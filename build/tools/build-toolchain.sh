@@ -636,11 +636,11 @@ build_toolchain ()
         OLD_CFLAGS="$CFLAGS"
         OLD_LDFLAGS="$LDFLAGS"
 
-	INCLUDE_DIRS="-I$TOOLCHAIN_PREFIX/lib/gcc/$ABI_TOOLCHAIN_PREFIX/$GCC_VERSION/include \
+        INCLUDE_DIRS="-I$TOOLCHAIN_PREFIX/lib/gcc/$ABI_TOOLCHAIN_PREFIX/$GCC_VERSION/include \
                       -I$ANDROID_SYSROOT/usr/include"
-	CRTBEGIN="$ANDROID_SYSROOT/usr/lib/crtbegin_static.o"
-	CRTEND="$ANDROID_SYSROOT/usr/lib/crtend_android.o"
-	LIBRARY_LDFLAGS="$CRTBEGIN -L$ANDROID_SYSROOT/usr/lib -lc -L$ANDROID_SYSROOT/usr/lib -lm -lgcc $CRTEND "
+        CRTBEGIN="$ANDROID_SYSROOT/usr/lib/crtbegin_static.o"
+        CRTEND="$ANDROID_SYSROOT/usr/lib/crtend_android.o"
+        LIBRARY_LDFLAGS="$CRTBEGIN -L$ANDROID_SYSROOT/usr/lib -lc -L$ANDROID_SYSROOT/usr/lib -lm -lgcc $CRTEND "
 
         cd $GDBSERVER_BUILD &&
         export CC="$TOOLCHAIN_PREFIX/bin/$ABI_TOOLCHAIN_PREFIX-gcc" &&
