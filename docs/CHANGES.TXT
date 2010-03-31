@@ -45,6 +45,9 @@ OTHER FIXES & CHANGES:
 - docs/STABLE-APIS.TXT: Add missing section for Dynamic Linker Library
   (libdl.so). It is actually supported by all API levels.
 
+- build/tools/download-toolchain-sources.sh: Use 'master' branch by default
+  instead of the 'eclair' one.
+
 -------------------------------------------------------------------------------
 android-ndk-r3
 
