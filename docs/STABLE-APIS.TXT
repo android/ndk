@@ -119,6 +119,16 @@ If you use it, your native module should link to /system/lib/libz.so with:
   LOCAL_LDLIBS := -lz
 
 
+Dynamic Linker Library:
+-----------------------
+
+<dlfcn.h> is available and can be used to use the dlopen()/dlsym()/dlclose()
+functions provided by the Android dynamic linker. You will need to link
+against /system/lib/libdl.so with:
+
+  LOCAL_LDLIBS := -ldl
+
+
 III. Android-4 Stable Native APIs:
 ----------------------------------
 

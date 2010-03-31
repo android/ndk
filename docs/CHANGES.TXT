@@ -1,18 +1,9 @@
 Android NDK ChangeLog:
 
 -------------------------------------------------------------------------------
-android-ndk-r3
+android-ndk-r4
 
 IMPORTANT BUG FIXES:
-
-- Fix build/host-setup.sh to execute as a Bourne shell script (again)
-
-- Make target shared libraries portable to systems that don't use the exact
-  same toolchain. This is needed due to differences in libgcc.a implementations
-  between gcc 4.2.1 and 4.4.0. This change ensures that generated machine
-  code doesn't depend on helper functions provided by the Android platform
-  runtime.
-
 
 IMPORTANT CHANGES:
 
@@ -48,6 +39,27 @@ IMPORTANT CHANGES:
 
 - Added a new sample (hello-neon) to demonstrate usage of 'cpufeatures'
   and NEON intrinsics & build support.
+
+OTHER FIXES & CHANGES:
+
+- docs/STABLE-APIS.TXT: Add missing section for Dynamic Linker Library
+  (libdl.so). It is actually supported by all API levels.
+
+-------------------------------------------------------------------------------
+android-ndk-r3
+
+IMPORTANT BUG FIXES:
+
+- Fix build/host-setup.sh to execute as a Bourne shell script (again)
+
+- Make target shared libraries portable to systems that don't use the exact
+  same toolchain. This is needed due to differences in libgcc.a implementations
+  between gcc 4.2.1 and 4.4.0. This change ensures that generated machine
+  code doesn't depend on helper functions provided by the Android platform
+  runtime.
+
+
+IMPORTANT CHANGES:
 
 - GCC 4.4.0 is now used by default by the NDK. It generates better code than
   GCC 4.2.1, which was used in previous releases. However, the compiler's C++
