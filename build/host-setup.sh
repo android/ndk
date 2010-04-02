@@ -128,11 +128,16 @@ bad_toolchain()
     ht=$2	# Host Tag
     echo ""
     echo "ERROR: Toolchain compiler not found"
-    echo "It seems you do not have the correct $tc toolchain binaries."
-    echo "This may be the result of incorrect unzipping of the NDK archive."
-    echo "Please go to the official Android NDK web site and download the"
-    echo "appropriate NDK package for your platform ($ht)."
-    echo "See http://developer.android.com/sdk/index.html"
+    if [ $tc = NONE_FOUND ] ; then
+        echo "It seems you don't have any toolchain binaries."
+    else
+        echo "It seems you do not have the correct $tc toolchain binaries."
+        echo "This may be the result of incorrect unzipping of the NDK archive."
+        echo "Please go to the official Android NDK web site and download the"
+        echo "appropriate NDK package for your platform ($ht)."
+        echo ""
+        echo "See http://developer.android.com/sdk/ndk/index.html"
+    fi
     echo ""
     echo "ABORTING."
     echo ""
