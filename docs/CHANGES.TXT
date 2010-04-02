@@ -54,6 +54,8 @@ OTHER FIXES & CHANGES:
   with 'patch -p1' into the <foo> directory of the unpacked toolchain sources
   before the configure step. 
 
+- docs/CPU-ARCH-ABIS.TXT: Mention the experimental 'x86' ABI.
+
 -------------------------------------------------------------------------------
 android-ndk-r3
 

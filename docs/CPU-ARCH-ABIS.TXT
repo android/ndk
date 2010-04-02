@@ -121,6 +121,29 @@ Each supported ABI is identified by a unique name.
                   ARMv6 based devices.
 
 
+ I.3. 'x86'
+ ----------
+
+  This is the name of an ABI for CPUs supporting the instruction set
+  commonly named 'x86' or 'IA-32'. More specifically, this targets the
+  instruction set commonly referenced as 'i686' or 'Pentium Pro' in
+  documents such as:
+
+    Intel IA-32 Intel Architecture Software Developer's Manual
+      volume 2: Instruction Set Reference
+
+
+  IMPORTANT IMPORTANT IMPORTANT IMPORTANT IMPORTANT IMPORTANT:
+
+      THE 'x86' ABI IS AN EXPERIMENTAL FEATURE THAT IS NOT FULLY
+      SUPPORTED YET BY THIS NDK RELEASE. TRYING TO USE IT WILL RESULT
+      IN AN ERROR DURING THE BUILD PROCESS.
+
+  Note that optional features like MMX/SSE2/SSE3/3DNow!/KVM must be
+  explictely tested at runtime by the generated machine code and
+  cannot be assumed to be everywhere.
+
+
 II. Generating code for a specific ABI:
 =======================================
 
