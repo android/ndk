@@ -8,6 +8,9 @@ IMPORTANT BUG FIXES:
 - build/host-setup.sh will complain if the NDK installation path contains
   a space and refuse to run.
 
+- The <fenv.h> header was not placed in the correct location and could not
+  be found by normal builds.
+
 IMPORTANT CHANGES:
 
 - Support for hardware FPU. This is through the new 'armeabi-v7a' ABI
