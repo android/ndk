@@ -5,6 +5,9 @@ android-ndk-r4
 
 IMPORTANT BUG FIXES:
 
+- build/host-setup.sh will complain if the NDK installation path contains
+  a space and refuse to run.
+
 IMPORTANT CHANGES:
 
 - Support for hardware FPU. This is through the new 'armeabi-v7a' ABI

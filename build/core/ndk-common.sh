@@ -41,6 +41,13 @@ if [ -z "$ANDROID_NDK_ROOT" ] ; then
     ANDROID_NDK_ROOT=`cd $PROGDIR && pwd`
 fi
 
+echo "$ANDROID_NDK_ROOT" | grep -q -e " "
+if [ $? = 0 ] ; then
+    echo "ERROR: The Android NDK installation path contains a space !"
+    echo "Please install to a different location."
+    exit 1
+fi
+
 if [ ! -d $ANDROID_NDK_ROOT ] ; then
     echo "ERROR: Your ANDROID_NDK_ROOT variable does not point to a directory."
     exit 1
