@@ -81,33 +81,7 @@ if [ $OPTION_HELP = "yes" ] ; then
     exit 0
 fi
 
-TMPLOG=/tmp/android-ndk-download-toolchain-$$.log
-rm -rf $TMPLOG
-
-if [ $VERBOSE = yes ] ; then
-    run ()
-    {
-        echo "##### NEW COMMAND"
-        echo $@
-        $@ 2>&1 | tee $TMPLOG
-    }
-    log ()
-    {
-        echo "LOG: $@"
-    }
-else
-    echo "To follow download, please use in another terminal: tail -F $TMPLOG"
-    run ()
-    {
-        echo "##### NEW COMMAND" >> $TMPLOG
-        echo "$@" >> $TMPLOG
-        $@ 1>$TMPLOG 2>&1
-    }
-    log ()
-    {
-        echo "$@" > /dev/null
-    }
-fi
+setup_log_file ()
 
 if [ -n "$OPTION_RELEASE" ] ; then
     RELEASE="$OPTION_RELEASE"
@@ -152,11 +126,11 @@ GITPREFIX=git://android.git.kernel.org/toolchain
 
 toolchain_clone ()
 {
-    echo "downloading sources for toolchain/$1"
+    dump "downloading sources for toolchain/$1"
     log "cloning $GITPREFIX/$1.git"
     run git clone $GITPREFIX/$1.git $1
     if [ $? != 0 ] ; then
-        echo "Could not clone $GITPREFIX/$1.git ?"
+        dump "Could not clone $GITPREFIX/$1.git ?"
         exit 1
     fi
     log "checking out $BRANCH branch of $1.git"
@@ -164,7 +138,7 @@ toolchain_clone ()
     if [ "$BRANCH" != "master" ] ; then
         run git checkout -b $BRANCH origin/$BRANCH
         if [ $? != 0 ] ; then
-            echo "Could not checkout $1 ?"
+            dump "Could not checkout $1 ?"
             exit 1
         fi
     fi
@@ -193,13 +167,13 @@ rm -rf $TMPDIR/gcc/gdb-6.8
 
 # create the package
 PACKAGE=/tmp/$PKGNAME.tar.bz2
-echo "Creating package archive $PACKAGE"
+dump "Creating package archive $PACKAGE"
 cd `dirname $TMPDIR`
 run tar cjvf $PACKAGE -C /tmp/$PKGNAME .
 if [ $? != 0 ] ; then
-    echo "Could not package toolchain source archive ?. See $TMPLOG"
+    dump "Could not package toolchain source archive ?. See $TMPLOG"
     exit 1
 fi
 
-echo "Toolchain sources downloaded and packaged succesfully at $PACKAGE"
+dump "Toolchain sources downloaded and packaged succesfully at $PACKAGE"
 rm -f $TMPLOG

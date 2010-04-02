@@ -159,34 +159,7 @@ x86 )
     ;;
 esac
 
-TMPLOG=/tmp/android-toolchain-build-$$.log
-rm -rf $TMPLOG
-
-if [ $VERBOSE = yes ] ; then
-    run ()
-    {
-        echo "##### NEW COMMAND"
-        echo "$@"
-        $@ 2>&1
-    }
-    log ()
-    {
-        echo "LOG: $@"
-    }
-else
-    echo "To follow build, please use in another terminal: tail -F $TMPLOG"
-    run ()
-    {
-        echo "##### NEW COMMAND" >> $TMPLOG
-        echo "$@" >> $TMPLOG
-        $@ >>$TMPLOG 2>&1
-    }
-    log ()
-    {
-        echo "$@" > /dev/null
-    }
-fi
-
+setup_log_file
 
 if [ -n "$OPTION_GCC_VERSION" ] ; then
     GCC_VERSION="$OPTION_GCC_VERSION"
@@ -236,81 +209,13 @@ TIMESTAMP_OUT=$OUT/timestamps
 ANDROID_TOOLCHAIN_SRC=$OUT/src
 ANDROID_SYSROOT=$ANDROID_NDK_ROOT/build/platforms/$PLATFORM/arch-$ARCH
 
-# Let's check that we have a working md5sum here
-A_MD5=`echo "A" | md5sum | cut -d' ' -f1`
-if [ "$A_MD5" != "bf072e9119077b4e76437a93986787ef" ] ; then
-    echo "Please install md5sum on this machine"
-    exit 2
-fi
+# Check that we have md5sum to check downloaded binaries
+check_md5sum
 
-# Find if a given shell program is available.
-# We need to take care of the fact that the 'which <foo>' command
-# may return either an empty string (Linux) or something like
-# "no <foo> in ..." (Darwin). Also, we need to redirect stderr
-# to /dev/null for Cygwin
-#
-# $1: variable name
-# $2: program name
-#
-# Result: set $1 to the full path of the corresponding command
-#         or to the empty/undefined string if not available
-#
-find_program ()
-{
-    local PROG
-    PROG=`which $2 2>/dev/null`
-    if [ -n "$PROG" ] ; then
-        echo "$PROG" | grep -q -e '^no '
-        if [ $? = 0 ] ; then
-            PROG=
-        fi
-    fi
-    eval $1="$PROG"
-}
-
-# And wget too
+# Do we have anything to download stuff
 find_program WGET wget
 find_program CURL curl
 find_program SCP scp
-
-# download a file with either 'curl', 'wget' or 'scp'
-# $1: source
-# $2: target
-download_file ()
-{
-    # is this HTTP, HTTPS or FTP ?
-    echo $1 | grep -q -e "^\(http\|https\):.*"
-    if [ $? = 0 ] ; then
-        if [ -n "$WGET" ] ; then
-            $WGET -O $2 $1 
-        elif [ -n "$CURL" ] ; then
-            $CURL -o $2 $1
-        else
-            echo "Please install wget or curl on this machine"
-            exit 1
-        fi
-        return
-    fi
-
-    # is this SSH ?
-    echo $1 | grep -q -e "^ssh:.*"
-    if [ $? = 0 ] ; then
-        if [ -n "$SCP" ] ; then
-            scp_src=`echo $1 | sed -e s%ssh://%%g`
-            $SCP $scp_src $2
-        else
-            echo "Please install scp on this machine"
-            exit 1
-        fi
-        return
-    fi
-
-    echo $1 | grep -q -e "^/.*"
-    if [ $? = 0 ] ; then
-        cp -f $1 $2
-    fi
-}
-
 
 timestamp_check ()
 {
@@ -342,12 +247,12 @@ download_package ()
 {
     WORKSPACE=$ANDROID_NDK_ARCHIVE/$1
     if [ ! -d $WORKSPACE ] ; then
-        echo "No directory named $1 under $ANDROID_NDK_ARCHIVE"
+        dump "No directory named $1 under $ANDROID_NDK_ARCHIVE"
         exit 2
     fi
     SOURCES=$WORKSPACE/sources.txt
     if [ ! -f $SOURCES ] ; then
-        echo "Missing sources.txt in $WORKSPACE"
+        dump "Missing sources.txt in $WORKSPACE"
         exit 2
     fi
     # First line must be file name
@@ -355,7 +260,7 @@ download_package ()
     # Second line must be md5sum
     PKGSUM=`cat $SOURCES | sed 1d | sed 1q`
     if [ -z "$PKGNAME" -o -z "$PKGSUM" ] ; then
-        echo "Corrupted file: $SOURCES"
+        dump "Corrupted file: $SOURCES"
         exit 2
     fi
 
@@ -368,36 +273,36 @@ download_package ()
             echo $src | grep -q -e "^/.*"
             if [ $? = 0 ] ; then
                 if [ -f $src ] ; then
-                    echo "Copy    : $PKGNAME"
-                    echo "          from `dirname $src`"
-                    echo "          into $PACKAGE_TARBALL"
+                    dump "Copy    : $PKGNAME"
+                    dump "          from `dirname $src`"
+                    dump "          into $PACKAGE_TARBALL"
                     run cp -f $src $PACKAGE_TARBALL
                     if [ $? = 0 ] ; then
                         break
                     fi
-                    echo "Copy    : Problem copying from $src"
+                    dump "Copy    : Problem copying from $src"
                 else
-                    echo "Copy    : Can't find $src (skipping)"
+                    dump "Copy    : Can't find $src (skipping)"
                 fi
                 continue
             fi
             echo $src | grep -q -e "^\(http\|https\|ftp\|ssh\):.*"
             if [ $? = 0 ] ; then
-                echo "Download: $PKGNAME"
-                echo "          from $src"
-                echo "          into $PACKAGE_TARBALL"
+                dump "Download: $PKGNAME"
+                dump "          from $src"
+                dump "          into $PACKAGE_TARBALL"
                 download_file $src $PACKAGE_TARBALL
                 if [ $? = 0 ] ; then
                     break
                 fi
                 continue
             else
-                "Copy    : Unknown method in $src"
+                dump "Copy    : Unknown method in $src"
             fi
         done
         if [ ! -f $PACKAGE_TARBALL ] ; then
-            echo "ERROR: Could not copy or download $PKGNAME !"
-            echo "Your probably need to edit $WORKSPACE/sources.txt"
+            dump "ERROR: Could not copy or download $PKGNAME !"
+            dump "Your probably need to edit $WORKSPACE/sources.txt"
             exit 1
         fi
     fi
@@ -405,14 +310,14 @@ download_package ()
     if ! timestamp_check $1 verify ; then
         SUM=`md5sum $PACKAGE_TARBALL | cut -d " " -f 1`
         if [ "$SUM" != "$PKGSUM" ] ; then
-            echo "ERROR: Invalid MD5 Sum for $PACKAGE_TARBALL"
-            echo "    Expected $PKGSUM"
-            echo "    Computed $SUM"
-            echo "You might want to use the --force-download option."
+            dump "ERROR: Invalid MD5 Sum for $PACKAGE_TARBALL"
+            dump "    Expected $PKGSUM"
+            dump "    Computed $SUM"
+            dump "You might want to use the --force-download option."
             exit 2
         fi
 
-        echo "Verified: $PACKAGE_TARBALL"
+        dump "Verified: $PACKAGE_TARBALL"
         timestamp_set   $1 verify
         timestamp_force $1 unpack
     fi
@@ -428,9 +333,9 @@ unpack_package ()
     SRCPKG=`var_value PKG_$1`
     SRCDIR=$2
     if ! timestamp_check $1 unpack; then
-        echo "Unpack  : $1 sources"
-        echo "          from $SRCPKG"
-        echo "          into $SRCDIR"
+        dump "Unpack  : $1 sources"
+        dump "          from $SRCPKG"
+        dump "          into $SRCDIR"
         run rm -rf $SRCDIR
         run mkdir -p $SRCDIR
         TARFLAGS=xjf
@@ -439,7 +344,7 @@ unpack_package ()
         fi
         run tar $TARFLAGS $SRCPKG -C $SRCDIR
         if [ $? != 0 ] ; then
-            echo "ERROR: Could not unpack $1, See $TMPLOG"
+            dump "ERROR: Could not unpack $1, See $TMPLOG"
             exit 1
         fi
         timestamp_set   $1 unpack
@@ -466,18 +371,18 @@ patch_package ()
     if ! timestamp_check $1 patch; then
         PATCH_FILES=`(cd $3 && find . -name "*.patch") 2> /dev/null`
         if [ -z "$PATCH_FILES" ] ; then
-            echo "Patch   : none provided"
+            dump "Patch   : none provided"
             return
         fi
         for PATCH in $PATCH_FILES; do
-            echo "Patch   : $1 sources"
-            echo "          from $PATCH"
-            echo "          into $SRCDIR"
+            dump "Patch   : $1 sources"
+            dump "          from $PATCH"
+            dump "          into $SRCDIR"
             PATCHDIR=`dirname $PATCH`
             PATCHNAME=`basename $PATCH`
             cd $SRCDIR/$PATCHDIR && patch -p1 < $3/$PATCH
             if [ $? != 0 ] ; then
-                echo "Patch failure !! Please check toolchain package !"
+                dump "Patch failure !! Please check toolchain package !"
                 exit 1
             fi
         done
@@ -487,19 +392,19 @@ patch_package ()
 }
 
 if [ $OPTION_FORCE_DOWNLOAD ] ; then
-    rm -rf $PACKAGE_OUT $ANDROID_TOOLCHAIN_SRC
+    run rm -rf $PACKAGE_OUT $ANDROID_TOOLCHAIN_SRC
     timestamp_force toolchain unpack
     timestamp_force toolchain verify
 fi
 
 if [ $OPTION_FORCE_BUILD = "yes" ] ; then
-    rm -rf $ANDROID_TOOLCHAIN_BUILD
+    run rm -rf $ANDROID_TOOLCHAIN_BUILD
     timestamp_clear toolchain
     timestamp_clear gdbserver
 fi
 
 # checks, we need more checks..
-mkdir -p $PACKAGE_OUT
+run mkdir -p $PACKAGE_OUT
 if [ $? != 0 ] ; then
     echo "Can't create download/archive directory for toolchain tarballs"
     exit 2
@@ -540,7 +445,7 @@ build_toolchain ()
 
     # configure the toolchain
     if ! timestamp_check $TOOLCHAIN_NAME configure; then
-        echo "Configure: $TOOLCHAIN_NAME toolchain build"
+        dump "Configure: $TOOLCHAIN_NAME toolchain build"
         # Old versions of the toolchain source packages placed the
         # configure script at the top-level. Newer ones place it under
         # the build directory though. Probe the file system to check
@@ -565,7 +470,7 @@ build_toolchain ()
                                 --with-gcc-version=$GCC_VERSION \
                                 --with-gdb-version=$GDB_VERSION
         if [ $? != 0 ] ; then
-            echo "Error while trying to configure toolchain build. See $TMPLOG"
+            dump "Error while trying to configure toolchain build. See $TMPLOG"
             exit 1
         fi
         ABI="$OLD_ABI"
@@ -577,7 +482,7 @@ build_toolchain ()
 
     # build the toolchain
     if ! timestamp_check $TOOLCHAIN_NAME build ; then
-        echo "Building : $TOOLCHAIN_NAME toolchain [this can take a long time]."
+        dump "Building : $TOOLCHAIN_NAME toolchain [this can take a long time]."
         OLD_CFLAGS="$CFLAGS"
         OLD_LDFLAGS="$LDFLAGS"
         OLD_ABI="$ABI"
@@ -599,7 +504,7 @@ build_toolchain ()
 
     # install the toolchain to its final location
     if ! timestamp_check $TOOLCHAIN_NAME install ; then
-        echo "Install  : $TOOLCHAIN_NAME toolchain binaries."
+        dump "Install  : $TOOLCHAIN_NAME toolchain binaries."
         cd $TOOLCHAIN_BUILD &&
         run make install
         if [ $? != 0 ] ; then
@@ -623,7 +528,7 @@ build_toolchain ()
 
     # configure the gdbserver build now
     if ! timestamp_check $TOOLCHAIN_NAME-gdbserver configure; then
-        echo "Configure: $TOOLCHAIN_NAME gdbserver build."
+        dump "Configure: $TOOLCHAIN_NAME gdbserver build."
         # Old toolchain source packages placed the gdb sources at
         # the top-level, while newer ones place them under the 'gdb'
         # directory. Probe the filesystem to check which one is appropriate.
@@ -631,7 +536,7 @@ build_toolchain ()
         if [ ! -d $GDB_SRCDIR ] ; then
             GDB_SRCDIR=$TOOLCHAIN_SRC/gdb-$GDB_VERSION
         fi
-        mkdir -p $GDBSERVER_BUILD
+        run mkdir -p $GDBSERVER_BUILD
         OLD_CC="$CC"
         OLD_CFLAGS="$CFLAGS"
         OLD_LDFLAGS="$LDFLAGS"
@@ -650,7 +555,7 @@ build_toolchain ()
         --host=${ABI_CONFIGURE_HOST} \
         --with-sysroot=$ANDROID_SYSROOT
         if [ $? != 0 ] ; then
-            echo "Could not configure gdbserver build. See $TMPLOG"
+            dump "Could not configure gdbserver build. See $TMPLOG"
             exit 1
         fi
         CC="$OLD_CC"
@@ -662,11 +567,11 @@ build_toolchain ()
 
     # build gdbserver
     if ! timestamp_check $TOOLCHAIN_NAME-gdbserver build; then
-        echo "Building : $TOOLCHAIN_NAME gdbserver."
+        dump "Building : $TOOLCHAIN_NAME gdbserver."
         cd $GDBSERVER_BUILD &&
         run make -j$JOBS
         if [ $? != 0 ] ; then
-            echo "Could not build $TOOLCHAIN_NAME gdbserver. See $TMPLOG"
+            dump "Could not build $TOOLCHAIN_NAME gdbserver. See $TMPLOG"
             exit 1
         fi
         timestamp_set   $TOOLCHAIN_NAME-gdbserver build
@@ -679,13 +584,13 @@ build_toolchain ()
     # not in $SYSROOT/usr/bin
     #
     if ! timestamp_check $TOOLCHAIN_NAME-gdbserver install; then
-        echo "Install  : $TOOLCHAIN_NAME gdbserver."
+        dump "Install  : $TOOLCHAIN_NAME gdbserver."
         DEST=$TOOLCHAIN_PREFIX/bin
         mkdir -p $DEST &&
         $TOOLCHAIN_PREFIX/bin/${ABI_TOOLCHAIN_PREFIX}-strip $GDBSERVER_BUILD/gdbserver &&
         run cp -f $GDBSERVER_BUILD/gdbserver $DEST/gdbserver
         if [ $? != 0 ] ; then
-            echo "Could not install gdbserver. See $TMPLOG"
+            dump "Could not install gdbserver. See $TMPLOG"
             exit 1
         fi
         timestamp_set   $TOOLCHAIN_NAME-gdbserver install
@@ -733,12 +638,12 @@ done
 # package the toolchain
 TOOLCHAIN_TARBALL=/tmp/android-ndk-prebuilt-$RELEASE-$HOST_TAG.tar.bz2
 if ! timestamp_check package toolchain; then
-    echo "Cleanup  : Removing unuseful stuff"
-    rm -rf $OUT/build/prebuilt/$HOST_TAG/*/share
-    find $OUT/build/prebuilt/$HOST_TAG -name "libiberty.a" | xargs rm -f
-    find $OUT/build/prebuilt/$HOST_TAG -name "lib${ABI}-elf-linux-sim.a" | xargs rm -f
-    echo "Package  : $HOST_ARCH toolchain binaries"
-    echo "           into $TOOLCHAIN_TARBALL"
+    dump "Cleanup  : Removing unuseful stuff"
+    run rm -rf $OUT/build/prebuilt/$HOST_TAG/*/share
+    run find $OUT/build/prebuilt/$HOST_TAG -name "libiberty.a" | xargs rm -f
+    run find $OUT/build/prebuilt/$HOST_TAG -name "lib${ABI}-elf-linux-sim.a" | xargs rm -f
+    dump "Package  : $HOST_ARCH toolchain binaries"
+    dump "           into $TOOLCHAIN_TARBALL"
     cd $ANDROID_NDK_ROOT &&
     TARFLAGS="cjf"
     if [ $VERBOSE = yes ] ; then
@@ -750,21 +655,21 @@ if ! timestamp_check package toolchain; then
     done
     run tar $TARFLAGS $TOOLCHAIN_TARBALL -C $OUT $TOOLCHAIN_SRC_DIRS
     if [ $? != 0 ] ; then
-        echo "ERROR: Cannot package prebuilt toolchain binaries. See $TMPLOG"
+        dump "ERROR: Cannot package prebuilt toolchain binaries. See $TMPLOG"
         exit 1
     fi
     timestamp_set package toolchain
-    echo "prebuilt toolchain is in $TOOLCHAIN_TARBALL"
+    dump "prebuilt toolchain is in $TOOLCHAIN_TARBALL"
 else
-    echo "prebuilt toolchain is in $TOOLCHAIN_TARBALL"
+    dump "prebuilt toolchain is in $TOOLCHAIN_TARBALL"
 fi
 
 if [ -z "$OPTION_BUILD_OUT" ] ; then
-    echo "Cleaning temporary directory $OUT"
+    dump "Cleaning temporary directory $OUT"
     rm -rf $OUT
 else
-    echo "Don't forget to clean build directory $OUT"
+    dump "Don't forget to clean build directory $OUT"
 fi
 
-echo "Done."
+dump "Done."
 rm -f $TMPLOG

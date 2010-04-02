@@ -63,17 +63,67 @@ fi
 VERBOSE=${VERBOSE-yes}
 VERBOSE2=${VERBOSE2-no}
 
+TMPLOG=
+
+# Setup a log file where all log() and log2() output will be sent
+#
+# $1: log file path  (optional)
+#
+setup_log_file ()
+{
+    if [ -n "$1" ] ; then
+        TMPLOG="$1"
+    else
+        TMPLOG=/tmp/ndk-log-$$.log
+    fi
+    rm -f $TMPLOG && touch $TMPLOG
+    echo "To follow build in another terminal, please use: tail -F $TMPLOG"
+}
+
+dump ()
+{
+    if [ -n "$TMPLOG" ] ; then
+        echo "$@" >> $TMPLOG
+    fi
+    echo "$@"
+}
+
 log ()
 {
     if [ "$VERBOSE" = "yes" ] ; then
-        echo "$1"
+        echo "$@"
+    else
+        if [ "$TMPLOG" ] ; then
+            echo "$@" >> $TMPLOG
+        fi
     fi
 }
 
 log2 ()
 {
     if [ "$VERBOSE2" = "yes" ] ; then
-        echo "$1"
+        echo "$@"
+    else
+        if [ -n "$TMPLOG" ] ; then
+            echo "$@" >> $TMPLOG
+        fi
+    fi
+}
+
+run ()
+{
+    if [ "$VERBOSE" = "yes" ] ; then
+        echo "##### NEW COMMAND"
+        echo "$@"
+        $@ 2>&1
+    else
+        if [ -n "$TMPLOG" ] ; then
+            echo "##### NEW COMMAND" >> $TMPLOG
+            echo "$@" >> $TMPLOG
+            $@ >>$TMPLOG 2>&1
+        else
+            $@ > /dev/null 2>&1
+        fi
     fi
 }
 
@@ -408,3 +458,79 @@ compile_exec_run()
     fi
     $TMPE
 }
+
+# Let's check that we have a working md5sum here
+check_md5sum ()
+{
+    A_MD5=`echo "A" | md5sum | cut -d' ' -f1`
+    if [ "$A_MD5" != "bf072e9119077b4e76437a93986787ef" ] ; then
+        echo "Please install md5sum on this machine"
+        exit 2
+    fi
+}
+
+# Find if a given shell program is available.
+# We need to take care of the fact that the 'which <foo>' command
+# may return either an empty string (Linux) or something like
+# "no <foo> in ..." (Darwin). Also, we need to redirect stderr
+# to /dev/null for Cygwin
+#
+# $1: variable name
+# $2: program name
+#
+# Result: set $1 to the full path of the corresponding command
+#         or to the empty/undefined string if not available
+#
+find_program ()
+{
+    local PROG
+    PROG=`which $2 2>/dev/null`
+    if [ -n "$PROG" ] ; then
+        echo "$PROG" | grep -q -e '^no '
+        if [ $? = 0 ] ; then
+            PROG=
+        fi
+    fi
+    eval $1="$PROG"
+}
+
+
+# Download a file with either 'curl', 'wget' or 'scp'
+#
+# $1: source URL (e.g. http://foo.com, ssh://blah, /some/path)
+# $2: target file
+download_file ()
+{
+    # is this HTTP, HTTPS or FTP ?
+    echo $1 | grep -q -e "^\(http\|https\):.*"
+    if [ $? = 0 ] ; then
+        if [ -n "$WGET" ] ; then
+            run $WGET -O $2 $1 
+        elif [ -n "$CURL" ] ; then
+            run $CURL -o $2 $1
+        else
+            echo "Please install wget or curl on this machine"
+            exit 1
+        fi
+        return
+    fi
+
+    # is this SSH ?
+    echo $1 | grep -q -e "^ssh:.*"
+    if [ $? = 0 ] ; then
+        if [ -n "$SCP" ] ; then
+            scp_src=`echo $1 | sed -e s%ssh://%%g`
+            run $SCP $scp_src $2
+        else
+            echo "Please install scp on this machine"
+            exit 1
+        fi
+        return
+    fi
+
+    echo $1 | grep -q -e "^/.*"
+    if [ $? = 0 ] ; then
+        run cp -f $1 $2
+    fi
+}
+
