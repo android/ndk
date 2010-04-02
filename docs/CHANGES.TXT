@@ -62,6 +62,8 @@ OTHER FIXES & CHANGES:
 
 - docs/CPU-ARCH-ABIS.TXT: Mention the experimental 'x86' ABI.
 
+- build/core/mkdeps.sh: Removed obsolete script.
+
 -------------------------------------------------------------------------------
 android-ndk-r3
 
