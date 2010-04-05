@@ -54,9 +54,7 @@ TARGET_PLATFORM := $(call get,$(_map),APP_PLATFORM)
 HOST_OUT    := $(NDK_APP_OUT)/$(_app)/$(HOST_TAG)
 HOST_OBJS   := $(HOST_OUT)/objs
 
-# the target to use
-TARGET_TOOLCHAIN := $(NDK_TARGET_TOOLCHAIN)
-
+# The ABI(s) to use
 APP_ABI := $(strip $(NDK_APP_ABI))
 ifndef APP_ABI
     # the default ABI for now is armeabi
@@ -88,4 +86,3 @@ $(foreach _abi,$(APP_ABI),\
     $(eval TARGET_ARCH_ABI := $(_abi))\
     $(eval include $(BUILD_SYSTEM)/setup-abi.mk) \
 )
-

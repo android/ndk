@@ -79,6 +79,16 @@ ifdef _bad_platform
     $(call __ndk_info,Switching to $(APP_PLATFORM))
 endif
 
+# Check that the value of APP_ABI corresponds to known ABIs
+#
+_bad_abis := $(strip $(filter-out $(NDK_ALL_ABIS),$(APP_ABI)))
+ifdef _bad_abis
+    $(call __ndk_info,Application $(_name) targets unknown ABI '$(_bad_abis)')
+    $(call __ndk_info,Please fix the APP_ABI definition in $(_application_mk))
+    $(call __ndk_info,to use a set of the following values: $(NDK_ALL_ABIS))
+    $(call __ndk_error,Aborting)
+endif
+
 # If APP_BUILD_SCRIPT is defined, check that the file exists.
 # If undefined, look in $(APP_PROJECT_PATH)/jni/Android.mk
 #

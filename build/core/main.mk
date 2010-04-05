@@ -94,18 +94,14 @@ NDK_ALL_ABIS         := $(call uniq,$(NDK_ALL_ABIS))
 # NOTE: you won't get armeabi-v7a support though !
 #
 NDK_TOOLCHAIN := $(strip $(NDK_TOOLCHAIN))
-ifndef NDK_TOOLCHAIN
-    NDK_TARGET_TOOLCHAIN := arm-eabi-4.4.0
-    $(call ndk_log, Default toolchain is $(NDK_TARGET_TOOLCHAIN))
-else
+ifdef NDK_TOOLCHAIN
     # check that the toolchain name is supported
     $(if $(filter-out $(NDK_ALL_TOOLCHAINS),$(NDK_TOOLCHAIN)),\
       $(call __ndk_info,NDK_TOOLCHAIN is defined to the unsupported value $(NDK_TOOLCHAIN)) \
       $(call __ndk_info,Please use one of the following values: $(NDK_ALL_TOOLCHAINS))\
       $(call __ndk_error,Aborting)\
     ,)
-    NDK_TARGET_TOOLCHAIN=$(NDK_TOOLCHAIN)
-    $(call ndk_log, Using specific toolchain $(NDK_TARGET_TOOLCHAIN))
+    $(call ndk_log, Using specific toolchain $(NDK_TOOLCHAIN))
 endif
 
 $(call ndk_log, This NDK supports the following toolchains and target ABIs:)

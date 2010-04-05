@@ -17,16 +17,35 @@
 # to setup the target toolchain for a given platform/abi combination.
 #
 
-$(call assert-defined,TARGET_TOOLCHAIN TARGET_PLATFORM TARGET_ARCH TARGET_ARCH_ABI)
+$(call assert-defined,TARGET_PLATFORM TARGET_ARCH TARGET_ARCH_ABI)
 $(call assert-defined,NDK_APPS)
 
-# Check that the toolchain supports the current ABI
-$(if $(filter-out $(NDK_TOOLCHAIN.$(NDK_TARGET_TOOLCHAIN).abis),$(TARGET_ARCH_ABI)),\
-    $(call __ndk_info,The $(NDK_TARGET_TOOLCHAIN) toolchain does not support the $(TARGET_ARCH_ABI) ABI.)\
-    $(call __ndk_info,Please modify the APP_ABI definition in $(NDK_APP_APPLICATION_MK) to fix this)\
-    $(call __ndk_info,Valid ABIs values for $(NDK_TARGET_TOOLCHAIN) are: $(NDK_TARGET_TOOLCHAIN.$(NDK_TOOLCHAIN).abis))\
-    $(call __ndk_error,Aborting)\
-,)
+# Check that we have a toolchain that supports the current ABI.
+# NOTE: If NDK_TOOLCHAIN is defined, we're going to use it.
+#
+ifndef NDK_TOOLCHAIN
+  TARGET_TOOLCHAIN_LIST := $(strip $(sort $(NDK_ABI.$(TARGET_ARCH_ABI).toolchains)))
+  ifndef TARGET_TOOLCHAIN_LIST
+    $(call __ndk_info,There is no toolchain that supports the $(TARGET_ARCH_ABI) ABI.)
+    $(call __ndk_info,Please modify the APP_ABI definition in $(NDK_APP_APPLICATION_MK) to use)
+    $(call __ndk_info,a set of the following values: $(NDK_ALL_ABIS))
+    $(call __ndk_error,Aborting)
+  endif
+  # Select the last toolchain from the sorted list.
+  # For now, this is enough to select armeabi-4.4.0 by default for ARM
+  TARGET_TOOLCHAIN := $(lastword $(TARGET_TOOLCHAIN_LIST))
+  $(call ndk_log,Using target toolchain '$(TARGET_TOOLCHAIN)' for '$(TARGET_ARCH_ABI)' ABI)
+else # NDK_TOOLCHAIN is not empty
+  TARGET_TOOLCHAIN_LIST := $(strip $(filter $(NDK_TOOLCHAIN),$(NDK_ABI.$(TARGET_ARCH_ABI).toolchains)))
+  ifndef TARGET_TOOLCHAIN_LIST
+    $(call __ndk_info,The selected toolchain ($(NDK_TOOLCHAIN)) does not support the $(TARGET_ARCH_ABI) ABI.)
+    $(call __ndk_info,Please modify the APP_ABI definition in $(NDK_APP_APPLICATION_MK) to use)
+    $(call __ndk_info,a set of the following values: $(NDK_TOOLCHAIN.$(NDK_TOOLCHAIN).abis))
+    $(call __ndk_info,Or change your NDK_TOOLCHAIN definition.)
+    $(call __ndk_error,Aborting)
+  endif
+  TARGET_TOOLCHAIN := $(NDK_TOOLCHAIN)
+endif # NDK_TOOLCHAIN is not empty
 
 TARGET_ABI := $(TARGET_PLATFORM)-$(TARGET_ARCH_ABI)
 

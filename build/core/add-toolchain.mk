@@ -62,4 +62,11 @@ $(if $(strip $($(_toolchain).setup)),,\
 NDK_ALL_TOOLCHAINS += $(_name)
 NDK_ALL_ABIS       += $(_abis)
 
+# NKD_ABI.<abi>.toolchains records the list of toolchains that support
+# a given ABI
+#
+$(foreach _abi,$(_abis),\
+    $(eval NDK_ABI.$(_abi).toolchains += $(_name)) \
+)
+
 # done
