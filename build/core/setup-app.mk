@@ -76,9 +76,11 @@ endif
 # package an obsolete version of it. Or if you change the ABIs you're targetting,
 # you're not going to leave a stale shared library for the old one.
 #
-ifeq ($($(_map).cleaned_binaries),)
-    $(_map).cleaned_binaries := true
-    clean-installed-binaries:
+ifeq ($(NDK_APP.$(_app).cleaned_binaries),)
+    NDK_APP.$(_app).cleaned_binaries := true
+    clean-installed-binaries: clean-installed-binaries-for-$(_app)
+    .PHONY: clean-installed-binaries-for-$(_app)
+    clean-installed-binaries-for-$(_app):
 	$(hide) rm -f $(NDK_ALL_ABIS:%=$(NDK_APP_PROJECT_PATH)/libs/%/lib*.so)
 endif
 

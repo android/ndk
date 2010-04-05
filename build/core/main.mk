@@ -158,9 +158,46 @@ $(call ndk_log,Found max platform level: $(NDK_MAX_PLATFORM_LEVEL))
 
 NDK_ALL_APPS :=
 
-NDK_APPLICATIONS := $(wildcard apps/*/Application.mk)
-$(foreach _application_mk, $(NDK_APPLICATIONS),\
-  $(eval include $(BUILD_SYSTEM)/add-application.mk)\
+# Get the list of apps listed under apps/*
+NDK_APPLICATIONS := $(wildcard apps/*)
+NDK_ALL_APPS     := $(NDK_APPLICATIONS:apps/%=%)
+
+# Check that APP is not empty
+APP := $(strip $(APP))
+ifndef APP
+  $(call __ndk_info,\
+    The APP variable is undefined or empty.)
+  $(call __ndk_info,\
+    Please define it to one of: $(NDK_ALL_APPS))
+  $(call __ndk_info,\
+    You can also add new applications by writing an Application.mk file.)
+  $(call __ndk_info,\
+    See docs/APPLICATION-MK.TXT for details.)
+  $(call __ndk_error, Aborting)
+endif
+
+# Check that all apps listed in APP do exist
+_bad_apps := $(strip $(filter-out $(NDK_ALL_APPS),$(APP)))
+ifdef _bad_apps
+  $(call __ndk_info,\
+    APP variable defined to unknown applications: $(_bad_apps))
+  $(call __ndk_info,\
+    You might want to use one of the following: $(NDK_ALL_APPS))
+  $(call __ndk_error, Aborting)
+endif
+
+# Check that all apps listed in APP have an Application.mk
+
+$(foreach _app,$(APP),\
+  $(eval _application_mk := $(strip $(wildcard apps/$(_app)/Application.mk))) \
+  $(call ndk_log,Parsing $(_application_mk))\
+  $(if $(_application_mk),\
+    $(eval include $(BUILD_SYSTEM)/add-application.mk)\
+  ,\
+    $(call __ndk_info,\
+      Missing file: apps/$(_app)/Application.mk !)\
+    $(call __ndk_error, Aborting)\
+  )\
 )
 
 # clean up environment, just to be safe
@@ -175,15 +212,6 @@ ifeq ($(strip $(NDK_ALL_APPS)),)
 endif
 
 ifeq ($(strip $(APP)),)
-  $(call __ndk_info,\
-    The APP variable is undefined or empty.)
-  $(call __ndk_info,\
-    Please define it to one of: $(NDK_ALL_APPS))
-  $(call __ndk_info,\
-    You can also add new applications by writing an Application.mk file.)
-  $(call __ndk_info,\
-    See docs/APPLICATION-MK.TXT for details.)
-  $(call __ndk_error, Aborting)
 endif
 
 # now check that APP doesn't contain an unknown app name
@@ -275,7 +303,7 @@ $(foreach _app,$(NDK_APPS),\
 #
 # ====================================================================
 
-clean: clean-intermediates clean-installed-modules
+clean: clean-intermediates clean-installed-modules clean-installed-binaries
 
 distclean: clean clean-config
 

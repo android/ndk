@@ -64,6 +64,10 @@ OTHER FIXES & CHANGES:
 
 - build/core/mkdeps.sh: Removed obsolete script.
 
+- the NDK build script now only parses the Application.mk and Android.mk of
+  the applications listed by APP. The error messages when APP is empty or
+  malformed have also been improved.
+
 -------------------------------------------------------------------------------
 android-ndk-r3
 
