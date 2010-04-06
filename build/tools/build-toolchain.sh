@@ -213,9 +213,9 @@ ANDROID_SYSROOT=$ANDROID_NDK_ROOT/build/platforms/$PLATFORM/arch-$ARCH
 check_md5sum
 
 # Do we have anything to download stuff
-find_program WGET wget
-find_program CURL curl
-find_program SCP scp
+find_program CMD_WGET wget
+find_program CMD_CURL curl
+find_program CMD_SCP scp
 
 timestamp_check ()
 {

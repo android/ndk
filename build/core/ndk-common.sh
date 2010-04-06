@@ -501,13 +501,13 @@ find_program ()
 # $2: target file
 download_file ()
 {
-    # is this HTTP, HTTPS or FTP ?
-    echo $1 | grep -q -e "^\(http\|https\):.*"
+    # Is this HTTP, HTTPS or FTP ?
+    echo $1 | grep -q -E -e "^(http|https|ftp):.*"
     if [ $? = 0 ] ; then
-        if [ -n "$WGET" ] ; then
-            run $WGET -O $2 $1 
-        elif [ -n "$CURL" ] ; then
-            run $CURL -o $2 $1
+        if [ -n "$CMD_WGET" ] ; then
+            run $CMD_WGET -O $2 $1 
+        elif [ -n "$CMD_CURL" ] ; then
+            run $CMD_CURL -o $2 $1
         else
             echo "Please install wget or curl on this machine"
             exit 1
@@ -515,12 +515,14 @@ download_file ()
         return
     fi
 
-    # is this SSH ?
-    echo $1 | grep -q -e "^ssh:.*"
+    # Is this SSH ?
+    # Accept both ssh://<path> or <machine>:<path>
+    #
+    echo $1 | grep -q -E -e "^(ssh|[^:]+):.*"
     if [ $? = 0 ] ; then
-        if [ -n "$SCP" ] ; then
+        if [ -n "$CMD_SCP" ] ; then
             scp_src=`echo $1 | sed -e s%ssh://%%g`
-            run $SCP $scp_src $2
+            run $CMD_SCP $scp_src $2
         else
             echo "Please install scp on this machine"
             exit 1
@@ -528,9 +530,13 @@ download_file ()
         return
     fi
 
-    echo $1 | grep -q -e "^/.*"
+    # Is this a file copy ?
+    # Accept both file://<path> or /<path>
+    #
+    echo $1 | grep -q -E -e "^(file://|/).*"
     if [ $? = 0 ] ; then
-        run cp -f $1 $2
+        cp_src=`echo $1 | sed -e s%^file://%%g`
+        run cp -f $cp_src $2
+        return
     fi
 }
-
