@@ -79,7 +79,7 @@ ifeq ($(NDK_APP.$(_app).cleaned_binaries),)
     clean-installed-binaries: clean-installed-binaries-for-$(_app)
     .PHONY: clean-installed-binaries-for-$(_app)
     clean-installed-binaries-for-$(_app):
-	$(hide) rm -f $(NDK_ALL_ABIS:%=$(NDK_APP_PROJECT_PATH)/libs/%/lib*.so)
+	$(hide) rm -f $(NDK_ALL_ABIS:%=$(NDK_APP_PROJECT_PATH)/libs/%/lib*.so) $(NDK_ALL_ABIS:%=$(NDK_APP_PROJECT_PATH)/libs/%/gdbserver)
 endif
 
 $(foreach _abi,$(APP_ABI),\

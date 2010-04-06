@@ -66,8 +66,33 @@ TARGET_PREBUILT_SHARED_LIBRARIES := $(TARGET_PREBUILT_SHARED_LIBRARIES:%=$(SYSRO
 # now call the toolchain-specific setup script
 include $(NDK_TOOLCHAIN.$(TARGET_TOOLCHAIN).setup)
 
+# We expect the gdbserver binary for this toolchain to be located at the same
+# place than the target C compiler.
+TARGET_GDBSERVER := $(dir $(TARGET_CC))/gdbserver
+
 # compute NDK_APP_DEST as the destination directory for the generated files
 NDK_APP_DEST := $(NDK_APP_PROJECT_PATH)/libs/$(TARGET_ARCH_ABI)
+
+# Ensure that for debuggable applications, gdbserver will be copied to
+# the proper location
+ifneq ($(NDK_APP_OPTIM),debug)
+
+NDK_APP_GDBSERVER := $(NDK_APP_DEST)/gdbserver
+
+installed_modules: $(NDK_APP_GDBSERVER)
+
+$(NDK_APP_GDBSERVER): PRIVATE_NAME := $(TOOLCHAIN_NAME)
+$(NDK_APP_GDBSERVER): PRIVATE_SRC  := $(TARGET_GDBSERVER)
+$(NDK_APP_GDBSERVER): PRIVATE_DEST := $(NDK_APP_DEST)
+$(NDK_APP_GDBSERVER): PRIVATE_DST  := $(NDK_APP_GDBSERVER)
+
+$(NDK_APP_GDBSERVER): clean-installed-binaries
+	@ echo "Gdbserver      : [$(PRIVATE_NAME)] $(PRIVATE_DST)"
+	$(hide) mkdir -p $(PRIVATE_DEST)
+	$(hide) install -p $(PRIVATE_SRC) $(PRIVATE_DST)
+	$(hide) $(call cmd-strip, $(PRIVATE_DST))
+
+endif
 
 # free the dictionary of LOCAL_MODULE definitions
 $(call modules-clear)
