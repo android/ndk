@@ -127,17 +127,15 @@ III. NDK development in practice:
 Here's a very rough overview of how you can develop native code with the
 Android NDK:
 
-  1/ Run build/host-setup.sh to configure the NDK
+  1/ Place your native sources under $PROJECT/jni/...
 
-  2/ Place your native sources under $PROJECT/jni/...
-
-  3/ Write $PROJECT/jni/Android.mk to describe your sources
+  2/ Write $PROJECT/jni/Android.mk to describe your sources
      to the NDK build system
 
-  4/ Write apps/<myapp>/Application.mk to describe your application
+  3/ Write apps/<myapp>/Application.mk to describe your application
      and the native sources it needs to the NDK build system
 
-  5/ Build your native code by running "make APP=<myapp>"
+  4/ Build your native code by running "make APP=<myapp>"
      in the top-level NDK directory.
 
 The last step will copy, in case of success, the stripped shared libraries
@@ -150,20 +148,9 @@ Now, for a few more details:
 III.1/ Configuring the NDK:
 - - - - - - - - - - - - - -
 
-After installing the NDK as described in docs/INSTALL.TXT, you should call
-the 'build/host-setup.sh' script to configure your NDK.
-
-This script is used to probe your host system and verify a few pre-requisites.
-It will then generate a configuration file (e.g. out/host/config-host.mk) that
-is later used during NDK builds.
-
-In some cases, this might instruct you to download an archive containing
-prebuilt toolchain binaries for your development platform, the unzip it
-to the NDK root directory. The message should contain enough information
-to let you do that.
-
-If you forget this step, trying to build with the NDK will generate an
-error message telling you what to do.
+Previous releases required that you run the 'build/host-setup.sh'
+script to configure your NDK. This step has been removed completely
+in release 4 (a.k.a. r4).
 
 
 III.2/ Placing C and C++ sources:

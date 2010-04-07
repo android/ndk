@@ -5,13 +5,14 @@ android-ndk-r4
 
 IMPORTANT BUG FIXES:
 
-- build/host-setup.sh will complain if the NDK installation path contains
-  a space and refuse to run.
-
 - The <fenv.h> header was not placed in the correct location and could not
   be found by normal builds.
 
 IMPORTANT CHANGES:
+
+- build/host-setup.sh has been removed. There is no need for a 'setup' step
+  when using the NDK for the first time. All host-specific autodetection and
+  basic tool sanity checking have been moved to the build scripts themselves.
 
 - Support for hardware FPU. This is through the new 'armeabi-v7a' ABI
   corresponding to ARMv7-a class devices.

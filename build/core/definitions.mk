@@ -16,28 +16,7 @@
 #
 
 # We use the GNU Make Standard Library
-include $(BUILD_SYSTEM)/../gmsl/gmsl
-
-# This is the Android NDK version number as a list of three items:
-# major, minor, revision
-#
-ndk_version := 1 0 0
-
-# Used to output warnings and error from the library, it's possible to
-# disable any warnings or errors by overriding these definitions
-# manually or by setting GMSL_NO_WARNINGS or GMSL_NO_ERRORS
-
-__ndk_name    := Android NDK
-__ndk_info     = $(info $(__ndk_name): $1 $2 $3 $4 $5)
-__ndk_warning  = $(warning $(__ndk_name): $1 $2 $3 $4 $5)
-__ndk_error    = $(error $(__ndk_name): $1 $2 $3 $4 $5)
-
-ifdef NDK_NO_WARNINGS
-__ndk_warning :=
-endif
-ifdef NDK_NO_ERRORS
-__ndk_error :=
-endif
+include $(NDK_ROOT)/build/gmsl/gmsl
 
 # If NDK_TRACE is enabled then calls to the library functions are
 # traced to stdout using warning messages with their arguments
@@ -51,19 +30,6 @@ __ndk_tr1 :=
 __ndk_tr2 :=
 __ndk_tr3 :=
 endif
-
-# -----------------------------------------------------------------------------
-# Function : ndk_log
-# Arguments: 1: text to print when NDK_LOG is defined
-# Returns  : None
-# Usage    : $(call ndk_log,<some text>)
-# -----------------------------------------------------------------------------
-ifdef NDK_LOG
-ndk_log = $(info $(__ndk_name): $1)
-else
-ndk_log :=
-endif
-
 
 # -----------------------------------------------------------------------------
 # Macro    : empty
@@ -620,3 +586,87 @@ define cmd-install-file
 @mkdir -p $(dir $2)
 $(hide) cp -fp $1 $2
 endef
+
+
+#
+# Determine host system and architecture from the environment
+#
+HOST_OS := $(strip $(HOST_OS))
+ifndef HOST_OS
+    # On all modern variants of Windows (including Cygwin and Wine)
+    # the OS environment variable is defined to 'Windows_NT'
+    #
+    # The value of PROCESSOR_ARCHITECTURE will be x86 or AMD64
+    #
+    ifeq ($(OS),Windows_NT)
+        HOST_OS := windows
+    else
+        # For other systems, use the `uname` output
+        UNAME := $(shell uname -s)
+        ifneq (,$(findstring Linux,$(UNAME)))
+            HOST_OS := linux
+        endif
+        ifneq (,$(findstring Darwin,$(UNAME)))
+            HOST_OS := darwin
+        endif
+        # We should not be there, but just in case !
+        ifneq (,$(findstring CYGWIN,$(UNAME)))
+            HOST_OS := windows
+        endif
+        ifeq ($(HOST_OS),)
+            $(call __ndk_info,Unable to determine HOST_OS from uname -s: $(UNAME))
+            $(call __ndk_info,Please define HOST_OS in your environment.)
+            $(call __ndk_error,Aborting.)
+        endif
+    endif
+    $(call ndk_log,Host OS was auto-detected: $(HOST_OS))
+else
+    $(call ndk_log,Host OS from environment: $(HOST_OS))
+endif
+
+HOST_ARCH := $(strip $(HOST_ARCH))
+ifndef HOST_ARCH
+    ifeq ($(HOST_OS),windows)
+        HOST_ARCH := $(PROCESSOR_ARCHITECTURE)
+        ifeq ($(HOST_ARCH),AMD64)
+            HOST_ARCH := x86
+        endif
+    else # HOST_OS != windows
+        UNAME := $(shell uname -m)
+        ifneq (,$(findstring 86,$(UNAME)))
+            HOST_ARCH := x86
+        endif
+        # We should probably should not care at all
+        ifneq (,$(findstring Power,$(UNAME)))
+            HOST_ARCH := ppc
+        endif
+        ifeq ($(HOST_ARCH),)
+            $(call __ndk_info,Unsupported host architecture: $(UNAME))
+            $(call __ndk_error,Aborting)
+        endif
+    endif # HOST_OS != windows
+    $(call ndk_log,Host CPU was auto-detected: $(HOST_ARCH))
+else
+    $(call ndk_log,Host CPU from environment: $(HOST_ARCH))
+endif
+
+HOST_TAG := $(HOST_OS)-$(HOST_ARCH)
+$(call ndk_log,HOST_TAG set to $(HOST_TAG))
+
+#
+#
+#
+HOST_AWK := $(strip $(HOST_AWK))
+ifndef HOST_AWK
+    HOST_AWK := awk
+    $(call ndk_log,Host awk tool was auto-detected: $(HOST_AWK))
+else
+    $(call ndk_log,Host awk tool from environment: $(HOST_AWK))
+endif
+
+AWK_TEST := $(shell $(HOST_AWK) -f $(NDK_ROOT)/build/check-awk.awk)
+$(call ndk_log,Host awk test returned: $(AWK_TEST))
+ifneq ($(AWK_TEST),Pass)
+    $(call __ndk_info,Host awk tool is outdated. Please define HOST_AWK to point to Gawk or Nawk !)
+    $(call __ndk_error,Aborting.)
+endif

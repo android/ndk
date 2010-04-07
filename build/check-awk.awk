@@ -4,7 +4,7 @@
 # These were introduced in nawk/gawk, but the original awk
 # does not have them.
 #
-END {
+BEGIN {
     RSTART=0
     RLENGTH=0
     s1="A real world example"

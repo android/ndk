@@ -51,9 +51,9 @@ See http://www.cygwin.com for instructions.
 II. Preparing your installation prebuilt cross-toolchain binaries:
 ------------------------------------------------------------------
 
-After installing and unarchiving the NDK, you will need to run the following
-command from the root folder:
+Previous releases required you to run the 'build/host-setup.sh' script to
+configure the NDK. However, this step has been removed in release 4 (a.k.a. r4).
 
-  build/host-setup.sh
-
-This will test your setup and make sure the NDK can work properly.
+The auto-detection and sanity checks that were performed by the script have
+been moved into the NDK makefiles (and are now performed each time you invoke
+GNU Make).

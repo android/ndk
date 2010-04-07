@@ -24,27 +24,27 @@ $(call assert-defined,NDK_APPS)
 # NOTE: If NDK_TOOLCHAIN is defined, we're going to use it.
 #
 ifndef NDK_TOOLCHAIN
-  TARGET_TOOLCHAIN_LIST := $(strip $(sort $(NDK_ABI.$(TARGET_ARCH_ABI).toolchains)))
-  ifndef TARGET_TOOLCHAIN_LIST
-    $(call __ndk_info,There is no toolchain that supports the $(TARGET_ARCH_ABI) ABI.)
-    $(call __ndk_info,Please modify the APP_ABI definition in $(NDK_APP_APPLICATION_MK) to use)
-    $(call __ndk_info,a set of the following values: $(NDK_ALL_ABIS))
-    $(call __ndk_error,Aborting)
-  endif
-  # Select the last toolchain from the sorted list.
-  # For now, this is enough to select armeabi-4.4.0 by default for ARM
-  TARGET_TOOLCHAIN := $(lastword $(TARGET_TOOLCHAIN_LIST))
-  $(call ndk_log,Using target toolchain '$(TARGET_TOOLCHAIN)' for '$(TARGET_ARCH_ABI)' ABI)
+    TARGET_TOOLCHAIN_LIST := $(strip $(sort $(NDK_ABI.$(TARGET_ARCH_ABI).toolchains)))
+    ifndef TARGET_TOOLCHAIN_LIST
+        $(call __ndk_info,There is no toolchain that supports the $(TARGET_ARCH_ABI) ABI.)
+        $(call __ndk_info,Please modify the APP_ABI definition in $(NDK_APP_APPLICATION_MK) to use)
+        $(call __ndk_info,a set of the following values: $(NDK_ALL_ABIS))
+        $(call __ndk_error,Aborting)
+    endif
+    # Select the last toolchain from the sorted list.
+    # For now, this is enough to select armeabi-4.4.0 by default for ARM
+    TARGET_TOOLCHAIN := $(lastword $(TARGET_TOOLCHAIN_LIST))
+    $(call ndk_log,Using target toolchain '$(TARGET_TOOLCHAIN)' for '$(TARGET_ARCH_ABI)' ABI)
 else # NDK_TOOLCHAIN is not empty
-  TARGET_TOOLCHAIN_LIST := $(strip $(filter $(NDK_TOOLCHAIN),$(NDK_ABI.$(TARGET_ARCH_ABI).toolchains)))
-  ifndef TARGET_TOOLCHAIN_LIST
-    $(call __ndk_info,The selected toolchain ($(NDK_TOOLCHAIN)) does not support the $(TARGET_ARCH_ABI) ABI.)
-    $(call __ndk_info,Please modify the APP_ABI definition in $(NDK_APP_APPLICATION_MK) to use)
-    $(call __ndk_info,a set of the following values: $(NDK_TOOLCHAIN.$(NDK_TOOLCHAIN).abis))
-    $(call __ndk_info,Or change your NDK_TOOLCHAIN definition.)
-    $(call __ndk_error,Aborting)
-  endif
-  TARGET_TOOLCHAIN := $(NDK_TOOLCHAIN)
+    TARGET_TOOLCHAIN_LIST := $(strip $(filter $(NDK_TOOLCHAIN),$(NDK_ABI.$(TARGET_ARCH_ABI).toolchains)))
+    ifndef TARGET_TOOLCHAIN_LIST
+        $(call __ndk_info,The selected toolchain ($(NDK_TOOLCHAIN)) does not support the $(TARGET_ARCH_ABI) ABI.)
+        $(call __ndk_info,Please modify the APP_ABI definition in $(NDK_APP_APPLICATION_MK) to use)
+        $(call __ndk_info,a set of the following values: $(NDK_TOOLCHAIN.$(NDK_TOOLCHAIN).abis))
+        $(call __ndk_info,Or change your NDK_TOOLCHAIN definition.)
+        $(call __ndk_error,Aborting)
+    endif
+    TARGET_TOOLCHAIN := $(NDK_TOOLCHAIN)
 endif # NDK_TOOLCHAIN is not empty
 
 TARGET_ABI := $(TARGET_PLATFORM)-$(TARGET_ARCH_ABI)
@@ -54,7 +54,7 @@ TARGET_ABI := $(TARGET_PLATFORM)-$(TARGET_ARCH_ABI)
 # some libraries and object files used for linking the generated
 # target files properly.
 #
-SYSROOT := build/platforms/$(TARGET_PLATFORM)/arch-$(TARGET_ARCH)
+SYSROOT := $(NDK_ROOT)/build/platforms/$(TARGET_PLATFORM)/arch-$(TARGET_ARCH)
 
 TARGET_CRTBEGIN_STATIC_O  := $(SYSROOT)/usr/lib/crtbegin_static.o
 TARGET_CRTBEGIN_DYNAMIC_O := $(SYSROOT)/usr/lib/crtbegin_dynamic.o
@@ -75,7 +75,7 @@ NDK_APP_DEST := $(NDK_APP_PROJECT_PATH)/libs/$(TARGET_ARCH_ABI)
 
 # Ensure that for debuggable applications, gdbserver will be copied to
 # the proper location
-ifneq ($(NDK_APP_OPTIM),debug)
+ifeq ($(NDK_APP_OPTIM),debug)
 
 NDK_APP_GDBSERVER := $(NDK_APP_DEST)/gdbserver
 
@@ -90,7 +90,6 @@ $(NDK_APP_GDBSERVER): clean-installed-binaries
 	@ echo "Gdbserver      : [$(PRIVATE_NAME)] $(PRIVATE_DST)"
 	$(hide) mkdir -p $(PRIVATE_DEST)
 	$(hide) install -p $(PRIVATE_SRC) $(PRIVATE_DST)
-	$(hide) $(call cmd-strip, $(PRIVATE_DST))
 
 endif
 
