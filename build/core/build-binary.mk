@@ -179,6 +179,9 @@ static_libraries := $(call map,static-library-path,$(LOCAL_STATIC_LIBRARIES))
 shared_libraries := $(call map,shared-library-path,$(LOCAL_SHARED_LIBRARIES)) \
                     $(TARGET_PREBUILT_SHARED_LIBRARIES)
 
+$(call module-add-static-depends,$(LOCAL_MODULE),$(LOCAL_STATIC_LIBRARIES))
+$(call module-add-shared-depends,$(LOCAL_MODULE),$(LOCAL_SHARED_LIBRARIES))
+
 $(LOCAL_BUILT_MODULE): $(static_libraries) $(shared_libraries)
 
 # If LOCAL_LDLIBS contains anything like -l<library> then

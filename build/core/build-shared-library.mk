@@ -24,14 +24,13 @@ LOCAL_MAKEFILE     := $(local-makefile)
 $(call check-defined-LOCAL_MODULE,$(LOCAL_BUILD_SCRIPT))
 $(call check-LOCAL_MODULE,$(LOCAL_MAKEFILE))
 
-# only adjust the build if this module is needed by the current app
-ifneq ($(filter $(LOCAL_MODULE),$(NDK_APP_MODULES)),)
-
 # we are building target objects
 my := TARGET_
 
 LOCAL_BUILT_MODULE := $(call shared-library-path,$(LOCAL_MODULE))
 LOCAL_OBJS_DIR     := $(TARGET_OBJS)/$(LOCAL_MODULE)
+
+$(call module-add-shared-library,$(LOCAL_MODULE),$(LOCAL_BUILT_MODULE),$(LOCAL_MAKEFILE))
 
 include $(BUILD_SYSTEM)/build-binary.mk
 
@@ -43,5 +42,3 @@ $(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
 ALL_SHARED_LIBRARIES += $(LOCAL_BUILT_MODULE)
 
 include $(BUILD_SYSTEM)/install-binary.mk
-
-endif # filter LOCAL_MODULE in NDK_APP_MODULES

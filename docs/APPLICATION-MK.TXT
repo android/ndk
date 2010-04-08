@@ -32,19 +32,25 @@ shared libraries or your final packages).
 The Application.mk is really a tiny GNU Makefile fragment that must
 define a few variables:
 
-APP_MODULES
-    This variable is mandatory and lists all the native modules
-    (described through Android.mk files) that your application
-    requires.
-
-    This must be a space-separated list of module names as they
-    appear in the LOCAL_MODULE definitions of Android.mk files
-
 APP_PROJECT_PATH
     This variable is mandatory and should give the *absolute*
     path to your Application's project root directory. This is used
     to copy/install stripped versions of the generated JNI shared
     libraries to a specific location known to the APK-generating tools.
+
+APP_MODULES
+    This variable is optional. If not defined, the NDK will build by
+    default _all_ the modules declared by your Android.mk, and any
+    sub-makefile it may include.
+
+    If APP_MODULES is defined, it must be a space-separated list of module
+    names as they appear in the LOCAL_MODULE definitions of Android.mk
+    files. Note that the NDK will compute module dependencies automatically.
+
+    NOTE: This variable's behaviour changed in NDK r4. Before that:
+
+      - the variable was mandatory in your Application.mk
+      - all required modules had to be listed explicitely.
 
 APP_OPTIM
     This optional variable can be defined to either 'release' or
@@ -75,7 +81,7 @@ APP_CFLAGS
     +    sources/foo/Android.mk
     +    sources/bar/Android.mk
     +
-    + To specify in foo/Android.mk that you want to add the path to the
+    +  To specify in foo/Android.mk that you want to add the path to the
     + 'bar' sources during compilation, you should use:
     +
     +   APP_CFLAGS += -Isources/bar
@@ -129,13 +135,12 @@ APP_ABI
 
         APP_ABI := armeabi armeabi-v7a
 
-    For the list of all supported ABIs and details about their usage / limitations
-    please read docs/CPU-ARCH-ABIS.TXT
+    For the list of all supported ABIs and details about their usage and
+    limitations, please read docs/CPU-ARCH-ABIS.TXT
 
 
 A trivial Application.mk file would be:
 
 -------------- cut here -------------------------
-APP_MODULES      := <list of modules>
 APP_PROJECT_PATH := <path to project>
 -------------- cut here -------------------------

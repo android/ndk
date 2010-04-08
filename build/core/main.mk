@@ -279,7 +279,7 @@ $(call __ndk_info,Building for application '$(NDK_APPS)')
         host_libraries host_executables \
         installed_modules \
         executables libraries static_libraries shared_libraries \
-        clean clean-config clean-objs-dir \
+        clean clean-objs-dir \
         clean-executables clean-libraries \
         clean-installed-modules \
         clean-installed-binaries
@@ -315,7 +315,8 @@ ALL_HOST_STATIC_LIBRARIES :=
 ALL_STATIC_LIBRARIES      :=
 ALL_SHARED_LIBRARIES      :=
 ALL_EXECUTABLES           :=
-ALL_INSTALLED_MODULES     :=
+
+WANTED_INSTALLED_MODULES  :=
 
 # the first rule
 all: installed_modules host_libraries host_executables
@@ -332,11 +333,11 @@ $(foreach _app,$(NDK_APPS),\
 #
 # ====================================================================
 
-clean: clean-intermediates clean-installed-modules clean-installed-binaries
+clean: clean-intermediates clean-installed-binaries
 
-distclean: clean clean-config
+distclean: clean
 
-installed_modules: libraries $(ALL_INSTALLED_MODULES)
+installed_modules: clean-installed-binaries libraries $(WANTED_INSTALLED_MODULES)
 host_libraries: $(HOST_STATIC_LIBRARIES)
 host_executables: $(HOST_EXECUTABLES)
 
@@ -351,12 +352,6 @@ clean-host-intermediates:
 
 clean-intermediates: clean-host-intermediates
 	$(hide) rm -rf $(EXECUTABLES) $(STATIC_LIBRARIES) $(SHARED_LIBRARIES)
-
-clean-installed-modules:
-	$(hide) rm -rf $(ALL_INSTALLED_MODULES)
-
-clean-config:
-	$(hide) rm -f $(CONFIG_MAKE) $(CONFIG_H)
 
 # include dependency information
 ALL_DEPENDENCY_DIRS := $(sort $(ALL_DEPENDENCY_DIRS))

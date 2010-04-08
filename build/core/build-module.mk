@@ -55,24 +55,16 @@ endif
 .PHONY: $(LOCAL_MODULE)
 $(LOCAL_MODULE): $(LOCAL_BUILT_MODULE)
 
-cleantarget := clean-$(LOCAL_MODULE)
+cleantarget := clean-$(LOCAL_MODULE)-$(TARGET_ARCH_ABI)
 .PHONY: $(cleantarget)
 clean: $(cleantarget)
 
 $(cleantarget): PRIVATE_MODULE      := $(LOCAL_MODULE)
-$(cleantarget): PRIVATE_CLEAN_FILES := $(PRIVATE_CLEAN_FILES) \
-                                       $(LOCAL_BUILT_MODULE) \
-                                       $(LOCAL_INSTALLED_MODULE) \
+$(cleantarget): PRIVATE_TEXT        := [$(TARGET_ARCH_ABI)]
+$(cleantarget): PRIVATE_CLEAN_FILES := $(LOCAL_BUILT_MODULE) \
                                        $(intermediates)
 
 $(cleantarget)::
-	@echo "Clean: $(PRIVATE_MODULE)"
+	@echo "Clean: $(PRIVATE_MODULE) $(PRIVATE_TEXT)"
 	$(hide) rm -rf $(PRIVATE_CLEAN_FILES)
-
-#
-# Register module
-#
-
-ALL_MODULES += $(LOCAL_MODULE)
-
 

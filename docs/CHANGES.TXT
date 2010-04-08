@@ -14,6 +14,13 @@ IMPORTANT CHANGES:
   when using the NDK for the first time. All host-specific autodetection and
   basic tool sanity checking have been moved to the build scripts themselves.
 
+- APP_MODULES in Application.mk is now optional. If not defined, the NDK
+  will simply build _all_ the modules that are declared from your Android.mk.
+
+  You can still use APP_MODULES to restrict the set of modules you want to
+  build. Note that the NDK now computes the transitive dependencies of these
+  modules for you now. See docs/APPLICATION-MK.TXT for details.
+
 - Support for hardware FPU. This is through the new 'armeabi-v7a' ABI
   corresponding to ARMv7-a class devices.
 

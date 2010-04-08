@@ -98,3 +98,16 @@ $(call modules-clear)
 
 # now parse the Android.mk for the application
 include $(NDK_APP_BUILD_SCRIPT)
+
+# Now compute the closure of all module dependencies.
+#
+# If APP_MODULES is not defined in the Application.mk, we
+# will build all modules that were listed from the top-level Android.mk
+#
+ifeq ($(strip $(NDK_APP_MODULES)),)
+    WANTED_MODULES := $(ALL_MODULES)
+else
+    WANTED_MODULES := $(call module-get-all-dependencies,$(NDK_APP_MODULES))
+endif
+
+WANTED_INSTALLED_MODULES += $(call map,module-get-installed,$(WANTED_MODULES))

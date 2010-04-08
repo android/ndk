@@ -28,5 +28,5 @@ $(LOCAL_INSTALLED_MODULE): $(LOCAL_BUILT_MODULE) clean-installed-binaries
 	$(hide) install -p $(PRIVATE_SRC) $(PRIVATE_DST)
 	$(hide) $(call cmd-strip, $(PRIVATE_DST))
 
-ALL_INSTALLED_MODULES += $(LOCAL_INSTALLED_MODULE)
-
+# Record installation location for the module.
+$(call module-set-installed,$(LOCAL_MODULE),$(LOCAL_INSTALLED_MODULE))
