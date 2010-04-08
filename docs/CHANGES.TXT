@@ -69,6 +69,9 @@ OTHER FIXES & CHANGES:
   the applications listed by APP. The error messages when APP is empty or
   malformed have also been improved.
 
+- removed the annoying 'the mangling of 'va_list' has changed in GCC 4.4'
+  warning when building with GCC 4.4.0 for ARM.
+
 -------------------------------------------------------------------------------
 android-ndk-r3
 
