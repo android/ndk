@@ -75,7 +75,7 @@ NDK_APP_DEST := $(NDK_APP_PROJECT_PATH)/libs/$(TARGET_ARCH_ABI)
 
 # Ensure that for debuggable applications, gdbserver will be copied to
 # the proper location
-ifeq ($(NDK_APP_OPTIM),debug)
+ifeq ($(NDK_APP_DEBUGGABLE),true)
 
 NDK_APP_GDBSERVER := $(NDK_APP_DEST)/gdbserver
 

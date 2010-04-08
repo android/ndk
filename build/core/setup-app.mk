@@ -34,7 +34,9 @@ $(foreach __name,$(NDK_APP_VARS),\
   $(eval NDK_$(__name) := $(call get,$(_map),$(__name)))\
 )
 
-# set release/debug build flags
+# set release/debug build flags. We always use the -g flag because
+# we generate symbol versions of the binaries that are later stripped
+# when they are copied to the final project's libs/<abi> directory.
 #
 ifeq ($(NDK_APP_OPTIM),debug)
   NDK_APP_CFLAGS := -O0 -g $(NDK_APP_CFLAGS)
@@ -68,6 +70,10 @@ ifneq ($(_bad_abis),)
     $(call __ndk_info,Please fix the APP_ABI definition in $(NDK_APP_APPLICATION_MK))
     $(call __ndk_error,Aborting)
 endif
+
+# extract the debuggable flag from the application's manifest
+NDK_APP_DEBUGGABLE := $(shell $(HOST_AWK) -f $(BUILD_SYSTEM)/extract-package-debuggable.awk $(NDK_APP_PROJECT_PATH)/AndroidManifest.xml)
+$(info NDK_APP_DEBUGGABLE=$(NDK_APP_DEBUGGABLE))
 
 # Clear all installed binaries for this application
 # This ensures that if the build fails, you're not going to mistakenly
