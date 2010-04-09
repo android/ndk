@@ -37,6 +37,16 @@ TARGET_CFLAGS.common := \
     -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ \
     -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__ \
 
+# This is to avoid the dreaded warning compiler message:
+#   note: the mangling of 'va_list' has changed in GCC 4.4
+#
+# The fact that the mangling changed does not affect the NDK ABI
+# very fortunately (since none of the exposed APIs used va_list
+# in their exported C++ functions). Also, GCC 4.5 has already
+# removed the warning from the compiler.
+#
+TARGET_CFLAGS.common += -Wno-psabi
+
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
     TARGET_ARCH_CFLAGS := -march=armv7-a \
                           -mfloat-abi=softfp \
