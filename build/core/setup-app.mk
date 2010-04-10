@@ -71,9 +71,14 @@ ifneq ($(_bad_abis),)
     $(call __ndk_error,Aborting)
 endif
 
-# extract the debuggable flag from the application's manifest
-NDK_APP_DEBUGGABLE := $(shell $(HOST_AWK) -f $(BUILD_SYSTEM)/extract-package-debuggable.awk $(NDK_APP_PROJECT_PATH)/AndroidManifest.xml)
-$(info NDK_APP_DEBUGGABLE=$(NDK_APP_DEBUGGABLE))
+# Extract the debuggable flag from the application's manifest
+# NOTE: To make unit-testing simpler, handle the case where there is no manifest.
+#
+NDK_APP_DEBUGGABLE := false
+NDK_APP_MANIFEST := $(strip $(wildcard $(NDK_APP_PROJECT_PATH)/AndroidManifest.xml))
+ifdef NDK_APP_MANIFEST
+    NDK_APP_DEBUGGABLE := $(shell $(HOST_AWK) -f $(BUILD_SYSTEM)/extract-package-debuggable.awk $(NDK_APP_MANIFEST))
+endif
 
 # Clear all installed binaries for this application
 # This ensures that if the build fails, you're not going to mistakenly
