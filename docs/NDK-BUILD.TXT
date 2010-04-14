@@ -1,0 +1,77 @@
+'ndk-build' Overview
+
+I. Usage:
+---------
+
+The Android NDK r4 introduced a new tiny shell script, named 'ndk-build',
+to simplify building machine code.
+
+The script is located at the top-level directory of the NDK, and shall
+be invoked from the command-line when in your application project
+directory, or any of its sub-directories. For example:
+
+    cd $PROJECT
+    $NDK/ndk-build
+
+Where $NDK points to your NDK installation path. You can also create an
+alias or add $NDK to your PATH to avoid typing it everytime.
+
+
+II. Options:
+------------
+
+All parameters to 'ndk-build' are passed directly to the underlying GNU Make
+command that runs the NDK build scripts. Notable uses include:
+
+  ndk-build                  --> rebuild required machine code.
+  ndk-build clean            --> clean all generated binaries.
+
+  ndk-build V=1              --> launch build, displaying build commands.
+
+  ndk-build -B               --> force a complete rebuild.
+
+  ndk-build -B V=1           --> force a complete rebuild and display build
+                                 commands.
+
+  ndk-build NDK_LOG=1        --> display internal NDK log messages
+                                 (used for debugging the NDK itself).
+
+  ndk-build NDK_APP_APPLICATION_MK=<file>
+    --> rebuild, using a specific Application.mk pointed to by
+        the NDK_APP_APPLICATION_MK command-line variable.
+
+
+III. Requirements:
+------------------
+
+You need GNU Make 3.81 or later to use 'ndk-build' or the NDK in general.
+The build scripts will detect that you're using a non-compliant Make tool
+and will complain with an error message.
+
+If you have GNU Make 3.81 installed, but that it is not launched by the
+default 'make' command, define GNUMAKE in your environment to point to it
+before launching 'ndk-build'. For example:
+
+    GNUMAKE=/usr/local/bin/gmake ndk-build
+
+Or to make the change more permanent:
+
+    export GNUMAKE=/usr/local/bin/gmake
+    ndk-build
+
+Adapt to your shell and GNU Make 3.81 installation location.
+
+
+III. Internals:
+---------------
+
+'ndk-build' itself is a tiny wrapper around GNU Make, its purpose is simply
+to invoke the right NDK build script, it is equivalent to;
+
+    $GNUMAKE -f $NDK/build/core/build-local.mk [parameters]
+
+Where '$GNUMAKE' points to GNU Make 3.81 or later, and $NDK points to your
+NDK installation directory.
+
+Use this knowledge if you want to invoke the NDK build script from other
+shell scripts (or even your own Makefiles).

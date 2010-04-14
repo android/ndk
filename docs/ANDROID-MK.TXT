@@ -136,7 +136,7 @@ information you defined in LOCAL_XXX variables since the latest
 'include $(CLEAR_VARS)' and determine what to build, and how to do it
 exactly. There is also BUILD_STATIC_LIBRARY to generate a static library.
 
-There are more complex examples under apps/, with commented
+There are more complex examples in the samples directories, with commented
 Android.mk files that you can look at.
 
 Reference:

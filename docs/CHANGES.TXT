@@ -10,16 +10,15 @@ IMPORTANT BUG FIXES:
 
 IMPORTANT CHANGES:
 
-- build/host-setup.sh has been removed. There is no need for a 'setup' step
-  when using the NDK for the first time. All host-specific autodetection and
-  basic tool sanity checking have been moved to the build scripts themselves.
+- Simplified build system: You no longer need to run build/host-setup.sh
+  or modify anything under $NDK_ROOT/apps/. Instead, just invoke the
+  new 'ndk-build' script from your application's project directory, or
+  one of its sub-directories.
 
-- APP_MODULES in Application.mk is now optional. If not defined, the NDK
-  will simply build _all_ the modules that are declared from your Android.mk.
+  See docs/OVERVIEW.TXT and docs/NDK-BUILD.TXT for more details.
 
-  You can still use APP_MODULES to restrict the set of modules you want to
-  build. Note that the NDK now computes the transitive dependencies of these
-  modules for you now. See docs/APPLICATION-MK.TXT for details.
+  NOTE: For compatibility purpose, you can still define projects
+        through $NDK_ROOT/apps/<name> though.
 
 - Support for hardware FPU. This is through the new 'armeabi-v7a' ABI
   corresponding to ARMv7-a class devices.
@@ -55,6 +54,17 @@ IMPORTANT CHANGES:
   and NEON intrinsics & build support.
 
 OTHER FIXES & CHANGES:
+
+- build/host-setup.sh has been removed. There is no need for a 'setup' step
+  when using the NDK for the first time. All host-specific autodetection and
+  basic tool sanity checking have been moved to the build scripts themselves.
+
+- APP_MODULES in Application.mk is now optional. If not defined, the NDK
+  will simply build _all_ the modules that are declared from your Android.mk.
+
+  You can still use APP_MODULES to restrict the set of modules you want to
+  build. Note that the NDK now computes the transitive dependencies of these
+  modules for you now. See docs/APPLICATION-MK.TXT for details.
 
 - docs/STABLE-APIS.TXT: Add missing section for Dynamic Linker Library
   (libdl.so). It is actually supported by all API levels.

@@ -105,7 +105,7 @@ include $(NDK_APP_BUILD_SCRIPT)
 # will build all modules that were listed from the top-level Android.mk
 #
 ifeq ($(strip $(NDK_APP_MODULES)),)
-    WANTED_MODULES := $(ALL_MODULES)
+    WANTED_MODULES := $(call modules-get-list)
 else
     WANTED_MODULES := $(call module-get-all-dependencies,$(NDK_APP_MODULES))
 endif

@@ -23,7 +23,7 @@
 # code here will perform book-keeping and basic checks
 #
 
-$(call assert-defined, _application_mk)
+$(call assert-defined, _application_mk _app)
 $(call ndk_log,Parsing $(_application_mk))
 
 $(call clear-vars, $(NDK_APP_VARS))
@@ -32,9 +32,7 @@ include $(_application_mk)
 
 $(call check-required-vars,$(NDK_APP_VARS_REQUIRED),$(_application_mk))
 
-_dir  := $(patsubst %/,%,$(dir $(_application_mk)))
-_name := $(notdir $(_dir))
-_map  := NDK_APP.$(_name)
+_map := NDK_APP.$(_app)
 
 # strip the 'lib' prefix in front of APP_MODULES modules
 APP_MODULES := $(call strip-lib-prefix,$(APP_MODULES))

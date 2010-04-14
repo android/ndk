@@ -7,7 +7,7 @@ A collection of tips and tricks for NDK users
 How to force the display of build commands:
 -------------------------------------------
 
-Do "make APP=<yourapp> V=1" and actual build commands will be
+Do "ndk-build V=1" and actual build commands will be
 displayed. This can be used to verify that things are compiled
 as you expect them to, and check for bugs in the NDK build system.
 
@@ -20,7 +20,7 @@ How to force a rebuild of all your sources:
 
 Use GNU Make's "-B" option, as in:
 
-   make APP=<yourapp> -B
+   ndk-build -B
 
 
 How to store your native sources in a location other than $PROJECT/jni:
@@ -30,23 +30,29 @@ First, you can simply tell your $PROJECT/jni/Android.mk to include
 another Android.mk that are located in different places.
 
 Alternatively, you can define APP_BUILD_SCRIPT in your Application.mk
-to point to an alternative Android.mk file, getting rid of the
-$PROJECT/jni directory hierarchy entirely if you need to.
+to point to an alternative Android.mk file.
 
 
 How to store your Application.mk in a location other than $NDK/app/<name>:
 --------------------------------------------------------------------------
 
-At the moment, the application descriptor files must be accessible from
-$NDK/app/<name>. You can however create a symlink to a different directory.
+Starting with NDK r4, you can simply place the file under $PROJECT/jni/
+and launch the 'ndk-build' script from your project tree.
 
-For example, imagine that you wrote:
+If you want to use 'ndk-build' but place the file to a different location,
+use a GNU Make variable override as:
 
-  $PROJECT/jni/Application.mk
+    ndk-build NDK_APPLICATION_MK=/path/to/your/Application.mk
+
+If you're using the legacy $NDK/apps/<name> build nethod, you can create
+a symbolic link to your final Application.mk there. For example, imagine
+that you wrote:
+
+  $PROJECT/foo/Application.mk
 
 You can create a symlink like with a command like:
 
-  ln -s $PROJECT/jni  $NDK/apps/<name>
+  ln -s $PROJECT/foo  $NDK/apps/<name>
 
 This will make $NDK/apps/<name>/Application.mk point directly to
 $PROJECT/jni/Application.mk
@@ -66,38 +72,38 @@ If you define several modules, it is common to need to include one
 module's header while compiling another one. For example, consider
 the following example:
 
-  $NDK_ROOT/sources/foo/
+  $PROJECT/jni/foo/
     Android.mk
     foo.h
     foo.c
 
-  $NDK_ROOT/sources/bar/
+  $PROJECT/jni/bar/
     Android.mk
     bar.c
 
 Where the 'bar.c' uses '#include <foo.h>'. You will need to add the
-path to the 'foo' module in bar/Android.mk to build it properly.
+path to the 'foo' module in jni/bar/Android.mk to build it properly.
 
 One is tempted to use the following:
 
   LOCAL_C_INCLUDES := ../foo
 
 However this will not work because all compilation happens from the
-root NDK directory (i.e. $NDK_ROOT), and include files must be relative
-to it. The above line really translates to:
+directory where 'ndk-build' is invoked, and include files must be
+relative to it.
 
-  LOCAL_C_INCLUDES := $(NDK_ROOT)/../foo
-
-Which adds a non-existing directory to the C include path. The correct
-line is instead:
-
-  LOCAL_C_INCLUDES := sources/foo
-
-Or even better:
+The correct line is instead:
 
   LOCAL_C_INCLUDES := $(LOCAL_PATH)/../foo
 
 Which uses a path relative to $(LOCAL_PATH), in the case where you would
 need to move 'foo' and 'bar' to a deeper level in the 'sources' hierarchy.
 
+In case you absolutely need it, you can also use NDK_APP_PROJECT_PATH to
+point to your project directory:
+
+  LOCAL_C_INCLUDES := $(NDK_APP_PROJECT_PATH)/jni/foo
+
+However, we don't recommend using this, paths relative to $(LOCAL_PATH)
+being better.
 

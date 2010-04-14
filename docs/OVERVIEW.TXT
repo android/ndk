@@ -132,11 +132,14 @@ Android NDK:
   2/ Write $PROJECT/jni/Android.mk to describe your sources
      to the NDK build system
 
-  3/ Write apps/<myapp>/Application.mk to describe your application
-     and the native sources it needs to the NDK build system
+  3/ Optional: write $PROJECT/jni/Application.mk to describe your
+     project in more details to the build system. You don't need
+     one to get started though, but this allows you to target
+     more than one CPU or override compiler/linker flags
+     (see docs/APPLICATION-MK.TXT for all details).
 
-  4/ Build your native code by running "make APP=<myapp>"
-     in the top-level NDK directory.
+  4/ Build your native code by running "$NDK/ndk-build" from your
+     project directory, or any of its sub-directories.
 
 The last step will copy, in case of success, the stripped shared libraries
 your application needs to your application's root project directory. You
@@ -150,13 +153,13 @@ III.1/ Configuring the NDK:
 
 Previous releases required that you run the 'build/host-setup.sh'
 script to configure your NDK. This step has been removed completely
-in release 4 (a.k.a. r4).
+in release 4 (a.k.a. NDK r4).
 
 
 III.2/ Placing C and C++ sources:
 - - - - - - - - - - - - - - - - -
 
-You should place your native sources under the following directory:
+Place your native sources under the following directory:
 
     $PROJECT/jni/
 
@@ -209,61 +212,135 @@ This will include all Android.mk files in sub-directories of the current
 build file's path.
 
 
-III.4/ Writing an Application.mk build file:
-- - - - - - - - - - - - - - - - - - - - - - -
+III.4/ Writing an Application.mk build file (optional):
+- - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-While an Android.mk file describes your modules to the build system, you
-need to write an Application.mk file to describe your application and the
-modules it requires. This file must be located in:
+While an Android.mk file describes your modules to the build system, the
+Application.mk file describes your application itself. See the
+docs/APPLICATION-MK.TXT document to understand what this file allows you
+to do. This includes, among others:
 
-  $NDK/apps/<myapp>/Application.mk
+   - The exact list of modules required by your application.
 
-Where <myapp> is a short descriptive name for your application that will
-be used to invoke the NDK build (and not go into final APKs). The file is
-used to provide the following to the NDK build:
-
-  - The location of your Android application's project path
-
-  - The list of NDK modules that is required by your application.
-    This should really be a list of 'shared library' modules.
+   - The CPU architecture(s) to generate machine code for.
 
   - Optional information, like whether you want a release or debug
-    build, specific C or C++ compiler flags and others.
+    build, specific C or C++ compiler flags and others that should
+    apply to all modules being built.
 
-  - Planned: the list of specific platforms/CPUs you want to explicitely
-    target (currently only one is supported).
+This file is optional: by default the NDK will provide one that simply
+builds *all* the modules listed from your Android.mk (and all the makefiles
+it includes) and target the default CPU ABI (armeabi).
 
-The syntax of an Application.mk file is very simple and is described in
-docs/APPLICATION-MK.TXT
+There are two ways to use an Application.mk:
 
-You can define several Application.mk corresponding to different builds
-of the same application, for example:
+  - Place it under $PROJECT/jni/Application.mk, and it will be picked
+    up automatically by the 'ndk-build' script (more on this later)
 
-  $NDK/apps/release/Application.mk
-  $NDK/apps/debug/Application.mk
+  - Place it under $NDK/apps/<name>/Application.mk, where $NDK
+    points to your NDK installation path. After that, launch
+    "make APP=<name>" from the NDK directory.
+
+    This was the way this file was used before Android NDK r4.
+    It is still supported for compatbility reasons, but we strongly
+    encourage you to use the first method instead, since it is much
+    simpler and doesn't need modifying / changing directories of the
+    NDK installation tree.
+
+Again, see docs/APPLICATION-MK.TXT for a complete description of its
+content.
 
 
 III.5/ Invoke the NDK build system:
 - - - - - - - - - - - - - - - - - -
 
-On the command-line, go to the top-level NDK directory, then invoke the
-build system with:
+The preferred way to build machine code with the NDK is to use the
+'ndk-build' script introduced with Android NDK r4. You can also use
+a second, legacy, method that depends on creating a '$NDK/apps' subdirectory.
 
-   make APP=<myapp>
-
-Where 'make' refers to GNU Make, and <myapp> is the name of one of the
-subdirectories of '$NDK/apps/'
-
-This will try to build all modules with relevant options, the final
-shared libraries listed by your Application.mk and, in case of success,
-will copy stripped versions of the shared libraries to your application's
-project path. (Note that unstripped versions are kept for debugging
+In both cases, a succesful build will copy the final stripped binary modules
+(i.e. shared libraries) required by your application to your application's
+project path (Note that unstripped versions are kept for debugging
 purposes, there is no need to copy unstripped binaries to a device).
 
 
+  1: Using the 'ndk-build' command:
+  ---------------------------------
 
-IV. Debugging support:
-- - - - - - - - - - - -
+  The 'ndk-build' script, located at the top of the NDK installation path
+  can be invoked directly from your application project directory (i.e. the
+  one where your AndroidManifest.xml is located) or any of its sub-directories.
+  For example:
+
+    cd $PROJECT
+    $NDK/ndk-build
+
+  This will launch the NDK build scripts, which will automatically probe your
+  development system and application project file to determine what to build.
+
+  For example:
+
+    ndk-build
+    ndk-build  clean    --> clean generated binaries
+    ndk-build  -B V=1   --> force complete rebuild, showing commands
+
+  By default, it expects an optional file under $PROJECT/jni/Application.mk,
+  and a required $PROJECT/jni/Android.mk.
+
+  On success, this will copy the generated binary modules (i.e. shared
+  libraries) to the appropriate location in your project tree. You can later
+  rebuild the full Android application package either through the usual
+  'ant' command, or the ADT Eclipse plugin.
+
+  See docs/NDK-BUILD.TXT for a more complete description of what this script
+  does and which options it can take.
+
+
+  2: Using the $NDK/apps/<name>/Application.mk:
+  ---------------------------------------------
+
+  This build method was the only one before Android NDK r4 and is only
+  supported for compatibility reason. We strongly recommend you to migrate
+  to using the 'ndk-build' command as soon as possible, since we may remove
+  legacy support in a later NDK release.
+
+  It requires the following:
+
+    1. Creating a sub-directory named $NDK/apps/<name>/ under
+       your NDK installation directory (not your project path).
+
+       Where <name> is an arbitrary name to decribe your application
+       to the NDK build system (no spaces allowed).
+
+    2. Write $NDK/apps/<name>/Application.mk, which then requires
+       a definition for APP_PROJECT_PATH that points to your
+       application project directory.
+
+    3. Go to the NDK installation path on the command line then
+       invoke the top-level GNUMakefile, as in:
+
+         cd $NDK
+         make APP=<name>
+
+  The result will be equivalent to the first method, except for the fact
+  that intermediate generated files will be placed under $NDK/out/apps/<name>/
+
+
+IV. Rebuild your application package:
+- - - - - - - - - - - - - - - - - - -
+
+After generating the binaries with the NDK, you need to rebuild your
+Android application package files (.apk) using the normal means, i.e.
+either using the 'ant' command or the ADT Eclipse plugin.
+
+See the Android SDK documentation for more details. The new .apk will
+embed your shared libraries, and they will be extracted automatically
+at installation time by the system when you install the package on a
+target device.
+
+
+V. Debugging support:
+- - - - - - - - - - -
 
 Debugging your native code with this initial release of the NDK is still
 very rough.

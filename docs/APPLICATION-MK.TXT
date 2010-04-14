@@ -20,8 +20,11 @@ The purpose of Application.mk is to describe which native
 'modules' (i.e. static/shared libraries) are needed by your
 application.
 
-Each Application.mk must be placed under a sub-directory of
-the top-level apps directory, e.g.:
+An Application.mk file is usually placed under $PROJECT/jni/Application.mk,
+where $PROJECT points to your application's project directory.
+
+Another alternative is to place it under a sub-directory of the top-level
+$NDK/apps directory, e.g.:
 
    $NDK/apps/<myapp>/Application.mk
 
@@ -33,10 +36,13 @@ The Application.mk is really a tiny GNU Makefile fragment that must
 define a few variables:
 
 APP_PROJECT_PATH
-    This variable is mandatory and should give the *absolute*
-    path to your Application's project root directory. This is used
-    to copy/install stripped versions of the generated JNI shared
-    libraries to a specific location known to the APK-generating tools.
+    This variable should give the *absolute* path to your
+    Application's project root directory. This is used to copy/install
+    stripped versions of the generated JNI shared libraries to a
+    specific location known to the APK-generating tools.
+
+    Note that it is optional for $PROJECT/jni/Application.mk, but
+    *mandatory* for $NDK/apps/<myapp>/Application.mk
 
 APP_MODULES
     This variable is optional. If not defined, the NDK will build by
