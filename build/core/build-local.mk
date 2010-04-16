@@ -48,15 +48,18 @@ include $(NDK_ROOT)/build/core/init.mk
 find-project-dir = $(strip $(call find-project-dir-inner,$1))
 
 find-project-dir-inner = \
+    $(eval __found_project_path := )\
     $(eval __find_project_path := $1)\
     $(call find-project-dir-inner-2)\
-    $(__find_project_path)
+    $(__found_project_path)
 
 find-project-dir-inner-2 = \
     $(call ndk_log,Looking for manifest file in $(__find_project_path))\
     $(eval __find_project_manifest := $(strip $(wildcard $(__find_project_path)/AndroidManifest.xml)))\
     $(if $(__find_project_manifest),\
-        $(call ndk_log,    Found it !),\
+        $(call ndk_log,    Found it !)\
+        $(eval __found_project_path := $(__find_project_path))\
+        ,\
         $(eval __find_project_parent := $(patsubst %/,%,$(dir $(__find_project_path))))\
         $(if $(__find_project_parent),\
             $(eval __find_project_path := $(__find_project_parent))\
@@ -64,27 +67,29 @@ find-project-dir-inner-2 = \
         )\
     )
 
-NDK_APP_PROJECT_PATH := $(call find-project-dir,$(strip $(shell pwd)))
-ifndef NDK_APP_PROJECT_PATH
+NDK_PROJECT_PATH := $(call find-project-dir,$(strip $(shell pwd)))
+ifndef NDK_PROJECT_PATH
     $(call __ndk_info,Could not find application's manifest from current directory.)
     $(call __ndk_info,Please ensure that you are inside the project's directory !)
     $(call __ndk_error,Aborting)
 endif
 
 # Check that there are no spaces in the project path, or bad things will happen
-ifneq ($(words $(NDK_APP_PROJECT_PATH)),1)
-    $(call __ndk_info,Your Android application project path contains spaces: '$(NDK_APP_PROJECT_PATH)')
+ifneq ($(words $(NDK_PROJECT_PATH)),1)
+    $(call __ndk_info,Your Android application project path contains spaces: '$(NDK_PROJECT_PATH)')
     $(call __ndk_info,The Android NDK build cannot work here. Please move your project to a different location.)
     $(call __ndk_error,Aborting.)
 endif
 
-NDK_APPLICATION_MK := $(strip $(wildcard $(NDK_APP_PROJECT_PATH)/jni/Application.mk))
+NDK_APPLICATION_MK := $(strip $(wildcard $(NDK_PROJECT_PATH)/jni/Application.mk))
 ifndef NDK_APPLICATION_MK
     NDK_APPLICATION_MK := $(NDK_ROOT)/build/core/default-application.mk
 endif
 
+$(call ndk_log,Found project path: $(NDK_PROJECT_PATH))
+
 # Place all generated files here
-NDK_APP_OUT := $(NDK_APP_PROJECT_PATH)/bin/ndk
+NDK_APP_OUT := $(NDK_PROJECT_PATH)/bin/ndk
 
 # Fake an application named 'local'
 _app            := local
@@ -93,5 +98,26 @@ NDK_APPS        := $(_app)
 
 include $(BUILD_SYSTEM)/add-application.mk
 
-# Build it
-include $(BUILD_SYSTEM)/build-all.mk
+# If a goal is DUMP_xxx then we dump a variable xxx instead
+# of building anything
+#
+DUMP_VAR     := $(patsubst DUMP_%,%,$(filter DUMP_%,$(MAKECMDGOALS)))
+MAKECMDGOALS := $(filter-out DUMP_$(DUMP_VAR),$(MAKECMDGOALS))
+
+ifneq (,$(DUMP_VAR))
+
+# We only support a single DUMP_XXX goal at a time for now.
+ifneq ($(words $(DUMP_VAR)),1)
+    $(call __ndk_error,!!TOO-MANY-DUMP-VARIABLES!!)
+endif
+
+$(foreach _app,$(NDK_APPS),\
+  $(eval include $(BUILD_SYSTEM)/setup-app.mk)\
+)
+
+DUMP_$(DUMP_VAR):
+	@echo $($(DUMP_VAR))
+else
+    # Build it
+    include $(BUILD_SYSTEM)/build-all.mk
+endif

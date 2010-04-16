@@ -22,16 +22,21 @@
 #
 # The printed value will be 0 if the package is not found.
 #
+# NOTE: For some reason, simply using $9 == PACKAGE does not work
+#       with this script, so use pattern matching instead.
+#
 
 BEGIN {
     PID=0
     FS=" "
+    # Need to escape the dots in the package name
+    REGEX=gensub("\\.","\\\\.","g",PACKAGE)
 }
 
 # We use the fact that the 9th column of the 'ps' output
 # contains the package name, while the 2nd one contains the pid
 #
-$9 == PACKAGE {
+$9 ~ REGEX {
     PID=$2
 }
 

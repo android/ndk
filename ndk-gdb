@@ -1,0 +1,402 @@
+#!/bin/sh
+#
+# Copyright (C) 2010 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# This wrapper script is used to launch a native debugging session
+# on a given NDK application. The application must be debuggable, i.e.
+# its android:debuggable attribute must be set to 'true' in the
+# <application> element of its manifest.
+#
+# See docs/NDK-GDB.TXT for usage description. Essentially, you just
+# need to launch ndk-gdb from your application project directory
+# after doing ndk-build && ant install && <start-application-on-device>
+#
+. `dirname $0`/build/core/ndk-common.sh
+
+force_32bit_binaries
+
+find_program ADB_CMD adb
+ADB_FLAGS=
+
+AWK_CMD=awk
+
+DEBUG_PORT=5039
+
+PARAMETERS=
+OPTION_HELP=no
+OPTION_PROJECT=
+OPTION_FORCE=no
+OPTION_ADB=
+OPTION_EXEC=
+
+check_parameter ()
+{
+    if [ -z "$2" ]; then
+        echo "ERROR: Missing parameter after option '$1'"
+        exit 1
+    fi
+}
+
+check_adb_flags ()
+{
+    if [ -n "$ADB_FLAGS" ] ; then
+        echo "ERROR: Only one of -e, -d or -s <serial> can be used at the same time!"
+        exit 1
+    fi
+}
+
+get_build_var ()
+{
+    if [ -z "$GNUMAKE" ] ; then
+        GNUMAKE=make
+    fi
+    $GNUMAKE --no-print-dir -f $ANDROID_NDK_ROOT/build/core/build-local.mk -C $PROJECT DUMP_$1
+}
+
+get_build_var_for_abi ()
+{
+    if [ -z "$GNUMAKE" ] ; then
+        GNUMAKE=make
+    fi
+    $GNUMAKE --no-print-dir -f $ANDROID_NDK_ROOT/build/core/build-local.mk -C $PROJECT DUMP_$1 APP_ABI=$2
+}
+
+VERBOSE=no
+while [ -n "$1" ]; do
+    opt="$1"
+    optarg=`expr "x$opt" : 'x[^=]*=\(.*\)'`
+    case "$opt" in
+        --help|-h|-\?)
+            OPTION_HELP=yes
+            ;;
+        --verbose)
+            VERBOSE=yes
+            ;;
+        -s)
+            check_parameter $1 $2
+            check_adb_flags
+            ADB_FLAGS=" -s $2"
+            shift
+            ;;
+        -s*)
+            check_adb_flags
+            optarg=`expr -- "$opt" : '-s\(.*\)'`
+            ADB_FLAGS=" -s $optarg"
+            ;;
+        -p)
+            check_parameter $1 $2
+            OPTION_PROJECT="$2"
+            shift
+            ;;
+        -p*)
+            optarg=`expr -- "$opt" : '-p\(.*\)'`
+            OPTION_PROJECT="$optarg"
+            ;;
+        --exec=*)
+            OPTION_EXEC="$optarg"
+            ;;
+        -x)
+            check_parameter $1 $2
+            OPTION_EXEC="$2"
+            shift
+            ;;
+        -x*)
+            optarg=`expr -- "$opt" : '-x\(.*\)'`
+            OPTION_EXEC="$optarg"
+            ;;
+        -e)
+            check_adb_flags
+            ADB_FLAGS=" -e"
+            ;;
+        -d)
+            check_adb_flags
+            ADB_FLAGS=" -d"
+            ;;
+        --adb=*) # specify ADB command
+            OPTION_ADB="$optarg"
+            ;;
+        --awk=*)
+            AWK_CMD="$optarg"
+            ;;
+        --project=*)
+            OPTION_PROJECT="$optarg"
+            ;;
+        --port=*)
+            DEBUG_PORT="$optarg"
+            ;;
+        --force)
+            OPTION_FORCE="yes"
+            ;;
+        -*) # unknown options
+            echo "ERROR: Unknown option '$opt', use --help for list of valid ones."
+            exit 1
+        ;;
+        *)  # Simply record parameter
+            if [ -z "$PARAMETERS" ] ; then
+                PARAMETERS="$opt"
+            else
+                PARAMETERS="$PARAMETERS $opt"
+            fi
+            ;;
+    esac
+    shift
+done
+
+if [ "$OPTION_HELP" = "yes" ] ; then
+    echo "Usage: $PROGNAME [options]"
+    echo ""
+    echo "Valid options:"
+    echo ""
+    echo "    --help|-h|-?      Print this help"
+    echo "    --verbose         Enable verbose mode"
+    echo "    --adb=<file>      Use specific adb command [$ADB_CMD]"
+    echo "    --awk=<file>      Use specific awk command [$AWK_CMD]"
+    echo "    --project=<path>  Specify application project path"
+    echo "    --port=<port>     Use tcp:localhost:<port> to communicate with gdbserver [$DEBUG_PORT]"
+    echo "    --force           Kill existing debug session if it exists"
+    echo "    -p <path>         Same as --project=<path>"
+    echo "    --exec=<file>     Execute gdb initialization commands in <file> after connection"
+    echo "    -x <file>         Same as --exec=<file>"
+    echo "    -e                Connect to single emulator instance"
+    echo "    -d                Connect to single target device"
+    echo "    -s <serial>       Connect to specific emulator or device"
+    echo ""
+    exit 0
+fi
+
+log "Android NDK installation path: $ANDROID_NDK_ROOT"
+
+if [ -n "$OPTION_EXEC" ] ; then
+    if [ ! -f "$OPTION_EXEC" ]; then
+        echo "ERROR: Invalid initialization file: $OPTION_EXEC"
+        exit 1
+    fi
+fi
+
+# Check ADB tool version
+if [ -n "$OPTION_ADB" ] ; then
+    ADB_CMD="$OPTION_ADB"
+    log "Using specific adb command: $ADB_CMD"
+else
+    if [ -z "$ADB_CMD" ] ; then
+        echo "ERROR: The 'adb' tool is not in your path."
+        echo "       You can change your PATH variable, or use"
+        echo "       --adb=<executable> to point to a valid one."
+        exit 1
+    fi
+    log "Using default adb command: $ADB_CMD"
+fi
+
+ADB_VERSION=`$ADB_CMD version`
+if [ $? != 0 ] ; then
+    echo "ERROR: Could not run ADB with: $ADB_CMD"
+    exit 1
+fi
+log "ADB version found: $ADB_VERSION"
+
+ADB_CMD="${ADB_CMD}${ADB_FLAGS}"
+log "Using final ADB command: '$ADB_CMD'"
+
+
+# Check the awk tool
+AWK_SCRIPTS=$ANDROID_NDK_ROOT/build/core
+AWK_TEST=`$AWK_CMD -f $ANDROID_NDK_ROOT/build/check-awk.awk`
+if [ $? != 0 ] ; then
+    echo "ERROR: Could not run '$AWK_CMD' command. Do you have it installed properly ?"
+    exit 1
+fi
+if [ "$AWK_TEST" != "Pass" ] ; then
+    echo "ERROR: Your version of 'awk' is obsolete. Please use --awk=<file> to point to Nawk or Gawk!"
+    exit 1
+fi
+
+# Name of the manifest file
+MANIFEST=AndroidManifest.xml
+
+# Find the root of the application project.
+if [ -n "$OPTION_PROJECT" ] ; then
+    PROJECT=$OPTION_PROJECT
+    log "Using specified project path: $PROJECT"
+    if [ ! -d "$PROJECT" ] ; then
+        echo "ERROR: Your --project option does not point to a directory!"
+        exit 1
+    fi
+    if [ ! -f "$PROJECT/$MANIFEST" ] ; then
+        echo "ERROR: Your --project does not point to an Android project path!"
+        echo "       It is missing a $MANIFEST file."
+        exit 1
+    fi
+else
+    # Assume we are in the project directory
+    if [ -f "$MANIFEST" ] ; then
+        PROJECT=.
+    else
+        PROJECT=
+        CURDIR=`pwd`
+        while [ "$CURDIR" != "/" ] ; do
+            if [ -f "$CURDIR/$MANIFEST" ] ; then
+                PROJECT="$CURDIR"
+                break
+            fi
+            CURDIR=`dirname $CURDIR`
+        done
+        if [ -z "$PROJECT" ] ; then
+            echo "ERROR: Launch this script from an application project directory, or use --project=<path>."
+            exit 1
+        fi
+    fi
+    log "Using auto-detected project path: $PROJECT"
+fi
+
+# Extract the package name from the manifest
+PACKAGE_NAME=`$AWK_CMD -f $AWK_SCRIPTS/extract-package-name.awk $PROJECT/$MANIFEST`
+log "Found package name: $PACKAGE_NAME"
+if [ $? != 0 -o "$PACKAGE_NAME" = "<none>" ] ; then
+    echo "ERROR: Could not extract package name from $PROJECT/$MANIFEST."
+    echo "       Please check that the file is well-formed!"
+    exit 1
+fi
+
+# Check that the application is debuggable, or nothing will work
+DEBUGGABLE=`$AWK_CMD -f $AWK_SCRIPTS/extract-package-debuggable.awk $PROJECT/$MANIFEST`
+log "Found debuggable flag: $DEBUGGABLE"
+if [ $? != 0 -o "$DEBUGGABLE" != "true" ] ; then
+    echo "ERROR: Package $PACKAGE_NAME is not debuggable ! Please fix your manifest,"
+    echo "       rebuild your application and re-install it to fix this."
+    exit 1
+fi
+
+APP_ABIS=`get_build_var APP_ABI`
+log "ABIs targetted by application: $APP_ABIS"
+
+# Check the ADB command, and that we can connect to the device/emulator
+ADB_TEST=`$ADB_CMD shell ls`
+if [ $? != 0 ] ; then
+    echo "ERROR: Could not connect to device or emulator!"
+    echo "       Please check that an emulator is running or a device is connected"
+    echo "       through USB to this machine. You can use the -e, -d and -s <serial>"
+    echo "       in case of multiple ones."
+    exit 1
+fi
+
+# Get the target device's supported ABI(s)
+# And check that they are supported by the application
+#
+COMPAT_ABI=none
+CPU_ABI=`$ADB_CMD shell getprop ro.product.cpu.abi | sed -e 's!\\r!!g'`
+echo "$APP_ABIS" | grep -q -F "$CPU_ABI"
+if [ $? = 0 ] ; then
+    COMPAT_ABI=$CPU_ABI
+fi
+
+CPU_ABI2=`$ADB_CMD shell getprop ro.product.cpu.abi2 | sed -e 's!\\r!!g'`
+if [ -z "$CPU_ABI2" ] ; then
+    log "Device CPU ABI: $CPU_ABI"
+else
+    log "Device CPU ABIs: $CPU_ABI $CPU_ABI2"
+    echo "$APP_ABIS" | grep -q -F "$CPU_ABI2"
+    if [ $? = 0 ] ; then
+        COMPAT_ABI=$CPU_ABI2
+    fi
+fi
+if [ "$COMPAT_ABI" = none ] ; then
+    echo "ERROR: The device does not support the application's targetted CPU ABIs!"
+    if [ "$CPU_ABI2" = "$CPU_ABI" ] ; then
+        CPU_ABI2=
+    fi
+    echo "       Device supports:  $CPU_ABI $CPU_ABI2"
+    echo "       Package supports: $APP_ABIS"
+    exit 1
+fi
+log "Compatible device ABI: $COMPAT_ABI"
+
+# Get information from the build system
+GDBSETUP_INIT=`get_build_var_for_abi NDK_APP_GDBSETUP $COMPAT_ABI`
+log "Using gdb setup init: $GDBSETUP_INIT"
+
+TOOLCHAIN_PREFIX=`get_build_var_for_abi TOOLCHAIN_PREFIX $COMPAT_ABI`
+log "Using toolchain prefix: $TOOLCHAIN_PREFIX"
+
+APP_OUT=`get_build_var_for_abi TARGET_OUT $COMPAT_ABI`
+log "Using app out directory: $APP_OUT"
+
+# Find the <dataDir> of the package on the device
+DATA_DIR=`$ADB_CMD shell run-as $PACKAGE_NAME /system/bin/sh -c pwd`
+# mmm, a rogue \r at the end, get rid of it.
+DATA_DIR=`echo "$DATA_DIR" | sed -e 's!\\r!!g'`
+log "Found data directory: '$DATA_DIR'"
+if [ $? != 0 ] ; then
+    echo "ERROR: Could not extract package's data directory. Are you sure that"
+    echo "       your installed application is debuggable ?"
+    exit 1
+fi
+
+# Find the PID of the application being run
+PID=`$ADB_CMD shell ps | $AWK_CMD -f $AWK_SCRIPTS/extract-package-pid.awk -v PACKAGE=$PACKAGE_NAME`
+log "Found running PID: $PID"
+if [ $? != 0 -o "$PID" = "0" ] ; then
+    echo "ERROR: Could not extract PID of application on device/emulator."
+    echo "       Are you sure the application is already started ?"
+    exit 1
+fi
+
+# Check that there is no other instance of gdbserver running
+GDBSERVER_PS=`$ADB_CMD shell ps | grep lib/gdbserver`
+if [ -n "$GDBSERVER_PS" ] ; then
+    if [ "$OPTION_FORCE" = "no" ] ; then
+        echo "ERROR: Another debug session running, Use --force to kill it."
+        exit 1
+    fi
+    log "Killing existing debugging session"
+    GDBSERVER_PID=`echo $GDBSERVER_PS | $AWK_CMD -f $AWK_SCRIPTS/extract-package-pid.awk -v PACKAGE=lib/gdbserver`
+    if [ $GDBSERVER_PID != 0 ] ; then
+        run $ADB_CMD shell kill -9 $GDBSERVER_PID
+    fi
+fi
+
+# Launch gdbserver now
+DEBUG_SOCKET=debug-socket
+run $ADB_CMD shell run-as $PACKAGE_NAME lib/gdbserver +$DEBUG_SOCKET --attach $PID &
+if [ $? != 0 ] ; then
+    echo "ERROR: Could not launch gdbserver on the device ?"
+    exit 1
+fi
+log "Launched gdbserver succesfully."
+
+# Setup network redirection
+log "Setup network redirection"
+run $ADB_CMD forward tcp:$DEBUG_PORT localfilesystem:$DATA_DIR/$DEBUG_SOCKET
+if [ $? != 0 ] ; then
+    echo "ERROR: Could not setup network redirection to gdbserver ?"
+    echo "       Maybe using --port=<port> to use a different TCP port might help ?"
+    exit 1
+fi
+
+# Get the app_server binary from the device
+APP_PROCESS=$APP_OUT/app_process
+run adb pull /system/bin/app_process $APP_PROCESS
+log "Pulled $APP_BINARY from device/emulator."
+
+# Now launch the appropriate gdb client with the right init commands
+#
+GDBCLIENT=${TOOLCHAIN_PREFIX}gdb
+GDBSETUP=$APP_OUT/gdb.setup
+cp -f $GDBSETUP_INIT $GDBSETUP
+echo "target remote :$DEBUG_PORT" >> $GDBSETUP
+if [ -n "$OPTION_EXEC" ] ; then
+    cat $OPTION_EXEC >> $GDBSETUP
+fi
+$GDBCLIENT -x $GDBSETUP -e $APP_PROCESS

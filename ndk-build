@@ -29,7 +29,16 @@
 #
 #  This really is a tiny wrapper around GNU Make.
 #
+
+# Ensure we get the full path of this script's directory
+# this is needed if the caller uses the -C <path> GNU Make
+# option, as in:
+#
+#    cd ndk
+#    ./ndk-build -C <project-path>
+#
 PROGDIR=`dirname $0`
+PROGDIR=`cd $PROGDIR && pwd`
 
 # if GNUMAKE is not defined in the environment, use 'make'
 if [ -z "$GNUMAKE" ] ; then

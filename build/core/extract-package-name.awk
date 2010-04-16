@@ -23,7 +23,7 @@ BEGIN {
     FS=" "
     in_manifest=0
     package_regex1="package=\"([[:alnum:].]+)\""
-    package_regex2="package=\'([[:alnum:].]+)\'"
+    package_regex2="package='([[:alnum:].]+)'"
     PACKAGE="<none>"
 }
 

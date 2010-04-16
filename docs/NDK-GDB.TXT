@@ -1,0 +1,147 @@
+'ndk-gdb' Overview
+
+I. Usage:
+---------
+
+The Android NDK r4 introduced a helper shell script named 'ndk-gdb' to
+easily launch a native debugging session for your NDK-generated machine code.
+
+The script is located at the top-level directory of the NDK, and shall
+be invoked from the command-line when in your application project
+directory, or any of its sub-directories. For example:
+
+    cd $PROJECT
+    $NDK/ndk-gdb
+
+Where $NDK points to your NDK installation path. You can also create an
+alias or add $NDK to your PATH to avoid typing it everytime.
+
+IMPORTANT: Native debugging can only work if *all* these conditions are met:
+
+    1. Your application is built with the 'ndk-build' script:
+
+        Building with the legacy "make APP=<name>" method is not
+        supported by ndk-gdb.
+
+    2. Your application is debuggable:
+
+        In other words, your AndroidManifest.xml has an <application>
+        element that sets the android:debuggable attribute to "true"
+
+    3. You are running your application on Android 2.2:
+
+        ndk-gdb will not work if you try to run your application on
+        previous versions of the system. That does not mean that your
+        application should target the Android 2.2. API level, just
+        that the debugging session should happen on a 2.2+ device or
+        emulator system image.
+
+        IMPORTANT IMPORTANT IMPORTANT !!
+
+            If you are using the ADT Eclipse plugin to build your
+            application, make sure you're using version 0.9.7 or
+            later.
+
+            If you are using the 'ant' build tool, make sure that you
+            have the latest revision of the SDK Platform components.
+            The following minimal revisions are required:
+
+                Android 1.5      r4
+                Android 1.6      r3
+                Android 2.1      r2
+                Android 2.2      r1
+
+            These should be available through the SDK updater.
+
+            If these conditions are not met, the generated .apk will
+            not contain required support files and native debugging
+            will not be possible.
+
+    4. Your application must be launched before ndk-gdb:
+
+        At the moment, it is not possible to directly launch your
+        application from ndk-gdb. You must thus start it before
+        invoking the script.
+
+
+'ndk-gdb' handles many error conditions and will dump an informative error
+message if it finds a problem. For example, it:
+
+    - checks that adb is in your path.
+
+    - checks that your application is declared debuggable in its manifest.
+
+    - checks that, on the device, the installed application with the same
+      package name is also debuggable.
+
+
+When ndk-gdb launches succesfully, it stops the running application and
+gives you a GDB prompt. You can set breakpoints with 'b <location>' and
+resume execution with 'c' (for 'continue'). See the GDB manual for a list
+of commands.
+
+NOTE: ndk-gdb sets up GDB automatically so that it can find your sources
+      and generated libraries (with debug information) automatically.
+
+IMPORTANT: When quitting the GDB prompt, your debugged application process
+           will be stopped! This is a gdb limitation.
+
+II. Options:
+------------
+
+To see a list of options, type 'ndk-gdb --help'. Notable ones are:
+
+  --force:
+    By default, ndk-gdb aborts if it finds that another native debugging
+    session is running on the same device. Using --force will kill the
+    session, and replace it with a new one. Note that the debugged program
+    is *not* killed and will be stopped again.
+
+  --verbose:
+    Print verbose information about the native debugging session setup.
+    Only needed to debug problems when you can't connect and that the
+    error messages printed by ndk-gdb are not enough.
+
+  --project=<path>:
+    Specify application project directory. Useful if you want to launch
+    the script without cd-ing to the directory before that.
+
+  --port=<port>:
+    By default, ndk-gdb will use local TCP port 5039 to communicate with
+    the debugged application. By using a different port, it is possible
+    to natively debug programs running on different devices/emulators
+    connected to the same development machine.
+
+  --adb=<file>:
+    Specify the adb tool executable, in case it is not in your path.
+
+  -d, -e, -s <serial>:
+    These flags are similar to the ADB ones and allow you to handle the
+    case where you have several devices/emulators connected to your
+    development machine.
+
+        -d:          Connect to a single physical device
+        -e:          Connect to a single emulator device
+        -s <serial>: Connect to a specific device or emulator
+                     where <serial> is the device's name as listed
+                     by the "adb devices" command.
+
+    Alternatively, you can define the ADB_SERIAL environment variable
+    to list a specific device, without the need for a specific option.
+
+  --exec=<file>:
+  -x <file>:
+    After connecting to the debugged process, run the GDB initialization
+    commands found in <file>. This is useful if you want to do something
+    repeatedly, e.g. setting up a list of breakpoints then resuming
+    execution automatically.
+
+
+III. Requirements:
+------------------
+
+At the moment 'ndk-gdb' requires a Unix shell to run. This means that
+Cygwin is required to run it on Windows. We hope to get rid of this
+limitation in a future NDK release.
+
+The other NDK requirements apply: e.g. GNU Make 3.81 or higher.

@@ -342,8 +342,25 @@ target device.
 V. Debugging support:
 - - - - - - - - - - -
 
-Debugging your native code with this initial release of the NDK is still
-very rough.
+The NDK provides a helper script, named 'ndk-gdb' to very easily launch
+a native debugging session of your applications.
 
-Note that we plan to make this much easier in a later NDK release, all of
-this without changing your sources, Android.mk and Application.mk files.
+Native debugging can be performed on production devices running Android 2.2
+or higher, and does not require root or privileged access, as long as your
+application is debuggable.
+
+For more information, read docs/NDK-GDB.TXT. In a nutshell, native debugging
+follows this simple scheme:
+
+   1. Ensure your application is debuggable (e.g. set android:debuggable
+      to "true" in your AndroidManifest.xml)
+
+   2. Build your application with 'ndk-build', then install it on your
+      device/emulator.
+
+   3. Launch your application.
+
+   4. Run 'ndk-gdb' from your application project directory.
+
+You will get a gdb prompt. See the GDB User Manual for a list of useful
+commands.
