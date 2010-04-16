@@ -459,6 +459,11 @@ compile_exec_run()
     $TMPE
 }
 
+pattern_match ()
+{
+    echo "$2" | grep -q -E -e "$1"
+}
+
 # Let's check that we have a working md5sum here
 check_md5sum ()
 {
@@ -486,14 +491,19 @@ find_program ()
     local PROG
     PROG=`which $2 2>/dev/null`
     if [ -n "$PROG" ] ; then
-        echo "$PROG" | grep -q -e '^no '
-        if [ $? = 0 ] ; then
+        if pattern_match '^no ' "$PROG"; then
             PROG=
         fi
     fi
     eval $1="$PROG"
 }
 
+prepare_download ()
+{
+    find_program CMD_WGET wget
+    find_program CMD_CURL curl
+    find_program CMD_SCRP scp
+}
 
 # Download a file with either 'curl', 'wget' or 'scp'
 #
@@ -502,8 +512,7 @@ find_program ()
 download_file ()
 {
     # Is this HTTP, HTTPS or FTP ?
-    echo $1 | grep -q -E -e "^(http|https|ftp):.*"
-    if [ $? = 0 ] ; then
+    if pattern_match "^(http|https|ftp):.*" "$1"; then
         if [ -n "$CMD_WGET" ] ; then
             run $CMD_WGET -O $2 $1 
         elif [ -n "$CMD_CURL" ] ; then
@@ -518,8 +527,7 @@ download_file ()
     # Is this SSH ?
     # Accept both ssh://<path> or <machine>:<path>
     #
-    echo $1 | grep -q -E -e "^(ssh|[^:]+):.*"
-    if [ $? = 0 ] ; then
+    if pattern_match "^(ssh|[^:]+):.*" "$1"; then
         if [ -n "$CMD_SCP" ] ; then
             scp_src=`echo $1 | sed -e s%ssh://%%g`
             run $CMD_SCP $scp_src $2
@@ -533,8 +541,7 @@ download_file ()
     # Is this a file copy ?
     # Accept both file://<path> or /<path>
     #
-    echo $1 | grep -q -E -e "^(file://|/).*"
-    if [ $? = 0 ] ; then
+    if pattern_match "^(file://|/).*" "$1"; then
         cp_src=`echo $1 | sed -e s%^file://%%g`
         run cp -f $cp_src $2
         return
