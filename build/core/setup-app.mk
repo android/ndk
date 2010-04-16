@@ -52,10 +52,6 @@ all: ndk-app-$(_app)
 # which platform/abi/toolchain are we going to use?
 TARGET_PLATFORM := $(call get,$(_map),APP_PLATFORM)
 
-# the location of generated files for this app
-HOST_OUT    := $(NDK_APP_OUT)/$(_app)/$(HOST_TAG)
-HOST_OBJS   := $(HOST_OUT)/objs
-
 # The ABI(s) to use
 APP_ABI := $(strip $(NDK_APP_ABI))
 ifndef APP_ABI
@@ -78,6 +74,14 @@ NDK_APP_DEBUGGABLE := false
 NDK_APP_MANIFEST := $(strip $(wildcard $(NDK_APP_PROJECT_PATH)/AndroidManifest.xml))
 ifdef NDK_APP_MANIFEST
     NDK_APP_DEBUGGABLE := $(shell $(HOST_AWK) -f $(BUILD_SYSTEM)/extract-package-debuggable.awk $(NDK_APP_MANIFEST))
+endif
+
+ifdef NDK_LOG
+  ifeq ($(NDK_APP_DEBUGGABLE),true)
+    $(call ndk_log,Application '$(_app)' *is* debuggable)
+  else
+    $(call ndk_log,Application '$(_app)' is not debuggable)
+  endif
 endif
 
 # Clear all installed binaries for this application

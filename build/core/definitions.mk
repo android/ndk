@@ -158,6 +158,14 @@ modules-clear = \
     $(eval __ndk_modules := $(empty_set))
 
 # -----------------------------------------------------------------------------
+# Function : modules-get-list
+# Arguments: None
+# Returns  : The list of all recorded modules
+# Usage    : $(call modules-get-list)
+# -----------------------------------------------------------------------------
+modules-get-list = $(__ndk_modules)
+
+# -----------------------------------------------------------------------------
 # Function : modules-add
 # Arguments: 1: module name
 #            2: built module path
@@ -525,11 +533,11 @@ $(foreach __src,$(LOCAL_SRC_FILES),$(info LOCAL_SRC_FILES_TEXT.$(__src) = $(LOCA
 # =============================================================================
 
 # the list of variables that *must* be defined in Application.mk files
-NDK_APP_VARS_REQUIRED := APP_MODULES APP_PROJECT_PATH
+NDK_APP_VARS_REQUIRED := APP_PROJECT_PATH
 
 # the list of variables that *may* be defined in Application.mk files
 NDK_APP_VARS_OPTIONAL := APP_OPTIM APP_CPPFLAGS APP_CFLAGS APP_CXXFLAGS \
-                         APP_PLATFORM APP_BUILD_SCRIPT APP_ABI
+                         APP_PLATFORM APP_BUILD_SCRIPT APP_ABI APP_MODULES
 
 # the list of all variables that may appear in an Application.mk file
 NDK_APP_VARS := $(NDK_APP_VARS_REQUIRED) $(NDK_APP_VARS_OPTIONAL)
@@ -738,86 +746,3 @@ define cmd-install-file
 $(hide) cp -fp $1 $2
 endef
 
-
-#
-# Determine host system and architecture from the environment
-#
-HOST_OS := $(strip $(HOST_OS))
-ifndef HOST_OS
-    # On all modern variants of Windows (including Cygwin and Wine)
-    # the OS environment variable is defined to 'Windows_NT'
-    #
-    # The value of PROCESSOR_ARCHITECTURE will be x86 or AMD64
-    #
-    ifeq ($(OS),Windows_NT)
-        HOST_OS := windows
-    else
-        # For other systems, use the `uname` output
-        UNAME := $(shell uname -s)
-        ifneq (,$(findstring Linux,$(UNAME)))
-            HOST_OS := linux
-        endif
-        ifneq (,$(findstring Darwin,$(UNAME)))
-            HOST_OS := darwin
-        endif
-        # We should not be there, but just in case !
-        ifneq (,$(findstring CYGWIN,$(UNAME)))
-            HOST_OS := windows
-        endif
-        ifeq ($(HOST_OS),)
-            $(call __ndk_info,Unable to determine HOST_OS from uname -s: $(UNAME))
-            $(call __ndk_info,Please define HOST_OS in your environment.)
-            $(call __ndk_error,Aborting.)
-        endif
-    endif
-    $(call ndk_log,Host OS was auto-detected: $(HOST_OS))
-else
-    $(call ndk_log,Host OS from environment: $(HOST_OS))
-endif
-
-HOST_ARCH := $(strip $(HOST_ARCH))
-ifndef HOST_ARCH
-    ifeq ($(HOST_OS),windows)
-        HOST_ARCH := $(PROCESSOR_ARCHITECTURE)
-        ifeq ($(HOST_ARCH),AMD64)
-            HOST_ARCH := x86
-        endif
-    else # HOST_OS != windows
-        UNAME := $(shell uname -m)
-        ifneq (,$(findstring 86,$(UNAME)))
-            HOST_ARCH := x86
-        endif
-        # We should probably should not care at all
-        ifneq (,$(findstring Power,$(UNAME)))
-            HOST_ARCH := ppc
-        endif
-        ifeq ($(HOST_ARCH),)
-            $(call __ndk_info,Unsupported host architecture: $(UNAME))
-            $(call __ndk_error,Aborting)
-        endif
-    endif # HOST_OS != windows
-    $(call ndk_log,Host CPU was auto-detected: $(HOST_ARCH))
-else
-    $(call ndk_log,Host CPU from environment: $(HOST_ARCH))
-endif
-
-HOST_TAG := $(HOST_OS)-$(HOST_ARCH)
-$(call ndk_log,HOST_TAG set to $(HOST_TAG))
-
-#
-#
-#
-HOST_AWK := $(strip $(HOST_AWK))
-ifndef HOST_AWK
-    HOST_AWK := awk
-    $(call ndk_log,Host awk tool was auto-detected: $(HOST_AWK))
-else
-    $(call ndk_log,Host awk tool from environment: $(HOST_AWK))
-endif
-
-AWK_TEST := $(shell $(HOST_AWK) -f $(NDK_ROOT)/build/check-awk.awk)
-$(call ndk_log,Host awk test returned: $(AWK_TEST))
-ifneq ($(AWK_TEST),Pass)
-    $(call __ndk_info,Host awk tool is outdated. Please define HOST_AWK to point to Gawk or Nawk !)
-    $(call __ndk_error,Aborting.)
-endif

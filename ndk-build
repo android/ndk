@@ -1,0 +1,39 @@
+#!/bin/sh
+#
+# Copyright (C) 2010 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+#  This shell script is a wrapper to launch the NDK build from the
+#  command-line inside an application project path.
+#
+#  Typical usage is:
+#
+#     cd $PROJECT_PATH
+#     ndk-build
+#
+#  Assuming that the Android NDK root path is in your PATH. However,
+#  you can also invoke it directly as:
+#
+#     $NDK_ROOT/ndk-build
+#
+#  This really is a tiny wrapper around GNU Make.
+#
+PROGDIR=`dirname $0`
+
+# if GNUMAKE is not defined in the environment, use 'make'
+if [ -z "$GNUMAKE" ] ; then
+    GNUMAKE=make
+fi
+
+$GNUMAKE -f $PROGDIR/build/core/build-local.mk $@
