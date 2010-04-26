@@ -16,7 +16,7 @@
 # This is the default Application.mk that is being used for applications
 # that don't provide $PROJECT_PATH/jni/Application.mk
 #
-APP_PROJECT_PATH := $(NDK_APP_PROJECT_PATH)
+APP_PROJECT_PATH := $(NDK_PROJECT_PATH)
 
 # We expect the build script to be located here
 APP_BUILD_SCRIPT := $(APP_PROJECT_PATH)/jni/Android.mk

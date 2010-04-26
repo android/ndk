@@ -533,11 +533,12 @@ $(foreach __src,$(LOCAL_SRC_FILES),$(info LOCAL_SRC_FILES_TEXT.$(__src) = $(LOCA
 # =============================================================================
 
 # the list of variables that *must* be defined in Application.mk files
-NDK_APP_VARS_REQUIRED := APP_PROJECT_PATH
+NDK_APP_VARS_REQUIRED :=
 
 # the list of variables that *may* be defined in Application.mk files
 NDK_APP_VARS_OPTIONAL := APP_OPTIM APP_CPPFLAGS APP_CFLAGS APP_CXXFLAGS \
-                         APP_PLATFORM APP_BUILD_SCRIPT APP_ABI APP_MODULES
+                         APP_PLATFORM APP_BUILD_SCRIPT APP_ABI APP_MODULES \
+                         APP_PROJECT_PATH
 
 # the list of all variables that may appear in an Application.mk file
 NDK_APP_VARS := $(NDK_APP_VARS_REQUIRED) $(NDK_APP_VARS_OPTIONAL)

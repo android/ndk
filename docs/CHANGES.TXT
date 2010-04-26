@@ -20,6 +20,10 @@ IMPORTANT CHANGES:
   NOTE: For compatibility purpose, you can still define projects
         through $NDK_ROOT/apps/<name> though.
 
+- Easy native debugging support when running debuggable applications
+  on Android 2.2 or higher, through the new 'ndk-gdb' helper script.
+  See docs/NDK-GDB.TXT for details.
+
 - Support for hardware FPU. This is through the new 'armeabi-v7a' ABI
   corresponding to ARMv7-a class devices.
 

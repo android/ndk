@@ -37,6 +37,11 @@ _map := NDK_APP.$(_app)
 # strip the 'lib' prefix in front of APP_MODULES modules
 APP_MODULES := $(call strip-lib-prefix,$(APP_MODULES))
 
+APP_PROJECT_PATH := $(strip $(APP_PROJECT_PATH))
+ifndef APP_PROJECT_PATH
+    APP_PROJECT_PATH := $(NDK_PROJECT_PATH)
+endif
+
 # check that APP_OPTIM, if defined, is either 'release' or 'debug'
 APP_OPTIM := $(strip $(APP_OPTIM))
 $(if $(filter-out release debug,$(APP_OPTIM)),\
@@ -72,9 +77,9 @@ endif
 #
 _bad_platform := $(strip $(filter-out $(NDK_ALL_PLATFORMS),$(APP_PLATFORM)))
 ifdef _bad_platform
-    $(call __ndk_info,Application $(_name) targets unknown platform '$(_bad_platform)')
+    $(call ndk_log,Application $(_name) targets unknown platform '$(_bad_platform)')
     APP_PLATFORM := android-$(NDK_MAX_PLATFORM_LEVEL)
-    $(call __ndk_info,Switching to $(APP_PLATFORM))
+    $(call ndk_log,Switching to $(APP_PLATFORM))
 endif
 
 # Check that the value of APP_ABI corresponds to known ABIs
