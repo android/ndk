@@ -20,83 +20,43 @@
 #
 
 # include common function and variable definitions
-. `dirname $0`/../core/ndk-common.sh
+. `dirname $0`/prebuilt-common.sh
 
 OPTION_HELP=no
 OPTION_RELEASE=
 OPTION_GIT=
 OPTION_BRANCH=
+OPTION_PACKAGE=no
 
 # the default release name (use today's date)
 RELEASE=`date +%Y%m%d`
 
 # the default branch to use
 BRANCH=master
-
 GITCMD=git
 
-VERBOSE=no
-VERBOSE2=no
+register_option "--branch=<name>" do_branch "Specify release branch" $BRANCH
+register_option "--release=<name>" do_release "Specify release name" $RELEASE
+register_option "--git=<executable>" do_git "Use this version of the git tool" $GITCMD
+register_option "--package" do_package "Create source package in /tmp"
 
-for opt do
-    optarg=`expr "x$opt" : 'x[^=]*=\(.*\)'`
-    case "$opt" in
-    --help|-h|-\?) OPTION_HELP=yes
-    ;;
-    --branch=*)
-        OPTION_BRANCH="$optarg"
-        ;;
-    --git=*)
-        OPTION_GIT="$optarg"
-        ;;
-    --verbose)
-        if [ "$VERBOSE" = "yes" ] ; then
-            VERBOSE2=yes
-        else
-            VERBOSE=yes
-        fi
-        ;;
-    --release=*)
-        OPTION_RELEASE=$optarg
-        ;;
-    *)
-        echo "unknown option '$opt', use --help"
-        exit 1
-    esac
-done
+do_branch () { OPTION_BRANCH=$1; }
+do_release () { OPTION_RELEASE=$1; }
+do_git () { OPTION_GIT=$1; }
+do_package () { OPTION_PACKAGE=yes; }
 
-if [ $OPTION_HELP = "yes" ] ; then
-    echo "Download the NDK toolchain sources from android.git.kernel.org and package them."
-    echo "You will need to run this script before being able to rebuild the NDK toolchain"
-    echo "binaries from scratch with build/tools/build-toolchain.sh"
-    echo ""
-    echo "options (defaults in brackets):"
-    echo ""
-    echo "  --help               print this message"
-    echo "  --branch=<name>      specify release branch [$BRANCH]"
-    echo "  --release=<name>     specify release name [$RELEASE]"
-    echo "  --git=<executable>   use this version of the git tool [$GITCMD]"
-    echo "  --verbose            increase verbosity"
-    echo ""
-    exit 0
-fi
+PROGRAM_PARAMETERS="<src-dir>"
+PROGRAM_DESCRIPTION=\
+"Download the NDK toolchain sources from android.git.kernel.org into <src-dir>.
+You will need to run this script before being able to rebuilt the NDK toolchain
+binaries from scratch with build/tools/build-gcc.sh."
 
-setup_log_file ()
+extract_parameters $@
 
-if [ -n "$OPTION_RELEASE" ] ; then
-    RELEASE="$OPTION_RELEASE"
-    log "Using release name $RELEASE"
-else
-    log "Using default release name $RELEASE"
-fi
+fix_option RELEASE "$OPTION_RELEASE" "release name"
 
 # Check that 'git' works
-if [ -n "$OPTION_GIT" ] ; then
-    GITCMD="$OPTION_GIT"
-    log "Using git tool command: '$GITCMD'"
-else
-    log "Using default git tool command."
-fi
+fix_option GITCMD  "$OPTION_GIT" "git too command"
 $GITCMD --version > /dev/null 2>&1
 if [ $? != 0 ] ; then
     echo "The git tool doesn't seem to work. Please check $GITCMD"
@@ -104,14 +64,19 @@ if [ $? != 0 ] ; then
 fi
 log "Git seems to work ok."
 
-if [ -n "$OPTION_BRANCH" ] ; then
-    BRANCH="$OPTION_BRANCH"
-    log "Using branch named $BRANCH"
-else
-    log "Using default branch name $BRANCH"
+fix_option BRANCH "$OPTION_BRANCH" "branch name"
+
+SRC_DIR=$PARAMETERS
+if [ -z "$SRC_DIR" -a $OPTION_PACKAGE = no ] ; then
+    echo "ERROR: You need to provide a <src-dir> parameter or use the --package option!"
+    exit 1
 fi
 
-# Create temp directory where everything will be copied
+mkdir -p $SRC_DIR
+SRC_DIR=`cd $SRC_DIR && pwd`
+log "Using target source directory: $SRC_DIR"
+
+# Create temp directory where everything will be copied first
 #
 PKGNAME=android-ndk-toolchain-$RELEASE
 TMPDIR=/tmp/$PKGNAME
@@ -148,7 +113,6 @@ toolchain_clone ()
     run rm -rf $1/.git
 }
 
-
 cd $TMPDIR
 toolchain_clone binutils
 toolchain_clone build
@@ -165,15 +129,45 @@ log "getting rid of obsolete sources: gcc-4.3.1 gdb-6.8"
 rm -rf $TMPDIR/gcc/gcc-4.3.1
 rm -rf $TMPDIR/gcc/gdb-6.8
 
-# create the package
-PACKAGE=/tmp/$PKGNAME.tar.bz2
-dump "Creating package archive $PACKAGE"
-cd `dirname $TMPDIR`
-run tar cjvf $PACKAGE -C /tmp/$PKGNAME .
-if [ $? != 0 ] ; then
-    dump "Could not package toolchain source archive ?. See $TMPLOG"
-    exit 1
+# remove all info files from the toolchain sources
+# they create countless little problems during the build
+# if you don't have exactly the configuration expected by
+# the scripts.
+#
+find $TMPDIR -type f -a -name "*.info" -print0 | xargs -0 rm -f
+
+if [ $OPTION_PACKAGE = "yes" ] ; then
+    # create the package
+    PACKAGE=/tmp/$PKGNAME.tar.bz2
+    dump "Creating package archive $PACKAGE"
+    cd `dirname $TMPDIR`
+    TARFLAGS="cjf"
+    if [ $VERBOSE = yes ] ; then
+        TARFLAGS="${TARFLAGS}v"
+    fi
+    run tar $TARFLAGS $PACKAGE -C /tmp/$PKGNAME .
+    if [ $? != 0 ] ; then
+        dump "Could not package toolchain source archive ?. See $TMPLOG"
+        exit 1
+    fi
+    dump "Toolchain sources downloaded and packaged succesfully at $PACKAGE"
+else
+    # copy sources to <src-dir>
+    SRC_DIR=`cd $SRC_DIR && pwd`
+    rm -rf $SRC_DIR && mkdir -p $SRC_DIR
+    if [ $? != 0 ] ; then
+        dump "ERROR: Could not create target source directory: $SRC_DIR"
+        exit 1
+    fi
+    run cd $TMPDIR && run cp -rp * $SRC_DIR
+    if [ $? != 0 ] ; then
+        dump "ERROR: Could not copy downloaded sources to: $SRC_DIR"
+        exit 1
+    fi
+    dump "Toolchain sources downloaded and copied to $SRC_DIR"
 fi
 
-dump "Toolchain sources downloaded and packaged succesfully at $PACKAGE"
+dump "Cleaning up..."
+rm -rf $TMPDIR
 rm -f $TMPLOG
+dump "Done."

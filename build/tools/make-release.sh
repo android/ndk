@@ -92,7 +92,7 @@ if [ $OPTION_HELP = yes ] ; then
     echo "Alternatively, you can use --prebuilt-ndk=<file> where <file> is the"
     echo "path to a previous official NDK release package. It will be used to"
     echo "extract the toolchain binaries and copy them to your new release."
-    echo "Only use this for experimental release packages !"
+    echo "Only use this for experimental release packages!"
     echo ""
     echo "The generated release packages will be stored in a temporary directory"
     echo "that will be printed at the end of the generation process."

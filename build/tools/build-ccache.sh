@@ -26,121 +26,72 @@
 #
 
 # include common function and variable definitions
-. `dirname $0`/../core/ndk-common.sh
+. `dirname $0`/prebuilt-common.sh
 
-print_help() {
-    echo "Rebuild the prebuilt ccache binary for the Android NDK toolchain."
-    echo ""
-    echo "This script will automatically download the sources from the"
-    echo "Internet, unless you use the --package=<file> option to specify"
-    echo "the exact source package to use."
-    echo ""
-    echo "options (defaults are within brackets):"
-    echo ""
-    echo "  --help                   print this message"
-    echo "  --package=<file>         specify download source package"
-    echo "  --build-out=<path>       set temporary build out directory [/tmp/<random>]"
-    echo "  --out=<file>             set output file for binary tarball"
-    echo "  --install                install into NDK prebuilt directory"
-    echo ""
-}
+PROGRAM_PARAMETERS="<ndk-dir>"
+PROGRAM_DESCRIPTION="Rebuild the prebuilt ccache binary for the Android NDK toolchain."
+
+CCACHE_VERSION=ccache-2.4-android-20070905
+CCACHE_PACKAGE=$CCACHE_VERSION.tar.gz
+DOWNLOAD_ROOT=http://android.git.kernel.org/pub
+CCACHE_URL=$DOWNLOAD_ROOT/$CCACHE_PACKAGE
+
+OPTION_PACKAGE=no
 
 BUILD_OUT=`mktemp -d /tmp/ndk-toolchain-XXX`
-
-OPTION_PACKAGE=
 OPTION_BUILD_OUT=
-OPTION_OUT=
-OPTION_INSTALL=no
+OPTION_FROM=
 
-VERBOSE=no
-for opt do
-    optarg=`expr "x$opt" : 'x[^=]*=\(.*\)'`
-    case "$opt" in
-    --help|-h|-\?) OPTION_HELP=yes
-        ;;
-    --verbose)
-        VERBOSE=yes
-        ;;
-    --package=*)
-        OPTION_PACKAGE="$optarg"
-        ;;
-    --build-out=*)
-        OPTION_BUILD_OUT="$optarg"
-        ;;
-    --out=*)
-        OPTION_OUT="$optarg"
-        ;;
-    --install)
-        OPTION_INSTALL=yes
-        ;;
-    *)
-        echo "unknown option '$opt', use --help"
+register_option "--from=<url>" do_from "Specify source package" "$PACKAGE"
+register_option "--build-out=<path>" do_build_out "Set temporary build directory" "/tmp/<random>"
+
+do_from () { CCACHE_URL=$1; CCACHE_PACKAGE=`basename $1`; }
+do_build_out () { OPTION_BUILD_OUT=$1; }
+
+extract_parameters $@
+
+set_parameters ()
+{
+    if [ -n "$2" ] ; then
+        echo "ERROR: Too many parameters. See --help for usage."
         exit 1
-    esac
-done
+    fi
 
-if [ "$OPTION_HELP" = "yes" ] ; then
-    print_help
-    exit 0
-fi
+    NDK_DIR=$1
+    if [ -z "$NDK_DIR" ] ; then
+        echo "ERROR: Missing required ndk directory. See --help for usage."
+        exit 1
+    fi
 
-# Force generation of 32-bit binaries on 64-bit systems
-case $HOST_TAG in
-    *-x86_64)
-        HOST_CFLAGS="$HOST_CFLAGS -m32"
-        HOST_LDFLAGS="$HOST_LDFLAGS -m32"
-        force_32bit_binaries  # to modify HOST_TAG and others
-        ;;
-esac
+    mkdir -p $NDK_DIR
+    if [ $? != 0 ] ; then
+        echo "ERROR: Could not create NDK target directory: $NDK_DIR"
+        exit 1
+    fi
+}
 
-setup_log_file
+set_parameters $PARAMETERS
 
-if [ -n "$OPTION_BUILD_OUT" ] ; then
-    BUILD_OUT=$OPTION_BUILD_OUT
-    log "Using specific build out directory: $BUILD_OUT"
-else
-    log "Using default random build out directory: $BUILD_OUT"
-fi
+prepare_host_flags
 
-
-# Where all generated files will be placed
-OUT=$BUILD_OUT
+fix_option BUILD_OUT "$OPTION_BUILD_OUT" "build directory"
 
 # Check for md5sum
 check_md5sum
 
-# And wget/curl/scp too
-find_program WGET wget
-find_program CURL curl
-find_program SCP scp
+prepare_download
 
-run rm -rf $BUILD_OUT
-run mkdir -p $BUILD_OUT
-
-if [ -n "$OPTION_PACKAGE" ] ; then
-    if [ ! -f "$OPTION_PACKAGE" ] ; then
-        dump "Your --package does not point to a valid file !"
-        exit 1
-    fi
-    tar tzf $OPTION_PACKAGE > /dev/null 2>&1
-    if [ $? != 0 ] ; then
-        dump "It looks like your --package does not point to well-formed .tar.gz archive !"
-        exit 1
-    fi
-    CCACHE_PACKAGE=$OPTION_PACKAGE
-    CCACHE_VERSION=`echo $CCACHE_PACKAGE | sed s/\.tar\.gz//g`
-    CCACHE_VERSION=`basename $CCACHE_VERSION`
-else
-    CCACHE_VERSION=ccache-2.4-android-20070905
-    CCACHE_PACKAGE=$CCACHE_VERSION.tar.gz
-    DOWNLOAD_ROOT=http://android.git.kernel.org/pub
+run rm -rf $BUILD_OUT && run mkdir -p $BUILD_OUT
+if [ $? != 0 ] ; then
+    echo "ERROR: Could not create build directory: $BUILD_OUT"
+    exit 1
 fi
 
-dump "Getting sources from $DOWNLOAD_ROOT/$CCACHE_PACKAGE"
+dump "Getting sources from $CCACHE_URL"
 
-download_file $DOWNLOAD_ROOT/$CCACHE_PACKAGE $BUILD_OUT/$CCACHE_PACKAGE
+download_file $CCACHE_URL $BUILD_OUT/$CCACHE_PACKAGE
 if [ $? != 0 ] ; then
-    dump "Could not download $DOWNLOAD_ROOT/$CCACHE_PACKAGE"
+    dump "Could not download $CCACHE_URL"
     dump "Aborting."
     exit 1
 fi
@@ -157,33 +108,11 @@ if [ $? != 0 ] ; then
     dump "Could not build ccache in $BUILD_OUT"
 fi
 
-PREBUILT_DIR=prebuilt/$HOST_TAG/ccache
-
-dump "Packaging ccache binary tarball..."
-if [ -n "$OPTION_OUT" ] ; then
-    CCACHE_TARBALL="$OPTION_OUT"
-else
-    CCACHE_TARBALL=/tmp/ccache-$HOST_TAG.tar.bz2
-fi
-cd $BUILD_OUT && run mkdir -p $PREBUILT_DIR && mv $CCACHE_VERSION/ccache $PREBUILT_DIR && run chmod a+x $PREBUILT_DIR/ccache && run tar cjf $CCACHE_TARBALL $PREBUILT_DIR/ccache
+PREBUILT_DIR=$NDK_DIR/build/prebuilt/$HOST_TAG/ccache
+mkdir -p $PREBUILT_DIR && cp -p $BUILD_OUT/$CCACHE_VERSION/ccache $PREBUILT_DIR
 if [ $? != 0 ] ; then
-    dump "Could not package ccache binary !"
+    dump "Could not copy ccache binary!"
     exit 1
-fi
-echo "Ccache binary tarball is ready in $CCACHE_TARBALL"
-
-if [ $OPTION_INSTALL = yes ] ; then
-    dump "Installing directly into $ANDROID_NDK_ROOT/$PREBUILT_DIR/ccache"
-    run mkdir -p $ANDROID_NDK_ROOT/$PREBUILT_DIR
-    if [ $? != 0 ] ; then
-        dump "Could not install ccache binary to $PREBUILT_DIR"
-        exit 1
-    fi
-    run cp -f $BUILD_OUT/$CCACHE_VERSION/ccache $ANDROID_NDK_ROOT/$PREBUILT_DIR/ccache
-    # cleanup if needed
-    if [ -n "$OPTION_BUILD_OUT" ] ; then
-        rm -rf $BUILD_OUT
-    fi
 fi
 
 dump "Done"

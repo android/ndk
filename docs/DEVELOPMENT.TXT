@@ -1,0 +1,88 @@
+NDK Development:
+----------------
+
+This document describes how one can modify the NDK and generate
+new experimental release packages for it.
+
+I. Getting the sources:
+=======================
+
+The sources live at android.git.kernel.org, You can get them with the following:
+
+  mkdir myndk
+  cd myndk
+  git clone git://android.git.kernel.org/platform/ndk.git .
+
+If you intend to contribute patches, you might want to use the "repo" tool instead.
+Follow the instructions at source.android.com and download the full Android sources
+to your tree.
+
+
+II. Prebuilt binaries:
+======================
+
+The source tree does not contain the prebuilt binaries for the cross-compiler and
+other stuff that are necessary to generate machine code with the NDK.
+
+The easiest way to get them is to use the following script:
+
+    build/tools/rebuild-all-prebuilt.sh:
+
+It will download all source packages from the Internet, unpack, patch and build
+them for you. In the end, the binaries will be located under the following:
+
+    build/prebuilt/$HOST_TAG/
+
+Where $HOST_TAG corresponds to your system (e.g. windows, darwin-x86 or linux-x86)
+
+rebuild-all-prebuilt.sh is really a wrapper script around many other scripts
+under build/tools. Use --help to get proper usage and options for each one of
+these tools. Things you can do with them include:
+
+  II.1: Download the toolchain sources and package them:
+  ------------------------------------------------------
+
+      build/tools/download-toolchain-sources.sh --package
+
+    This downloads the toolchain sources from android.git.kernel.org and
+    packages them into a file like /tmp/android-ndk-toolchain-<date>.tar.bz2
+
+    This is useful is you want to modify rebuild-all-prebuilt.sh to support different
+    prebuilts or toolchains. To use the package, to rebuilt binaries:
+
+      build/tools/rebuild-all-prebuilt.sh --toolchain-src=<package>
+
+    You can also directly unpack the sources into a target source directory with:
+
+      build/tools/download-toolchain-sources.sh <src-dir>
+
+
+  II.2.: Build the cross-compiler only:
+  -------------------------------------
+
+    build/tools/build-gcc.sh <src-dir> <ndk-dir> <toolchain-name>
+
+        src-dir = unpacked toolchain source directory
+        ndk-dir = target NDK install location (e.g. your 'myndk' top-level directory)
+        toolchain-name = toolchain name (arm-eabi-4.2.1 / arm-eabi-4.4.0 / x86-4.2.1)
+
+  II.3.: Build the gdbserver binary only:
+  ---------------------------------------
+
+    build/tools/build-gcc.sh <gdbserver-src-dir> <ndk-dir> <toolchain-name>
+
+  II.4.: Package all prebuilt binaries for easier redistribution / unpacking:
+  ---------------------------------------------------------------------------
+
+    Build everything into a target directory:
+
+        build/tools/rebuild-all-prebuilt.sh --package
+
+    This will create a package named /tmp/android-ndk-prebuilt-<date>-<system>.tar.bz2
+
+    This package is to be unpacked directly in your NDK top-level directory, i.e.
+
+        cd myndk
+        tar xjf <package>
+
+
