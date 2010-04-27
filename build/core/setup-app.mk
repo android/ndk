@@ -73,7 +73,7 @@ endif
 NDK_APP_DEBUGGABLE := false
 NDK_APP_MANIFEST := $(strip $(wildcard $(NDK_APP_PROJECT_PATH)/AndroidManifest.xml))
 ifdef NDK_APP_MANIFEST
-    NDK_APP_DEBUGGABLE := $(shell $(HOST_AWK) -f $(BUILD_SYSTEM)/extract-package-debuggable.awk $(NDK_APP_MANIFEST))
+    NDK_APP_DEBUGGABLE := $(shell $(HOST_AWK) -f $(BUILD_AWK)/extract-debuggable.awk $(NDK_APP_MANIFEST))
 endif
 
 ifdef NDK_LOG
