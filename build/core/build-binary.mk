@@ -158,7 +158,7 @@ $(call TARGET-process-src-files-tags)
 # Build the sources to object files
 #
 $(foreach src,$(filter %.c,$(LOCAL_SRC_FILES)), $(call compile-c-source,$(src)))
-$(foreach src,$(filter %.S,$(LOCAL_SRC_FILES)), $(call compile-s-source,$(src)))
+$(foreach src,$(filter %.S %.s,$(LOCAL_SRC_FILES)), $(call compile-s-source,$(src)))
 
 $(foreach src,$(filter %$(LOCAL_CPP_EXTENSION),$(LOCAL_SRC_FILES)),\
     $(call compile-cpp-source,$(src)))
