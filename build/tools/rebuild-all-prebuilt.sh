@@ -48,14 +48,18 @@ do_gdb_version () { OPTION_GDB_VERSION=$1; }
 
 OPTION_TOOLCHAIN_SRC_PKG=
 OPTION_TOOLCHAIN_SRC_DIR=
-OPTION_PACKAGE=
-register_option "--toolchain-src-pkg=<file>" do_toolchain_src_pkg "Use toolchain source package"
-register_option "--toolchain-src-dir=<path>" do_toolchain_src_dir "Use toolchain source directory"
-register_option "--package"                  do_toolchain_package "Package prebuilt binaries"
-
+register_option "--toolchain-src-pkg=<file>" do_toolchain_src_pkg "Use toolchain source package."
+register_option "--toolchain-src-dir=<path>" do_toolchain_src_dir "Use toolchain source directory."
 do_toolchain_src_pkg () { OPTION_TOOLCHAIN_SRC_PKG=$1; }
 do_toolchain_src_dir () { OPTION_TOOLCHAIN_SRC_DIR=$1; }
-do_toolchain_package () { OPTION_PACKAGE=yes; }
+
+OPTION_PACKAGE=no
+register_option "--package" do_package "Package prebuilt binaries."
+do_package () { OPTION_PACKAGE=yes; }
+
+OPTION_TRY_X86=no
+register_option "--try-x86" do_try_x86 "Build experimental x86 toolchain too."
+do_try_x86 () { OPTION_TRY_X86=yes; }
 
 extract_parameters $@
 
@@ -170,10 +174,10 @@ build_gdbserver arm-eabi-4.2.1
 build_toolchain arm-eabi-4.4.0
 build_gdbserver arm-eabi-4.4.0
 
-# XXX: NOT READY YET!
-#
-#build_toolchain x86-4.2.1
-#build_gdbserver x86-4.2.1
+if [ "$OPTION_TRY_X86" = "yes" ] ; then
+    build_toolchain x86-4.2.1
+    build_gdbserver x86-4.2.1
+fi
 
 # XXX: NOT YET NEEDED!
 #
@@ -184,7 +188,7 @@ build_gdbserver arm-eabi-4.4.0
 #    exit 1
 #fi
 
-if [ $OPTION_PACKAGE = yes ] ; then
+if [ "$OPTION_PACKAGE" = yes ] ; then
     RELEASE=`date +%Y%m%d`
     dump "Packaging prebuilt binaries..."
     PREBUILT_PACKAGE=/tmp/android-ndk-prebuilt-$RELEASE-$HOST_TAG.tar.bz2
