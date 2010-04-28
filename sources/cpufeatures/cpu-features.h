@@ -28,7 +28,10 @@
 #ifndef CPU_FEATURES_H
 #define CPU_FEATURES_H
 
+#include <sys/cdefs.h>
 #include <stdint.h>
+
+__BEGIN_DECLS
 
 typedef enum {
     ANDROID_CPU_FAMILY_UNKNOWN = 0,
@@ -49,5 +52,7 @@ enum {
 };
 
 extern uint64_t    android_getCpuFeatures(void);
+
+__END_DECLS
 
 #endif /* CPU_FEATURES_H */
