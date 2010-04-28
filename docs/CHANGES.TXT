@@ -57,6 +57,12 @@ IMPORTANT CHANGES:
 - Added a new sample (hello-neon) to demonstrate usage of 'cpufeatures'
   and NEON intrinsics & build support.
 
+- Added <android/bitmap.h>, a new stable API available from android-8
+  (a.k.a. Android 2.2) to reliably access the pixel buffer of an
+  android.graphics.Bitmap object from native code. See docs/STABLE-API.TXT
+  and the new samble program under 'samples/bitmap-plasma' for details
+  and usage example.
+
 OTHER FIXES & CHANGES:
 
 - support the .s extension for raw assembly sources (.S is already supported
