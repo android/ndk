@@ -59,6 +59,10 @@ IMPORTANT CHANGES:
 
 OTHER FIXES & CHANGES:
 
+- support the .s extension for raw assembly sources (.S is already supported
+  but the input files are parsed by the C-preprocessor before being sent to
+  the assembler).
+
 - build/host-setup.sh has been removed. There is no need for a 'setup' step
   when using the NDK for the first time. All host-specific autodetection and
   basic tool sanity checking have been moved to the build scripts themselves.
