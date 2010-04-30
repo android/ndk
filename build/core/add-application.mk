@@ -72,6 +72,13 @@ ifndef APP_PLATFORM
     endif
 endif
 
+# SPECIAL CASE: android-6 and android-7 are the same thing than android-5
+#               with regards to the NDK. Adjust accordingly!
+ifneq (,$(filter android-6 android-7,$(APP_PLATFORM)))
+    APP_PLATFORM := android-5
+    $(call ndk_log,  Adjusting APP_PLATFORM to $(APP_PLATFORM))
+endif
+
 # Check that the value of APP_PLATFORM corresponds to a known platform
 # If not, we're going to use the max supported platform value.
 #
