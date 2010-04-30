@@ -28,7 +28,7 @@ IMPORTANT: Native debugging can only work if *all* these conditions are met:
         In other words, your AndroidManifest.xml has an <application>
         element that sets the android:debuggable attribute to "true"
 
-    3. You are running your application on Android 2.2:
+    3. You are running your application on Android 2.2 (or higher):
 
         ndk-gdb will not work if you try to run your application on
         previous versions of the system. That does not mean that your
@@ -57,13 +57,6 @@ IMPORTANT: Native debugging can only work if *all* these conditions are met:
             not contain required support files and native debugging
             will not be possible.
 
-    4. Your application must be launched before ndk-gdb:
-
-        At the moment, it is not possible to directly launch your
-        application from ndk-gdb. You must thus start it before
-        invoking the script.
-
-
 'ndk-gdb' handles many error conditions and will dump an informative error
 message if it finds a problem. For example, it:
 
@@ -75,21 +68,39 @@ message if it finds a problem. For example, it:
       package name is also debuggable.
 
 
-When ndk-gdb launches succesfully, it stops the running application and
-gives you a GDB prompt. You can set breakpoints with 'b <location>' and
-resume execution with 'c' (for 'continue'). See the GDB manual for a list
-of commands.
+By default, ndk-gdb will search for an already-running application process,
+and will dump an error if it doesn't find one. You can however use the --start
+or --launch=<name> option to automatically start your activity before the
+debugging session.
 
-NOTE: ndk-gdb sets up GDB automatically so that it can find your sources
-      and generated libraries (with debug information) automatically.
+When it succesfully attaches to your application process, ndk-gdb will give
+you a normal GDB prompt, after setting up the session to properly look for
+your source files and symbol/debug versions of your generated native
+libraries.
+
+You can set breakpoints with 'b <location>' and resume execution with 'c'
+(for 'continue'). See the GDB manual for a list of commands.
 
 IMPORTANT: When quitting the GDB prompt, your debugged application process
            will be stopped! This is a gdb limitation.
+
+IMPORTANT: The GDB prompt will be preceded by a long list of error messages,
+           where gdb complains that it cannot find various system libraries
+           (e.g. libc.so, libstdc++.so, liblog.so, libcutils.so, etc...)
+
+           This is normal, because there are no symbol/debug versions of
+           these libraries corresponding to your target device on your
+           development machine. You can safely ignore these messages.
 
 II. Options:
 ------------
 
 To see a list of options, type 'ndk-gdb --help'. Notable ones are:
+
+  --verbose:
+    Print verbose information about the native debugging session setup.
+    Only needed to debug problems when you can't connect and that the
+    error messages printed by ndk-gdb are not enough.
 
   --force:
     By default, ndk-gdb aborts if it finds that another native debugging
@@ -97,10 +108,23 @@ To see a list of options, type 'ndk-gdb --help'. Notable ones are:
     session, and replace it with a new one. Note that the debugged program
     is *not* killed and will be stopped again.
 
-  --verbose:
-    Print verbose information about the native debugging session setup.
-    Only needed to debug problems when you can't connect and that the
-    error messages printed by ndk-gdb are not enough.
+  --start:
+    By default, ndk-gdb will try to attach to an existing running instance
+    of your application on the target device. You can use --start to
+    explicitely launch your application before the debugging session.
+
+    NOTE: This launches the first launchable activity listed from your
+          application manifest. Use --launch=<name> to start another one.
+          See --launch-list to dump the list of such activites.
+
+  --launch=<name>:
+    This is similar to --start, except that it allows you to start a specific
+    activity from your application. This is only useful if your manifest
+    defines several launchable activities.
+
+  --launch-list:
+    Convenience option that prints the list of all launchable activity names
+    found in your application manifest. The first one will be used by --start
 
   --project=<path>:
     Specify application project directory. Useful if you want to launch

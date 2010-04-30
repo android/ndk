@@ -161,7 +161,10 @@ else
     $(call ndk_log,Host awk tool from environment: $(HOST_AWK))
 endif
 
-AWK_TEST := $(shell $(HOST_AWK) -f $(NDK_ROOT)/build/check-awk.awk)
+# Location of all awk scripts we use
+BUILD_AWK := $(NDK_ROOT)/build/awk
+
+AWK_TEST := $(shell $(HOST_AWK) -f $(BUILD_AWK)/check-awk.awk)
 $(call ndk_log,Host awk test returned: $(AWK_TEST))
 ifneq ($(AWK_TEST),Pass)
     $(call __ndk_info,Host awk tool is outdated. Please define HOST_AWK to point to Gawk or Nawk !)

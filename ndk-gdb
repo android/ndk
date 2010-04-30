@@ -41,6 +41,9 @@ OPTION_PROJECT=
 OPTION_FORCE=no
 OPTION_ADB=
 OPTION_EXEC=
+OPTION_START=no
+OPTION_LAUNCH=
+OPTION_LAUNCH_LIST=no
 
 check_parameter ()
 {
@@ -72,6 +75,12 @@ get_build_var_for_abi ()
         GNUMAKE=make
     fi
     $GNUMAKE --no-print-dir -f $ANDROID_NDK_ROOT/build/core/build-local.mk -C $PROJECT DUMP_$1 APP_ABI=$2
+}
+
+# Used to run an awk script on the manifest
+run_awk_manifest_script ()
+{
+    $AWK_CMD -f $AWK_SCRIPTS/$1 $PROJECT/$MANIFEST
 }
 
 VERBOSE=no
@@ -140,6 +149,15 @@ while [ -n "$1" ]; do
         --force)
             OPTION_FORCE="yes"
             ;;
+        --launch-list)
+            OPTION_LAUNCH_LIST="yes"
+            ;;
+        --launch=*)
+            OPTION_LAUNCH="$optarg"
+            ;;
+        --start)
+            OPTION_START=yes
+            ;;
         -*) # unknown options
             echo "ERROR: Unknown option '$opt', use --help for list of valid ones."
             exit 1
@@ -158,18 +176,24 @@ done
 if [ "$OPTION_HELP" = "yes" ] ; then
     echo "Usage: $PROGNAME [options]"
     echo ""
+    echo "Setup a gdb debugging session for your Android NDK application."
+    echo "Read $$NDK/docs/NDK-GDB.TXT for complete usage instructions."
+    echo ""
     echo "Valid options:"
     echo ""
     echo "    --help|-h|-?      Print this help"
     echo "    --verbose         Enable verbose mode"
-    echo "    --adb=<file>      Use specific adb command [$ADB_CMD]"
-    echo "    --awk=<file>      Use specific awk command [$AWK_CMD]"
-    echo "    --project=<path>  Specify application project path"
-    echo "    --port=<port>     Use tcp:localhost:<port> to communicate with gdbserver [$DEBUG_PORT]"
     echo "    --force           Kill existing debug session if it exists"
+    echo "    --start           Launch application instead of attaching to existing one"
+    echo "    --launch=<name>   Same as --start, but specify activity name (see below)"
+    echo "    --launch-list     List all launchable activity names from manifest"
+    echo "    --project=<path>  Specify application project path"
     echo "    -p <path>         Same as --project=<path>"
+    echo "    --port=<port>     Use tcp:localhost:<port> to communicate with gdbserver [$DEBUG_PORT]"
     echo "    --exec=<file>     Execute gdb initialization commands in <file> after connection"
     echo "    -x <file>         Same as --exec=<file>"
+    echo "    --adb=<file>      Use specific adb command [$ADB_CMD]"
+    echo "    --awk=<file>      Use specific awk command [$AWK_CMD]"
     echo "    -e                Connect to single emulator instance"
     echo "    -d                Connect to single target device"
     echo "    -s <serial>       Connect to specific emulator or device"
@@ -212,10 +236,10 @@ log "Using final ADB command: '$ADB_CMD'"
 
 
 # Check the awk tool
-AWK_SCRIPTS=$ANDROID_NDK_ROOT/build/core
-AWK_TEST=`$AWK_CMD -f $ANDROID_NDK_ROOT/build/check-awk.awk`
+AWK_SCRIPTS=$ANDROID_NDK_ROOT/build/awk
+AWK_TEST=`$AWK_CMD -f $AWK_SCRIPTS/check-awk.awk`
 if [ $? != 0 ] ; then
-    echo "ERROR: Could not run '$AWK_CMD' command. Do you have it installed properly ?"
+    echo "ERROR: Could not run '$AWK_CMD' command. Do you have it installed properly?"
     exit 1
 fi
 if [ "$AWK_TEST" != "Pass" ] ; then
@@ -262,7 +286,7 @@ else
 fi
 
 # Extract the package name from the manifest
-PACKAGE_NAME=`$AWK_CMD -f $AWK_SCRIPTS/extract-package-name.awk $PROJECT/$MANIFEST`
+PACKAGE_NAME=`run_awk_manifest_script extract-package-name.awk`
 log "Found package name: $PACKAGE_NAME"
 if [ $? != 0 -o "$PACKAGE_NAME" = "<none>" ] ; then
     echo "ERROR: Could not extract package name from $PROJECT/$MANIFEST."
@@ -270,8 +294,15 @@ if [ $? != 0 -o "$PACKAGE_NAME" = "<none>" ] ; then
     exit 1
 fi
 
+# If --launch-list is used, list all launchable activities, and be done with it
+if [ "$OPTION_LAUNCH_LIST" = "yes" ] ; then
+    log "Extracting list of launchable activities from manifest:"
+    run_awk_manifest_script extract-launchable.awk
+    exit 0
+fi
+
 # Check that the application is debuggable, or nothing will work
-DEBUGGABLE=`$AWK_CMD -f $AWK_SCRIPTS/extract-package-debuggable.awk $PROJECT/$MANIFEST`
+DEBUGGABLE=`run_awk_manifest_script extract-debuggable.awk`
 log "Found debuggable flag: $DEBUGGABLE"
 if [ $? != 0 -o "$DEBUGGABLE" != "true" ] ; then
     echo "ERROR: Package $PACKAGE_NAME is not debuggable ! Please fix your manifest,"
@@ -340,16 +371,58 @@ DATA_DIR=`echo "$DATA_DIR" | sed -e 's!\\r!!g'`
 log "Found data directory: '$DATA_DIR'"
 if [ $? != 0 ] ; then
     echo "ERROR: Could not extract package's data directory. Are you sure that"
-    echo "       your installed application is debuggable ?"
+    echo "       your installed application is debuggable?"
     exit 1
 fi
 
+# Launch the activity if needed
+if [ -n "$OPTION_START" ] ; then
+    # If --launch is used, ignore --start, otherwise extract the first
+    # launchable activity name from the manifest and use it as if --launch=<name>
+    # was used instead.
+    #
+    if [ -z "$OPTION_LAUNCH" ] ; then
+        OPTION_LAUNCH=`run_awk_manifest_script extract-launchable.awk | sed 2q`
+        if [ $? != 0 ] ; then
+            echo "ERROR: Could not extract name of launchable activity from manifest!"
+            echo "       Try to use --launch=<name> directly instead as a work-around."
+            exit 1
+        fi
+        log "Found first launchable activity: $OPTION_LAUNCH"
+        if [ -z "$OPTION_LAUNCH" ] ; then
+            echo "ERROR: It seems that your Application does not have any launchable activity!"
+            echo "       Please fix your manifest file and rebuild/re-install your application."
+            exit 1
+        fi
+    fi
+fi
+
+if [ -n "$OPTION_LAUNCH" ] ; then
+    log "Launching activity: $PACKAGE_NAME/$OPTION_LAUNCH"
+    run $ADB_CMD shell am start -n $PACKAGE_NAME/$OPTION_LAUNCH
+    if [ $? != 0 ] ; then
+        echo "ERROR: Could not launch specified activity: $OPTION_LAUNCH"
+        echo "       Use --launch-list to dump a list of valid values."
+        exit 1
+    fi
+    # Sleep a bit, it sometimes take one second to start properly
+    # Note that we use the 'sleep' command on the device here.
+    run $ADB_CMD shell sleep 1
+fi
+
 # Find the PID of the application being run
-PID=`$ADB_CMD shell ps | $AWK_CMD -f $AWK_SCRIPTS/extract-package-pid.awk -v PACKAGE=$PACKAGE_NAME`
+PID=`$ADB_CMD shell ps | $AWK_CMD -f $AWK_SCRIPTS/extract-pid.awk -v PACKAGE=$PACKAGE_NAME`
 log "Found running PID: $PID"
 if [ $? != 0 -o "$PID" = "0" ] ; then
     echo "ERROR: Could not extract PID of application on device/emulator."
-    echo "       Are you sure the application is already started ?"
+    if [ -n "$OPTION_LAUNCH" ] ; then
+        echo "       Weird, this probably means that the installed package does not"
+        echo "       match your current manifest. Try using the --verbose option and"
+        echo "       look at its output for details."
+    else
+        echo "       Are you sure the application is already started?"
+        echo "       Consider using --start or --launch=<name> if not."
+    fi
     exit 1
 fi
 
@@ -361,7 +434,7 @@ if [ -n "$GDBSERVER_PS" ] ; then
         exit 1
     fi
     log "Killing existing debugging session"
-    GDBSERVER_PID=`echo $GDBSERVER_PS | $AWK_CMD -f $AWK_SCRIPTS/extract-package-pid.awk -v PACKAGE=lib/gdbserver`
+    GDBSERVER_PID=`echo $GDBSERVER_PS | $AWK_CMD -f $AWK_SCRIPTS/extract-pid.awk -v PACKAGE=lib/gdbserver`
     if [ $GDBSERVER_PID != 0 ] ; then
         run $ADB_CMD shell kill -9 $GDBSERVER_PID
     fi
@@ -371,7 +444,7 @@ fi
 DEBUG_SOCKET=debug-socket
 run $ADB_CMD shell run-as $PACKAGE_NAME lib/gdbserver +$DEBUG_SOCKET --attach $PID &
 if [ $? != 0 ] ; then
-    echo "ERROR: Could not launch gdbserver on the device ?"
+    echo "ERROR: Could not launch gdbserver on the device?"
     exit 1
 fi
 log "Launched gdbserver succesfully."
@@ -380,8 +453,8 @@ log "Launched gdbserver succesfully."
 log "Setup network redirection"
 run $ADB_CMD forward tcp:$DEBUG_PORT localfilesystem:$DATA_DIR/$DEBUG_SOCKET
 if [ $? != 0 ] ; then
-    echo "ERROR: Could not setup network redirection to gdbserver ?"
-    echo "       Maybe using --port=<port> to use a different TCP port might help ?"
+    echo "ERROR: Could not setup network redirection to gdbserver?"
+    echo "       Maybe using --port=<port> to use a different TCP port might help?"
     exit 1
 fi
 
