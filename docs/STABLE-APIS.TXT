@@ -230,3 +230,40 @@ IMPORTANT NOTE:
     The Android emulator does not support OpenGL ES 2.0 hardware emulation
     at this time. Running and testing code that uses this API requires a
     real device with such capabilities.
+
+
+IV. Android-8 Stable Native APIs:
+----------------------------------
+
+All the APIs listed below are available for developing native code that runs
+on Android 2.2 system images and above.
+
+
+The 'jnigraphics' Library:
+--------------------------
+
+This is a tiny library that exposes a stable, C-based, interface that allows
+native code to reliably access the pixel buffers of Java bitmap objects.
+
+To use it, include the <android/bitmap.h> header in your source code, and
+and link to the jnigraphics library as in:
+
+  LOCAL_LDLIBS += -ljnigraphics
+
+For details, read the source header at the following location:
+
+    build/platforms/android-8/arch-arm/usr/include/android/bitmap.h
+
+Briefly, typical usage should look like:
+
+    1/ Use AndroidBitmap_getInfo() to retrieve information about a
+       given bitmap handle from JNI (e.g. its width/height/pixel format)
+
+    2/ Use AndroidBitmap_lockPixels() to lock the pixel buffer and
+       retrieve a pointer to it. This ensures the pixels will not move
+       until AndroidBitmap_unlockPixels() is called.
+
+    3/ Modify the pixel buffer, according to its pixel format, width,
+       stride, etc.., in native code.
+
+    4/ Call AndroidBitmap_unlockPixels() to unlock the buffer.
