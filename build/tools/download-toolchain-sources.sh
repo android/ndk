@@ -72,9 +72,11 @@ if [ -z "$SRC_DIR" -a $OPTION_PACKAGE = no ] ; then
     exit 1
 fi
 
-mkdir -p $SRC_DIR
-SRC_DIR=`cd $SRC_DIR && pwd`
-log "Using target source directory: $SRC_DIR"
+if [ -n "$SRC_DIR" ] ; then
+    mkdir -p $SRC_DIR
+    SRC_DIR=`cd $SRC_DIR && pwd`
+    log "Using target source directory: $SRC_DIR"
+fi
 
 # Create temp directory where everything will be copied first
 #

@@ -192,7 +192,7 @@ extract_parameters ()
     while [ -n "$1" ] ; do
         # If the parameter does not begin with a dash
         # it is not an option.
-        param=`expr -- "$1" : '^\([^-].*\)$'`
+        param=`expr -- "$1" : '^\([^\-].*\)$'`
         if [ -n "$param" ] ; then
             if [ -z "$PARAMETERS" ] ; then
                 PARAMETERS="$1"
