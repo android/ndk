@@ -34,6 +34,7 @@ NDK_LOCAL_VARS := \
   LOCAL_ALLOW_UNDEFINED_SYMBOLS \
   LOCAL_ARM_MODE \
   LOCAL_ARM_NEON \
+  LOCAL_DISABLE_NO_EXECUTE \
 
 $(call clear-src-tags)
 $(call clear-vars, $(NDK_LOCAL_VARS))

@@ -108,6 +108,13 @@ TARGET_LDLIBS := -Wl,-rpath-link=$(SYSROOT)/usr/lib
 # flags.
 TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
 
+# These flags are used to enfore the NX (no execute) security feature in the
+# generated machine code. This adds a special section to the generated shared
+# libraries that instruct the Linux kernel to disable code execution from
+# the stack and the heap.
+TARGET_NO_EXECUTE_CFLAGS  := -Wa,--noexecstack
+TARGET_NO_EXECUTE_LDFLAGS := -Wl,-z,noexecstack
+
 # The ABI-specific sub-directory that the SDK tools recognize for
 # this toolchain's generated binaries
 TARGET_ABI_SUBDIR := armeabi
