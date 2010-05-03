@@ -63,6 +63,13 @@ IMPORTANT CHANGES:
   and the new samble program under 'samples/bitmap-plasma' for details
   and usage example.
 
+- Support the NX (No Execute) security feature, where special sections
+  are added to the generated shared libraries to instruct the kernel
+  that code shall not be executed from the heap and stack by default.
+
+  See docs/ANDROID-MK.TXT to see how to disable this, plus reference
+  links for more information.
+
 OTHER FIXES & CHANGES:
 
 - support the .s extension for raw assembly sources (.S is already supported

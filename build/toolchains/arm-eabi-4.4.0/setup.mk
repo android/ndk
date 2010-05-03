@@ -132,6 +132,13 @@ TARGET_LDLIBS := -Wl,-rpath-link=$(SYSROOT)/usr/lib
 # flags.
 TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
 
+# These flags are used to enfore the NX (no execute) security feature in the
+# generated machine code. This adds a special section to the generated shared
+# libraries that instruct the Linux kernel to disable code execution from
+# the stack and the heap.
+TARGET_NO_EXECUTE_CFLAGS  := -Wa,--noexecstack
+TARGET_NO_EXECUTE_LDFLAGS := -Wl,-z,noexecstack
+
 # NOTE: Ensure that TARGET_LIBGCC is placed after all private objects
 #       and static libraries, but before any other library in the link
 #       command line when generating shared libraries and executables.

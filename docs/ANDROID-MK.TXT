@@ -466,3 +466,18 @@ LOCAL_ARM_NEON
 
     Note that the '.neon' suffix must appear after the '.arm' suffix
     if you use both (i.e. foo.c.arm.neon works, but not foo.c.neon.arm !)
+
+LOCAL_DISABLE_NO_EXECUTE
+    Android NDK r4 added support for the "NX bit" security feature.
+    It is enabled by default, but you can disable it if you *really*
+    need to by setting this variable to 'true'.
+
+    NOTE: This feature does not modify the ABI and is only enabled on
+          kernels targetting ARMv6+ CPU devices. Machine code generated
+          with this feature enabled will run unmodified on devices
+          running earlier CPU architectures.
+
+    For more information, see:
+
+        http://en.wikipedia.org/wiki/NX_bit
+        http://www.gentoo.org/proj/en/hardened/gnu-stack.xml
