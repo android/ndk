@@ -11,8 +11,11 @@ I. Requirements:
 ----------------
 
 The Android NDK currently requires a Linux, OS X or Windows host operating system.
-Windows users will need to install Cygwin (http://www.cygwin.com) to use it. Note
-that running the NDK under MSys is not supported.
+
+Windows users will need to install Cygwin 1.7 or later (http://www.cygwin.com) to
+use the NDK. Note that running it under MSys is not supported. Running under the
+now-obsolete Cygwin 1.5 has not been tested and might not work. Consider upgrading
+to 1.7 instead in case of problems.
 
 You will need to have the Android SDK and its dependencies installed. The NDK
 cannot generate final application packages (.apk files), only the shared library
@@ -38,14 +41,12 @@ should look like:
 
 On certain systems, GNU Make might be available through a different command like
 'gmake' or 'gnumake'. For these systems, replace 'make' by the appropriate command
-when invoking the NDK build system as described in the documentation.
+when invoking the NDK build system as described in the documentation. You might
+also want to define the GNUMAKE environment variable to point to it.
 
 The NDK also requires a Nawk or GNU Awk executable being available on your
 development system. Note that the original 'awk' program doesn't implement
 the 'match' and 'substr' functions used by the NDK build system.
-
-On Windows, you will need to install a recent release of Cygwin to use the NDK.
-See http://www.cygwin.com for instructions.
 
 
 II. Preparing your installation prebuilt cross-toolchain binaries:
