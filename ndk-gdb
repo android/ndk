@@ -318,7 +318,7 @@ ADB_TEST=`$ADB_CMD shell ls`
 if [ $? != 0 ] ; then
     echo "ERROR: Could not connect to device or emulator!"
     echo "       Please check that an emulator is running or a device is connected"
-    echo "       through USB to this machine. You can use the -e, -d and -s <serial>"
+    echo "       through USB to this machine. You can use -e, -d and -s <serial>"
     echo "       in case of multiple ones."
     exit 1
 fi
@@ -353,6 +353,28 @@ if [ "$COMPAT_ABI" = none ] ; then
     exit 1
 fi
 log "Compatible device ABI: $COMPAT_ABI"
+
+# Let's check that the user didn't change the debuggable flag in
+# the manifest without calling ndk-build afterwards.
+if [ ! -f $PROJECT/libs/$COMPAT_ABI/gdbserver ] ; then
+    echo "ERROR: Could not find gdbserver binary under $PROJECT/libs/$COMPAT_ABI"
+    echo "       This usually means you modified your AndroidManifest.xml to set"
+    echo "       the android:debuggable flag to 'true' but did not rebuild the"
+    echo "       native binaries. Please call 'ndk-build' to do so,"
+    echo "       *then* re-install to the device !"
+    exit 1
+fi
+
+# Let's check that 'gdbserver' is properly installed on the device too. If this
+# is not the case, the user didn't install the proper package after rebuilding.
+#
+DEVICE_GDBSERVER=`$ADB_CMD shell ls /data/data/$PACKAGE_NAME/lib/gdbserver`
+log "Found device gdbserver: $DEVICE_GDBSERVER"
+if pattern_match "No such file or directory" "$DEVICE_GDBSERVER" ] ; then
+    echo "ERROR: Non-debuggable application installed on the target device."
+    echo "       Please re-install the debuggable version !"
+    exit 1
+fi
 
 # Get information from the build system
 GDBSETUP_INIT=`get_build_var_for_abi NDK_APP_GDBSETUP $COMPAT_ABI`
@@ -416,9 +438,12 @@ log "Found running PID: $PID"
 if [ $? != 0 -o "$PID" = "0" ] ; then
     echo "ERROR: Could not extract PID of application on device/emulator."
     if [ -n "$OPTION_LAUNCH" ] ; then
-        echo "       Weird, this probably means that the installed package does not"
-        echo "       match your current manifest. Try using the --verbose option and"
-        echo "       look at its output for details."
+        echo "       Weird, this probably means one of these:"
+        echo ""
+        echo "         - The installed package does not match your current manifest."
+        echo "         - The application process was terminated."
+        echo ""
+        echo "       Try using the --verbose option and look at its output for details."
     else
         echo "       Are you sure the application is already started?"
         echo "       Consider using --start or --launch=<name> if not."
