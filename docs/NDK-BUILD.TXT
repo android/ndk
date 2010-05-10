@@ -40,6 +40,10 @@ command that runs the NDK build scripts. Notable uses include:
     --> rebuild, using a specific Application.mk pointed to by
         the NDK_APP_APPLICATION_MK command-line variable.
 
+  ndk-build -C <project>     --> build the native code for the project
+                                 path located at <project>. Useful if you
+                                 don't want to 'cd' to it in your terminal.
+
 
 III. Requirements:
 ------------------

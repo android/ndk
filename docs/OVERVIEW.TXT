@@ -242,7 +242,7 @@ There are two ways to use an Application.mk:
     "make APP=<name>" from the NDK directory.
 
     This was the way this file was used before Android NDK r4.
-    It is still supported for compatbility reasons, but we strongly
+    It is still supported for compatibility reasons, but we strongly
     encourage you to use the first method instead, since it is much
     simpler and doesn't need modifying / changing directories of the
     NDK installation tree.
@@ -345,9 +345,9 @@ V. Debugging support:
 The NDK provides a helper script, named 'ndk-gdb' to very easily launch
 a native debugging session of your applications.
 
-Native debugging can be performed on production devices running Android 2.2
-or higher, and does not require root or privileged access, as long as your
-application is debuggable.
+Native debugging can *ONLY* be performed on production devices running
+Android 2.2 or higher, and does not require root or privileged access, as
+long as your application is debuggable.
 
 For more information, read docs/NDK-GDB.TXT. In a nutshell, native debugging
 follows this simple scheme:
