@@ -147,6 +147,23 @@ else
 endif
 
 HOST_TAG := $(HOST_OS)-$(HOST_ARCH)
+
+# If we are on Windows, we need to check that we are not running
+# Cygwin 1.5, which is deprecated and won't run our toolchain
+# binaries properly.
+#
+ifeq ($(HOST_TAG),windows-x86)
+    # On cygwin, 'uname -r' returns something like 1.5.23(0.225/5/3)
+    # We recognize 1.5. as the prefix to look for then.
+    CYGWIN_VERSION := $(shell uname -r)
+    ifneq ($(filter XX1.5.%,XX$(CYGWIN_VERSION)),)
+        $(call __ndk_info,You seem to be running Cygwin 1.5, which is not supported.)
+        $(call __ndk_info,Please upgrade to Cygwin 1.7 or higher.)
+        $(call __ndk_error,Aborting.)
+    endif
+    # special-case the host-tag
+    HOST_TAG := windows
+endif
 $(call ndk_log,HOST_TAG set to $(HOST_TAG))
 
 #

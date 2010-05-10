@@ -13,9 +13,7 @@ I. Requirements:
 The Android NDK currently requires a Linux, OS X or Windows host operating system.
 
 Windows users will need to install Cygwin 1.7 or later (http://www.cygwin.com) to
-use the NDK. Note that running it under MSys is not supported. Running under the
-now-obsolete Cygwin 1.5 has not been tested and might not work. Consider upgrading
-to 1.7 instead in case of problems.
+use the NDK. Note that running it under MSys or Cygwin 1.5 is not supported.
 
 You will need to have the Android SDK and its dependencies installed. The NDK
 cannot generate final application packages (.apk files), only the shared library
