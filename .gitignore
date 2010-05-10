@@ -4,3 +4,7 @@
 Thumbs.db
 local.properties
 build.xml
+samples/*/libs/
+samples/*/bin/
+samples/*/gen/
+build/prebuilt/

@@ -24,6 +24,11 @@ IMPORTANT CHANGES:
   NOTE: For compatibility purpose, you can still define projects
         through $NDK_ROOT/apps/<name> though.
 
+        However, not that sample applications have moved from
+        'apps/<name>/project' to 'samples/<name>' and now must
+        be built with 'ndk-build'. The source code of pre-existing
+        samples didn't change though.
+
 - Easy native debugging support when running debuggable applications
   on Android 2.2 or higher, through the new 'ndk-gdb' helper script.
   See docs/NDK-GDB.TXT for details.
