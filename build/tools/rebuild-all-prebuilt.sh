@@ -98,7 +98,7 @@ else
 fi
 
 FLAGS=""
-if [ $VERBOSE2 = yes ] ; then
+if [ $VERBOSE = yes ] ; then
     FLAGS="--verbose"
 fi
 

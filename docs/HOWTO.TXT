@@ -14,7 +14,6 @@ as you expect them to, and check for bugs in the NDK build system.
 (The V=1 trick comes from the Linux kernel build system)
 
 
-
 How to force a rebuild of all your sources:
 -------------------------------------------
 
@@ -33,8 +32,18 @@ Alternatively, you can define APP_BUILD_SCRIPT in your Application.mk
 to point to an alternative Android.mk file.
 
 
-How to store your Application.mk in a location other than $NDK/app/<name>:
---------------------------------------------------------------------------
+How to build a project's native files without cd-ing to it:
+-----------------------------------------------------------
+
+Sometimes, you may need to rebuild a project's native file without
+being able to cd to its top-level path from the command-line. This
+is do-able by using the GNU-Make '-C <path>' option, as in:
+
+    ndk-build -C <project-path>
+
+
+How to store your Application.mk in a location other than $PROJECT/jni:
+-----------------------------------------------------------------------
 
 Starting with NDK r4, you can simply place the file under $PROJECT/jni/
 and launch the 'ndk-build' script from your project tree.
