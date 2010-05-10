@@ -10,6 +10,10 @@ IMPORTANT BUG FIXES:
 
 IMPORTANT CHANGES:
 
+- On Windows, Cygwin 1.7 or higher is now required. The NDK will not
+  work properly with Cygwin 1.5 which is now officially obsolete
+  anyway.
+
 - Simplified build system: You no longer need to run build/host-setup.sh
   or modify anything under $NDK_ROOT/apps/. Instead, just invoke the
   new 'ndk-build' script from your application's project directory, or
