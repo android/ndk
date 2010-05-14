@@ -99,6 +99,10 @@ extern int setfsuid(uid_t);
 extern int issetugid(void);
 extern char* getlogin(void);
 extern int getlogin_r(char* name, size_t namesize);
+extern char* getusershell(void);
+extern void setusershell(void);
+extern void endusershell(void);
+
 
 
 /* Macros for access() */
@@ -145,7 +149,7 @@ extern int ftruncate(int, off_t);
 extern int pause(void);
 extern unsigned int alarm(unsigned int);
 extern unsigned int sleep(unsigned int);
-extern void usleep(unsigned long);
+extern int usleep(unsigned long);
 
 extern int gethostname(char *, size_t);
 extern int sethostname(const char *, size_t);
@@ -163,6 +167,8 @@ extern char *optarg;
 extern int optind, opterr, optopt;
 
 extern int isatty(int);
+extern char* ttyname(int);
+extern int ttyname_r(int, char*, size_t);
 
 extern int  acct(const char*  filepath);
 
@@ -184,6 +190,14 @@ extern int cacheflush(long start, long end, long flags);
 
 extern pid_t tcgetpgrp(int fd);
 extern int   tcsetpgrp(int fd, pid_t _pid);
+
+/* Used to retry syscalls that can return EINTR. */
+#define TEMP_FAILURE_RETRY(exp) ({         \
+    typeof (exp) _rc;                      \
+    do {                                   \
+        _rc = (exp);                       \
+    } while (_rc == -1 && errno == EINTR); \
+    _rc; })
 
 __END_DECLS
 

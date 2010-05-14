@@ -31,7 +31,6 @@
 #include <stdint.h>
 #include <sys/types.h>
 #include <netinet/in.h>
-#include <netinet/in6.h>
 
 __BEGIN_DECLS
 

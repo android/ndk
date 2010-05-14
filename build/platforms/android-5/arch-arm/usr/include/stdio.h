@@ -112,6 +112,9 @@ struct __sbuf {
  * that does not match the previous one in _bf.  When this happens,
  * _ub._base becomes non-nil (i.e., a stream has ungetc() data iff
  * _ub._base!=NULL) and _up and _ur save the current values of _p and _r.
+ *
+ * NOTE: if you change this structure, you also need to update the
+ * std() initializer in findfp.c.
  */
 typedef	struct __sFILE {
 	unsigned char *_p;	/* current position in (some) buffer */
