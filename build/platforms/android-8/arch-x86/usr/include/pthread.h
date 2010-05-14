@@ -165,6 +165,11 @@ int pthread_mutex_unlock(pthread_mutex_t *mutex);
 int pthread_mutex_trylock(pthread_mutex_t *mutex);
 int pthread_mutex_timedlock(pthread_mutex_t *mutex, struct timespec*  ts);
 
+int pthread_condattr_init(pthread_condattr_t *attr);
+int pthread_condattr_getpshared(pthread_condattr_t *attr, int *pshared);
+int pthread_condattr_setpshared(pthread_condattr_t* attr, int pshared);
+int pthread_condattr_destroy(pthread_condattr_t *attr);
+
 int pthread_cond_init(pthread_cond_t *cond,
                       const pthread_condattr_t *attr);
 int pthread_cond_destroy(pthread_cond_t *cond);

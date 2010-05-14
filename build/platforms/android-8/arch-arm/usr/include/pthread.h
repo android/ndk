@@ -165,6 +165,11 @@ int pthread_mutex_unlock(pthread_mutex_t *mutex);
 int pthread_mutex_trylock(pthread_mutex_t *mutex);
 int pthread_mutex_timedlock(pthread_mutex_t *mutex, struct timespec*  ts);
 
+int pthread_condattr_init(pthread_condattr_t *attr);
+int pthread_condattr_getpshared(pthread_condattr_t *attr, int *pshared);
+int pthread_condattr_setpshared(pthread_condattr_t* attr, int pshared);
+int pthread_condattr_destroy(pthread_condattr_t *attr);
+
 int pthread_cond_init(pthread_cond_t *cond,
                       const pthread_condattr_t *attr);
 int pthread_cond_destroy(pthread_cond_t *cond);
@@ -179,13 +184,40 @@ int pthread_cond_timedwait(pthread_cond_t *cond,
  *         to the CLOCK_MONOTONIC clock instead, to avoid any problems when
  *         the wall-clock time is changed brutally
  */
+int pthread_cond_timedwait_monotonic_np(pthread_cond_t         *cond,
+                                        pthread_mutex_t        *mutex,
+                                        const struct timespec  *abstime);
+
+/* BIONIC: DEPRECATED. same as pthread_cond_timedwait_monotonic_np()
+ * unfortunately pthread_cond_timedwait_monotonic has shipped already
+ */
 int pthread_cond_timedwait_monotonic(pthread_cond_t         *cond,
                                      pthread_mutex_t        *mutex,
                                      const struct timespec  *abstime);
 
+#define HAVE_PTHREAD_COND_TIMEDWAIT_MONOTONIC 1
+
+/* BIONIC: same as pthread_cond_timedwait, except the 'reltime' given refers
+ *         is relative to the current time.
+ */
+int pthread_cond_timedwait_relative_np(pthread_cond_t         *cond,
+                                     pthread_mutex_t        *mutex,
+                                     const struct timespec  *reltime);
+
+#define HAVE_PTHREAD_COND_TIMEDWAIT_RELATIVE 1
+
+
+
 int pthread_cond_timeout_np(pthread_cond_t *cond,
                             pthread_mutex_t * mutex,
                             unsigned msecs);
+
+/* same as pthread_mutex_lock(), but will wait up to 'msecs' milli-seconds
+ * before returning. same return values than pthread_mutex_trylock though, i.e.
+ * returns EBUSY if the lock could not be acquired after the timeout
+ * expired.
+ */
+int pthread_mutex_lock_timeout_np(pthread_mutex_t *mutex, unsigned msecs);
 
 int pthread_key_create(pthread_key_t *key, void (*destructor_function)(void *));
 int pthread_key_delete (pthread_key_t);

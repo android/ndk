@@ -28,6 +28,10 @@
 #ifndef _SYS_EPOLL_H_
 #define _SYS_EPOLL_H_
 
+#include <sys/cdefs.h>
+
+__BEGIN_DECLS
+
 #define EPOLLIN          0x00000001
 #define EPOLLPRI         0x00000002
 #define EPOLLOUT         0x00000004
@@ -61,6 +65,8 @@ struct epoll_event
 int epoll_create(int size);
 int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event);
 int epoll_wait(int epfd, struct epoll_event *events, int max, int timeout);
+
+__END_DECLS
 
 #endif  /* _SYS_EPOLL_H_ */
 

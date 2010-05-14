@@ -31,8 +31,11 @@ Modified for Bionic by the Android Open Source Project
 #ifndef TIME64_H
 #define TIME64_H
 
+#include <sys/cdefs.h>
 #include <time.h>
 #include <stdint.h>
+
+__BEGIN_DECLS
 
 typedef int64_t  time64_t;
 
@@ -50,5 +53,7 @@ char *ctime64_r (const time64_t*, char*);
 time64_t timegm64 (const struct tm *);
 time64_t mktime64 (const struct tm *);
 time64_t timelocal64 (const struct tm *);
+
+__END_DECLS
 
 #endif /* TIME64_H */
