@@ -32,12 +32,16 @@
 #include <linux/socket.h>
 #include <linux/in.h>
 #include <linux/in6.h>
+#include <netinet/in6.h>
 
 __BEGIN_DECLS
 
 #define IPPORT_RESERVED  1024
 
 extern int bindresvport (int sd, struct sockaddr_in *sin);
+
+static const struct in6_addr in6addr_any = IN6ADDR_ANY_INIT;
+static const struct in6_addr in6addr_loopback = IN6ADDR_LOOPBACK_INIT;
 
 __END_DECLS
 

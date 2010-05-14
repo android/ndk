@@ -90,4 +90,12 @@
 
 #define INET6_ADDRSTRLEN 46
 
+#define IPV6_JOIN_GROUP IPV6_ADD_MEMBERSHIP
+#define IPV6_LEAVE_GROUP IPV6_DROP_MEMBERSHIP
+
+#define IN6ADDR_ANY_INIT {{{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}}}
+
+#define ipv6mr_interface ipv6mr_ifindex
+
+
 #endif /* _NETINET_IN6_H */

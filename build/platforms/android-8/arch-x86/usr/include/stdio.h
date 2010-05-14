@@ -112,6 +112,9 @@ struct __sbuf {
  * that does not match the previous one in _bf.  When this happens,
  * _ub._base becomes non-nil (i.e., a stream has ungetc() data iff
  * _ub._base!=NULL) and _up and _ur save the current values of _p and _r.
+ *
+ * NOTE: if you change this structure, you also need to update the
+ * std() initializer in findfp.c.
  */
 typedef	struct __sFILE {
 	unsigned char *_p;	/* current position in (some) buffer */
@@ -433,5 +436,16 @@ static __inline int __sputc(int _c, FILE *_p) {
 #define	putchar(x)	putc(x, stdout)
 #define getchar_unlocked()	getc_unlocked(stdin)
 #define putchar_unlocked(c)	putc_unlocked(c, stdout)
+
+#ifdef _GNU_SOURCE
+/*
+ * glibc defines dprintf(int, const char*, ...), which is poorly named
+ * and likely to conflict with locally defined debugging printfs
+ * fdprintf is a better name, and some programs that use fdprintf use a
+ * #define fdprintf dprintf for compatibility
+ */
+int fdprintf(int, const char*, ...);
+int vfdprintf(int, const char*, __va_list);
+#endif /* _GNU_SOURCE */
 
 #endif /* _STDIO_H_ */

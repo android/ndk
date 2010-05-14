@@ -29,6 +29,10 @@
 #ifndef _INCLUDE_SYS_SYSTEM_PROPERTIES_H
 #define _INCLUDE_SYS_SYSTEM_PROPERTIES_H
 
+#include <sys/cdefs.h>
+
+__BEGIN_DECLS
+
 typedef struct prop_info prop_info;
 
 #define PROP_NAME_MAX   32
@@ -75,5 +79,7 @@ int __system_property_read(const prop_info *pi, char *name, char *value);
 ** not a bug.
 */ 
 const prop_info *__system_property_find_nth(unsigned n);
+
+__END_DECLS
 
 #endif

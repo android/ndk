@@ -132,7 +132,7 @@ static __inline__ void srandom(unsigned int __s)
 
 extern int    unlockpt(int);
 extern char*  ptsname(int);
-extern char*  ptsname_r(int, char*, size_t);
+extern int    ptsname_r(int, char*, size_t);
 extern int    getpt(void);
 
 static __inline__ int grantpt(int __fd)

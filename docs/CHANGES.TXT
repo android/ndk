@@ -119,6 +119,43 @@ OTHER FIXES & CHANGES:
 - removed the annoying 'the mangling of 'va_list' has changed in GCC 4.4'
   warning when building with GCC 4.4.0 for ARM.
 
+- C Library header fixes:
+
+    For all platforms:
+
+        - <arpa/inet.h>: no longer includes <netinet/in6.h>.
+        - <ctype.h>: better inlining with -ansi option.
+        - <mntent.h>: add missing include for <stdio.h>.
+        - <netinet/in.h>: include <netinet/in6.h> and define in6addr_any +
+          in6addr_loopback.
+        - <netinet/in6.h>: add IPV6_JOIN_GROUP, IPV6_LEAVE_GROUP,
+          IN6ADDR_ANY_INIT, ipv6mr_interface.
+        - <sys/epoll.h>: add missing C++ inclusion guards.
+        - <sys/resource.h>: add missing rlim_t declaration.
+        - <sys/system_properties.h>: add missing C++ inclusion guards.
+        - <time64.h>: add missing C++ inclusion guards.
+        - <netdb.h>: move h_errno declaration inside C++ inclusion guards.
+
+- C Library changes:
+
+    For android-8 (a.k.a. Android 2.2):
+
+        - <dlfcn.h>: add DL_info and dladdr().
+        - <err.h>: add err(), warn() and other variants.
+        - <regex.h>, <fts.h>, <sys/queue.h>: added
+        - <pthread.h>: add pthread_condattr_t
+        - <sched.h>: added proper clone() declaration (and implementation).
+        - <signal.h>: added killpg().
+        - <stdio.h>: add fdprintf() and vfdprintf().
+        - <stdlib.h>: fix ptsname_r() signature in declaration. previous
+          implementation was broken anyway.
+        - <unistd.h>: add getusershell(), setusershell(), endusershell(),
+          ttyname(), ttyname_r(), TEMP_FAILURE_RETRY. Fix usleep() signature
+          (now returns int).
+        - <wchar.h>: add fake mbstowcs() and wcstombs().
+
+  More details available under docs/system/libc/CHANGES.TXT
+
 -------------------------------------------------------------------------------
 android-ndk-r3
 

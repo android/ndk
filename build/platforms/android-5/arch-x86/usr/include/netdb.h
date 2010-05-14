@@ -75,10 +75,6 @@
 
 #define  MAXHOSTNAMELEN  256
 
-/* BIONIC-BEGIN */
-#define  h_errno   (*__get_h_errno())
-extern int*  __get_h_errno(void);
-/* BIONIC-END */
 
 /*
  * Structures returned by network data base library.  All addresses are
@@ -203,6 +199,10 @@ struct addrinfo {
 #define	SCOPE_DELIMITER	'%'
 
 __BEGIN_DECLS
+/* BIONIC-BEGIN */
+#define  h_errno   (*__get_h_errno())
+int*  __get_h_errno(void);
+/* BIONIC-END */
 void endhostent(void);
 void endnetent(void);
 void endnetgrent(void);
