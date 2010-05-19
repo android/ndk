@@ -64,6 +64,23 @@ static void onWindowFocusChanged(android_activity_t* activity, int focused)
     LOGI("WindowFocusChanged: %p -- %d\n", activity, focused);
 }
 
+static void onSurfaceCreated(android_activity_t* activity, android_surface_t* surface)
+{
+    LOGI("SurfaceCreated: %p -- %p\n", activity, surface);
+}
+
+static void onSurfaceChanged(android_activity_t* activity, android_surface_t* surface,
+        int format, int width, int height)
+{
+    LOGI("SurfaceChanged: %p -- %p fmt=%d w=%d h=%d\n", activity, surface,
+            format, width, height);
+}
+
+static void onSurfaceDestroyed(android_activity_t* activity, android_surface_t* surface)
+{
+    LOGI("SurfaceDestroyed: %p -- %p\n", activity, surface);
+}
+
 void android_onCreateActivity(android_activity_t* activity,
         void* savedState, size_t savedStateSize)
 {
@@ -76,4 +93,7 @@ void android_onCreateActivity(android_activity_t* activity,
     activity->callbacks->onStop = onStop;
     activity->callbacks->onLowMemory = onLowMemory;
     activity->callbacks->onWindowFocusChanged = onWindowFocusChanged;
+    activity->callbacks->onSurfaceCreated = onSurfaceCreated;
+    activity->callbacks->onSurfaceChanged = onSurfaceChanged;
+    activity->callbacks->onSurfaceDestroyed = onSurfaceDestroyed;
 }
