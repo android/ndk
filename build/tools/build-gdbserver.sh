@@ -33,7 +33,7 @@ is the name of the toolchain to use (e.g. arm-eabi-4.4.0).
 NOTE: The --platform option is ignored if --sysroot is used."
 
 RELEASE=`date +%Y%m%d`
-BUILD_OUT=`mktemp -d /tmp/ndk-toolchain-XXX`
+BUILD_OUT=`random_temp_directory`
 PLATFORM=android-3
 VERBOSE=no
 JOBS=$HOST_NUM_CPUS
