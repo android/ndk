@@ -36,7 +36,7 @@ NDK_DIR=$ANDROID_NDK_ROOT
 register_option "--ndk-dir=<path>" do_ndk_dir "Specify target NDK directory" "$NDK_DIR"
 do_ndk_dir () { OPTION_NDK_DIR=$1; }
 
-BUILD_DIR=`mktemp -d /tmp/ndk-prebuilt-XXX`
+BUILD_DIR=`random_temp_directory`
 OPTION_BUILD_DIR=
 register_option "--build-dir=<path>" do_build_dir "Specify temporary build directory" "/tmp/<random>"
 do_build_dir () { OPTION_BUILD_DIR=$1; }

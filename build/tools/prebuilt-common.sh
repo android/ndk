@@ -424,3 +424,8 @@ check_toolchain_install ()
     set_toolchain_install $TOOLCHAIN_PATH
 }
 
+
+random_temp_directory ()
+{
+    mktemp -d /tmp/ndk-toolchain-XXXXXX
+}

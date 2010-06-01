@@ -1,6 +1,17 @@
 Android NDK ChangeLog:
 
 -------------------------------------------------------------------------------
+android-ndk-r4b
+
+This release fixes a few bugs in r4 scripts. There are no new features.
+
+OTHER FIXES & CHANGES:
+
+- build/tools/rebuild-all-prebuilt.sh: mktemp expects 'XXXXXX' instead of 'XXX'.
+  Fix the script (and others in the same directory) to do that properly.
+
+
+-------------------------------------------------------------------------------
 android-ndk-r4
 
 IMPORTANT BUG FIXES:
