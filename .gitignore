@@ -6,5 +6,6 @@ local.properties
 build.xml
 samples/*/libs/
 samples/*/bin/
+samples/*/obj/
 samples/*/gen/
 build/prebuilt/

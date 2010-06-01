@@ -100,7 +100,7 @@ endif
 $(call ndk_log,Found project path: $(NDK_PROJECT_PATH))
 
 # Place all generated files here
-NDK_APP_OUT := $(NDK_PROJECT_PATH)/bin/ndk
+NDK_APP_OUT := $(NDK_PROJECT_PATH)/obj
 
 # Fake an application named 'local'
 _app            := local
