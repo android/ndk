@@ -40,22 +40,27 @@ include $(NDK_ROOT)/build/core/init.mk
 
 # ====================================================================
 #
-# Find the application's project path by looking at the manifest file
-# in the current directory or any of its parents.
+# If NDK_PROJECT_PATH is not defined, find the application's project
+# path by looking at the manifest file in the current directory or
+# any of its parents. If none is found, try again with 'jni/Android.mk'
+#
+# It turns out that some people use ndk-build to generate static
+# libraries without a full Android project tree.
 #
 # ====================================================================
 
-find-project-dir = $(strip $(call find-project-dir-inner,$1))
+find-project-dir = $(strip $(call find-project-dir-inner,$1,$2))
 
 find-project-dir-inner = \
     $(eval __found_project_path := )\
     $(eval __find_project_path := $1)\
+    $(eval __find_project_file := $2)\
     $(call find-project-dir-inner-2)\
     $(__found_project_path)
 
 find-project-dir-inner-2 = \
-    $(call ndk_log,Looking for manifest file in $(__find_project_path))\
-    $(eval __find_project_manifest := $(strip $(wildcard $(__find_project_path)/AndroidManifest.xml)))\
+    $(call ndk_log,Looking for $(__find_project_file) in $(__find_project_path))\
+    $(eval __find_project_manifest := $(strip $(wildcard $(__find_project_path)/$(__find_project_file))))\
     $(if $(__find_project_manifest),\
         $(call ndk_log,    Found it !)\
         $(eval __found_project_path := $(__find_project_path))\
@@ -67,10 +72,16 @@ find-project-dir-inner-2 = \
         )\
     )
 
-NDK_PROJECT_PATH := $(call find-project-dir,$(strip $(shell pwd)))
+NDK_PROJECT_PATH := $(strip $(NDK_PROJECT_PATH))
 ifndef NDK_PROJECT_PATH
-    $(call __ndk_info,Could not find application's manifest from current directory.)
-    $(call __ndk_info,Please ensure that you are inside the project's directory !)
+    NDK_PROJECT_PATH := $(call find-project-dir,$(strip $(shell pwd)),AndroidManifest.xml)
+endif
+ifndef NDK_PROJECT_PATH
+    NDK_PROJECT_PATH := $(call find-project-dir,$(strip $(shell pwd)),jni/Android.mk)
+endif
+ifndef NDK_PROJECT_PATH
+    $(call __ndk_info,Could not find application project directory !)
+    $(call __ndk_info,Please define the NDK_PROJECT_PATH variable to point to it.)
     $(call __ndk_error,Aborting)
 endif
 
