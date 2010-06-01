@@ -38,7 +38,7 @@ CCACHE_URL=$DOWNLOAD_ROOT/$CCACHE_PACKAGE
 
 OPTION_PACKAGE=no
 
-BUILD_OUT=`mktemp -d /tmp/ndk-toolchain-XXX`
+BUILD_OUT=`random_temp_directory`
 OPTION_BUILD_OUT=
 OPTION_FROM=
 

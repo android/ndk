@@ -32,7 +32,7 @@ the toolchain to use (e.g. arm-eabi-4.4.0)."
 
 JOBS=$HOST_NUM_CPUS
 RELEASE=`date +%Y%m%d`
-BUILD_OUT=`mktemp -d /tmp/ndk-toolchain-XXX`
+BUILD_OUT=`random_temp_directory`
 PLATFORM=android-3
 GDB_VERSION=6.6
 BINUTILS_VERSION=2.19
