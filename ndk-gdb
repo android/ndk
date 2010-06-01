@@ -234,6 +234,15 @@ log "ADB version found: $ADB_VERSION"
 ADB_CMD="${ADB_CMD}${ADB_FLAGS}"
 log "Using final ADB command: '$ADB_CMD'"
 
+adb_shell ()
+{
+    # Run an adb shell command and return its output.
+    #
+    # We need to filter weird control characters like \r that are
+    # included in the output.
+    #
+    $ADB_CMD shell $@ | sed -e 's![[:cntrl:]]!!g'
+}
 
 # Check the awk tool
 AWK_SCRIPTS=$ANDROID_NDK_ROOT/build/awk
@@ -323,17 +332,31 @@ if [ $? != 0 ] ; then
     exit 1
 fi
 
+# Check that the device is running Froyo (API Level 8) or higher
+#
+API_LEVEL=`adb_shell getprop ro.build.version.sdk`
+if [ $? != 0 -o -z "$API_LEVEL" ] ; then
+    echo "ERROR: Could not find target device's supported API level !"
+    echo "ndk-gdb will only work if your device is running Android 2.2 or higher."
+    exit 1
+fi
+if [ "$API_LEVEL" -lt "8" ] ; then
+    echo "ERROR: ndk-gdb requires a target device running Android 2.2 (API level 8) or higher."
+    echo "The target device is running API level $API_LEVEL !"
+    exit 1
+fi
+
 # Get the target device's supported ABI(s)
 # And check that they are supported by the application
 #
 COMPAT_ABI=none
-CPU_ABI=`$ADB_CMD shell getprop ro.product.cpu.abi | sed -e 's!\\r!!g'`
+CPU_ABI=`adb_shell getprop ro.product.cpu.abi`
 echo "$APP_ABIS" | grep -q -F "$CPU_ABI"
 if [ $? = 0 ] ; then
     COMPAT_ABI=$CPU_ABI
 fi
 
-CPU_ABI2=`$ADB_CMD shell getprop ro.product.cpu.abi2 | sed -e 's!\\r!!g'`
+CPU_ABI2=`adb_shell getprop ro.product.cpu.abi2`
 if [ -z "$CPU_ABI2" ] ; then
     log "Device CPU ABI: $CPU_ABI"
 else
@@ -368,7 +391,7 @@ fi
 # Let's check that 'gdbserver' is properly installed on the device too. If this
 # is not the case, the user didn't install the proper package after rebuilding.
 #
-DEVICE_GDBSERVER=`$ADB_CMD shell ls /data/data/$PACKAGE_NAME/lib/gdbserver`
+DEVICE_GDBSERVER=`adb_shell ls /data/data/$PACKAGE_NAME/lib/gdbserver`
 log "Found device gdbserver: $DEVICE_GDBSERVER"
 if pattern_match "No such file or directory" "$DEVICE_GDBSERVER" ] ; then
     echo "ERROR: Non-debuggable application installed on the target device."
@@ -387,11 +410,9 @@ APP_OUT=`get_build_var_for_abi TARGET_OUT $COMPAT_ABI`
 log "Using app out directory: $APP_OUT"
 
 # Find the <dataDir> of the package on the device
-DATA_DIR=`$ADB_CMD shell run-as $PACKAGE_NAME /system/bin/sh -c pwd`
-# mmm, a rogue \r at the end, get rid of it.
-DATA_DIR=`echo "$DATA_DIR" | sed -e 's!\\r!!g'`
+DATA_DIR=`adb_shell run-as $PACKAGE_NAME /system/bin/sh -c pwd`
 log "Found data directory: '$DATA_DIR'"
-if [ $? != 0 ] ; then
+if [ $? != 0 -o -z "$DATA_DIR" ] ; then
     echo "ERROR: Could not extract package's data directory. Are you sure that"
     echo "       your installed application is debuggable?"
     exit 1
