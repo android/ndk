@@ -10,9 +10,13 @@ OTHER FIXES & CHANGES:
 - build/tools/rebuild-all-prebuilt.sh: mktemp expects 'XXXXXX' instead of 'XXX'.
   Fix the script (and others in the same directory) to do that properly.
 
-- ndk-gdb: check the target device's API level, and dump an error message if it
-  is not at least 8 (Android 2.2 a.k.a. Froyo). Fix script to properly remove
-  control characters like '\r' from adb shell's output.
+- ndk-gdb: check the target device's API level, and dump an error message if
+  it is not at least 8 (Android 2.2 a.k.a. Froyo). Fix script to properly
+  remove control characters like '\r' from adb shell's output.
+
+- ndk-build: Make AndroidManifest.xml optional. Now the build scripts will try
+  to look for jni/Android.mk if not manifest is found. If you don't use this,
+  you can also define NDK_PROJECT_PATH to point to your tree.
 
 -------------------------------------------------------------------------------
 android-ndk-r4
