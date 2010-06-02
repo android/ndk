@@ -34,6 +34,7 @@ endif
 #
 $(call assert-defined,LOCAL_MAKEFILE)
 
+include $(BUILD_SYSTEM)/import-locals.mk
 include $(BUILD_SYSTEM)/build-module.mk
 
 # list of generated object files

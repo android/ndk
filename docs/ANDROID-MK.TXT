@@ -481,3 +481,70 @@ LOCAL_DISABLE_NO_EXECUTE
 
         http://en.wikipedia.org/wiki/NX_bit
         http://www.gentoo.org/proj/en/hardened/gnu-stack.xml
+
+LOCAL_EXPORT_CFLAGS
+    Define this variable to record a set of C/C++ compiler flags that will
+    be added to the LOCAL_CFLAGS definition of any other module that uses
+    this one with LOCAL_STATIC_LIBRARIES or LOCAL_SHARED_LIBRARIES.
+
+    For example, consider the module 'foo' with the following definition:
+
+        include $(CLEAR_VARS)
+        LOCAL_MODULE := foo
+        LOCAL_SRC_FILES := foo/foo.c
+        LOCAL_EXPORT_CFLAGS := -DFOO=1
+        include $(BUILD_STATIC_LIBRARY)
+
+    And another module, named 'bar' that depends on it as:
+
+        include $(CLEAR_VARS)
+        LOCAL_MODULE := bar
+        LOCAL_SRC_FILES := bar.c
+        LOCAL_CFLAGS := -DBAR=2
+        LOCAL_STATIC_LIBRARIES := foo
+        include $(BUILD_SHARED_LIBRARY)
+
+    Then, the flags '-DFOO=1 -DBAR=2' will be passed to the compiler when
+    building bar.c
+
+    Exported flags are prepended to your module's LOCAL_CFLAGS so you can
+    easily override them. They are also transitive: if 'zoo' depends on
+    'bar' which depends on 'foo', then 'zoo' will also inherit all flags
+    exported by 'foo'.
+
+    Finally, exported flags are *not* used when building the module that
+    exports them. In the above example, -DFOO=1 would not be passed to the
+    compiler when building foo/foo.c.
+
+LOCAL_EXPORT_CPPFLAGS
+    Same as LOCAL_EXPORT_CFLAGS, but for C++ flags only.
+
+LOCAL_EXPORT_C_INCLUDES
+    Same as LOCAL_EXPORT_CFLAGS, but for C include paths.
+    This can be useful if 'bar.c' wants to include headers
+    that are provided by module 'foo'.
+
+LOCAL_EXPORT_LDLIBS
+    Same as LOCAL_EXPORT_CFLAGS, but for linker flags. Note that the
+    imported linker flags will be appended to your module's LOCAL_LDLIBS
+    though, due to the way Unix linkers work.
+
+    This is typically useful when module 'foo' is a static library and has
+    code that depends on a system library. LOCAL_EXPORT_LDLIBS can then be
+    used to export the dependency. For example:
+
+        include $(CLEAR_VARS)
+        LOCAL_MODULE := foo
+        LOCAL_SRC_FILES := foo/foo.c
+        LOCAL_EXPORT_LDLIBS := -llog
+        include $(BUILD_STATIC_LIBRARY)
+
+        include $(CLEAR_VARS)
+        LOCAL_MODULE := bar
+        LOCAL_SRC_FILES := bar.c
+        LOCAL_STATIC_LIBRARIES := foo
+        include $(BUILD_SHARED_LIBRARY)
+
+    There, libbar.so will be built with a -llog at the end of the linker
+    command to indicate that it depends on the system logging library,
+    because it depends on 'foo'.

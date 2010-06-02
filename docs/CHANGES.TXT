@@ -1,6 +1,24 @@
 Android NDK ChangeLog:
 
 -------------------------------------------------------------------------------
+android-ndk-r5
+
+IMPORTANT BUG FIXES:
+
+IMPORTANT CHANGES:
+
+- Support for module exports: A module can now define a set of compiler or
+  linker flags that will be automatically 'imported' by any other module that
+  depends on it, through LOCAL_STATIC_LIBRARIES or LOCAL_SHARED_LIBRARIES.
+
+  This is achieved with the help of new Android.mk variables named
+  LOCAL_EXPORT_CFLAGS, LOCAL_EXPORT_CPPFLAGS, LOCAL_EXPORT_C_INCLUDES and
+  LOCAL_EXPORT_LDLIBS. See docs/ANDROID-MK.TXT for mode documentation, and
+  a 'samples/module-exports' for a sample project that uses this.
+
+OTHER FIXES & CHANGES:
+
+-------------------------------------------------------------------------------
 android-ndk-r4b
 
 This release fixes a few bugs in r4 scripts. There are no new features.
