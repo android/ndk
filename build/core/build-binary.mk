@@ -165,11 +165,18 @@ $(call TARGET-process-src-files-tags)
 
 # Build the sources to object files
 #
+
 $(foreach src,$(filter %.c,$(LOCAL_SRC_FILES)), $(call compile-c-source,$(src)))
 $(foreach src,$(filter %.S %.s,$(LOCAL_SRC_FILES)), $(call compile-s-source,$(src)))
 
 $(foreach src,$(filter %$(LOCAL_CPP_EXTENSION),$(LOCAL_SRC_FILES)),\
     $(call compile-cpp-source,$(src)))
+
+unknown_sources := $(strip $(filter-out %.c %.S %.s %$(LOCAL_CPP_EXTENSION),$(LOCAL_SRC_FILES)))
+ifdef unknown_sources
+    $(call __ndk_info,WARNING: Unsupported source file extensions in $(LOCAL_MAKEFILE) for module $(LOCAL_MODULE))
+    $(call __ndk_info,  $(unknown_sources))
+endif
 
 #
 # The compile-xxx-source calls updated LOCAL_OBJECTS and LOCAL_DEPENDENCY_DIRS
