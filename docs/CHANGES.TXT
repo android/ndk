@@ -18,6 +18,11 @@ OTHER FIXES & CHANGES:
   to look for jni/Android.mk if not manifest is found. If you don't use this,
   you can also define NDK_PROJECT_PATH to point to your tree.
 
+- Place generated binaries under $PROJECT_PATH/obj/ instead of
+  $PROJECT_PATH/bin/ndk/. The 'bin' directory is sometimes cleaned
+  by the JDT, resulting in the inability to properly load symbol versions
+  of the shared libraries when running ndk-gdb.
+
 -------------------------------------------------------------------------------
 android-ndk-r4
 
