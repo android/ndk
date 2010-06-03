@@ -30,13 +30,20 @@ BEGIN {
     PID=0
     FS=" "
     # Need to escape the dots in the package name
-    REGEX=gensub("\\.","\\\\.","g",PACKAGE)
+    #
+    # The first argument is the regular expression '\.'
+    # corresponding to a single dot character. The second
+    # argument is the replacement string, which will be '\.'
+    # for every input dot. Finally, we need to escape each
+    # backslash in the Awk strings.
+    #
+    gsub("\\.","\\.",PACKAGE)
 }
 
 # We use the fact that the 9th column of the 'ps' output
 # contains the package name, while the 2nd one contains the pid
 #
-$9 ~ REGEX {
+$9 ~ PACKAGE {
     PID=$2
 }
 
