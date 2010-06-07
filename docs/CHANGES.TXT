@@ -12,7 +12,8 @@ OTHER FIXES & CHANGES:
 
 - ndk-gdb: check the target device's API level, and dump an error message if
   it is not at least 8 (Android 2.2 a.k.a. Froyo). Fix script to properly
-  remove control characters like '\r' from adb shell's output.
+  remove control characters like '\r' from adb shell's output. Also fix
+  script to work properly with OS X's BSD awk.
 
 - ndk-build: Make AndroidManifest.xml optional. Now the build scripts will try
   to look for jni/Android.mk if no manifest is found. If you don't use this,
