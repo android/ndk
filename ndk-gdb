@@ -340,6 +340,7 @@ if [ $? != 0 -o -z "$API_LEVEL" ] ; then
     echo "ndk-gdb will only work if your device is running Android 2.2 or higher."
     exit 1
 fi
+log "Device API Level: $API_LEVEL"
 if [ "$API_LEVEL" -lt "8" ] ; then
     echo "ERROR: ndk-gdb requires a target device running Android 2.2 (API level 8) or higher."
     echo "The target device is running API level $API_LEVEL !"
