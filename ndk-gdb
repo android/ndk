@@ -83,6 +83,26 @@ run_awk_manifest_script ()
     $AWK_CMD -f $AWK_SCRIPTS/$1 $PROJECT/$MANIFEST
 }
 
+if [ "$HOST_OS" = "cygwin" ] ; then
+# Return native path representation from cygwin one
+# $1: a cygwin-compatible path (e.g. /cygdrive/c/some/thing)
+# Return: path in host windows representation, e.g. C:/some/thing
+#
+# We use mixed mode (i.e. / as the directory separator) because
+# all the tools we use recognize it properly, and it avoids lots
+# of escaping nonsense associated with "\"
+#
+native_path ()
+{
+    cygpath -m $1
+}
+else # HOST_OS != windows
+native_path ()
+{
+    echo "$1"
+}
+fi # HOST_OS != windows
+
 VERBOSE=no
 while [ -n "$1" ]; do
     opt="$1"
@@ -352,19 +372,25 @@ fi
 #
 COMPAT_ABI=none
 CPU_ABI=`adb_shell getprop ro.product.cpu.abi`
-echo "$APP_ABIS" | grep -q -F "$CPU_ABI"
-if [ $? = 0 ] ; then
-    COMPAT_ABI=$CPU_ABI
-fi
+for ABI in $APP_ABIS; do
+    if [ "$ABI" = "$CPU_ABI" ] ; then
+        COMPAT_ABI=$CPU_ABI
+        break
+    fi
+done
 
 CPU_ABI2=`adb_shell getprop ro.product.cpu.abi2`
 if [ -z "$CPU_ABI2" ] ; then
     log "Device CPU ABI: $CPU_ABI"
 else
     log "Device CPU ABIs: $CPU_ABI $CPU_ABI2"
-    echo "$APP_ABIS" | grep -q -F "$CPU_ABI2"
-    if [ $? = 0 ] ; then
-        COMPAT_ABI=$CPU_ABI2
+    if [ "$COMPAT_ABI" = "none" ] ; then
+        for ABI in $APP_ABIS; do
+            if [ "$ABI" = "$CPU_ABI2" ] ; then
+                COMPAT_ABI=$CPU_ABI2
+                break
+            fi
+        done
     fi
 fi
 if [ "$COMPAT_ABI" = none ] ; then
@@ -507,7 +533,7 @@ fi
 
 # Get the app_server binary from the device
 APP_PROCESS=$APP_OUT/app_process
-run adb pull /system/bin/app_process $APP_PROCESS
+run $ADB_CMD pull /system/bin/app_process `native_path $APP_PROCESS`
 log "Pulled $APP_BINARY from device/emulator."
 
 # Now launch the appropriate gdb client with the right init commands
