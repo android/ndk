@@ -125,8 +125,8 @@ that will be passed directly to a compiler, and you should be good.
 
 Note that the default extension for C++ source files is '.cpp'. It is
 however possible to specify a different one by defining the variable
-LOCAL_DEFAULT_CPP_EXTENSION. Don't forget the initial dot (i.e. '.cxx'
-will work, but not 'cxx').
+LOCAL_CPP_EXTENSION. Don't forget the initial dot (i.e. '.cxx' will
+work, but not 'cxx').
 
   include $(BUILD_SHARED_LIBRARY)
 
