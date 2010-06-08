@@ -34,16 +34,6 @@ $(foreach __name,$(NDK_APP_VARS),\
   $(eval NDK_$(__name) := $(call get,$(_map),$(__name)))\
 )
 
-# set release/debug build flags. We always use the -g flag because
-# we generate symbol versions of the binaries that are later stripped
-# when they are copied to the final project's libs/<abi> directory.
-#
-ifeq ($(NDK_APP_OPTIM),debug)
-  NDK_APP_CFLAGS := -O0 -g $(NDK_APP_CFLAGS)
-else
-  NDK_APP_CFLAGS := -O2 -DNDEBUG -g $(NDK_APP_CFLAGS)
-endif
-
 # make the application depend on the modules it requires
 .PHONY: ndk-app-$(_app)
 ndk-app-$(_app): $(NDK_APP_MODULES)
@@ -65,23 +55,6 @@ ifneq ($(_bad_abis),)
     $(call __ndk_info,NDK Application '$(_app)' targets unknown ABI(s): $(_bad_abis))
     $(call __ndk_info,Please fix the APP_ABI definition in $(NDK_APP_APPLICATION_MK))
     $(call __ndk_error,Aborting)
-endif
-
-# Extract the debuggable flag from the application's manifest
-# NOTE: To make unit-testing simpler, handle the case where there is no manifest.
-#
-NDK_APP_DEBUGGABLE := false
-NDK_APP_MANIFEST := $(strip $(wildcard $(NDK_APP_PROJECT_PATH)/AndroidManifest.xml))
-ifdef NDK_APP_MANIFEST
-    NDK_APP_DEBUGGABLE := $(shell $(HOST_AWK) -f $(BUILD_AWK)/extract-debuggable.awk $(NDK_APP_MANIFEST))
-endif
-
-ifdef NDK_LOG
-  ifeq ($(NDK_APP_DEBUGGABLE),true)
-    $(call ndk_log,Application '$(_app)' *is* debuggable)
-  else
-    $(call ndk_log,Application '$(_app)' is not debuggable)
-  endif
 endif
 
 # Clear all installed binaries for this application
