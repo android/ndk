@@ -41,14 +41,6 @@ intermediates := $($(my)OBJS)
 #
 LOCAL_INTERMEDIATES := $(LOCAL_BUILT_MODULE)
 
-# LOCAL_BUILD_MODE will be either release or debug
-#
-ifneq ($(NDK_APP_OPTIM),)
-    LOCAL_BUILD_MODE := $(NDK_APP_OPTIM)
-else
-    LOCAL_BUILD_MODE := release
-endif
-
 #
 # Ensure that 'make <module>' and 'make clean-<module>' work
 #

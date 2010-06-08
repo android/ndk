@@ -42,18 +42,6 @@ ifndef APP_PROJECT_PATH
     APP_PROJECT_PATH := $(NDK_PROJECT_PATH)
 endif
 
-# check that APP_OPTIM, if defined, is either 'release' or 'debug'
-APP_OPTIM := $(strip $(APP_OPTIM))
-$(if $(filter-out release debug,$(APP_OPTIM)),\
-  $(call __ndk_info, The APP_OPTIM defined in $(_application_mk) must only be 'release' or 'debug')\
-  $(call __ndk_error,Aborting)\
-)
-
-ifndef APP_OPTIM
-    $(call ndk_log,  Defaulted to APP_OPTIM=release)
-    APP_OPTIM := release
-endif
-
 # check whether APP_PLATFORM is defined. If not, look for default.properties in
 # the $(APP_PROJECT_PATH) and extract the value with awk's help. If nothing is here,
 # revert to the default value (i.e. "android-3").
@@ -121,6 +109,57 @@ else
     endif
     APP_BUILD_SCRIPT := $(_build_script)
     $(call ndk_log,  Defaulted to APP_BUILD_SCRIPT=$(APP_BUILD_SCRIPT))
+endif
+
+# Extract the debuggable flag from the application's manifest
+# NOTE: To make unit-testing simpler, handle the case where there is no manifest.
+#
+APP_DEBUGGABLE := false
+APP_MANIFEST := $(strip $(wildcard $(APP_PROJECT_PATH)/AndroidManifest.xml))
+ifdef APP_MANIFEST
+    APP_DEBUGGABLE := $(shell $(HOST_AWK) -f $(BUILD_AWK)/extract-debuggable.awk $(APP_MANIFEST))
+endif
+
+ifdef NDK_LOG
+  ifeq ($(APP_DEBUGGABLE),true)
+    $(call ndk_log,Application '$(_app)' *is* debuggable)
+  else
+    $(call ndk_log,Application '$(_app)' is not debuggable)
+  endif
+endif
+
+# LOCAL_BUILD_MODE will be either release or debug
+#
+# If APP_OPTIM is defined in the Application.mk, just use this.
+#
+# Otherwise, set to 'debug' if android:debuggable is set to TRUE,
+# and to 'release' if not.
+#
+ifneq ($(APP_OPTIM),)
+    # check that APP_OPTIM, if defined, is either 'release' or 'debug'
+    $(if $(filter-out release debug,$(APP_OPTIM)),\
+        $(call __ndk_info, The APP_OPTIM defined in $(_application_mk) must only be 'release' or 'debug')\
+        $(call __ndk_error,Aborting)\
+    )
+    $(call ndk_log,Selecting optimization mode through Application.mk: $(APP_OPTIM))
+else
+    ifeq ($(APP_DEBUGGABLE),true)
+        $(call ndk_log,Selecting debug optimization mode (app is debuggable))
+        APP_OPTIM := debug
+    else
+        $(call ndk_log,Selecting release optimization mode (app is not debuggable))
+        APP_OPTIM := release
+    endif
+endif
+
+# set release/debug build flags. We always use the -g flag because
+# we generate symbol versions of the binaries that are later stripped
+# when they are copied to the final project's libs/<abi> directory.
+#
+ifeq ($(APP_OPTIM),debug)
+  APP_CFLAGS := -O0 -g $(APP_CFLAGS)
+else
+  APP_CFLAGS := -O2 -DNDEBUG -g $(APP_CFLAGS)
 endif
 
 $(if $(call get,$(_map),defined),\
