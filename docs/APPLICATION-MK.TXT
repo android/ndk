@@ -67,6 +67,11 @@ APP_OPTIM
     optimized binaries. The 'debug' mode will generate un-optimized
     binaries which are much easier to debug.
 
+    Note that if your application is debuggable (i.e. if your manifest
+    sets the android:debuggable attribute to "true" in its <application>
+    tag), the default will be 'debug' instead of 'release'. This can
+    be overriden by setting APP_OPTIM to 'release'.
+
     Note that it is possible to debug both 'release' and 'debug'
     binaries, but the 'release' builds tend to provide less information
     during debugging sessions: some variables are optimized out and

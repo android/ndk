@@ -27,6 +27,17 @@ OTHER FIXES & CHANGES:
 - Warn when sources with unsupported extensions are used in LOCAL_SRC_FILES.
   Previous behaviour was to silently ignore them.
 
+- Set the optimization mode to 'debug' automatically if the manifest sets
+  android:debuggable to 'true'. You can override this by using
+  'APP_OPTIM := release' in your Application.mk, or by adding '-O2' to
+  your LOCAL_CFLAGS.
+
+  Note that even in release mode, the NDK build scripts will produce
+  binaries with symbols under obj/local/<abi>/ that will be used for
+  debugging with gdb. However, the debugger will have a harder time to
+  print proper local variable values that have been optimized out or
+  even set breakpoints properly.
+
 -------------------------------------------------------------------------------
 android-ndk-r4
 
