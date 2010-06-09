@@ -45,4 +45,31 @@ if [ -z "$GNUMAKE" ] ; then
     GNUMAKE=make
 fi
 
+# On Windows, when running under cygwin, check that we are
+# invoking a cygwin-compatible GNU Make binary. It is unfortunately
+# common for app developers to have another non-cygwin compatible
+#
+if [ "$OSTYPE" = "cygwin" ] ; then
+    PROGDIR_MIXED=`cygpath -m $PROGDIR`
+    GNUMAKE=`cygpath -u $GNUMAKE`
+    CYGWIN_GNUMAKE=`$GNUMAKE -f $PROGDIR_MIXED/build/core/check-cygwin-make.mk 2>&1`
+    if [ $? != 0 ] ; then
+        echo "ERROR: You are using a non-Cygwin compatible Make program."
+        echo "Currently using: `cygpath -m $GNUMAKE`"
+        echo ""
+        echo "To solve the issue, follow these steps:"
+        echo ""
+        echo "1. Ensure that the Cygwin 'make' package is installed."
+        echo "   NOTE: You will need GNU Make 3.81 or later!"
+        echo ""
+        echo "2. Define the GNUMAKE environment variable to point to it, as in:"
+        echo ""
+        echo "     export GNUMAKE=/usr/bin/make"
+        echo ""
+        echo "3. Call 'ndk-build' again."
+        echo ""
+        exit 1
+    fi
+fi
+
 $GNUMAKE -f $PROGDIR/build/core/build-local.mk $@
