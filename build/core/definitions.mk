@@ -541,7 +541,11 @@ NDK_APP_VARS_OPTIONAL := APP_OPTIM APP_CPPFLAGS APP_CFLAGS APP_CXXFLAGS \
                          APP_PROJECT_PATH
 
 # the list of all variables that may appear in an Application.mk file
-NDK_APP_VARS := $(NDK_APP_VARS_REQUIRED) $(NDK_APP_VARS_OPTIONAL)
+# or defined by the build scripts.
+NDK_APP_VARS := $(NDK_APP_VARS_REQUIRED) \
+                $(NDK_APP_VARS_OPTIONAL) \
+                APP_DEBUGGABLE \
+                APP_MANIFEST
 
 # =============================================================================
 #

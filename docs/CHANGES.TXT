@@ -19,6 +19,10 @@ OTHER FIXES & CHANGES:
   to look for jni/Android.mk if no manifest is found. If you don't use this,
   you can also define NDK_PROJECT_PATH to point to your tree.
 
+  Also, on Windows, check that a Cygwin-compatible make executable is being
+  used, and dump a readable help message to solve the issue if this is not
+  the case.
+
 - Place generated binaries under $PROJECT_PATH/obj/ instead of
   $PROJECT_PATH/bin/ndk/. The 'bin' directory is sometimes cleaned
   by the JDT, resulting in the inability to properly load symbol versions
