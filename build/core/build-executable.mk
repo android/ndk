@@ -18,8 +18,8 @@
 #
 
 LOCAL_BUILD_SCRIPT := BUILD_EXECUTABLE
-LOCAL_MODULE_CLASS := EXECUTABLE
 LOCAL_MAKEFILE     := $(local-makefile)
+LOCAL_IS_HOST_MODULE := false
 
 $(call check-defined-LOCAL_MODULE,$(LOCAL_BUILD_SCRIPT))
 $(call check-LOCAL_MODULE,$(LOCAL_MAKEFILE))
@@ -30,15 +30,4 @@ my := TARGET_
 LOCAL_BUILT_MODULE := $(call executable-path,$(LOCAL_MODULE))
 LOCAL_OBJS_DIR     := $(TARGET_OBJS)/$(LOCAL_MODULE)
 
-$(call module-add-executable,$(LOCAL_MODULE),$(LOCAL_BUILT_MODULE),$(LOCAL_MAKEFILE))
-
-include $(BUILD_SYSTEM)/build-binary.mk
-
-$(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
-	@ mkdir -p $(dir $@)
-	@ echo "Executable     : $(PRIVATE_NAME)"
-	$(hide) $(cmd-build-executable)
-
-ALL_EXECUTABLES += $(LOCAL_BUILT_MODULE)
-
-include $(BUILD_SYSTEM)/install-binary.mk
+$(call module-add-executable,$(LOCAL_MODULE))

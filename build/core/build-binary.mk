@@ -13,11 +13,21 @@
 # limitations under the License.
 #
 
-# we expect the 'my' variable to be defined, either to
-# 'HOST_' or 'TARGET_', and this allows us to call the
-# appropriate compiler with $($(my)CC)
+# Check that LOCAL_MODULE is defined, then restore its LOCAL_XXXX values
+$(call assert-defined,LOCAL_MODULE)
+$(call module-restore-locals,$(LOCAL_MODULE))
+
+# Check LOCAL_IS_HOST_MODULE and define 'my' as either HOST_ or TARGET_
 #
-$(call assert-defined,my)
+LOCAL_IS_HOST_MODULE := $(strip $(LOCAL_IS_HOST_MODULE))
+ifdef LOCAL_IS_HOST_MODULE
+  ifneq ($(LOCAL_IS_HOST_MODULE),true)
+    $(call __ndk_log,$(LOCAL_PATH): LOCAL_IS_HOST_MODULE must be "true" or empty, not "$(LOCAL_IS_HOST_MODULE)")
+  endif
+  my := HOST_
+else
+  my := TARGET_
+endif
 
 # LOCAL_MAKEFILE must also exist and name the Android.mk that
 # included the module build script.
@@ -215,3 +225,56 @@ $(LOCAL_BUILT_MODULE): PRIVATE_LDFLAGS := $(TARGET_LDFLAGS) $(LOCAL_LDFLAGS)
 $(LOCAL_BUILT_MODULE): PRIVATE_LDLIBS  := $(LOCAL_LDLIBS) $(TARGET_LDLIBS)
 
 $(LOCAL_BUILT_MODULE): PRIVATE_NAME := $(notdir $(LOCAL_BUILT_MODULE))
+
+#
+# If this is a static library module
+#
+ifeq ($(call module-is-static-library,$(LOCAL_MODULE)),$(true))
+$(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
+	@ mkdir -p $(dir $@)
+	@ echo "StaticLibrary  : $(PRIVATE_NAME)"
+	$(hide) rm -rf $@
+	$(hide) $(cmd-build-static-library)
+
+ALL_STATIC_LIBRARIES += $(LOCAL_BUILT_MODULE)
+endif
+
+#
+# If this is a shared library module
+#
+ifeq ($(call module-is-shared-library,$(LOCAL_MODULE)),$(true))
+$(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
+	@ mkdir -p $(dir $@)
+	@ echo "SharedLibrary  : $(PRIVATE_NAME)"
+	$(hide) $(cmd-build-shared-library)
+
+ALL_SHARED_LIBRARIES += $(LOCAL_BUILT_MODULE)
+endif
+
+#
+# If this is an executable module
+#
+ifeq ($(call module-is-executable,$(LOCAL_MODULE)),$(true))
+$(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
+	@ mkdir -p $(dir $@)
+	@ echo "Executable     : $(PRIVATE_NAME)"
+	$(hide) $(cmd-build-executable)
+
+ALL_EXECUTABLES += $(LOCAL_BUILT_MODULE)
+endif
+
+#
+# If this is an installable module
+#
+ifeq ($(call module-is-installable,$(LOCAL_MODULE)),$(true))
+$(LOCAL_INSTALLED): PRIVATE_NAME    := $(notdir $(LOCAL_BUILT_MODULE))
+$(LOCAL_INSTALLED): PRIVATE_SRC     := $(LOCAL_BUILT_MODULE)
+$(LOCAL_INSTALLED): PRIVATE_DST_DIR := $(NDK_APP_DST_DIR)
+$(LOCAL_INSTALLED): PRIVATE_DST     := $(LOCAL_INSTALLED)
+
+$(LOCAL_INSTALLED): $(LOCAL_BUILT_MODULE) clean-installed-binaries
+	@ echo "Install        : $(PRIVATE_NAME) => $(PRIVATE_DST_DIR)"
+	$(hide) mkdir -p $(PRIVATE_DST_DIR)
+	$(hide) install -p $(PRIVATE_SRC) $(PRIVATE_DST)
+	$(hide) $(call cmd-strip, $(PRIVATE_DST))
+endif
