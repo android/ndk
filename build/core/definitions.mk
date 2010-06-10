@@ -303,6 +303,13 @@ modules-closure = \
 # =============================================================================
 
 # -----------------------------------------------------------------------------
+# Function : parent-dir
+# Arguments: 1: path
+# Returns  : Parent dir or path of $1, with final separator removed.
+# -----------------------------------------------------------------------------
+parent-dir = $(patsubst %/,%,$(dir $1))
+
+# -----------------------------------------------------------------------------
 # Function : check-user-define
 # Arguments: 1: name of variable that must be defined by the user
 #            2: name of Makefile where the variable should be defined
@@ -357,7 +364,7 @@ check-LOCAL_MODULE = \
 # Returns  : the directory of the current Makefile
 # Usage    : $(my-dir)
 # -----------------------------------------------------------------------------
-my-dir = $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
+my-dir = $(call parent-dir,$(lastword $(MAKEFILE_LIST)))
 
 # -----------------------------------------------------------------------------
 # Function : all-makefiles-under

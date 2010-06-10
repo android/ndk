@@ -263,7 +263,34 @@ $(foreach tc,$(NDK_ALL_TOOLCHAINS),\
 #
 # ====================================================================
 
-NDK_PLATFORMS_ROOT := $(NDK_ROOT)/build/platforms
+# The platform files were moved in the Android source tree from
+# $TOP/ndk/build/platforms to $TOP/development/ndk/platforms. However,
+# the official NDK release packages still place them under the old
+# location for now, so deal with this here
+#
+NDK_PLATFORMS_ROOT := $(strip $(NDK_PLATFORMS_ROOT))
+ifndef NDK_PLATFORMS_ROOT
+    NDK_PLATFORMS_ROOT := $(strip $(wildcard $(NDK_ROOT)/build/platforms))
+    ifndef NDK_PLATFORMS_ROOT
+    NDK_PLATFORMS_ROOT := $(strip $(wildcard $(call parent-dir,$(NDK_ROOT))/development/ndk/platforms))
+    endif
+
+    ifndef NDK_PLATFORMS_ROOT
+    $(call __ndk_info,Could not find platform files (headers and libraries))
+        $(call __ndk_info,Please define NDK_PLATFORMS_ROOT to point to a valid)
+        $(call __ndk_info,root directory for these.)
+        $(call __ndk_error,Aborting)
+    endif
+
+    $(call ndk_log,Found platform root directory: $(NDK_PLATFORMS_ROOT))
+else
+    ifeq ($(strip $(wildcard $(NDK_PLATFORMS_ROOT)/android-*)),)
+        $(call __ndk_info,Your NDK_PLATFORMS_ROOT points to an invalid directory)
+        $(call __ndk_info,Current value: $(NDK_PLATFORMS_ROOT))
+        $(call __ndk_error,Aborting)
+    endif
+endif
+
 NDK_ALL_PLATFORMS := $(strip $(notdir $(wildcard $(NDK_PLATFORMS_ROOT)/android-*)))
 $(call ndk_log,Found supported platforms: $(NDK_ALL_PLATFORMS))
 
