@@ -110,8 +110,24 @@ clean-installed-binaries::
 # free the dictionary of LOCAL_MODULE definitions
 $(call modules-clear)
 
-# now parse the Android.mk for the application
+# now parse the Android.mk for the application, this records all
+# module declarations, but does not populate the dependency graph yet.
 include $(NDK_APP_BUILD_SCRIPT)
+
+# recompute all dependencies between modules
+$(call modules-compute-dependencies)
+
+# for debugging purpose
+ifdef NDK_DEBUG_MODULES
+$(call modules-dump-database)
+endif
+
+# now, really build the modules, the second pass allows one to deal
+# with exported values
+$(foreach __pass2_module,$(__ndk_modules),\
+    $(eval LOCAL_MODULE := $(__pass2_module))\
+    $(eval include $(BUILD_SYSTEM)/build-binary.mk)\
+)
 
 # Now compute the closure of all module dependencies.
 #

@@ -18,19 +18,7 @@
 # This should be included from build-binary.mk
 #
 
-$(call assert-defined,LOCAL_MODULE_CLASS LOCAL_BUILD_SCRIPT LOCAL_BUILT_MODULE)
-
-# Check LOCAL_IS_HOST_MODULE and define 'my' as either HOST_ or TARGET_
-#
-LOCAL_IS_HOST_MODULE := $(strip $(LOCAL_IS_HOST_MODULE))
-ifdef LOCAL_IS_HOST_MODULE
-  ifneq ($(LOCAL_IS_HOST_MODULE),true)
-    $(call __ndk_log,$(LOCAL_PATH): LOCAL_IS_HOST_MODULE must be "true" or empty, not "$(LOCAL_IS_HOST_MODULE)")
-  endif
-  my := HOST_
-else
-  my := TARGET_
-endif
+$(call assert-defined,my LOCAL_BUILD_SCRIPT LOCAL_BUILT_MODULE)
 
 # Compute 'intermediates' which is the location where we're going to store
 # intermediate generated files like object (.o) files.

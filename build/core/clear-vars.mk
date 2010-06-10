@@ -16,26 +16,7 @@
 # this file is included repeatedly from Android.mk files in order to clean
 # the module-specific variables from the environment,
 
-NDK_LOCAL_VARS := \
-  LOCAL_MODULE \
-  LOCAL_SRC_FILES \
-  LOCAL_C_INCLUDES \
-  LOCAL_CFLAGS \
-  LOCAL_CXXFLAGS \
-  LOCAL_CPPFLAGS \
-  LOCAL_LDFLAGS \
-  LOCAL_LDLIBS \
-  LOCAL_ARFLAGS \
-  LOCAL_CPP_EXTENSION \
-  LOCAL_STATIC_LIBRARIES \
-  LOCAL_STATIC_WHOLE_LIBRARIES \
-  LOCAL_SHARED_LIBRARIES \
-  LOCAL_MAKEFILE \
-  LOCAL_ALLOW_UNDEFINED_SYMBOLS \
-  LOCAL_ARM_MODE \
-  LOCAL_ARM_NEON \
-  LOCAL_DISABLE_NO_EXECUTE \
-
 $(call clear-src-tags)
-$(call clear-vars, $(NDK_LOCAL_VARS))
 
+# Note: As a special exception, we don't want to clear LOCAL_PATH
+$(call clear-vars, $(filter-out LOCAL_PATH,$(modules-LOCALS:%=LOCAL_%)))

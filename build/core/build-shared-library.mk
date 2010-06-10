@@ -18,7 +18,6 @@
 #
 
 LOCAL_BUILD_SCRIPT := BUILD_SHARED_LIBRARY
-LOCAL_MODULE_CLASS := SHARED_LIBRARY
 LOCAL_MAKEFILE     := $(local-makefile)
 
 $(call check-defined-LOCAL_MODULE,$(LOCAL_BUILD_SCRIPT))
@@ -30,15 +29,4 @@ my := TARGET_
 LOCAL_BUILT_MODULE := $(call shared-library-path,$(LOCAL_MODULE))
 LOCAL_OBJS_DIR     := $(TARGET_OBJS)/$(LOCAL_MODULE)
 
-$(call module-add-shared-library,$(LOCAL_MODULE),$(LOCAL_BUILT_MODULE),$(LOCAL_MAKEFILE))
-
-include $(BUILD_SYSTEM)/build-binary.mk
-
-$(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
-	@ mkdir -p $(dir $@)
-	@ echo "SharedLibrary  : $(PRIVATE_NAME)"
-	$(hide) $(cmd-build-shared-library)
-
-ALL_SHARED_LIBRARIES += $(LOCAL_BUILT_MODULE)
-
-include $(BUILD_SYSTEM)/install-binary.mk
+$(call module-add-shared-library,$(LOCAL_MODULE))
