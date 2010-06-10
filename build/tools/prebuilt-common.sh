@@ -327,6 +327,22 @@ fix_option ()
     fi
 }
 
+
+# If SYSROOT is empty, check that $1/$2 contains a sysroot
+# and set the variable to it.
+#
+# $1: sysroot path
+# $2: platform/arch suffix
+check_sysroot ()
+{
+    if [ -z "$SYSROOT" ] ; then
+        log "Probing directory for sysroot: $1/$2"
+        if [ -d $1/$2 ] ; then
+            SYSROOT=$1/$2
+        fi
+    fi
+}
+
 # Determine sysroot
 # $1: Option value (or empty)
 #
@@ -336,13 +352,16 @@ fix_sysroot ()
         eval SYSROOT="$1"
         log "Using specified sysroot: $1"
     else
-        SYSROOT_SUFFIX=build/platforms/$PLATFORM/arch-$ARCH
-        if [ -d $NDK_DIR/$SYSROOT_SUFFIX ] ; then
-            SYSROOT=$NDK_DIR/$SYSROOT_SUFFIX
-            log "Using target NDK sysroot: $SYSROOT"
-        else
-            SYSROOT=$ANDROID_NDK_ROOT/$SYSROOT_SUFFIX
-            log "Using install NDK sysroot: $SYSROOT"
+        SYSROOT_SUFFIX=$PLATFORM/arch-$ARCH
+        SYSROOT=
+        check_sysroot $NDK_DIR/build/platforms $SYSROOT_SUFFIX
+        check_sysroot $ANDROID_NDK_ROOT/build/platforms $SYSROOT_SUFFIX
+        check_sysroot `dirname $ANDROID_NDK_ROOT`/development/ndk/platforms $SYSROOT_SUFFIX
+
+        if [ -z "$SYSROOT" ] ; then
+            echo "ERROR: Could not find NDK sysroot path for $SYSROOT_SUFFIX."
+            echo "       Use --sysroot=<path> to specify one."
+            exit 1
         fi
     fi
 

@@ -44,6 +44,18 @@ PREBUILT_NDK=
 # be copied into the archive.
 USE_GIT_FILES=yes
 
+# Find the location of the platforms root directory
+PLATFORMS_ROOT=$NDK_ROOT_DIR/build/platforms
+if [ ! -d $PLATFORMS_ROOT ] ; then
+    PLATFORMS_ROOT=`dirname $NDK_ROOT_DIR`/development/ndk/platforms
+fi
+
+# Find the location of the samples
+SAMPLES_ROOT=$NDK_ROOT_DIR/samples
+if [ ! -d $SAMPLES_ROOT ] ; then
+    SAMPLES_ROOT=`dirname $NDK_ROOT_DIR`/development/ndk/samples
+fi
+
 OPTION_HELP=no
 
 for opt do
@@ -69,6 +81,10 @@ for opt do
   --systems=*) PREBUILT_SYSTEMS=$optarg
   ;;
   --no-git) USE_GIT_FILES=no
+  ;;
+  --platforms-root=*) PLATFORMS_ROOT=$optarg
+  ;;
+  --samples-root=*) SAMPLES_ROOT=$optarg
   ;;
   *)
     echo "unknown option '$opt', use --help"
@@ -106,6 +122,8 @@ if [ $OPTION_HELP = yes ] ; then
     echo "  --prebuilt-ndk=FILE       Specify a previous NDK package [$PREBUILT_NDK]"
     echo "  --systems=SYSTEMS         List of host system packages [$PREBUILT_SYSTEMS]"
     echo "  --no-git                  Don't use git to list input files, take all of them."
+    echo "  --platforms-root=PATH     Specify platforms root directory [$PLATFORMS_ROOT]"
+    echo "  --samples-root=PATH       Specify samples root directory [$SAMPLES_ROOT]"
     echo ""
     exit 1
 fi
@@ -193,6 +211,29 @@ rm -f $REFERENCE/Android.mk
 if [ $? != 0 ] ; then
     echo "Could not create reference. Aborting."
     exit 2
+fi
+
+# copy platform files if needed
+echo "Copying platform files"
+if [ ! -d $REFERENCE/build/platforms ] ; then
+    echo "REF=$REFERENCE/build/platforms"
+    mkdir -p $REFERENCE/build/platforms &&
+    (cd $PLATFORMS_ROOT && tar cf - android-*) | (cd $REFERENCE/build/platforms && tar xf -)
+    if [ $? != 0 ] ; then
+        echo "Could not copy platform files. Aborting."
+        exit 2
+    fi
+fi
+
+# copy sample files if needed
+echo "Copying samples"
+if [ ! -d $REFERENCE/samples ] ; then
+    mkdir -p $REFERENCE/samples &&
+    (cd $SAMPLES_ROOT && tar cf - *) | (cd $REFERENCE/samples && tar xf -)
+    if [ $? != 0 ] ; then
+        echo "Could not copy samples. Aborting."
+        exit 2
+    fi
 fi
 
 # now, for each system, create a package
