@@ -54,7 +54,7 @@ TARGET_ABI := $(TARGET_PLATFORM)-$(TARGET_ARCH_ABI)
 # some libraries and object files used for linking the generated
 # target files properly.
 #
-SYSROOT := $(NDK_ROOT)/build/platforms/$(TARGET_PLATFORM)/arch-$(TARGET_ARCH)
+SYSROOT := $(NDK_PLATFORMS_ROOT)/$(TARGET_PLATFORM)/arch-$(TARGET_ARCH)
 
 TARGET_CRTBEGIN_STATIC_O  := $(SYSROOT)/usr/lib/crtbegin_static.o
 TARGET_CRTBEGIN_DYNAMIC_O := $(SYSROOT)/usr/lib/crtbegin_dynamic.o

@@ -18,8 +18,25 @@ Follow the instructions at source.android.com and download the full Android sour
 to your tree.
 
 
-II. Prebuilt binaries:
-======================
+II. Getting platform files and samples:
+=======================================
+
+The platform files (headers and libraries) have moved to a different location
+in the Android source tree. They are now under development/ndk/
+
+  mkdir mydevelopment
+  cd mydevelopment
+  git clone git://android.git.kernel.org/platform/development.git
+
+Then, to work with them (i.e. when launching ndk-build / ndk-gdb), do:
+
+  export NDK_PLATFORMS_ROOT=/path/to/mydevelopment/ndk/platforms
+
+The sample files are under mydevelopment/ndk/samples/
+
+
+III. Prebuilt binaries:
+=======================
 
 The source tree does not contain the prebuilt binaries for the cross-compiler and
 other stuff that are necessary to generate machine code with the NDK.
@@ -84,5 +101,4 @@ these tools. Things you can do with them include:
 
         cd myndk
         tar xjf <package>
-
 

@@ -216,7 +216,6 @@ fi
 # copy platform files if needed
 echo "Copying platform files"
 if [ ! -d $REFERENCE/build/platforms ] ; then
-    echo "REF=$REFERENCE/build/platforms"
     mkdir -p $REFERENCE/build/platforms &&
     (cd $PLATFORMS_ROOT && tar cf - android-*) | (cd $REFERENCE/build/platforms && tar xf -)
     if [ $? != 0 ] ; then
