@@ -245,6 +245,8 @@ module-add-executable = \
 # Returns $(true) iff module $1 is of type $2
 module-is-type = $(call seq,$(__ndk_modules.$1.type),$2)
 
+module-get-type = $(__ndk_modules.$1.type)
+
 # Retrieve built location of module $1
 module-get-built = $(__ndk_modules.$1.BUILT_MODULE)
 
