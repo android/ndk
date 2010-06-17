@@ -40,9 +40,23 @@
 PROGDIR=`dirname $0`
 PROGDIR=`cd $PROGDIR && pwd`
 
-# if GNUMAKE is not defined in the environment, use 'make'
-if [ -z "$GNUMAKE" ] ; then
-    GNUMAKE=make
+# If GNUMAKE is defined, check that it points to a valid file
+if [ -n "$GNUMAKE" ] ; then
+    ABS_GNUMAKE=`which $GNUMAKE 2> /dev/null`
+    if [ $? != 0 ] ; then
+        echo "ERROR: Your GNUMAKE variable is defined to an invalid name: $GNUMAKE"
+        echo "Please fix it to point to a valid make executable (e.g. /usr/bin/make)"
+        exit 1
+    fi
+    GNUMAKE="$ABS_GNUMAKE"
+else
+    # Otherwise, use 'make' and check that it is available
+    GNUMAKE=`which make 2> /dev/null`
+    if [ $? != 0 ] ; then
+        echo "ERROR: Cannot find 'make' program. Please install Cygwin make package"
+        echo "or define the GNUMAKE variable to point to it."
+        exit 1
+    fi
 fi
 
 # On Windows, when running under cygwin, check that we are
@@ -50,8 +64,8 @@ fi
 # common for app developers to have another non-cygwin compatible
 #
 if [ "$OSTYPE" = "cygwin" ] ; then
-    PROGDIR_MIXED=`cygpath -m $PROGDIR`
     GNUMAKE=`cygpath -u $GNUMAKE`
+    PROGDIR_MIXED=`cygpath -m $PROGDIR`
     CYGWIN_GNUMAKE=`$GNUMAKE -f $PROGDIR_MIXED/build/core/check-cygwin-make.mk 2>&1`
     if [ $? != 0 ] ; then
         echo "ERROR: You are using a non-Cygwin compatible Make program."
