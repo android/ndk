@@ -230,7 +230,7 @@ $(LOCAL_BUILT_MODULE): PRIVATE_NAME := $(notdir $(LOCAL_BUILT_MODULE))
 #
 # If this is a static library module
 #
-ifeq ($(call module-is-static-library,$(LOCAL_MODULE)),$(true))
+ifeq ($(call module-get-type,$(LOCAL_MODULE)),static-library)
 $(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
 	@ mkdir -p $(dir $@)
 	@ echo "StaticLibrary  : $(PRIVATE_NAME)"
@@ -243,7 +243,7 @@ endif
 #
 # If this is a shared library module
 #
-ifeq ($(call module-is-shared-library,$(LOCAL_MODULE)),$(true))
+ifeq ($(call module-get-type,$(LOCAL_MODULE)),shared-library)
 $(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
 	@ mkdir -p $(dir $@)
 	@ echo "SharedLibrary  : $(PRIVATE_NAME)"
@@ -255,7 +255,7 @@ endif
 #
 # If this is an executable module
 #
-ifeq ($(call module-is-executable,$(LOCAL_MODULE)),$(true))
+ifeq ($(call module-get-type,$(LOCAL_MODULE)),executable)
 $(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
 	@ mkdir -p $(dir $@)
 	@ echo "Executable     : $(PRIVATE_NAME)"
