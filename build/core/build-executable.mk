@@ -19,7 +19,6 @@
 
 LOCAL_BUILD_SCRIPT := BUILD_EXECUTABLE
 LOCAL_MAKEFILE     := $(local-makefile)
-LOCAL_IS_HOST_MODULE := false
 
 $(call check-defined-LOCAL_MODULE,$(LOCAL_BUILD_SCRIPT))
 $(call check-LOCAL_MODULE,$(LOCAL_MAKEFILE))
