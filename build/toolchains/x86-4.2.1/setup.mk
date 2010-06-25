@@ -99,6 +99,7 @@ define cmd-build-shared-library
 $(TARGET_CC) \
     -nostdlib -Wl,-soname,$(notdir $@) \
     -Wl,-shared,-Bsymbolic \
+    $(TARGET_CRTBEGIN_SO_O) \
     $(PRIVATE_OBJECTS) \
     -Wl,--whole-archive \
     $(PRIVATE_WHOLE_STATIC_LIBRARIES) \
@@ -108,6 +109,7 @@ $(TARGET_CC) \
     $(PRIVATE_SHARED_LIBRARIES) \
     $(PRIVATE_LDFLAGS) \
     $(PRIVATE_LDLIBS) \
+    $(TARGET_CRTEND_SO_O) \
     -o $@
 endef
 
