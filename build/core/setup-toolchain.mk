@@ -60,6 +60,12 @@ TARGET_CRTBEGIN_STATIC_O  := $(SYSROOT)/usr/lib/crtbegin_static.o
 TARGET_CRTBEGIN_DYNAMIC_O := $(SYSROOT)/usr/lib/crtbegin_dynamic.o
 TARGET_CRTEND_O           := $(SYSROOT)/usr/lib/crtend_android.o
 
+# crtbegin_so.o and crtend_so.o are not available for all platforms, so
+# only define them if they are in the sysroot
+#
+TARGET_CRTBEGIN_SO_O := $(strip $(wildcard $(SYSROOT)/usr/lib/crtbegin_so.o))
+TARGET_CRTEND_SO_O   := $(strip $(wildcard $(SYSROOT)/usr/lib/crtend_so.o))
+
 TARGET_PREBUILT_SHARED_LIBRARIES := libc libstdc++ libm
 TARGET_PREBUILT_SHARED_LIBRARIES := $(TARGET_PREBUILT_SHARED_LIBRARIES:%=$(SYSROOT)/usr/lib/%.so)
 
