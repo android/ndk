@@ -5,6 +5,10 @@ android-ndk-r5
 
 IMPORTANT BUG FIXES:
 
+- Allow dlclose() to properly call static C++ destructors when unloading
+  a shared library. This requires changes in both the C library and the
+  build system. IMPORTANT: This feature is only available for API level 9.
+
 IMPORTANT CHANGES:
 
 - Support for module exports: A module can now define a set of compiler or
