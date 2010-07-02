@@ -26,7 +26,9 @@
  * SUCH DAMAGE.
  */
 #include <sys/system_properties.h>
+#ifdef __ARM_ARCH__
 #include <machine/cpu-features.h>
+#endif
 #include <pthread.h>
 #include "cpu-features.h"
 #include <stdio.h>
