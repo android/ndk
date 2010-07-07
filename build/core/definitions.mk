@@ -342,8 +342,8 @@ modules-compute-dependencies = \
     )
 
 module-compute-depends = \
-    $(call module-add-static-depends,$1,$(call strip-lib-prefix,$(__ndk_modules.$1.STATIC_LIBRARIES)))\
-    $(call module-add-shared-depends,$1,$(call strip-lib-prefix,$(__ndk_modules.$1.SHARED_LIBRARIES)))
+    $(call module-add-static-depends,$1,$(__ndk_modules.$1.STATIC_LIBRARIES))\
+    $(call module-add-shared-depends,$1,$(__ndk_modules.$1.SHARED_LIBRARIES))
 
 module-get-installed = $(__ndk_modules.$1.INSTALLED)
 
@@ -376,6 +376,44 @@ modules-closure = \
     $(eval __closure_deps += $(__closure_new)) \
     $(eval __closure_wq   := $(strip $(__closure_wq) $(__closure_new)))\
     $(if $(__closure_wq),$(call modules-closure)) \
+
+# Return the C++ extension of a given module
+#
+module-get-cpp-extension = \
+    $(if $(__ndk_modules.$1.CPP_EXTENSION),\
+        $(__ndk_modules.$1.CPP_EXTENSION),\
+        .cpp\
+    )
+
+# Return the list of C++ sources of a given module
+#
+module-get-c++-sources = \
+    $(filter %$(call module-get-cpp-extension,$1),$(__ndk_modules.$1.SRC_FILES))
+
+# Returns true if a module has C++ sources
+#
+module-has-c++ = $(strip $(call module-get-c++-sources,$1))
+
+# Add C++ dependencies to any module that has C++ sources.
+# $1: list of C++ runtime static libraries (if any)
+# $2: list of C++ runtime shared libraries (if any)
+#
+modules-add-c++-dependencies = \
+    $(foreach __module,$(__ndk_modules),\
+        $(if $(call module-has-c++,$(__module)),\
+            $(call module-add-c++-deps,$(__module),$1,$2),\
+        )\
+    )
+
+# Add standard C++ dependencies to a given module
+#
+# $1: module name
+# $2: list of C++ runtime static libraries (if any)
+# $3: list of C++ runtime shared libraries (if any)
+#
+module-add-c++-deps = \
+    $(eval __ndk_modules.$1.STATIC_LIBRARIES += $(2))\
+    $(eval __ndk_modules.$1.SHARED_LIBRARIES += $(3))
 
 
 # =============================================================================
