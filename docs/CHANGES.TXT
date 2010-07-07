@@ -20,6 +20,22 @@ IMPORTANT CHANGES:
   LOCAL_EXPORT_LDLIBS. See docs/ANDROID-MK.TXT for mode documentation, and
   a 'samples/module-exports' for a sample project that uses this.
 
+- Refresh of system C++ headers:
+
+     - Headers have been moved out of the platform directory hierarchy.
+       This is to prevent conflicts with other STLs like STLport or the
+       GNU libstdc++ which provide their own version of the headers.
+
+     - The list of headers has growned to include the following:
+
+            cassert, cctype, cerrno, cfloat, climits, cmath,
+            csetjmp, csignal, cstddef, cstdint, cstdio, cstdlib,
+            cstring, ctime, cwchar, new, typeinfo, utility 
+
+    Note that they still correspond to our minimal C++ runtime, no new feature
+    was introduced here.
+
+
 OTHER FIXES & CHANGES:
 
 -------------------------------------------------------------------------------
