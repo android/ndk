@@ -250,11 +250,62 @@ The following are GNU Make 'function' macros, and must be evaluated
 by using '$(call <function>)'. They return textual information.
 
 my-dir
-    Returns the path of the current Android.mk's directory, relative
-    to the top of the NDK build system. This is useful to define
+    Returns the path of the last included Makefile, which typically is
+    the current Android.mk's directory. This is useful to define
     LOCAL_PATH at the start of your Android.mk as with:
 
         LOCAL_PATH := $(call my-dir)
+
+    IMPORTANT NOTE: Due to the way GNU Make works, this really returns
+    the path of the *last* *included* *Makefile* during the parsing of
+    build scripts. Do not call my-dir after including another file.
+
+    For example, consider the following example:
+
+        LOCAL_PATH := $(call my-dir)
+
+        ... declare one module
+
+        include $(LOCAL_PATH)/foo/Android.mk
+
+        LOCAL_PATH := $(call my-dir)
+
+        ... declare another module
+
+    The problem here is that the second call to 'my-dir' will define
+    LOCAL_PATH to $PATH/foo instead of $PATH, due to the include that
+    was performed before that.
+
+    For this reason, it's better to put additionnal includes after
+    everything else in an Android.mk, as in:
+
+        LOCAL_PATH := $(call my-dir)
+
+        ... declare one module
+
+        LOCAL_PATH := $(call my-dir)
+
+        ... declare another module
+
+        # extra includes at the end of the Android.mk
+        include $(LOCAL_PATH)/foo/Android.mk
+
+    If this is not convenient, save the value of the first my-dir call
+    into another variable, for example:
+
+        MY_LOCAL_PATH := $(call my-dir)
+
+        LOCAL_PATH := $(MY_LOCAL_PATH)
+
+        ... declare one module
+
+        include $(LOCAL_PATH)/foo/Android.mk
+
+        LOCAL_PATH := $(MY_LOCAL_PATH)
+
+        ... declare another module
+
+
 
 all-subdir-makefiles
     Returns a list of Android.mk located in all sub-directories of
