@@ -38,6 +38,11 @@ IMPORTANT CHANGES:
 
 OTHER FIXES & CHANGES:
 
+- Update documentation for 'my-dir' function to explain that, due to the
+  way GNU Make works, it really returns the path of the last included
+  Makefile (instead of the current one). Also provide examples on how
+  to deal with it.
+
 -------------------------------------------------------------------------------
 android-ndk-r4b
 
