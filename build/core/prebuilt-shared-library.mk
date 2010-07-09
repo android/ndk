@@ -22,6 +22,7 @@ LOCAL_MAKEFILE     := $(local-makefile)
 
 $(call check-defined-LOCAL_MODULE,$(LOCAL_BUILD_SCRIPT))
 $(call check-LOCAL_MODULE,$(LOCAL_MAKEFILE))
+$(call check-LOCAL_MODULE_FILENAME)
 
 # Check that LOCAL_SRC_FILES contains only paths to shared libraries
 ifneq ($(words $(LOCAL_SRC_FILES)),1)
@@ -40,6 +41,11 @@ prebuilt := $(strip $(wildcard $(LOCAL_SRC_FILES)))
 ifndef prebuilt
 $(call __ndk_info,ERROR:$(LOCAL_MAKEFILE):$(LOCAL_MODULE): LOCAL_SRC_FILES points to a missing file)
 $(call __ndk_info,Check that $(LOCAL_SRC_FILES) exists, or that its path is correct)
+$(call __ndk_error,Aborting)
+endif
+
+ifdef LOCAL_MODULE_FILENAME
+$(call __ndk_info,ERROR:$(LOCAL_MAKEFILE):$(LOCAL_MODULE): LOCAL_MODULE_FILENAME cannot be used for a prebuilt shared library)
 $(call __ndk_error,Aborting)
 endif
 
