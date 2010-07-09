@@ -202,6 +202,16 @@ BUILD_STATIC_LIBRARY
 
     Note that this will generate a file named lib$(LOCAL_MODULE).a
 
+PREBUILT_SHARED_LIBRARY
+    Points to a build script used to specify a prebuilt shared library.
+    Unlike BUILD_SHARED_LIBRARY and BUILD_STATIC_LIBRARY, the value
+    of LOCAL_SRC_FILES must be a single path to a prebuilt shared
+    library (e.g. $(LOCAL_PATH)/libfoo.so), instead of a source file.
+
+    You can reference the prebuilt library in another module using
+    the LOCAL_PREBUILTS variable (see docs/PREBUILTS.TXT for more
+    information).
+
 TARGET_ARCH
     Name of the target CPU architecture as it is specified by the
     full Android open-source build. This is 'arm' for any ARM-compatible
@@ -448,9 +458,12 @@ LOCAL_SHARED_LIBRARIES
     This is necessary at link time and to embed the corresponding information
     in the generated file.
 
-    Note that this does not append the listed modules to the build graph,
-    i.e. you should still add them to your application's required modules
-    in your Application.mk
+LOCAL_PREBUILTS
+    The list of prebuild shared library *modules* this module depends on at
+    runtime. This is necessary at link time and to embed the corresponding
+    information in the generated file.
+
+    See docs/PREBUILTS.TXT for more information.
 
 LOCAL_LDLIBS
     The list of additional linker flags to be used when building your

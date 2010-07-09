@@ -202,11 +202,9 @@ LOCAL_STATIC_LIBRARIES := $(call strip-lib-prefix,$(LOCAL_STATIC_LIBRARIES))
 LOCAL_SHARED_LIBRARIES := $(call strip-lib-prefix,$(LOCAL_SHARED_LIBRARIES))
 
 static_libraries := $(call map,static-library-path,$(LOCAL_STATIC_LIBRARIES))
-shared_libraries := $(call map,shared-library-path,$(LOCAL_SHARED_LIBRARIES)) \
+shared_libraries := $(call map,shared-library-path,$(LOCAL_SHARED_LIBRARIES))\
+                    $(call map,module-get-built,$(LOCAL_PREBUILTS))\
                     $(TARGET_PREBUILT_SHARED_LIBRARIES)
-
-$(call module-add-static-depends,$(LOCAL_MODULE),$(LOCAL_STATIC_LIBRARIES))
-$(call module-add-shared-depends,$(LOCAL_MODULE),$(LOCAL_SHARED_LIBRARIES))
 
 $(LOCAL_BUILT_MODULE): $(static_libraries) $(shared_libraries)
 
