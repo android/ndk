@@ -163,6 +163,7 @@ modules-LOCALS := \
     CPPFLAGS \
     STATIC_LIBRARIES \
     SHARED_LIBRARIES \
+    PREBUILTS \
     LDLIBS \
     ALLOW_UNDEFINED_SYMBOLS \
     ARM_MODE \
@@ -242,6 +243,10 @@ module-add-executable = \
     $(eval LOCAL_INSTALLED := $(NDK_APP_DST_DIR)/$(notdir $(LOCAL_BUILT_MODULE)))\
     $(call module-add,$1,executable)
 
+module-add-prebuilt-shared-library = \
+    $(eval LOCAL_INSTALLED := $(NDK_APP_DST_DIR)/$(notdir $(LOCAL_BUILT_MODULE)))\
+    $(call module-add,$1,prebuilt-shared-library)
+
 # Returns $(true) iff module $1 is of type $2
 module-is-type = $(call seq,$(__ndk_modules.$1.type),$2)
 
@@ -253,8 +258,8 @@ module-get-built = $(__ndk_modules.$1.BUILT_MODULE)
 # Returns $(true) is module $1 is of a given type
 module-is-static-library = $(call module-is-type,$1,static-library)
 module-is-shared-library = $(call module-is-type,$1,shared-library)
-module-is-exectuable     = $(call module-is-type,$1,executable)
-module-is-installable    = $(call or,$(call module-is-type,$1,shared-library),$(call module-is-type,$1,executable))
+module-is-executable     = $(call module-is-type,$1,executable)
+module-is-installable    = $(if $(filter shared-library executable prebuilt-shared-library,$(call module-get-type,$1)),$(true),$(false))
 
 # -----------------------------------------------------------------------------
 # Function : module-get-export
@@ -328,6 +333,9 @@ module-add-static-depends = \
 module-add-shared-depends = \
     $(call module-add-depends-any,$1,$2,depends) \
 
+module-add-prebuilt-depends = \
+    $(call module-add-depends-any,$1,$2,depends) \
+
 # Used internally by module-add-static-depends and module-add-shared-depends
 # NOTE: this function must not modify the existing dependency order when new depends are added.
 #
@@ -343,7 +351,8 @@ modules-compute-dependencies = \
 
 module-compute-depends = \
     $(call module-add-static-depends,$1,$(__ndk_modules.$1.STATIC_LIBRARIES))\
-    $(call module-add-shared-depends,$1,$(__ndk_modules.$1.SHARED_LIBRARIES))
+    $(call module-add-shared-depends,$1,$(__ndk_modules.$1.SHARED_LIBRARIES))\
+    $(call module-add-prebuilt-depends,$1,$(__ndk_modules.$1.PREBUILTS))
 
 module-get-installed = $(__ndk_modules.$1.INSTALLED)
 
@@ -379,11 +388,11 @@ modules-closure = \
 
 # Return the C++ extension of a given module
 #
-module-get-cpp-extension = \
+module-get-cpp-extension = $(strip \
     $(if $(__ndk_modules.$1.CPP_EXTENSION),\
         $(__ndk_modules.$1.CPP_EXTENSION),\
         .cpp\
-    )
+    ))
 
 # Return the list of C++ sources of a given module
 #
@@ -401,6 +410,7 @@ module-has-c++ = $(strip $(call module-get-c++-sources,$1))
 modules-add-c++-dependencies = \
     $(foreach __module,$(__ndk_modules),\
         $(if $(call module-has-c++,$(__module)),\
+            $(call ndk_log,Module '$(__module)' has C++ sources)\
             $(call module-add-c++-deps,$(__module),$1,$2),\
         )\
     )
