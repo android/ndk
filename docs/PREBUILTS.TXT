@@ -1,0 +1,126 @@
+NDK Prebuilt library support:
+-----------------------------
+
+Android NDK r5 introduced support for prebuilt shared libraries, i.e.
+the ability to include and use, in your applications, prebuilt version
+of libraries. This document explains how this support works.
+
+
+I. Declaring a prebuilt shared library module:
+----------------------------------------------
+
+Each prebuilt library must be declared as an independent module to the
+build system. Here is a trivial example:
+
+   LOCAL_PATH := $(call my-dir)
+
+   include $(CLEAR_VARS)
+   LOCAL_MODULE := foo-prebuilt
+   LOCAL_SRC_FILES := $(LOCAL_PATH)/libfoo.so
+   include $(PREBUILT_SHARED_LIBRARY)
+
+Notice that, to declare such a module, you really only need the following:
+
+1. Give the module a name (here 'foo-prebuilt'). This does not need to
+   correspond to the name of the prebuilt shared library itself.
+
+2. Assign to LOCAL_SRC_FILES the path to the prebuilt library you are
+   providing.
+
+   IMPORTANT: You *must* ensure that the prebuilt library corresponds
+              to the target ABI you are using. More on this later.
+
+3. Include PREBUILT_SHARED_LIBRARY, instead of BUILD_SHARED_LIBRARY
+
+A prebuilt module does not build anything. However, a copy of your prebuilt
+shared library will be copied and stripped into $PROJECT/libs/<abi>.
+
+
+II. Referencing the prebuilt library in other modules:
+------------------------------------------------------
+
+If you are building code that depends on symbols provided by the prebuilt
+library, you can reference it through the LOCAL_PREBUILTS variable. It must
+contain a list of prebuilt module names that your module depends on.
+
+For example, a naive example of a module using libfoo.so would be:
+
+    include $(CLEAR_VARS)
+    LOCAL_MODULE := foo-user
+    LOCAL_SRC_FILES := foo-user.c
+    LOCAL_PREBUILTS := foo-prebuilt
+    include $(BUILD_SHARED_LIBRARY)
+
+
+III. Exporting headers for prebuilt libraries:
+----------------------------------------------
+
+The example above was called 'naive' because, in practice, the code in
+foo-user.c is going to depend on specific declarations that are normally
+found in a header file distributed with the prebuilt library (e.g. "foo.h").
+
+In other words, foo-user.c is going to have a line like:
+
+  #include <foo.h>
+
+And you need to provide the header and its include path to the compiler
+when building the foo-user module.
+
+A simple way to deal with that is to use exports in the prebuilt module
+definition. For example, assuming that a file "foo.h" is located under
+the 'include' directory relative to the prebuilt module, we can write:
+
+   include $(CLEAR_VARS)
+   LOCAL_MODULE := foo-prebuilt
+   LOCAL_SRC_FILES := $(LOCAL_PATH)/libfoo.so
+   LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/include
+   include $(PREBUILT_SHARED_LIBRARY)
+
+The LOCAL_EXPORT_C_INCLUDES definition here ensures that any module that
+depends on the prebuilt one will have its LOCAL_C_INCLUDES automatically
+prepended with the path to the prebuilt's include directory, and will thus
+be able to find headers inside that.
+
+
+IV. Debugging prebuilt binaries:
+--------------------------------
+
+We recommend you to provide prebuilt shared libraries that contain debug
+symbols. The version that is installed into $PROJECT/libs/<abi>/ is always
+stripped by the NDK build system, but the debug version will be used for
+debugging purposes with ndk-gdb.
+
+
+V. ABI Selection of prebuilt binaries:
+--------------------------------------
+
+As said previously, it is crucial to provide a prebuilt shared library
+that is compatible with the targetted ABI during the build. To do that,
+check for the value of TARGET_ARCH_ABI, its value will be:
+
+   armeabi     => when targetting ARMv5TE or higher CPUs
+   armeabi-v7a => when targetting ARMv7 or higher CPUs
+   x86         => when targetting x86 CPUs
+
+Note that armeabi-v7a systems can run armeabi binaries just fine.
+
+Here's an example where we provide two versions of a prebuilt library
+and select which one to copy based on the target ABI:
+
+    include $(CLEAR_VARS)
+    LOCAL_MODULE := foo-prebuilt
+    LOCAL_SRC_FILES := $(LOCAL_PATH)/$(TARGET_ARCH_ABI)/libfoo.so
+    LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/include
+    include $(PREBUILT_SHARED_LIBRARY)
+
+Here. we assume that the prebuilt libraries to copy are under the
+following directory hierarchy:
+
+    Android.mk            --> the file above
+    armeabi/libfoo.so     --> the armeabi prebuilt shared library
+    armeabi-v7a/libfoo.so --> the armeabi-v7a prebuilt shared library
+    include/foo.h         --> the exported header file
+
+NOTE: Remember that you don't need to provide an armeabi-v7a prebuilt
+      library, since an armeabi one can easily run on the corresponding
+      devices.
