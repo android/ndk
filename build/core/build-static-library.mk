@@ -26,8 +26,8 @@ $(call check-LOCAL_MODULE,$(LOCAL_MAKEFILE))
 # we are building target objects
 my := TARGET_
 
-LOCAL_BUILT_MODULE := $(call static-library-path,$(LOCAL_MODULE))
-LOCAL_OBJS_DIR     := $(TARGET_OBJS)/$(LOCAL_MODULE)
+$(call handle-module-filename,lib,.a)
+$(call handle-module-built)
 
 $(call module-add-static-library,$(LOCAL_MODULE))
 

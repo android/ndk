@@ -22,11 +22,12 @@ LOCAL_MAKEFILE     := $(local-makefile)
 
 $(call check-defined-LOCAL_MODULE,$(LOCAL_BUILD_SCRIPT))
 $(call check-LOCAL_MODULE,$(LOCAL_MAKEFILE))
+$(call check-LOCAL_MODULE_FILENAME)
 
 # we are building target objects
 my := TARGET_
 
-LOCAL_BUILT_MODULE := $(call executable-path,$(LOCAL_MODULE))
-LOCAL_OBJS_DIR     := $(TARGET_OBJS)/$(LOCAL_MODULE)
+$(call handle-module-filename,,)
+$(call handle-module-built)
 
 $(call module-add-executable,$(LOCAL_MODULE))

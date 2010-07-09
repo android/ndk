@@ -201,8 +201,8 @@ CLEAN_OBJS_DIRS     += $(LOCAL_OBJS_DIR)
 LOCAL_STATIC_LIBRARIES := $(call strip-lib-prefix,$(LOCAL_STATIC_LIBRARIES))
 LOCAL_SHARED_LIBRARIES := $(call strip-lib-prefix,$(LOCAL_SHARED_LIBRARIES))
 
-static_libraries := $(call map,static-library-path,$(LOCAL_STATIC_LIBRARIES))
-shared_libraries := $(call map,shared-library-path,$(LOCAL_SHARED_LIBRARIES))\
+static_libraries := $(call map,module-get-built,$(LOCAL_STATIC_LIBRARIES))
+shared_libraries := $(call map,module-get-built,$(LOCAL_SHARED_LIBRARIES))\
                     $(call map,module-get-built,$(LOCAL_PREBUILTS))\
                     $(TARGET_PREBUILT_SHARED_LIBRARIES)
 
