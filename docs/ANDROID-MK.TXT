@@ -374,11 +374,28 @@ LOCAL_MODULE
     module names, and shall not contain any space. You MUST define
     it before including any $(BUILD_XXXX) script.
 
-    The module name determines the name of generated files, e.g.
-    lib<foo>.so for a shared library module named <foo>. However
+    By default, the module name determines the name of generated files,
+    e.g. lib<foo>.so for a shared library module named <foo>. However
     you should only refer to other modules with their 'normal'
     name (e.g. <foo>) in your NDK build files (either Android.mk
     or Application.mk)
+
+    You can override this default with LOCAL_MODULE_FILENAME (see below)
+
+LOCAL_MODULE_FILENAME
+    This variable is optional, and allows you to redefine the name of
+    generated files. By default, module <foo> will always generate a
+    static library named lib<foo>.a or a shared library named lib<foo>.so,
+    which are standard Unix conventions.
+
+    You can override this by defining LOCAL_MODULE_FILENAME, For example:
+
+        LOCAL_MODULE := foo-version-1
+        LOCAL_MODULE_FILENAME := libfoo
+
+    NOTE: You should not put a path or file extension in your
+    LOCAL_MODULE_FILENAME, these will be handled automatically by the
+    build system.
 
 LOCAL_SRC_FILES
     This is a list of source files that will be built for your module.

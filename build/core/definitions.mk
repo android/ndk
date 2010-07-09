@@ -154,6 +154,7 @@ check-required-vars = $(foreach __varname,$1,\
 #
 modules-LOCALS := \
     MODULE \
+    MODULE_FILENAME \
     PATH \
     SRC_FILES \
     CPP_EXTENSION \
@@ -468,6 +469,66 @@ check-defined-LOCAL_MODULE = \
   )
 
 # -----------------------------------------------------------------------------
+# This is used to check that LOCAL_MODULE_FILENAME, if defined, is correct.
+#
+# Function : check-user-LOCAL_MODULE_FILENAME
+# Returns  : None
+# Usage    : $(call check-user-LOCAL_MODULE_FILENAME)
+# -----------------------------------------------------------------------------
+check-LOCAL_MODULE_FILENAME = \
+  $(if $(strip $(LOCAL_MODULE_FILENAME)),\
+    $(if $(call seq,$(words $(LOCAL_MODULE_FILENAME)),1),,\
+        $(call __ndk_info,$(LOCAL_MAKEFILE):$(LOCAL_MODULE): LOCAL_MODULE_FILENAME must not contain spaces)\
+        $(call __ndk_error,Plase correct error. Aborting)\
+    )\
+    $(if $(filter %.a %.so,$(LOCAL_MODULE_FILENAME)),\
+        $(call __ndk_info,$(LOCAL_MAKEFILE):$(LOCAL_MODULE): LOCAL_MODULE_FILENAME should not include file extensions)\
+    )\
+  )
+
+# -----------------------------------------------------------------------------
+# Function  : handle-module-filename
+# Arguments : 1: default file prefix
+#             2: file suffix
+# Returns   : None
+# Usage     : $(call handle-module-filename,<prefix>,<suffix>)
+# Rationale : To be used to check and or set the module's filename through
+#             the LOCAL_MODULE_FILENAME variable.
+# -----------------------------------------------------------------------------
+handle-module-filename = $(eval $(call ev-handle-module-filename,$1,$2))
+
+
+# $1: default file prefix
+# $2: default file suffix
+define ev-handle-module-filename
+LOCAL_MODULE_FILENAME := $$(strip $$(LOCAL_MODULE_FILENAME))
+ifdef LOCAL_MODULE_FILENAME
+    ifneq ($$(words $$(LOCAL_MODULE_FILENAME)),1)
+        $$(call __ndk_info,$$(LOCAL_MAKEFILE):$$(LOCAL_MODULE): LOCAL_MODULE_FILENAME must not contain any space)
+        $$(call __ndk_error,Aborting)
+    endif
+    ifneq ($$(filter %.a %.so,$$(LOCAL_MODULE_FILENAME)),)
+        $$(call __ndk_info,$$(LOCAL_MAKEFILE):$$(LOCAL_MODULE): LOCAL_MODULE_FILENAME must not contain a file extension)
+        $$(call __ndk_error,Aborting)
+    endif
+else
+    LOCAL_MODULE_FILENAME := $1$(LOCAL_MODULE)
+endif
+LOCAL_MODULE_FILENAME := $$(LOCAL_MODULE_FILENAME)$2
+endef
+
+# -----------------------------------------------------------------------------
+# Function  : handle-module-built
+# Returns   : None
+# Usage     : $(call handle-module-built)
+# Rationale : To be used to automatically compute the location of the generated
+#             binary file, and the directory where to place its object files.
+# -----------------------------------------------------------------------------
+handle-module-built = \
+    $(eval LOCAL_BUILT_MODULE := $(TARGET_OUT)/$(LOCAL_MODULE_FILENAME))\
+    $(eval LOCAL_OBJS_DIR     := $(TARGET_OBJS)/$(LOCAL_MODULE))
+
+# -----------------------------------------------------------------------------
 # Strip any 'lib' prefix in front of a given string.
 #
 # Function : strip-lib-prefix
@@ -689,54 +750,6 @@ NDK_APP_VARS := $(NDK_APP_VARS_REQUIRED) \
 # Android.mk support
 #
 # =============================================================================
-
-
-# =============================================================================
-#
-# Generated files support
-#
-# =============================================================================
-
-
-# -----------------------------------------------------------------------------
-# Function  : host-static-library-path
-# Arguments : 1: library module name (e.g. 'foo')
-# Returns   : location of generated host library name (e.g. '..../libfoo.a)
-# Usage     : $(call host-static-library-path,<modulename>)
-# -----------------------------------------------------------------------------
-host-static-library-path = $(HOST_OUT)/lib$1.a
-
-# -----------------------------------------------------------------------------
-# Function  : host-executable-path
-# Arguments : 1: executable module name (e.g. 'foo')
-# Returns   : location of generated host executable name (e.g. '..../foo)
-# Usage     : $(call host-executable-path,<modulename>)
-# -----------------------------------------------------------------------------
-host-executable-path = $(HOST_OUT)/$1$(HOST_EXE)
-
-# -----------------------------------------------------------------------------
-# Function  : static-library-path
-# Arguments : 1: library module name (e.g. 'foo')
-# Returns   : location of generated static library name (e.g. '..../libfoo.a)
-# Usage     : $(call static-library-path,<modulename>)
-# -----------------------------------------------------------------------------
-static-library-path = $(TARGET_OUT)/lib$1.a
-
-# -----------------------------------------------------------------------------
-# Function  : shared-library-path
-# Arguments : 1: library module name (e.g. 'foo')
-# Returns   : location of generated shared library name (e.g. '..../libfoo.so)
-# Usage     : $(call shared-library-path,<modulename>)
-# -----------------------------------------------------------------------------
-shared-library-path = $(TARGET_OUT)/lib$1.so
-
-# -----------------------------------------------------------------------------
-# Function  : executable-path
-# Arguments : 1: executable module name (e.g. 'foo')
-# Returns   : location of generated exectuable name (e.g. '..../foo)
-# Usage     : $(call executable-path,<modulename>)
-# -----------------------------------------------------------------------------
-executable-path = $(TARGET_OUT)/$1
 
 # =============================================================================
 #

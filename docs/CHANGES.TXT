@@ -39,6 +39,10 @@ IMPORTANT CHANGES:
   build script (instead of BUILD_SHARED_LIBRARY). See the new documentation
   file named docs/PREBUILTS.TXT for explanations and usage examples.
 
+- Add support to specify a different file name for generated files, through
+  the new LOCAL_MODULE_FILENAME variable. See docs/ANDROID-MK.TXT for an
+  example.
+
 OTHER FIXES & CHANGES:
 
 - Update documentation for 'my-dir' function to explain that, due to the
