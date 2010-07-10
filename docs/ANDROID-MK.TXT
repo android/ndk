@@ -348,6 +348,17 @@ parent-makefile
 grand-parent-makefile
     Guess what...
 
+import-module
+    A function that allows you to find and include the Android.mk
+    of another module by name. A typical example is:
+
+      $(call import-module,<name>)
+
+    And this will look for the module tagged <name> in the list of
+    directories referenced by your NDK_MODULE_PATH environment
+    variable, and include its Android.mk automatically for you.
+
+    Read docs/IMPORT-MODULE.TXT for more details.
 
 Module-description variables:
 - - - - - - - - - - - - - - -

@@ -43,6 +43,12 @@ IMPORTANT CHANGES:
   the new LOCAL_MODULE_FILENAME variable. See docs/ANDROID-MK.TXT for an
   example.
 
+- Add support for module imports, through the NDK_MODULE_PATH environment variable
+  and the new 'import-module' function. This allows you to avoid hard-coding the
+  path of third-party modules into your project files.
+
+  See docs/IMPORT-MODULE.TXT for details.
+
 OTHER FIXES & CHANGES:
 
 - Update documentation for 'my-dir' function to explain that, due to the

@@ -1,0 +1,91 @@
+Android module paths:
+=====================
+
+The Android NDK allows you, since release r5, to "import" other modules.
+without hard-coding their path in your Android.mk. To use this, do the
+following:
+
+  1. Place the Android.mk and related source files for your module
+     to be imported into a directory named:
+
+        <path>/<tag>
+
+     <path> is an arbitrary path name that does *not* contain
+     spaces. This path does not have to be under your application
+     project tree.
+
+     <tag> is an arbitrary name, usually the same than the main
+     module defined in your Android.mk.
+
+
+  2. Define the NDK_MODULE_PATH variable in your environment to point
+     to <path>. For example, on Linux, do:
+
+        export NDK_MODULE_PATH=<path>
+
+     And on Windows:
+
+        set NDK_MODULE_PATH=<path>
+
+     You can also list several directories (see below), and they will
+     be searched in-order.
+
+  3. In your application's Android.mk, use the following at the end
+     of the file:
+
+        $(call import-module,<tag>)
+
+     Where <tag> is the module tag defined in 1. above.
+
+The 'import-module' function will look for a directory named <tag> under
+the paths listed in NDK_MODULE_PATH, and if a file named
+<path>/<tag>/Android.mk is found, it will be automatically included.
+
+If no Android.mk is found for your <tag>, the NDK build script will
+complain with an error message.
+
+The call to 'import-module' is essentially equivalent to
+
+  include <path>/<tag>/Android.mk
+
+Except that you don't have to put <path> in your project's Android.mk.
+This can be useful if you want to use third-party NDK modules that are
+installed outside of your main project path.
+
+
+I. NDK_MODULE_PATH:
+-------------------
+
+The NDK_MODULE_PATH variable must contain a list of directories.
+
+  * Due to GNU Make limitations, NDK_MODULE_PATH must not contain any space.
+    The NDK will complain if this is not the case.
+
+  * Use ':' as a directory separator on Unix systems (e.g. OS X or Linux),
+    and ';' on Windows ones.
+
+  * On Windows, use '/' as the directory separator.
+
+The directories of NDK_MODULE_PATH will be searched in order. The first
+<path>/<tag>/Android.mk file that is found during the lookup will be
+included automatically.
+
+
+As a convenience, you can always import NDK-provided sources, like
+the 'cpufeatures' library, because the NDK build script automatically
+appends $NDK/sources to your NDK_MODULE_PATH. Some of the samples use
+this feature.
+
+
+II. Important Notes:
+--------------------
+
+Use import-module at the *end* of your Android.mk to avoid
+messing with the result of 'my-dir'. See the description of this
+function in docs/ANDROID-MK.TXT to understand why.
+
+<tag> can include directory separators if you want, e.g.:
+
+  $(call import-module,gnome/gtk)
+
+It's up to you to organize your module tags and paths.
