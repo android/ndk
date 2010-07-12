@@ -64,6 +64,10 @@ OTHER FIXES & CHANGES:
   Makefile (instead of the current one). Also provide examples on how
   to deal with it.
 
+- make-release.sh: Now has an --out-dir=<path> option to specify the
+  output directory where the packages are going to be copied. Also
+  ensure that generated packages have go+r permissions.
+
 -------------------------------------------------------------------------------
 android-ndk-r4b
 
