@@ -49,8 +49,5 @@ $(cleantarget)::
 	$(hide) rm -rf $(PRIVATE_CLEAN_FILES)
 
 ifeq ($(NDK_APP_DEBUGGABLE),true)
-$(NDK_APP_GDBSETUP):: PRIVATE_DIR := $(LOCAL_PATH)
-$(NDK_APP_GDBSETUP)::
-	@echo "Gdbsetup       : + source directory $(PRIVATE_DIR)"
-	$(hide) echo "directory $(PRIVATE_DIR)" >> $(PRIVATE_DST)
+$(NDK_APP_GDBSETUP): PRIVATE_SRC_DIRS += $(LOCAL_C_INCLUDES) $(LOCAL_PATH)
 endif
