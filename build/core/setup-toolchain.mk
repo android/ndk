@@ -79,6 +79,8 @@ TARGET_GDBSERVER := $(dir $(TARGET_CC))/gdbserver
 # compute NDK_APP_DST_DIR as the destination directory for the generated files
 NDK_APP_DST_DIR := $(NDK_APP_PROJECT_PATH)/libs/$(TARGET_ARCH_ABI)
 
+clean-installed-binaries::
+
 # Ensure that for debuggable applications, gdbserver will be copied to
 # the proper location
 ifeq ($(NDK_APP_DEBUGGABLE),true)
@@ -100,18 +102,18 @@ $(NDK_APP_GDBSERVER): clean-installed-binaries
 NDK_APP_GDBSETUP := $(NDK_APP_DST_DIR)/gdb.setup
 installed_modules: $(NDK_APP_GDBSETUP)
 
-$(NDK_APP_GDBSETUP)::
+$(NDK_APP_GDBSETUP): PRIVATE_DST := $(NDK_APP_GDBSETUP)
+$(NDK_APP_GDBSETUP): PRIVATE_SOLIB_PATH := $(TARGET_OUT)
+$(NDK_APP_GDBSETUP): PRIVATE_SRC_DIRS := $(SYSROOT)/usr/include
+
+$(NDK_APP_GDBSETUP):
 	@ echo "Gdbsetup       : $(PRIVATE_DST)"
 	$(hide) echo "set solib-search-path $(PRIVATE_SOLIB_PATH)" > $(PRIVATE_DST)
-	$(hide) echo "directory $(SYSROOT)/usr/include" >> $(PRIVATE_DST)
+	$(hide) echo "directory $(call uniq,$(PRIVATE_SRC_DIRS))" >> $(PRIVATE_DST)
 
-$(NDK_APP_GDBSETUP):: PRIVATE_DST := $(NDK_APP_GDBSETUP)
-$(NDK_APP_GDBSETUP):: PRIVATE_SOLIB_PATH := $(TARGET_OUT)
-$(NDK_APP_GDBSETUP):: PRIVATE_SRC_DIRS := $(SYSROOT)/usr/include
-
+# This prevents parallel execution to clear gdb.setup after it has been written to
+$(NDK_APP_GDBSETUP): clean-installed-binaries
 endif
-
-clean-installed-binaries::
 
 # free the dictionary of LOCAL_MODULE definitions
 $(call modules-clear)

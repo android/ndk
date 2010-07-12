@@ -49,6 +49,14 @@ IMPORTANT CHANGES:
 
   See docs/IMPORT-MODULE.TXT for details.
 
+- Add the content of LOCAL_C_INCLUDES to gdb.setup to make native debugging
+  easier. Also fixes an issue that prevented clean parallel builds of debuggable
+  applications to work correctly. This fixes an error message that said:
+
+      /bin/sh: <project>/libs/armeabi/gdb.setup: No such file or directory
+
+  When doing a "ndk-build -j<number>", with <number> bigger than 1.
+
 OTHER FIXES & CHANGES:
 
 - Update documentation for 'my-dir' function to explain that, due to the
