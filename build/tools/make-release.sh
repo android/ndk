@@ -40,6 +40,9 @@ PREBUILT_SYSTEMS="linux-x86 darwin-x86 windows"
 # a prebuilt NDK archive (.zip file). empty means don't use any
 PREBUILT_NDK=
 
+# default location for generated packages
+OUT_DIR=/tmp/ndk-release
+
 # set to 'yes' if we should use 'git ls-files' to list the files to
 # be copied into the archive.
 USE_GIT_FILES=yes
@@ -57,6 +60,7 @@ if [ ! -d $SAMPLES_ROOT ] ; then
 fi
 
 OPTION_HELP=no
+OPTION_OUT_DIR=
 
 for opt do
   optarg=`expr "x$opt" : 'x[^=]*=\(.*\)'`
@@ -85,6 +89,8 @@ for opt do
   --platforms-root=*) PLATFORMS_ROOT=$optarg
   ;;
   --samples-root=*) SAMPLES_ROOT=$optarg
+  ;;
+  --out-dir=*) OPTION_OUT_DIR=$optarg
   ;;
   *)
     echo "unknown option '$opt', use --help"
@@ -124,6 +130,7 @@ if [ $OPTION_HELP = yes ] ; then
     echo "  --no-git                  Don't use git to list input files, take all of them."
     echo "  --platforms-root=PATH     Specify platforms root directory [$PLATFORMS_ROOT]"
     echo "  --samples-root=PATH       Specify samples root directory [$SAMPLES_ROOT]"
+    echo "  --out-dir=PATH            Specify output package directory [$OUT_DIR]"
     echo ""
     exit 1
 fi
@@ -138,6 +145,19 @@ fi
 if [ -z "$PREBUILT_PREFIX" -a -z "$PREBUILT_NDK" ] ; then
     echo "ERROR: You must use one of --prebuilt-prefix or --prebuilt-ndk. See --help for details."
     exit 1
+fi
+
+if [ -n "$OPTION_OUT_DIR" ] ; then
+    OUT_DIR="$OPTION_OUT_DIR"
+    if [ ! -d $OUT_DIR ] ; then
+        mkdir -p $OUT_DIR
+        if [ $? != 0 ] ; then
+            echo "ERROR: Could not create output directory: $OUT_DIR"
+            exit 1
+        fi
+    fi
+else
+    rm -rf $OUT_DIR && mkdir -p $OUT_DIR
 fi
 
 if [ -n "$PREBUILT_PREFIX" ] ; then
@@ -199,6 +219,8 @@ fi
 TMPDIR=/tmp/ndk-release
 
 RELEASE_PREFIX=$PREFIX-$RELEASE
+
+umask 0022
 
 rm -rf $TMPDIR && mkdir -p $TMPDIR
 
@@ -274,18 +296,18 @@ for SYSTEM in $PREBUILT_SYSTEMS; do
 
     ARCHIVE=$BIN_RELEASE.zip
     echo "Creating $ARCHIVE"
-    (cd $TMPDIR && zip -9qr $ARCHIVE $RELEASE_PREFIX && rm -rf $DSTDIR) 2>/dev/null 1>&2
+    (cd $TMPDIR && zip -9qr $OUT_DIR/$ARCHIVE $RELEASE_PREFIX && rm -rf $DSTDIR) 2>/dev/null 1>&2
     if [ $? != 0 ] ; then
         echo "Could not create zip archive. Aborting."
         exit 1
     fi
 
-    chmod a+r $TMPDIR/$ARCHIVE
+#    chmod a+r $TMPDIR/$ARCHIVE
 done
 
 echo "Cleaning up."
 rm -rf $TMPDIR/reference
 rm -rf $TMPDIR/prev-ndk
 
-echo "Done, please see packages in $TMPDIR:"
-ls -l $TMPDIR
+echo "Done, please see packages in $OUT_DIR:"
+ls -l $OUT_DIR
