@@ -901,3 +901,64 @@ define cmd-install-file
 $(hide) cp -fp $1 $2
 endef
 
+
+#
+#  Module imports
+#
+
+# Initialize import list
+import-init = $(eval __ndk_import_dirs :=)
+
+# Add an optional single directory to the list of import paths
+#
+import-add-path-optional = \
+  $(if $(strip $(wildcard $1)),\
+    $(call ndk_log,Adding import directory: $1)\
+    $(eval __ndk_import_dirs += $1)\
+  )\
+
+# Add a directory to the list of import paths
+# This will warn if the directory does not exist
+#
+import-add-path = \
+  $(if $(strip $(wildcard $1)),\
+    $(call ndk_log,Adding import directory: $1)\
+    $(eval __ndk_import_dirs += $1)\
+  ,\
+    $(call __ndk_info,WARNING: Ignoring unknown import directory: $1)\
+  )\
+
+import-find-module = $(strip \
+      $(eval __imported_module :=)\
+      $(foreach __import_dir,$(__ndk_import_dirs),\
+        $(if $(__imported_module),,\
+          $(call ndk_log,  Probing $(__import_dir)/$1/Android.mk)\
+          $(if $(strip $(wildcard $(__import_dir)/$1/Android.mk)),\
+            $(eval __imported_module := $(__import_dir)/$1)\
+          )\
+        )\
+      )\
+      $(__imported_module)\
+    )
+
+# described in docs/IMPORT-MODULE.TXT
+# $1: tag name for the lookup
+#
+import-module = \
+    $(call ndk_log,Looking for imported module with tag '$1')\
+    $(eval __imported_path := $(call import-find-module,$1))\
+    $(if $(__imported_path),\
+      $(eval include $(__imported_path)/Android.mk)\
+    ,\
+      $(call __ndk_info,$(call local-makefile): Cannot find module with tag '$1' in import path)\
+      $(call __ndk_info,Are you sure your NDK_MODULE_PATH variable is properly defined ?)\
+      $(call __ndk_error,Aborting.)\
+    )
+
+# Only used for debugging
+#
+import-debug = \
+    $(info IMPORT DIRECTORIES:)\
+    $(foreach __dir,$(__ndk_import_dirs),\
+      $(info -- $(__dir))\
+    )\
