@@ -443,6 +443,9 @@ LOCAL_C_INCLUDES
     These are placed before any corresponding inclusion flag in
     LOCAL_CFLAGS / LOCAL_CPPFLAGS
 
+    The LOCAL_C_INCLUDES path are also used automatically when
+    launching native debugging with ndk-gdb.
+
 
 LOCAL_CFLAGS
     An optional set of compiler flags that will be passed when building
@@ -461,6 +464,12 @@ LOCAL_CFLAGS
           to C source files, not C++ ones. This has been corrected to
           match the full Android build system behaviour. (You can use
           LOCAL_CPPFLAGS to specify flags for C++ sources only now).
+
+    It is possible to specify additional include paths with
+    LOCAL_CFLAGS += -I<path>, however, it is better to use LOCAL_C_INCLUDES
+    for this, since the paths will then also be used during native
+    debugging with ndk-gdb.
+
 
 LOCAL_CXXFLAGS
     An alias for LOCAL_CPPFLAGS. Note that use of this flag is obsolete
