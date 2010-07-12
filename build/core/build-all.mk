@@ -23,6 +23,28 @@ $(call assert-defined,NDK_APPS NDK_APP_OUT)
 
 # ====================================================================
 #
+# Check the import path
+#
+# ====================================================================
+
+NDK_MODULE_PATH := $(strip $(NDK_MODULE_PATH))
+ifdef NDK_MODULE_PATH
+  ifneq ($(words $(NDK_MODULE_PATH)),1)
+    $(call __ndk_info,ERROR: You NDK_MODULE_PATH variable contains spaces)
+    $(call __ndk_info,Please fix the error and start again.)
+    $(call __ndk_error,Aborting)
+  endif
+endif
+
+$(call import-init)
+$(foreach __path,$(patsubst $(HOST_DIRSEP),$(space),$(NDK_MODULE_PATH)),\
+  $(call import-add-path,$(__path))\
+)
+$(call import-add-path-optional,$(NDK_ROOT)/sources)
+$(call import-add-path-optional,$(NDK_ROOT)/../development/ndk/sources)
+
+# ====================================================================
+#
 # Prepare the build for parsing Android.mk files
 #
 # ====================================================================
@@ -55,6 +77,7 @@ ANDROID_MK_INCLUDED := \
   $(BUILD_STATIC_LIBRARY) \
   $(BUILD_SHARED_LIBRARY) \
   $(BUILD_EXECUTABLE) \
+  $(PREBUILT_SHARED_LIBRARY) \
 
 
 # this is the list of directories containing dependency information
