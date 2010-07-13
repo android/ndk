@@ -68,6 +68,13 @@ OTHER FIXES & CHANGES:
   output directory where the packages are going to be copied. Also
   ensure that generated packages have go+r permissions.
 
+- ndk-build will now properly escape arguments. This means that something
+  like this:
+
+     ndk-build  MY_CFLAGS="-DFOO -DBAR"
+
+  will now work correctly.
+
 -------------------------------------------------------------------------------
 android-ndk-r4b
 
