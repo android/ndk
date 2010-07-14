@@ -27,6 +27,7 @@ OPTION_RELEASE=
 OPTION_GIT=
 OPTION_BRANCH=
 OPTION_PACKAGE=no
+OPTION_GIT_HTTP=no
 
 # the default release name (use today's date)
 RELEASE=`date +%Y%m%d`
@@ -38,11 +39,13 @@ GITCMD=git
 register_option "--branch=<name>" do_branch "Specify release branch" $BRANCH
 register_option "--release=<name>" do_release "Specify release name" $RELEASE
 register_option "--git=<executable>" do_git "Use this version of the git tool" $GITCMD
+register_option "--git-http" do_git_http "Use http to download sources from git"
 register_option "--package" do_package "Create source package in /tmp"
 
 do_branch () { OPTION_BRANCH=$1; }
 do_release () { OPTION_RELEASE=$1; }
 do_git () { OPTION_GIT=$1; }
+do_git_http () { OPTION_GIT_HTTP=yes; }
 do_package () { OPTION_PACKAGE=yes; }
 
 PROGRAM_PARAMETERS="<src-dir>"
@@ -89,7 +92,11 @@ if [ $? != 0 ] ; then
 fi
 
 # prefix used for all clone operations
-GITPREFIX=git://android.git.kernel.org/toolchain
+GITPROTO=git
+if [ "$OPTION_GIT_HTTP" = "yes" ] ; then
+  GITPROTO=http
+fi
+GITPREFIX=${GITPROTO}://android.git.kernel.org/toolchain
 
 toolchain_clone ()
 {
