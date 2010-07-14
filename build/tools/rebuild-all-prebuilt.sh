@@ -61,6 +61,10 @@ OPTION_TRY_X86=no
 register_option "--try-x86" do_try_x86 "Build experimental x86 toolchain too."
 do_try_x86 () { OPTION_TRY_X86=yes; }
 
+OPTION_GIT_HTTP=no
+register_option "--git-http" do_git_http "Download sources with http."
+do_git_http() { OPTION_GIT_HTTP=yes; }
+
 extract_parameters $@
 
 if [ "$OPTION_PACKAGE" = yes -a -z "$OPTION_NDK_DIR" ] ; then
@@ -128,7 +132,11 @@ if [ -z "$OPTION_TOOLCHAIN_SRC_DIR" ] ; then
     else
         # Download the toolchain sources
         dump "Download sources from android.git.kernel.org"
-        $PROGDIR/download-toolchain-sources.sh $FLAGS $SRC_DIR
+        DOWNLOAD_FLAGS="$FLAGS"
+        if [ $OPTION_GIT_HTTP = "yes" ] ; then
+            DOWNLOAD_FLAGS="$DOWNLOAD_FLAGS --git-http"
+        fi
+        $PROGDIR/download-toolchain-sources.sh $DOWNLOAD_FLAGS $SRC_DIR
         if [ $? != 0 ] ; then
             dump "ERROR: Could not download toolchain sources!"
             exit 1

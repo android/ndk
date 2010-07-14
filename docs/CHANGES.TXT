@@ -75,6 +75,9 @@ OTHER FIXES & CHANGES:
 
   will now work correctly.
 
+- Add --git-http option to download-toolchain-sources.sh and rebuild-all-prebuilt.sh
+  in order to download sources from android.git.kernel.org through HTTP.
+
 -------------------------------------------------------------------------------
 android-ndk-r4b
 
