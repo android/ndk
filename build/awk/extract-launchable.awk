@@ -49,6 +49,11 @@ BEGIN {
         else if ( event == "END-ACTIVITY" &&
                   XML_RPATH == "APPLICATION/MANIFEST/" ) {
             if ( name && launchable ) {
+                # If the name doesn't contain any dot, we consider
+                # that it is just missing the initial one.
+                if (index(name, ".") == 0) {
+                    name = "." name
+                }
                 print name;
             }
         }

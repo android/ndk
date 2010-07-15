@@ -78,6 +78,8 @@ OTHER FIXES & CHANGES:
 - Add --git-http option to download-toolchain-sources.sh and rebuild-all-prebuilt.sh
   in order to download sources from android.git.kernel.org through HTTP.
 
+- ndk-gdb: properly launch activities which name does not contain any dot.
+
 -------------------------------------------------------------------------------
 android-ndk-r4b
 
