@@ -32,10 +32,32 @@ endif
 # LOCAL_MAKEFILE must also exist and name the Android.mk that
 # included the module build script.
 #
-$(call assert-defined,LOCAL_MAKEFILE)
+$(call assert-defined,LOCAL_MAKEFILE LOCAL_BUILD_SCRIPT LOCAL_BUILT_MODULE)
 
 include $(BUILD_SYSTEM)/import-locals.mk
-include $(BUILD_SYSTEM)/build-module.mk
+
+#
+# Ensure that 'make <module>' and 'make clean-<module>' work
+#
+.PHONY: $(LOCAL_MODULE)
+$(LOCAL_MODULE): $(LOCAL_BUILT_MODULE)
+
+cleantarget := clean-$(LOCAL_MODULE)-$(TARGET_ARCH_ABI)
+.PHONY: $(cleantarget)
+clean: $(cleantarget)
+
+$(cleantarget): PRIVATE_MODULE      := $(LOCAL_MODULE)
+$(cleantarget): PRIVATE_TEXT        := [$(TARGET_ARCH_ABI)]
+$(cleantarget): PRIVATE_CLEAN_FILES := $(LOCAL_BUILT_MODULE) \
+                                       $($(my)OBJS)
+
+$(cleantarget)::
+	@echo "Clean: $(PRIVATE_MODULE) $(PRIVATE_TEXT)"
+	$(hide) rm -rf $(PRIVATE_CLEAN_FILES)
+
+ifeq ($(NDK_APP_DEBUGGABLE),true)
+$(NDK_APP_GDBSETUP): PRIVATE_SRC_DIRS += $(LOCAL_C_INCLUDES) $(LOCAL_PATH)
+endif
 
 # list of generated object files
 LOCAL_OBJECTS :=
