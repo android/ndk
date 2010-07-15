@@ -7,98 +7,139 @@ new experimental release packages for it.
 I. Getting the sources:
 =======================
 
-The sources live at android.git.kernel.org, You can get them with the following:
+The sources live under the "ndk" and "development/ndk" directories in
+the Android source tree:
+
+  - "ndk" contains the main build scripts and documentation
+  - "development/ndk" contains platform-specific headers and samples
+
+If you have downloaded the full Android source tree through the "repo"
+tool, you can start directly there. Otherwise, you can just get these
+two repositories with the following:
 
   mkdir myndk
   cd myndk
-  git clone git://android.git.kernel.org/platform/ndk.git .
+  git clone git://android.git.kernel.org/platform/ndk.git ndk
+  git clone git://android.git.kernel.org/platform/development.git development
+  export NDK=`pwd`/ndk
 
-If you intend to contribute patches, you might want to use the "repo" tool instead.
-Follow the instructions at source.android.com and download the full Android sources
-to your tree.
+II. Prebuilt binaries:
+======================
 
+The source tree does not contain the prebuilt binaries for the cross-compiler
+and other stuff that are necessary to generate machine code with the NDK.
 
-II. Getting platform files and samples:
-=======================================
+There are several ways to get them:
 
-The platform files (headers and libraries) have moved to a different location
-in the Android source tree. They are now under development/ndk/
+  1/ From a previous NDK release package:
 
-  mkdir mydevelopment
-  cd mydevelopment
-  git clone git://android.git.kernel.org/platform/development.git
+      Copy them from $PREVIOUS_NDK/build/prebuilt/<system>/ to your
+      $NDK/build/prebuilt/<system>, where <system> corresponds to your
+      development system. Valid values are: windows, darwin-x86 and linux-x86
 
-Then, to work with them (i.e. when launching ndk-build / ndk-gdb), do:
+  2/ Download and rebuild directly from the internet:
 
-  export NDK_PLATFORMS_ROOT=/path/to/mydevelopment/ndk/platforms
+      IMPORTANT: This is *very* long.
 
-The sample files are under mydevelopment/ndk/samples/
+      Just launch the following command:
 
+        $NDK/build/tools/rebuild-all-prebuilt.sh
 
-III. Prebuilt binaries:
-=======================
+      It will download all source packages from the Internet, unpack, patch
+      and build them for you. In the end, the binaries will be located under
+      $NDK/build/prebuilt/<system>, ready to be used.
 
-The source tree does not contain the prebuilt binaries for the cross-compiler and
-other stuff that are necessary to generate machine code with the NDK.
+  3/ Download, rebuild, package, then unpack:
 
-The easiest way to get them is to use the following script:
+      IMPORTANT: This is also *very* long.
 
-    build/tools/rebuild-all-prebuilt.sh:
+      It is a good idea to save the generated toolchain binaries into
+      an archive. To do that, use the --package option, as in:
 
-It will download all source packages from the Internet, unpack, patch and build
-them for you. In the end, the binaries will be located under the following:
+        $NDK/build/tools/rebuild-all-prebuilt.sh --package
 
-    build/prebuilt/$HOST_TAG/
+      This will generate a package file containing all the prebuilds, that
+      can be unpacked directly into your $NDK directory. The package name is
+      printed at the end, e.g."android-ndk-prebuild-<date>-<system>.tar.bz2".
 
-Where $HOST_TAG corresponds to your system (e.g. windows, darwin-x86 or linux-x86)
+      Where <date> is the current date, and <system> is your system name.
+      Then, to unpack:
 
-rebuild-all-prebuilt.sh is really a wrapper script around many other scripts
-under build/tools. Use --help to get proper usage and options for each one of
-these tools. Things you can do with them include:
-
-  II.1: Download the toolchain sources and package them:
-  ------------------------------------------------------
-
-      build/tools/download-toolchain-sources.sh --package
-
-    This downloads the toolchain sources from android.git.kernel.org and
-    packages them into a file like /tmp/android-ndk-toolchain-<date>.tar.bz2
-
-    This is useful is you want to modify rebuild-all-prebuilt.sh to support different
-    prebuilts or toolchains. To use the package, to rebuilt binaries:
-
-      build/tools/rebuild-all-prebuilt.sh --toolchain-src=<package>
-
-    You can also directly unpack the sources into a target source directory with:
-
-      build/tools/download-toolchain-sources.sh <src-dir>
+        cd $NDK
+        tar xjf /tmp/android-ndk-prebuilt-<date>-<system>.tar.bz2
 
 
-  II.2.: Build the cross-compiler only:
-  -------------------------------------
+      The generated package can easily be shared with other people.
 
-    build/tools/build-gcc.sh <src-dir> <ndk-dir> <toolchain-name>
 
-        src-dir = unpacked toolchain source directory
-        ndk-dir = target NDK install location (e.g. your 'myndk' top-level directory)
-        toolchain-name = toolchain name (arm-eabi-4.2.1 / arm-eabi-4.4.0 / x86-4.2.1)
+III. Generate new package releases:
+===================================
 
-  II.3.: Build the gdbserver binary only:
-  ---------------------------------------
+Use the 'build/tools/make-release.sh' script to generate experimental
+NDK release packages. You will need prebuilt binaries to do that properly,
+and there are two ways to do that:
 
-    build/tools/build-gcc.sh <gdbserver-src-dir> <ndk-dir> <toolchain-name>
+  1/ Using a previous NDK release package:
 
-  II.4.: Package all prebuilt binaries for easier redistribution / unpacking:
-  ---------------------------------------------------------------------------
+    Use the following command:
 
-    Build everything into a target directory:
+        cd $NDK
+        build/tools/make-release.sh --prebuilt-ndk=<file>
 
-        build/tools/rebuild-all-prebuilt.sh --package
+    Where <file> points to a previous NDK release. This will extract
+    the prebuilt binaries from it, and copy them to the new package file.
 
-    This will create a package named /tmp/android-ndk-prebuilt-<date>-<system>.tar.bz2
+    This method can only be used to generate a single release package
+    for the current <system>.
 
-    This package is to be unpacked directly in your NDK top-level directory, i.e.
 
-        cd myndk
-        tar xjf <package>
+  2/ Using one or more toolchain prebuilt packages:
+
+    Alternatively, you can generate release packages for several
+    supported systems if you have generated the appropriate prebuilt
+    toolchains, as described in II.3/ above.
+
+    Assuming you have placed the packages under:
+
+      /tmp/ndk/android-ndk-prebuilt-<date>-windows.tar.bz2
+      /tmp/ndk/android-ndk-prebuilt-<date>-darwin-x86.tar.bz2
+      /tmp/ndk/android-ndk-prebuilt-<date>-linux-x86.tar.bz2
+
+    You can invoke the following command:
+
+        $NDK/build/tools/make-release.sh --prebuilt-prefix=/tmp/ndk/android-ndk-prebuilt-<date>
+
+    This will generate 3 release packages under /tmp/ndk-release/ by default.
+
+  3/ Additionnal options:
+
+    --out-dir=<directory>: 
+        Allows you to specify a different output directory for the final
+        packages (instead of the default /tmp/ndk-release/)
+
+    --systems=<list>:
+        Allows you to limit the number of release packages to a specific list
+        of systems. For example, use:
+
+        $NDK/build/tools/make-release.sh --systems='linux-x86 darwin-x86' \
+            --prebuilt-prefix=<prefix>
+
+        If you don't have prebuilt packages for the 'windows' platform.
+
+    --no-git:
+        By default, the script clones the current git directory to a temporary
+        directory before packaging its content. Using --no-git will simply
+        copy the content of the current directory, which may contain misc.
+        unwanted files (e.g. backup files from text editors, generated
+        object files, etc...). Only use this as a last resort.
+
+    --release=<name>:
+        By default, the release name is the current <date>. You can change
+        this with this option, for example:
+
+        $NDK/build/tools/make-release.sh --release=crazy-experiment ...
+
+        The generated packages will be named android-ndk-<release>-<system>.zip
+
+    Other options are supported, use --help to list them all.
 
