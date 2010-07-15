@@ -27,7 +27,6 @@ TOOLCHAIN_NAME   := arm-eabi-4.4.0
 TOOLCHAIN_PREFIX := $(HOST_PREBUILT)/$(TOOLCHAIN_NAME)/bin/arm-eabi-
 
 TARGET_CFLAGS.common := \
-    -I$(SYSROOT)/usr/include \
     -fpic \
     -mthumb-interwork \
     -ffunction-sections \
@@ -36,6 +35,9 @@ TARGET_CFLAGS.common := \
     -fno-short-enums \
     -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ \
     -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__ \
+
+TARGET_C_INCLUDES := \
+    $(SYSROOT)/usr/include
 
 # This is to avoid the dreaded warning compiler message:
 #   note: the mangling of 'va_list' has changed in GCC 4.4

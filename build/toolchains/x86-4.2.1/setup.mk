@@ -27,12 +27,14 @@ TOOLCHAIN_NAME   := x86-4.2.1
 TOOLCHAIN_PREFIX := $(HOST_PREBUILT)/$(TOOLCHAIN_NAME)/bin/i686-android-linux-gnu-
 
 TARGET_CFLAGS.common := \
-    -I$(SYSROOT)/usr/include \
     -msoft-float -fpic \
     -ffunction-sections \
     -funwind-tables \
     -fstack-protector \
     -fno-short-enums
+
+TARGET_C_INCLUDES := \
+    (SYSROOT)/usr/include
 
 TARGET_x86_release_CFLAGS :=  -O2 \
                               -fomit-frame-pointer \

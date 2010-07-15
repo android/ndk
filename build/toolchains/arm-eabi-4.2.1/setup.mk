@@ -27,7 +27,6 @@ TOOLCHAIN_NAME   := arm-eabi-4.2.1
 TOOLCHAIN_PREFIX := $(HOST_PREBUILT)/$(TOOLCHAIN_NAME)/bin/arm-eabi-
 
 TARGET_CFLAGS.common := \
-    -I$(SYSROOT)/usr/include \
     -march=armv5te -mtune=xscale \
     -msoft-float -fpic \
     -mthumb-interwork \
@@ -38,6 +37,8 @@ TARGET_CFLAGS.common := \
     -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ \
     -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__ \
 
+TARGET_C_INCLUDES := \
+    $(SYSROOT)/usr/include
 
 TARGET_arm_release_CFLAGS :=  -O2 \
                               -fomit-frame-pointer \
