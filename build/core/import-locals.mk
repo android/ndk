@@ -26,10 +26,6 @@ $(call assert-defined,LOCAL_MODULE)
 # and 'zoo'
 #
 
-#
-# The imported compiler flags are prepended to their LOCAL_XXXX value
-# (this allows the module to override them).
-#
 all_depends := $(call module-get-all-dependencies,$(LOCAL_MODULE))
 all_depends := $(filter-out $(LOCAL_MODULE),$(all_depends))
 
@@ -45,14 +41,22 @@ ifdef NDK_DEBUG_IMPORTS
     $(info All depends='$(all_depends)')
 endif
 
+#
+# The imported compiler flags are prepended to their LOCAL_XXXX value
+# (this allows the module to override them).
+#
 LOCAL_CFLAGS     := $(strip $(imported_CFLAGS) $(LOCAL_CFLAGS))
 LOCAL_CPPFLAGS   := $(strip $(imported_CPPFLAGS) $(LOCAL_CPPFLAGS))
-LOCAL_C_INCLUDES := $(strip $(imported_C_INCLUDES) $(LOCAL_C_INCLUDES))
 
-# For LOCAL_LDLIBS, things are a bit different!
 #
-# You want the imported flags to appear _after_ the LOCAL_LDLIBS due to the way Unix
-# linkers work.
+# The imported include directories are appended to their LOCAL_XXX value
+# (this allows the module to override them)
+#
+LOCAL_C_INCLUDES := $(strip $(LOCAL_C_INCLUDES) $(imported_C_INCLUDES))
+
+# Similarly, you want the imported flags to appear _after_ the LOCAL_LDLIBS
+# due to the way Unix linkers work (depending libraries must appear before
+# dependees on final link command).
 #
 imported_LDLIBS := $(call module-get-listed-export,$(all_depends),LDLIBS)
 
