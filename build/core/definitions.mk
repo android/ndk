@@ -803,7 +803,8 @@ $$(_OBJ): PRIVATE_CFLAGS   := $$($$(my)CFLAGS) \
                               $$(LOCAL_C_INCLUDES:%=-I%) \
                               -I$$(LOCAL_PATH) \
                               $$(LOCAL_CFLAGS) \
-                              $$(NDK_APP_CFLAGS)
+                              $$(NDK_APP_CFLAGS) \
+                              $$($(my)C_INCLUDES:%=-I%) \
 
 $$(_OBJ): $$(_SRC) $$(LOCAL_MAKEFILE) $$(NDK_APP_APPLICATION_MK)
 	@mkdir -p $$(dir $$(PRIVATE_OBJ))
@@ -865,6 +866,7 @@ $$(_OBJ): PRIVATE_CXXFLAGS := $$($$(my)CXXFLAGS) \
                               $$(NDK_APP_CFLAGS) \
                               $$(NDK_APP_CPPFLAGS) \
                               $$(NDK_APP_CXXFLAGS) \
+                              $$($(my)C_INCLUDES:%=-I%) \
 
 $$(_OBJ): $$(_SRC) $$(LOCAL_MAKEFILE) $$(NDK_APP_APPLICATION_MK)
 	@mkdir -p $$(dir $$(PRIVATE_OBJ))

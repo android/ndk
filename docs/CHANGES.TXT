@@ -59,6 +59,11 @@ IMPORTANT CHANGES:
 
 OTHER FIXES & CHANGES:
 
+- The path to system headers is now included last in the compilation command
+  line. This prevents conflicts with source code that define their own headers
+  with similar names (e.g. a custom "err.h" was ignored, because the system
+  <err.h> was used instead).
+
 - Update documentation for 'my-dir' function to explain that, due to the
   way GNU Make works, it really returns the path of the last included
   Makefile (instead of the current one). Also provide examples on how
