@@ -29,5 +29,6 @@ my := TARGET_
 $(call handle-module-filename,lib,.a)
 $(call handle-module-built)
 
-$(call module-add-static-library,$(LOCAL_MODULE))
+LOCAL_MODULE_CLASS := STATIC_LIBRARY
+include $(BUILD_SYSTEM)/build-module.mk
 

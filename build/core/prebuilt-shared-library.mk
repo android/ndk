@@ -53,4 +53,5 @@ LOCAL_BUILT_MODULE := $(LOCAL_SRC_FILES)
 LOCAL_SRC_FILES    :=
 LOCAL_OBJS_DIR     := $(TARGET_OBJS)/$(LOCAL_MODULE)
 
-$(call module-add-prebuilt-shared-library,$(LOCAL_MODULE))
+LOCAL_MODULE_CLASS := PREBUILT_SHARED_LIBRARY
+include $(BUILD_SYSTEM)/build-module.mk
