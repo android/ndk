@@ -17,17 +17,11 @@
 $(call assert-defined,LOCAL_MODULE)
 $(call module-restore-locals,$(LOCAL_MODULE))
 
-# Check LOCAL_IS_HOST_MODULE and define 'my' as either HOST_ or TARGET_
+# For now, only support target (device-specific modules).
+# We may want to introduce support for host modules in the future
+# but that is too experimental for now.
 #
-LOCAL_IS_HOST_MODULE := $(strip $(LOCAL_IS_HOST_MODULE))
-ifdef LOCAL_IS_HOST_MODULE
-  ifneq ($(LOCAL_IS_HOST_MODULE),true)
-    $(call __ndk_log,$(LOCAL_PATH): LOCAL_IS_HOST_MODULE must be "true" or empty, not "$(LOCAL_IS_HOST_MODULE)")
-  endif
-  my := HOST_
-else
-  my := TARGET_
-endif
+my := TARGET_
 
 # LOCAL_MAKEFILE must also exist and name the Android.mk that
 # included the module build script.
@@ -69,12 +63,10 @@ LOCAL_CFLAGS := -DANDROID $(LOCAL_CFLAGS)
 #
 # Add the default system shared libraries to the build
 #
-ifndef LOCAL_IS_HOST_MODULE
-  ifeq ($(LOCAL_SYSTEM_SHARED_LIBRARIES),none)
-    LOCAL_SHARED_LIBRARIES += $(TARGET_DEFAULT_SYSTEM_SHARED_LIBRARIES)
-  else
-    LOCAL_SHARED_LIBRARIES += $(LOCAL_SYSTEM_SHARED_LIBRARIES)
-  endif
+ifeq ($(LOCAL_SYSTEM_SHARED_LIBRARIES),none)
+  LOCAL_SHARED_LIBRARIES += $(TARGET_DEFAULT_SYSTEM_SHARED_LIBRARIES)
+else
+  LOCAL_SHARED_LIBRARIES += $(LOCAL_SYSTEM_SHARED_LIBRARIES)
 endif
 
 
@@ -250,7 +242,7 @@ $(LOCAL_BUILT_MODULE): PRIVATE_NAME := $(notdir $(LOCAL_BUILT_MODULE))
 #
 # If this is a static library module
 #
-ifeq ($(call module-get-type,$(LOCAL_MODULE)),static-library)
+ifeq ($(call module-get-class,$(LOCAL_MODULE)),STATIC_LIBRARY)
 $(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
 	@ mkdir -p $(dir $@)
 	@ echo "StaticLibrary  : $(PRIVATE_NAME)"
@@ -263,7 +255,7 @@ endif
 #
 # If this is a shared library module
 #
-ifeq ($(call module-get-type,$(LOCAL_MODULE)),shared-library)
+ifeq ($(call module-get-class,$(LOCAL_MODULE)),SHARED_LIBRARY)
 $(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
 	@ mkdir -p $(dir $@)
 	@ echo "SharedLibrary  : $(PRIVATE_NAME)"
@@ -275,7 +267,7 @@ endif
 #
 # If this is an executable module
 #
-ifeq ($(call module-get-type,$(LOCAL_MODULE)),executable)
+ifeq ($(call module-get-class,$(LOCAL_MODULE)),EXECUTABLE)
 $(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
 	@ mkdir -p $(dir $@)
 	@ echo "Executable     : $(PRIVATE_NAME)"
