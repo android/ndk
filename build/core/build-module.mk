@@ -1,4 +1,4 @@
-# Copyright (C) 2009 The Android Open Source Project
+# Copyright (C) 2010 The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,22 +13,22 @@
 # limitations under the License.
 #
 
-# this file is included from Android.mk files to build a target-specific
-# shared library
-#
-
-LOCAL_BUILD_SCRIPT := BUILD_SHARED_LIBRARY
-LOCAL_MAKEFILE     := $(local-makefile)
-
 $(call check-defined-LOCAL_MODULE,$(LOCAL_BUILD_SCRIPT))
 $(call check-LOCAL_MODULE,$(LOCAL_MAKEFILE))
-$(call check-LOCAL_MODULE_FILENAME)
 
-# we are building target objects
-my := TARGET_
+# This file is used to record the LOCAL_XXX definitions of a given
+# module. It is included by BUILD_STATIC_LIBRARY, BUILD_SHARED_LIBRARY
+# and others.
+#
+LOCAL_MODULE_CLASS := $(strip $(LOCAL_MODULE_CLASS))
+ifndef LOCAL_MODULE_CLASS
+$(call __ndk_info,$(LOCAL_MAKEFILE):$(LOCAL_MODULE): LOCAL_MODULE_CLASS definition is missing !)
+$(call __ndk_error,Aborting)
+endif
 
-$(call handle-module-filename,lib,.so)
-$(call handle-module-built)
+$(if $(call module-class-check,$(LOCAL_MODULE_CLASS)),,\
+$(call __ndk_info,$(LOCAL_MAKEFILE):$(LOCAL_MODULE): Unknown LOCAL_MODULE_CLASS value: $(LOCAL_MODULE_CLASS))\
+$(call __ndk_error,Aborting)\
+)
 
-LOCAL_MODULE_CLASS := SHARED_LIBRARY
-include $(BUILD_SYSTEM)/build-module.mk
+$(call module-add,$(LOCAL_MODULE))

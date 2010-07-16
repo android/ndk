@@ -30,4 +30,5 @@ my := TARGET_
 $(call handle-module-filename,,)
 $(call handle-module-built)
 
-$(call module-add-executable,$(LOCAL_MODULE))
+LOCAL_MODULE_CLASS := EXECUTABLE
+include $(BUILD_SYSTEM)/build-module.mk
