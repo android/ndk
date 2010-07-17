@@ -57,6 +57,10 @@ IMPORTANT CHANGES:
 
   When doing a "ndk-build -j<number>", with <number> bigger than 1.
 
+- Add support for assembly-level source filtering. See the description of
+  LOCAL_FILTER_ASM in docs/ANDROID-MK.TXT for more details. This can be useful
+  for certain kinds of obfuscation tasks.
+
 OTHER FIXES & CHANGES:
 
 - The path to system headers is now included last in the compilation command
