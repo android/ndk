@@ -42,9 +42,14 @@ OPTION_HELP=no
 OPTION_BUILD_OUT=
 OPTION_SYSROOT=
 
+SYSROOT=
+if [ -d $TOOLCHAIN_PATH/libc ] ; then
+  SYSROOT=$TOOLCHAIN_PATH/libc
+fi
+
 register_option "--build-out=<path>" do_build_out "Set temporary build directory" "/tmp/random"
 register_option "--platform=<name>"  do_platform  "Target specific platform" "$PLATFORM"
-register_option "--sysroot=<path>"   do_sysroot   "Specify sysroot directory directly."
+register_option "--sysroot=<path>"   do_sysroot   "Specify sysroot directory directly [$SYSROOT]."
 register_option "-j<number>"         do_jobs      "Use <number> build jobs in parallel" "$JOBS"
 
 do_build_out () { OPTION_BUILD_OUT=$1; }
