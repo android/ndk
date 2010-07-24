@@ -23,9 +23,6 @@
 # revisions of the NDK.
 #
 
-TOOLCHAIN_NAME   := arm-eabi-4.4.0
-TOOLCHAIN_PREFIX := $(HOST_PREBUILT)/$(TOOLCHAIN_NAME)/bin/arm-eabi-
-
 TARGET_CFLAGS.common := \
     -fpic \
     -mthumb-interwork \

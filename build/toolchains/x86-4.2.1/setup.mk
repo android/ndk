@@ -23,7 +23,6 @@
 # revisions of the NDK.
 #
 
-TOOLCHAIN_NAME   := x86-4.2.1
 TOOLCHAIN_PREFIX := $(HOST_PREBUILT)/$(TOOLCHAIN_NAME)/bin/i686-android-linux-gnu-
 
 TARGET_CFLAGS.common := \
