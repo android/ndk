@@ -155,6 +155,16 @@ set_toolchain_install $NDK_DIR/build/prebuilt/$HOST_TAG/$TOOLCHAIN
 # Location where the toolchain license files are
 TOOLCHAIN_LICENSES=$ANDROID_NDK_ROOT/build/tools/toolchain-licenses
 
+# Copy the sysroot to the installation prefix. This prevents the generated
+# binaries from containing hard-coding host paths
+TOOLCHAIN_SYSROOT=$TOOLCHAIN_PATH/libc
+dump "Sysroot  : Copying: $SYSROOT --> $TOOLCHAIN_SYSROOT"
+mkdir -p $TOOLCHAIN_SYSROOT && (cd $SYSROOT && tar c *) | (cd $TOOLCHAIN_SYSROOT && tar x)
+if [ $? != 0 ] ; then
+    echo "Error while copying sysroot files. See $TMPLOG"
+    exit 1
+fi
+
 # configure the toolchain
 #
 dump "Configure: $TOOLCHAIN toolchain build"
@@ -177,7 +187,7 @@ export LDFLAGS="$HOST_LDFLAGS" && run \
 $BUILD_SRCDIR/configure --target=$ABI_TOOLCHAIN_PREFIX \
                         --disable-nls \
                         --prefix=$TOOLCHAIN_PATH \
-                        --with-sysroot=$SYSROOT \
+                        --with-sysroot=$TOOLCHAIN_SYSROOT \
                         --with-binutils-version=$BINUTILS_VERSION \
                         --with-gcc-version=$GCC_VERSION \
                         --with-gdb-version=$GDB_VERSION

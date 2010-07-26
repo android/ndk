@@ -85,6 +85,9 @@ OTHER FIXES & CHANGES:
 
 - ndk-gdb: properly launch activities which name does not contain any dot.
 
+- build/tools/build-gcc.sh: copy the sysroot to the build directory. This avoids
+  the generated toolchain binaries from hard-coding host build paths.
+
 -------------------------------------------------------------------------------
 android-ndk-r4b
 
