@@ -23,8 +23,31 @@ two repositories with the following:
   git clone git://android.git.kernel.org/platform/development.git development
   export NDK=`pwd`/ndk
 
-II. Prebuilt binaries:
-======================
+II. Building the platforms tree:
+================================
+
+You need to do that once if you want to use the content of $NDK to build
+samples, tests or anything else:
+
+  $NDK/build/tools/build-platforms.sh
+
+What the script does is populate the $NDK/platforms and $NDK/samples
+directories from the content of development/ndk.
+
+What is under development/ndk is segregated by API level. This makes it
+easier to add a new platform to the tree, but is not well-suited to building
+stuff. The build-platforms.sh script will gather all files appropriately
+and place the result inside $NDK/platforms and $NDK/samples.
+
+Note: These directories are listed by $NDK/.gitignore, so they won't appear
+      on your git status. You can remove them if you want by running:
+
+        $NDK/build/tools/dev-cleanup.sh
+
+      which also removes all intermediate files and directories from $NDK.
+
+III. Prebuilt binaries:
+=======================
 
 The source tree does not contain the prebuilt binaries for the cross-compiler
 and other stuff that are necessary to generate machine code with the NDK.
@@ -72,8 +95,8 @@ There are several ways to get them:
       The generated package can easily be shared with other people.
 
 
-III. Generate new package releases:
-===================================
+IV. Generate new package releases:
+==================================
 
 Use the 'build/tools/make-release.sh' script to generate experimental
 NDK release packages. You will need prebuilt binaries to do that properly,
@@ -142,4 +165,3 @@ and there are two ways to do that:
         The generated packages will be named android-ndk-<release>-<system>.zip
 
     Other options are supported, use --help to list them all.
-
