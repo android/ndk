@@ -47,17 +47,11 @@ OUT_DIR=/tmp/ndk-release
 # be copied into the archive.
 USE_GIT_FILES=yes
 
-# Find the location of the platforms root directory
-PLATFORMS_ROOT=$NDK_ROOT_DIR/build/platforms
-if [ ! -d $PLATFORMS_ROOT ] ; then
-    PLATFORMS_ROOT=`dirname $NDK_ROOT_DIR`/development/ndk/platforms
-fi
+# set of platforms to package (all by default)
+PLATFORMS=
 
-# Find the location of the samples
-SAMPLES_ROOT=$NDK_ROOT_DIR/samples
-if [ ! -d $SAMPLES_ROOT ] ; then
-    SAMPLES_ROOT=`dirname $NDK_ROOT_DIR`/development/ndk/samples
-fi
+# Find the location of the platforms root directory
+DEVELOPMENT_ROOT=`dirname $NDK_ROOT_DIR`/development/ndk
 
 OPTION_HELP=no
 OPTION_OUT_DIR=
@@ -84,11 +78,11 @@ for opt do
   ;;
   --systems=*) PREBUILT_SYSTEMS=$optarg
   ;;
+  --platforms=*) PLATFORMS=$optarg
+  ;;
   --no-git) USE_GIT_FILES=no
   ;;
-  --platforms-root=*) PLATFORMS_ROOT=$optarg
-  ;;
-  --samples-root=*) SAMPLES_ROOT=$optarg
+  --development-root=*) DEVELOPMENT_ROOT=$optarg
   ;;
   --out-dir=*) OPTION_OUT_DIR=$optarg
   ;;
@@ -127,9 +121,9 @@ if [ $OPTION_HELP = yes ] ; then
     echo "  --prebuilt-prefix=PREFIX  Prefix of prebuilt binary tarballs [$PREBUILT_PREFIX]"
     echo "  --prebuilt-ndk=FILE       Specify a previous NDK package [$PREBUILT_NDK]"
     echo "  --systems=SYSTEMS         List of host system packages [$PREBUILT_SYSTEMS]"
+    echo "  --platforms=PLATFORMS     List of platforms to include [all]"
     echo "  --no-git                  Don't use git to list input files, take all of them."
-    echo "  --platforms-root=PATH     Specify platforms root directory [$PLATFORMS_ROOT]"
-    echo "  --samples-root=PATH       Specify samples root directory [$SAMPLES_ROOT]"
+    echo "  --development-root=PATH   Specify platforms/samples directory [$DEVELOPMENT_ROOT]"
     echo "  --out-dir=PATH            Specify output package directory [$OUT_DIR]"
     echo ""
     exit 1
@@ -235,27 +229,28 @@ if [ $? != 0 ] ; then
     exit 2
 fi
 
-# copy platform files if needed
-echo "Copying platform files"
-if [ ! -d $REFERENCE/build/platforms ] ; then
-    mkdir -p $REFERENCE/build/platforms &&
-    (cd $PLATFORMS_ROOT && tar cf - android-*) | (cd $REFERENCE/build/platforms && tar xf -)
-    if [ $? != 0 ] ; then
-        echo "Could not copy platform files. Aborting."
-        exit 2
-    fi
+# copy platform and sample files
+echo "Copying platform and sample files"
+FLAGS="--src-dir=$DEVELOPMENT_ROOT --dst-dir=$REFERENCE"
+if [ "$VERBOSE2" = "yes" ] ; then
+  FLAGS="$FLAGS --verbose"
+fi
+PLATFORM_FLAGS=
+if [ -n "$PLATFORMS" ] ; then
+    PLATFORM_FLAGS="--platform=$PLATFORMS"
+fi
+$NDK_ROOT_DIR/build/tools/build-platforms.sh $FLAGS "$PLATFORM_FLAGS"
+if [ $? != 0 ] ; then
+    echo "Could not copy platform files. Aborting."
+    exit 2
 fi
 
-# copy sample files if needed
-echo "Copying samples"
-if [ ! -d $REFERENCE/samples ] ; then
-    mkdir -p $REFERENCE/samples &&
-    (cd $SAMPLES_ROOT && tar cf - *) | (cd $REFERENCE/samples && tar xf -)
-    if [ $? != 0 ] ; then
-        echo "Could not copy samples. Aborting."
-        exit 2
-    fi
-fi
+# create a release file named 'RELEASE.TXT' containing the release
+# name. This is used by the build script to detect whether you're
+# invoking the NDK from a release package or from the development
+# tree.
+#
+echo "$RELEASE" > $REFERENCE/RELEASE.TXT
 
 # now, for each system, create a package
 #

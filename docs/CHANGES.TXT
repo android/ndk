@@ -88,6 +88,8 @@ OTHER FIXES & CHANGES:
 - build/tools/build-gcc.sh: copy the sysroot to the build directory. This avoids
   the generated toolchain binaries from hard-coding host build paths.
 
+- Platforms files are now under $NDK/platforms instead of $NDK/build/platforms
+
 -------------------------------------------------------------------------------
 android-ndk-r4b
 

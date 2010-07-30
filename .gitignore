@@ -4,6 +4,8 @@
 Thumbs.db
 local.properties
 build.xml
+samples/*
+build/platforms/*
 samples/*/libs/
 samples/*/bin/
 samples/*/obj/
