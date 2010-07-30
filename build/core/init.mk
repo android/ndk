@@ -276,15 +276,18 @@ $(foreach tc,$(NDK_ALL_TOOLCHAINS),\
 #
 NDK_PLATFORMS_ROOT := $(strip $(NDK_PLATFORMS_ROOT))
 ifndef NDK_PLATFORMS_ROOT
-    NDK_PLATFORMS_ROOT := $(strip $(wildcard $(NDK_ROOT)/build/platforms))
+    NDK_PLATFORMS_ROOT := $(strip $(wildcard $(NDK_ROOT)/platforms))
     ifndef NDK_PLATFORMS_ROOT
-    NDK_PLATFORMS_ROOT := $(strip $(wildcard $(call parent-dir,$(NDK_ROOT))/development/ndk/platforms))
+        NDK_PLATFORMS_ROOT := $(strip $(wildcard $(NDK_ROOT)/build/platforms))
     endif
 
     ifndef NDK_PLATFORMS_ROOT
-    $(call __ndk_info,Could not find platform files (headers and libraries))
-        $(call __ndk_info,Please define NDK_PLATFORMS_ROOT to point to a valid)
-        $(call __ndk_info,root directory for these.)
+        $(call __ndk_info,Could not find platform files (headers and libraries))
+        $(if $(strip $(wildcard $(NDK_ROOT)/RELEASE.TXT)),\
+            $(call __ndk_info,Please define NDK_PLATFORMS_ROOT to point to a valid directory.)\
+        ,\
+            $(call __ndk_info,Please run build/tools/build-platforms.sh to build the corresponding directory.)\
+        )
         $(call __ndk_error,Aborting)
     endif
 
