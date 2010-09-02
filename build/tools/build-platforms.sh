@@ -24,6 +24,18 @@
 # that is relevant to API level N, and not contain anything that is already
 # provided by API level N-1, N-2, etc..
 #
+# More precisely, for each architecture A:
+#  $SRC/android-N/include        --> $DST/android-N/arch-A/usr/include
+#  $SRC/android-N/arch-A/include --> $DST/android-N/arch-A/usr/include
+#  $SRC/android-N/arch-A/lib     --> $DST/android-N/arch-A/usr/lib
+#
+# For backwards compatibility:
+#  $SRC/android-N/arch-A/usr/include --> $DST/android-N/arch-A/usr/include
+#  $SRC/android-N/arch-A/usr/lib     --> $DST/android-N/arch-A/usr/lib
+#
+# Repeat after that for N+1, N+2, etc..
+#
+
 . `dirname $0`/../core/ndk-common.sh
 
 extract_platforms_from ()
@@ -178,7 +190,7 @@ copy_directory ()
 {
     local SDIR="$SRCDIR/$1"
     local DDIR="$DSTDIR/$2"
-    log "SDIR=$SDIR DDIR=$DDIR"
+    log2 "SDIR=$SDIR DDIR=$DDIR"
     if [ -d "$SDIR" ] ; then
         log "Copying $3 from \$SRC/$1 to \$DST/$2."
         mkdir -p "$DDIR" && cp -rf "$SDIR"/* "$DDIR"
@@ -192,6 +204,14 @@ copy_directory ()
 
 # Copy platform sysroot and samples into your destination
 #
+
+# $SRC/android-$PLATFORM/include --> $DST/platforms/android-$PLATFORM/arch-$ABI/usr/include
+# $SRC/android-$PLATFORM/arch-$ABI/include --> $DST/platforms/android-$PLATFORM/arch-$ABI/usr/include
+# for compatibility:
+# $SRC/android-$PLATFORM/arch-$ABI/usr/include --> $DST/platforms/android-$PLATFORM/arch-$ABI/usr/include
+
+
+
 # $SRC/android-$PLATFORM/arch-$ABI/usr --> $DST/platforms/android-$PLATFORM/arch-$ABI/usr
 # $SRC/android-$PLATFORM/samples       --> $DST/samples
 #
@@ -210,7 +230,10 @@ for PLATFORM in $PLATFORMS; do
     fi
     for ABI in $ABIS; do
         SYSROOT=arch-$ABI/usr
-        copy_directory $PLATFORM_SRC/$SYSROOT $PLATFORM_DST/$SYSROOT sysroot
+        copy_directory $PLATFORM_SRC/include           $PLATFORM_DST/$SYSROOT/include "sysroot headers"
+        copy_directory $PLATFORM_SRC/arch-$ABI/include $PLATFORM_DST/$SYSROOT/include "sysroot headers"
+        copy_directory $PLATFORM_SRC/arch-$ABI/lib     $PLATFORM_DST/$SYSROOT/lib "sysroot libs"
+        copy_directory $PLATFORM_SRC/$SYSROOT          $PLATFORM_DST/$SYSROOT sysroot
     done
     PREV_PLATFORM_DST=$PLATFORM_DST
 done
@@ -218,7 +241,7 @@ done
 # Copy platform samples and generic samples into your destination
 #
 # $SRC/samples/ --> $DST/samples/
-# $SRC/android-$PLATFORM/arch-$ABI/samples/ --> $DST/samples/
+# $SRC/android-$PLATFORM/samples/ --> $DST/samples
 #
 copy_directory  samples samples samples
 
