@@ -237,9 +237,9 @@ if [ "$VERBOSE2" = "yes" ] ; then
 fi
 PLATFORM_FLAGS=
 if [ -n "$PLATFORMS" ] ; then
-    PLATFORM_FLAGS="--platform=$PLATFORMS"
+    PLATFORM_FLAGS="--platform=\"$PLATFORMS\"'
 fi
-$NDK_ROOT_DIR/build/tools/build-platforms.sh $FLAGS "$PLATFORM_FLAGS"
+$NDK_ROOT_DIR/build/tools/build-platforms.sh $FLAGS $PLATFORM_FLAGS
 if [ $? != 0 ] ; then
     echo "Could not copy platform files. Aborting."
     exit 2
@@ -251,6 +251,9 @@ fi
 # tree.
 #
 echo "$RELEASE" > $REFERENCE/RELEASE.TXT
+
+# Remove un-needed files
+rm -f $REFERENCE/CleanSpec.mk
 
 # now, for each system, create a package
 #
