@@ -649,3 +649,34 @@ LOCAL_EXPORT_LDLIBS
     There, libbar.so will be built with a -llog at the end of the linker
     command to indicate that it depends on the system logging library,
     because it depends on 'foo'.
+
+LOCAL_FILTER_ASM
+    Define this variable to a shell command that will be used to filter
+    the assembly files from, or generated from, your LOCAL_SRC_FILES.
+
+    When it is defined, the following happens:
+
+      - Any C or C++ source file is generated into a temporary assembly
+        file (instead of being compiled into an object file).
+
+      - Any temporary assembly file, and any assembly file listed in
+        LOCAL_SRC_FILES is sent through the LOCAL_FILTER_ASM command
+        to generate _another_ temporary assembly file.
+
+      - These filtered assembly files are compiled into object file.
+
+    In other words, If you have:
+
+      LOCAL_SRC_FILES  := foo.c bar.S
+      LOCAL_FILTER_ASM := myasmfilter
+
+    foo.c --1--> $OBJS_DIR/foo.S.original --2--> $OBJS_DIR/foo.S --3--> $OBJS_DIR/foo.o
+    bar.S                                 --2--> $OBJS_DIR/bar.S --3--> $OBJS_DIR/bar.o
+
+    Were "1" corresponds to the compiler, "2" to the filter, and "3" to the
+    assembler. The filter must be a standalone shell command that takes the
+    name of the input file as its first argument, and the name of the output
+    file as the second one, as in:
+
+        myasmfilter $OBJS_DIR/foo.S.original $OBJS_DIR/foo.S
+        myasmfilter bar.S $OBJS_DIR/bar.S
