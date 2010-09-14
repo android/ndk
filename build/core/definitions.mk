@@ -749,6 +749,7 @@ NDK_APP_VARS_OPTIONAL := APP_OPTIM APP_CPPFLAGS APP_CFLAGS APP_CXXFLAGS \
 # or defined by the build scripts.
 NDK_APP_VARS := $(NDK_APP_VARS_REQUIRED) \
                 $(NDK_APP_VARS_OPTIONAL) \
+                APP_DEBUG \
                 APP_DEBUGGABLE \
                 APP_MANIFEST
 

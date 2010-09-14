@@ -61,6 +61,13 @@ IMPORTANT CHANGES:
   LOCAL_FILTER_ASM in docs/ANDROID-MK.TXT for more details. This can be useful
   for certain kinds of obfuscation tasks.
 
+- Easier native debugging support by using 'ndk-build NDK_DEBUG=1'. The main
+  idea is that if NDK_DEBUG is defined, its value overrides the value found
+  in the application's android:debuggable manifest attribute.
+
+  Valid values for NDK_DEBUG are '1', '0', 'true' or 'false' (anything else
+  will be ignored).
+
 OTHER FIXES & CHANGES:
 
 - The path to system headers is now included last in the compilation command
