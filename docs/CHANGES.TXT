@@ -68,6 +68,12 @@ IMPORTANT CHANGES:
   Valid values for NDK_DEBUG are '1', '0', 'true' or 'false' (anything else
   will be ignored).
 
+- Switched to GCC 4.4.3. The binaries for GCC 4.4.0 are still available and
+  can be used with NDK_TOOLCHAIN=arm-eabi-4.4.0 defined in your environment.
+  The binaries and support files for arm-eabi-4.2.1 were removed.
+
+  IMPORTANT: The new toolchain is called arm-linux-androideabi-4.4.3
+
 OTHER FIXES & CHANGES:
 
 - The path to system headers is now included last in the compilation command

@@ -200,10 +200,8 @@ else
     echo "Collecting all sources files under tree."
     # Cleanup everything that is likely to not be part of the final NDK
     # i.e. generated files...
-    rm -rf $NDK_ROOT_DIR/out
-    rm -rf $NDK_ROOT_DIR/apps/*/project/libs/armeabi
-    rm -rf $NDK_ROOT_DIR/apps/*/project/libs/armeabi-v7a
-    rm -rf $NDK_ROOT_DIR/apps/*/project/libs/x86
+    rm -rf $NDK_ROOT_DIR/samples/*/obj
+    rm -rf $NDK_ROOT_DIR/samples/*/libs
     # Get all files under the NDK root
     GIT_FILES=`cd $NDK_ROOT_DIR && find .`
     GIT_FILES=`echo $GIT_FILES | sed -e "s!\./!!g"`
@@ -214,6 +212,7 @@ TMPDIR=/tmp/ndk-release
 
 RELEASE_PREFIX=$PREFIX-$RELEASE
 
+# ensure that the generated files are ug+rx
 umask 0022
 
 rm -rf $TMPDIR && mkdir -p $TMPDIR
@@ -237,12 +236,23 @@ if [ "$VERBOSE2" = "yes" ] ; then
 fi
 PLATFORM_FLAGS=
 if [ -n "$PLATFORMS" ] ; then
-    PLATFORM_FLAGS="--platform=\"$PLATFORMS\"'
+    $NDK_ROOT_DIR/build/tools/build-platforms.sh $FLAGS --platform="$PLATFORMS"
+else
+    $NDK_ROOT_DIR/build/tools/build-platforms.sh $FLAGS $PLATFORM_FLAGS
 fi
-$NDK_ROOT_DIR/build/tools/build-platforms.sh $FLAGS $PLATFORM_FLAGS
 if [ $? != 0 ] ; then
     echo "Could not copy platform files. Aborting."
     exit 2
+fi
+
+# copy sources files
+if [ -d $DEVELOPMENT_ROOT/sources ] ; then
+    echo "Copying NDK sources files"
+    (cd $DEVELOPMENT_ROOT && tar cf - sources) | (cd $REFERENCE && tar xf -)
+    if [ $? != 0 ] ; then
+        echo "Could not copy sources. Aborting."
+        exit 2
+    fi
 fi
 
 # create a release file named 'RELEASE.TXT' containing the release

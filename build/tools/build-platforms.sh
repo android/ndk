@@ -250,4 +250,8 @@ for PLATFORM in $PLATFORMS; do
     copy_directory platforms/android-$PLATFORM/samples samples samples
 done
 
+# Cleanup generated files in samples
+rm -rf "$DSTDIR/samples/*/obj"
+rm -rf "$DSTDIR/samples/*/libs"
+
 log "Done !"
