@@ -134,9 +134,10 @@ toolchain_clone mpfr
 # We only keep one version of gcc and binutils
 
 # we clearly don't need this
-log "getting rid of obsolete sources: gcc-4.3.1 gdb-6.8"
+log "getting rid of obsolete sources: gcc-4.3.1 gdb-6.8 binutils-2.17"
 rm -rf $TMPDIR/gcc/gcc-4.3.1
 rm -rf $TMPDIR/gcc/gdb-6.8
+rm -rf $TMPDIR/binutils/binutils-2.17
 
 # remove all info files from the toolchain sources
 # they create countless little problems during the build

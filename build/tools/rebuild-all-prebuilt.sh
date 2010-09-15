@@ -176,11 +176,11 @@ build_gdbserver ()
     fi
 }
 
-build_toolchain arm-eabi-4.2.1
-build_gdbserver arm-eabi-4.2.1
-
 build_toolchain arm-eabi-4.4.0
 build_gdbserver arm-eabi-4.4.0
+
+build_toolchain arm-linux-androideabi-4.4.3
+build_gdbserver arm-linux-androideabi-4.4.3
 
 if [ "$OPTION_TRY_X86" = "yes" ] ; then
     build_toolchain x86-4.2.1

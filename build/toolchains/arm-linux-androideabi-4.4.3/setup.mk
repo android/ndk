@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 
-# this file is used to prepare the NDK to build with the arm-eabi-4.2.1
+# this file is used to prepare the NDK to build with the arm-eabi-4.4.0
 # toolchain any number of source files
 #
 # its purpose is to define (or re-define) templates used to build
@@ -23,12 +23,8 @@
 # revisions of the NDK.
 #
 
-TOOLCHAIN_NAME   := arm-eabi-4.2.1
-TOOLCHAIN_PREFIX := $(HOST_PREBUILT)/$(TOOLCHAIN_NAME)/bin/arm-eabi-
-
 TARGET_CFLAGS.common := \
-    -march=armv5te -mtune=xscale \
-    -msoft-float -fpic \
+    -fpic \
     -mthumb-interwork \
     -ffunction-sections \
     -funwind-tables \
@@ -39,6 +35,31 @@ TARGET_CFLAGS.common := \
 
 TARGET_C_INCLUDES := \
     $(SYSROOT)/usr/include
+
+# This is to avoid the dreaded warning compiler message:
+#   note: the mangling of 'va_list' has changed in GCC 4.4
+#
+# The fact that the mangling changed does not affect the NDK ABI
+# very fortunately (since none of the exposed APIs used va_list
+# in their exported C++ functions). Also, GCC 4.5 has already
+# removed the warning from the compiler.
+#
+TARGET_CFLAGS.common += -Wno-psabi
+
+ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
+    TARGET_ARCH_CFLAGS := -march=armv7-a \
+                          -mfloat-abi=softfp \
+                          -mfpu=vfp
+    TARGET_ARCH_LDFLAGS := -Wl,--fix-cortex-a8
+else
+    TARGET_ARCH_CFLAGS := -march=armv5te \
+                            -mtune=xscale \
+                            -msoft-float
+    TARGET_ARCH_LDFLAGS :=
+endif
+
+TARGET_CFLAGS.neon := \
+    -mfpu=neon
 
 TARGET_arm_release_CFLAGS :=  -O2 \
                               -fomit-frame-pointer \
@@ -64,8 +85,6 @@ TARGET_thumb_debug_CFLAGS := $(TARGET_thumb_release_CFLAGS) \
 # This function will be called to determine the target CFLAGS used to build
 # a C or Assembler source file, based on its tags.
 #
-# NOTE: ARM Advanced SIMD (a.k.a. NEON) is not supported with this toolchain.
-#
 TARGET-process-src-files-tags = \
 $(eval __arm_sources := $(call get-src-files-with-tag,arm)) \
 $(eval __thumb_sources := $(call get-src-files-without-tag,arm)) \
@@ -86,18 +105,21 @@ $(call set-src-files-target-cflags,\
 $(call set-src-files-target-cflags,\
     $(call set_intersection,$(__thumb_sources),$(__debug_sources)),\
     $(TARGET_thumb_debug_CFLAGS)) \
+$(call add-src-files-target-cflags,\
+    $(call get-src-files-with-tag,neon),\
+    $(TARGET_CFLAGS.neon)) \
 $(call set-src-files-text,$(__arm_sources),arm$(space)$(space)) \
 $(call set-src-files-text,$(__thumb_sources),thumb)
 
 TARGET_CC       := $(TOOLCHAIN_PREFIX)gcc
-TARGET_CFLAGS   := $(TARGET_CFLAGS.common)
+TARGET_CFLAGS   := $(TARGET_CFLAGS.common) $(TARGET_ARCH_CFLAGS)
 
 
 TARGET_CXX      := $(TOOLCHAIN_PREFIX)g++
-TARGET_CXXFLAGS := $(TARGET_CFLAGS.common) -fno-exceptions -fno-rtti
+TARGET_CXXFLAGS := $(TARGET_CFLAGS.common) $(TARGET_ARCH_CFLAGS) -fno-exceptions -fno-rtti
 
 TARGET_LD      := $(TOOLCHAIN_PREFIX)ld
-TARGET_LDFLAGS :=
+TARGET_LDFLAGS := $(TARGET_ARCH_LDFLAGS)
 
 TARGET_AR      := $(TOOLCHAIN_PREFIX)ar
 TARGET_ARFLAGS := crs
@@ -115,10 +137,6 @@ TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
 # the stack and the heap.
 TARGET_NO_EXECUTE_CFLAGS  := -Wa,--noexecstack
 TARGET_NO_EXECUTE_LDFLAGS := -Wl,-z,noexecstack
-
-# The ABI-specific sub-directory that the SDK tools recognize for
-# this toolchain's generated binaries
-TARGET_ABI_SUBDIR := armeabi
 
 # NOTE: Ensure that TARGET_LIBGCC is placed after all private objects
 #       and static libraries, but before any other library in the link

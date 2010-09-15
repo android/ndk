@@ -49,6 +49,8 @@ register_option "--gdb-version=<version>"  do_gdb_version  "Specify gdb version"
 register_option "--binutils-version=<version>" do_binutils_version "Specify binutils version" "$BINUTILS_VERSION"
 register_option "-j<number>" do_jobs "Use <number> parallel build jobs" "$JOBS"
 
+register_mingw_option
+
 do_build_out ()
 {
     OPTION_BUILD_OUT=$1
@@ -132,6 +134,10 @@ prepare_host_flags
 
 parse_toolchain_name
 
+if [ "$MINGW" = "yes" ] ; then
+    enable_linux_mingw
+fi
+
 fix_option PLATFORM "$OPTION_PLATFORM" "platform"
 fix_option BUILD_OUT "$OPTION_BUILD_OUT" "build directory"
 fix_sysroot "$OPTION_SYSROOT"
@@ -151,6 +157,9 @@ if [ ! -d $SRC_DIR/binutils/binutils-$BINUTILS_VERSION ] ; then
 fi
 
 set_toolchain_install $NDK_DIR/build/prebuilt/$HOST_TAG/$TOOLCHAIN
+
+dump "Using C compiler: $CC"
+dump "Using C++ compiler: $CXX"
 
 # Location where the toolchain license files are
 TOOLCHAIN_LICENSES=$ANDROID_NDK_ROOT/build/tools/toolchain-licenses
@@ -177,44 +186,37 @@ if [ ! -d $BUILD_SRCDIR ] ; then
     BUILD_SRCDIR=$SRC_DIR
 fi
 OLD_ABI="${ABI}"
-OLD_CFLAGS="$CFLAGS"
-OLD_LDFLAGS="$LDFLAGS"
+export CC CXX
 mkdir -p $BUILD_OUT &&
 cd $BUILD_OUT &&
-export ABI="32" &&  # needed to build a 32-bit gmp
-export CFLAGS="$HOST_CFLAGS" &&
-export LDFLAGS="$HOST_LDFLAGS" && run \
-$BUILD_SRCDIR/configure --target=$ABI_TOOLCHAIN_PREFIX \
+export CC CXX &&
+export ABI=$HOST_GMP_ABI &&  # needed to build a 32-bit gmp
+run \
+$BUILD_SRCDIR/configure --target=$ABI_CONFIGURE_TARGET \
+                        --host=$ABI_CONFIGURE_HOST \
+                        --build=$ABI_CONFIGURE_BUILD \
                         --disable-nls \
                         --prefix=$TOOLCHAIN_PATH \
                         --with-sysroot=$TOOLCHAIN_SYSROOT \
                         --with-binutils-version=$BINUTILS_VERSION \
                         --with-gcc-version=$GCC_VERSION \
-                        --with-gdb-version=$GDB_VERSION
+                        --with-gdb-version=$GDB_VERSION \
+                        $ABI_CONFIGURE_EXTRA_FLAGS
 if [ $? != 0 ] ; then
     dump "Error while trying to configure toolchain build. See $TMPLOG"
     exit 1
 fi
 ABI="$OLD_ABI"
-CFLAGS="$OLD_CFLAGS"
-LDFLAGS="$OLD_LDFLAGS"
-
 # build the toolchain
 dump "Building : $TOOLCHAIN toolchain [this can take a long time]."
-OLD_CFLAGS="$CFLAGS"
-OLD_LDFLAGS="$LDFLAGS"
-OLD_ABI="$ABI"
 cd $BUILD_OUT &&
-export CFLAGS="$HOST_CFLAGS" &&
-export LDFLAGS="$HOST_LDFLAGS" &&
-export ABI="32" &&
+export CC CXX &&
+export ABI=$HOST_GMP_ABI &&
 run make -j$JOBS
 if [ $? != 0 ] ; then
     echo "Error while building toolchain. See $TMPLOG"
     exit 1
 fi
-CFLAGS="$OLD_CFLAGS"
-LDFLAGS="$OLD_LDFLAGS"
 ABI="$OLD_ABI"
 
 # install the toolchain to its final location
@@ -231,7 +233,7 @@ run rm -f $TOOLCHAIN_PATH/bin/*-gccbug
 run rm -rf $TOOLCHAIN_PATH/man $TOOLCHAIN_PATH/info
 # strip binaries to reduce final package size
 run strip $TOOLCHAIN_PATH/bin/*
-run strip $TOOLCHAIN_PATH/$ABI_TOOLCHAIN_PATH/bin/*
+run strip $TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/bin/*
 run strip $TOOLCHAIN_PATH/libexec/gcc/*/*/cc1
 run strip $TOOLCHAIN_PATH/libexec/gcc/*/*/cc1plus
 run strip $TOOLCHAIN_PATH/libexec/gcc/*/*/collect2

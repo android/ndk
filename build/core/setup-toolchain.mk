@@ -69,6 +69,18 @@ TARGET_CRTEND_SO_O   := $(strip $(wildcard $(SYSROOT)/usr/lib/crtend_so.o))
 TARGET_PREBUILT_SHARED_LIBRARIES := libc libstdc++ libm
 TARGET_PREBUILT_SHARED_LIBRARIES := $(TARGET_PREBUILT_SHARED_LIBRARIES:%=$(SYSROOT)/usr/lib/%.so)
 
+# Define default values for TOOLCHAIN_NAME, this can be overriden in
+# the setup file.
+TOOLCHAIN_NAME   := $(TARGET_TOOLCHAIN)
+
+# Do the same for TOOLCHAIN_PREFIX. Note that we must chop the version
+# number from the toolchain name, e.g. arm-eabi-4.4.0 -> path/bin/arm-eabi-
+# to do that, we split at dashes, remove the last element, then merge the
+# result. Finally, add the complete path prefix.
+#
+TOOLCHAIN_PREFIX := $(call merge,-,$(call chop,$(call split,-,$(TOOLCHAIN_NAME))))-
+TOOLCHAIN_PREFIX := $(HOST_PREBUILT)/$(TOOLCHAIN_NAME)/bin/$(TOOLCHAIN_PREFIX)
+
 # now call the toolchain-specific setup script
 include $(NDK_TOOLCHAIN.$(TARGET_TOOLCHAIN).setup)
 

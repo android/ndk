@@ -16,7 +16,7 @@
 # this script is included repeatedly by main.mk to add a new toolchain
 # definition to the NDK build system.
 #
-# 'toolchain_config' must be defined as the path of a toolchain
+# '_config_mk' must be defined as the path of a toolchain
 # configuration file (config.mk) that will be included here.
 #
 $(call assert-defined, _config_mk)
@@ -40,7 +40,7 @@ $(call check-required-vars,$(NDK_TOOLCHAIN_VARS_REQUIRED),$(_config_mk))
 # Check that the file didn't do something stupid
 $(call assert-defined, _config_mk)
 
-# Now record the toolchain-specific informatio
+# Now record the toolchain-specific information
 _dir  := $(patsubst %/,%,$(dir $(_config_mk)))
 _name := $(notdir $(_dir))
 _abis := $(TOOLCHAIN_ABIS)

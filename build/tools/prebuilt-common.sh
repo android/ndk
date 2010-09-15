@@ -141,6 +141,16 @@ register_option ()
     option_set_attr $optname default "$4"
 }
 
+MINGW=no
+do_mingw_option () { MINGW=yes; }
+
+register_mingw_option ()
+{
+    if [ "$HOST_OS" = "linux" ] ; then
+        register_option "--mingw" do_mingw_option "Generate windows binaries on Linux."
+    fi
+}
+
 # Print the help, including a list of registered options for this program
 # Note: Assumes PROGRAM_PARAMETERS and PROGRAM_DESCRIPTION exist and
 #       correspond to the parameters list and the program description
@@ -355,9 +365,7 @@ fix_sysroot ()
         SYSROOT_SUFFIX=$PLATFORM/arch-$ARCH
         SYSROOT=
         check_sysroot $NDK_DIR/platforms $SYSROOT_SUFFIX
-        check_sysroot $NDK_DIR/build/platforms $SYSROOT_SUFFIX
         check_sysroot $ANDROID_NDK_ROOT/platforms $SYSROOT_SUFFIX
-        check_sysroot $ANDROID_NDK_ROOT/build/platforms $SYSROOT_SUFFIX
         check_sysroot `dirname $ANDROID_NDK_ROOT`/development/ndk/platforms $SYSROOT_SUFFIX
 
         if [ -z "$SYSROOT" ] ; then
@@ -376,14 +384,59 @@ fix_sysroot ()
 
 prepare_host_flags ()
 {
+    # detect build tag
+    case $HOST_TAG in
+        linux-x86)
+            ABI_CONFIGURE_BUILD=i386-linux-gnu
+            ;;
+        linux-x86_64)
+            ABI_CONFIGURE_BUILD=x86_64-linux-gnu
+            ;;
+        darwin-x86)
+            ABI_CONFIGURE_BUILD=i686-apple-darwin
+            ;;
+        darwin-x86_64)
+            ABI_CONFIGURE_BUILD=x86_64-apple-darwin
+            ;;
+        windows)
+            ABI_CONFIGURE_BUILD=i686-pc-cygwin
+            ;;
+        *)
+            echo "ERROR: Unsupported HOST_TAG: $HOST_TAG"
+            echo "Please update 'prepare_host_flags' in build/tools/prebuilt-common.sh"
+            ;;
+    esac
+
+    # By default, assume host == build
+    ABI_CONFIGURE_HOST="$ABI_CONFIGURE_BUILD"
+
     # Force generation of 32-bit binaries on 64-bit systems
+    CC=${CC:-gcc}
+    CXX=${CXX:-g++}
     case $HOST_TAG in
         *-x86_64)
-            HOST_CFLAGS="$HOST_CFLAGS -m32"
-            HOST_LDFLAGS="$HOST_LDFLAGS -m32"
+            CC="$CC -m32"
+            CXX="$CXX -m32"
+            HOST_GMP_ABI="32"
             force_32bit_binaries  # to modify HOST_TAG and others
             ;;
     esac
+
+    # Now handle the --mingw flag
+    if [ "$MINGW" = "yes" ] ; then
+        case $HOST_TAG in
+            linux-*)
+                ;;
+            *)
+                echo "ERROR: Can only enable mingw on Linux platforms !"
+                exit 1
+                ;;
+        esac
+        ABI_CONFIGURE_HOST=i586-mingw32msvc
+        HOST_OS=windows
+        HOST_TAG=windows
+        HOST_GMP_ABI=
+    fi
 }
 
 parse_toolchain_name ()
@@ -398,15 +451,21 @@ parse_toolchain_name ()
     case "$TOOLCHAIN" in
     arm-eabi-*)
         ARCH="arm"
-        ABI_INSTALL_NAME="arm-eabi"
-        ABI_TOOLCHAIN_PREFIX="arm-eabi"
-        ABI_CONFIGURE_HOST="arm-eabi-linux"
+        ABI_CONFIGURE_TARGET="arm-eabi"
+        ;;
+    arm-linux-androideabi-*)
+        ARCH="arm"
+        ABI_CONFIGURE_TARGET="arm-linux-androideabi"
+        ABI_CONFIGURE_EXTRA_FLAGS="--with-gmp-version=4.2.4 --with-mpfr-version=2.4.1
+--with-arch=armv5te"
+        # Disabled until Gold is fixed for Cortex-A8 CPU bug
+        #ABI_CONFIGURE_EXTRA_FLAGS="$ABI_CONFIGURE_EXTRA_FLAGS --enable-gold=both/gold"
+        GDB_VERSION=7.1.x
         ;;
     x86-*)
         ARCH="x86"
         ABI_INSTALL_NAME="x86"
-        ABI_TOOLCHAIN_PREFIX="i686-android-linux-gnu"
-        ABI_CONFIGURE_HOST="i686-linux"
+        ABI_CONFIGURE_TARGET="i686-android-linux-gnu"
         PLATFORM=android-5
         ;;
     * )
@@ -422,6 +481,18 @@ parse_toolchain_name ()
     GCC_VERSION=`expr -- "$TOOLCHAIN" : '.*-\([0-9\.]*\)'`
     log "Using GCC version: $GCC_VERSION"
 
+    # Determine --host value when building gdbserver
+    case "$TOOLCHAIN" in
+    arm-*)
+        GDBSERVER_HOST=arm-eabi-linux
+        GDBSERVER_CFLAGS="-fno-short-enums"
+        ;;
+    x86-*)
+        GDBSERVER_HOST=i686-android-linux-gnu
+        GDBSERVER_CFLAGS=
+        ;;
+    esac
+
 }
 
 set_toolchain_install ()
@@ -429,7 +500,7 @@ set_toolchain_install ()
     TOOLCHAIN_PATH=$1
     log "Using toolchain path: $TOOLCHAIN_PATH"
 
-    TOOLCHAIN_PREFIX=$TOOLCHAIN_PATH/bin/$ABI_TOOLCHAIN_PREFIX
+    TOOLCHAIN_PREFIX=$TOOLCHAIN_PATH/bin/$ABI_CONFIGURE_TARGET
     log "Using toolchain prefix: $TOOLCHAIN_PREFIX"
 }
 
@@ -448,5 +519,6 @@ check_toolchain_install ()
 
 random_temp_directory ()
 {
-    mktemp -d /tmp/ndk-toolchain-XXXXXX
+    mkdir -p /tmp/ndk-toolchain
+    mktemp -d /tmp/ndk-toolchain/build-XXXXXX
 }

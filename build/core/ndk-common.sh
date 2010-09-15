@@ -323,6 +323,15 @@ setup_toolchain ()
     if [ -z "$CC" ] ; then
         CC=gcc
     fi
+    if [ -z "$CXX" ] ; then
+        CXX=g++
+    fi
+    if [ -z "$CXXFLAGS" ] ; then
+        CXXFLAGS="$CFLAGS"
+    fi
+    if [ -z "$LD" ] ; then
+        LD="$CC"
+    fi
 
     log2 "Using '$CC' as the C compiler"
 
@@ -332,8 +341,9 @@ int main(void) {}
 EOF
 
     if [ "$FORCE_32BIT" = yes ] ; then
-        CFLAGS="$CFLAGS -m32"
-        LDFLAGS="$LDFLAGS -m32"
+        CC="$CC -m32"
+        CXX="$CXX -m32"
+        LD="$LD -m32"
         compile
         if [ $? != 0 ] ; then
             # sometimes, we need to also tell the assembler to generate 32-bit binaries
@@ -353,17 +363,14 @@ EOF
     log "CC         : compiler check ok ($CC)"
 
     # check that we can link the trivial program into an executable
-    if [ -z "$LD" ] ; then
-        LD=$CC
-    fi
     link
     if [ $? != 0 ] ; then
-        OLD_LD=$LD
-        LD=gcc
+        OLD_LD="$LD"
+        LD="$CC"
         compile
         link
         if [ $? != 0 ] ; then
-            LD=$OLD_LD
+            LD="$OLD_LD"
             echo "your linker doesn't seem to work:"
             cat $TMPL
             clean_exit
@@ -373,13 +380,6 @@ EOF
     log "LD         : linker check ok ($LD)"
 
     # check the C++ compiler
-    if [ -z "$CXX" ] ; then
-        CXX=g++
-    fi
-    if [ -z "$CXXFLAGS" ] ; then
-        CXXFLAGS=$CFLAGS
-    fi
-
     log2 "Using '$CXX' as the C++ compiler"
 
     cat > $TMPC <<EOF

@@ -122,18 +122,24 @@ OLD_CFLAGS="$CFLAGS"
 OLD_LDFLAGS="$LDFLAGS"
 
 INCLUDE_DIRS=\
-"-I$TOOLCHAIN_PATH/lib/gcc/$ABI_TOOLCHAIN_PREFIX/$GCC_VERSION/include \
+"-I$TOOLCHAIN_PATH/lib/gcc/$ABI_CONFIGURE_TARGET/$GCC_VERSION/include \
 -I$SYSROOT/usr/include"
 CRTBEGIN="$SYSROOT/usr/lib/crtbegin_static.o"
 CRTEND="$SYSROOT/usr/lib/crtend_android.o"
-LIBRARY_LDFLAGS="$CRTBEGIN -L$SYSROOT/usr/lib -lc -lm -lgcc $CRTEND "
+
+# Note: we must put a second -lc after -lgcc to resolve a cyclical
+#       dependency on arm-linux-androideabi, where libgcc.a contains
+#       a function (__div0) which depends on raise(), implemented
+#       in the C library.
+#
+LIBRARY_LDFLAGS="$CRTBEGIN -L$SYSROOT/usr/lib -lc -lm -lgcc -lc $CRTEND "
 
 cd $BUILD_OUT &&
 export CC="$TOOLCHAIN_PREFIX-gcc" &&
-export CFLAGS="-O2 -nostdinc -nostdlib -D__ANDROID__ -DANDROID -DSTDC_HEADERS $INCLUDE_DIRS"  &&
+export CFLAGS="-O2 -nostdinc -nostdlib -D__ANDROID__ -DANDROID -DSTDC_HEADERS $INCLUDE_DIRS $GDBSERVER_CFLAGS"  &&
 export LDFLAGS="-static -Wl,-z,nocopyreloc -Wl,--no-undefined $LIBRARY_LDFLAGS" &&
 run $SRC_DIR/configure \
---host=${ABI_CONFIGURE_HOST} \
+--host=$GDBSERVER_HOST \
 --with-sysroot=$SYSROOT
 if [ $? != 0 ] ; then
     dump "Could not configure gdbserver build. See $TMPLOG"
