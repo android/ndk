@@ -28,6 +28,24 @@ $(call ndk_log,Parsing $(_application_mk))
 
 $(call clear-vars, $(NDK_APP_VARS))
 
+# Check that NDK_DEBUG is properly defined. If it is
+# the only valid states are: undefined, 0, 1, false and true
+#
+# We set APP_DEBUG to <undefined>, 'true' or 'false'.
+#
+APP_DEBUG := $(strip $(NDK_DEBUG))
+ifeq ($(APP_DEBUG),0)
+  APP_DEBUG:= false
+endif
+ifeq ($(APP_DEBUG),1)
+  APP_DEBUG := true
+endif
+ifdef APP_DEBUG
+  ifneq (,$(filter-out true false,$(APP_DEBUG)))
+    $(call __ndk_warning,NDK_DEBUG is defined to the unsupported value '$(NDK_DEBUG)', will be ignored!)
+  endif
+endif
+
 include $(_application_mk)
 
 $(call check-required-vars,$(NDK_APP_VARS_REQUIRED),$(_application_mk))
@@ -111,20 +129,33 @@ else
     $(call ndk_log,  Defaulted to APP_BUILD_SCRIPT=$(APP_BUILD_SCRIPT))
 endif
 
-# Extract the debuggable flag from the application's manifest
-# NOTE: To make unit-testing simpler, handle the case where there is no manifest.
+# Determine whether the application should be debuggable.
+# - If APP_DEBUG is set to 'true', then it always should.
+# - If APP_DEBUG is set to 'false', then it never should
+# - Otherwise, extract the android:debuggable attribute from the manifest.
 #
-APP_DEBUGGABLE := false
-APP_MANIFEST := $(strip $(wildcard $(APP_PROJECT_PATH)/AndroidManifest.xml))
-ifdef APP_MANIFEST
+ifdef APP_DEBUG
+  APP_DEBUGGABLE := $(APP_DEBUG)
+  ifdef NDK_LOG
+    ifeq ($(APP_DEBUG),true)
+      $(call ndk_log,Application '$(_app)' forced debuggable through NDK_DEBUG)
+    else
+      $(call ndk_log,Application '$(_app)' forced *not* debuggable through NDK_DEBUG)
+    endif
+  endif
+else
+  # NOTE: To make unit-testing simpler, handle the case where there is no manifest.
+  APP_DEBUGGABLE := false
+  APP_MANIFEST := $(strip $(wildcard $(APP_PROJECT_PATH)/AndroidManifest.xml))
+  ifdef APP_MANIFEST
     APP_DEBUGGABLE := $(shell $(HOST_AWK) -f $(BUILD_AWK)/extract-debuggable.awk $(APP_MANIFEST))
-endif
-
-ifdef NDK_LOG
-  ifeq ($(APP_DEBUGGABLE),true)
-    $(call ndk_log,Application '$(_app)' *is* debuggable)
-  else
-    $(call ndk_log,Application '$(_app)' is not debuggable)
+  endif
+  ifdef NDK_LOG
+    ifeq ($(APP_DEBUGGABLE),true)
+      $(call ndk_log,Application '$(_app)' *is* debuggable)
+    else
+      $(call ndk_log,Application '$(_app)' is not debuggable)
+    endif
   endif
 endif
 

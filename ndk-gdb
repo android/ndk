@@ -330,15 +330,6 @@ if [ "$OPTION_LAUNCH_LIST" = "yes" ] ; then
     exit 0
 fi
 
-# Check that the application is debuggable, or nothing will work
-DEBUGGABLE=`run_awk_manifest_script extract-debuggable.awk`
-log "Found debuggable flag: $DEBUGGABLE"
-if [ $? != 0 -o "$DEBUGGABLE" != "true" ] ; then
-    echo "ERROR: Package $PACKAGE_NAME is not debuggable ! Please fix your manifest,"
-    echo "       rebuild your application and re-install it to fix this."
-    exit 1
-fi
-
 APP_ABIS=`get_build_var APP_ABI`
 log "ABIs targetted by application: $APP_ABIS"
 
@@ -356,14 +347,14 @@ fi
 #
 API_LEVEL=`adb_shell getprop ro.build.version.sdk`
 if [ $? != 0 -o -z "$API_LEVEL" ] ; then
-    echo "ERROR: Could not find target device's supported API level !"
+    echo "ERROR: Could not find target device's supported API level!"
     echo "ndk-gdb will only work if your device is running Android 2.2 or higher."
     exit 1
 fi
 log "Device API Level: $API_LEVEL"
 if [ "$API_LEVEL" -lt "8" ] ; then
     echo "ERROR: ndk-gdb requires a target device running Android 2.2 (API level 8) or higher."
-    echo "The target device is running API level $API_LEVEL !"
+    echo "The target device is running API level $API_LEVEL!"
     exit 1
 fi
 
@@ -404,15 +395,37 @@ if [ "$COMPAT_ABI" = none ] ; then
 fi
 log "Compatible device ABI: $COMPAT_ABI"
 
-# Let's check that the user didn't change the debuggable flag in
-# the manifest without calling ndk-build afterwards.
-if [ ! -f $PROJECT/libs/$COMPAT_ABI/gdbserver ] ; then
-    echo "ERROR: Could not find gdbserver binary under $PROJECT/libs/$COMPAT_ABI"
-    echo "       This usually means you modified your AndroidManifest.xml to set"
-    echo "       the android:debuggable flag to 'true' but did not rebuild the"
-    echo "       native binaries. Please call 'ndk-build' to do so,"
-    echo "       *then* re-install to the device !"
-    exit 1
+# Check that the application is debuggable, or nothing will work
+DEBUGGABLE=`run_awk_manifest_script extract-debuggable.awk`
+log "Found debuggable flag: $DEBUGGABLE"
+if [ $? != 0 -o "$DEBUGGABLE" != "true" ] ; then
+    # If gdbserver exists, then we built with 'ndk-build NDK_DEBUG=1' and it's
+    # ok to not have android:debuggable set to true in the original manifest.
+    # However, if this is not the case, then complain!!
+    if [ -f $PROJECT/libs/$COMPAT_ABI/gdbserver ] ; then
+        log "Found gdbserver under libs/$COMPAT_ABI, assuming app was built with NDK_DEBUG=1"
+    else
+        echo "ERROR: Package $PACKAGE_NAME is not debuggable ! You can fix that in two ways:"
+        echo ""
+        echo "  - Rebuilt with the NDK_DEBUG=1 option when calling 'ndk-build'."
+        echo ""
+        echo "  - Modify your manifest to set android:debuggable attribute to \"true\","
+        echo "    then rebuild normally."
+        echo ""
+        echo "After one of these, re-install to the device!"
+        exit 1
+    fi
+else
+    # DEBUGGABLE is true in the manifest. Let's check that the user didn't change the
+    # debuggable flag in the manifest without calling ndk-build afterwards.
+    if [ ! -f $PROJECT/libs/$COMPAT_ABI/gdbserver ] ; then
+        echo "ERROR: Could not find gdbserver binary under $PROJECT/libs/$COMPAT_ABI"
+        echo "       This usually means you modified your AndroidManifest.xml to set"
+        echo "       the android:debuggable flag to 'true' but did not rebuild the"
+        echo "       native binaries. Please call 'ndk-build' to do so,"
+        echo "       *then* re-install to the device!"
+        exit 1
+    fi
 fi
 
 # Let's check that 'gdbserver' is properly installed on the device too. If this
@@ -422,7 +435,7 @@ DEVICE_GDBSERVER=`adb_shell ls /data/data/$PACKAGE_NAME/lib/gdbserver`
 log "Found device gdbserver: $DEVICE_GDBSERVER"
 if pattern_match "No such file or directory" "$DEVICE_GDBSERVER" ] ; then
     echo "ERROR: Non-debuggable application installed on the target device."
-    echo "       Please re-install the debuggable version !"
+    echo "       Please re-install the debuggable version!"
     exit 1
 fi
 

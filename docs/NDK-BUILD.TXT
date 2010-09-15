@@ -26,6 +26,8 @@ command that runs the NDK build scripts. Notable uses include:
   ndk-build                  --> rebuild required machine code.
   ndk-build clean            --> clean all generated binaries.
 
+  ndk-build NDK_DEBUG=1      --> generate debuggable native code.
+
   ndk-build V=1              --> launch build, displaying build commands.
 
   ndk-build -B               --> force a complete rebuild.
