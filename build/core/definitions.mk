@@ -164,7 +164,6 @@ modules-LOCALS := \
     CPPFLAGS \
     STATIC_LIBRARIES \
     SHARED_LIBRARIES \
-    PREBUILTS \
     LDLIBS \
     ALLOW_UNDEFINED_SYMBOLS \
     ARM_MODE \
@@ -267,7 +266,13 @@ module-get-built = $(__ndk_modules.$1.BUILT_MODULE)
 # An installable module is one that will be copied to $PROJECT/libs/<abi>/
 # (e.g. shared libraries).
 #
-module-is-installable    = $(call module-class-is-installable,$(call module-get-class,$1))
+module-is-installable = $(call module-class-is-installable,$(call module-get-class,$1))
+
+# Returns $(true) if module $1 is prebuilt
+# A prebuilt module is one declared with BUILD_PREBUILT_SHARED_LIBRARY or
+# BUILD_PREBUILT_STATIC_LIBRARY
+#
+module-is-prebuilt = $(call module-class-is-prebuilt,$(call module-get-class,$1))
 
 # -----------------------------------------------------------------------------
 # Function : module-get-export
@@ -341,9 +346,6 @@ module-add-static-depends = \
 module-add-shared-depends = \
     $(call module-add-depends-any,$1,$2,depends) \
 
-module-add-prebuilt-depends = \
-    $(call module-add-depends-any,$1,$2,depends) \
-
 # Used internally by module-add-static-depends and module-add-shared-depends
 # NOTE: this function must not modify the existing dependency order when new depends are added.
 #
@@ -360,7 +362,6 @@ modules-compute-dependencies = \
 module-compute-depends = \
     $(call module-add-static-depends,$1,$(__ndk_modules.$1.STATIC_LIBRARIES))\
     $(call module-add-shared-depends,$1,$(__ndk_modules.$1.SHARED_LIBRARIES))\
-    $(call module-add-prebuilt-depends,$1,$(__ndk_modules.$1.PREBUILTS))
 
 module-get-installed = $(__ndk_modules.$1.INSTALLED)
 
@@ -447,6 +448,15 @@ module-add-c++-deps = \
 # -----------------------------------------------------------------------------
 parent-dir = $(patsubst %/,%,$(dir $1))
 
+
+# -----------------------------------------------------------------------------
+# Function : pretty-dir
+# Arguments: 1: path
+# Returns  : Remove NDK_PROJECT_PATH prefix from a given path. This can be
+#            used to perform pretty-printing for logs.
+# -----------------------------------------------------------------------------
+pretty-dir = $(patsubst $(NDK_PROJECT_PATH)/%,%,$1)
+
 # -----------------------------------------------------------------------------
 # Function : check-user-define
 # Arguments: 1: name of variable that must be defined by the user
@@ -504,25 +514,62 @@ check-LOCAL_MODULE_FILENAME = \
 # -----------------------------------------------------------------------------
 handle-module-filename = $(eval $(call ev-handle-module-filename,$1,$2))
 
+#
+# Check that LOCAL_MODULE_FILENAME is properly defined
+# - with one single item
+# - without a library file extension
+# - with no directory separators
+#
+define ev-check-module-filename
+ifneq (1,$$(words $$(LOCAL_MODULE_FILENAME)))
+    $$(call __ndk_info,$$(LOCAL_MAKEFILE):$$(LOCAL_MODULE): LOCAL_MODULE_FILENAME must not contain any space)
+    $$(call __ndk_error,Aborting)
+endif
+ifneq (,$$(filter %.a %.so,$$(LOCAL_MODULE_FILENAME)))
+    $$(call __ndk_info,$$(LOCAL_MAKEFILE):$$(LOCAL_MODULE): LOCAL_MODULE_FILENAME must not contain a file extension)
+    $$(call __ndk_error,Aborting)
+endif
+ifneq (1,$$(words $$(subst /, ,$$(LOCAL_MODULE_FILENAME))))
+    $$(call __ndk_info,$$(LOCAL_MAKEFILE):$$(LOCAL_MODULE): LOCAL_MODULE_FILENAME must not contain directory separators)
+    $$(call __ndk_error,Aborting)
+endif
+endef
 
+#
+# Check the definition of LOCAL_MODULE_FILENAME. If none exists,
+# infer it from the LOCAL_MODULE name.
+#
 # $1: default file prefix
 # $2: default file suffix
+#
 define ev-handle-module-filename
 LOCAL_MODULE_FILENAME := $$(strip $$(LOCAL_MODULE_FILENAME))
-ifdef LOCAL_MODULE_FILENAME
-    ifneq ($$(words $$(LOCAL_MODULE_FILENAME)),1)
-        $$(call __ndk_info,$$(LOCAL_MAKEFILE):$$(LOCAL_MODULE): LOCAL_MODULE_FILENAME must not contain any space)
-        $$(call __ndk_error,Aborting)
-    endif
-    ifneq ($$(filter %.a %.so,$$(LOCAL_MODULE_FILENAME)),)
-        $$(call __ndk_info,$$(LOCAL_MAKEFILE):$$(LOCAL_MODULE): LOCAL_MODULE_FILENAME must not contain a file extension)
-        $$(call __ndk_error,Aborting)
-    endif
-else
-    LOCAL_MODULE_FILENAME := $1$(LOCAL_MODULE)
+ifndef LOCAL_MODULE_FILENAME
+    LOCAL_MODULE_FILENAME := $1$$(LOCAL_MODULE)
 endif
+$$(eval $$(call ev-check-module-filename))
 LOCAL_MODULE_FILENAME := $$(LOCAL_MODULE_FILENAME)$2
 endef
+
+handle-prebuilt-module-filename = $(eval $(call ev-handle-prebuilt-module-filename,$1))
+
+#
+# Check the definition of LOCAL_MODULE_FILENAME for a _prebuilt_ module.
+# If none exists, infer it from $(LOCAL_SRC_FILES)
+#
+# $1: default file suffix
+#
+define ev-handle-prebuilt-module-filename
+LOCAL_MODULE_FILENAME := $$(strip $$(LOCAL_MODULE_FILENAME))
+ifndef LOCAL_MODULE_FILENAME
+    LOCAL_MODULE_FILENAME := $$(notdir $(LOCAL_SRC_FILES))
+    LOCAL_MODULE_FILENAME := $$(LOCAL_MODULE_FILENAME:%.a=%)
+    LOCAL_MODULE_FILENAME := $$(LOCAL_MODULE_FILENAME:%.so=%)
+endif
+LOCAL_MODULE_FILENAME := $$(LOCAL_MODULE_FILENAME)$1
+$$(eval $$(call ev-check-module-filename))
+endef
+
 
 # -----------------------------------------------------------------------------
 # Function  : handle-module-built
@@ -1075,6 +1122,9 @@ module-class-register-installable = \
     $(call module-class-register,$1,$2,$3) \
     $(eval NDK_MODULE_CLASS.$1.INSTALLABLE := $(true))
 
+module-class-set-prebuilt = \
+    $(eval NDK_MODULE_CLASS.$1.PREBUILT := $(true))
+
 # Returns $(true) if $1 is a valid/registered LOCAL_MODULE_CLASS value
 #
 module-class-check = $(call set_is_member,$(NDK_MODULE_CLASSES),$1)
@@ -1083,6 +1133,9 @@ module-class-check = $(call set_is_member,$(NDK_MODULE_CLASSES),$1)
 #
 module-class-is-installable = $(if $(NDK_MODULE_CLASS.$1.INSTALLABLE),$(true),$(false))
 
+# Returns $(true) if $1 corresponds to an installable module class
+#
+module-class-is-prebuilt = $(if $(NDK_MODULE_CLASS.$1.PREBUILT),$(true),$(false))
 
 #
 # Register valid module classes
@@ -1102,7 +1155,13 @@ $(call module-class-register-installable,SHARED_LIBRARY,lib,.so)
 # an executable is installable.
 $(call module-class-register-installable,EXECUTABLE,,)
 
-# prebuild shared library
+# prebuilt shared library
 # <foo> -> <foo>  (we assume it is already well-named)
 # it is installable
 $(call module-class-register-installable,PREBUILT_SHARED_LIBRARY,,)
+$(call module-class-set-prebuilt,PREBUILT_SHARED_LIBRARY)
+
+# prebuilt static library
+# <foo> -> <foo> (we assume it is already well-named)
+$(call module-class-register,PREBUILT_STATIC_LIBRARY,,)
+$(call module-class-set-prebuilt,PREBUILT_STATIC_LIBRARY)

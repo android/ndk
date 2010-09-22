@@ -69,6 +69,7 @@ BUILD_STATIC_LIBRARY      := $(BUILD_SYSTEM)/build-static-library.mk
 BUILD_SHARED_LIBRARY      := $(BUILD_SYSTEM)/build-shared-library.mk
 BUILD_EXECUTABLE          := $(BUILD_SYSTEM)/build-executable.mk
 PREBUILT_SHARED_LIBRARY   := $(BUILD_SYSTEM)/prebuilt-shared-library.mk
+PREBUILT_STATIC_LIBRARY   := $(BUILD_SYSTEM)/prebuilt-static-library.mk
 
 ANDROID_MK_INCLUDED := \
   $(CLEAR_VARS) \
