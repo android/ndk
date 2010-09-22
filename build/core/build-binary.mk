@@ -188,6 +188,8 @@ $(call TARGET-process-src-files-tags)
 # only call dump-src-file-tags during debugging
 #$(dump-src-file-tags)
 
+LOCAL_DEPENDENCY_DIRS :=
+
 # Build the sources to object files
 #
 
