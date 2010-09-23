@@ -185,12 +185,14 @@ BUILD_SRCDIR=$SRC_DIR/build
 if [ ! -d $BUILD_SRCDIR ] ; then
     BUILD_SRCDIR=$SRC_DIR
 fi
+rm -rf $BUILD_OUT
 OLD_ABI="${ABI}"
 export CC CXX
 mkdir -p $BUILD_OUT &&
 cd $BUILD_OUT &&
 export CC CXX &&
 export ABI=$HOST_GMP_ABI &&  # needed to build a 32-bit gmp
+export CFLAGS="-Wno-error" && # needed because gdb-6.6 uses -Werror by default and fails to build with recent GCC versions
 run \
 $BUILD_SRCDIR/configure --target=$ABI_CONFIGURE_TARGET \
                         --host=$ABI_CONFIGURE_HOST \
