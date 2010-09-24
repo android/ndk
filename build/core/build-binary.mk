@@ -189,6 +189,7 @@ $(call TARGET-process-src-files-tags)
 #$(dump-src-file-tags)
 
 LOCAL_DEPENDENCY_DIRS :=
+LOCAL_OBJECTS :=
 
 # Build the sources to object files
 #
@@ -279,6 +280,16 @@ ALL_EXECUTABLES += $(LOCAL_BUILT_MODULE)
 endif
 
 #
+# If this is a prebuilt module
+#
+ifeq ($(call module-is-prebuilt,$(LOCAL_MODULE)),$(true))
+$(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
+	@ mkdir -p $(dir $@)
+	@ echo "Prebuilt       : $(call pretty-dir,$@) <= $(call pretty-dir,$<)"
+	$(hide) cp -f $< $@
+endif
+
+#
 # If this is an installable module
 #
 ifeq ($(call module-is-installable,$(LOCAL_MODULE)),$(true))
@@ -288,7 +299,7 @@ $(LOCAL_INSTALLED): PRIVATE_DST_DIR := $(NDK_APP_DST_DIR)
 $(LOCAL_INSTALLED): PRIVATE_DST     := $(LOCAL_INSTALLED)
 
 $(LOCAL_INSTALLED): $(LOCAL_BUILT_MODULE) clean-installed-binaries
-	@ echo "Install        : $(PRIVATE_NAME) => $(PRIVATE_DST_DIR)"
+	@ echo "Install        : $(PRIVATE_NAME) => $(call pretty-dir,$(PRIVATE_DST))"
 	$(hide) mkdir -p $(PRIVATE_DST_DIR)
 	$(hide) install -p $(PRIVATE_SRC) $(PRIVATE_DST)
 	$(hide) $(call cmd-strip, $(PRIVATE_DST))

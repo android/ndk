@@ -107,7 +107,7 @@ $(NDK_APP_GDBSERVER): PRIVATE_DST_DIR := $(NDK_APP_DST_DIR)
 $(NDK_APP_GDBSERVER): PRIVATE_DST     := $(NDK_APP_GDBSERVER)
 
 $(NDK_APP_GDBSERVER): clean-installed-binaries
-	@ echo "Gdbserver      : [$(PRIVATE_NAME)] $(PRIVATE_DST)"
+	@ echo "Gdbserver      : [$(PRIVATE_NAME)] $(call pretty-dir,$(PRIVATE_DST))"
 	$(hide) mkdir -p $(PRIVATE_DST_DIR)
 	$(hide) install -p $(PRIVATE_SRC) $(PRIVATE_DST)
 
@@ -119,7 +119,7 @@ $(NDK_APP_GDBSETUP): PRIVATE_SOLIB_PATH := $(TARGET_OUT)
 $(NDK_APP_GDBSETUP): PRIVATE_SRC_DIRS := $(SYSROOT)/usr/include
 
 $(NDK_APP_GDBSETUP):
-	@ echo "Gdbsetup       : $(PRIVATE_DST)"
+	@ echo "Gdbsetup       : $(call pretty-dir,$(PRIVATE_DST))"
 	$(hide) echo "set solib-search-path $(PRIVATE_SOLIB_PATH)" > $(PRIVATE_DST)
 	$(hide) echo "directory $(call uniq,$(PRIVATE_SRC_DIRS))" >> $(PRIVATE_DST)
 

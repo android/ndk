@@ -206,11 +206,15 @@ PREBUILT_SHARED_LIBRARY
     Points to a build script used to specify a prebuilt shared library.
     Unlike BUILD_SHARED_LIBRARY and BUILD_STATIC_LIBRARY, the value
     of LOCAL_SRC_FILES must be a single path to a prebuilt shared
-    library (e.g. $(LOCAL_PATH)/libfoo.so), instead of a source file.
+    library (e.g. foo/libfoo.so), instead of a source file.
 
     You can reference the prebuilt library in another module using
     the LOCAL_PREBUILTS variable (see docs/PREBUILTS.TXT for more
     information).
+
+PREBUILT_STATIC_LIBRARY
+    This is the same than PREBUILT_SHARED_LIBRARY, but for a static library
+    file instead. See docs/PREBUILTS.TXT for more.
 
 TARGET_ARCH
     Name of the target CPU architecture as it is specified by the
@@ -488,19 +492,12 @@ LOCAL_CPPFLAGS
 LOCAL_STATIC_LIBRARIES
     The list of static libraries modules (built with BUILD_STATIC_LIBRARY)
     that should be linked to this module. This only makes sense in
-    shared library modules. 
+    shared library modules.
 
 LOCAL_SHARED_LIBRARIES
     The list of shared libraries *modules* this module depends on at runtime.
     This is necessary at link time and to embed the corresponding information
     in the generated file.
-
-LOCAL_PREBUILTS
-    The list of prebuild shared library *modules* this module depends on at
-    runtime. This is necessary at link time and to embed the corresponding
-    information in the generated file.
-
-    See docs/PREBUILTS.TXT for more information.
 
 LOCAL_LDLIBS
     The list of additional linker flags to be used when building your

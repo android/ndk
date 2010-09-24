@@ -35,8 +35,8 @@ IMPORTANT CHANGES:
     Note that they still correspond to our minimal C++ runtime, no new feature
     was introduced here.
 
-- Add support for prebuilt shared libraries with the PREBUILT_SHARED_LIBRARY
-  build script (instead of BUILD_SHARED_LIBRARY). See the new documentation
+- Add support for prebuilt libraries with the PREBUILT_SHARED_LIBRARY and
+  PREBUILT_STATIC_LIBRARIES build scripts. See the new documentation
   file named docs/PREBUILTS.TXT for explanations and usage examples.
 
 - Add support to specify a different file name for generated files, through
