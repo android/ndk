@@ -23,7 +23,7 @@
 # revisions of the NDK.
 #
 
-TOOLCHAIN_PREFIX := $(HOST_PREBUILT)/$(TOOLCHAIN_NAME)/bin/i686-android-linux-gnu-
+TOOLCHAIN_PREFIX := $(TOOLCHAIN_PREBUILT_ROOT)/bin/i686-android-linux-gnu-
 
 TARGET_CFLAGS.common := \
     -msoft-float -fpic \

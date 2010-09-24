@@ -110,6 +110,9 @@ OTHER FIXES & CHANGES:
 
 - Platforms files are now under $NDK/platforms instead of $NDK/build/platforms
 
+- Toolchain files are now under $NDK/toolchains instead of
+  $NDK/build/toolchains and $NDK/build/prebuilt.
+
 -------------------------------------------------------------------------------
 android-ndk-r4b
 

@@ -200,10 +200,6 @@ BUILD_SYSTEM := $(NDK_ROOT)/build/core
 # Include common definitions
 include $(BUILD_SYSTEM)/definitions.mk
 
-# Location where all prebuilt binaries for a given host architectures
-# will be stored.
-HOST_PREBUILT := $(NDK_ROOT)/build/prebuilt/$(HOST_TAG)
-
 # ====================================================================
 #
 # Read all toolchain-specific configuration files.
@@ -227,7 +223,7 @@ ADD_TOOLCHAIN := $(BUILD_SYSTEM)/add-toolchain.mk
 NDK_ALL_TOOLCHAINS :=
 NDK_ALL_ABIS       :=
 
-TOOLCHAIN_CONFIGS := $(wildcard $(NDK_ROOT)/build/toolchains/*/config.mk)
+TOOLCHAIN_CONFIGS := $(wildcard $(NDK_ROOT)/toolchains/*/config.mk)
 $(foreach _config_mk,$(TOOLCHAIN_CONFIGS),\
   $(eval include $(BUILD_SYSTEM)/add-toolchain.mk)\
 )

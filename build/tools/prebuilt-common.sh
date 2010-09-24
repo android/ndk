@@ -495,25 +495,43 @@ parse_toolchain_name ()
 
 }
 
-set_toolchain_install ()
+# Return the host/build specific path for prebuilt toolchain binaries
+# relative to $1.
+#
+# $1: target root NDK directory
+#
+get_toolchain_install ()
 {
-    TOOLCHAIN_PATH=$1
+    echo "$1/toolchains/$TOOLCHAIN/prebuilt/$HOST_TAG"
+}
+
+
+# Set the toolchain target NDK location.
+# this sets TOOLCHAIN_PATH and TOOLCHAIN_PREFIX
+# $1: target NDK path
+set_toolchain_ndk ()
+{
+    TOOLCHAIN_PATH=`get_toolchain_install $1`
     log "Using toolchain path: $TOOLCHAIN_PATH"
 
     TOOLCHAIN_PREFIX=$TOOLCHAIN_PATH/bin/$ABI_CONFIGURE_TARGET
     log "Using toolchain prefix: $TOOLCHAIN_PREFIX"
 }
 
+# Check that a toolchain is properly installed at a target NDK location
+#
+# $1: target root NDK directory
+#
 check_toolchain_install ()
 {
-    TOOLCHAIN_PATH=$1/build/prebuilt/$HOST_TAG/$TOOLCHAIN
+    TOOLCHAIN_PATH=`get_toolchain_install $1`
     if [ ! -d "$TOOLCHAIN_PATH" ] ; then
         echo "ERROR: Toolchain '$TOOLCHAIN' not installed in '$NDK_DIR'!"
         echo "       Ensure that the toolchain has been installed there before."
         exit 1
     fi
 
-    set_toolchain_install $TOOLCHAIN_PATH
+    set_toolchain_ndk $1
 }
 
 
