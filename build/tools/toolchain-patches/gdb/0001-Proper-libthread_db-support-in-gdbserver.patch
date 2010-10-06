@@ -1,0 +1,40 @@
+From 1f21dc117bb3c18773b85107550757b40ca91dc9 Mon Sep 17 00:00:00 2001
+From: David 'Digit' Turner <digit@android.com>
+Date: Tue, 5 Oct 2010 22:08:33 +0200
+Subject: [PATCH] Proper libthread_db support in gdbserver.
+
+Change-Id: I6dde4030f7471c578928b17bff19086de23ba483
+---
+ gdb-6.6/gdb/gdbserver/acinclude.m4 |    2 +-
+ gdb-6.6/gdb/gdbserver/configure    |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/gdb-6.6/gdb/gdbserver/acinclude.m4 b/gdb-6.6/gdb/gdbserver/acinclude.m4
+index aaad2e2..04f023c 100644
+--- a/gdb-6.6/gdb/gdbserver/acinclude.m4
++++ b/gdb-6.6/gdb/gdbserver/acinclude.m4
+@@ -4,7 +4,7 @@ sinclude(../../bfd/bfd.m4)
+ AC_DEFUN([SRV_CHECK_THREAD_DB],
+ [AC_CACHE_CHECK([for libthread_db],[srv_cv_thread_db],
+  [old_LIBS="$LIBS"
+-  LIBS="$LIBS -lthread_db"
++  LIBS="$LIBS -lthread_db -lc"
+   AC_TRY_LINK(
+   [void ps_pglobal_lookup() {}
+    void ps_pdread() {}
+diff --git a/gdb-6.6/gdb/gdbserver/configure b/gdb-6.6/gdb/gdbserver/configure
+index 9d97888..debb43a 100755
+--- a/gdb-6.6/gdb/gdbserver/configure
++++ b/gdb-6.6/gdb/gdbserver/configure
+@@ -3657,7 +3657,7 @@ if test "${srv_cv_thread_db+set}" = set; then
+   echo $ECHO_N "(cached) $ECHO_C" >&6
+ else
+   old_LIBS="$LIBS"
+-  LIBS="$LIBS -lthread_db"
++  LIBS="$LIBS -lthread_db -lc"
+   cat >conftest.$ac_ext <<_ACEOF
+ /* confdefs.h.  */
+ _ACEOF
+-- 
+1.7.1
+

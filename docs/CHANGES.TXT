@@ -43,9 +43,9 @@ IMPORTANT CHANGES:
   the new LOCAL_MODULE_FILENAME variable. See docs/ANDROID-MK.TXT for an
   example.
 
-- Add support for module imports, through the NDK_MODULE_PATH environment variable
-  and the new 'import-module' function. This allows you to avoid hard-coding the
-  path of third-party modules into your project files.
+- Add support for module imports, through the NDK_MODULE_PATH environment
+  variable and the new 'import-module' function. This allows you to avoid
+  hard-coding the path of third-party modules into your project files.
 
   See docs/IMPORT-MODULE.TXT for details.
 
@@ -100,13 +100,14 @@ OTHER FIXES & CHANGES:
 
   will now work correctly.
 
-- Add --git-http option to download-toolchain-sources.sh and rebuild-all-prebuilt.sh
-  in order to download sources from android.git.kernel.org through HTTP.
+- Add --git-http option to download-toolchain-sources.sh and
+  rebuild-all-prebuilt.sh in order to download sources from
+  android.git.kernel.org through HTTP.
 
 - ndk-gdb: properly launch activities which name does not contain any dot.
 
-- build/tools/build-gcc.sh: copy the sysroot to the build directory. This avoids
-  the generated toolchain binaries from hard-coding host build paths.
+- build/tools/build-gcc.sh: copy the sysroot to the build directory. This
+  avoids the generated toolchain binaries from hard-coding host build paths.
 
 - Platforms files are now under $NDK/platforms instead of $NDK/build/platforms
 

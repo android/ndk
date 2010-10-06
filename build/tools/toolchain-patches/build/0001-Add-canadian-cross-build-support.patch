@@ -1,0 +1,496 @@
+From 5dbbf4cf3abac1b8bba459ddae7c572636a82915 Mon Sep 17 00:00:00 2001
+From: David 'Digit' Turner <digit@android.com>
+Date: Tue, 5 Oct 2010 22:06:25 +0200
+Subject: [PATCH] Add canadian-cross build support.
+
+Change-Id: Ie21aaa2be8f27b37d5821b1f6eab1e08e679720d
+---
+ Makefile.in  |  191 ++++++++++++++++++++++++++++++++++++++++++++++------------
+ configure    |   48 ++++++++++----
+ configure.ac |   31 +++++++---
+ 3 files changed, 209 insertions(+), 61 deletions(-)
+
+diff --git a/Makefile.in b/Makefile.in
+index 2c905de..c8b704c 100644
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -23,6 +23,7 @@ prefix = @prefix@
+ exec_prefix = @exec_prefix@
+ 
+ srcdir = @srcdir@
++abs_srcdir = @abs_srcdir@
+ 
+ bindir = @bindir@
+ sbindir = @sbindir@
+@@ -120,6 +121,43 @@ find-package-srcdir = $(shell \
+     echo 'error cannot find $(strip $1)' ; \
+   fi)
+ 
++# Set effective <build>, <host> and <target>.
++
++ifneq ($(build_alias),)
++cur_build := $(build_alias)
++else
++cur_build := $(build)
++endif
++
++ifneq ($(host_alias),)
++cur_host := $(host_alias)
++else
++cur_host := $(host)
++endif
++
++ifneq ($(target_alias),)
++cur_target := $(target_alias)
++else
++cur_target := $(target)
++endif
++
++# Define environment variables for canadian cross build.
++ifneq ($(cur_host),$(cur_build))
++canadian_build_env := \
++	export CC_FOR_BUILD=$(cur_build)-gcc ; \
++	export CC=$(cur_build)-gcc ; \
++	export CXX=$(cur_build)-g++ ;
++
++CANADIAN_ROOT := $(PWD)/host-${cur_build}
++canadian_env := \
++	export CC_FOR_BUILD=$(cur_build)-gcc ; \
++	export CC=$(cur_host)-gcc ; \
++	export CXX=$(cur_host)-g++ ; \
++	export AR=$(cur_host)-ar ; \
++	export RANLIB=$(cur_host)-ranlib ; \
++	export PATH="$(CANADIAN_ROOT)/install/bin:${PATH}" ;
++endif
++
+ #
+ # Make rules
+ #
+@@ -133,33 +171,87 @@ build: build-target-binutils build-target-gcc build-target-gdb
+ 
+ install: install-target-binutils install-target-gcc install-target-gdb
+ 
++# To support canadian cross build we need to build build->target toolchain
++# as well as final host->target toolchain.
++ifneq ($(cur_host),$(cur_build))
++.PHONY: config-canadian-tools build-canadian-tools install-canadian-tools
++
++config-canadian-tools: stmp-config-canadian-tools
++stmp-config-canadian-tools:
++	([ -d $(CANADIAN_ROOT) ] || \
++	  mkdir $(CANADIAN_ROOT)) && \
++	($(canadian_build_env) \
++	 cd $(CANADIAN_ROOT) && \
++	 $(abs_srcdir)/configure $(baseargs) --build=$(cur_build) \
++		--host=$(cur_build) --target=$(cur_target)) && \
++	$(STAMP) $@
++
++build-canadian-tools: stmp-build-canadian-tools
++stmp-build-canadian-tools: stmp-config-canadian-tools
++	($(canadian_build_env) \
++	 cd $(CANADIAN_ROOT) && \
++	 $(MAKE)) && \
++	$(STAMP) $@
++
++install-canadian-tools: stmp-install-canadian-tools
++stmp-install-canadian-tools: stmp-build-canadian-tools
++	($(canadian_build_env) \
++	 cd $(CANADIAN_ROOT) && \
++	 $(MAKE) install prefix=$(CANADIAN_ROOT)/install) && \
++	$(STAMP) $@
++
++# When building canadian cross toolchain we cannot build GCC target libraries.
++# So we build the compilers only and copy the target libaries from
++# $(CANADIAN_ROOT)/install/ installation.
++gcc_build_target := all-gcc
++gcc_install_target := install-gcc
++install-target-gcc-multilibs: stmp-install-canadian-tools
++	mkdir -p $(prefix)/lib/gcc/
++	rsync -a $(CANADIAN_ROOT)/install/lib/gcc/ $(prefix)/lib/gcc/
++install-target-gcc-multilibs := install-target-gcc-multilibs
++
++# We add canadian_stmp dependency to rules that have no dependencies
++# on other modules.  This is to ensure that simple cross toolchain is built
++# before canadian cross toolchain.
++canadian_stmp := stmp-install-canadian-tools
++else
++gcc_build_target :=
++gcc_install_target := install
++install-target-gcc-multilibs :=
++canadian_stmp :=
++endif
++
+ # target binutils rules
+ .PHONY: config-target-binutils build-target-binutils install-target-binutils
+ config-target-binutils: stmp-config-target-binutils
+ # We do not want to enable shared libraries in binutils
+ BINUTILS_CONFIG_ARGS=--prefix=$(prefix) \
+-	--target=${target_alias} --host=${host} --build=${build} \
++	--target=${cur_target} --host=${cur_host} --build=${cur_build} \
+ 	$(baseargs) --disable-shared
+-stmp-config-target-binutils: config.status
++stmp-config-target-binutils: config.status $(canadian_stmp)
+ 	([ -d ${BINUTILS_VERSION} ] || \
+ 	  mkdir ${BINUTILS_VERSION}) && \
+-	(cd ${BINUTILS_VERSION} ; \
++	($(canadian_env) \
++	 cd ${BINUTILS_VERSION} ; \
+ 	 $(call find-package-srcdir, ${BINUTILS_VERSION})/configure \
+ 	  $(BINUTILS_CONFIG_ARGS)) && \
+ 	$(STAMP) $@
+ build-target-binutils: stmp-build-target-binutils
+ stmp-build-target-binutils: stmp-config-target-binutils
+-	$(MAKE) -C ${BINUTILS_VERSION} && $(STAMP) $@
++	($(canadian_env) \
++	 $(MAKE) -C ${BINUTILS_VERSION}) && $(STAMP) $@
+ install-target-binutils: stmp-build-target-binutils
+-	$(MAKE) -C ${BINUTILS_VERSION} install
++	($(canadian_env) \
++	 $(MAKE) -C ${BINUTILS_VERSION} install)
+ 
+ # target gcc rules
+ .PHONY: config-target-gcc build-target-gcc install-target-gcc
++.PHONY: install-target-gcc-gcc $(install-target-gcc-multilibs)
+ config-target-gcc: stmp-config-target-gcc
+ 
+ GCC_CONFIG_ARGS=--prefix=$(prefix) \
+-	  --target=${target_alias} --host=${host} --build=${build} \
+-	  --enable-languages=c,c++
++	  --target=${cur_target} --host=${cur_host} --build=${cur_build} \
++	  --with-gnu-as --with-gnu-ld --enable-languages=c,c++
+ 
+ # For gcc versions 4.3.0 and later, gmp and mpfr are required.
+ # Also build libgcc is a seperate sub-target in 4.3.0+.
+@@ -203,7 +295,8 @@ GCC_CONFIG_ARGS += $(baseargs)
+ stmp-config-target-gcc: config.status stmp-build-target-binutils
+ 	([ -d ${GCC_VERSION} ] || \
+ 	  mkdir ${GCC_VERSION}) && \
+-	(cd ${GCC_VERSION} ; \
++	($(canadian_env) \
++	 cd ${GCC_VERSION} ; \
+ 	 $(TARGET_BINUTILS_EXPORTS) ; \
+ 	 export CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" ; \
+ 	 export CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" ; \
+@@ -213,13 +306,17 @@ stmp-config-target-gcc: config.status stmp-build-target-binutils
+ 	$(STAMP) $@
+ build-target-gcc: stmp-build-target-gcc
+ stmp-build-target-gcc: stmp-config-target-gcc
+-	$(MAKE) -C ${GCC_VERSION} \
++	($(canadian_env) \
++	 $(MAKE) -C ${GCC_VERSION} \
+ 		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
+ 		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
+ 		LDFLAGS_FOR_TARGET="$(LDFLAGS_FOR_TARGET)" \
++		$(gcc_build_target)) \
+ 	&& $(STAMP) $@
+-install-target-gcc: stmp-build-target-gcc
+-	$(MAKE) -C ${GCC_VERSION} install
++install-target-gcc-gcc: stmp-build-target-gcc
++	($(canadian_env) \
++	 $(MAKE) -C ${GCC_VERSION} $(gcc_install_target))
++install-target-gcc: install-target-gcc-gcc $(install-target-gcc-multilibs)
+ 
+ # minimal gcc rules
+ # minimal gcc only builds the C and C++ compilers and libgcc
+@@ -233,52 +330,60 @@ endif
+ 
+ build-target-minimal-gcc: stmp-build-target-minimal-gcc
+ stmp-build-target-minimal-gcc: stmp-config-target-gcc
+-	$(MAKE) -C ${GCC_VERSION} \
+-		$(call prefix-list, all-, $(MINIMAL_GCC_BUILD_TARGETS)) && \
++	($(canadian_env) \
++	 $(MAKE) -C ${GCC_VERSION} \
++		$(call prefix-list, all-, $(MINIMAL_GCC_BUILD_TARGETS))) && \
+ 	$(STAMP) $@
+ install-target-minimal-gcc: stmp-build-target-minimal-gcc
+-	$(MAKE) -C ${GCC_VERSION} \
+-		$(call prefix-list, install-, $(MINIMAL_GCC_BUILD_TARGETS))
++	($(canadian_env) \
++	 $(MAKE) -C ${GCC_VERSION} \
++		$(call prefix-list, install-, $(MINIMAL_GCC_BUILD_TARGETS)))
+ 
+ # target newlib rules
+ .PHONY: config-target-newlib build-target-newlib install-target-newlib
+ config-target-newlib: stmp-config-target-newlib
+ NEWLIB_CONFIG_ARGS=$(baseargs) --prefix=$(prefix) \
+-	  --target=${target_alias} --host=${host} --build=${build}
++	  --target=${cur_target} --host=${cur_host} --build=${cur_build}
+ 
+ stmp-config-target-newlib: stmp-build-target-binutils \
+ 			   stmp-build-target-minimal-gcc
+ 	([ -d ${NEWLIB_VERSION} ] || \
+ 	  mkdir ${NEWLIB_VERSION}) && \
+-	(cd ${NEWLIB_VERSION} ; \
++	($(canadian_env) \
++	 cd ${NEWLIB_VERSION} ; \
+ 	 $(TARGET_BINUTILS_EXPORTS) ; \
+ 	 $(TARGET_MINIMAL_GCC_EXPORTS) ; \
+ 	 $(call find-package-srcdir, ${NEWLIB_VERSION})/configure \
+ 	  $(NEWLIB_CONFIG_ARGS)) && \
+ 	$(STAMP) $@
+ stmp-build-target-newlib: stmp-config-target-newlib
+-	$(MAKE) -C ${NEWLIB_VERSION} && $(STAMP) $@
++	($(canadian_env) \
++	 $(MAKE) -C ${NEWLIB_VERSION}) && $(STAMP) $@
+ install-target-newlib: stmp-build-target-newlib
+-	$(MAKE) -C ${NEWLIB_VERSION} install
++	($(canadian_env) \
++	 $(MAKE) -C ${NEWLIB_VERSION} install)
+ 
+ # host gmp rules
+ .PHONY: config-host-gmp build-host-gmp install-host-gmp
+ config-host-gmp: stmp-config-host-gmp
+ GMP_CONFIG_ARGS=$(baseargs) --prefix=$(TEMP_INSTALLDIR) --disable-shared \
+-	  --host=${host} --build=${build}
+-stmp-config-host-gmp: config.status
++	  --host=${cur_host} --build=${cur_build}
++stmp-config-host-gmp: config.status $(canadian_stmp)
+ 	([ -d ${GMP_VERSION} ] || \
+ 	  mkdir ${GMP_VERSION}) && \
+-	(cd ${GMP_VERSION} ; \
++	($(canadian_env) \
++	 cd ${GMP_VERSION} ; \
+ 	 $(call find-package-srcdir, ${GMP_VERSION})/configure \
+ 	  $(GMP_CONFIG_ARGS)) && \
+ 	$(STAMP) $@
+ stmp-build-host-gmp: stmp-config-host-gmp
+-	$(MAKE) -C ${GMP_VERSION} && $(STAMP) $@
++	($(canadian_env) \
++	 $(MAKE) -C ${GMP_VERSION}) && $(STAMP) $@
+ build-host-gmp: stmp-build-host-gmp
+ # Need -j1 to avoid a race condition in building on OS X.
+ stmp-install-host-gmp: stmp-build-host-gmp
+-	$(MAKE) -C ${GMP_VERSION} install -j1 && \
++	($(canadian_env) \
++	 $(MAKE) -C ${GMP_VERSION} install -j1) && \
+ 	$(STAMP) $@
+ install-host-gmp: stmp-install-host-gmp
+ 
+@@ -286,19 +391,23 @@ install-host-gmp: stmp-install-host-gmp
+ .PHONY: config-host-mpfr build-host-mpfr install-host-mpfr
+ config-host-mpfr: stmp-config-host-mpfr
+ MPFR_CONFIG_ARGS=$(baseargs) --prefix=$(TEMP_INSTALLDIR) --disable-shared \
+-	  --host=${host} --build=${build} --with-gmp=$(TEMP_INSTALLDIR)
++	  --host=${cur_host} --build=${cur_build} \
++	  --with-gmp=$(TEMP_INSTALLDIR)
+ stmp-config-host-mpfr: config.status stmp-install-host-gmp
+ 	([ -d ${MPFR_VERSION} ] || \
+ 	  mkdir ${MPFR_VERSION}) && \
+-	(cd ${MPFR_VERSION} ; \
++	($(canadian_env) \
++	 cd ${MPFR_VERSION} ; \
+ 	 $(call find-package-srcdir, ${MPFR_VERSION})/configure \
+ 	  $(MPFR_CONFIG_ARGS)) && \
+ 	$(STAMP) $@
+ stmp-build-host-mpfr: stmp-config-host-mpfr
+-	$(MAKE) -C ${MPFR_VERSION} && $(STAMP) $@
++	($(canadian_env) \
++	 $(MAKE) -C ${MPFR_VERSION}) && $(STAMP) $@
+ build-host-mpfr: stmp-build-host-mpfr
+ stmp-install-host-mpfr: stmp-build-host-mpfr
+-	$(MAKE) -C ${MPFR_VERSION} install && \
++	($(canadian_env) \
++	 $(MAKE) -C ${MPFR_VERSION} install) && \
+ 	$(STAMP) $@
+ install-host-mpfr: stmp-install-host-mpfr
+ 
+@@ -306,20 +415,23 @@ install-host-mpfr: stmp-install-host-mpfr
+ .PHONY: config-host-mpc build-host-mpc install-host-mpc
+ config-host-mpc: stmp-config-host-mpc
+ MPC_CONFIG_ARGS=$(baseargs) --prefix=$(TEMP_INSTALLDIR) --disable-shared \
+-	 --host=${host} --build=${build} --with-gmp=$(TEMP_INSTALLDIR) \
+-	 --with-mpfr=$(TEMP_INSTALLDIR)
++	 --host=${cur_host} --build=${cur_build} \
++	 --with-gmp=$(TEMP_INSTALLDIR) --with-mpfr=$(TEMP_INSTALLDIR)
+ stmp-config-host-mpc: config.status stmp-install-host-gmp stmp-install-host-mpfr
+ 	([ -d ${MPC_VERSION} ] || \
+ 	  mkdir ${MPC_VERSION}) && \
+-	(cd ${MPC_VERSION} ; \
++	($(canadian_env) \
++	 cd ${MPC_VERSION} ; \
+ 	 $(call find-package-srcdir, ${MPC_VERSION})/configure \
+ 	  $(MPC_CONFIG_ARGS)) && \
+ 	$(STAMP) $@
+ stmp-build-host-mpc: stmp-config-host-mpc
+-	$(MAKE) -C ${MPC_VERSION} && $(STAMP) $@
++	($(canadian_env) \
++	 $(MAKE) -C ${MPC_VERSION}) && $(STAMP) $@
+ build-host-mpc: stmp-build-host-mpc
+ stmp-install-host-mpc: stmp-build-host-mpc
+-	$(MAKE) -C ${MPC_VERSION} install && \
++	($(canadian_env) \
++	 $(MAKE) -C ${MPC_VERSION} install) && \
+ 	$(STAMP) $@
+ install-host-mpc: stmp-install-host-mpc
+ 
+@@ -328,21 +440,24 @@ install-host-mpc: stmp-install-host-mpc
+ config-target-gdb: stmp-config-target-gdb
+ 
+ GDB_CONFIG_ARGS=$(baseargs) --prefix=$(prefix) \
+-	--target=$(GDB_TARGET) --host=${host} --build=${build} \
++	--target=$(GDB_TARGET) --host=${cur_host} --build=${cur_build} \
+ 	--disable-nls
+ 
+-stmp-config-target-gdb: config.status
++stmp-config-target-gdb: config.status $(canadian_stmp)
+ 	([ -d ${GDB_VERSION} ] || \
+ 	  mkdir ${GDB_VERSION}) && \
+-	(cd ${GDB_VERSION} ; \
++	($(canadian_env) \
++	 cd ${GDB_VERSION} ; \
+ 	 $(call find-package-srcdir, ${GDB_VERSION})/configure \
+ 	  $(GDB_CONFIG_ARGS)) && \
+ 	$(STAMP) $@
+ build-target-gdb: stmp-build-target-gdb
+ stmp-build-target-gdb: stmp-config-target-gdb
+-	$(MAKE) -C ${GDB_VERSION} && $(STAMP) $@
++	($(canadian_env) \
++	 $(MAKE) -C ${GDB_VERSION}) && $(STAMP) $@
+ install-target-gdb: stmp-build-target-gdb
+-	$(MAKE) -C ${GDB_VERSION} install
++	($(canadian_env) \
++	 $(MAKE) -C ${GDB_VERSION} install)
+ 
+ # clean rules
+ .PHONY: clean
+diff --git a/configure b/configure
+index 96a2d52..37db9be 100755
+--- a/configure
++++ b/configure
+@@ -639,6 +639,7 @@ GMP_VERSION
+ MPFR_VERSION
+ MPC_VERSION
+ GDB_VERSION
++sysroot
+ LIBOBJS
+ LTLIBOBJS'
+ ac_subst_files=''
+@@ -1239,6 +1240,8 @@ Optional Packages:
+                           use mpc-VERSION (default is 0.8.1)
+   --with-gdb-version=VERSION
+                           use gdb-VERSION (default is 6.6)
++  --with-sysroot=DIR
++                          use target sysroot in DIR
+ 
+ _ACEOF
+ ac_status=$?
+@@ -1997,19 +2000,6 @@ fi
+ 
+ 
+ 
+-#
+-# Check for Canadian cross, which is not supported.
+-#
+-{ echo "$as_me:$LINENO: checking for Canadian cross" >&5
+-echo $ECHO_N "checking for Canadian cross... $ECHO_C" >&6; }
+-if test $build != $host ; then
+-  { { echo "$as_me:$LINENO: error: Canadian cross build not supported." >&5
+-echo "$as_me: error: Canadian cross build not supported." >&2;}
+-   { (exit 1); exit 1; }; }
+-fi
+-{ echo "$as_me:$LINENO: result: no" >&5
+-echo "${ECHO_T}no" >&6; }
+-
+ # package to source path
+ case $srcdir in
+  /* | A-Za-z:*) package_to_srcdir=$srcdir ;;
+@@ -2353,6 +2343,35 @@ echo "$as_me: error: 'package gdb-${GDB_VERSION} does not exist.'" >&2;}
+   fi
+ fi
+ 
++# Sysroot location
++
++# Check whether --with-sysroot was given.
++if test "${with_sysroot+set}" = set; then
++  withval=$with_sysroot; if test x"$withval" != x ; then
++     if test $build != $host ; then
++       case "$withval" in
++         "$prefix"|"${prefix%/}/"*)
++           ;;
++         *)
++           { { echo "$as_me:$LINENO: error: 'Target sysroot must be a subdirectory of <prefix> for canadian cross build $prefix ; $withval'" >&5
++echo "$as_me: error: 'Target sysroot must be a subdirectory of <prefix> for canadian cross build $prefix ; $withval'" >&2;}
++   { (exit 1); exit 1; }; }
++           ;;
++       esac
++     fi
++
++     sysroot="$withval"
++   fi
++else
++  if test $build != $host ; then
++   { { echo "$as_me:$LINENO: error: 'Target sysroot is not set for canadian cross build'" >&5
++echo "$as_me: error: 'Target sysroot is not set for canadian cross build'" >&2;}
++   { (exit 1); exit 1; }; }
++ fi
++fi
++
++
++
+ cat >confcache <<\_ACEOF
+ # This file is a shell script that caches the results of configure
+ # tests run on this system so they can be shared between configure
+@@ -3044,11 +3063,12 @@ GMP_VERSION!$GMP_VERSION$ac_delim
+ MPFR_VERSION!$MPFR_VERSION$ac_delim
+ MPC_VERSION!$MPC_VERSION$ac_delim
+ GDB_VERSION!$GDB_VERSION$ac_delim
++sysroot!$sysroot$ac_delim
+ LIBOBJS!$LIBOBJS$ac_delim
+ LTLIBOBJS!$LTLIBOBJS$ac_delim
+ _ACEOF
+ 
+-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 65; then
++  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 66; then
+     break
+   elif $ac_last_try; then
+     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
+diff --git a/configure.ac b/configure.ac
+index 973b8f4..4180f29 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -171,15 +171,6 @@ fi
+ 
+ AC_SUBST(baseargs)
+ 
+-#
+-# Check for Canadian cross, which is not supported.
+-#
+-AC_MSG_CHECKING([for Canadian cross])
+-if test $build != $host ; then
+-  AC_MSG_ERROR(Canadian cross build not supported.)
+-fi
+-AC_MSG_RESULT(no)
+-
+ # package to source path
+ case $srcdir in
+  /* | [A-Za-z]:*) package_to_srcdir=$srcdir ;;
+@@ -349,4 +340,26 @@ AC_MSG_RESULT($GDB_VERSION)
+ AC_SUBST(GDB_VERSION)
+ ANDROID_CHECK_PACKAGE(gdb-${GDB_VERSION})
+ 
++# Sysroot location
++AC_ARG_WITH([sysroot],
++  [  --with-sysroot=DIR
++                          use target sysroot in DIR],
++  [if test x"$withval" != x ; then
++     if test $build != $host ; then
++       case "$withval" in
++         "$prefix"|"${prefix%/}/"*)
++           ;;
++         *)
++           AC_MSG_ERROR('Target sysroot must be a subdirectory of <prefix> for canadian cross build $prefix ; $withval')
++           ;;
++       esac
++     fi
++
++     sysroot="$withval"
++   fi],
++[if test $build != $host ; then
++   AC_MSG_ERROR('Target sysroot is not set for canadian cross build')
++ fi])
++AC_SUBST(sysroot)
++
+ AC_OUTPUT
+-- 
+1.7.1
+
