@@ -53,6 +53,7 @@ OPTION_HELP=no
 OPTION_PLATFORMS=
 OPTION_SRCDIR=
 OPTION_DSTDIR=
+OPTION_NO_SAMPLES=no
 
 VERBOSE=no
 VERBOSE2=no
@@ -81,6 +82,9 @@ for opt do
   --abi=*)
     OPTION_ABI=$optarg
     ;;
+  --no-samples)
+    OPTION_NO_SAMPLES=yes
+    ;;
   *)
     echo "unknown option '$opt', use --help"
     exit 1
@@ -93,12 +97,13 @@ if [ $OPTION_HELP = "yes" ] ; then
     echo ""
     echo "options:"
     echo ""
-    echo "  --help             print this message"
-    echo "  --verbose          enable verbose messages"
-    echo "  --src-dir=<path>   source directory for development platform files [$SRCDIR]"
-    echo "  --dst-dir=<path>   destination directory [$DSTDIR]"
-    echo "  --platform=<list>  space-separated list of API levels [$PLATFORMS]"
-    echo "  --abi=<list>       space-separated list of ABIs [$ABIS]"
+    echo "  --help             Print this message"
+    echo "  --verbose          Enable verbose messages"
+    echo "  --src-dir=<path>   Source directory for development platform files [$SRCDIR]"
+    echo "  --dst-dir=<path>   Destination directory [$DSTDIR]"
+    echo "  --platform=<list>  Space-separated list of API levels [$PLATFORMS]"
+    echo "  --abi=<list>       Space-separated list of ABIs [$ABIS]"
+    echo "  --no-samples       Ignore samples"
     echo ""
     exit 0
 fi
@@ -238,20 +243,22 @@ for PLATFORM in $PLATFORMS; do
     PREV_PLATFORM_DST=$PLATFORM_DST
 done
 
-# Copy platform samples and generic samples into your destination
-#
-# $SRC/samples/ --> $DST/samples/
-# $SRC/android-$PLATFORM/samples/ --> $DST/samples
-#
-copy_directory  samples samples samples
+if [ "$OPTION_NO_SAMPLES" = no ] ; then
+    # Copy platform samples and generic samples into your destination
+    #
+    # $SRC/samples/ --> $DST/samples/
+    # $SRC/android-$PLATFORM/samples/ --> $DST/samples
+    #
+    copy_directory  samples samples samples
 
-for PLATFORM in $PLATFORMS; do
-    # $SRC/platform-$PLATFORM/samples --> $DST/samples
-    copy_directory platforms/android-$PLATFORM/samples samples samples
-done
+    for PLATFORM in $PLATFORMS; do
+        # $SRC/platform-$PLATFORM/samples --> $DST/samples
+        copy_directory platforms/android-$PLATFORM/samples samples samples
+    done
 
-# Cleanup generated files in samples
-rm -rf "$DSTDIR/samples/*/obj"
-rm -rf "$DSTDIR/samples/*/libs"
+    # Cleanup generated files in samples
+    rm -rf "$DSTDIR/samples/*/obj"
+    rm -rf "$DSTDIR/samples/*/libs"
+fi
 
 log "Done !"

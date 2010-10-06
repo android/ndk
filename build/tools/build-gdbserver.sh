@@ -43,8 +43,8 @@ OPTION_BUILD_OUT=
 OPTION_SYSROOT=
 
 SYSROOT=
-if [ -d $TOOLCHAIN_PATH/libc ] ; then
-  SYSROOT=$TOOLCHAIN_PATH/libc
+if [ -d $TOOLCHAIN_PATH/sysroot ] ; then
+  SYSROOT=$TOOLCHAIN_PATH/sysroot
 fi
 
 register_option "--build-out=<path>" do_build_out "Set temporary build directory" "/tmp/random"
@@ -58,6 +58,8 @@ do_sysroot () { OPTION_SYSROOT=$1; }
 do_jobs () { JOBS=$1; }
 
 extract_parameters $@
+
+setup_default_log_file
 
 set_parameters ()
 {
@@ -164,9 +166,9 @@ fi
 # not in $SYSROOT/usr/bin
 #
 dump "Install  : $TOOLCHAIN gdbserver."
-DEST=$TOOLCHAIN_PATH/bin
+DEST=`dirname $TOOLCHAIN_PATH`
 mkdir -p $DEST &&
-run $TOOLCHAIN_PREFIX-objcopy --strip-unneeded $BUILD_OUT/gdbserver $TOOLCHAIN_PATH/bin/gdbserver
+run $TOOLCHAIN_PREFIX-objcopy --strip-unneeded $BUILD_OUT/gdbserver $DEST/gdbserver
 if [ $? != 0 ] ; then
     dump "Could not install gdbserver. See $TMPLOG"
     exit 1

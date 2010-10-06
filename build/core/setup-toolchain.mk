@@ -73,20 +73,25 @@ TARGET_PREBUILT_SHARED_LIBRARIES := $(TARGET_PREBUILT_SHARED_LIBRARIES:%=$(SYSRO
 # the setup file.
 TOOLCHAIN_NAME   := $(TARGET_TOOLCHAIN)
 
+# Define the root path of the toolchain in the NDK tree.
+TOOLCHAIN_ROOT   := $(NDK_ROOT)/toolchains/$(TOOLCHAIN_NAME)
+
+# Define the root path where toolchain prebuilts are stored
+TOOLCHAIN_PREBUILT_ROOT := $(TOOLCHAIN_ROOT)/prebuilt/$(HOST_TAG)
+
 # Do the same for TOOLCHAIN_PREFIX. Note that we must chop the version
 # number from the toolchain name, e.g. arm-eabi-4.4.0 -> path/bin/arm-eabi-
 # to do that, we split at dashes, remove the last element, then merge the
 # result. Finally, add the complete path prefix.
 #
 TOOLCHAIN_PREFIX := $(call merge,-,$(call chop,$(call split,-,$(TOOLCHAIN_NAME))))-
-TOOLCHAIN_PREFIX := $(HOST_PREBUILT)/$(TOOLCHAIN_NAME)/bin/$(TOOLCHAIN_PREFIX)
+TOOLCHAIN_PREFIX := $(TOOLCHAIN_PREBUILT_ROOT)/bin/$(TOOLCHAIN_PREFIX)
 
 # now call the toolchain-specific setup script
 include $(NDK_TOOLCHAIN.$(TARGET_TOOLCHAIN).setup)
 
-# We expect the gdbserver binary for this toolchain to be located at the same
-# place than the target C compiler.
-TARGET_GDBSERVER := $(dir $(TARGET_CC))/gdbserver
+# We expect the gdbserver binary for this toolchain to be located at its root.
+TARGET_GDBSERVER := $(TOOLCHAIN_ROOT)/prebuilt/gdbserver
 
 # compute NDK_APP_DST_DIR as the destination directory for the generated files
 NDK_APP_DST_DIR := $(NDK_APP_PROJECT_PATH)/libs/$(TARGET_ARCH_ABI)
