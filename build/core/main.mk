@@ -134,4 +134,5 @@ $(call __ndk_info,Building for application '$(NDK_APPS)')
 # Where all app-specific generated files will be stored
 NDK_APP_OUT := $(NDK_ROOT)/out/apps
 
+include $(BUILD_SYSTEM)/setup-imports.mk
 include $(BUILD_SYSTEM)/build-all.mk
