@@ -27,57 +27,71 @@ PROGDIR=`dirname $0`
 
 prepare_host_flags
 
-PROGRAM_PARAMETERS=
-PROGRAM_DESCRIPTION=\
-"Download and rebuild from scratch all prebuilt binaries for the Android NDK."
-
-NDK_DIR=$ANDROID_NDK_ROOT
-
-register_option "--ndk-dir=<path>" do_ndk_dir "Specify target NDK directory" "$NDK_DIR"
-do_ndk_dir () { OPTION_NDK_DIR=$1; }
+NDK_DIR=
+register_var_option "--ndk-dir=<path>" NDK_DIR "Don't package, copy binaries to target NDK directory"
 
 BUILD_DIR=`random_temp_directory`
-OPTION_BUILD_DIR=
-register_option "--build-dir=<path>" do_build_dir "Specify temporary build directory" "/tmp/<random>"
-do_build_dir () { OPTION_BUILD_DIR=$1; }
+register_var_option "--build-dir=<path>" BUILD_DIR "Specify temporary build directory" "/tmp/<random>"
 
 GDB_VERSION=6.6
-OPTION_GDB_VERSION=
-register_option "--gdb-version=<version>" do_gdb_version "Specify gdb version" "$GDB_VERSION"
-do_gdb_version () { OPTION_GDB_VERSION=$1; }
+register_var_option "--gdb-version=<version>" GDB_VERSION "Specify gdb version"
 
 OPTION_TOOLCHAIN_SRC_PKG=
-OPTION_TOOLCHAIN_SRC_DIR=
-register_option "--toolchain-src-pkg=<file>" do_toolchain_src_pkg "Use toolchain source package."
-register_option "--toolchain-src-dir=<path>" do_toolchain_src_dir "Use toolchain source directory."
-do_toolchain_src_pkg () { OPTION_TOOLCHAIN_SRC_PKG=$1; }
-do_toolchain_src_dir () { OPTION_TOOLCHAIN_SRC_DIR=$1; }
+register_var_option "--toolchain-src-pkg=<file>" OPTION_TOOLCHAIN_SRC_PKG "Use toolchain source package."
 
-OPTION_PACKAGE=no
-register_option "--package" do_package "Package prebuilt binaries."
-do_package () { OPTION_PACKAGE=yes; }
+OPTION_TOOLCHAIN_SRC_DIR=
+register_var_option "--toolchain-src-dir=<path>" OPTION_TOOLCHAIN_SRC_DIR "Use toolchain source directory."
+
+RELEASE=`date +%Y%m%d`
+PACKAGE_DIR=/tmp/ndk-prebuilt/prebuilt-$RELEASE
+register_var_option "--package-dir=<path>" PACKAGE_DIR "Put prebuilt tarballs into <path>."
 
 OPTION_TRY_X86=no
-register_option "--try-x86" do_try_x86 "Build experimental x86 toolchain too."
-do_try_x86 () { OPTION_TRY_X86=yes; }
+register_var_option "--try-x86" OPTION_TRY_X86 "Build experimental x86 toolchain too."
 
 OPTION_GIT_HTTP=no
-register_option "--git-http" do_git_http "Download sources with http."
-do_git_http() { OPTION_GIT_HTTP=yes; }
+register_var_option "--git-http" OPTION_GIT_HTTP "Download sources with http."
 
 register_mingw_option
 
+PROGRAM_PARAMETERS=
+PROGRAM_DESCRIPTION=\
+"Download and rebuild from scratch all prebuilt binaries for the Android NDK.
+By default, this will create prebuilt binary tarballs in: $PACKAGE_DIR
+
+You can however use --ndk-dir=<path> to instead copy the binaries directly
+to an existing NDK installation.
+
+By default, the script will download the toolchain sources from the Internet,
+but you can override this using either --toolchain-src-dir or
+--toolchain-src-pkg.
+
+Please read docs/DEVELOPMENT.TXT for more usage information about this
+script.
+"
+
 extract_parameters $@
 
-fix_option NDK_DIR "$OPTION_NDK_DIR" "target NDK directory"
-fix_option BUILD_DIR "$OPTION_BUILD_DIR" "build directory"
-fix_option GDB_VERSION "$OPTION_GDB_VERSION" "gdb version"
-
-if [ "$OPTION_PACKAGE" = "yes" -a -z "$OPTION_NDK_DIR" ] ; then
-    NDK_DIR=/tmp/ndk-toolchain/ndk-prebuilt-$$
+if [ -n "$PACKAGE_DIR" -a -n "$NDK_DIR" ] ; then
+    echo "ERROR: You cannot use both --package-dir and --ndk-dir at the same time!"
+    exit 1
 fi
 
-setup_default_log_file "$NDK_DIR/log.txt"
+if [ -z "$NDK_DIR" ] ; then
+    mkdir -p "$PACKAGE_DIR"
+    if [ $? != 0 ] ; then
+        echo "ERROR: Could not create directory: $PACKAGE_DIR"
+        exit 1
+    fi
+    NDK_DIR=/tmp/ndk-toolchain/ndk-prebuilt-$$
+    mkdir -p $NDK_DIR
+else
+    if [ ! -d "$NDK_DIR" ] ; then
+        echo "ERROR: NDK directory does not exists: $NDK_DIR"
+        exit 1
+    fi
+    PACKAGE_DIR=
+fi
 
 if [ -n "$PARAMETERS" ]; then
     dump "ERROR: Too many parameters. See --help for proper usage."
@@ -89,28 +103,26 @@ if [ $? != 0 ] ; then
     dump "ERROR: Could not create build directory: $BUILD_DIR"
     exit 1
 fi
+setup_default_log_file "$BUILD_DIR/log.txt"
 
 if [ -n "$OPTION_TOOLCHAIN_SRC_DIR" ] ; then
     if [ -n "$OPTION_TOOLCHAIN_SRC_PKG" ] ; then
         dump "ERROR: You can't use both --toolchain-src-dir and --toolchain-src-pkg"
         exi t1
     fi
-    SRC_DIR=$OPTION_TOOLCHAIN_SRC_DIR
-    if [ ! -d $SRC_DIR/gcc ] ; then
+    SRC_DIR="$OPTION_TOOLCHAIN_SRC_DIR"
+    if [ ! -d "$SRC_DIR/gcc" ] ; then
         dump "ERROR: Invalid toolchain source directory: $SRC_DIR"
         exit 1
     fi
 else
-    SRC_DIR=$BUILD_DIR/src
-    mkdir -p $SRC_DIR
+    SRC_DIR="$BUILD_DIR/src"
+    mkdir -p "$SRC_DIR"
 fi
 
 FLAGS=""
 if [ $VERBOSE = yes ] ; then
     FLAGS="--verbose"
-fi
-if [ "$MINGW" = yes ] ; then
-    FLAGS="$FLAGS --mingw"
 fi
 
 if [ -z "$OPTION_TOOLCHAIN_SRC_DIR" ] ; then
@@ -149,25 +161,14 @@ if [ -z "$OPTION_TOOLCHAIN_SRC_DIR" ] ; then
             exit 1
         fi
     fi
-
-    # Patch the sources
-    PATCHES_DIR=$PROGDIR/patches
-    if [ -d "$PATCHES_DIR" ] ; then
-        $PROGDIR/patch-sources.sh $FLAGS $SRC_DIR $PATCHES_DIR
-        if [ $? != 0 ] ; then
-            dump "ERROR: Could not patch sources."
-            exit 1
-        fi
-    fi
-
 fi # ! $TOOLCHAIN_SRC_DIR
+
+if [ "$MINGW" = yes ] ; then
+    FLAGS="$FLAGS --mingw"
+fi
 
 # Needed to set HOST_TAG to windows if --mingw is used.
 prepare_host_flags
-
-RELEASE=`date +%Y%m%d`
-PREBUILT_ROOT=/tmp/ndk-prebuilt/prebuilt-$RELEASE
-mkdir -p $PREBUILT_ROOT
 
 # Package a directory in a .tar.bz2 archive
 #
@@ -177,9 +178,9 @@ mkdir -p $PREBUILT_ROOT
 #
 package_it ()
 {
-    if [ "$OPTION_PACKAGE" = "yes" ] ; then
+    if [ -n "$PACKAGE_DIR" ] ; then
         dump "Packaging $1 ($2.tar.bz2) ..."
-        PREBUILT_PACKAGE=$PREBUILT_ROOT/"$2".tar.bz2
+        PREBUILT_PACKAGE="$PACKAGE_DIR/$2".tar.bz2
         (cd $NDK_DIR && tar cjf $PREBUILT_PACKAGE "$3")
         if [ $? != 0 ] ; then
             dump "ERROR: Could not package $1!"
@@ -192,7 +193,7 @@ package_it ()
 build_toolchain ()
 {
     dump "Building $1 toolchain... (this can be long)"
-    $PROGDIR/build-gcc.sh $FLAGS --build-out=$BUILD_DIR/toolchain-$1 $SRC_DIR $NDK_DIR $1
+    run $PROGDIR/build-gcc.sh $FLAGS --build-out=$BUILD_DIR/toolchain-$1 $SRC_DIR $NDK_DIR $1
     if [ $? != 0 ] ; then
         dump "ERROR: Could not build $1 toolchain!"
         exit 1
@@ -235,4 +236,8 @@ fi
 #    exit 1
 #fi
 
-dump "Done!"
+if [ -n "$PACKAGE_DIR" ] ; then
+    dump "Done! See $PACKAGE_DIR"
+else
+    dump "Done! See $NDK_DIR/toolchains"
+fi

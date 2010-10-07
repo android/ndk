@@ -21,32 +21,25 @@
 
 # include common function and variable definitions
 . `dirname $0`/prebuilt-common.sh
-
-OPTION_HELP=no
-OPTION_RELEASE=
-OPTION_GIT=
-OPTION_BRANCH=
-OPTION_PACKAGE=no
-OPTION_GIT_HTTP=no
-
-# the default release name (use today's date)
-RELEASE=`date +%Y%m%d`
+PROGDIR=`dirname $0`
+PROGDIR=`cd $PROGDIR && pwd`
 
 # the default branch to use
 BRANCH=master
+register_option "--branch=<name>" BRANCH "Specify release branch"
+
+# the default release name (use today's date)
+RELEASE=`date +%Y%m%d`
+register_var_option "--release=<name>" RELEASE "Specify release name"
+
 GITCMD=git
+register_var_option "--git=<executable>" GITCMD "Use this version of the git tool"
 
-register_option "--branch=<name>" do_branch "Specify release branch" $BRANCH
-register_option "--release=<name>" do_release "Specify release name" $RELEASE
-register_option "--git=<executable>" do_git "Use this version of the git tool" $GITCMD
-register_option "--git-http" do_git_http "Use http to download sources from git"
-register_option "--package" do_package "Create source package in /tmp"
+OPTION_GIT_HTTP=no
+register_var_option "--git-http" OPTION_GIT_HTTP "Use http to download sources from git"
 
-do_branch () { OPTION_BRANCH=$1; }
-do_release () { OPTION_RELEASE=$1; }
-do_git () { OPTION_GIT=$1; }
-do_git_http () { OPTION_GIT_HTTP=yes; }
-do_package () { OPTION_PACKAGE=yes; }
+OPTION_PACKAGE=no
+register_var_option "--package" OPTION_PACKAGE "Create source package in /tmp"
 
 PROGRAM_PARAMETERS="<src-dir>"
 PROGRAM_DESCRIPTION=\
@@ -56,10 +49,7 @@ binaries from scratch with build/tools/build-gcc.sh."
 
 extract_parameters $@
 
-fix_option RELEASE "$OPTION_RELEASE" "release name"
-
 # Check that 'git' works
-fix_option GITCMD  "$OPTION_GIT" "git too command"
 $GITCMD --version > /dev/null 2>&1
 if [ $? != 0 ] ; then
     echo "The git tool doesn't seem to work. Please check $GITCMD"
@@ -67,10 +57,8 @@ if [ $? != 0 ] ; then
 fi
 log "Git seems to work ok."
 
-fix_option BRANCH "$OPTION_BRANCH" "branch name"
-
-SRC_DIR=$PARAMETERS
-if [ -z "$SRC_DIR" -a $OPTION_PACKAGE = no ] ; then
+SRC_DIR="$PARAMETERS"
+if [ -z "$SRC_DIR" -a "$OPTION_PACKAGE" = no ] ; then
     echo "ERROR: You need to provide a <src-dir> parameter or use the --package option!"
     exit 1
 fi
@@ -128,8 +116,20 @@ toolchain_clone build
 toolchain_clone gcc
 toolchain_clone gdb
 toolchain_clone gmp
-#toolchain_clone gold  # not sure about this one !
+toolchain_clone gold  # not sure about this one !
 toolchain_clone mpfr
+
+# Patch the toolchain sources
+PATCHES_DIR="$PROGDIR/toolchain-patches"
+if [ -d "$PATCHES_DIR" ] ; then
+    dump "Patching toolchain sources"
+    run $PROGDIR/patch-sources.sh $FLAGS $TMPDIR $PATCHES_DIR
+    if [ $? != 0 ] ; then
+        dump "ERROR: Could not patch sources."
+        exit 1
+    fi
+fi
+
 
 # We only keep one version of gcc and binutils
 

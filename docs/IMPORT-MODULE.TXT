@@ -19,7 +19,7 @@ following:
 
 
   2. Define the NDK_MODULE_PATH variable in your environment to point
-     to <path>. For example, on Linux, do:
+     to <path>. For example, on Linux or Cygwin, do:
 
         export NDK_MODULE_PATH=<path>
 

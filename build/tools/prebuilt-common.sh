@@ -76,13 +76,11 @@ option_get_attr ()
 
 # Register a new option
 # $1: option
-# $2: name of function that will be called when the option is parsed
-# $3: small abstract for the option
-# $4: optional. default value
+# $2: small abstract for the option
+# $3: optional. default value
 #
-register_option ()
+register_option_internal ()
 {
-    local optname optvalue opttype optlabel
     optlabel=
     optname=
     optvalue=
@@ -136,10 +134,39 @@ register_option ()
     option_set_attr $optname otype "$opttype"
     option_set_attr $optname value "$optvalue"
     option_set_attr $optname text "$1"
-    option_set_attr $optname funcname "$2"
-    option_set_attr $optname abstract "$3"
-    option_set_attr $optname default "$4"
+    option_set_attr $optname abstract "$2"
+    option_set_attr $optname default "$3"
 }
+
+# Register a new option with a function callback.
+#
+# $1: option
+# $2: name of function that will be called when the option is parsed
+# $3: small abstract for the option
+# $4: optional. default value
+#
+register_option ()
+{
+    local optname optvalue opttype optlabel
+    register_option_internal "$1" "$3" "$4"
+    option_set_attr $optname funcname "$2"
+}
+
+# Register a new option with a variable store
+#
+# $1: option
+# $2: name of variable that will be set by this option
+# $3: small abstract for the option
+#
+# NOTE: The current value of $2 is used as the default
+#
+register_var_option ()
+{
+    local optname optvalue opttype optlabel
+    register_option_internal "$1" "$3" "`var_value $2`"
+    option_set_attr $optname varname "$2"
+}
+
 
 MINGW=no
 do_mingw_option () { MINGW=yes; }
@@ -226,7 +253,7 @@ extract_parameters ()
             opt=`expr -- "$1" : '^\(--.*\)$'`
             if [ -n "$opt" ] ; then
                 otype="long_flag"
-                value=
+                value="yes"
                 break
             fi
 
@@ -242,7 +269,7 @@ extract_parameters ()
             opt=`expr -- "$1" : '^\(-.\)$'`
             if [ -n "$opt" ] ; then
                 otype="short_flag"
-                value=
+                value="yes"
                 break
             fi
 
@@ -291,8 +318,13 @@ extract_parameters ()
             echo "ERROR: Unknown option '$opt'. See --help for usage."
             exit 1
         fi
-        # Launch option-specific function, value, if any as argument
-        eval `option_get_attr $name funcname` \"$value\"
+        # Set variable or launch option-specific function.
+        varname=`option_get_attr $name varname`
+        if [ -n "$varname" ] ; then
+            eval ${varname}=\"$value\"
+        else
+            eval `option_get_attr $name funcname` \"$value\"
+        fi
         shift
     done
 }

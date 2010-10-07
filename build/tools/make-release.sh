@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright (C) 2009 The Android Open Source Project
+# Copyright (C) 2010 The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,308 +14,126 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# This script is used to build complete Android NDK release packages
-# from the git repository and a set of prebuilt cross-toolchain tarballs
+# This script is used to build an NDK release package *from* scratch !!
+# While handy, this is *not* the best way to generate NDK release packages.
+# See docs/DEVELOPMENT.TXT for details.
 #
 
-# location of the root ndk directory. we assume this script is under build/tools
-NDK_ROOT_DIR=`dirname $0`/../..
-NDK_ROOT_DIR=`cd $NDK_ROOT_DIR && pwd`
+. `dirname $0`/prebuilt-common.sh
 
-. $NDK_ROOT_DIR/build/core/ndk-common.sh
 force_32bit_binaries
 
-# the default release name (use today's date)
+# The default release name (use today's date)
 RELEASE=`date +%Y%m%d`
+register_var_option "--release=<name>" RELEASE "Specify release name"
 
-# the package prefix
+# The package prefix
 PREFIX=android-ndk
-
-# the prefix of prebuilt toolchain tarballs
-PREBUILT_PREFIX=
-
-# the list of supported host development systems
-PREBUILT_SYSTEMS="linux-x86 darwin-x86 windows"
-
-# a prebuilt NDK archive (.zip file). empty means don't use any
-PREBUILT_NDK=
-
-# default location for generated packages
-OUT_DIR=/tmp/ndk-release
-
-# set to 'yes' if we should use 'git ls-files' to list the files to
-# be copied into the archive.
-USE_GIT_FILES=yes
-
-# set of platforms to package (all by default)
-PLATFORMS=
+register_var_option "--prefix=<name>" PREFIX "Specify package prefix"
 
 # Find the location of the platforms root directory
-DEVELOPMENT_ROOT=`dirname $NDK_ROOT_DIR`/development/ndk
+DEVELOPMENT_ROOT=`dirname $ANDROID_NDK_ROOT`/development/ndk
+register_var_option "--development=<path>" DEVELOPMENT_ROOT "Path to development/ndk directory"
 
-OPTION_HELP=no
-OPTION_OUT_DIR=
+# Force the build
+FORCE=no
+register_var_option "--force" FORCE "Force build (do not ask initial question)"
 
-for opt do
-  optarg=`expr "x$opt" : 'x[^=]*=\(.*\)'`
-  case "$opt" in
-  --help|-h|-\?) OPTION_HELP=yes
-  ;;
-  --verbose)
-    if [ "$VERBOSE" = "yes" ] ; then
-        VERBOSE2=yes
-    else
-        VERBOSE=yes
-    fi
-  ;;
-  --release=*) RELEASE=$optarg
-  ;;
-  --prefix=*) PREFIX=$optarg
-  ;;
-  --prebuilt-ndk=*) PREBUILT_NDK=$optarg
-  ;;
-  --prebuilt-prefix=*) PREBUILT_PREFIX=$optarg
-  ;;
-  --systems=*) PREBUILT_SYSTEMS=$optarg
-  ;;
-  --platforms=*) PLATFORMS=$optarg
-  ;;
-  --no-git) USE_GIT_FILES=no
-  ;;
-  --development-root=*) DEVELOPMENT_ROOT=$optarg
-  ;;
-  --out-dir=*) OPTION_OUT_DIR=$optarg
-  ;;
-  *)
-    echo "unknown option '$opt', use --help"
-    exit 1
-  esac
-done
-
-if [ $OPTION_HELP = yes ] ; then
-    echo "Usage: make-release.sh [options]"
-    echo ""
-    echo "Package a new set of release packages for the Android NDK."
-    echo ""
-    echo "You will need to have generated one or more prebuilt toolchain tarballs"
-    echo "with the build/tools/build-toolchain.sh script. These files should be"
-    echo "named like <prefix>-<system>.tar.bz2, where <prefix> is an arbitrary"
-    echo "prefix and <system> is one of: $PREBUILT_SYSTEMS"
-    echo ""
-    echo "Use the --prebuilt-prefix=<path>/<prefix> option to build release"
-    echo "packages from these tarballs."
-    echo ""
-    echo "Alternatively, you can use --prebuilt-ndk=<file> where <file> is the"
-    echo "path to a previous official NDK release package. It will be used to"
-    echo "extract the toolchain binaries and copy them to your new release."
-    echo "Only use this for experimental release packages!"
-    echo ""
-    echo "The generated release packages will be stored in a temporary directory"
-    echo "that will be printed at the end of the generation process."
-    echo ""
-    echo "Options: [defaults in brackets after descriptions]"
-    echo ""
-    echo "  --help                    Print this help message"
-    echo "  --prefix=PREFIX           Release package prefix name [$PREFIX]"
-    echo "  --release=NAME            Specify release name [$RELEASE]"
-    echo "  --prebuilt-prefix=PREFIX  Prefix of prebuilt binary tarballs [$PREBUILT_PREFIX]"
-    echo "  --prebuilt-ndk=FILE       Specify a previous NDK package [$PREBUILT_NDK]"
-    echo "  --systems=SYSTEMS         List of host system packages [$PREBUILT_SYSTEMS]"
-    echo "  --platforms=PLATFORMS     List of platforms to include [all]"
-    echo "  --no-git                  Don't use git to list input files, take all of them."
-    echo "  --development-root=PATH   Specify platforms/samples directory [$DEVELOPMENT_ROOT]"
-    echo "  --out-dir=PATH            Specify output package directory [$OUT_DIR]"
-    echo ""
-    exit 1
-fi
-
-# Check the prebuilt path
+# Determine the host platforms we can build for.
+# This is the current host platform, and eventually windows if
+# we are on Linux and have the mingw32 compiler installed and
+# in our path.
 #
-if [ -n "$PREBUILD_NDK" -a -n "$PREBUILT_PREFIX" ] ; then
-    echo "ERROR: You cannot use both --prebuilt-ndk and --prebuilt-prefix at the same time."
-    exit 1
-fi
+HOST_SYSTEMS="$HOST_TAG"
 
-if [ -z "$PREBUILT_PREFIX" -a -z "$PREBUILT_NDK" ] ; then
-    echo "ERROR: You must use one of --prebuilt-prefix or --prebuilt-ndk. See --help for details."
-    exit 1
-fi
-
-if [ -n "$OPTION_OUT_DIR" ] ; then
-    OUT_DIR="$OPTION_OUT_DIR"
-    if [ ! -d $OUT_DIR ] ; then
-        mkdir -p $OUT_DIR
-        if [ $? != 0 ] ; then
-            echo "ERROR: Could not create output directory: $OUT_DIR"
-            exit 1
-        fi
-    fi
-else
-    rm -rf $OUT_DIR && mkdir -p $OUT_DIR
-fi
-
-if [ -n "$PREBUILT_PREFIX" ] ; then
-    if [ -d "$PREBUILT_PREFIX" ] ; then
-        echo "ERROR: the --prebuilt-prefix argument must not be a direct directory path: $PREBUILT_PREFIX."
-        exit 1
-    fi
-    PREBUILT_DIR=`dirname $PREBUILT_PREFIX`
-    if [ ! -d "$PREBUILT_DIR" ] ; then
-        echo "ERROR: the --prebuilt-prefix argument does not point to a directory: $PREBUILT_DIR"
-        exit 1
-    fi
-    if [ -z "$PREBUILT_SYSTEMS" ] ; then
-        echo "ERROR: Your systems list is empty, use --system=LIST to specify a different one."
-        exit 1
-    fi
-    # Check the systems
-    #
-    for SYS in $PREBUILT_SYSTEMS; do
-        if [ ! -f $PREBUILT_PREFIX-$SYS.tar.bz2 ] ; then
-            echo "ERROR: It seems there is no prebuilt binary tarball for the '$SYS' system"
-            echo "Please check the content of $PREBUILT_DIR for a file named $PREBUILT_PREFIX-$SYS.tar.bz2."
-            exit 1
-        fi
-    done
-else
-    if [ ! -f "$PREBUILT_NDK" ] ; then
-        echo "ERROR: the --prebuilt-ndk argument is not a file: $PREBUILT_NDK"
-        exit 1
-    fi
-    # Check that the name ends with the proper host tag
-    HOST_NDK_SUFFIX="$HOST_TAG.zip"
-    echo "$PREBUILT_NDK" | grep -q "$HOST_NDK_SUFFIX"
-    if [ $? != 0 ] ; then
-        echo "ERROR: the name of the prebuilt NDK must end in $HOST_NDK_SUFFIX"
-        exit 1
-    fi
-    PREBUILT_SYSTEMS=$HOST_TAG
-fi
-
-# The list of git files to copy into the archives
-if [ "$USE_GIT_FILES" = "yes" ] ; then
-    echo "Collecting sources from git (use --no-git to copy all files instead)."
-    GIT_FILES=`cd $NDK_ROOT_DIR && git ls-files`
-else
-    echo "Collecting all sources files under tree."
-    # Cleanup everything that is likely to not be part of the final NDK
-    # i.e. generated files...
-    rm -rf $NDK_ROOT_DIR/samples/*/obj
-    rm -rf $NDK_ROOT_DIR/samples/*/libs
-    # Get all files under the NDK root
-    GIT_FILES=`cd $NDK_ROOT_DIR && find .`
-    GIT_FILES=`echo $GIT_FILES | sed -e "s!\./!!g"`
-fi
-
-# temporary directory used for packaging
-TMPDIR=/tmp/ndk-release
-
-RELEASE_PREFIX=$PREFIX-$RELEASE
-
-# ensure that the generated files are ug+rx
-umask 0022
-
-rm -rf $TMPDIR && mkdir -p $TMPDIR
-
-# first create the reference ndk directory from the git reference
-echo "Creating reference from source files"
-REFERENCE=$TMPDIR/reference &&
-mkdir -p $REFERENCE &&
-(cd $NDK_ROOT_DIR && tar cf - $GIT_FILES) | (cd $REFERENCE && tar xf -) &&
-rm -f $REFERENCE/Android.mk
-if [ $? != 0 ] ; then
-    echo "Could not create reference. Aborting."
-    exit 2
-fi
-
-# copy platform and sample files
-echo "Copying platform and sample files"
-FLAGS="--src-dir=$DEVELOPMENT_ROOT --dst-dir=$REFERENCE"
-if [ "$VERBOSE2" = "yes" ] ; then
-  FLAGS="$FLAGS --verbose"
-fi
-PLATFORM_FLAGS=
-if [ -n "$PLATFORMS" ] ; then
-    $NDK_ROOT_DIR/build/tools/build-platforms.sh $FLAGS --platform="$PLATFORMS"
-else
-    $NDK_ROOT_DIR/build/tools/build-platforms.sh $FLAGS $PLATFORM_FLAGS
-fi
-if [ $? != 0 ] ; then
-    echo "Could not copy platform files. Aborting."
-    exit 2
-fi
-
-# copy sources files
-if [ -d $DEVELOPMENT_ROOT/sources ] ; then
-    echo "Copying NDK sources files"
-    (cd $DEVELOPMENT_ROOT && tar cf - sources) | (cd $REFERENCE && tar xf -)
-    if [ $? != 0 ] ; then
-        echo "Could not copy sources. Aborting."
-        exit 2
+MINGW_GCC=
+if [ "$HOST_TAG" == "linux-x86" ] ; then
+    find_program MINGW_GCC i586-mingw32msvc-gcc
+    if [ -n "$MINGW_GCC" ] ; then
+        HOST_SYSTEMS="$HOST_SYSTEMS windows"
     fi
 fi
+register_var_option "--systems=<list>" HOST_SYSTEMS "List of host systems to build for"
 
-# create a release file named 'RELEASE.TXT' containing the release
-# name. This is used by the build script to detect whether you're
-# invoking the NDK from a release package or from the development
-# tree.
+TOOLCHAIN_SRCDIR=
+register_var_option "--toolchain-src-dir=<path>" TOOLCHAIN_SRCDIR "Use toolchain sources from <path>"
+
+extract_parameters "$@"
+
+# Print a warning and ask the user if he really wants to do that !
 #
-echo "$RELEASE" > $REFERENCE/RELEASE.TXT
+if [ "$FORCE" = "no" ] ; then
+    echo "IMPORTANT WARNING !!"
+    echo ""
+    echo "This script is used to generate an NDK release package from scratch"
+    echo "for the following host platforms: $HOST_SYSTEMS"
+    echo ""
+    echo "This process is EXTREMELY LONG and may take SEVERAL HOURS on a dual-core"
+    echo "machine. If you plan to do that often, please read docs/DEVELOPMENT.TXT"
+    echo "that provides instructions on how to do that more easily."
+    echo ""
+    echo "Are you sure you want to do that [y/N] "
+    read YESNO
+    case "$YESNO" in
+        y|Y|yes|YES)
+            ;;
+        *)
+            echo "Aborting !"
+            exit 0
+    esac
+fi
 
-# Remove un-needed files
-rm -f $REFERENCE/CleanSpec.mk
+PROGRAM_PARAMETERS=
+PROGRAM_DESCRIPTION=\
+"This script is used to generate an NDK release package from scratch.
 
-# now, for each system, create a package
-#
-for SYSTEM in $PREBUILT_SYSTEMS; do
-    echo "Preparing package for system $SYSTEM."
-    BIN_RELEASE=$RELEASE_PREFIX-$SYSTEM
-    PREBUILT=$PREBUILT_PREFIX-$SYSTEM
-    DSTDIR=$TMPDIR/$RELEASE_PREFIX
-    rm -rf $DSTDIR && mkdir -p $DSTDIR &&
-    cp -rp $REFERENCE/* $DSTDIR
-    if [ $? != 0 ] ; then
-        echo "Could not copy reference. Aborting."
-        exit 2
-    fi
+This process is EXTREMELY LONG and consists in the following steps:
 
-    if [ -n "$PREBUILT_NDK" ] ; then
-        echo "Unpacking prebuilt toolchain from $PREBUILT_NDK"
-        UNZIP_DIR=$TMPDIR/prev-ndk
-        rm -rf $UNZIP_DIR && mkdir -p $UNZIP_DIR
-        if [ $? != 0 ] ; then
-            echo "Could not create temporary directory: $UNZIP_DIR"
-            exit 1
-        fi
-        cd $UNZIP_DIR && unzip -q $PREBUILT_NDK 1>/dev/null 2>&1
-        if [ $? != 0 ] ; then
-            echo "ERROR: Could not unzip NDK package $PREBUILT_NDK"
-            exit 1
-        fi
-        cd android-ndk-* && cp -rP build/prebuilt $DSTDIR/build
-    else
-        echo "Unpacking $PREBUILT.tar.bz2"
-        (cd $DSTDIR && tar xjf $PREBUILT.tar.bz2) 2>/dev/null 1>&2
-        if [ $? != 0 ] ; then
-            echo "Could not unpack prebuilt for system $SYSTEM. Aborting."
-            exit 1
-        fi
-    fi
+  - downloading toolchain sources from the Internet
+  - patching them appropriately (if needed)
+  - rebuilding the toolchain binaries for the host system
+  - rebuilding the platforms and samples directories from ../development/ndk
+  - packaging everything into a host-specific archive
 
-    ARCHIVE=$BIN_RELEASE.zip
-    echo "Creating $ARCHIVE"
-    (cd $TMPDIR && zip -9qr $OUT_DIR/$ARCHIVE $RELEASE_PREFIX && rm -rf $DSTDIR) 2>/dev/null 1>&2
-    if [ $? != 0 ] ; then
-        echo "Could not create zip archive. Aborting."
-        exit 1
-    fi
+This can take several hours on a dual-core machine, even assuming a very
+nice Internet connection and plenty of RAM and disk space.
 
-#    chmod a+r $TMPDIR/$ARCHIVE
-done
+Note that on Linux, if you have the 'mingw32' package installed, the script
+will also automatically generate a windows release package. You can prevent
+that by using the --platforms option.
 
-echo "Cleaning up."
-rm -rf $TMPDIR/reference
-rm -rf $TMPDIR/prev-ndk
+IMPORTANT:
+        If you intend to package NDK releases often, please read the
+        file named docs/DEVELOPMENT.TXT which provides ways to do that
+        more quickly, by preparing toolchain binary tarballs that can be
+        reused for each package operation. This will save you hours of
+        your time compared to using this script!
+"
 
-echo "Done, please see packages in $OUT_DIR:"
-ls -l $OUT_DIR
+# Create directory where everything will be performed.
+RELEASE_DIR=/tmp/ndk-release
+rm -rf $RELEASE_DIR && mkdir -p $RELEASE_DIR
+
+# Step 1, If needed, download toolchain sources into a temporary directory
+if [ -n "$TOOLCHAIN_SRCDIR" ] ; then
+    dump "Using toolchain source directory: $TOOLCHAIN_SRCDIR"
+else
+    dump "Downloading toolchain sources..."
+    TOOLCHAIN_SRCDIR="$RELEASE_DIR/toolchain-src"
+    log "Using toolchain source directory: $TOOLCHAIN_SRCDIR"
+    $ANDROID_NDK_ROOT/build/tools/download-toolchain-sources.sh "$TOOLCHAIN_SRCDIR"
+fi
+
+# Step 2, build the host toolchain binaries and package them
+PREBUILT_DIR="$RELEASE_DIR/prebuilt-$RELEASE"
+dump "Building host toolchain binaries..."
+$ANDROID_NDK_ROOT/build/tools/rebuild-all-prebuilt.sh --toolchain-src-dir="$TOOLCHAIN_SRCDIR" --package-dir="$PREBUILT_DIR"
+if [ -n "$MINGW_GCC" ] ; then
+    dump "Building windows toolchain binaries..."
+    $ANDROID_NDK_ROOT/build/tools/rebuild-all-prebuilt.sh --toolchain-src-dir="$TOOLCHAIN_SRCDIR" --package-dir="$PREBUILT_DIR" --mingw
+fi
+
+# Step 3, package a release with everything
+dump "Generating NDK release packages"
+$ANDROID_NDK_ROOT/build/tools/package-release.sh --release=$RELEASE --prefix=$PREFIX --prebuilt-dir="$PREBUILT_DIR" --systems="'$SYSTEMS'" --development-root="$DEVELOPMENT_ROOT"
+
