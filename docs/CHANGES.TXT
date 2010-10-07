@@ -119,6 +119,11 @@ OTHER FIXES & CHANGES:
 - Toolchain files are now under $NDK/toolchains instead of
   $NDK/build/toolchains and $NDK/build/prebuilt.
 
+- Release and debug objects are stored under two different directories now
+  (i.e. obj/local/<abi>/objs and obj/local/<abi>/objs-debug). This prevents
+  rebuilding *everything* when you switch between these two modes, which can
+  be a real time-saver for complex projects.
+
 -------------------------------------------------------------------------------
 android-ndk-r4b
 
