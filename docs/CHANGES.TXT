@@ -9,6 +9,13 @@ IMPORTANT BUG FIXES:
   a shared library. This requires changes in both the C library and the
   build system. IMPORTANT: This feature is only available for API level 9.
 
+- Fix packaging error for system libraries of level 5 and 8. The libraries
+  bundled with the NDK and used at link time were not the correct version,
+  and this prevented linking against certain symbols appropriately.
+
+- ndk-gdb: do not start activity unless --start or --launch is used.
+  (the documentation was correct, the implementation wrong)
+
 IMPORTANT CHANGES:
 
 - Support for module exports: A module can now define a set of compiler or
@@ -61,13 +68,6 @@ IMPORTANT CHANGES:
   LOCAL_FILTER_ASM in docs/ANDROID-MK.TXT for more details. This can be useful
   for certain kinds of obfuscation tasks.
 
-- Easier native debugging support by using 'ndk-build NDK_DEBUG=1'. The main
-  idea is that if NDK_DEBUG is defined, its value overrides the value found
-  in the application's android:debuggable manifest attribute.
-
-  Valid values for NDK_DEBUG are '1', '0', 'true' or 'false' (anything else
-  will be ignored).
-
 - Switched to GCC 4.4.3. The binaries for GCC 4.4.0 are still available and
   can be used with NDK_TOOLCHAIN=arm-eabi-4.4.0 defined in your environment.
   The binaries and support files for arm-eabi-4.2.1 were removed.
@@ -105,6 +105,11 @@ OTHER FIXES & CHANGES:
   android.git.kernel.org through HTTP.
 
 - ndk-gdb: properly launch activities which name does not contain any dot.
+
+- ndk-gdb: add --delay=<timeout> option to specify a delay in seconds between
+  activity launch and gdbserver attach. This is needed because certain
+  activities can take a long time to properly launch. The default delay is
+  also increased to 2 secondes (instead of 1).
 
 - build/tools/build-gcc.sh: copy the sysroot to the build directory. This
   avoids the generated toolchain binaries from hard-coding host build paths.

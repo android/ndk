@@ -115,6 +115,8 @@ include $(BUILD_SYSTEM)/add-application.mk
 DUMP_VAR     := $(patsubst DUMP_%,%,$(filter DUMP_%,$(MAKECMDGOALS)))
 MAKECMDGOALS := $(filter-out DUMP_$(DUMP_VAR),$(MAKECMDGOALS))
 
+include $(BUILD_SYSTEM)/setup-imports.mk
+
 ifneq (,$(DUMP_VAR))
 
 # We only support a single DUMP_XXX goal at a time for now.

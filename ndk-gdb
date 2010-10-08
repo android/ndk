@@ -35,6 +35,11 @@ AWK_CMD=awk
 
 DEBUG_PORT=5039
 
+# Delay in seconds between launching the activity and attaching gdbserver on it.
+# This is needed because there is no way to know when the activity has really
+# started, and sometimes this takes a few seconds.
+DELAY=2
+
 PARAMETERS=
 OPTION_HELP=no
 OPTION_PROJECT=
@@ -44,6 +49,7 @@ OPTION_EXEC=
 OPTION_START=no
 OPTION_LAUNCH=
 OPTION_LAUNCH_LIST=no
+OPTION_DELAY=
 
 check_parameter ()
 {
@@ -178,6 +184,9 @@ while [ -n "$1" ]; do
         --start)
             OPTION_START=yes
             ;;
+        --delay=*)
+            OPTION_DELAY="$optarg"
+            ;;
         -*) # unknown options
             echo "ERROR: Unknown option '$opt', use --help for list of valid ones."
             exit 1
@@ -207,6 +216,7 @@ if [ "$OPTION_HELP" = "yes" ] ; then
     echo "    --start           Launch application instead of attaching to existing one"
     echo "    --launch=<name>   Same as --start, but specify activity name (see below)"
     echo "    --launch-list     List all launchable activity names from manifest"
+    echo "    --delay=<secs>    Delay in seconds between activity start and gdbserver attach."
     echo "    --project=<path>  Specify application project path"
     echo "    -p <path>         Same as --project=<path>"
     echo "    --port=<port>     Use tcp:localhost:<port> to communicate with gdbserver [$DEBUG_PORT]"
@@ -228,6 +238,10 @@ if [ -n "$OPTION_EXEC" ] ; then
         echo "ERROR: Invalid initialization file: $OPTION_EXEC"
         exit 1
     fi
+fi
+
+if [ -n "$OPTION_DELAY" ] ; then
+    DELAY="$OPTION_DELAY"
 fi
 
 # Check ADB tool version
@@ -459,7 +473,7 @@ if [ $? != 0 -o -z "$DATA_DIR" ] ; then
 fi
 
 # Launch the activity if needed
-if [ -n "$OPTION_START" ] ; then
+if [ "$OPTION_START" = "yes" ] ; then
     # If --launch is used, ignore --start, otherwise extract the first
     # launchable activity name from the manifest and use it as if --launch=<name>
     # was used instead.
@@ -490,7 +504,7 @@ if [ -n "$OPTION_LAUNCH" ] ; then
     fi
     # Sleep a bit, it sometimes take one second to start properly
     # Note that we use the 'sleep' command on the device here.
-    run $ADB_CMD shell sleep 1
+    run $ADB_CMD shell sleep $DELAY
 fi
 
 # Find the PID of the application being run
@@ -547,13 +561,18 @@ fi
 # Get the app_server binary from the device
 APP_PROCESS=$APP_OUT/app_process
 run $ADB_CMD pull /system/bin/app_process `native_path $APP_PROCESS`
-log "Pulled $APP_BINARY from device/emulator."
+log "Pulled app_process from device/emulator."
+
+run $ADB_CMD pull /system/lib/libc.so `native_path $APP_OUT/libc.so`
+log "Pulled libc.so from device/emulator."
 
 # Now launch the appropriate gdb client with the right init commands
 #
 GDBCLIENT=${TOOLCHAIN_PREFIX}gdb
 GDBSETUP=$APP_OUT/gdb.setup
 cp -f $GDBSETUP_INIT $GDBSETUP
+#uncomment the following to debug the remote connection only
+#echo "set debug remote 1" >> $GDBSETUP
 echo "target remote :$DEBUG_PORT" >> $GDBSETUP
 if [ -n "$OPTION_EXEC" ] ; then
     cat $OPTION_EXEC >> $GDBSETUP
