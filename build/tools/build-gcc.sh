@@ -30,12 +30,13 @@ Where <src-dir> is the location of toolchain sources, <ndk-dir> is
 the top-level NDK installation path and <toolchain> is the name of
 the toolchain to use (e.g. arm-eabi-4.4.0)."
 
-JOBS=$HOST_NUM_CPUS
+JOBS=$BUILD_NUM_CPUS
 RELEASE=`date +%Y%m%d`
 BUILD_OUT=`random_temp_directory`
 PLATFORM=android-3
 GDB_VERSION=6.6
 BINUTILS_VERSION=2.19
+LOG=
 
 OPTION_BUILD_OUT=
 OPTION_PLATFORM=
@@ -82,6 +83,8 @@ do_jobs ()
 }
 
 extract_parameters $@
+
+setup_default_log_file
 
 set_parameters ()
 {
@@ -134,10 +137,6 @@ prepare_host_flags
 
 parse_toolchain_name
 
-if [ "$MINGW" = "yes" ] ; then
-    enable_linux_mingw
-fi
-
 fix_option PLATFORM "$OPTION_PLATFORM" "platform"
 fix_option BUILD_OUT "$OPTION_BUILD_OUT" "build directory"
 fix_sysroot "$OPTION_SYSROOT"
@@ -156,7 +155,7 @@ if [ ! -d $SRC_DIR/binutils/binutils-$BINUTILS_VERSION ] ; then
     exit 1
 fi
 
-set_toolchain_install $NDK_DIR/build/prebuilt/$HOST_TAG/$TOOLCHAIN
+set_toolchain_ndk $NDK_DIR
 
 dump "Using C compiler: $CC"
 dump "Using C++ compiler: $CXX"
@@ -166,7 +165,7 @@ TOOLCHAIN_LICENSES=$ANDROID_NDK_ROOT/build/tools/toolchain-licenses
 
 # Copy the sysroot to the installation prefix. This prevents the generated
 # binaries from containing hard-coding host paths
-TOOLCHAIN_SYSROOT=$TOOLCHAIN_PATH/libc
+TOOLCHAIN_SYSROOT=$TOOLCHAIN_PATH/sysroot
 dump "Sysroot  : Copying: $SYSROOT --> $TOOLCHAIN_SYSROOT"
 mkdir -p $TOOLCHAIN_SYSROOT && (cd $SYSROOT && tar c *) | (cd $TOOLCHAIN_SYSROOT && tar x)
 if [ $? != 0 ] ; then

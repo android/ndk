@@ -65,20 +65,24 @@ OPTION_GIT_HTTP=no
 register_option "--git-http" do_git_http "Download sources with http."
 do_git_http() { OPTION_GIT_HTTP=yes; }
 
+register_mingw_option
+
 extract_parameters $@
 
-if [ "$OPTION_PACKAGE" = yes -a -z "$OPTION_NDK_DIR" ] ; then
-    NDK_DIR=/tmp/ndk-prebuilt-$$
+fix_option NDK_DIR "$OPTION_NDK_DIR" "target NDK directory"
+fix_option BUILD_DIR "$OPTION_BUILD_DIR" "build directory"
+fix_option GDB_VERSION "$OPTION_GDB_VERSION" "gdb version"
+
+if [ "$OPTION_PACKAGE" = "yes" -a -z "$OPTION_NDK_DIR" ] ; then
+    NDK_DIR=/tmp/ndk-toolchain/ndk-prebuilt-$$
 fi
+
+setup_default_log_file "$NDK_DIR/log.txt"
 
 if [ -n "$PARAMETERS" ]; then
     dump "ERROR: Too many parameters. See --help for proper usage."
     exit 1
 fi
-
-fix_option NDK_DIR "$OPTION_NDK_DIR" "target NDK directory"
-fix_option BUILD_DIR "$OPTION_BUILD_DIR" "build directory"
-fix_option GDB_VERSION "$OPTION_GDB_VERSION" "gdb version"
 
 mkdir -p $BUILD_DIR
 if [ $? != 0 ] ; then
@@ -104,6 +108,9 @@ fi
 FLAGS=""
 if [ $VERBOSE = yes ] ; then
     FLAGS="--verbose"
+fi
+if [ "$MINGW" = yes ] ; then
+    FLAGS="$FLAGS --mingw"
 fi
 
 if [ -z "$OPTION_TOOLCHAIN_SRC_DIR" ] ; then
@@ -155,6 +162,32 @@ if [ -z "$OPTION_TOOLCHAIN_SRC_DIR" ] ; then
 
 fi # ! $TOOLCHAIN_SRC_DIR
 
+# Needed to set HOST_TAG to windows if --mingw is used.
+prepare_host_flags
+
+RELEASE=`date +%Y%m%d`
+PREBUILT_ROOT=/tmp/ndk-prebuilt/prebuilt-$RELEASE
+mkdir -p $PREBUILT_ROOT
+
+# Package a directory in a .tar.bz2 archive
+#
+# $1: textual description
+# $2: final package name (without .tar.bz2 suffix)
+# $3: relative root path from $NDK_DIR
+#
+package_it ()
+{
+    if [ "$OPTION_PACKAGE" = "yes" ] ; then
+        dump "Packaging $1 ($2.tar.bz2) ..."
+        PREBUILT_PACKAGE=$PREBUILT_ROOT/"$2".tar.bz2
+        (cd $NDK_DIR && tar cjf $PREBUILT_PACKAGE "$3")
+        if [ $? != 0 ] ; then
+            dump "ERROR: Could not package $1!"
+            exit 1
+        fi
+    fi
+}
+
 # Build the toolchain from sources
 build_toolchain ()
 {
@@ -164,16 +197,22 @@ build_toolchain ()
         dump "ERROR: Could not build $1 toolchain!"
         exit 1
     fi
+    package_it "$1 toolchain" "$1-$HOST_TAG" "toolchains/$1/prebuilt/$HOST_TAG"
 }
 
 build_gdbserver ()
 {
+    if [ "$MINGW" = yes ] ; then
+        dump "Skipping gdbserver build (--mingw option being used)."
+        return
+    fi
     dump "Build $1 gdbserver..."
     $PROGDIR/build-gdbserver.sh $FLAGS --build-out=$BUILD_DIR/gdbserver-$1 $SRC_DIR/gdb/gdb-$GDB_VERSION/gdb/gdbserver $NDK_DIR $1
     if [ $? != 0 ] ; then
         dump "ERROR: Could not build $1 toolchain!"
         exit 1
     fi
+    package_it "$1 gdbserver" "$1-gdbserver" "toolchains/$1/prebuilt/gdbserver"
 }
 
 build_toolchain arm-eabi-4.4.0
@@ -195,17 +234,5 @@ fi
 #    dump "ERROR: Could not build host ccache binary!"
 #    exit 1
 #fi
-
-if [ "$OPTION_PACKAGE" = yes ] ; then
-    RELEASE=`date +%Y%m%d`
-    dump "Packaging prebuilt binaries..."
-    PREBUILT_PACKAGE=/tmp/android-ndk-prebuilt-$RELEASE-$HOST_TAG.tar.bz2
-    cd $NDK_DIR && tar cjf $PREBUILT_PACKAGE *
-    if [ $? != 0 ] ; then
-        dump "ERROR: Could not package prebuilt binaries!"
-        exit 1
-    fi
-    dump "See: $PREBUILT_PACKAGE"
-fi
 
 dump "Done!"

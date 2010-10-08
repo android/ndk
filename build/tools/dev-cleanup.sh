@@ -32,11 +32,9 @@ if [ ! -d $DIR/.git ] ; then
     exit 1
 fi
 
-rm -rf $DIR/build/platforms
 rm -rf $DIR/platforms
+rm -rf $DIR/toolchains/*/prebuilt
 rm -rf $DIR/samples
-rm -rf $DIR/apps
-rm -rf $DIR/out
 
 DIR=`dirname $ANDROID_NDK_ROOT`/development/ndk
 if [ ! -d $DIR ] ; then

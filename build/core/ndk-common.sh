@@ -63,20 +63,31 @@ fi
 VERBOSE=${VERBOSE-yes}
 VERBOSE2=${VERBOSE2-no}
 
+
+# If NDK_LOGFILE is defined in the environment, use this as the log file
 TMPLOG=
+if [ -n "$NDK_LOGFILE" ] ; then
+    mkdir -p `dirname "$NDK_LOGFILE"` && touch "$NDK_LOGFILE"
+    TMPLOG="$NDK_LOGFILE"
+fi
 
 # Setup a log file where all log() and log2() output will be sent
 #
 # $1: log file path  (optional)
 #
-setup_log_file ()
+setup_default_log_file ()
 {
-    if [ -n "$1" ] ; then
-        TMPLOG="$1"
-    else
-        TMPLOG=/tmp/ndk-log-$$.log
+    if [ -n "$NDK_LOGFILE" ] ; then
+        return
     fi
-    rm -f $TMPLOG && touch $TMPLOG
+    if [ -n "$1" ] ; then
+        NDK_LOGFILE="$1"
+    else
+        NDK_LOGFILE=/tmp/ndk-log-$$.txt
+    fi
+    export NDK_LOGFILE
+    TMPLOG="$NDK_LOGFILE"
+    rm -rf "$TMPLOG" && mkdir -p `dirname "$TMPLOG"` && touch "$TMPLOG"
     echo "To follow build in another terminal, please use: tail -F $TMPLOG"
 }
 
@@ -93,7 +104,7 @@ log ()
     if [ "$VERBOSE" = "yes" ] ; then
         echo "$@"
     else
-        if [ "$TMPLOG" ] ; then
+        if [ -n "$TMPLOG" ] ; then
             echo "$@" >> $TMPLOG
         fi
     fi
@@ -253,7 +264,7 @@ log2 "HOST_NUM_CPUS=$HOST_NUM_CPUS"
 
 # If BUILD_NUM_CPUS is not already defined in your environment,
 # define it as the double of HOST_NUM_CPUS. This is used to
-# run Make commends in parralles, as in 'make -j$BUILD_NUM_CPUS'
+# run Make commands in parralles, as in 'make -j$BUILD_NUM_CPUS'
 #
 if [ -z "$BUILD_NUM_CPUS" ] ; then
     BUILD_NUM_CPUS=`expr $HOST_NUM_CPUS \* 2`
@@ -514,7 +525,7 @@ download_file ()
     # Is this HTTP, HTTPS or FTP ?
     if pattern_match "^(http|https|ftp):.*" "$1"; then
         if [ -n "$CMD_WGET" ] ; then
-            run $CMD_WGET -O $2 $1 
+            run $CMD_WGET -O $2 $1
         elif [ -n "$CMD_CURL" ] ; then
             run $CMD_CURL -o $2 $1
         else
