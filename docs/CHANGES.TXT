@@ -124,6 +124,9 @@ OTHER FIXES & CHANGES:
   rebuilding *everything* when you switch between these two modes, which can
   be a real time-saver for complex projects.
 
+- Fixed a bug that duplicated the LOCAL_LDFLAGS in the final link command
+  when LOCAL_ALLOW_UNDEFINED_SYMBOLS was not set to 'true'
+
 -------------------------------------------------------------------------------
 android-ndk-r4b
 
