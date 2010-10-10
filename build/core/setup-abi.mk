@@ -26,7 +26,15 @@ TARGET_ARCH_for_x86         := x86
 TARGET_ARCH := $(TARGET_ARCH_for_$(TARGET_ARCH_ABI))
 
 TARGET_OUT  := $(NDK_APP_OUT)/$(_app)/$(TARGET_ARCH_ABI)
+
+# Separate the debug and release objects. This prevents rebuilding
+# everything when you switch between these two modes. For projects
+# with lots of C++ sources, this can be a considerable time saver.
+ifeq ($(NDK_APP_OPTIM),debug)
+TARGET_OBJS := $(TARGET_OUT)/objs-debug
+else
 TARGET_OBJS := $(TARGET_OUT)/objs
+endif
 
 TARGET_GDB_SETUP := $(TARGET_OUT)/setup.gdb
 
