@@ -115,6 +115,37 @@ check-required-vars = $(foreach __varname,$1,\
   )\
 )
 
+# -----------------------------------------------------------------------------
+# Function : host-path
+# Arguments: 1: file path
+# Returns  : file path, as understood by the host file system
+# Usage    : $(call host-path,<path>)
+# Rationale: This function is used to translate Cygwin paths into
+#            Windows-specific ones. On other platforms, it will just
+#            return its argument.
+# -----------------------------------------------------------------------------
+ifeq ($(HOST_OS),windows)
+# Note that we want mixed paths, which are supported by our toolchain binaries.
+host-path = $(if $(strip $1),$(shell cygpath -m $1),)
+else
+host-path = $1
+endif
+
+# -----------------------------------------------------------------------------
+# Function : host-c-includes
+# Arguments: 1: list of file paths (e.g. "foo bar")
+# Returns  : list of include compiler options (e.g. "-Ifoo -Ibar")
+# Usage    : $(call host-c-includes,<paths>)
+# Rationale: This function is used to translate Cygwin paths into
+#            Windows-specific ones. On other platforms, it will just
+#            return its argument.
+# -----------------------------------------------------------------------------
+ifeq ($(HOST_OS),windows)
+host-c-includes = $(patsubst %,-I%,$(call host-path,$1))
+else
+host-c-includes = $(1:%=-I%)
+endif
+
 # =============================================================================
 #
 # Modules database
@@ -834,6 +865,18 @@ else
 hide = @
 endif
 
+# cmd-convert-deps-to-cygwin
+#
+# Commands used to convert a GCC dependency file to a format that can be
+# parsed properly by a Cygwin GNU Make. This assumes that we run under Cygwin!
+#
+ifeq ($(HOST_OS),windows)
+cmd-convert-deps-to-cygwin = \
+    mv $1 $1.org && \
+    $(HOST_AWK) -f $(BUILD_AWK)/convert-deps-to-cygwin.awk $1.org > $1 && \
+    rm -f $1.org
+endif
+
 # This assumes that many variables have been pre-defined:
 # _SRC: source file
 # _OBJ: destination file
@@ -844,6 +887,7 @@ endif
 define ev-build-file
 $$(_OBJ): PRIVATE_SRC      := $$(_SRC)
 $$(_OBJ): PRIVATE_OBJ      := $$(_OBJ)
+$$(_OBJ): PRIVATE_DEPS     := $$(call host-path,$$(_OBJ).d)
 $$(_OBJ): PRIVATE_MODULE   := $$(LOCAL_MODULE)
 $$(_OBJ): PRIVATE_TEXT     := "$$(_TEXT)"
 $$(_OBJ): PRIVATE_CC       := $$(_CC)
@@ -851,7 +895,10 @@ $$(_OBJ): PRIVATE_CFLAGS   := $$(_FLAGS)
 $$(_OBJ): $$(_SRC) $$(LOCAL_MAKEFILE) $$(NDK_APP_APPLICATION_MK)
 	@mkdir -p $$(dir $$(PRIVATE_OBJ))
 	@echo "$$(PRIVATE_TEXT)  : $$(PRIVATE_MODULE) <= $$(notdir $$(PRIVATE_SRC))"
-	$(hide) $$(PRIVATE_CC) $$(PRIVATE_CFLAGS) $$(PRIVATE_SRC) -o $$(PRIVATE_OBJ)
+	$(hide) $$(PRIVATE_CC) -MMD -MP -MF $$(PRIVATE_DEPS) $$(PRIVATE_CFLAGS) $$(call host-path,$$(PRIVATE_SRC)) -o $$(call host-path,$$(PRIVATE_OBJ))
+ifeq ($(HOST_OS),windows)
+	$(hide) $$(call cmd-convert-deps-to-cygwin,$$(PRIVATE_DEPS))
+endif
 endef
 
 # This assumes the same things than ev-build-file, but will handle
@@ -885,7 +932,7 @@ else
     _OBJ_ASM_ORIGINAL := $$(_SRC)
   endif
 
-  $$(info SRC=$$(_SRC) OBJ=$$(_OBJ) OBJ_ORIGINAL=$$(_OBJ_ASM_ORIGINAL) OBJ_FILTERED=$$(_OBJ_ASM_FILTERED))
+  #$$(info SRC=$$(_SRC) OBJ=$$(_OBJ) OBJ_ORIGINAL=$$(_OBJ_ASM_ORIGINAL) OBJ_FILTERED=$$(_OBJ_ASM_FILTERED))
 
   # We need to transform the source into an assembly file, instead of
   # an object. The proper way to do that depends on the file extension.
@@ -945,12 +992,11 @@ _OBJ:=$$(LOCAL_OBJS_DIR)/$(2)
 
 _FLAGS := $$($$(my)CFLAGS) \
           $$(call get-src-file-target-cflags,$(1)) \
-          $$(LOCAL_C_INCLUDES:%=-I%) \
-          -I$$(LOCAL_PATH) \
+          $$(call host-c-includes,$$(LOCAL_C_INCLUDES) $$(LOCAL_PATH)) \
           $$(LOCAL_CFLAGS) \
           $$(NDK_APP_CFLAGS) \
-          $$($(my)C_INCLUDES:%=-I%) \
-          -MMD -MP -MF $$(_OBJ).d -c \
+          $$(call host-c-includes,$$($(my)C_INCLUDES)) \
+          -c \
 
 _TEXT := "Compile $$(call get-src-file-text,$1)"
 _CC   := $$(TARGET_CC)
@@ -991,16 +1037,15 @@ _SRC:=$$(LOCAL_PATH)/$(1)
 _OBJ:=$$(LOCAL_OBJS_DIR)/$(2)
 _FLAGS := $$($$(my)CXXFLAGS) \
           $$(call get-src-file-target-cflags,$(1)) \
-          $$(LOCAL_C_INCLUDES:%=-I%) \
-          -I$$(LOCAL_PATH) \
+          $$(call host-c-includes, $$(LOCAL_C_INCLUDES) $$(LOCAL_PATH)) \
           $$(LOCAL_CFLAGS) \
           $$(LOCAL_CPPFLAGS) \
           $$(LOCAL_CXXFLAGS) \
           $$(NDK_APP_CFLAGS) \
           $$(NDK_APP_CPPFLAGS) \
           $$(NDK_APP_CXXFLAGS) \
-          $$($(my)C_INCLUDES:%=-I%) \
-          -MMD -MP -MF $$(_OBJ).d -c \
+          $$(call host-c-includes,$$($(my)C_INCLUDES)) \
+          -c \
 
 _CC   := $$($$(my)CXX)
 _TEXT := "Compile++ $$(call get-src-file-text,$1)"
@@ -1165,3 +1210,4 @@ $(call module-class-set-prebuilt,PREBUILT_SHARED_LIBRARY)
 # <foo> -> <foo> (we assume it is already well-named)
 $(call module-class-register,PREBUILT_STATIC_LIBRARY,,)
 $(call module-class-set-prebuilt,PREBUILT_STATIC_LIBRARY)
+

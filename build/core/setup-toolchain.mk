@@ -87,6 +87,9 @@ TOOLCHAIN_PREBUILT_ROOT := $(TOOLCHAIN_ROOT)/prebuilt/$(HOST_TAG)
 TOOLCHAIN_PREFIX := $(call merge,-,$(call chop,$(call split,-,$(TOOLCHAIN_NAME))))-
 TOOLCHAIN_PREFIX := $(TOOLCHAIN_PREBUILT_ROOT)/bin/$(TOOLCHAIN_PREFIX)
 
+# Default build commands, can be overriden by the toolchain's setup script
+include $(BUILD_SYSTEM)/default-build-commands.mk
+
 # now call the toolchain-specific setup script
 include $(NDK_TOOLCHAIN.$(TARGET_TOOLCHAIN).setup)
 
@@ -125,8 +128,8 @@ $(NDK_APP_GDBSETUP): PRIVATE_SRC_DIRS := $(SYSROOT)/usr/include
 
 $(NDK_APP_GDBSETUP):
 	@ echo "Gdbsetup       : $(call pretty-dir,$(PRIVATE_DST))"
-	$(hide) echo "set solib-search-path $(PRIVATE_SOLIB_PATH)" > $(PRIVATE_DST)
-	$(hide) echo "directory $(call uniq,$(PRIVATE_SRC_DIRS))" >> $(PRIVATE_DST)
+	$(hide) echo "set solib-search-path $(call host-path,$(PRIVATE_SOLIB_PATH))" > $(PRIVATE_DST)
+	$(hide) echo "directory $(call host-path,$(call uniq,$(PRIVATE_SRC_DIRS)))" >> $(PRIVATE_DST)
 
 # This prevents parallel execution to clear gdb.setup after it has been written to
 $(NDK_APP_GDBSETUP): clean-installed-binaries
