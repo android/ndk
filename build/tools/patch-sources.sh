@@ -67,7 +67,7 @@ for PATCH in $PATCHES; do
     PATCHDIR=`dirname $PATCH`
     PATCHNAME=`basename $PATCH`
     log "Applying $PATCHNAME into $SRC_DIR/$PATCHDIR"
-    cd $SRC_DIR/$PATCHDIR && patch -p1 < $ANDROID_NDK_ROOT/$PATCHES_DIR/$PATCH
+    cd $SRC_DIR/$PATCHDIR && patch -p1 < $PATCHES_DIR/$PATCH
     if [ $? != 0 ] ; then
         dump "ERROR: Patch failure !! Please check your patches directory!"
         exit 1

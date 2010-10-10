@@ -30,57 +30,27 @@ Where <src-dir> is the location of toolchain sources, <ndk-dir> is
 the top-level NDK installation path and <toolchain> is the name of
 the toolchain to use (e.g. arm-eabi-4.4.0)."
 
-JOBS=$BUILD_NUM_CPUS
 RELEASE=`date +%Y%m%d`
 BUILD_OUT=`random_temp_directory`
-PLATFORM=android-3
-GDB_VERSION=6.6
-BINUTILS_VERSION=2.19
-LOG=
-
 OPTION_BUILD_OUT=
-OPTION_PLATFORM=
-OPTION_SYSROOT=
-OPTION_BINUTILS_VERSION=
+register_var_option "--build-out=<path>" OPTION_BUILD_OUT "Set temporary build directory" "/tmp/<random>"
 
-register_option "--build-out=<path>" do_build_out "Set temporary build directory" "/tmp/<random>"
-register_option "--sysroot=<path>"   do_sysroot   "Specify sysroot directory directly"
-register_option "--platform=<name>"  do_platform  "Specify platform name" "$PLATFORM"
-register_option "--gdb-version=<version>"  do_gdb_version  "Specify gdb version" "$GDB_VERSION"
-register_option "--binutils-version=<version>" do_binutils_version "Specify binutils version" "$BINUTILS_VERSION"
-register_option "-j<number>" do_jobs "Use <number> parallel build jobs" "$JOBS"
+PLATFORM=android-3
+register_var_option "--platform=<name>"  PLATFORM "Specify platform name"
+
+OPTION_SYSROOT=
+register_var_option "--sysroot=<path>"   OPTION_SYSROOT   "Specify sysroot directory directly"
+
+GDB_VERSION=6.6
+register_var_option "--gdb-version=<version>"  GDB_VERSION "Specify gdb version"
+
+BINUTILS_VERSION=2.19
+register_var_option "--binutils-version=<version>" BINUTILS_VERSION "Specify binutils version"
+
+JOBS=$BUILD_NUM_CPUS
+register_var_option "-j<number>" JOBS "Use <number> parallel build jobs"
 
 register_mingw_option
-
-do_build_out ()
-{
-    OPTION_BUILD_OUT=$1
-}
-
-do_platform ()
-{
-    OPTION_PLATFORM=$1
-}
-
-do_sysroot ()
-{
-    OPTION_SYSROOT=$1
-}
-
-do_gdb_version ()
-{
-    OPTION_GDB_VERSION=$1
-}
-
-do_binutils_version ()
-{
-    OPTION_BINUTILS_VERSION=$1
-}
-
-do_jobs ()
-{
-    JOBS=$1
-}
 
 extract_parameters $@
 
@@ -137,11 +107,9 @@ prepare_host_flags
 
 parse_toolchain_name
 
-fix_option PLATFORM "$OPTION_PLATFORM" "platform"
 fix_option BUILD_OUT "$OPTION_BUILD_OUT" "build directory"
 fix_sysroot "$OPTION_SYSROOT"
 
-fix_option GDB_VERSION "$OPTION_GDB_VERSION" "gdb version"
 if [ ! -d $SRC_DIR/gdb/gdb-$GDB_VERSION ] ; then
     echo "ERROR: Missing gdb sources: $SRC_DIR/gdb/gdb-$GDB_VERSION"
     echo "       Use --gdb-version=<version> to specify alternative."
