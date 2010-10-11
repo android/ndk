@@ -88,7 +88,7 @@ endif
 # of a binary that uses undefined symbols.
 #
 ifneq ($(LOCAL_ALLOW_UNDEFINED_SYMBOLS),true)
-  LOCAL_LDFLAGS += $(LOCAL_LDFLAGS) $($(my)NO_UNDEFINED_LDFLAGS)
+  LOCAL_LDFLAGS += $($(my)NO_UNDEFINED_LDFLAGS)
 endif
 
 # If LOCAL_DISABLE_NO_EXECUTE is not true, we disable generated code from running from
