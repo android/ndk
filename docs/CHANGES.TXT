@@ -18,6 +18,36 @@ IMPORTANT BUG FIXES:
 
 IMPORTANT CHANGES:
 
+- Support for API level 9, which adds the following native features to the
+  platform:
+
+     - Native audio API through the OpenSL ES Standard.
+       New headers <SLES/OpenSLES.h> and <SLES/OpenSLES_Android.h> are
+       provided to allow applications targetting this API level to perform
+       low-latency audio input, output and processing directly from native
+       code.
+
+     - Native activity support, i.e. the ability to build applications that
+       are coded entirely in C or C++. More precisely, such applications still
+       run inside a VM, and will have to access most of the platform's features
+       using JNI (i.e. native code calling VM methods). However, this also
+       comes with a series of headers and libraries to implement the following
+       directly from native code:
+
+          - activity lifecycle management.
+          - user input handling (touch, keyboard, trackball, ...).
+          - window management (including accessing the pixel buffer).
+          - sensor listeners (e.g. accelerometer, compass, ...).
+          - hardware configuration management.
+          - easily reading assets out of an APK from native code.
+          - access to the storage manager, a new feature of Android X.X
+            that allows one to provide Opaque Binary Objects containing
+            large amounts of data outside of the APK.
+
+       See the documentation in docs/STABLE-APIS.TXT for more details.
+
+       Note that most of these new features are targetted at game developers.
+
 - Support for module exports: A module can now define a set of compiler or
   linker flags that will be automatically 'imported' by any other module that
   depends on it, through LOCAL_STATIC_LIBRARIES or LOCAL_SHARED_LIBRARIES.
