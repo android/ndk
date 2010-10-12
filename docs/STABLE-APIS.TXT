@@ -35,6 +35,11 @@ currently supported:
 Note that android-6 and android-7 are the same than android-5 for the NDK,
 i.e. they provide exactly the same native ABIs!
 
+IMPORTANT:
+    The headers corresponding to a given API level are now located
+    under $NDK/platforms/android-<level>/arch-arm/usr/include
+
+
 II. Android-3 Stable Native APIs:
 ---------------------------------
 
@@ -267,3 +272,79 @@ Briefly, typical usage should look like:
        stride, etc.., in native code.
 
     4/ Call AndroidBitmap_unlockPixels() to unlock the buffer.
+
+
+V. Android-9 Stable Native APIs:
+--------------------------------
+
+All the APIs listed below are available for developing native code that runs
+on Android > 2.2 system images and above.
+
+The OpenSL ES native audio Library:
+-----------------------------------
+
+The standard OpenSL ES headers <SLES/OpenSLES.h> and <SLES/OpenSLES_Platform.h>
+contain the declrations needed to perform audio input and output from the
+native side of Android.
+
+NOTE: Despite the fact that the current OpenSL ES specification uses
+      <OpenSLES.h> to include these headers, Khronos is currently modifying
+      the document to recommend <SLES/OpenSLES.h> instead, hence the later
+      approach was adopted for Android.
+
+This API level also provides Android-specific extensions, see the content
+of <SLES/OpenSLES_Android.h> and <SLES/OpenSLES_AndroidConfiguration.h> for
+details.
+
+The system library named "libOpenSLES.so" implements the public native audio
+functions. Use the following to link your modules against it:
+
+    LOCAL_LDLIBS += -lOpenSLES
+
+
+The Android native application APIs:
+------------------------------------
+
+Starting from API level 9, it is possible to entirely write an Android
+application with native code (i.e. without any Java). That does not mean
+that your code does not run inside a VM though, and most of the features
+of the platform will still need to be accessed through JNI.
+
+For more information about this topic, please read the dedicated
+document named docs/XXXXXXXXX.TXT (TODO: WRITE DOC).
+
+The following headers correspond to these new native APIs (see comments
+inside them for more details):
+
+  <android/native_activity.h>
+
+        Activity lifecycle management (and general entry point)
+
+  <android/looper.h>
+  <android/input.h>
+  <android/keycodes.h>
+  <android/sensor.h>
+
+        To Listen to input events and sensors directly from native code.
+
+  <android/rect.h>
+  <android/window.h>
+  <android/native_window.h>
+  <android/native_window_jni.h>
+
+        Window management, including the ability to lock/unlock the pixel
+        buffer to draw directly into it.
+
+  <android/configuration.h>
+  <android/asset_manager.h>
+  <android/storage_manager.h>
+  <android/obb.h>
+        Direct (read-only) access to assets embedded in your .apk. or
+        the Opaque Binary Blob (OBB) files, a new feature of Android X.X
+        that allows one to distribute large amount of application data
+        outside of the .apk (useful for game assets, for example).
+
+All the corresponding functions are provided by the "libandroid.so" library
+version that comes with API level 9. To use it, use the following:
+
+    LOCAL_LDLIBS += -landroid
