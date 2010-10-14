@@ -42,7 +42,9 @@ namespace std {
 using ::exit;
 using ::abort;
 using ::atexit;
+#if 0 /* MISSING FROM BIONIC */
 using ::on_exit;
+#endif
 
 using ::getenv;
 using ::putenv;
