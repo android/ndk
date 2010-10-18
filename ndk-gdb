@@ -573,8 +573,9 @@ GDBSETUP=$APP_OUT/gdb.setup
 cp -f $GDBSETUP_INIT $GDBSETUP
 #uncomment the following to debug the remote connection only
 #echo "set debug remote 1" >> $GDBSETUP
+echo "file `native_path $APP_PROCESS`" >> $GDBSETUP
 echo "target remote :$DEBUG_PORT" >> $GDBSETUP
 if [ -n "$OPTION_EXEC" ] ; then
     cat $OPTION_EXEC >> $GDBSETUP
 fi
-$GDBCLIENT -x $GDBSETUP -e $APP_PROCESS
+$GDBCLIENT -x `native_path $GDBSETUP`
