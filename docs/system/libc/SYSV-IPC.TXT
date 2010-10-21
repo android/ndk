@@ -13,7 +13,7 @@ For example, there is no way to automatically release a SysV semaphore
 allocated in the kernel when:
 
 - a buggy or malicious process exits
-- a non-buggy and non-malicious process crashes or is explicitely killed.
+- a non-buggy and non-malicious process crashes or is explicitly killed.
 
 Killing processes automatically to make room for new ones is an
 important part of Android's application lifecycle implementation. This means

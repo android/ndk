@@ -14,7 +14,7 @@ include the following information:
 
   - the CPU instruction set that the machine code should use
 
-  - the endianess of memory stores and loads at runtime
+  - the endianness of memory stores and loads at runtime
 
   - the format of executable binaries (shared libraries, programs, etc...)
     and what type of content is allowed/supported in them.
@@ -140,7 +140,7 @@ Each supported ABI is identified by a unique name.
       IN AN ERROR DURING THE BUILD PROCESS.
 
   Note that optional features like MMX/SSE2/SSE3/3DNow!/KVM must be
-  explictely tested at runtime by the generated machine code and
+  explicitly tested at runtime by the generated machine code and
   cannot be assumed to be everywhere.
 
 

@@ -16,7 +16,7 @@ this NDK, as well as the corresponding system image versions that support
 them.
 
 Before using the NDK, you will need to follow the steps described by
-docs/INSTALL.TXT which lists the NDK pre-requisites and the steps needed
+docs/INSTALL.TXT which lists the NDK prerequisites and the steps needed
 to set it up properly on your machine.
 
 We recommend developers to make themselves familiar with JNI concepts. Also

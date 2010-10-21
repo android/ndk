@@ -11,7 +11,7 @@ Core Philosophy:
   around kernel facilities and not try to be too smart to deal with edge cases.
 
   The name "Bionic" comes from the fact that it is part-BSD and part-Linux:
-  its source code consists in a mix of BSD C library pieces with custom
+  its source code consists of a mix of BSD C library pieces with custom
   Linux-specific bits used to deal with threads, processes, signals and a few
   others things.
 
@@ -57,7 +57,7 @@ Syscall stubs:
 time_t:
 
   time_t is 32-bit as defined by the kernel on 32-bit CPUs. A 64-bit version
-  would be preferrable to avoid the Y2038 bug, but the kernel maintainers
+  would be preferable to avoid the Y2038 bug, but the kernel maintainers
   consider that this is not needed at the moment.
 
   Instead, Bionic provides a <time64.h> header that defines a time64_t type,
@@ -326,7 +326,7 @@ Binary Compatibility:
 
   Failure to do so will usually result in the inability to run or link your
   program, or even runtime crashes. Several random web pages on the Internet
-  describe how you can succesfully write a "hello-world" program with the
+  describe how you can successfully write a "hello-world" program with the
   ARM GNU toolchain. These examples usually work by chance, if anything else,
   and you should not follow these instructions unless you want to waste a lot
   of your time in the process.

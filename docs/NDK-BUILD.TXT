@@ -14,7 +14,7 @@ directory, or any of its sub-directories. For example:
     $NDK/ndk-build
 
 Where $NDK points to your NDK installation path. You can also create an
-alias or add $NDK to your PATH to avoid typing it everytime.
+alias or add $NDK to your PATH to avoid typing it every time.
 
 
 II. Options:

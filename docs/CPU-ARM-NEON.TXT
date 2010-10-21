@@ -5,7 +5,7 @@ Introduction:
 -------------
 
 Android NDK r3 added support for the new 'armeabi-v7a' ARM-based ABI
-that allows native code to use two useful instruction set extenstions:
+that allows native code to use two useful instruction set extensions:
 
 - Thumb-2, which provides performance comparable to 32-bit ARM
   instructions with similar compactness to Thumb-1
@@ -23,7 +23,7 @@ instruction set extension known as "ARM Advanced SIMD", nick-named
 "NEON". It provides:
 
 - A set of interesting scalar/vector instructions and registers
-  (the latter are mapped to the same chip area than the FPU ones),
+  (the latter are mapped to the same chip area as the FPU ones),
   comparable to MMX/SSE/3DNow! in the x86 world.
 
 - VFPv3-D32 as a requirement (i.e. 32 hardware FPU 64-bit registers,
@@ -94,7 +94,7 @@ machine code can be run on the target device.
 To do that, use the 'cpufeatures' library that comes with this NDK. To lean
 more about it, see docs/CPU-FEATURES.TXT.
 
-You should explicitely check that android_getCpuFamily() returns
+You should explicitly check that android_getCpuFamily() returns
 ANDROID_CPU_FAMILY_ARM, and that android_getCpuFeatures() returns a value
 that has the ANDROID_CPU_ARM_FEATURE_NEON flag set, as  in:
 

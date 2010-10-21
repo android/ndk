@@ -63,7 +63,7 @@ IMPORTANT CHANGES:
        This is to prevent conflicts with other STLs like STLport or the
        GNU libstdc++ which provide their own version of the headers.
 
-     - The list of headers has growned to include the following:
+     - The list of headers has grown to include the following:
 
             cassert, cctype, cerrno, cfloat, climits, cmath,
             csetjmp, csignal, cstddef, cstdint, cstdio, cstdlib,
@@ -139,17 +139,17 @@ OTHER FIXES & CHANGES:
   rebuild-all-prebuilt.sh in order to download sources from
   android.git.kernel.org through HTTP.
 
-- ndk-gdb: properly launch activities which name does not contain any dot.
+- ndk-gdb: properly launch activities for which name does not contain any dot.
 
 - ndk-gdb: add --delay=<timeout> option to specify a delay in seconds between
   activity launch and gdbserver attach. This is needed because certain
   activities can take a long time to properly launch. The default delay is
-  also increased to 2 secondes (instead of 1).
+  also increased to 2 seconds (instead of 1).
 
 - build/tools/build-gcc.sh: copy the sysroot to the build directory. This
   avoids the generated toolchain binaries from hard-coding host build paths.
 
-- Platforms files are now under $NDK/platforms instead of $NDK/build/platforms
+- Platform files are now under $NDK/platforms instead of $NDK/build/platforms
 
 - Toolchain files are now under $NDK/toolchains instead of
   $NDK/build/toolchains and $NDK/build/prebuilt.
@@ -273,7 +273,7 @@ IMPORTANT CHANGES:
 - Added <android/bitmap.h>, a new stable API available from android-8
   (a.k.a. Android 2.2) to reliably access the pixel buffer of an
   android.graphics.Bitmap object from native code. See docs/STABLE-API.TXT
-  and the new samble program under 'samples/bitmap-plasma' for details
+  and the new sample program under 'samples/bitmap-plasma' for details
   and usage example.
 
 - Support the NX (No Execute) security feature, where special sections

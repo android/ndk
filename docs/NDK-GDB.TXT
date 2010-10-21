@@ -14,7 +14,7 @@ directory, or any of its sub-directories. For example:
     $NDK/ndk-gdb
 
 Where $NDK points to your NDK installation path. You can also create an
-alias or add $NDK to your PATH to avoid typing it everytime.
+alias or add $NDK to your PATH to avoid typing it every time.
 
 IMPORTANT: Native debugging can only work if *all* these conditions are met:
 
@@ -38,7 +38,7 @@ IMPORTANT: Native debugging can only work if *all* these conditions are met:
 
         IMPORTANT IMPORTANT IMPORTANT !!
 
-            If you are using the ADT Eclipse plugin to build your
+            If you are using the ADT Eclipse plug-in to build your
             application, make sure you're using version 0.9.7 or
             later.
 
@@ -73,7 +73,7 @@ and will dump an error if it doesn't find one. You can however use the --start
 or --launch=<name> option to automatically start your activity before the
 debugging session.
 
-When it succesfully attaches to your application process, ndk-gdb will give
+When it successfully attaches to your application process, ndk-gdb will give
 you a normal GDB prompt, after setting up the session to properly look for
 your source files and symbol/debug versions of your generated native
 libraries.
@@ -111,11 +111,11 @@ To see a list of options, type 'ndk-gdb --help'. Notable ones are:
   --start:
     By default, ndk-gdb will try to attach to an existing running instance
     of your application on the target device. You can use --start to
-    explicitely launch your application before the debugging session.
+    explicitly launch your application before the debugging session.
 
     NOTE: This launches the first launchable activity listed from your
           application manifest. Use --launch=<name> to start another one.
-          See --launch-list to dump the list of such activites.
+          See --launch-list to dump the list of such activities.
 
   --launch=<name>:
     This is similar to --start, except that it allows you to start a specific
