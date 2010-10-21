@@ -27,6 +27,12 @@
 
 NDK_ROOT_DIR="$ANDROID_NDK_ROOT"
 
+# the list of platforms / API levels we want to package in
+# this release. This can be overriden with the --platforms
+# option, see below.
+#
+PLATFORMS="3 4 5 8 9"
+
 # the default release name (use today's date)
 RELEASE=`date +%Y%m%d`
 register_var_option "--release=<name>" RELEASE "Specify release name"
@@ -53,7 +59,6 @@ TOOLCHAINS="arm-eabi-4.4.0 arm-linux-androideabi-4.4.3"
 register_var_option "--toolchains=<list>" TOOLCHAINS "Specify list of toolchains."
 
 # set of platforms to package (all by default)
-PLATFORMS="3 4 5 8"
 register_var_option "--platforms=<list>" PLATFORMS "Specify API levels"
 
 # the package prefix
