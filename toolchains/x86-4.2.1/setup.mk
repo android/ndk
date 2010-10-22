@@ -32,10 +32,17 @@ TARGET_CFLAGS := \
     -fstack-protector \
     -fno-short-enums
 
+#
+# Normally, this macro should be defined by the toolchain automatically.
+# Unfortunately, this is not the case, so add it manually. Note that
+# the arm-linux-androideabi toolchain does not have this problem.
+#
+TARGET_CFLAGS += -D__ANDROID__
+
 TARGET_LDFLAGS :=
 
 TARGET_C_INCLUDES := \
-    (SYSROOT)/usr/include
+    $(SYSROOT)/usr/include
 
 TARGET_x86_release_CFLAGS :=  -O2 \
                               -fomit-frame-pointer \
