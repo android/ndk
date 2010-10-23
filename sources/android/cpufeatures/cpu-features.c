@@ -25,10 +25,28 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
+
+/* ChangeLog for this library:
+ *
+ * NDK r5: Handle buggy kernels which report a CPU Architecture number of 7
+ *         for an ARMv6 CPU (see below).
+ *
+ *         Handle kernels that only report 'neon', and not 'vfpv3'
+ *         (VFPv3 is mandated by the ARM architecture is Neon is implemented)
+ *
+ *         Handle kernels that only report 'vfpv3d16', and not 'vfpv3'
+ *
+ *         Fix x86 compilation. Report ANDROID_CPU_FAMILY_X86 in
+ *         android_getCpuFamily().
+ *
+ * NDK r4: Initial release
+ */
 #include <sys/system_properties.h>
 #include <machine/cpu-features.h>
 #include <pthread.h>
+#ifdef __ARM_ARCH__
 #include "cpu-features.h"
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -181,9 +199,13 @@ android_cpuInit(void)
             return;
         }
 
-        /* Extract architecture from the "CPU Architecture" field,
-         * Which can be something like 5JTE, 7, or something else.
-         * We cannot rely on the 'Processor' field here.
+        /* Extract architecture from the "CPU Architecture" field.
+         * The list is well-known, unlike the the output of
+         * the 'Processor' field which can vary greatly.
+         *
+         * See the definition of the 'proc_arch' array in
+         * $KERNEL/arch/arm/kernel/setup.c and the 'c_show' function in
+         * same file.
          */
         {
             char* cpuArch = extract_cpuinfo_field(cpuinfo, cpuinfo_len, "CPU architecture");
@@ -191,6 +213,7 @@ android_cpuInit(void)
             if (cpuArch != NULL) {
                 char*  end;
                 long   archNumber;
+                int    hasARMv7 = 0;
 
                 D("found cpuArch = '%s'\n", cpuArch);
 
@@ -202,8 +225,36 @@ android_cpuInit(void)
                  * indicate that Thumb-2 is supported.
                  */
                 if (end > cpuArch && archNumber >= 7) {
+                    hasARMv7 = 1;
+                }
+
+                /* Unfortunately, it seems that certain ARMv6-based CPUs
+                 * report an incorrect architecture number of 7!
+                 *
+                 * See http://code.google.com/p/android/issues/detail?id=10812
+                 *
+                 * We try to correct this by looking at the 'elf_format'
+                 * field reported by the 'Processor' field, which is of the
+                 * form of "(v7l)" for an ARMv7-based CPU, and "(v6l)" for
+                 * an ARMv6-one.
+                 */
+                if (hasARMv7) {
+                    char* cpuProc = extract_cpuinfo_field(cpuinfo, cpuinfo_len,
+                                                          "Processor");
+                    if (cpuProc != NULL) {
+                        D("found cpuProc = '%s'\n", cpuProc);
+                        if (has_list_item(cpuProc, "(v6l)")) {
+                            D("CPU processor and architecture mismatch!!\n");
+                            hasARMv7 = 0;
+                        }
+                        free(cpuProc);
+                    }
+                }
+
+                if (hasARMv7) {
                     g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_ARMv7;
                 }
+
                 free(cpuArch);
             }
         }
@@ -219,14 +270,27 @@ android_cpuInit(void)
                 if (has_list_item(cpuFeatures, "vfpv3"))
                     g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_VFPv3;
 
-                if (has_list_item(cpuFeatures, "neon"))
-                    g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_NEON;
+                else if (has_list_item(cpuFeatures, "vfpv3d16"))
+                    g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_VFPv3;
 
+                if (has_list_item(cpuFeatures, "neon")) {
+                    /* Note: Certain kernels only report neon but not vfpv3
+                     *       in their features list. However, ARM mandates
+                     *       that if Neon is implemented, so must be VFPv3
+                     *       so always set the flag.
+                     */
+                    g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_NEON |
+                                     ANDROID_CPU_ARM_FEATURE_VFPv3;
+                }
                 free(cpuFeatures);
             }
         }
     }
 #endif /* __ARM_ARCH__ */
+
+#ifdef __i386__
+    g_cpuFamily = ANDROID_CPU_FAMILY_X86;
+#endif
 }
 
 
