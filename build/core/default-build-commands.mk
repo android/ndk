@@ -69,7 +69,10 @@ define cmd-build-static-library
 $(TARGET_AR) $(TARGET_ARFLAGS) $(call host-path,$@) $(call host-path,$(PRIVATE_OBJECTS))
 endef
 
-cmd-strip = $(TOOLCHAIN_PREFIX)strip --strip-debug $(call host-path,$1)
+# The strip command is only used for shared libraries and executables.
+# It is thus safe to use --strip-unneeded, which is only dangerous
+# when applied to static libraries or object files.
+cmd-strip = $(TOOLCHAIN_PREFIX)strip --strip-unneeded $(call host-path,$1)
 
 TARGET_LIBGCC = $(shell $(TARGET_CC) -print-libgcc-file-name)
 TARGET_LDLIBS := -Wl,-rpath-link=$(call host-path,$(SYSROOT)/usr/lib)
@@ -81,7 +84,7 @@ TARGET_LDLIBS := -Wl,-rpath-link=$(call host-path,$(SYSROOT)/usr/lib)
 #
 
 TARGET_CC       = $(TOOLCHAIN_PREFIX)gcc
-TARGET_CFLAGS   = 
+TARGET_CFLAGS   =
 
 TARGET_CXX      = $(TOOLCHAIN_PREFIX)g++
 TARGET_CXXFLAGS = $(TARGET_CFLAGS) -fno-exceptions -fno-rtti
