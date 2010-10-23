@@ -537,6 +537,17 @@ IMPORTANT CHANGES:
 
 OTHER FIXES & CHANGES
 
+- Ensure that the __ANDROID__ macro is always defined when building code
+  with the NDK. Normally, the macro must be defined by the toolchain
+  automatically to indicate that you're targetting the Android runtime.
+
+  This works for the new arm-linux-androideabi toolchain, but there is
+  a bug in the way we built the arm-eabi one, so add the flag manually
+  through the NDK build script for it.
+
+  Note that the ANDROID macro, is now deprecated. While it is still defined
+  by the NDK, you should modify your code to test against __ANDROID__ instead!
+
 - Generate thumb binaries by default.
 
 - Add support for LOCAL_ARM_MODE in Android.mk.

@@ -33,6 +33,13 @@ TARGET_CFLAGS := \
     -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ \
     -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__ \
 
+#
+# Normally, this macro should be defined by the toolchain automatically.
+# Unfortunately, this is not the case, so add it manually. Note that
+# the arm-linux-androideabi toolchain does not have this problem.
+#
+TARGET_CFLAGS += -D__ANDROID__
+
 TARGET_LDFLAGS :=
 
 TARGET_C_INCLUDES := \
