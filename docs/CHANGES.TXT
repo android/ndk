@@ -130,6 +130,10 @@ IMPORTANT CHANGES:
 
   The binaries for the already-deprecated gcc-4.2.1 have been removed.
 
+- This NDK comes with a port of the STLport library, provided as an import
+  module. See sources/android/stlport/README for usage instructions.
+
+  Warning: C++ exceptions and RTTI are still not supported.
 
 - The 'cpufeatures' library has been updated to provide better architecture
   and features detection (including a work-around for buggy ARMv6 kernels
