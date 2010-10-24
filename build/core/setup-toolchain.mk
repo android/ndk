@@ -170,7 +170,7 @@ $(foreach __pass2_module,$(__ndk_modules),\
 # will build all modules that were listed from the top-level Android.mk
 #
 ifeq ($(strip $(NDK_APP_MODULES)),)
-    WANTED_MODULES := $(call modules-get-list)
+    WANTED_MODULES := $(call modules-get-top-list)
 else
     WANTED_MODULES := $(call module-get-all-dependencies,$(NDK_APP_MODULES))
 endif
