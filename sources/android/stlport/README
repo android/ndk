@@ -1,0 +1,77 @@
+STLport for Android
+
+WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+
+     This feature is currently in beta. In case of issue
+     please contact the android-ndk support forum or
+     file bugs at http://b.android.com
+
+WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+
+This directory contains a port of STLport for Android, which provides
+a simple STL implementation. Note that it currently does not support
+C++ exceptions and RTTI. Support for wchar_t and locales is probably buggy.
+
+You can either use it as a static or shared library.
+
+1/ The static library is recommended if you will only produce
+   one shared library for your project. All necessary STLport functions
+   will be added to it. This option should also generate smaller
+   overall binaries.
+
+2/ The shared library, is recommended if you want to produce
+   several shared libraries in your project, because it avoids copying the
+   same STLport functions to each one of them, and having different instances
+   of the same global variables (which can easily conflict or result in
+   undefined behaviour).
+
+To use the *static* library, do the following:
+
+  a. Add 'stlport_static' to your module's LOCAL_STATIC_LIBRARIES
+     variable.
+
+  b. At the end of your Android.mk, import the module with:
+
+        $(call import-module,android/stlport)
+
+
+To use the *shared* library, do the following:
+
+  a. Add 'stlport_shared' to your module's LOCAL_SHARED_LIBRARIES
+     variable.
+
+  b. At the end of your Android.mk, import them module with
+     the same line described above for the static case.
+
+Note that you will need, in your application, to explicitely load
+the 'stlport_shared' library before any library that depends on it.
+For example:
+
+    static {
+        System.loadLibrary("stlport_shared");
+        System.loadLibrary("foo");
+        System.loadLibrary("bar");
+    }
+
+If both libfoo.so and libbar.so depend on STLport.
+
+You can build the STLport unit test program by doing the following:
+
+  cd $NDK/sources/android/stlport/test
+  $NDK/ndk-build
+
+This generates a standalone executable under libs/armeabi/test_stlport.
+Note that it must be run in a writable directory (it needs to write then
+read a few files). Here's an example on how to run it:
+
+  adb push libs/armeabi/test_stlport /data/local/
+  adb shell chmod 755 /data/local/test_stlport
+  adb shell 'cd /data/local; test_stlport'
+
+Note that a few unit tests fail at the moment, they should hopefully
+fixed in a later release of this library.
+
+VERSION INFORMATION: This module is based on STLport version 5.x.y (TODO)
+
