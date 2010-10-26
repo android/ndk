@@ -16,6 +16,10 @@ IMPORTANT BUG FIXES:
 - ndk-gdb: do not start activity unless --start or --launch is used.
   (the documentation was correct, the implementation wrong)
 
+- The system headers for all API levels have been cleaned up and will
+  not provide the declarations of functions that are not available in
+  the corresponding system libraries.
+
 IMPORTANT CHANGES:
 
 - Support for API level 9, which adds the following native features to the
@@ -48,20 +52,24 @@ IMPORTANT CHANGES:
 
        Note that most of these new features are targetted at game developers.
 
-- Support for module exports: A module can now define a set of compiler or
-  linker flags that will be automatically 'imported' by any other module that
-  depends on it, through LOCAL_STATIC_LIBRARIES or LOCAL_SHARED_LIBRARIES.
+- Easier debuggable builds: just invoke ndk-build while defining the
+  NDK_DEBUG variable to 1, as in:
 
-  This is achieved with the help of new Android.mk variables named
-  LOCAL_EXPORT_CFLAGS, LOCAL_EXPORT_CPPFLAGS, LOCAL_EXPORT_C_INCLUDES and
-  LOCAL_EXPORT_LDLIBS. See docs/ANDROID-MK.TXT for mode documentation, and
-  a 'samples/module-exports' for a sample project that uses this.
+      $NDK/ndk-build NDK_DEBUG=1
+
+  This will have the same result that setting the android:debuggable="true"
+  in the <application> element of your AndroidManifest.xml file. See the
+  file docs/NDK-BUILD.TXT for more details.
+
+  Note that you will need to use the SDKr8 build tools to use this feature
+  properly!
 
 - Refresh of system C++ headers:
 
      - Headers have been moved out of the platform directory hierarchy.
        This is to prevent conflicts with other STLs like STLport or the
-       GNU libstdc++ which provide their own version of the headers.
+       GNU libstdc++ which provide their own version of the headers, but
+       does not affect your builds.
 
      - The list of headers has grown to include the following:
 
@@ -76,6 +84,15 @@ IMPORTANT CHANGES:
   PREBUILT_STATIC_LIBRARIES build scripts. See the new documentation
   file named docs/PREBUILTS.TXT for explanations and usage examples.
 
+- Support for module exports: A module can now define a set of compiler or
+  linker flags that will be automatically 'imported' by any other module that
+  depends on it, through LOCAL_STATIC_LIBRARIES or LOCAL_SHARED_LIBRARIES.
+
+  This is achieved with the help of new Android.mk variables named
+  LOCAL_EXPORT_CFLAGS, LOCAL_EXPORT_CPPFLAGS, LOCAL_EXPORT_C_INCLUDES and
+  LOCAL_EXPORT_LDLIBS. See docs/ANDROID-MK.TXT for mode documentation, and
+  a 'samples/module-exports' for a sample project that uses this.
+
 - Add support to specify a different file name for generated files, through
   the new LOCAL_MODULE_FILENAME variable. See docs/ANDROID-MK.TXT for an
   example.
@@ -87,8 +104,9 @@ IMPORTANT CHANGES:
   See docs/IMPORT-MODULE.TXT for details.
 
 - Add the content of LOCAL_C_INCLUDES to gdb.setup to make native debugging
-  easier. Also fixes an issue that prevented clean parallel builds of debuggable
-  applications to work correctly. This fixes an error message that said:
+  easier. Also fixes an issue that prevented clean parallel builds of
+  debuggable applications to work correctly. This fixes an error message that
+  said:
 
       /bin/sh: <project>/libs/armeabi/gdb.setup: No such file or directory
 
