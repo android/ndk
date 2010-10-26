@@ -53,7 +53,7 @@ use a GNU Make variable override as:
 
     ndk-build NDK_APPLICATION_MK=/path/to/your/Application.mk
 
-If you're using the legacy $NDK/apps/<name> build nethod, you can create
+If you're using the legacy $NDK/apps/<name> build method, you can create
 a symbolic link to your final Application.mk there. For example, imagine
 that you wrote:
 

@@ -2,7 +2,7 @@ Android module paths:
 =====================
 
 The Android NDK allows you, since release r5, to "import" other modules.
-without hard-coding their path in your Android.mk. To use this, do the
+without hard-coding their paths in your Android.mk. To use this, do the
 following:
 
   1. Place the Android.mk and related source files for your module
@@ -14,7 +14,7 @@ following:
      spaces. This path does not have to be under your application
      project tree.
 
-     <tag> is an arbitrary name, usually the same than the main
+     <tag> is an arbitrary name, usually the same as the main
      module defined in your Android.mk.
 
 

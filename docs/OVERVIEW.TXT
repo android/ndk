@@ -34,7 +34,7 @@ implemented in native code through the JNI. In a nutshell, this means that:
 
       libFileLoader.so
 
-  - Your application must explicitely load the library. For example, to load
+  - Your application must explicitly load the library. For example, to load
     it at application startup, simply add the following to its source code:
 
       static {
@@ -112,7 +112,7 @@ Android system image includes many native shared libraries, these should
 be considered an implementation detail that might change drastically between
 updates and releases of the platform.
 
-If an Android system library is not explicitely supported by the NDK
+If an Android system library is not explicitly supported by the NDK
 headers, then applications should not depend on it being available, or
 they risk breaking after the next over-the-air system update on various
 devices.
@@ -203,7 +203,7 @@ By default, the NDK will look for the following build script:
    $PROJECT/jni/Android.mk
 
 If you want to define Android.mk files in sub-directories, you should
-include them explicitely in your top-level Android.mk. There is even
+include them explicitly in your top-level Android.mk. There is even
 a helper function to do that, i.e. use:
 
    include $(call all-subdir-makefiles)
@@ -258,7 +258,7 @@ The preferred way to build machine code with the NDK is to use the
 'ndk-build' script introduced with Android NDK r4. You can also use
 a second, legacy, method that depends on creating a '$NDK/apps' subdirectory.
 
-In both cases, a succesful build will copy the final stripped binary modules
+In both cases, a successful build will copy the final stripped binary modules
 (i.e. shared libraries) required by your application to your application's
 project path (Note that unstripped versions are kept for debugging
 purposes, there is no need to copy unstripped binaries to a device).
@@ -290,7 +290,7 @@ purposes, there is no need to copy unstripped binaries to a device).
   On success, this will copy the generated binary modules (i.e. shared
   libraries) to the appropriate location in your project tree. You can later
   rebuild the full Android application package either through the usual
-  'ant' command, or the ADT Eclipse plugin.
+  'ant' command, or the ADT Eclipse plug-in.
 
   See docs/NDK-BUILD.TXT for a more complete description of what this script
   does and which options it can take.
@@ -309,7 +309,7 @@ purposes, there is no need to copy unstripped binaries to a device).
     1. Creating a sub-directory named $NDK/apps/<name>/ under
        your NDK installation directory (not your project path).
 
-       Where <name> is an arbitrary name to decribe your application
+       Where <name> is an arbitrary name to describe your application
        to the NDK build system (no spaces allowed).
 
     2. Write $NDK/apps/<name>/Application.mk, which then requires
@@ -331,7 +331,7 @@ IV. Rebuild your application package:
 
 After generating the binaries with the NDK, you need to rebuild your
 Android application package files (.apk) using the normal means, i.e.
-either using the 'ant' command or the ADT Eclipse plugin.
+either using the 'ant' command or the ADT Eclipse plug-in.
 
 See the Android SDK documentation for more details. The new .apk will
 embed your shared libraries, and they will be extracted automatically

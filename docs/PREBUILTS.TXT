@@ -53,7 +53,7 @@ II. Referencing the prebuilt library in other modules:
 ------------------------------------------------------
 
 Simply list your prebuilt module's name in the LOCAL_STATIC_LIBRARIES or
-LOCAL_SHARED_LIBRARIES declaration int he Android.mk of any module that
+LOCAL_SHARED_LIBRARIES declaration in the Android.mk of any module that
 depends on them.
 
 For example, a naive example of a module using libfoo.so would be:

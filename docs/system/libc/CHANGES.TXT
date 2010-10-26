@@ -138,7 +138,7 @@ Differences between Android 2.0 and 1.6:
     Only perform IPv6 lookup for AF_UNSPEC if we have IPv6 connectivity.
     This saves one DNS query per lookup on non-IPv6 systems.
 
-- mktime(): Fix an infinite loop problen that appeared when switching to
+- mktime(): Fix an infinite loop problem that appeared when switching to
   GCC 4.4.0.
 
 - strftime(): fix incorrect handling of dates > 2038 due to 64-bit issue

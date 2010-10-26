@@ -213,7 +213,7 @@ PREBUILT_SHARED_LIBRARY
     information).
 
 PREBUILT_STATIC_LIBRARY
-    This is the same than PREBUILT_SHARED_LIBRARY, but for a static library
+    This is the same as PREBUILT_SHARED_LIBRARY, but for a static library
     file instead. See docs/PREBUILTS.TXT for more.
 
 TARGET_ARCH
@@ -290,7 +290,7 @@ my-dir
     LOCAL_PATH to $PATH/foo instead of $PATH, due to the include that
     was performed before that.
 
-    For this reason, it's better to put additionnal includes after
+    For this reason, it's better to put additional includes after
     everything else in an Android.mk, as in:
 
         LOCAL_PATH := $(call my-dir)
@@ -370,7 +370,7 @@ Module-description variables:
 The following variables are used to describe your module to the build
 system. You should define some of them between an 'include $(CLEAR_VARS)'
 and an 'include $(BUILD_XXXXX)'. As written previously, $(CLEAR_VARS) is
-a script that will undefine/clear all of these variables, unless explicitely
+a script that will undefine/clear all of these variables, unless explicitly
 noted in their description.
 
 LOCAL_PATH
@@ -455,7 +455,7 @@ LOCAL_CFLAGS
     An optional set of compiler flags that will be passed when building
     C *and* C++ source files.
 
-    This can be useful to specify additionnal macro definitions or
+    This can be useful to specify additional macro definitions or
     compile options.
 
     IMPORTANT: Try not to change the optimization/debugging level in
