@@ -42,11 +42,11 @@
  * NDK r4: Initial release
  */
 #include <sys/system_properties.h>
-#include <machine/cpu-features.h>
-#include <pthread.h>
 #ifdef __ARM_ARCH__
-#include "cpu-features.h"
+#include <machine/cpu-features.h>
 #endif
+#include <pthread.h>
+#include "cpu-features.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
