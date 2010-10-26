@@ -150,9 +150,11 @@ HOST_TAG := $(HOST_OS)-$(HOST_ARCH)
 
 # The directory separator used on this host
 HOST_DIRSEP := :
-ifeq ($(HOST_OS),windows)
-  HOST_DIRSEP := ;
-endif
+
+# For now always use ":" since Windows is Cygwin
+#ifeq ($(HOST_OS),windows)
+#  HOST_DIRSEP := ;
+#endif
 
 # If we are on Windows, we need to check that we are not running
 # Cygwin 1.5, which is deprecated and won't run our toolchain

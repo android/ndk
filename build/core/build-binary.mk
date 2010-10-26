@@ -156,7 +156,7 @@ neon_sources := $(strip $(neon_sources))
 ifdef neon_sources
   ifneq ($(TARGET_ARCH_ABI),armeabi-v7a)
     $(call __ndk_info,NEON support is only possible for armeabi-v7a ABI)
-    $(call __ndk_info,Please add checks afainst TARGET_ARCH_ABI in $(LOCAL_MAKEFILE))
+    $(call __ndk_info,Please add checks against TARGET_ARCH_ABI in $(LOCAL_MAKEFILE))
     $(call __ndk_error,Aborting)
   endif
   $(call tag-src-files,$(neon_sources:%.arm=%),neon)
