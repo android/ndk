@@ -1,11 +1,3 @@
-LOCAL_PATH := $(call my-dir)
-
-# If targetting ARM CPUs, build the ARMv7 detection
-# function. It will only be called by the main
-# library if we detect ARMv7 through a system property.
-#
-include $(CLEAR_VARS)
-LOCAL_MODULE := cpufeatures
-LOCAL_SRC_FILES := cpu-features.c
-LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)
-include $(BUILD_STATIC_LIBRARY)
+# NOTE: The library has moved to $NDK/sources/android/cpufeatures,
+#       this file is only provided to redirect to the real one.
+include $(dir $(call my-dir))/android/cpufeatures/Android.mk

@@ -122,6 +122,19 @@ IMPORTANT CHANGES:
 
   IMPORTANT: The new toolchain is called arm-linux-androideabi-4.4.3
 
+- The 'cpufeatures' library has been updated to provide better architecture
+  and features detection (including a work-around for buggy ARMv6 kernels
+  which report an architecture version of 7).
+
+  The library is now also available as an import module, to simplify its
+  usage in your build scripts. See the updated docs/CPU-FEATURES.TXT file
+  for details.
+
+  NOTE: Please update your Android.mk to use module imports as soon as
+        possible. The location $NDK/source/cpufeatures/ is deprecated
+        and will be removed in a future NDK release. Avoid referencing
+        it directly in your build scritps!
+
 OTHER FIXES & CHANGES:
 
 - Reduced the size of generated binaries by using --strip-unneeded
