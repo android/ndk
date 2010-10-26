@@ -25,11 +25,9 @@
 
 TARGET_CFLAGS := \
     -fpic \
-    -mthumb-interwork \
     -ffunction-sections \
     -funwind-tables \
     -fstack-protector \
-    -fno-short-enums \
     -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ \
     -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__ \
 

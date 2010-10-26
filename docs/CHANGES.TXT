@@ -116,11 +116,20 @@ IMPORTANT CHANGES:
   LOCAL_FILTER_ASM in docs/ANDROID-MK.TXT for more details. This can be useful
   for certain kinds of obfuscation tasks.
 
-- Switched to GCC 4.4.3. The binaries for GCC 4.4.0 are still available and
-  can be used with NDK_TOOLCHAIN=arm-eabi-4.4.0 defined in your environment.
-  The binaries and support files for arm-eabi-4.2.1 were removed.
+- This NDK comes with a new toolchain (named arm-linux-androideabi-4.4.3)
+  which provides many benefits, including:
 
-  IMPORTANT: The new toolchain is called arm-linux-androideabi-4.4.3
+     - Better code generation than the previous one (gcc-4.4.0)
+     - On Windows, the binaries do not depend on Cygwin anymore.
+     - The ability to use it as a stand-alone cross-compiler
+       (see docs/STANDALONE-TOOLCHAIN.TXT for all details).
+
+  The binaries for gcc-4.4.0 are still provided for backwards compatibility.
+  Use NDK_TOOLCHAIN=arm-eabi-4.4.0 in your environment to force its usage.
+  Note that it is now deprecated and will be removed in a future NDK release.
+
+  The binaries for the already-deprecated gcc-4.2.1 have been removed.
+
 
 - The 'cpufeatures' library has been updated to provide better architecture
   and features detection (including a work-around for buggy ARMv6 kernels
