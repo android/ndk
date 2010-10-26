@@ -8,20 +8,21 @@ it supports.
 Usage:
 ------
 
-The library is available from sources/cpufeatures. It provides an Android.mk
-build script that can be used to build it as a static library.
+The library is available as an import module. To use it, you must:
 
 To use it, you must:
 
-  * include '$(NDK_ROOT)/sources/cpufeatures/Android.mk' at the start or end of your
-    Android.mk file.
+  * List 'cpufeatures' in your list of static library dependencies, as in:
 
-  * add '$(NDK_ROOT)/sources/cpufeatures' to your LOCAL_C_INCLUDES definition.
+        LOCAL_STATIC_LIBRARIES := cpufeatures
 
-  * add 'cpufeatures' to your LOCAL_STATIC_LIBRARIES definition when building
-    your final shared library.
+  * At the end of your Android.mk, import the 'android/cpufeatures' module,
+    as in:
 
-  your source code can then #include <cpu-features.h> to compile against it.
+        $(call import-module,android/cpufeatures)
+
+  * In your source code, include the header named <cpu-features.h>
+
 
 Here is a simple example:
 
@@ -30,12 +31,11 @@ Here is a simple example:
 
     include $(CLEAR_VARS)
     LOCAL_MODULE := <your-module-name>
-    LOCAL_C_INCLUDES += $(NDK_ROOT)/sources/cpufeatures
     LOCAL_SRC_FILES := <your-source-files>
-    LOCAL_STATIC_LIBRARIES += cpufeatures
+    LOCAL_STATIC_LIBRARIES := cpufeatures
     include $(BUILD_SHARED_LIBRARY)
 
-    include $(NDK_ROOT)/sources/cpufeature/Android.mk
+    $(call import-module,android/cpufeatures)
 
 
 Features:
@@ -59,7 +59,7 @@ Currently, only the following flags are defined, for the ARM CPU Family:
 
    ANDROID_CPU_ARM_FEATURE_ARMv7
       Indicates that the device's CPU supports the ARMv7-A instruction
-      set as supported by the "armeabi-v7a" abi (see CPU-ARCH-ABIS.TXT). 
+      set as supported by the "armeabi-v7a" abi (see CPU-ARCH-ABIS.TXT).
       This corresponds to Thumb-2 and VFPv3-D16 instructions.
 
    ANDROID_CPU_ARM_FEATURE_VFPv3
@@ -84,3 +84,10 @@ Important Note:
 The cpufeatures library will be updated to support more CPU families and
 optional features in the future. It is designed to work as-is on all
 official Android platform versions.
+
+
+Change History:
+---------------
+
+Please see the comments in $NDK/sources/android/cpufeatures/cpu-features.c
+for the complete change history for this library.
