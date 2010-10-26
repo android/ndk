@@ -2,5 +2,5 @@
 # build the Android platform. This is not the normal usage of the NDK.
 
 ifneq ($(TARGET_SIMULATOR),true)
-include ndk/sources/cpufeatures/Android.mk
+include ndk/sources/android/cpufeatures/Android.mk
 endif

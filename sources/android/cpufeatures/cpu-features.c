@@ -46,9 +46,7 @@
 #include <machine/cpu-features.h>
 #endif
 #include <pthread.h>
-#ifdef __ARM_ARCH__
 #include "cpu-features.h"
-#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
