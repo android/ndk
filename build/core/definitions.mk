@@ -253,7 +253,9 @@ modules-clear = \
             $(eval __ndk_modules.$(__mod).$(__field) := $(empty))\
         )\
     )\
-    $(eval __ndk_modules := $(empty_set))
+    $(eval __ndk_modules := $(empty_set)) \
+    $(eval __ndk_top_modules := $(empty)) \
+    $(eval __ndk_import_depth := $(empty))
 
 # -----------------------------------------------------------------------------
 # Function : modules-get-list
@@ -262,6 +264,14 @@ modules-clear = \
 # Usage    : $(call modules-get-list)
 # -----------------------------------------------------------------------------
 modules-get-list = $(__ndk_modules)
+
+# -----------------------------------------------------------------------------
+# Function : modules-get-top-list
+# Arguments: None
+# Returns  : The list of all recorded non-imported modules
+# Usage    : $(call modules-get-top-list)
+# -----------------------------------------------------------------------------
+modules-get-top-list = $(__ndk_top_modules)
 
 # -----------------------------------------------------------------------------
 # Function : module-add
@@ -279,6 +289,9 @@ module-add = \
     $(call __ndk_error,Aborting.)\
   )\
   $(eval __ndk_modules := $(call set_insert,$(__ndk_modules),$1))\
+  $(if $(strip $(__ndk_import_depth)),,\
+    $(eval __ndk_top_modules := $(call set_insert,$(__ndk_top_modules),$1))\
+  )\
   $(if $(call module-class-is-installable,$(LOCAL_MODULE_CLASS)),\
     $(eval LOCAL_INSTALLED := $(NDK_APP_DST_DIR)/$(notdir $(LOCAL_BUILT_MODULE)))\
   )\
@@ -1123,7 +1136,9 @@ import-module = \
     $(call ndk_log,Looking for imported module with tag '$1')\
     $(eval __imported_path := $(call import-find-module,$1))\
     $(if $(__imported_path),\
+      $(eval __ndk_import_depth += x) \
       $(eval include $(__imported_path)/Android.mk)\
+      $(eval __ndk_import_depth := $(call rest,$(__ndk_import_depth)))\
     ,\
       $(call __ndk_info,$(call local-makefile): Cannot find module with tag '$1' in import path)\
       $(call __ndk_info,Are you sure your NDK_MODULE_PATH variable is properly defined ?)\
