@@ -56,7 +56,7 @@ APP_MODULES
     NOTE: This variable's behaviour changed in NDK r4. Before that:
 
       - the variable was mandatory in your Application.mk
-      - all required modules had to be listed explicitely.
+      - all required modules had to be listed explicitly.
 
 APP_OPTIM
     This optional variable can be defined to either 'release' or
@@ -70,7 +70,7 @@ APP_OPTIM
     Note that if your application is debuggable (i.e. if your manifest
     sets the android:debuggable attribute to "true" in its <application>
     tag), the default will be 'debug' instead of 'release'. This can
-    be overriden by setting APP_OPTIM to 'release'.
+    be overridden by setting APP_OPTIM to 'release'.
 
     Note that it is possible to debug both 'release' and 'debug'
     binaries, but the 'release' builds tend to provide less information
@@ -119,7 +119,7 @@ APP_CPPFLAGS
     NOTE: In android-ndk-1.5_r1, this applied to both C and C++ sources.
           This has been corrected to match the full Android build system.
           You can now use APP_CFLAGS for flags that shall apply to C and
-          C++ souces.
+          C++ sources.
 
 APP_BUILD_SCRIPT
     By default, the NDK build system will look for a file named Android.mk
@@ -129,7 +129,7 @@ APP_BUILD_SCRIPT
 
     If you want to override this behaviour, you can define APP_BUILD_SCRIPT
     to point to an alternate build script. A non-absolute path will always
-    be interpreated as relative to the NDK's top-level directory.
+    be interpreted as relative to the NDK's top-level directory.
 
 APP_ABI
     By default, the NDK build system will generate machine code for the

@@ -282,7 +282,7 @@ ways to do that:
     (e.g. 20100915), and <system> corresponds to the host system where the
     NDK release is supposed to run.
 
-    The script 'package-release.sh' provides a few additionnal options:
+    The script 'package-release.sh' provides a few additional options:
 
         --release=<name>       Change the name of the release
 
