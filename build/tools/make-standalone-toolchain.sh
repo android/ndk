@@ -61,7 +61,7 @@ PACKAGE_DIR=/tmp/ndk
 register_var_option "--package-dir=<path>" PACKAGE_DIR "Place package file in <path>"
 
 INSTALL_DIR=
-register_var_option "--install-dir=<path>" OUT_DIR "Don't create package, install files to <path> instead."
+register_var_option "--install-dir=<path>" INSTALL_DIR "Don't create package, install files to <path> instead."
 
 PLATFORM=android-3
 register_var_option "--platform=<name>" PLATFORM "Specify target Android platform/API level."
