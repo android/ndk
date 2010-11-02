@@ -88,7 +88,7 @@ archive and redistribute the binaries easily.
 
 Use --help for more options and details.
 
-IMPORTANT: The toolchain binaries do depend or contain host-specific paths,
+IMPORTANT: The toolchain binaries do not depend or contain host-specific paths,
            in other words, they can be installed in any location, or even
            moved if you need to.
 
