@@ -1,4 +1,4 @@
-Android.mk file syntax specification
+<html><body><pre>Android.mk file syntax specification
 
 Introduction:
 -------------
@@ -6,7 +6,7 @@ Introduction:
 This document describes the syntax of Android.mk build file
 written to describe your C and C++ source files to the Android
 NDK. To understand what follows, it is assumed that you have
-read the docs/OVERVIEW.TXT file that explains their role and
+read the docs/OVERVIEW.html file that explains their role and
 usage.
 
 Overview:
@@ -209,12 +209,12 @@ PREBUILT_SHARED_LIBRARY
     library (e.g. foo/libfoo.so), instead of a source file.
 
     You can reference the prebuilt library in another module using
-    the LOCAL_PREBUILTS variable (see docs/PREBUILTS.TXT for more
+    the LOCAL_PREBUILTS variable (see docs/PREBUILTS.html for more
     information).
 
 PREBUILT_STATIC_LIBRARY
     This is the same as PREBUILT_SHARED_LIBRARY, but for a static library
-    file instead. See docs/PREBUILTS.TXT for more.
+    file instead. See docs/PREBUILTS.html for more.
 
 TARGET_ARCH
     Name of the target CPU architecture as it is specified by the
@@ -225,7 +225,7 @@ TARGET_PLATFORM
     Name of the target Android platform when this Android.mk is parsed.
     For example, 'android-3' correspond to Android 1.5 system images. For
     a complete list of platform names and corresponding Android system
-    images, read docs/STABLE-APIS.TXT.
+    images, read docs/STABLE-APIS.html.
 
 TARGET_ARCH_ABI
     Name of the target CPU+ABI when this Android.mk is parsed.
@@ -241,7 +241,7 @@ TARGET_ARCH_ABI
           match what is used internally by the Android platform.
 
     For more details about architecture ABIs and corresponding
-    compatibility issues, please read docs/CPU-ARCH-ABIS.TXT
+    compatibility issues, please read docs/CPU-ARCH-ABIS.html
 
     Other target ABIs will be introduced in future releases of the NDK
     and will have a different name. Note that all ARM-based ABIs will
@@ -261,7 +261,7 @@ NDK-provided function macros:
 - - - - - - - - - - - - - - -
 
 The following are GNU Make 'function' macros, and must be evaluated
-by using '$(call <function>)'. They return textual information.
+by using '$(call &lt;function&gt;)'. They return textual information.
 
 my-dir
     Returns the path of the last included Makefile, which typically is
@@ -356,13 +356,13 @@ import-module
     A function that allows you to find and include the Android.mk
     of another module by name. A typical example is:
 
-      $(call import-module,<name>)
+      $(call import-module,&lt;name&gt;)
 
-    And this will look for the module tagged <name> in the list of
+    And this will look for the module tagged &lt;name&gt; in the list of
     directories referenced by your NDK_MODULE_PATH environment
     variable, and include its Android.mk automatically for you.
 
-    Read docs/IMPORT-MODULE.TXT for more details.
+    Read docs/IMPORT-MODULE.html for more details.
 
 Module-description variables:
 - - - - - - - - - - - - - - -
@@ -390,17 +390,17 @@ LOCAL_MODULE
     it before including any $(BUILD_XXXX) script.
 
     By default, the module name determines the name of generated files,
-    e.g. lib<foo>.so for a shared library module named <foo>. However
+    e.g. lib&lt;foo&gt;.so for a shared library module named &lt;foo&gt;. However
     you should only refer to other modules with their 'normal'
-    name (e.g. <foo>) in your NDK build files (either Android.mk
+    name (e.g. &lt;foo&gt;) in your NDK build files (either Android.mk
     or Application.mk)
 
     You can override this default with LOCAL_MODULE_FILENAME (see below)
 
 LOCAL_MODULE_FILENAME
     This variable is optional, and allows you to redefine the name of
-    generated files. By default, module <foo> will always generate a
-    static library named lib<foo>.a or a shared library named lib<foo>.so,
+    generated files. By default, module &lt;foo&gt; will always generate a
+    static library named lib&lt;foo&gt;.a or a shared library named lib&lt;foo&gt;.so,
     which are standard Unix conventions.
 
     You can override this by defining LOCAL_MODULE_FILENAME, For example:
@@ -470,7 +470,7 @@ LOCAL_CFLAGS
           LOCAL_CPPFLAGS to specify flags for C++ sources only now).
 
     It is possible to specify additional include paths with
-    LOCAL_CFLAGS += -I<path>, however, it is better to use LOCAL_C_INCLUDES
+    LOCAL_CFLAGS += -I&lt;path&gt;, however, it is better to use LOCAL_C_INCLUDES
     for this, since the paths will then also be used during native
     debugging with ndk-gdb.
 
@@ -507,7 +507,7 @@ LOCAL_LDLIBS
 
       LOCAL_LDLIBS := -lz
 
-    See docs/STABLE-APIS.TXT for the list of exposed system libraries you
+    See docs/STABLE-APIS.html for the list of exposed system libraries you
     can linked against with this NDK release.
 
 LOCAL_ALLOW_UNDEFINED_SYMBOLS
@@ -550,7 +550,7 @@ LOCAL_ARM_NEON
     based CPUs support the NEON instruction set extensions and that you
     should perform runtime detection to be able to use this code at runtime
     safely. To lean more about this, please read the documentation at
-    docs/CPU-ARM-NEON.TXT and docs/CPU-FEATURES.TXT.
+    docs/CPU-ARM-NEON.html and docs/CPU-FEATURES.html.
 
     Alternatively, you can also specify that only specific source files
     may be compiled with NEON support by using the '.neon' suffix, as
@@ -667,8 +667,8 @@ LOCAL_FILTER_ASM
       LOCAL_SRC_FILES  := foo.c bar.S
       LOCAL_FILTER_ASM := myasmfilter
 
-    foo.c --1--> $OBJS_DIR/foo.S.original --2--> $OBJS_DIR/foo.S --3--> $OBJS_DIR/foo.o
-    bar.S                                 --2--> $OBJS_DIR/bar.S --3--> $OBJS_DIR/bar.o
+    foo.c --1--&gt; $OBJS_DIR/foo.S.original --2--&gt; $OBJS_DIR/foo.S --3--&gt; $OBJS_DIR/foo.o
+    bar.S                                 --2--&gt; $OBJS_DIR/bar.S --3--&gt; $OBJS_DIR/bar.o
 
     Were "1" corresponds to the compiler, "2" to the filter, and "3" to the
     assembler. The filter must be a standalone shell command that takes the
@@ -677,3 +677,4 @@ LOCAL_FILTER_ASM
 
         myasmfilter $OBJS_DIR/foo.S.original $OBJS_DIR/foo.S
         myasmfilter bar.S $OBJS_DIR/bar.S
+</pre></body></html>

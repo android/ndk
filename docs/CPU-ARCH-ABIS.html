@@ -1,4 +1,4 @@
-Android Native CPU ABI Management
+<html><body><pre>Android Native CPU ABI Management
 
 
 Introduction:
@@ -76,7 +76,7 @@ Each supported ABI is identified by a unique name.
 
   Thumb (a.k.a. Thumb-1) instructions are supported. Note that the NDK
   will generate thumb code by default, unless you define LOCAL_ARM_MODE
-  in your Android.mk (see docs/ANDROID-MK.TXT for all details).
+  in your Android.mk (see docs/ANDROID-MK.html for all details).
 
 
  I.2. 'armeabi-v7a'
@@ -104,8 +104,8 @@ Each supported ABI is identified by a unique name.
   (Just like one typically does on x86 systems to check/use MMX/SSE2/etc...
    specialized instructions).
 
-  You can check docs/CPU-FEATURES.TXT to see how to perform these runtime
-  checks, and docs/CPU-ARM-NEON.TXT to learn about the NDK's support for
+  You can check docs/CPU-FEATURES.html to see how to perform these runtime
+  checks, and docs/CPU-ARM-NEON.html to learn about the NDK's support for
   building NEON-capable machine code too.
 
   IMPORTANT NOTE: This ABI enforces that all double values are passed during
@@ -181,18 +181,18 @@ native code in application packages.
     It is expected that shared libraries generated with the NDK are stored in
     the final application package (.apk) at locations of the form:
 
-       lib/<abi>/lib<name>.so
+       lib/&lt;abi&gt;/lib&lt;name&gt;.so
 
-    Where <abi> is one of the ABI names listed in section II above, and <name>
+    Where &lt;abi&gt; is one of the ABI names listed in section II above, and &lt;name&gt;
     is a name that can be used when loading the shared library from the VM
     as in:
 
-        System.loadLibrary("<name>");
+        System.loadLibrary("&lt;name&gt;");
 
     Since .apk files are just zip files, you can trivially list their content
     with a command like:
 
-        unzip -l <apk>
+        unzip -l &lt;apk&gt;
 
     to verify that the native shared libraries you want are indeed at the
     proper location. You can also place native shared libraries at other
@@ -235,18 +235,19 @@ native code in application packages.
     When installing an application, the package manager service will scan
     the .apk and look for any shared library of the form:
 
-         lib/<primary-abi>/lib<name>.so
+         lib/&lt;primary-abi&gt;/lib&lt;name&gt;.so
 
-    If one is found, then it is copied under $APPDIR/lib/lib<name>.so,
+    If one is found, then it is copied under $APPDIR/lib/lib&lt;name&gt;.so,
     where $APPDIR corresponds to the application's specific data directory.
 
     If none is found, and a secondary ABI is defined, the service will
     then scan for shared libraries of the form:
 
-        lib/<secondary-abi>/lib<name>.so
+        lib/&lt;secondary-abi&gt;/lib&lt;name&gt;.so
 
-    If anything is found, then it is copied under $APPDIR/lib/lib<name>.so
+    If anything is found, then it is copied under $APPDIR/lib/lib&lt;name&gt;.so
 
     This mechanism ensures that the best machine code for the target
     device is automatically extracted from the package at installation
     time.
+</pre></body></html>

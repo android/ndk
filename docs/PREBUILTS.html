@@ -1,4 +1,4 @@
-NDK Prebuilt library support:
+<html><body><pre>NDK Prebuilt library support:
 -----------------------------
 
 Android NDK r5 introduced support for prebuilt libraries (shared and
@@ -47,7 +47,7 @@ Notice that, to declare such a module, you really only need the following:
 
 A prebuilt module does not build anything. However, a copy of your prebuilt
 shared library will be copied into $PROJECT/obj/local, and another will be
-copied and stripped into $PROJECT/libs/<abi>.
+copied and stripped into $PROJECT/libs/&lt;abi&gt;.
 
 II. Referencing the prebuilt library in other modules:
 ------------------------------------------------------
@@ -74,7 +74,7 @@ found in a header file distributed with the prebuilt library (e.g. "foo.h").
 
 In other words, foo-user.c is going to have a line like:
 
-  #include <foo.h>
+  #include &lt;foo.h&gt;
 
 And you need to provide the header and its include path to the compiler
 when building the foo-user module.
@@ -99,7 +99,7 @@ IV. Debugging prebuilt binaries:
 --------------------------------
 
 We recommend you to provide prebuilt shared libraries that contain debug
-symbols. The version that is installed into $PROJECT/libs/<abi>/ is always
+symbols. The version that is installed into $PROJECT/libs/&lt;abi&gt;/ is always
 stripped by the NDK build system, but the debug version will be used for
 debugging purposes with ndk-gdb.
 
@@ -111,9 +111,9 @@ As said previously, it is crucial to provide a prebuilt shared library
 that is compatible with the targetted ABI during the build. To do that,
 check for the value of TARGET_ARCH_ABI, its value will be:
 
-   armeabi     => when targetting ARMv5TE or higher CPUs
-   armeabi-v7a => when targetting ARMv7 or higher CPUs
-   x86         => when targetting x86 CPUs
+   armeabi     =&gt; when targetting ARMv5TE or higher CPUs
+   armeabi-v7a =&gt; when targetting ARMv7 or higher CPUs
+   x86         =&gt; when targetting x86 CPUs
 
 Note that armeabi-v7a systems can run armeabi binaries just fine.
 
@@ -129,11 +129,12 @@ and select which one to copy based on the target ABI:
 Here. we assume that the prebuilt libraries to copy are under the
 following directory hierarchy:
 
-    Android.mk            --> the file above
-    armeabi/libfoo.so     --> the armeabi prebuilt shared library
-    armeabi-v7a/libfoo.so --> the armeabi-v7a prebuilt shared library
-    include/foo.h         --> the exported header file
+    Android.mk            --&gt; the file above
+    armeabi/libfoo.so     --&gt; the armeabi prebuilt shared library
+    armeabi-v7a/libfoo.so --&gt; the armeabi-v7a prebuilt shared library
+    include/foo.h         --&gt; the exported header file
 
 NOTE: Remember that you don't need to provide an armeabi-v7a prebuilt
       library, since an armeabi one can easily run on the corresponding
       devices.
+</pre></body></html>

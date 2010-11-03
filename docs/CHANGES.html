@@ -1,4 +1,4 @@
-Android NDK ChangeLog:
+<html><body><pre>Android NDK ChangeLog:
 
 -------------------------------------------------------------------------------
 android-ndk-r5
@@ -26,7 +26,7 @@ IMPORTANT CHANGES:
   platform:
 
      - Native audio API through the OpenSL ES Standard.
-       New headers <SLES/OpenSLES.h> and <SLES/OpenSLES_Android.h> are
+       New headers &lt;SLES/OpenSLES.h&gt; and &lt;SLES/OpenSLES_Android.h&gt; are
        provided to allow applications targetting this API level to perform
        low-latency audio input, output and processing directly from native
        code.
@@ -48,7 +48,7 @@ IMPORTANT CHANGES:
             that allows one to provide Opaque Binary Objects containing
             large amounts of data outside of the APK.
 
-       See the documentation in docs/STABLE-APIS.TXT for more details.
+       See the documentation in docs/STABLE-APIS.html for more details.
 
        Note that most of these new features are targetted at game developers.
 
@@ -58,8 +58,8 @@ IMPORTANT CHANGES:
       $NDK/ndk-build NDK_DEBUG=1
 
   This will have the same result that setting the android:debuggable="true"
-  in the <application> element of your AndroidManifest.xml file. See the
-  file docs/NDK-BUILD.TXT for more details.
+  in the &lt;application&gt; element of your AndroidManifest.xml file. See the
+  file docs/NDK-BUILD.html for more details.
 
   Note that you will need to use the SDKr8 build tools to use this feature
   properly!
@@ -82,7 +82,7 @@ IMPORTANT CHANGES:
 
 - Add support for prebuilt libraries with the PREBUILT_SHARED_LIBRARY and
   PREBUILT_STATIC_LIBRARIES build scripts. See the new documentation
-  file named docs/PREBUILTS.TXT for explanations and usage examples.
+  file named docs/PREBUILTS.html for explanations and usage examples.
 
 - Support for module exports: A module can now define a set of compiler or
   linker flags that will be automatically 'imported' by any other module that
@@ -90,30 +90,30 @@ IMPORTANT CHANGES:
 
   This is achieved with the help of new Android.mk variables named
   LOCAL_EXPORT_CFLAGS, LOCAL_EXPORT_CPPFLAGS, LOCAL_EXPORT_C_INCLUDES and
-  LOCAL_EXPORT_LDLIBS. See docs/ANDROID-MK.TXT for mode documentation, and
+  LOCAL_EXPORT_LDLIBS. See docs/ANDROID-MK.html for mode documentation, and
   a 'samples/module-exports' for a sample project that uses this.
 
 - Add support to specify a different file name for generated files, through
-  the new LOCAL_MODULE_FILENAME variable. See docs/ANDROID-MK.TXT for an
+  the new LOCAL_MODULE_FILENAME variable. See docs/ANDROID-MK.html for an
   example.
 
 - Add support for module imports, through the NDK_MODULE_PATH environment
   variable and the new 'import-module' function. This allows you to avoid
   hard-coding the path of third-party modules into your project files.
 
-  See docs/IMPORT-MODULE.TXT for details.
+  See docs/IMPORT-MODULE.html for details.
 
 - Add the content of LOCAL_C_INCLUDES to gdb.setup to make native debugging
   easier. Also fixes an issue that prevented clean parallel builds of
   debuggable applications to work correctly. This fixes an error message that
   said:
 
-      /bin/sh: <project>/libs/armeabi/gdb.setup: No such file or directory
+      /bin/sh: &lt;project&gt;/libs/armeabi/gdb.setup: No such file or directory
 
-  When doing a "ndk-build -j<number>", with <number> bigger than 1.
+  When doing a "ndk-build -j&lt;number&gt;", with &lt;number&gt; bigger than 1.
 
 - Add support for assembly-level source filtering. See the description of
-  LOCAL_FILTER_ASM in docs/ANDROID-MK.TXT for more details. This can be useful
+  LOCAL_FILTER_ASM in docs/ANDROID-MK.html for more details. This can be useful
   for certain kinds of obfuscation tasks.
 
 - This NDK comes with a new toolchain (named arm-linux-androideabi-4.4.3)
@@ -122,7 +122,7 @@ IMPORTANT CHANGES:
      - Better code generation than the previous one (gcc-4.4.0)
      - On Windows, the binaries do not depend on Cygwin anymore.
      - The ability to use it as a stand-alone cross-compiler
-       (see docs/STANDALONE-TOOLCHAIN.TXT for all details).
+       (see docs/STANDALONE-TOOLCHAIN.html for all details).
 
   The binaries for gcc-4.4.0 are still provided for backwards compatibility.
   Use NDK_TOOLCHAIN=arm-eabi-4.4.0 in your environment to force its usage.
@@ -140,7 +140,7 @@ IMPORTANT CHANGES:
   which report an architecture version of 7).
 
   The library is now also available as an import module, to simplify its
-  usage in your build scripts. See the updated docs/CPU-FEATURES.TXT file
+  usage in your build scripts. See the updated docs/CPU-FEATURES.html file
   for details.
 
   NOTE: Please update your Android.mk to use module imports as soon as
@@ -148,7 +148,7 @@ IMPORTANT CHANGES:
         and will be removed in a future NDK release. Avoid referencing
         it directly in your build scritps!
 
-OTHER FIXES & CHANGES:
+OTHER FIXES AND CHANGES:
 
 - Reduced the size of generated binaries by using --strip-unneeded
   instead of --strip-debug. This gets rid of mor symbol table entries
@@ -161,14 +161,14 @@ OTHER FIXES & CHANGES:
 - The path to system headers is now included last in the compilation command
   line. This prevents conflicts with source code that define their own headers
   with similar names (e.g. a custom "err.h" was ignored, because the system
-  <err.h> was used instead).
+  &lt;err.h&gt; was used instead).
 
 - Update documentation for 'my-dir' function to explain that, due to the
   way GNU Make works, it really returns the path of the last included
   Makefile (instead of the current one). Also provide examples on how
   to deal with it.
 
-- make-release.sh: Now has an --out-dir=<path> option to specify the
+- make-release.sh: Now has an --out-dir=&lt;path&gt; option to specify the
   output directory where the packages are going to be copied. Also
   ensure that generated packages have go+r permissions.
 
@@ -185,7 +185,7 @@ OTHER FIXES & CHANGES:
 
 - ndk-gdb: properly launch activities for which name does not contain any dot.
 
-- ndk-gdb: add --delay=<timeout> option to specify a delay in seconds between
+- ndk-gdb: add --delay=&lt;timeout&gt; option to specify a delay in seconds between
   activity launch and gdbserver attach. This is needed because certain
   activities can take a long time to properly launch. The default delay is
   also increased to 2 seconds (instead of 1).
@@ -199,7 +199,7 @@ OTHER FIXES & CHANGES:
   $NDK/build/toolchains and $NDK/build/prebuilt.
 
 - Release and debug objects are stored under two different directories now
-  (i.e. obj/local/<abi>/objs and obj/local/<abi>/objs-debug). This prevents
+  (i.e. obj/local/&lt;abi&gt;/objs and obj/local/&lt;abi&gt;/objs-debug). This prevents
   rebuilding *everything* when you switch between these two modes, which can
   be a real time-saver for complex projects.
 
@@ -211,7 +211,7 @@ android-ndk-r4b
 
 This release fixes a few bugs in r4 scripts. There are no new features.
 
-OTHER FIXES & CHANGES:
+OTHER FIXES &amp; CHANGES:
 
 - build/tools/rebuild-all-prebuilt.sh: mktemp expects 'XXXXXX' instead of 'XXX'.
   Fix the script (and others in the same directory) to do that properly.
@@ -243,7 +243,7 @@ OTHER FIXES & CHANGES:
   your LOCAL_CFLAGS.
 
   Note that even in release mode, the NDK build scripts will produce
-  binaries with symbols under obj/local/<abi>/ that will be used for
+  binaries with symbols under obj/local/&lt;abi&gt;/ that will be used for
   debugging with gdb. However, the debugger will have a harder time to
   print proper local variable values that have been optimized out or
   even set breakpoints properly.
@@ -253,7 +253,7 @@ android-ndk-r4
 
 IMPORTANT BUG FIXES:
 
-- The <fenv.h> header was not placed in the correct location and could not
+- The &lt;fenv.h&gt; header was not placed in the correct location and could not
   be found by normal builds.
 
 IMPORTANT CHANGES:
@@ -267,19 +267,19 @@ IMPORTANT CHANGES:
   new 'ndk-build' script from your application's project directory, or
   one of its sub-directories.
 
-  See docs/OVERVIEW.TXT and docs/NDK-BUILD.TXT for more details.
+  See docs/OVERVIEW.html and docs/NDK-BUILD.html for more details.
 
   NOTE: For compatibility purpose, you can still define projects
-        through $NDK_ROOT/apps/<name> though.
+        through $NDK_ROOT/apps/&lt;name&gt; though.
 
         However, not that sample applications have moved from
-        'apps/<name>/project' to 'samples/<name>' and now must
+        'apps/&lt;name&gt;/project' to 'samples/&lt;name&gt;' and now must
         be built with 'ndk-build'. The source code of pre-existing
         samples didn't change though.
 
 - Easy native debugging support when running debuggable applications
   on Android 2.2 or higher, through the new 'ndk-gdb' helper script.
-  See docs/NDK-GDB.TXT for details.
+  See docs/NDK-GDB.html for details.
 
 - Support for hardware FPU. This is through the new 'armeabi-v7a' ABI
   corresponding to ARMv7-a class devices.
@@ -289,15 +289,15 @@ IMPORTANT CHANGES:
   system images to date.
 
   You will need to define APP_ABI in your Application.mk file to change this.
-  See docs/APPLICATION-MK.TXT
+  See docs/APPLICATION-MK.html
 
-  More details about ABIs is now available in docs/CPU-ARCH-ABIS.TXT
+  More details about ABIs is now available in docs/CPU-ARCH-ABIS.html
 
 - A small static library named 'cpufeatures' is provided with source code
   and can be used at runtime to determine the CPU features supported by the
   target device. It should run on all Android platforms, starting from 1.5.
 
-  For more information, see docs/CPU-FEATURES.TXT
+  For more information, see docs/CPU-FEATURES.html
 
 - Support for the optional ARM Advanced SIMD (a.k.a. NEON) instruction set
   extension through the use the LOCAL_ARM_NEON variable in Android.mk, or
@@ -309,14 +309,14 @@ IMPORTANT CHANGES:
   paths if this is not the case. This is similar to MMX/SSE/3DNow on x86
   platforms.
 
-  For more information, see docs/CPU-ARM-NEON.TXT
+  For more information, see docs/CPU-ARM-NEON.html
 
 - Added a new sample (hello-neon) to demonstrate usage of 'cpufeatures'
-  and NEON intrinsics & build support.
+  and NEON intrinsics and build support.
 
-- Added <android/bitmap.h>, a new stable API available from android-8
+- Added &lt;android/bitmap.h&gt;, a new stable API available from android-8
   (a.k.a. Android 2.2) to reliably access the pixel buffer of an
-  android.graphics.Bitmap object from native code. See docs/STABLE-API.TXT
+  android.graphics.Bitmap object from native code. See docs/STABLE-API.html
   and the new sample program under 'samples/bitmap-plasma' for details
   and usage example.
 
@@ -324,10 +324,10 @@ IMPORTANT CHANGES:
   are added to the generated shared libraries to instruct the kernel
   that code shall not be executed from the heap and stack by default.
 
-  See docs/ANDROID-MK.TXT to see how to disable this, plus reference
+  See docs/ANDROID-MK.html to see how to disable this, plus reference
   links for more information.
 
-OTHER FIXES & CHANGES:
+OTHER FIXES AND CHANGES:
 
 - support the .s extension for raw assembly sources (.S is already supported
   but the input files are parsed by the C-preprocessor before being sent to
@@ -342,9 +342,9 @@ OTHER FIXES & CHANGES:
 
   You can still use APP_MODULES to restrict the set of modules you want to
   build. Note that the NDK now computes the transitive dependencies of these
-  modules for you now. See docs/APPLICATION-MK.TXT for details.
+  modules for you now. See docs/APPLICATION-MK.html for details.
 
-- docs/STABLE-APIS.TXT: Add missing section for Dynamic Linker Library
+- docs/STABLE-APIS.html: Add missing section for Dynamic Linker Library
   (libdl.so). It is actually supported by all API levels.
 
 - build/tools/download-toolchain-sources.sh: Use 'master' branch by default
@@ -352,11 +352,11 @@ OTHER FIXES & CHANGES:
 
 - build-toolchain.sh: Allow ad-hoc patching of toolchain sources when rebuilding
   them. This is primarily to ease development. All you need to do is put a patch
-  under build/tools/toolchain-patches/<foo>/<name>.patch, and it will be applied
-  with 'patch -p1' into the <foo> directory of the unpacked toolchain sources
+  under build/tools/toolchain-patches/&lt;foo&gt;/&lt;name&gt;.patch, and it will be applied
+  with 'patch -p1' into the &lt;foo&gt; directory of the unpacked toolchain sources
   before the configure step.
 
-- docs/CPU-ARCH-ABIS.TXT: Mention the experimental 'x86' ABI.
+- docs/CPU-ARCH-ABIS.html: Mention the experimental 'x86' ABI.
 
 - build/core/mkdeps.sh: Removed obsolete script.
 
@@ -371,38 +371,38 @@ OTHER FIXES & CHANGES:
 
     For all platforms:
 
-        - <arpa/inet.h>: no longer includes <netinet/in6.h>.
-        - <ctype.h>: better inlining with -ansi option.
-        - <mntent.h>: add missing include for <stdio.h>.
-        - <netinet/in.h>: include <netinet/in6.h> and define in6addr_any +
+        - &lt;arpa/inet.h&gt;: no longer includes &lt;netinet/in6.h&gt;.
+        - &lt;ctype.h&gt;: better inlining with -ansi option.
+        - &lt;mntent.h&gt;: add missing include for &lt;stdio.h&gt;.
+        - &lt;netinet/in.h&gt;: include &lt;netinet/in6.h&gt; and define in6addr_any +
           in6addr_loopback.
-        - <netinet/in6.h>: add IPV6_JOIN_GROUP, IPV6_LEAVE_GROUP,
+        - &lt;netinet/in6.h&gt;: add IPV6_JOIN_GROUP, IPV6_LEAVE_GROUP,
           IN6ADDR_ANY_INIT, ipv6mr_interface.
-        - <sys/epoll.h>: add missing C++ inclusion guards.
-        - <sys/resource.h>: add missing rlim_t declaration.
-        - <sys/system_properties.h>: add missing C++ inclusion guards.
-        - <time64.h>: add missing C++ inclusion guards.
-        - <netdb.h>: move h_errno declaration inside C++ inclusion guards.
+        - &lt;sys/epoll.h&gt;: add missing C++ inclusion guards.
+        - &lt;sys/resource.h&gt;: add missing rlim_t declaration.
+        - &lt;sys/system_properties.h&gt;: add missing C++ inclusion guards.
+        - &lt;time64.h&gt;: add missing C++ inclusion guards.
+        - &lt;netdb.h&gt;: move h_errno declaration inside C++ inclusion guards.
 
 - C Library changes:
 
     For android-8 (a.k.a. Android 2.2):
 
-        - <dlfcn.h>: add DL_info and dladdr().
-        - <err.h>: add err(), warn() and other variants.
-        - <regex.h>, <fts.h>, <sys/queue.h>: added
-        - <pthread.h>: add pthread_condattr_t
-        - <sched.h>: added proper clone() declaration (and implementation).
-        - <signal.h>: added killpg().
-        - <stdio.h>: add fdprintf() and vfdprintf().
-        - <stdlib.h>: fix ptsname_r() signature in declaration. previous
+        - &lt;dlfcn.h&gt;: add DL_info and dladdr().
+        - &lt;err.h&gt;: add err(), warn() and other variants.
+        - &lt;regex.h&gt;, &lt;fts.h&gt;, &lt;sys/queue.h&gt;: added
+        - &lt;pthread.h&gt;: add pthread_condattr_t
+        - &lt;sched.h&gt;: added proper clone() declaration (and implementation).
+        - &lt;signal.h&gt;: added killpg().
+        - &lt;stdio.h&gt;: add fdprintf() and vfdprintf().
+        - &lt;stdlib.h&gt;: fix ptsname_r() signature in declaration. previous
           implementation was broken anyway.
-        - <unistd.h>: add getusershell(), setusershell(), endusershell(),
+        - &lt;unistd.h&gt;: add getusershell(), setusershell(), endusershell(),
           ttyname(), ttyname_r(), TEMP_FAILURE_RETRY. Fix usleep() signature
           (now returns int).
-        - <wchar.h>: add fake mbstowcs() and wcstombs().
+        - &lt;wchar.h&gt;: add fake mbstowcs() and wcstombs().
 
-  More details available under docs/system/libc/CHANGES.TXT
+  More details available under docs/system/libc/CHANGES.html
 
 -------------------------------------------------------------------------------
 android-ndk-r3
@@ -462,12 +462,12 @@ IMPORTANT CHANGES:
     folder corresponding to the old ABI.
 
 
-- Updated the STABLE-APIS.TXT document to clarify the OpenGL ES 1.0/1.1/2.0
+- Updated the STABLE-APIS.html document to clarify the OpenGL ES 1.0/1.1/2.0
   issues regarding specific devices (i.e. 1.0 supported everywhere, 1.1 and
-  2.0 on specific devices only, need for <uses-feature> tag in manifest).
+  2.0 on specific devices only, need for &lt;uses-feature&gt; tag in manifest).
 
 
-OTHER FIXES & CHANGES:
+OTHER FIXES AND CHANGES:
 
 - Actually use the awk version detected by host-setup.sh during the build.
 
@@ -505,12 +505,12 @@ OTHER FIXES & CHANGES:
 
 - Refresh C library headers for all platforms:
 
-    - make <endian.h> simply include <sys/endian.h>
-    - make <stdint.h> properly declare 64-bit integer types with a C99 compiler
-    - add missing <sys/types.h> to <strings.h>
+    - make &lt;endian.h&gt; simply include &lt;sys/endian.h&gt;
+    - make &lt;stdint.h&gt; properly declare 64-bit integer types with a C99 compiler
+    - add missing &lt;sys/types.h&gt; to &lt;strings.h&gt;
     - add GLibc-compatible macro aliases (st_atimensec, st_mtimensec and
-      st_ctimensec) to <stat.h>
-    - add missing declaration for tzset() in <time.h>
+      st_ctimensec) to &lt;stat.h&gt;
+    - add missing declaration for tzset() in &lt;time.h&gt;
 
 - Added build/tools/download-toolchain-sources.sh, a script that allows you
   to download the toolchain sources from the official open-source repository
@@ -519,7 +519,7 @@ OTHER FIXES & CHANGES:
   binaries for your system.
 
 - Updated build/tools/build-toolchain.sh to support the tarballs generated
-  by download-toolchain-sources.sh with the --package=<file> option. This
+  by download-toolchain-sources.sh with the --package=&lt;file&gt; option. This
   also builds both gcc 4.2.1 and 4.4.0, adding support for armeabi-v7a to
   gcc 4.4.0.
 
@@ -558,7 +558,7 @@ IMPORTANT CHANGES:
     apps/hello-jni/project/jni/Android.mk
     apps/hello-jni/project/jni/hello-jni.c
 
-  The 'apps/<name>' directory is still needed in this release though.
+  The 'apps/&lt;name&gt;' directory is still needed in this release though.
 
 - Change LOCAL_CFLAGS / LOCAL_CPPFLAGS to work as in the full Android build
   system. This means that:
@@ -584,7 +584,7 @@ IMPORTANT CHANGES:
   how to make a simple Android application that uses them.
 
 
-OTHER FIXES & CHANGES
+OTHER FIXES AND CHANGES
 
 - Ensure that the __ANDROID__ macro is always defined when building code
   with the NDK. Normally, the macro must be defined by the toolchain
@@ -612,3 +612,4 @@ OTHER FIXES & CHANGES
 
 -------------------------------------------------------------------------------
 android-ndk-1.5_r1 released.
+</pre></body></html>

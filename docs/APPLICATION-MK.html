@@ -1,4 +1,4 @@
-Application.mk file syntax specification
+<html><body><pre>Application.mk file syntax specification
 
 Introduction:
 -------------
@@ -6,11 +6,11 @@ Introduction:
 This document describes the syntax of Application.mk build files
 written to describe the native modules required by your Android
 application. To understand what follows, it is assumed that you have
-read the docs/OVERVIEW.TXT file that explains their role and
+read the docs/OVERVIEW.html file that explains their role and
 usage.
 
-Readers of this document should have read docs/OVERVIEW.TXT and
-docs/ANDROID-MK.TXT
+Readers of this document should have read docs/OVERVIEW.html and
+docs/ANDROID-MK.html
 
 
 Overview:
@@ -26,9 +26,9 @@ where $PROJECT points to your application's project directory.
 Another alternative is to place it under a sub-directory of the top-level
 $NDK/apps directory, e.g.:
 
-   $NDK/apps/<myapp>/Application.mk
+   $NDK/apps/&lt;myapp&gt;/Application.mk
 
-Where <myapp> is a short name used to describe your 'application'
+Where &lt;myapp&gt; is a short name used to describe your 'application'
 to the NDK build system (this name doesn't go into your generated
 shared libraries or your final packages).
 
@@ -42,7 +42,7 @@ APP_PROJECT_PATH
     specific location known to the APK-generating tools.
 
     Note that it is optional for $PROJECT/jni/Application.mk, but
-    *mandatory* for $NDK/apps/<myapp>/Application.mk
+    *mandatory* for $NDK/apps/&lt;myapp&gt;/Application.mk
 
 APP_MODULES
     This variable is optional. If not defined, the NDK will build by
@@ -68,7 +68,7 @@ APP_OPTIM
     binaries which are much easier to debug.
 
     Note that if your application is debuggable (i.e. if your manifest
-    sets the android:debuggable attribute to "true" in its <application>
+    sets the android:debuggable attribute to "true" in its &lt;application&gt;
     tag), the default will be 'debug' instead of 'release'. This can
     be overridden by setting APP_OPTIM to 'release'.
 
@@ -147,11 +147,12 @@ APP_ABI
         APP_ABI := armeabi armeabi-v7a
 
     For the list of all supported ABIs and details about their usage and
-    limitations, please read docs/CPU-ARCH-ABIS.TXT
+    limitations, please read docs/CPU-ARCH-ABIS.html
 
 
 A trivial Application.mk file would be:
 
 -------------- cut here -------------------------
-APP_PROJECT_PATH := <path to project>
+APP_PROJECT_PATH := &lt;path to project&gt;
 -------------- cut here -------------------------
+</pre></body></html>
