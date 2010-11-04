@@ -1,4 +1,4 @@
-Android NDK Overview
+<html><body><pre>Android NDK Overview
 
 Introduction:
 
@@ -29,7 +29,7 @@ implemented in native code through the JNI. In a nutshell, this means that:
   - You must provide a native shared library that contains the
     implementation of these methods, which will be packaged into your
     application's .apk. This library must be named according to standard
-    Unix conventions as lib<something>.so, and shall contain a standard JNI
+    Unix conventions as lib&lt;something&gt;.so, and shall contain a standard JNI
     entry point (more on this later). For example:
 
       libFileLoader.so
@@ -66,7 +66,7 @@ Moreover, the Android NDK provides:
     supported by the Android platform. This corresponds to definitions that
     are guaranteed to be supported in all later releases of the platform.
 
-    They are documented in the file docs/STABLE-APIS.TXT
+    They are documented in the file docs/STABLE-APIS.html
 
     IMPORTANT:
     Keep in mind that most of the native system libraries in Android system
@@ -136,7 +136,7 @@ Android NDK:
      project in more details to the build system. You don't need
      one to get started though, but this allows you to target
      more than one CPU or override compiler/linker flags
-     (see docs/APPLICATION-MK.TXT for all details).
+     (see docs/APPLICATION-MK.html for all details).
 
   4/ Build your native code by running "$NDK/ndk-build" from your
      project directory, or any of its sub-directories.
@@ -169,12 +169,12 @@ project.
 You are pretty free to organize the content of 'jni' as you want,
 the directory names and structure here will not influence the final
 generated application packages, so you don't have to use pseudo-unique
-names like com.<mycompany>.<myproject> as is the case for application
+names like com.&lt;mycompany&gt;.&lt;myproject&gt; as is the case for application
 package names.
 
 Note that C and C++ sources are supported. The default C++ file extensions
 supported by the NDK is '.cpp', but other extensions can be handled as well
-(see docs/ANDROID-MK.TXT for details).
+(see docs/ANDROID-MK.html for details).
 
 It is possible to store your sources in a different location by adjusting
 your Android.mk file (see below).
@@ -185,7 +185,7 @@ III.3/ Writing an Android.mk build script:
 
 An Android.mk file is a small build script that you write to describe your
 sources to the NDK build system. Its syntax is described in details in
-the file docs/ANDROID-MK.TXT.
+the file docs/ANDROID-MK.html.
 
 In a nutshell, the NDK groups your sources into "modules", where each module
 can be one of the following:
@@ -217,7 +217,7 @@ III.4/ Writing an Application.mk build file (optional):
 
 While an Android.mk file describes your modules to the build system, the
 Application.mk file describes your application itself. See the
-docs/APPLICATION-MK.TXT document to understand what this file allows you
+docs/APPLICATION-MK.html document to understand what this file allows you
 to do. This includes, among others:
 
    - The exact list of modules required by your application.
@@ -237,9 +237,9 @@ There are two ways to use an Application.mk:
   - Place it under $PROJECT/jni/Application.mk, and it will be picked
     up automatically by the 'ndk-build' script (more on this later)
 
-  - Place it under $NDK/apps/<name>/Application.mk, where $NDK
+  - Place it under $NDK/apps/&lt;name&gt;/Application.mk, where $NDK
     points to your NDK installation path. After that, launch
-    "make APP=<name>" from the NDK directory.
+    "make APP=&lt;name&gt;" from the NDK directory.
 
     This was the way this file was used before Android NDK r4.
     It is still supported for compatibility reasons, but we strongly
@@ -247,7 +247,7 @@ There are two ways to use an Application.mk:
     simpler and doesn't need modifying / changing directories of the
     NDK installation tree.
 
-Again, see docs/APPLICATION-MK.TXT for a complete description of its
+Again, see docs/APPLICATION-MK.html for a complete description of its
 content.
 
 
@@ -281,8 +281,8 @@ purposes, there is no need to copy unstripped binaries to a device).
   For example:
 
     ndk-build
-    ndk-build  clean    --> clean generated binaries
-    ndk-build  -B V=1   --> force complete rebuild, showing commands
+    ndk-build  clean    --&gt; clean generated binaries
+    ndk-build  -B V=1   --&gt; force complete rebuild, showing commands
 
   By default, it expects an optional file under $PROJECT/jni/Application.mk,
   and a required $PROJECT/jni/Android.mk.
@@ -292,11 +292,11 @@ purposes, there is no need to copy unstripped binaries to a device).
   rebuild the full Android application package either through the usual
   'ant' command, or the ADT Eclipse plug-in.
 
-  See docs/NDK-BUILD.TXT for a more complete description of what this script
+  See docs/NDK-BUILD.html for a more complete description of what this script
   does and which options it can take.
 
 
-  2: Using the $NDK/apps/<name>/Application.mk:
+  2: Using the $NDK/apps/&lt;name&gt;/Application.mk:
   ---------------------------------------------
 
   This build method was the only one before Android NDK r4 and is only
@@ -306,13 +306,13 @@ purposes, there is no need to copy unstripped binaries to a device).
 
   It requires the following:
 
-    1. Creating a sub-directory named $NDK/apps/<name>/ under
+    1. Creating a sub-directory named $NDK/apps/&lt;name&gt;/ under
        your NDK installation directory (not your project path).
 
-       Where <name> is an arbitrary name to describe your application
+       Where &lt;name&gt; is an arbitrary name to describe your application
        to the NDK build system (no spaces allowed).
 
-    2. Write $NDK/apps/<name>/Application.mk, which then requires
+    2. Write $NDK/apps/&lt;name&gt;/Application.mk, which then requires
        a definition for APP_PROJECT_PATH that points to your
        application project directory.
 
@@ -320,10 +320,10 @@ purposes, there is no need to copy unstripped binaries to a device).
        invoke the top-level GNUMakefile, as in:
 
          cd $NDK
-         make APP=<name>
+         make APP=&lt;name&gt;
 
   The result will be equivalent to the first method, except for the fact
-  that intermediate generated files will be placed under $NDK/out/apps/<name>/
+  that intermediate generated files will be placed under $NDK/out/apps/&lt;name&gt;/
 
 
 IV. Rebuild your application package:
@@ -349,7 +349,7 @@ Native debugging can *ONLY* be performed on production devices running
 Android 2.2 or higher, and does not require root or privileged access, as
 long as your application is debuggable.
 
-For more information, read docs/NDK-GDB.TXT. In a nutshell, native debugging
+For more information, read docs/NDK-GDB.html. In a nutshell, native debugging
 follows this simple scheme:
 
    1. Ensure your application is debuggable (e.g. set android:debuggable
@@ -364,3 +364,4 @@ follows this simple scheme:
 
 You will get a gdb prompt. See the GDB User Manual for a list of useful
 commands.
+</pre></body></html>

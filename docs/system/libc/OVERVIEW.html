@@ -1,4 +1,4 @@
-Bionic C Library Overview:
+<html><body><pre>Bionic C Library Overview:
 ==========================
 
 Introduction:
@@ -15,7 +15,7 @@ Core Philosophy:
   Linux-specific bits used to deal with threads, processes, signals and a few
   others things.
 
-  All original BSD pieces carry the BSD copyright disclaimer. Bionic-specific 
+  All original BSD pieces carry the BSD copyright disclaimer. Bionic-specific
   bits carry the Android Open Source Project copyright disclaimer. And
   everything is released under the BSD license.
 
@@ -23,7 +23,7 @@ Architectures:
 
   Bionic currently supports the ARM and x86 instruction sets. In theory, it
   should be possible to support more, but this may require a little work (e.g.
-  adding system call IDs to SYSCALLS.TXT, described below, or modifying the
+  adding system call IDs to SYSCALLS.html, described below, or modifying the
   dynamic linker).
 
   The ARM-specific code is under arch-arm/ and the x86-specific one is under
@@ -37,9 +37,9 @@ Syscall stubs:
 
   Each system call function is implemented by a tiny assembler source fragment
   (called a "syscall stub"), which is generated automatically by
-  tools/gensyscalls.py which reads the SYSCALLS.TXT file for input.
+  tools/gensyscalls.py which reads the SYSCALLS.html file for input.
 
-  SYSCALLS.TXT contains the list of all syscall stubs to generate, along with
+  SYSCALLS.html contains the list of all syscall stubs to generate, along with
   the corresponding syscall numeric identifier (which may differ between ARM
   and x86), and its signature
 
@@ -51,7 +51,7 @@ Syscall stubs:
   corresponding syscall with another name. For example, the exit() function
   is provided by the C library and calls the _exit() syscall stub.
 
-  See SYSCALLS.TXT for documentation and details.
+  See SYSCALLS.html for documentation and details.
 
 
 time_t:
@@ -60,7 +60,7 @@ time_t:
   would be preferable to avoid the Y2038 bug, but the kernel maintainers
   consider that this is not needed at the moment.
 
-  Instead, Bionic provides a <time64.h> header that defines a time64_t type,
+  Instead, Bionic provides a &lt;time64.h&gt; header that defines a time64_t type,
   and related functions like mktime64(), localtime64(), etc...
 
 
@@ -213,7 +213,7 @@ Android-specific features:
        simple size-limited string that can be associated to a size-limited
        string value.
 
-       The header <sys/system_properties.h> can be used to read system
+       The header &lt;sys/system_properties.h&gt; can be used to read system
        properties and also defines the maximum size of keys and values.
 
    - Android-specific user/group management:
@@ -266,7 +266,7 @@ DNS resolver:
   Bionic uses a NetBSD-derived resolver library which has been modified in
   the following ways:
 
-     - don't implement the name-server-switch feature (a.k.a. <nsswitch.h>)
+     - don't implement the name-server-switch feature (a.k.a. &lt;nsswitch.h&gt;)
 
      - read /system/etc/resolv.conf instead of /etc/resolv.conf
 
@@ -278,7 +278,7 @@ DNS resolver:
        (e.g. the dhcpd daemon).
 
        the implementation also supports per-process DNS server list, using the
-       properties 'net.dns1.<pid>', 'net.dns2.<pid>', etc... Where <pid> stands
+       properties 'net.dns1.&lt;pid&gt;', 'net.dns2.&lt;pid&gt;', etc... Where &lt;pid&gt; stands
        for the numerical ID of the current process.
 
      - when performing a query, use a properly randomized Query ID (instead of
@@ -290,7 +290,7 @@ DNS resolver:
      - get rid of *many* unfortunate thread-safety issues in the original code
 
   Bionic does *not* expose implementation details of its DNS resolver; the
-  content of <arpa/nameser.h> is intentionally blank. The resolver
+  content of &lt;arpa/nameser.h&gt; is intentionally blank. The resolver
   implementation might change completely in the future.
 
 
@@ -372,7 +372,7 @@ System V IPCs:
   Bionic intentionally does not provide support for System-V IPCs mechanisms,
   like the ones provided by semget(), shmget(), msgget(). The reason for this
   is to avoid denial-of-service. For a detailed rationale about this, please
-  read the file docs/SYSV-IPCS.TXT.
+  read the file docs/SYSV-IPCS.html.
 
 Include Paths:
 
@@ -386,3 +386,4 @@ Include Paths:
       libc/kernel/arch-$ARCH
 
   to your C include path.
+</pre></body></html>

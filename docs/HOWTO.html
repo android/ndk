@@ -1,4 +1,4 @@
-Android NDK How-To:
+<html><body><pre>Android NDK How-To:
 ===================
 
 A collection of tips and tricks for NDK users
@@ -37,9 +37,9 @@ How to build a project's native files without cd-ing to it:
 
 Sometimes, you may need to rebuild a project's native file without
 being able to cd to its top-level path from the command-line. This
-is do-able by using the GNU-Make '-C <path>' option, as in:
+is do-able by using the GNU-Make '-C &lt;path&gt;' option, as in:
 
-    ndk-build -C <project-path>
+    ndk-build -C &lt;project-path&gt;
 
 
 How to store your Application.mk in a location other than $PROJECT/jni:
@@ -53,7 +53,7 @@ use a GNU Make variable override as:
 
     ndk-build NDK_APPLICATION_MK=/path/to/your/Application.mk
 
-If you're using the legacy $NDK/apps/<name> build method, you can create
+If you're using the legacy $NDK/apps/&lt;name&gt; build method, you can create
 a symbolic link to your final Application.mk there. For example, imagine
 that you wrote:
 
@@ -61,17 +61,17 @@ that you wrote:
 
 You can create a symlink like with a command like:
 
-  ln -s $PROJECT/foo  $NDK/apps/<name>
+  ln -s $PROJECT/foo  $NDK/apps/&lt;name&gt;
 
-This will make $NDK/apps/<name>/Application.mk point directly to
+This will make $NDK/apps/&lt;name&gt;/Application.mk point directly to
 $PROJECT/jni/Application.mk
 
-Note that generated files will still go under $NDK/out/apps/<name> though.
+Note that generated files will still go under $NDK/out/apps/&lt;name&gt; though.
 
 Windows users: The NDK is only supported on Cygwin, which implements
 symbolic links through the "ln -s" command, as in:
 
-    ln -s  <target>  <link>
+    ln -s  &lt;target&gt;  &lt;link&gt;
 
 
 How to properly add include directories to your module declaration:
@@ -90,7 +90,7 @@ the following example:
     Android.mk
     bar.c
 
-Where the 'bar.c' uses '#include <foo.h>'. You will need to add the
+Where the 'bar.c' uses '#include &lt;foo.h&gt;'. You will need to add the
 path to the 'foo' module in jni/bar/Android.mk to build it properly.
 
 One is tempted to use the following:
@@ -116,3 +116,4 @@ point to your project directory:
 However, we don't recommend using this, paths relative to $(LOCAL_PATH)
 being better.
 
+</pre></body></html>

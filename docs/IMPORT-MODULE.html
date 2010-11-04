@@ -1,4 +1,4 @@
-Android module paths (sharing code made easy):
+<html><body><pre>Android module paths (sharing code made easy):
 ==============================================
 
 Starting from r5, the Android NDK comes with a cool feature that allows
@@ -24,28 +24,28 @@ In practice, here's how this works:
   2. To import a module, place a line like the following to, preferably at
      the *end* of, your Android.mk:
 
-          $(call import-module,<tag>)
+          $(call import-module,&lt;tag&gt;)
 
-     This will look for <tag>/Android.mk under any of the directories
+     This will look for &lt;tag&gt;/Android.mk under any of the directories
      listed in your NDK_MODULE_PATH.
 
      (The reason why it must be at the end is to avoid messing with
      the results of the 'my-dir' function. See its description in
-     docs/ANDROID-MK.TXT for details).
+     docs/ANDROID-MK.html for details).
 
 
   3. Declare that your project's modules depend on the imported one by
      listing them in either your LOCAL_STATIC_LIBRARIES or
      LOCAL_SHARED_LIBRARIES. For example:
 
-          LOCAL_STATIC_LIBRARIES += <tag>
+          LOCAL_STATIC_LIBRARIES += &lt;tag&gt;
 
 
   4. Rebuild!
 
      Remember that NDK r5 also added the ability for a module to "export"
      declarations to other modules that depend on it (for example, see the
-     definition of LOCAL_EXPORT_CFLAGS in docs/ANDROID-MK.TXT).
+     definition of LOCAL_EXPORT_CFLAGS in docs/ANDROID-MK.html).
 
      A well-written module will correctly export all the things its
      dependees need, et voila.
@@ -66,13 +66,13 @@ The NDK_MODULE_PATH variable must contain a list of directories.
   * On Windows, use '/' as the directory separator.
 
 The directories of NDK_MODULE_PATH will be searched in order. The first
-<path>/<tag>/Android.mk file that is found during the lookup will be
+&lt;path&gt;/&lt;tag&gt;/Android.mk file that is found during the lookup will be
 included automatically.
 
 
 As a convenience, $NDK/sources is appended to your NDK_MODULE_PATH
 definition by the NDK build system. This allows you to easily import
-the helper libraries that come with it (see docs/CPU-FEATURES.TXT for
+the helper libraries that come with it (see docs/CPU-FEATURES.html for
 a practical example).
 
 
@@ -113,7 +113,7 @@ build directory, e.g. $PROJECT_PATH/obj/).
 
 You can however distribute prebuilt binaries in your import module with
 the new PREBUILT_STATIC_LIBRARIES or PREBUILT_SHARED_LIBRARIES feature
-(see docs/ANDROID-MK.TXT).
+(see docs/ANDROID-MK.html).
 
 This makes it easy to package and redistribute your import module directory
 to third-parties.
@@ -131,11 +131,11 @@ your import module:
 
     Your imported Android.mk can define any number of modules, with
     any name. As a consequence, there is no direct relationship between
-    <name> in the following line:
+    &lt;name&gt; in the following line:
 
-          $(call import-module,<tag>/<name>)
+          $(call import-module,&lt;tag&gt;/&lt;name&gt;)
 
-    And the names of the modules defined under <tag>/<name>/Android.mk.
+    And the names of the modules defined under &lt;tag&gt;/&lt;name&gt;/Android.mk.
 
     IN CASE OF DOUBT, KEEP IT SIMPLE!
 
@@ -154,7 +154,7 @@ your import module:
            include $(CLEAR_VARS)
            LOCAL_MODULE := bar_static
            LOCAL_SRC_FILES := bar.c
-           # Ensure our dependees can include <bar.h> too
+           # Ensure our dependees can include &lt;bar.h&gt; too
            LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)
            include $(BUILD_STATIC_LIBRARY)
 
@@ -184,7 +184,7 @@ your import module:
    - The module namespace is flat, so try to give your modules names that
      are likely to not collide with other. Note that your can use
      LOCAL_MODULE_FILENAME to give the name of your module's binary
-     file, independently from its LOCAL_MODULE (see docs/ANDROID-MK.TXT
+     file, independently from its LOCAL_MODULE (see docs/ANDROID-MK.html
      for definition and usage). For example:
 
              include $(CLEAR_VARS)
@@ -213,14 +213,14 @@ your import module:
             }
 
 
-IV. Tips & Recommendations:
+IV. Tips &amp; Recommendations:
 ---------------------------
 
 * You don't need to import a module before you can reference it!
 
 * Use import-module at the *end* of your Android.mk to avoid messing with
   the result of 'my-dir'. See the description of this function in
-  docs/ANDROID-MK.TXT to understand why.
+  docs/ANDROID-MK.html to understand why.
 
 * It is *strongly* suggested to use a subdirectory for your import tags,
   that describes its origin, as in:
@@ -234,3 +234,4 @@ IV. Tips & Recommendations:
   IMPORTANT: THE 'android' IMPORT DIRECTORY, AND ANY OF ITS SUB-DIRECTORIES
              IS *RESERVED* FOR NDK USAGE. FEEL FREE TO ORGANIZE YOUR OTHER
              IMPORT MODULES AS YOU WANT OTHERWISE.
+</pre></body></html>

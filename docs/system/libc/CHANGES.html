@@ -1,4 +1,4 @@
-Bionic ChangeLog:
+<html><body><pre>Bionic ChangeLog:
 -----------------
 
 Differences between current and Android 2.1:
@@ -7,48 +7,48 @@ Differences between current and Android 2.1:
 
 - __atomic_swap(): use LDREX/STREX CPU instructions on ARMv6 and higher.
 
-- <arpa/telnet.h>: New header (declarations only, no implementation).
+- &lt;arpa/telnet.h&gt;: New header (declarations only, no implementation).
 
-- <err.h>: New header + implementation. GLibc compatibility.
+- &lt;err.h&gt;: New header + implementation. GLibc compatibility.
 
-- <warn.h>: New header + implementation. GLibc compatibility.
+- &lt;warn.h&gt;: New header + implementation. GLibc compatibility.
 
-- <fts.h>: New header + implementation.
+- &lt;fts.h&gt;: New header + implementation.
 
-- <mntent.h>: Add missing <stdio.h> include.
+- &lt;mntent.h&gt;: Add missing &lt;stdio.h&gt; include.
 
-- <regex.h>: New header + implementation.
+- &lt;regex.h&gt;: New header + implementation.
 
-- <signal.h>: Added killpg()
+- &lt;signal.h&gt;: Added killpg()
 
-- <stdint.h>: Allow 64-bit type declarations on C99 builds.
+- &lt;stdint.h&gt;: Allow 64-bit type declarations on C99 builds.
 
-- <stdio.h>: Add fdprintf() and vfdprintf(). Note that GLibc provides
+- &lt;stdio.h&gt;: Add fdprintf() and vfdprintf(). Note that GLibc provides
   the confusing 'dprintf' and 'vdprintf()' functions instead.
 
-- <stdlib.h>: Fix ptsname_r(): the return type is int instead of char*.
+- &lt;stdlib.h&gt;: Fix ptsname_r(): the return type is int instead of char*.
   The mistake comes from a GLibc man page bug (the man page listed a return
   type of char*, while the implementation used int. Fixed in late 2009 only).
   The Bionic implementation was incorrect. Technically, this is an ABI
   breakage, but code that used this function probably never worked or
   compiled properly anyway.
 
-- <strings.h>: Add missing <sys/types.h> include.
+- &lt;strings.h&gt;: Add missing &lt;sys/types.h&gt; include.
 
-- <sys/queue.h>: Added new header (no implementation - macro templates).
+- &lt;sys/queue.h&gt;: Added new header (no implementation - macro templates).
 
-- <sys/resource.h>: Add rlim_t proper definition.
+- &lt;sys/resource.h&gt;: Add rlim_t proper definition.
 
-- <time64.h>: Add missing C++ header inclusion guards.
+- &lt;time64.h&gt;: Add missing C++ header inclusion guards.
 
-- <unistd.h>: Add getusershell(), setusershell() and endusershell(), though
+- &lt;unistd.h&gt;: Add getusershell(), setusershell() and endusershell(), though
   implementation are bogus. GLibc compatibility.
 
-- <wchar.h>: Add mbstowcs() and wcstombs()
+- &lt;wchar.h&gt;: Add mbstowcs() and wcstombs()
 
 - add clone() implementation for ARM (x86 and SH-4 not working yet).
 
-- <sys/epoll.h>: <sys/system_properties.h>: Add missing C++ inclusion guards
+- &lt;sys/epoll.h&gt;: &lt;sys/system_properties.h&gt;: Add missing C++ inclusion guards
 
 - fix getpwnam() and getpwgrp() to accept "app_0" as a valid user name.
 
@@ -70,17 +70,17 @@ Differences between current and Android 2.1:
 
 - add sigaltstack() implementation for ARM.
 
-- <time.h>: Properly implement the 'timezone' and 'daylight' global variables
+- &lt;time.h&gt;: Properly implement the 'timezone' and 'daylight' global variables
   (they were not defined previously, though declared in the header).
 
-- <time.h>: Fix timezone management implementation to properly update
+- &lt;time.h&gt;: Fix timezone management implementation to properly update
   'tm_gmtoff' field in 'struct tm' structure.
 
 - DNS: get rid of spurious random DNS queries when trying to resolve
   an unknown domain name. Due to an initialization bug, a random DNS search
   list was generated for each thread if net.dns.search is not defined.
 
-- <pthread.h>: Add pthread_condattr_init/destroy/setpshared/getpshared functions
+- &lt;pthread.h&gt;: Add pthread_condattr_init/destroy/setpshared/getpshared functions
   to enable proper shared conditional variable initialization.
 
   Modify the pthread_mutex_t and pthread_cond_t implementation to use private
@@ -125,12 +125,12 @@ Differences between Android 2.0 and 1.6:
 - pthread_cond_timedwait_relative_np(): Same as pthread_cond_timedwait()
   but uses a relative timeout instead. Android-specific.
 
-- <netinet/in.h>: Now includes <netinet/in6.h>.
+- &lt;netinet/in.h&gt;: Now includes &lt;netinet/in6.h&gt;.
 
-- <netinet/in6.h>: Added IPV6_JOIN_GROUP, IPV6_LEAVE_GROUP, IN6ADDR_ANY_INIT
+- &lt;netinet/in6.h&gt;: Added IPV6_JOIN_GROUP, IPV6_LEAVE_GROUP, IN6ADDR_ANY_INIT
   and ipv6mr_interface definitions.
 
-- <time.h>:
+- &lt;time.h&gt;:
     * Add missing tzset() declaration.
     * Add Android-specific strftime_tz().
 
@@ -141,7 +141,7 @@ Differences between Android 2.0 and 1.6:
 - mktime(): Fix an infinite loop problem that appeared when switching to
   GCC 4.4.0.
 
-- strftime(): fix incorrect handling of dates > 2038 due to 64-bit issue
+- strftime(): fix incorrect handling of dates &gt; 2038 due to 64-bit issue
   in original code.
 
 -------------------------------------------------------------------------------
@@ -153,7 +153,7 @@ Differences between Android 1.6 and 1.5:
 - __aeabi_atexit(): Fix implementation to properly call C++ static destructors
   when the program exits (or when a shared library is unloaded).
 
-- <sys/stat.h>: added GLibc compatibility macros definitions:
+- &lt;sys/stat.h&gt;: added GLibc compatibility macros definitions:
 
         #define  st_atimensec  st_atime_nsec
         #define  st_mtimensec  st_mtime_nsec
@@ -172,3 +172,4 @@ Differences between Android 1.6 and 1.5:
 - DNS: Support for DNS domain search lists through the new net.dns.search
   system property. The corresponding value must be a space-separated list of
   domain suffixes.
+</pre></body></html>
