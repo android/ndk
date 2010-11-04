@@ -1,4 +1,4 @@
-Android NDK & ARM NEON instruction set extension support
+<html><body><pre>Android NDK &amp; ARM NEON instruction set extension support
 --------------------------------------------------------
 
 Introduction:
@@ -16,7 +16,7 @@ that allows native code to use two useful instruction set extensions:
   More specifically, by default 'armeabi-v7a' only supports
   VFPv3-D16 which only uses/requires 16 hardware FPU 64-bit registers.
 
-More information about this can be read in docs/CPU-ARCH-ABIS.TXT
+More information about this can be read in docs/CPU-ARCH-ABIS.html
 
 The ARMv7 Architecture Reference Manual also defines another optional
 instruction set extension known as "ARM Advanced SIMD", nick-named
@@ -92,19 +92,19 @@ It is thus crucial to perform runtime detection to know if the NEON-capable
 machine code can be run on the target device.
 
 To do that, use the 'cpufeatures' library that comes with this NDK. To lean
-more about it, see docs/CPU-FEATURES.TXT.
+more about it, see docs/CPU-FEATURES.html.
 
 You should explicitly check that android_getCpuFamily() returns
 ANDROID_CPU_FAMILY_ARM, and that android_getCpuFeatures() returns a value
 that has the ANDROID_CPU_ARM_FEATURE_NEON flag set, as  in:
 
-    #include <cpu-features.h>
+    #include &lt;cpu-features.h&gt;
 
     ...
     ...
 
-    if (android_getCpuFamily() == ANDROID_CPU_FAMILY_ARM &&
-        (android_getCpuFeatures() & ANDROID_CPU_ARM_FEATURE_NEON) != 0)
+    if (android_getCpuFamily() == ANDROID_CPU_FAMILY_ARM &amp;&amp;
+        (android_getCpuFeatures() &amp; ANDROID_CPU_ARM_FEATURE_NEON) != 0)
     {
         // use NEON-optimized routines
         ...
@@ -125,3 +125,4 @@ on how to use the 'cpufeatures' library and Neon intrinsics at the same time.
 
 This implements a tiny benchmark for a FIR filter loop using a C version, and
 a NEON-optimized one for devices that support it.
+</pre></body></html>

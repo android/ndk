@@ -1,4 +1,4 @@
-Android System Image Issues
+<html><body><pre>Android System Image Issues
 ===========================
 
 This document contains a list of known issues in existing Android
@@ -16,7 +16,7 @@ No standard C++ library support:
 
 The Android 1.5 system does not use any C++ standard library, and does
 not provide one to applicative native code. Instead, a very limited set
-of headers are provided (see docs/STABLE-APIS.TXT) which correspond to
+of headers are provided (see docs/STABLE-APIS.html) which correspond to
 the C++ support code used to build the Android platform.
 
 It is possible to hack existing C++ STL implementations to work on top
@@ -37,7 +37,7 @@ C Library limitations:
 
 The C library doesn't try to implement every feature under the sun.
 Most notably, pthread cancellation is not supported. A detailed overview
-of the C library and its design is available in docs/system/libc/OVERVIEW.TXT
+of the C library and its design is available in docs/system/libc/OVERVIEW.html
 
 
 No SysV IPCs in C library:
@@ -45,7 +45,7 @@ No SysV IPCs in C library:
 
 Unix System V Inter-Process Communication APIs (e.g. semget()) are
 intentionally not available from the C library, to avoid denial-of-service
-issues. See docs/system/libc/SYSV-IPC.TXT for details.
+issues. See docs/system/libc/SYSV-IPC.html for details.
 
 
 C Library bug: getservbyname() returns port number in incorrect order:
@@ -71,14 +71,14 @@ my_getservbyname(const char*  name, const char*  proto)
     static int       has_bug = -1;
     struct servent*  ret;
 
-    if (has_bug < 0) {
+    if (has_bug &lt; 0) {
         ret = getservbyname("http",NULL);
-        has_bug = (ret == NULL || ret->s_port == 80);
+        has_bug = (ret == NULL || ret-&gt;s_port == 80);
     }
 
     ret = getservbyname(name, proto);
     if (has_bug)
-        ret->s_port = htons(ret->s_port);
+        ret-&gt;s_port = htons(ret-&gt;s_port);
 }
 
 (the returned struct servent is thread-local and can be modified by the
@@ -111,3 +111,4 @@ The Android dynamic linker in 1.5 has many important limitations:
   libbar.so will always fail, even if you have already loaded libfoo.so
   in your process.
 
+</pre></body></html>
