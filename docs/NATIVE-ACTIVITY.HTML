@@ -1,0 +1,137 @@
+<html>
+<body>
+  <pre>
+Native Activities and Applications:
+-----------------------------------
+
+I. Overview
+===========
+The Android SDK provides a helper class, NativeActivity, that allows you to write a completely
+native activity. With a native activity, it is possible to write a completely native application.
+NativeActivity handles the communication between the Android framework and your
+native code, so you do not have to subclass it or call its methods. All you need to do is declare
+your application to be native in your AndroidManifest.xml file and begin creating your native
+application.
+
+Native activities do not change the fact that Android applications still run in their own virtual
+machine, sandboxed from other applications. Because of this, you can still access Android framework
+APIs through the JNI. There are, however, native interfaces to access things such as sensors, input
+events, and assets that you can use. For more information about what is supported, see the
+&lt;ndk_root&gt;/docs/STABLE-APIS.HTML.
+
+If you are developing a native activity, you should still create your projects with Eclipse or the
+"android create project" command. You still build and package native applications with the usual
+Android build tools, so the build system can only build Android projects that have the correct
+structure. Using the android tool or Eclipse helps ensure that.
+
+The Android NDK provides you with two choices to implement your native activity:
+
+  - The native_activity.h header defines the native version of the NativeActivity class. It
+    contains the callback interface and data structures that you need to create your native
+    activity. Because the main thread of your application handles the callbacks, your callback
+    implementations must not be blocking. If they block, you might receive ANR (Application Not
+    Responding) errors because your main thread will be unresponsive until the callback returns.
+    Read the comments in the 
+    &lt;ndk_root&gt;/platforms/android-9/arch-arm/usr/include/android/native_activity.h file for
+    more information.
+    
+  - The android_native_app_glue.h file defines a static helper library built on top of the
+    native_activity.h interface. It spawns another thread to handle things such as callbacks or
+    input events. This prevents any callbacks from blocking your main thread and adds some
+    flexibility in how you implement the callbacks, so you might find this programming model a bit
+    easier to implement. The &lt;ndk_root&gt;/sources/android/native_app_glue/android_native_app_glue.c
+    source is also available to you, so you can modify the implementation if you need. Read the
+    comments in the &lt;ndk_root&gt;/sources/android/native_app_glue/android_native_app_glue.h file
+    for more information.
+
+II. Using the native-activity.h interface:
+==========================================
+You can use the native-activity.h interface to implement a completely native activity. If you use
+this interface you must ensure that your callback implementations do not block the main UI thread.
+For more information on how to use this interface, see 
+&lt;ndk_root&gt;/platforms/android-9/arch-arm/usr/include/android/native_activity.h.
+
+You might find it easier to use the native_app_glue static helper library that handles the
+callbacks in an event loop in another thread. See the native-activity sample application for more
+information on how to use this static library.
+
+To implement a native activity with the native-activity.h interface:
+
+  1/ Create a project with the "android create project" command or from Eclipse. Create a jni/
+     directory in the project's root directory. This directory stores all of your native code.
+
+  2/ Declare your native activity in the AndroidManifest.xml file. An example is shown below:
+  
+      &lt;manifest xmlns:android="http://schemas.android.com/apk/res/android"
+        package="com.example.native_activity"
+        android:versionCode="1"
+        android:versionName="1.0"&gt;  
+        
+        &lt;uses-sdk android:minSdkVersion="8" /&gt;
+        
+        &lt;application android:label="@string/app_name" android:hasCode="false"&gt;
+        
+          &lt;activity android:name="android.app.NativeActivity"
+            android:label="@string/app_name"
+            android:configChanges="orientation|keyboardHidden"&gt;
+        
+          &lt;meta-data android:name="android.app.lib_name"
+            android:value="native-activity" /&gt;
+            &lt;intent-filter&gt;
+              &lt;action android:name="android.intent.action.MAIN" /&gt;
+              &lt;category android:name="android.intent.category.LAUNCHER" /&gt;
+            &lt;/intent-filter&gt;
+          &lt;/activity&gt;
+        &lt;/application&gt;
+      &lt;/manifest&gt;
+
+    The main things to note are:
+
+      - The android:name attribute of the activity tag must be set to android.app.NativeActivity.
+        It is possible to subclass the NativeActivity, however, so if you do, specify the name of
+        that class instead.
+      - The android:name attribute of the meta-data tag must be in the form of android.app.lib_name
+        where lib_name is the name of the module without the lib prefix and .so suffix.
+
+  3/ Create a file for your native activity and implement the ANativeActivity_onCreate() function, 
+     which is called when your native activity starts. This function receives a pointer to an
+     ANativeActivity structure, which contains function pointers to the various callback
+     implementations that you need to write. Set the applicable callback function pointers in
+     ANativeActivity-&gt;callbacks to the implementations of your callbacks.
+
+  4/ Set the ANativeActivity-&gt;instance field to the address of any instance specific data that
+     you want to use.
+
+  5/ Implement any other things that you want your activity to do upon starting.
+
+  6/ Implement the rest of the callbacks that you set in ANativeActivity-&gt;callbacks. For more
+     information on when the callbacks are called, see the SDK documentation for Activity
+     Lifecycles. Remember that your callback implementations must not be blocking, or you might get
+     ANR (Application Not Responding) errors because the main UI thread is waiting for the callbacks
+     to return.
+
+  7/ Develop the rest of your application.
+    
+  8/ Create an Android.mk file in the jni/ directory of your project to describe your native module
+     to the build system. An Android.mk file is essentially a snippet of a GNU Make file. For
+     example:
+       
+       LOCAL_PATH := $(call my-dir) 
+       include $(CLEAR_VARS)
+       LOCAL_MODULE    := my_native_module
+       LOCAL_SRC_FILES := my_native_code.c
+       include $(BUILD_SHARED_LIBRARY)
+
+     For more information on how to create an Android.mk file and what the variables mean,
+     see the &lt;ndk_root&gt;/docs/ANDROID-MK.TXT file.
+     
+  9/ Once you have an Android.mk file, compile your native code using the "ndk-build" command.
+     
+       cd path/to/project
+       &lt;ndk_root&gt;/ndk-build
+
+ 10/ Build and install your Android project as usual, using Ant or Eclipse. The build automatically
+     packages your native code into the .apk file if it is present in the jni/ directory.
+   </pre>
+</body>
+</html>
