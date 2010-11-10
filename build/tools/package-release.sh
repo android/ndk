@@ -282,11 +282,22 @@ for SYSTEM in $SYSTEMS; do
         done
     fi
 
-    ARCHIVE=$BIN_RELEASE.zip
+    # Create an archive for the final package. Extension depends on the
+    # host system.
+    case "$SYSTEM" in
+        windows)
+            ARCHIVE="$BIN_RELEASE.zip"
+            PACKER="zip -9qr"
+            ;;
+        *)
+            ARCHIVE="$BIN_RELEASE.tar.bz2"
+            PACKER="tar cjf"
+            ;;
+    esac
     echo "Creating $ARCHIVE"
-    (cd $TMPDIR && zip -9qr $OUT_DIR/$ARCHIVE $RELEASE_PREFIX && rm -rf $DSTDIR) 2>/dev/null 1>&2
+    (cd $TMPDIR && $PACKER $OUT_DIR/$ARCHIVE $RELEASE_PREFIX && rm -rf $DSTDIR) 2>/dev/null 1>&2
     if [ $? != 0 ] ; then
-        echo "Could not create zip archive. Aborting."
+        echo "Could not create archive. Aborting."
         exit 1
     fi
 
