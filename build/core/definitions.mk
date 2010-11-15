@@ -194,6 +194,7 @@ modules-LOCALS := \
     CXXFLAGS \
     CPPFLAGS \
     STATIC_LIBRARIES \
+    WHOLE_STATIC_LIBRARIES \
     SHARED_LIBRARIES \
     LDLIBS \
     ALLOW_UNDEFINED_SYMBOLS \
@@ -406,6 +407,7 @@ modules-compute-dependencies = \
 
 module-compute-depends = \
     $(call module-add-static-depends,$1,$(__ndk_modules.$1.STATIC_LIBRARIES))\
+    $(call module-add-static-depends,$1,$(__ndk_modules.$1.WHOLE_STATIC_LIBRARIES))\
     $(call module-add-shared-depends,$1,$(__ndk_modules.$1.SHARED_LIBRARIES))\
 
 module-get-installed = $(__ndk_modules.$1.INSTALLED)
