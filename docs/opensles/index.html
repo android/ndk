@@ -15,7 +15,8 @@ Khronos Group OpenSL ES 1.0.1 standard, as of Android API level 9 (Android
 version 2.3).
 <p>
 OpenSL ES provides a C language interface that is also callable from C++, and
-exposes features similar to the audio portions of these Android Java APIs:
+exposes features similar to the audio portions of these Android APIs
+callable from Java programming language code:
 <ul>
 <li><a href="http://developer.android.com/reference/android/media/MediaPlayer.html">
 android.media.MediaPlayer</a>
@@ -25,7 +26,7 @@ android.media.MediaRecorder</a>
 
 As with all of the Android Native Development Kit (NDK), the primary
 purpose of OpenSL ES for Android is to facilitate the implementation
-of shared libraries to be called from Java code via Java Native
+of shared libraries to be called from Java programming language code via Java Native
 Interface (JNI).  NDK is not intended for writing pure C/C++
 applications.  That said, OpenSL ES is a full-featured API, and we
 expect that you should be able to accomplish most of your audio
@@ -93,10 +94,10 @@ application, including:
 <dt>Resources</dt>
 <dd>
 By placing your audio files into the <code>res/raw/</code> folder,
-they can be accessed easily by the associated Java APIs for
+they can be accessed easily by the associated APIs for
 <a href="http://developer.android.com/reference/android/content/res/Resources.html">
 Resources</a>.  However there is no direct native access to resources,
-so you will need to write Java code to copy them out before use.
+so you will need to write Java programming language code to copy them out before use.
 </dd>
 
 <dt>Assets</dt>
@@ -216,6 +217,17 @@ objects and interfaces from the previous section.
 
 An audio player or recorder with buffer queue data locator supports
 PCM data format only.
+
+<h4>Device data locator</h4>
+
+The only supported use of an I/O device data locator is when it is
+specified as the data source for <code>Engine::CreateAudioRecorder</code>.
+It should be initialized using these values, as shown in the example:
+<pre>
+SLDataLocator_IODevice loc_dev =
+  {SL_DATALOCATOR_IODEVICE, SL_IODEVICE_AUDIOINPUT,
+  SL_DEFAULTDEVICEID_AUDIOINPUT, NULL};
+</pre>
 
 <h4>Dynamic interface management</h4>
 
@@ -492,11 +504,28 @@ platform-specific parameters for objects. Unlike other OpenSL ES
 1.0.1 interfaces, the Android configuration interface is available
 prior to object realization. This permits the object to be configured
 and then realized. Header file <code>SLES/OpenSLES_AndroidConfiguration.h</code>
-documents the available configuration options:
+documents the available configuration keys and values:
 <ul>
-<li>stream type for audio players
-<li>record profile for audio recorders
+<li>stream type for audio players (default <code>SL_ANDROID_STREAM_MEDIA</code>)
+<li>record profile for audio recorders (default <code>SL_ANDROID_RECORDING_PRESET_GENERIC</code>)
 </ul>
+Here is an example code fragment that sets the Android audio stream type on an audio player:
+<pre>
+// CreateAudioPlayer and specify SL_IID_ANDROIDCONFIGURATION
+// in the required interface ID array. Do not realize player yet.
+// ...
+SLAndroidConfigurationItf playerConfig;
+result = (*playerObject)-&gt;GetInterface(playerObject,
+    SL_IID_ANDROIDCONFIGURATION, &amp;playerConfig);
+assert(SL_RESULT_SUCCESS == result);
+SLint32 streamType = SL_ANDROID_STREAM_ALARM;
+result = (*playerConfig)-&gt;SetConfiguration(playerConfig,
+    SL_ANDROID_KEY_STREAM_TYPE, &amp;streamType, sizeof(SLint32));
+assert(SL_RESULT_SUCCESS == result);
+// ...
+// Now realize the player here.
+</pre>
+Similar code can be used to configure the preset for an audio recorder.
 
 <h3>Android effects interfaces</h3>
 
@@ -558,7 +587,6 @@ queue into a known state.
 A corollary is that it is unspecified whether buffer queue callbacks
 are called upon transition to <code>SL_PLAYSTATE_STOPPED</code> or by
 <code>BufferQueue::Clear</code>.
-<p>
 We recommend that you do not rely on either behavior; be prepared
 to receive a callback in these cases, but also do not depend on
 receiving one.
@@ -578,6 +606,57 @@ above).
 </ul>
 
 <h2>Programming notes</h2>
+
+These notes supplement the OpenSL ES 1.0.1 specification,
+available in the "References" section below.
+
+<h3>Objects and interface initialization</h3>
+
+Two aspects of the OpenSL ES programming model that may be unfamiliar
+to new developers are the distinction between objects and interfaces,
+and the initialization sequence.
+<p>
+Briefly, an OpenSL ES object is similar to the object concept
+in programming languages such as Java and C++, except an OpenSL ES
+object is <i>only</i> visible via its associated interfaces. This
+includes the initial interface for all objects, called
+<code>SLObjectItf</code>.  There is no handle for an object itself,
+only a handle to the <code>SLObjectItf</code> interface of the object.
+<p>
+An OpenSL ES object is first "created", which returns an
+<code>SLObjectItf</code>, then "realized". This is similar to the
+common programming pattern of first constructing an object (which
+should never fail other than for lack of memory or invalid parameters),
+and then completing initialization (which may fail due to lack of
+resources).  The realize step gives the implementation a
+logical place to allocate additional resources if needed.
+<p>
+As part of the API to create an object, an application specifies
+an array of desired interfaces that it plans to acquire later. Note
+that this array does <i>not</i> automatically acquire the interfaces;
+it merely indicates a future intention to acquire them.  Interfaces
+are distinguished as "implicit" or "explicit".  An explicit interface
+<i>must</i> be listed in the array if it will be acquired later.
+An implicit interface need not be listed in the object create array,
+but there is no harm in listing it there.  OpenSL ES has one more
+kind of interface called "dynamic", which does not need to be
+specified in the object create array, and can be added later after
+the object is created.  The Android implementation provides a
+convenience feature to avoid this complexity; see section "Dynamic
+interfaces at object creation" above.
+<p>
+After the object is created and realized, the application should
+acquire interfaces for each feature it needs, using
+<code>GetInterface</code> on the initial <code>SLObjectItf</code>.
+<p>
+Finally, the object is available for use via its interfaces, though
+note that some objects require further setup. In particular, an
+audio player with URI data source needs a bit more preparation in
+order to detect connection errors. See the next section
+"Audio player prefetch" for details.
+<p>
+After your application is done with the object, you should explicitly
+destroy it; see section "Destroy" below.
 
 <h3>Audio player prefetch</h3>
 
@@ -612,6 +691,8 @@ events are delivered simultaneously, and
 <code>PrefetchStatus::GetPrefetchStatus</code> reports
 <code>SL_PREFETCHSTATUS_UNDERFLOW</code>, then this indicates a
 non-recoverable error in the data source.
+This includes the inability to connect to the data source because
+the local filename does not exist or the network URI is invalid.
 <p>
 The next version of OpenSL ES is expected to add more explicit
 support for handling errors in the data source. However, for future
@@ -634,7 +715,13 @@ callback will be called with periodic status updates
 
 <h3>Destroy</h3>
 
-OpenSL ES does not support
+Be sure to destroy all objects on exit from your application.  Objects
+should be destroyed in reverse order of their creation, as it is
+not safe to destroy an object that has any dependent objects.
+For example, destroy in this order: audio players and recorders,
+output mix, then finally the engine.
+<p>
+OpenSL ES does not support automatic garbage collection or
 <a href="http://en.wikipedia.org/wiki/Reference_counting">reference counting</a>
 of interfaces. After you call <code>Object::Destroy</code>, all extant
 interfaces derived from the associated object become <i>undefined</i>.
@@ -663,8 +750,18 @@ for more information.
 
 <h3>Callbacks and threads</h3>
 
-Callback handlers are generally called synchronously from internal
-non-application thread(s) which are not attached to Java and thus
+Callback handlers are generally called <i>synchronously</i> with
+respect to the event, that is, at the moment and location where the
+event is detected by the implementation. But this point is
+<i>asynchronous</i> with respect to the application. Thus you should
+use a mutex or other synchronization mechanism to control access
+to any variables shared between the application and the callback
+handler. In the example code, such as for buffer queues, we have
+omitted this synchronization in the interest of simplicity. However,
+proper mutual exclusion would be critical for any production code.
+<p>
+Callback handlers are called from internal
+non-application thread(s) which are not attached to the Dalvik virtual machine and thus
 are ineligible to use JNI. Because these internal threads are
 critical to the integrity of the OpenSL ES implementation, a callback
 handler should also not block or perform excessive work. Therefore,
@@ -673,7 +770,7 @@ if your callback handler needs to use JNI or do anything significant
 family), the handler should instead post an event for another thread
 to process.
 <p>
-Note that the converse is safe: a Java application thread which has
+Note that the converse is safe: a Dalvik application thread which has
 entered JNI is allowed to directly call OpenSL ES APIs, including
 those which block. However, blocking calls are not recommended from
 the main thread, as they may result in the dreaded "Application Not
@@ -681,8 +778,8 @@ Responding" (ANR).
 
 <h3>Performance</h3>
 
-As OpenSL ES is a native C API, non-Java application threads which
-call OpenSL ES have no Java-related overhead such as garbage
+As OpenSL ES is a native C API, non-Dalvik application threads which
+call OpenSL ES have no Dalvik-related overhead such as garbage
 collection pauses. However, there is no additional performance
 benefit to the use of OpenSL ES other than this. In particular, use
 of OpenSL ES does not result in lower audio latency, higher scheduling
@@ -694,14 +791,14 @@ expect to benefit from any future system performance improvements.
 <h3>Security and permissions</h3>
 
 As far as who can do what, security in Android is done at the
-process level. Java can't do anything more than native code, nor
-can native code do anything more than Java. The only differences
+process level. Java programming language code can't do anything more than native code, nor
+can native code do anything more than Java code. The only differences
 between them are what APIs are available that provide functionality
 that the platform promises to support in the future and across
 different devices.
 <p>
 Applications using OpenSL ES must request whatever permissions they
-would need for similar Java APIs. For example, if your application
+would need for similar non-native APIs. For example, if your application
 records audio, then it needs the <code>android.permission.RECORD_AUDIO</code>
 permission. Applications that use audio effects need
 <code>android.permission.MODIFY_AUDIO_SETTINGS</code>. Applications that play
@@ -718,6 +815,17 @@ sandboxed environment.  For example you could process media from
 untrustworthy sources in a separate process. Though both processes
 would still run under the same UID, this separation does make an
 attack more difficult.
+
+<h2>Platform issues</h2>
+
+This section describes known issues in the initial platform
+release which supports these APIs.
+
+<h3>Dynamic interface management</h3>
+
+<code>DynamicInterfaceManagement::AddInterface</code> does not work.
+Instead, specify the interface in the array passed to Create, as
+shown in the example code for environmental reverb.
 
 <h2>References and resources</h2>
 
