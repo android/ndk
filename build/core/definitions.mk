@@ -255,6 +255,7 @@ modules-clear = \
     )\
     $(eval __ndk_modules := $(empty_set)) \
     $(eval __ndk_top_modules := $(empty)) \
+    $(eval __ndk_import_list := $(empty)) \
     $(eval __ndk_import_depth := $(empty))
 
 # -----------------------------------------------------------------------------
@@ -1133,16 +1134,25 @@ import-find-module = $(strip \
 # $1: tag name for the lookup
 #
 import-module = \
-    $(call ndk_log,Looking for imported module with tag '$1')\
-    $(eval __imported_path := $(call import-find-module,$1))\
-    $(if $(__imported_path),\
-      $(eval __ndk_import_depth += x) \
-      $(eval include $(__imported_path)/Android.mk)\
-      $(eval __ndk_import_depth := $(call rest,$(__ndk_import_depth)))\
+    $(eval __import_tag := $(strip $1))\
+    $(if $(call seq,$(words $(__import_tag)),1),,\
+      $(call __ndk_info,$(call local-makefile): Cannot import module with spaces in tag: '$(__import_tag)')\
+    )\
+    $(if $(call set_is_member,$(__ndk_import_list),$(__import_tag)),\
+      $(call ndk_log,Skipping duplicate import for module with tag '$(__import_tag)')\
     ,\
-      $(call __ndk_info,$(call local-makefile): Cannot find module with tag '$1' in import path)\
-      $(call __ndk_info,Are you sure your NDK_MODULE_PATH variable is properly defined ?)\
-      $(call __ndk_error,Aborting.)\
+      $(call ndk_log,Looking for imported module with tag '$(__import_tag)')\
+      $(eval __imported_path := $(call import-find-module,$(__import_tag)))\
+      $(if $(__imported_path),\
+        $(eval __ndk_import_depth += x) \
+        $(eval include $(__imported_path)/Android.mk)\
+        $(eval __ndk_import_depth := $(call rest,$(__ndk_import_depth)))\
+      ,\
+        $(call __ndk_info,$(call local-makefile): Cannot find module with tag '$(__import_tag)' in import path)\
+        $(call __ndk_info,Are you sure your NDK_MODULE_PATH variable is properly defined ?)\
+        $(call __ndk_error,Aborting.)\
+      )\
+      $(eval __ndk_import_list := $(call set_insert,$(__ndk_import_list),$(__import_tag)))\
     )
 
 # Only used for debugging
