@@ -54,7 +54,12 @@ $(TARGET_CC) \
     -Wl,-z,nocopyreloc \
     $(call host-path,\
         $(TARGET_CRTBEGIN_DYNAMIC_O) \
-        $(PRIVATE_OBJECTS) \
+        $(PRIVATE_OBJECTS)) \
+    -Wl,--whole-archive \
+    $(call host-path,\
+        $(PRIVATE_WHOLE_STATIC_LIBRARIES)) \
+    -Wl,--no-whole-archive \
+    $(call host-path,\
         $(PRIVATE_STATIC_LIBRARIES) \
         $(TARGET_LIBGCC) \
         $(PRIVATE_SHARED_LIBRARIES)) \
@@ -79,8 +84,8 @@ TARGET_LDLIBS := -Wl,-rpath-link=$(call host-path,$(SYSROOT)/usr/lib)
 
 #
 # IMPORTANT: The following definitions must use lazy assignment because
-# the value of TOOLCHAIN_PREFIX, TARGET_CFLAGS.common can be changed
-# later by the toolchain's setup.mk script.
+# the value of TOOLCHAIN_PREFIX or TARGET_CFLAGS can be changed later by
+# the toolchain's setup.mk script.
 #
 
 TARGET_CC       = $(TOOLCHAIN_PREFIX)gcc
