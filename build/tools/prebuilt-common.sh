@@ -572,3 +572,12 @@ random_temp_directory ()
     mkdir -p /tmp/ndk-toolchain
     mktemp -d /tmp/ndk-toolchain/build-XXXXXX
 }
+
+#
+# Common definitions
+#
+
+# Location of the STLport sources, relative to the NDK root directory
+STLPORT_SUBDIR=sources/android/stlport
+# Default ABIs for the prebuilt STLport binaries
+STLPORT_ABIS="armeabi armeabi-v7a"

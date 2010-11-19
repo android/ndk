@@ -1,5 +1,19 @@
 LOCAL_PATH := $(call my-dir)
 
+# Normally, we distribute the NDK with prebuilt binaries of STLport
+# in $LOCAL_PATH/<abi>/. However,
+#
+
+STLPORT_FORCE_REBUILD := $(strip $(STLPORT_FORCE_REBUILD))
+ifndef STLPORT_FORCE_REBUILD
+  ifeq (,$(strip $(wildcard $(LOCAL_PATH)/libs/armeabi/libstlport_static.a)))
+    $(call __ndk_info,WARNING: Rebuilding STLport libraries from sources!)
+    $(call __ndk_info,You might want to use $$NDK/build/tools/build-stlport.sh)
+    $(call __ndk_info,in order to build prebuilt versions to speed up your builds!)
+    STLPORT_FORCE_REBUILD := true
+  endif
+endif
+
 libstlport_path := $(call my-dir)
 
 libstlport_src_files := \
@@ -40,13 +54,33 @@ libstlport_cflags := -D_GNU_SOURCE
 libstlport_cppflags := -fuse-cxa-atexit
 libstlport_c_includes := $(libstlport_path)/stlport
 
+ifneq ($(STLPORT_FORCE_REBUILD),true)
+
+$(call ndk_log,Using prebuilt STLport libraries)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := stlport_static
+LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).a
+LOCAL_EXPORT_C_INCLUDES := $(libstlport_c_includes)
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := stlport_shared
+LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).so
+LOCAL_EXPORT_C_INCLUDES := $(libstlport_c_includes)
+include $(PREBUILT_SHARED_LIBRARY)
+
+else # STLPORT_FORCE_REBUILD == true
+
+$(call ndk_log,Rebuilding STLport libraries from sources)
+
 include $(CLEAR_VARS)
 LOCAL_MODULE := stlport_static
 LOCAL_SRC_FILES := $(libstlport_src_files)
 LOCAL_CFLAGS := $(libstlport_cflags)
 LOCAL_CPPFLAGS := $(libstlport_cppflags)
 LOCAL_C_INCLUDES := $(libstlport_c_includes)
-LOCAL_EXPORT_C_INCLUDES := $(LOCAL_C_INCLUDES)
+LOCAL_EXPORT_C_INCLUDES := $(libstlport_c_includes)
 include $(BUILD_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
@@ -55,5 +89,7 @@ LOCAL_SRC_FILES := $(libstlport_src_files)
 LOCAL_CFLAGS := $(libstlport_cflags)
 LOCAL_CPPFLAGS := $(libstlport_cppflags)
 LOCAL_C_INCLUDES := $(libstlport_c_includes)
-LOCAL_EXPORT_C_INCLUDES := $(LOCAL_C_INCLUDES)
+LOCAL_EXPORT_C_INCLUDES := $(libstlport_c_includes)
 include $(BUILD_SHARED_LIBRARY)
+
+endif # STLPORT_FORCE_REBUILD == true
