@@ -31,10 +31,7 @@ $(TARGET_CC) \
     $(call host-path,\
         $(TARGET_CRTBEGIN_SO_O) \
         $(PRIVATE_OBJECTS)) \
-    -Wl,--whole-archive \
-    $(call host-path,\
-        $(PRIVATE_WHOLE_STATIC_LIBRARIES)) \
-    -Wl,--no-whole-archive \
+    $(call link-whole-archives,$(PRIVATE_WHOLE_STATIC_LIBRARIES))\
     $(call host-path,\
         $(PRIVATE_STATIC_LIBRARIES) \
         $(TARGET_LIBGCC) \
@@ -55,10 +52,7 @@ $(TARGET_CC) \
     $(call host-path,\
         $(TARGET_CRTBEGIN_DYNAMIC_O) \
         $(PRIVATE_OBJECTS)) \
-    -Wl,--whole-archive \
-    $(call host-path,\
-        $(PRIVATE_WHOLE_STATIC_LIBRARIES)) \
-    -Wl,--no-whole-archive \
+    $(call link-whole-archives,$(PRIVATE_WHOLE_STATIC_LIBRARIES))\
     $(call host-path,\
         $(PRIVATE_STATIC_LIBRARIES) \
         $(TARGET_LIBGCC) \
