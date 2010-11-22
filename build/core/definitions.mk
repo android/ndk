@@ -146,6 +146,21 @@ else
 host-c-includes = $(1:%=-I%)
 endif
 
+
+# -----------------------------------------------------------------------------
+# Function : link-whole-archives
+# Arguments: 1: list of whole static libraries
+# Returns  : linker flags to use the whole static libraries
+# Usage    : $(call link-whole-archives,<libraries>)
+# Rationale: This function is used to put the list of whole static libraries
+#            inside a -Wl,--whole-archive ... -Wl,--no-whole-archive block.
+#            If the list is empty, it returns an empty string.
+#            This function also calls host-path to translate the library
+#            paths.
+# -----------------------------------------------------------------------------
+link-whole-archives = $(if $(strip $1),$(call link-whole-archive-flags,$1))
+link-whole-archive-flags = -Wl,--whole-archive $(call host-path,$1) -Wl,--no-whole-archive
+
 # =============================================================================
 #
 # Modules database
