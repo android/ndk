@@ -517,7 +517,8 @@ parent-dir = $(patsubst %/,%,$(dir $1))
 # Returns  : Remove NDK_PROJECT_PATH prefix from a given path. This can be
 #            used to perform pretty-printing for logs.
 # -----------------------------------------------------------------------------
-pretty-dir = $(patsubst $(NDK_PROJECT_PATH)/%,%,$1)
+pretty-dir = $(patsubst $(NDK_ROOT)/%,<NDK>/%,\
+                 $(patsubst $(NDK_PROJECT_PATH)/%,%,$1))
 
 # -----------------------------------------------------------------------------
 # Function : check-user-define

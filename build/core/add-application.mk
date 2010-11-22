@@ -90,7 +90,7 @@ endif
 #
 _bad_platform := $(strip $(filter-out $(NDK_ALL_PLATFORMS),$(APP_PLATFORM)))
 ifdef _bad_platform
-    $(call ndk_log,Application $(_name) targets unknown platform '$(_bad_platform)')
+    $(call ndk_log,Application $(_app) targets unknown platform '$(_bad_platform)')
     APP_PLATFORM := android-$(NDK_MAX_PLATFORM_LEVEL)
     $(call ndk_log,Switching to $(APP_PLATFORM))
 endif
@@ -99,7 +99,7 @@ endif
 #
 _bad_abis := $(strip $(filter-out $(NDK_ALL_ABIS),$(APP_ABI)))
 ifdef _bad_abis
-    $(call __ndk_info,Application $(_name) targets unknown ABI '$(_bad_abis)')
+    $(call __ndk_info,Application $(_app) targets unknown ABI '$(_bad_abis)')
     $(call __ndk_info,Please fix the APP_ABI definition in $(_application_mk))
     $(call __ndk_info,to use a set of the following values: $(NDK_ALL_ABIS))
     $(call __ndk_error,Aborting)
@@ -194,7 +194,7 @@ else
 endif
 
 $(if $(call get,$(_map),defined),\
-  $(call __ndk_info,Weird, the application $(_name) is already defined by $(call get,$(_map),defined))\
+  $(call __ndk_info,Weird, the application $(_app) is already defined by $(call get,$(_map),defined))\
   $(call __ndk_error,Aborting)\
 )
 
@@ -208,4 +208,4 @@ $(foreach __name,$(NDK_APP_VARS),\
 # Record the Application.mk for debugging
 $(call set,$(_map),Application.mk,$(_application_mk))
 
-NDK_ALL_APPS += $(_name)
+NDK_ALL_APPS += $(_app)

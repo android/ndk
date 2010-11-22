@@ -227,6 +227,21 @@ if [ "$OPTION_TRY_X86" = "yes" ] ; then
     build_gdbserver x86-4.2.1
 fi
 
+# Rebuild prebuilt libraries
+if [ "$MINGW" != "yes" ] ; then
+    if [ -z "$PACKAGE_DIR" ] ; then
+        BUILD_STLPORT_FLAGS="--ndk-dir=\"$NDK_DIR\""
+    else
+        BUILD_STLPORT_FLAGS="--package-dir=\"$PACKAGE_DIR\""
+    fi
+    $ANDROID_NDK_ROOT/build/tools/build-stlport.sh $BUILD_STLPORT_FLAGS
+    if [ "$OPTION_TRY_X86" = "yes" ]; then
+        $ANDROID_NDK_ROOT/build/tools/build-stlport.sh $BUILD_STLPORT_FLAGS--abis=x86
+    fi
+else
+    dump "Skipping STLport binaries build (--mingw option being used)"
+fi
+
 # XXX: NOT YET NEEDED!
 #
 #dump "Building host ccache binary..."

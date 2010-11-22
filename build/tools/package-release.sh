@@ -236,6 +236,23 @@ echo "$RELEASE" > $REFERENCE/RELEASE.TXT
 # Remove un-needed files
 rm -f $REFERENCE/CleanSpec.mk
 
+# Unpack a prebuilt into the destination directory ($DSTDIR)
+# $1: prebuilt name, relative to $PREBUILT_DIR
+unpack_prebuilt ()
+{
+    local PREBUILT=$1
+    echo "Unpacking $PREBUILT"
+    if [ -f "$PREBUILT_DIR/$PREBUILT" ] ; then
+        (cd $DSTDIR && run tar xjf "$PREBUILT_DIR/$PREBUILT") 2>/dev/null 1>&2
+        if [ $? != 0 ] ; then
+            echo "Could not unpack prebuilt $PREBUILT. Aborting."
+            exit 1
+        fi
+    else
+        echo "WARNING: Could not find $PREBUILT in $PREBUILT_DIR"
+    fi
+}
+
 # now, for each system, create a package
 #
 for SYSTEM in $SYSTEMS; do
@@ -262,24 +279,36 @@ for SYSTEM in $SYSTEMS; do
             echo "ERROR: Could not unzip NDK package $PREBUILT_NDK"
             exit 1
         fi
-        cd android-ndk-* && cp -rP toolchains/* $DSTDIR/toolchains/
+        cd $UNZIP_DIR/android-ndk-* && cp -rP toolchains/* $DSTDIR/toolchains/
+
+        if [ -d "$DSTDIR/$STLPORT_SUBDIR" ] ; then
+            STLPORT_ABIS="armeabi armeabi-v7a x86"
+            cd $UNZIP_DIR/android-ndk-*
+            for STL_ABI in $STLPORT_ABIS; do
+                if [ -d "$STLPORT_SUBDIR/$STL_ABI" ] ; then
+                    echo "Copying: $STLPORT_SUBDIR/$STL_ABI"
+                    run cp -rp $STLPORT_SUBDIR/$STL_ABI $DSTDIR/$STLPORT_SUBDIR
+                else
+                    echo "Ignored: $STLPORT_SUBDIR/$STL_ABI"
+                fi
+            done
+        else
+            echo "WARNING: Could not find STLport source tree!"
+        fi
     else
         for TC in $TOOLCHAINS; do
-            echo "Unpacking $TC-$SYSTEM.tar.bz2"
-            (cd $DSTDIR && tar xjf "$PREBUILT_DIR/$TC-$SYSTEM.tar.bz2") 2>/dev/null 1>&2
-            if [ $? != 0 ] ; then
-                echo "Could not unpack prebuilt toolchain $TC-$SYS.tar.bz2. Aborting."
-                exit 1
-            fi
+            unpack_prebuilt $TC-$SYSTEM.tar.bz2
             echo "Removing sysroot for $TC"
             rm -rf $DSTDIR/toolchains/$TC/prebuilt/$SYSTEM/sysroot
-            echo "Unpacking $TC-gdbserver.tar.bz2"
-            (cd $DSTDIR && tar xjf "$PREBUILT_DIR/$TC-gdbserver.tar.bz2") 2>/dev/null 1>&2
-            if [ $? != 0 ] ; then
-                echo "Could not unpack prebuilt $TC-gdbserver.tar.bz2. Aborting."
-                exit 1
-            fi
+            unpack_prebuilt $TC-gdbserver.tar.bz2
         done
+        unpack_prebuilt stlport-libs-armeabi.tar.bz2
+        unpack_prebuilt stlport-libs-armeabi-v7a.tar.bz2
+        echo "$TOOLCHAINS" | tr ' ' '\n' | grep -q x86
+        if [ $? = 0 ] ; then
+            unpack_prebuilt stlport-prebuilt-x86.tar.bz2
+        fi
+
     fi
 
     # Create an archive for the final package. Extension depends on the

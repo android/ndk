@@ -1,0 +1,3 @@
+This project shall only be used by the build/tools/rebuild-stlport.sh script.
+Its purpose is to rebuild the STLport binaries with the NDK, so they can be
+copied to $STLPORT_PATH/<abi>/ directories.
