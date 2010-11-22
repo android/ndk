@@ -558,3 +558,33 @@ download_file ()
         return
     fi
 }
+
+
+# Unpack a given archive
+#
+# $1: archive file path
+# $2: optional target directory (current one if omitted)
+#
+unpack_archive ()
+{
+    local ARCHIVE="$1"
+    local DIR=${2-.}
+    local RESULT
+    case "$ARCHIVE" in
+        *.zip)
+            (cd $DIR && run unzip -q "$ARCHIVE")
+            ;;
+        *.tar)
+            run tar xf "$ARCHIVE" -C $DIR
+            ;;
+        *.tar.gz)
+            run tar xzf "$ARCHIVE" -C $DIR
+            ;;
+        *.tar.bz2)
+            run tar xjf "$ARCHIVE" -C $DIR
+            ;;
+        *)
+            dump "ERROR: Cannot unpack archive with unknown extension: $ARCHIVE"
+            ;;
+    esac
+}
