@@ -99,7 +99,7 @@ extract_parameters $@
 
 # Check the prebuilt path
 #
-if [ -n "$PREBUILD_NDK" -a -n "$PREBUILT_DIR" ] ; then
+if [ -n "$PREBUILT_NDK" -a -n "$PREBUILT_DIR" ] ; then
     echo "ERROR: You cannot use both --prebuilt-ndk and --prebuilt-dir at the same time."
     exit 1
 fi
@@ -112,12 +112,10 @@ fi
 # Check the option directory.
 if [ -n "$OPTION_OUT_DIR" ] ; then
     OUT_DIR="$OPTION_OUT_DIR"
-    if [ ! -d $OUT_DIR ] ; then
-        mkdir -p $OUT_DIR
-        if [ $? != 0 ] ; then
-            echo "ERROR: Could not create output directory: $OUT_DIR"
-            exit 1
-        fi
+    mkdir -p $OUT_DIR
+    if [ $? != 0 ] ; then
+        echo "ERROR: Could not create output directory: $OUT_DIR"
+        exit 1
     fi
 else
     rm -rf $OUT_DIR && mkdir -p $OUT_DIR

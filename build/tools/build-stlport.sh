@@ -49,6 +49,9 @@ register_var_option "--package-dir=<path>" PACKAGE_DIR "Put prebuilt tarballs in
 NDK_DIR=
 register_var_option "--ndk-dir=<path>" NDK_DIR "Don't package, put the files in target NDK dir."
 
+TOOLCHAIN_PKG=
+register_var_option "--toolchain-pkg=<path>" TOOLCHAIN_PKG "Use specific toolchain prebuilt package."
+
 BUILD_DIR=
 OPTION_BUILD_DIR=
 register_var_option "--build-dir=<path>" OPTION_BUILD_DIR "Specify temporary build dir."
@@ -66,6 +69,20 @@ if [ -n "$PACKAGE_DIR" -a -n "$NDK_DIR" ] ; then
     exit 1
 fi
 
+if [ -n "$TOOLCHAIN_PKG" ] ; then
+    if [ ! -f "$TOOLCHAIN_PKG" ] ; then
+        dump "ERROR: Your toolchain package does not exist: $TOOLCHAIN_PKG"
+        exit 1
+    fi
+    case "$TOOLCHAIN_PKG" in
+        *.tar.bz2)
+            ;;
+        *)
+            dump "ERROR: Toolchain package is not .tar.bz2 archive: $TOOLCHAIN_PKG"
+            exit 1
+    esac
+fi
+
 if [ -z "$NDK_DIR" ] ; then
     mkdir -p "$PACKAGE_DIR"
     if [ $? != 0 ] ; then
@@ -75,7 +92,11 @@ if [ -z "$NDK_DIR" ] ; then
     NDK_DIR=/tmp/ndk-toolchain/ndk-prebuilt-$$
     mkdir -p $NDK_DIR &&
     dump "Copying NDK files to temporary dir: $NDK_DIR"
-    cp -rf $ANDROID_NDK_ROOT/* $NDK_DIR/
+    run cp -rf $ANDROID_NDK_ROOT/* $NDK_DIR/
+    if [ -n "$TOOLCHAIN_PKG" ] ; then
+        dump "Extracting prebuilt toolchain binaries."
+        run tar -C $NDK_DIR xjf $TOOLCHAIN_PKG
+    fi
 else
     if [ ! -d "$NDK_DIR" ] ; then
         echo "ERROR: NDK directory does not exists: $NDK_DIR"
@@ -117,11 +138,15 @@ if [ ! -d $PROJECT_DIR ] ; then
     exit 1
 fi
 
+# cleanup required to avoid problems with stale dependency files
+rm -rf "$PROJECT_DIR/libs"
+rm -rf "$PROJECT_DIR/obj"
+
 LIBRARIES="libstlport_static.a libstlport_shared.so"
 
 for ABI in $ABIS; do
     dump "Building $ABI STLport binaries..."
-    (cd "$PROJECT_SUBDIR" && run "$NDK_DIR"/ndk-build -B APP_ABI=$ABI -j$BUILD_JOBS STLPORT_FORCE_REBUILD=true)
+    (run cd "$PROJECT_SUBDIR" && run "$NDK_DIR"/ndk-build -B APP_ABI=$ABI -j$BUILD_JOBS STLPORT_FORCE_REBUILD=true)
     if [ $? != 0 ] ; then
         dump "ERROR: Could not build $ABI STLport binaries!!"
         exit 1
