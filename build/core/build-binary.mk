@@ -288,7 +288,7 @@ endif
 ifeq ($(call module-is-prebuilt,$(LOCAL_MODULE)),$(true))
 $(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
 	@ mkdir -p $(dir $@)
-	@ echo "Prebuilt       : $(call pretty-dir,$@) <= $(call pretty-dir,$<)"
+	@ echo "Prebuilt       : $(PRIVATE_NAME) <= $(call pretty-dir,$(dir $<))"
 	$(hide) cp -f $< $@
 endif
 

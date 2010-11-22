@@ -73,5 +73,13 @@ read a few files). Here's an example on how to run it:
 Note that a few unit tests fail at the moment, they should hopefully
 fixed in a later release of this library.
 
+
+The NDK comes with prebuilt binaries for this library to speed up development.
+You can however rebuild them from sources in your own application build by
+defining STLPORT_FORCE_REBUILD to 'true' in your Application.mk as in:
+
+    STLPORT_FORCE_REBUILD := true
+
+
 VERSION INFORMATION: This module is based on STLport version 5.x.y (TODO)
 
