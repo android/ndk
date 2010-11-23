@@ -165,6 +165,9 @@ fi # ! $TOOLCHAIN_SRC_DIR
 
 if [ "$MINGW" = yes ] ; then
     FLAGS="$FLAGS --mingw"
+    # For some reason the build fails with a weird error here on Lucid!?
+    # Disable parallel builds until we debug the issue.
+    FLAGS="$FLAGS -j1"
 fi
 
 # Needed to set HOST_TAG to windows if --mingw is used.
