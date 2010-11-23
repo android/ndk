@@ -31,7 +31,7 @@ NDK_ROOT_DIR="$ANDROID_NDK_ROOT"
 # this release. This can be overriden with the --platforms
 # option, see below.
 #
-PLATFORMS="3 4 5 8 9"
+PLATFORMS="$API_LEVELS"
 
 # the default release name (use today's date)
 RELEASE=`date +%Y%m%d`
