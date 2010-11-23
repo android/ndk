@@ -38,6 +38,7 @@ NDK_ROOT=
 JOBS=$BUILD_NUM_CPUS
 find_program ADB_CMD adb
 TESTABLES="samples build device"
+NDK_PACKAGE=
 
 while [ -n "$1" ]; do
     opt="$1"
@@ -55,6 +56,9 @@ while [ -n "$1" ]; do
             ;;
         --ndk=*)
             NDK_ROOT="$optarg"
+            ;;
+        --package=*)
+            NDK_PACKAGE="$optarg"
             ;;
         -j*)
             JOBS=`expr "$opt" : '-j\(.*\)'`
@@ -100,12 +104,14 @@ if [ "$OPTION_HELP" = "yes" ] ; then
     echo "    --help|-h|-?      Print this help"
     echo "    --verbose         Enable verbose mode"
     echo "    --ndk=<path>      Path to NDK to test [$ROOTDIR]"
+    echo "    --package=<path>  Path to NDK package to test"
     echo "    -j<N> --jobs=<N>  Launch parallel builds [$JOBS]"
     echo "    --adb=<file>      Specify adb executable for device tests"
     echo "    --only-samples    Only rebuild samples"
     echo "    --only-build      Only rebuild build tests"
     echo "    --only-device     Only rebuild & run device tests"
     echo ""
+    echo "NOTE: You cannot use --ndk and --package at the same time."
     exit 0
 fi
 
@@ -120,6 +126,22 @@ is_testable () {
         return 1
     fi
 }
+
+mkdir -p /tmp/ndk-tests
+setup_default_log_file /tmp/ndk-tests/build-tests.log
+
+if [ -n "$NDK_PACKAGE" ] ; then
+    if [ -n "$NDK_ROOT" ] ; then
+        dump "ERROR: You can't use --ndk and --package at the same time!"
+        exit 1
+    fi
+    NDK_ROOT=/tmp/ndk-tests/install
+    mkdir -p  "$NDK_ROOT" && rm -rf "$NDK_ROOT/*"
+    dump "Unpacking NDK package to $NDK_ROOT"
+    unpack_archive "$NDK_PACKAGE" "$NDK_ROOT"
+    NDK_ROOT=`ls -d $NDK_ROOT/*`
+fi
+
 #
 # Check the NDK install path.
 #
@@ -142,9 +164,6 @@ fi
 #
 # Create log file
 #
-
-mkdir -p /tmp/ndk-tests
-setup_default_log_file /tmp/ndk-tests/build-tests.log
 
 BUILD_DIR=`mktemp -d /tmp/ndk-tests/build-XXXXXX`
 
