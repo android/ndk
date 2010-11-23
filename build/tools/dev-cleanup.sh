@@ -74,3 +74,9 @@ done
 for PROJECT in $DIR/platforms/android-*/samples/*; do
     cleanup_project $PROJECT
 done
+for PROJECT in $DIR/tests/build/*; do
+    cleanup_project $PROJECT
+done
+for PROJECT in $DIR/tests/device/*; do
+    cleanup_project $PROJECT
+done

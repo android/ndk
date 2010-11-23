@@ -214,6 +214,10 @@ if [ $? != 0 ] ; then
     exit 2
 fi
 
+rm -rf $REFERENCE/samples/*/{obj,libs,build.xml,local.properties,Android.mk} &&
+rm -rf $REFERENCE/tests/build/*/{obj,libs} &&
+rm -rf $REFERENCE/tests/device/*/{obj,libs}
+
 # copy sources files
 if [ -d $DEVELOPMENT_ROOT/sources ] ; then
     echo "Copying NDK sources files"
