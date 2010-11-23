@@ -577,6 +577,13 @@ random_temp_directory ()
 # Common definitions
 #
 
+# Current list of platform levels we support
+#
+# Note: levels 6 and 7 are omitted since they have the same native
+# APIs as level 5.
+#
+API_LEVELS="3 4 5 8 9"
+
 # Location of the STLport sources, relative to the NDK root directory
 STLPORT_SUBDIR=sources/android/stlport
 # Default ABIs for the prebuilt STLport binaries

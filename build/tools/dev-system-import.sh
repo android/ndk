@@ -59,7 +59,7 @@ NDK definitions for the 'android-9' platform, use one of:
 
 You can also use several values to update several levels at once, e.g.:
 
-    $PROGNAME 3 4 5 8 9
+    $PROGNAME $API_LEVELS
 
 NOTE: The currently auto-detected API level for your build is $PLATFORM,
       but this value may be incorrect if your platform has not been assigned
