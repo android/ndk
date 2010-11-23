@@ -1,0 +1,93 @@
+<html><body><pre>
+C++ STL support with the Android NDK
+====================================
+
+
+The Android platform provides a very minimal C++ runtime support library
+(/system/lib/libstdc++) and corresponding headers for it in the NDK.
+
+If your C++ code needs a real Standard C++ Library, the NDK provides you
+with a port of the STLport library (www.stlport.org) and a way to use it
+easily in your applications.
+
+I. Usage:
+---------
+
+  Define APP_STL to name the C++ STL implementation you would want to use.
+  This instructs the NDK build system to automatically provide for the correct
+  headers and library dependencies for your C++ sources and modules.
+
+  Valid values are:
+
+     "system":         The default minimal C++ runtime support library
+     "stlport_static": STLport built as a static library.
+     "stlport_shared": STLport built as a shared library.
+
+  "stlport_shared" is preferred if you have several shared libraries in your
+  project that use the C++ STL, because it avoids duplication of functions
+  and more importantly of global variables (e.g. std::cout) in each one of
+  them, which can have surprising results.
+
+  On the other hand, you will have to load it explicitely when starting your
+  application, as in the following example:
+
+     static {
+         System.loadLibrary("stlport_shared");
+         System.loadLibrary("foo");
+         System.loadLibrary("bar");
+     }
+
+  Where both "libfoo.so" and "libbar.so" depend on "libstlport_shared.so".
+
+  Note that the shared library's name if "libstlport_shared.so" to avoid
+  naming conflicts with certain Android system images which include a
+  system-level libstlport.so (which happens to not be ABI-stable and
+  cannot be used from NDK-generated machine code).
+
+  "stlport_static" is preferred if you have only one shared library in your
+  project: only the STL functions and variables you actually need will be
+  linked to your machine code, reducing its code size, and you won't need
+  to load the dynamic stlport_shared at startup.
+
+  2/ Rebuild
+
+  After defining APP_STL, just rebuild your native code with $NDK/ndk-build
+  as usual.
+
+
+  3/ Debugging
+
+  The NDK provides prebuilt binaries of STLport to speed up development.
+  It can be however useful to rebuild the library from sources in order
+  to make native debugging easier. To do so, define the following in your
+  environment or your Application.mk before building:
+
+    STLPORT_FORCE_REBUILD := true
+
+
+II. Licensing:
+--------------
+
+  See sources/android/stlport/README for more information about the
+  STLport sources distributed with this SDK.
+
+  STLport is under a BSD-style open-source license.
+
+II. Known Issues:
+-----------------
+
+  - The STLport version provided with this NDK does not support C++ exceptions
+    and RTTI.
+
+  - No support for STLport in "standalone toolchain" mode.
+    (See docs/STANDALONE-TOOLCHAIN.html)
+
+
+III. Future Plans:
+------------------
+
+  - GNU libstdc++ support
+  - Exceptions and RTTI support
+  - uSTL support?
+
+</pre></body></html>

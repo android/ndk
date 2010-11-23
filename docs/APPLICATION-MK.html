@@ -149,6 +149,20 @@ APP_ABI
     For the list of all supported ABIs and details about their usage and
     limitations, please read docs/CPU-ARCH-ABIS.html
 
+APP_STL
+    By default, the NDK build system provides C++ headers for the minimal
+    C++ runtime library (/system/lib/libstdc++.so) provided by the Android
+    system.
+
+    However, the NDK comes with alternative C++ implementations that you can
+    use or link to in your own applications. Define APP_STL to select one of
+    them. Examples are:
+
+       APP_STL := stlport_static    --> static STLport library
+       APP_STL := stlport_shared    --> shared STLport library
+       APP_STL := system            --> default C++ runtime library
+
+    For more information on the subject, please read docs/STL-SUPPORT.html
 
 A trivial Application.mk file would be:
 
