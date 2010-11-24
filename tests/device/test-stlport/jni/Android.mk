@@ -20,8 +20,4 @@ sources := $(filter-out unit/codecvt_test.cpp,$(sources))
 LOCAL_SRC_FILES := $(sources)
 LOCAL_SRC_FILES += unit/cppunit/test_main.cpp
 
-LOCAL_STATIC_LIBRARIES := stlport_static
 include $(BUILD_EXECUTABLE)
-
-$(call import-module,android/stlport)
-

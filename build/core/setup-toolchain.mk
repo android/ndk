@@ -18,7 +18,7 @@
 #
 
 $(call assert-defined,TARGET_PLATFORM TARGET_ARCH TARGET_ARCH_ABI)
-$(call assert-defined,NDK_APPS)
+$(call assert-defined,NDK_APPS NDK_APP_STL)
 
 # Check that we have a toolchain that supports the current ABI.
 # NOTE: If NDK_TOOLCHAIN is defined, we're going to use it.
@@ -138,16 +138,13 @@ endif
 # free the dictionary of LOCAL_MODULE definitions
 $(call modules-clear)
 
+$(call ndk-stl-select,$(NDK_APP_STL))
+
 # now parse the Android.mk for the application, this records all
 # module declarations, but does not populate the dependency graph yet.
 include $(NDK_APP_BUILD_SCRIPT)
 
-# special case of C++ runtime support: If any module has C++ sources,
-# we need to parse the Android.mk for our selected C++ runtime and
-# add it as an automatic dependency to the corresponding modules.
-#
-include $(NDK_ROOT)/sources/cxx-stl/system/setup.mk
-$(call modules-add-c++-dependencies,$(NDK_APP_CXX_STATIC_LIBRARIES),$(NDK_APP_CXX_SHARED_LIBRARIES))
+$(call ndk-stl-add-dependencies,$(NDK_APP_STL))
 
 # recompute all dependencies between modules
 $(call modules-compute-dependencies)
