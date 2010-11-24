@@ -1,0 +1,7 @@
+This test is meant to test the most basic level of RTTI support
+even if you are not using a regular C++ STL. No <typeinfo> required.
+
+This is really a way to check that the C++ compiler properly links against
+libsupc++.a without any kind of conflict, and that the dynamic_cast<>
+really works.
+
