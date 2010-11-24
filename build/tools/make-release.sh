@@ -35,9 +35,18 @@ register_var_option "--prefix=<name>" PREFIX "Specify package prefix"
 DEVELOPMENT_ROOT=`dirname $ANDROID_NDK_ROOT`/development/ndk
 register_var_option "--development=<path>" DEVELOPMENT_ROOT "Path to development/ndk directory"
 
+# Default location for final packages
+OUT_DIR=/tmp/ndk-release
+register_var_option "--out-dir=<path>" OUT_DIR "Path to output directory"
+
 # Force the build
 FORCE=no
 register_var_option "--force" FORCE "Force build (do not ask initial question)"
+
+# Use --incremental to implement incremental release builds.
+# This is only useful to debug this script or the ones it calls.
+INCREMENTAL=no
+register_var_option "--incremental" INCREMENTAL "Enable incremental packaging (debug only)."
 
 # Determine the host platforms we can build for.
 # This is the current host platform, and eventually windows if
@@ -62,7 +71,7 @@ extract_parameters "$@"
 
 # Print a warning and ask the user if he really wants to do that !
 #
-if [ "$FORCE" = "no" ] ; then
+if [ "$FORCE" = "no" -a "$INCREMENTAL" = "no" ] ; then
     echo "IMPORTANT WARNING !!"
     echo ""
     echo "This script is used to generate an NDK release package from scratch"
@@ -111,29 +120,98 @@ IMPORTANT:
 "
 
 # Create directory where everything will be performed.
-RELEASE_DIR=/tmp/ndk-release
-rm -rf $RELEASE_DIR && mkdir -p $RELEASE_DIR
+RELEASE_DIR=/tmp/ndk/release-$RELEASE
+if [ "$INCREMENTAL" = "no" ] ; then
+    rm -rf $RELEASE_DIR && mkdir -p $RELEASE_DIR
+else
+    if [ ! -d "$RELEASE_DIR" ] ; then
+        echo "ERROR: Can't make incremental, missing release dir: $RELEASE_DIR"
+        exit 1
+    fi
+fi
+
+
+#
+# Timestamp management
+TIMESTAMP_DIR="$RELEASE_DIR/timestamps"
+mkdir -p "$TIMESTAMP_DIR"
+if [ "$INCREMENTAL" = "no" ] ; then
+    run rm -rf "$TIMESTAMP_DIR/*"
+fi
+
+timestamp_set ()
+{
+    touch "$TIMESTAMP_DIR/$1"
+}
+
+timestamp_clear ()
+{
+    rm -f "$TIMESTAMP_DIR/$1"
+}
+
+timestamp_check ()
+{
+    if [ -f "$TIMESTAMP_DIR/$1" ] ; then
+        return 1
+    else
+        return 0
+    fi
+}
 
 # Step 1, If needed, download toolchain sources into a temporary directory
 if [ -n "$TOOLCHAIN_SRCDIR" ] ; then
     dump "Using toolchain source directory: $TOOLCHAIN_SRCDIR"
+    timestamp_set   toolchain-download-sources
 else
-    dump "Downloading toolchain sources..."
-    TOOLCHAIN_SRCDIR="$RELEASE_DIR/toolchain-src"
-    log "Using toolchain source directory: $TOOLCHAIN_SRCDIR"
-    $ANDROID_NDK_ROOT/build/tools/download-toolchain-sources.sh "$TOOLCHAIN_SRCDIR"
+    if timestamp_check toolchain-download-sources; then
+        dump "Downloading toolchain sources..."
+        TOOLCHAIN_SRCDIR="$RELEASE_DIR/toolchain-src"
+        log "Using toolchain source directory: $TOOLCHAIN_SRCDIR"
+        $ANDROID_NDK_ROOT/build/tools/download-toolchain-sources.sh "$TOOLCHAIN_SRCDIR"
+        if [ "$?" != 0 ] ; then
+            dump "ERROR: Could not download toolchain sources"
+            exit 1
+        fi
+        timestamp_set   toolchain-download-sources
+        timestamp_clear build-prebuilts
+    fi
 fi
 
 # Step 2, build the host toolchain binaries and package them
-PREBUILT_DIR="$RELEASE_DIR/prebuilt-$RELEASE"
-dump "Building host toolchain binaries..."
-$ANDROID_NDK_ROOT/build/tools/rebuild-all-prebuilt.sh --toolchain-src-dir="$TOOLCHAIN_SRCDIR" --package-dir="$PREBUILT_DIR"
-if [ -n "$MINGW_GCC" ] ; then
-    dump "Building windows toolchain binaries..."
-    $ANDROID_NDK_ROOT/build/tools/rebuild-all-prebuilt.sh --toolchain-src-dir="$TOOLCHAIN_SRCDIR" --package-dir="$PREBUILT_DIR" --mingw
+if timestamp_check build-prebuilts; then
+    PREBUILT_DIR="$RELEASE_DIR/prebuilt"
+    if timestamp_check build-host-prebuilts; then
+        dump "Building host toolchain binaries..."
+        $ANDROID_NDK_ROOT/build/tools/rebuild-all-prebuilt.sh --toolchain-src-dir="$TOOLCHAIN_SRCDIR" --package-dir="$PREBUILT_DIR" --build-dir="$RELEASE_DIR/build"
+        if [ "$?" != 0 ] ; then
+            dump "ERROR: Can't build $HOST_SYSTEM binaries."
+            exit 1
+        fi
+        timestamp_set build-host-prebuilts
+    fi
+    if [ -n "$MINGW_GCC" ] ; then
+        if timestamp_check build-mingw-prebuilts; then
+            dump "Building windows toolchain binaries..."
+            $ANDROID_NDK_ROOT/build/tools/rebuild-all-prebuilt.sh --toolchain-src-dir="$TOOLCHAIN_SRCDIR" --package-dir="$PREBUILT_DIR" --build-dir="$RELEASE_DIR/build-mingw" --mingw
+            if [ "$?" != 0 ] ; then
+                dump "ERROR: Can't build windows binaries."
+                exit 1
+            fi
+        fi
+    fi
+    timestamp_set build-prebuilts
+    timestamp_clear make-packages
 fi
 
 # Step 3, package a release with everything
-dump "Generating NDK release packages"
-$ANDROID_NDK_ROOT/build/tools/package-release.sh --release=$RELEASE --prefix=$PREFIX --prebuilt-dir="$PREBUILT_DIR" --systems="'$SYSTEMS'" --development-root="$DEVELOPMENT_ROOT"
+if timestamp_check make-packages; then
+    dump "Generating NDK release packages"
+    $ANDROID_NDK_ROOT/build/tools/package-release.sh --release=$RELEASE --prefix=$PREFIX --out-dir="$OUT_DIR" --prebuilt-dir="$PREBUILT_DIR" --systems="$HOST_SYSTEMS" --development-root="$DEVELOPMENT_ROOT"
+    if [ $? != 0 ] ; then
+        dump "ERROR: Can't generate proper release packages."
+        exit 1
+    fi
+    timestamp_set make-packages
+fi
 
+dump "All clear. Good work! See $OUT_DIR"
