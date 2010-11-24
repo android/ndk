@@ -853,7 +853,7 @@ NDK_APP_VARS_REQUIRED :=
 # the list of variables that *may* be defined in Application.mk files
 NDK_APP_VARS_OPTIONAL := APP_OPTIM APP_CPPFLAGS APP_CFLAGS APP_CXXFLAGS \
                          APP_PLATFORM APP_BUILD_SCRIPT APP_ABI APP_MODULES \
-                         APP_PROJECT_PATH
+                         APP_PROJECT_PATH APP_STL
 
 # the list of all variables that may appear in an Application.mk file
 # or defined by the build scripts.
@@ -1254,3 +1254,76 @@ $(call module-class-set-prebuilt,PREBUILT_SHARED_LIBRARY)
 $(call module-class-register,PREBUILT_STATIC_LIBRARY,,)
 $(call module-class-set-prebuilt,PREBUILT_STATIC_LIBRARY)
 
+#
+# C++ STL support
+#
+
+# The list of registered STL implementations we support
+NDK_STL_LIST :=
+
+# Used internally to register a given STL implementation, see below.
+#
+# $1: STL name as it appears in APP_STL (e.g. system)
+# $2: STL module name (e.g. cxx-stl/system)
+# $3: list of static libraries all modules will depend on
+# $4: list of shared libraries all modules will depend on
+#
+ndk-stl-register = \
+    $(eval __ndk_stl := $(strip $1)) \
+    $(eval NDK_STL_LIST += $(__ndk_stl)) \
+    $(eval NDK_STL.$(__ndk_stl).IMPORT_MODULE := $(strip $2)) \
+    $(eval NDK_STL.$(__ndk_stl).STATIC_LIBS := $(strip $3)) \
+    $(eval NDK_STL.$(__ndk_stl).SHARED_LIBS := $(strip $4))
+
+# Called to check that the value of APP_STL is a valid one.
+# $1: STL name as it apperas in APP_STL (e.g. 'system')
+#
+ndk-stl-check = \
+    $(if $(call set_is_member,$(NDK_STL_LIST),$1),,\
+        $(call __ndk_info,Invalid APP_STL value: $1)\
+        $(call __ndk_info,Please use one of the following instead: $(NDK_STL_LIST))\
+        $(call __ndk_error,Aborting))
+
+# Called before the top-level Android.mk is parsed to
+# select the STL implementation.
+# $1: STL name as it appears in APP_STL (e.g. system)
+#
+ndk-stl-select = \
+    $(call import-module,$(NDK_STL.$1.IMPORT_MODULE))
+
+# Called after all Android.mk files are parsed to add
+# proper STL dependencies to every C++ module.
+# $1: STL name as it appears in APP_STL (e.g. system)
+#
+ndk-stl-add-dependencies = \
+    $(call modules-add-c++-dependencies,\
+        $(NDK_STL.$1.STATIC_LIBS),\
+        $(NDK_STL.$1.SHARED_LIBS))
+
+#
+#
+
+# Register the 'system' STL implementation
+#
+$(call ndk-stl-register,\
+    system,\
+    cxx-stl/system,\
+    libstdc++,\
+    )
+
+# Register the 'stlport_static' STL implementation
+#
+$(call ndk-stl-register,\
+    stlport_static,\
+    android/stlport,\
+    stlport_static,\
+    )
+
+# Register the 'stlport_shared' STL implementation
+#
+$(call ndk-stl-register,\
+    stlport_shared,\
+    android/stlport,\
+    ,\
+    stlport_shared\
+    )

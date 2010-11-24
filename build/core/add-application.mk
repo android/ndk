@@ -193,6 +193,17 @@ else
   APP_CFLAGS := -O2 -DNDEBUG -g $(APP_CFLAGS)
 endif
 
+# Check that APP_STL is defined. If not, use the default value (system)
+# otherwise, check that the name is correct.
+APP_STL := $(strip $(APP_STL))
+ifndef APP_STL
+    APP_STL := system
+else
+    $(call ndk-stl-check,$(APP_STL))
+endif
+
+
+
 $(if $(call get,$(_map),defined),\
   $(call __ndk_info,Weird, the application $(_app) is already defined by $(call get,$(_map),defined))\
   $(call __ndk_error,Aborting)\

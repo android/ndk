@@ -54,6 +54,11 @@ libstlport_cflags := -D_GNU_SOURCE
 libstlport_cppflags := -fuse-cxa-atexit
 libstlport_c_includes := $(libstlport_path)/stlport
 
+# Note: For now, this implementation depends on the system libstdc++
+#       We may want to avoid that in the future, i.e. in order to
+#       properly support exceptions and RTTI.
+libstlport_static_libs := libstdc++
+
 ifneq ($(STLPORT_FORCE_REBUILD),true)
 
 $(call ndk_log,Using prebuilt STLport libraries)
@@ -61,12 +66,14 @@ $(call ndk_log,Using prebuilt STLport libraries)
 include $(CLEAR_VARS)
 LOCAL_MODULE := stlport_static
 LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).a
+LOCAL_STATIC_LIBRARIES := $(libstlport_static_libs)
 LOCAL_EXPORT_C_INCLUDES := $(libstlport_c_includes)
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := stlport_shared
 LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).so
+LOCAL_STATIC_LIBRARIES := $(libstlport_static_libs)
 LOCAL_EXPORT_C_INCLUDES := $(libstlport_c_includes)
 include $(PREBUILT_SHARED_LIBRARY)
 
@@ -80,6 +87,7 @@ LOCAL_SRC_FILES := $(libstlport_src_files)
 LOCAL_CFLAGS := $(libstlport_cflags)
 LOCAL_CPPFLAGS := $(libstlport_cppflags)
 LOCAL_C_INCLUDES := $(libstlport_c_includes)
+LOCAL_STATIC_LIBRARIES := $(libstlport_static_libs)
 LOCAL_EXPORT_C_INCLUDES := $(libstlport_c_includes)
 include $(BUILD_STATIC_LIBRARY)
 
@@ -89,7 +97,11 @@ LOCAL_SRC_FILES := $(libstlport_src_files)
 LOCAL_CFLAGS := $(libstlport_cflags)
 LOCAL_CPPFLAGS := $(libstlport_cppflags)
 LOCAL_C_INCLUDES := $(libstlport_c_includes)
+LOCAL_STATIC_LIBRARIES := $(libstlport_static_libs)
 LOCAL_EXPORT_C_INCLUDES := $(libstlport_c_includes)
 include $(BUILD_SHARED_LIBRARY)
 
 endif # STLPORT_FORCE_REBUILD == true
+
+# See above not above libstdc++ dependency.
+$(call import-module,cxx-stl/system)
