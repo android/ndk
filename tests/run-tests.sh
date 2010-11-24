@@ -167,6 +167,12 @@ fi
 
 BUILD_DIR=`mktemp -d /tmp/ndk-tests/build-XXXXXX`
 
+NDK_BUILD_FLAGS="-B"
+# Use --verbose twice to see build commands for the tests
+if [ "$VERBOSE2" = "yes" ] ; then
+    NDK_BUILD_FLAGS="$NDK_BUILD_FLAGS V=1"
+fi
+
 run_ndk_build ()
 {
     run $NDK/ndk-build -j$JOBS "$@"
@@ -177,7 +183,7 @@ build_project ()
     local NAME=`basename $1`
     local DIR="$BUILD_DIR/$NAME"
     cp -r "$1" "$DIR"
-    cd "$DIR" && run_ndk_build -B V=1
+    cd "$DIR" && run_ndk_build $NDK_BUILD_FLAGS
     if [ $? != 0 ] ; then
         echo "!!! BUILD FAILURE [$1]!!! See $NDK_LOGFILE for details or use --verbose option!"
         exit 1
@@ -268,11 +274,84 @@ if is_testable device; then
         build_project $1
     }
 
+    run_device_test ()
+    {
+        local SRCDIR="$BUILD_DIR/`basename $1`/libs/armeabi"
+        local DSTDIR="$2/ndk-tests"
+        local SRCFILE
+        local DSTFILE
+        local PROGRAMS=
+        local PROGRAM
+        # First, copy all files to /data/local, except for gdbserver
+        # or gdb.setup.
+        $ADB_CMD shell mkdir $DSTDIR
+        for SRCFILE in `ls $SRCDIR`; do
+            DSTFILE=`basename $SRCFILE`
+            if [ "$DSTFILE" = "gdbserver" -o "$DSTFILE" = "gdb.setup" ] ; then
+                continue
+            fi
+            DSTFILE="$DSTDIR/$DSTFILE"
+            run $ADB_CMD push "$SRCDIR/$SRCFILE" "$DSTFILE" &&
+            run $ADB_CMD shell chmod 0755 $DSTFILE
+            if [ $? != 0 ] ; then
+                dump "ERROR: Could not install $SRCFILE to device!"
+                exit 1
+            fi
+            # If its name doesn't end with .so, add it to PROGRAMS
+            echo "$DSTFILE" | grep -q -e '\.so$'
+            if [ $? != 0 ] ; then
+                PROGRAMS="$PROGRAMS $DSTFILE"
+            fi
+        done
+        for PROGRAM in $PROGRAMS; do
+            dump "Running device test: `basename $PROGRAM`"
+            run $ADB_CMD shell /data/local/$PROGRAM
+            if [ $? != 0 ] ; then
+                dump "   ---> TEST FAILED!!"
+            fi
+        done
+        # Cleanup
+        $ADB_CMD shell rm -r $DSTDIR
+        #for SRCFILE in `ls $SRCDIR`; do
+        #    DSTFILE=`basename $SRCFILE`
+        #    $ADB_CMD shell rm $DSTDIR/$DSTFILE
+        #done
+    }
+
     for DIR in `ls -d $ROOTDIR/tests/device/*`; do
         if [ -f "$DIR/jni/Android.mk" ] ; then
             build_device_test $DIR
         fi
     done
+
+    # Do we have adb and any device connected here?
+    # If not, we can't run our tests.
+    #
+    SKIP_TESTS=no
+    if [ -z "$ADB_CMD" ] ; then
+        dump "WARNING: No 'adb' in your path!"
+        SKIP_TESTS=yes
+    else
+        ADB_DEVCOUNT=`$ADB_CMD devices | wc -l`
+        ADB_DEVCOUNT=`expr $ADB_DEVCOUNT - 2`
+        if [ "$ADB_DEVCOUNT" = "0" ]; then
+            dump "WARNING: No device connected to adb!"
+            SKIP_TESTS=yes
+        elif [ "$ADB_DEVCOUNT" != 1 -a -z "$ADB_SERIAL" ] ; then
+            dump "WARNING: More than one device connected to adb. Please define ADB_SERIAL!"
+            SKIP_TESTS=yes
+        fi
+    fi
+
+    if [ "$SKIP_TESTS" = "yes" ] ; then
+        dump "SKIPPING RUNNING TESTS ON DEVICE!"
+    else
+        for DIR in `ls -d $ROOTDIR/tests/device/*`; do
+            if [ -f "$DIR/jni/Android.mk" ] ; then
+                run_device_test $DIR /data/local
+            fi
+        done
+    fi
 fi
 
 dump "Cleaning up..."

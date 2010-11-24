@@ -1,0 +1,5 @@
+# Ignore generated files in test subdirectories.
+*/obj/
+*/libs/
+*/*/obj/
+*/*/libs/
