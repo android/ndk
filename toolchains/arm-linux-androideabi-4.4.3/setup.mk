@@ -110,4 +110,39 @@ $(call add-src-files-target-cflags,\
 $(call set-src-files-text,$(__arm_sources),arm$(space)$(space)) \
 $(call set-src-files-text,$(__thumb_sources),thumb)
 
-TARGET_LIBGCC := $(shell $(TARGET_CC) -mthumb-interwork -print-libgcc-file-name)
+#
+# We need to add -lsupc++ to the final link command to make exceptions
+# and RTTI work properly (when -fexceptions and -frtti are used).
+#
+# Normally, the toolchain should be configured to do that automatically,
+# this will be debugged later.
+#
+define cmd-build-shared-library
+$(TARGET_CXX) \
+    -Wl,-soname,$(notdir $@) \
+    -shared \
+    $(call host-path, $(PRIVATE_OBJECTS)) \
+    $(call whole-archive-list-flags,$(PRIVATE_WHOLE_STATIC_LIBRARIES)) \
+    $(call host-path,\
+        $(PRIVATE_STATIC_LIBRARIES) \
+        $(PRIVATE_SHARED_LIBRARIES)) \
+    $(PRIVATE_LDFLAGS) \
+    $(PRIVATE_LDLIBS) \
+    -lsupc++ \
+    -o $(call host-path,$@)
+endef
+
+define cmd-build-executable
+$(TARGET_CC) \
+    -Wl,--gc-sections \
+    -Wl,-z,nocopyreloc \
+    $(call host-path, $(PRIVATE_OBJECTS)) \
+    $(call whole-archive-list-flags,$(PRIVATE_WHOLE_STATIC_LIBRARIES)) \
+    $(call host-path,\
+        $(PRIVATE_STATIC_LIBRARIES) \
+        $(PRIVATE_SHARED_LIBRARIES)) \
+    $(PRIVATE_LDFLAGS) \
+    $(PRIVATE_LDLIBS) \
+    -lsupc++ \
+    -o $(call host-path,$@)
+endef
