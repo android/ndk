@@ -35,7 +35,8 @@ BUILD_OUT=`random_temp_directory`
 OPTION_BUILD_OUT=
 register_var_option "--build-out=<path>" OPTION_BUILD_OUT "Set temporary build directory" "/tmp/<random>"
 
-PLATFORM=android-3
+# Note: platform API level 9 or higher is needed for proper C++ support
+PLATFORM=android-9
 register_var_option "--platform=<name>"  PLATFORM "Specify platform name"
 
 OPTION_SYSROOT=
@@ -49,6 +50,9 @@ register_var_option "--binutils-version=<version>" BINUTILS_VERSION "Specify bin
 
 JOBS=$BUILD_NUM_CPUS
 register_var_option "-j<number>" JOBS "Use <number> parallel build jobs"
+
+KEEP_LIBSTDCXX=no
+register_var_option "--keep-libstdcxx" KEEP_LIBSTDCXX "Experimental: build libstdc++"
 
 register_mingw_option
 
@@ -135,7 +139,7 @@ TOOLCHAIN_LICENSES=$ANDROID_NDK_ROOT/build/tools/toolchain-licenses
 # binaries from containing hard-coding host paths
 TOOLCHAIN_SYSROOT=$TOOLCHAIN_PATH/sysroot
 dump "Sysroot  : Copying: $SYSROOT --> $TOOLCHAIN_SYSROOT"
-mkdir -p $TOOLCHAIN_SYSROOT && (cd $SYSROOT && tar c *) | (cd $TOOLCHAIN_SYSROOT && tar x)
+mkdir -p $TOOLCHAIN_SYSROOT && (cd $SYSROOT && tar ch *) | (cd $TOOLCHAIN_SYSROOT && tar x)
 if [ $? != 0 ] ; then
     echo "Error while copying sysroot files. See $TMPLOG"
     exit 1
@@ -155,12 +159,15 @@ fi
 rm -rf $BUILD_OUT
 OLD_ABI="${ABI}"
 export CC CXX
-mkdir -p $BUILD_OUT &&
-cd $BUILD_OUT &&
-export CC CXX &&
-export ABI=$HOST_GMP_ABI &&  # needed to build a 32-bit gmp
-export CFLAGS="-Wno-error" && # needed because gdb-6.6 uses -Werror by default and fails to build with recent GCC versions
-run \
+export CFLAGS_FOR_TARGET="$ABI_CFLAGS_FOR_TARGET"
+export CXXFLAGS_FOR_TARGET="$ABI_CXXFLAGS_FOR_TARGET"
+# Needed to build a 32-bit gmp on 64-bit systems
+export ABI=$HOST_GMP_ABI
+# -Wno-error is needed because our gdb-6.6 sources use -Werror by default
+# and fail to build with recent GCC versions.
+export CFLAGS="-Wno-error"
+#export LDFLAGS="$HOST_LDFLAGS"
+mkdir -p $BUILD_OUT && cd $BUILD_OUT && run \
 $BUILD_SRCDIR/configure --target=$ABI_CONFIGURE_TARGET \
                         --host=$ABI_CONFIGURE_HOST \
                         --build=$ABI_CONFIGURE_BUILD \
@@ -197,9 +204,27 @@ if [ $? != 0 ] ; then
 fi
 # don't forget to copy the GPL and LGPL license files
 run cp -f $TOOLCHAIN_LICENSES/COPYING $TOOLCHAIN_LICENSES/COPYING.LIB $TOOLCHAIN_PATH
+
 # remove some unneeded files
 run rm -f $TOOLCHAIN_PATH/bin/*-gccbug
-run rm -rf $TOOLCHAIN_PATH/man $TOOLCHAIN_PATH/info
+run rm -rf $TOOLCHAIN_PATH/info
+run rm -rf $TOOLCHAIN_PATH/man
+run rm -rf $TOOLCHAIN_PATH/share
+run rm -rf $TOOLCHAIN_PATH/lib/gcc/$ABI_CONFIGURE_TARGET/*/install-tools
+run rm -rf $TOOLCHAIN_PATH/lib/gcc/$ABI_CONFIGURE_TARGET/*/plugin
+run rm -rf $TOOLCHAIN_PATH/libexec/gcc/$ABI_CONFIGURE_TARGET/*/install-tools
+run rm -rf $TOOLCHAIN_PATH/lib32/libiberty.a
+run rm -rf $TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/lib/libiberty.a
+run rm -rf $TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/lib/*/libiberty.a
+
+# Remove libstdc++ for now (will add it differently later)
+# We had to build it to get libsupc++ which we keep.
+if [ "$KEEP_LIBSTDCXX" = "no" ] ; then
+    run rm -rf $TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/lib/libstdc++.*
+    run rm -rf $TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/lib/*/libstdc++.*
+    run rm -rf $TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/include/c++
+fi
+
 # strip binaries to reduce final package size
 run strip $TOOLCHAIN_PATH/bin/*
 run strip $TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/bin/*

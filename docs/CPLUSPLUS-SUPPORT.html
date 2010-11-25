@@ -1,0 +1,122 @@
+<html><body><pre>
+C++ support with the Android NDK
+================================
+
+
+The Android platform provides a very minimal C++ runtime support library
+(/system/lib/libstdc++) and corresponding headers for it in the NDK.
+
+I. C++ Exceptions support:
+--------------------------
+
+The NDK toolchain supports C++ exceptions, since NDK r5, however all C++
+sources are compiled with -fno-exceptions support by default, for
+compatibility reasons with previous releases.
+
+To enable it, use the '-fexceptions' C++ compiler flag. This can be done
+by adding the following to every module definition in your Android.mk:
+
+    LOCAL_CPPFLAGS += -fexceptions
+
+More simply, add a single line to your Application.mk, the setting will
+automatically apply to all your project's NDK modules:
+
+    APP_CPPFLAGS += -fexceptions
+
+NOTE: The obsolete "arm-eabi-4.4.0" toolchain provided for backwards
+      compatibility with this NDK does not support exceptions!
+
+
+II. RTTI support:
+------------------
+
+Similarly, the NDK toolchain supports C++ RTTI (RunTime Type Information)
+since NDK r5, but all C++ sources are built with -fno-rtti by default for
+compatibility reasons. To enable it, add the following to your module
+declarations:
+
+    LOCAL_CPPFLAGS += -frtti
+
+Or more simply to your Application.mk:
+
+    APP_CPPFLAGS += -frtti
+
+
+NOTE: The obsolete "arm-eabi-4.4.0" toolchain provided for backwards
+      compatibility with this NDK does not support RTTI!
+
+
+III. Selecting the C++ Standard Library Implementation:
+-------------------------------------------------------
+
+By default, the headers and libraries for the minimal C++ runtime system
+library (/system/lib/libstdc++.so) are used when building C++ sources.
+
+You can however select a different implementation by setting the variable
+APP_STL to something else in your Application.mk, for example:
+
+  APP_STL := stlport_static
+
+To select the static STLport implementation provided with this NDK.
+Value APP_STL values are the following:
+
+   system              -> Use the default minimal C++ runtime library.
+   stlport_static      -> Use STLport built as a static library.
+   stlport_shared      -> Use STLport built as a shared library.
+
+WARNING: IMPORTANT CAVEAT
+
+     AT THE MOMENT, OUR STLPORT IMPLEMENTATION DOES NOT SUPPORT EXCEPTIONS
+     AND RTTI. PLEASE BE SURE TO NOT USE -fexceptions OR -frtti IN ALL
+     MODULES THAT USE IT.
+
+WARNING: END OF IMPORTANT CAVEAT
+
+  "stlport_shared" is preferred if you have several shared libraries in your
+  project that use the C++ STL, because it avoids duplication of functions
+  and more importantly of global variables (e.g. std::cout) in each one of
+  them, which can have surprising results.
+
+  On the other hand, you will have to load it explicitely when starting your
+  application, as in the following example:
+
+     static {
+         System.loadLibrary("stlport_shared");
+         System.loadLibrary("foo");
+         System.loadLibrary("bar");
+     }
+
+  Where both "libfoo.so" and "libbar.so" depend on "libstlport_shared.so".
+
+  Note that the shared library's name if "libstlport_shared.so" to avoid
+  naming conflicts with certain Android system images which include a
+  system-level libstlport.so (which happens to not be ABI-stable and
+  cannot be used from NDK-generated machine code).
+
+  "stlport_static" is preferred if you have only one shared library in your
+  project: only the STL functions and variables you actually need will be
+  linked to your machine code, reducing its code size, and you won't need
+  to load the dynamic stlport_shared at startup.
+
+
+IV. STLport-specific issues:
+----------------------------
+
+This NDK provides prebuilt static and shared libraries for STLport,
+but you can force it to be rebuilt from sources by defining the following
+in your environment or your Application.mk before building:
+
+    STLPORT_FORCE_REBUILD := true
+
+STLport is licensed under a BSD-style open-source license. See
+sources/android/stlport/README for more details about the library.
+
+
+V. Future Plans:
+----------------
+
+  - Make STLport compatible with C++ exceptions and RTTI
+  - Full GNU libstdc++ support
+  - uSTL support?
+
+</pre></body></html>

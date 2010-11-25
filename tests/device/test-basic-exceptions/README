@@ -1,0 +1,11 @@
+This test is meant to test the most basic level of exception support
+even if you are not using a regular C++ STL. No <stdexcept> required.
+
+Normally, the only thing needed is adding -fexceptions to your LOCAL_CFLAGS
+and that's it. Alternatively, use it in APP_CFLAGS to add the flag to all your
+modules at the same time.
+
+This is really a way to check that the C++ compiler properly links against
+libsupc++.a without any kind of conflict, and that the try / throw / catch
+features do really work.
+
