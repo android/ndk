@@ -22,8 +22,8 @@ IMPORTANT BUG FIXES:
 
 IMPORTANT CHANGES:
 
-- Support for API level 9, which adds the following native features to the
-  platform:
+- Support for API level 9, (a.k.a. Android 2.3) which adds the following
+  native features to the platform:
 
      - Native audio API through the OpenSL ES Standard.
        New headers &lt;SLES/OpenSLES.h&gt; and &lt;SLES/OpenSLES_Android.h&gt; are
@@ -51,6 +51,18 @@ IMPORTANT CHANGES:
        See the documentation in docs/STABLE-APIS.html for more details.
 
        Note that most of these new features are targetted at game developers.
+
+- Improved gdbserver binary to allow debugging _threaded_ programs properly
+  with ndk-gdb (the previous binary could only set breakpoints on the main
+  thread).
+
+  IMPORTANT: THIS ONLY WORKS IF YOU RUN ON ANDROID 2.3 OR HIGHER.
+
+  The root cause of the problem is a platform bug that was only fixed in
+  2.3. If you try to debug on a previous platform, the gdbserver binary
+  will only be able to set breakpoints on the main thread.
+
+  For more information, see the specific section in docs/NDK-GDB.html.
 
 - Easier debuggable builds: just invoke ndk-build while defining the
   NDK_DEBUG variable to 1, as in:

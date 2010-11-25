@@ -211,9 +211,9 @@ build_gdbserver ()
         return
     fi
     dump "Build $1 gdbserver..."
-    $PROGDIR/build-gdbserver.sh $FLAGS --build-out=$BUILD_DIR/gdbserver-$1 $SRC_DIR/gdb/gdb-$GDB_VERSION/gdb/gdbserver $NDK_DIR $1
+    $PROGDIR/build-gdbserver.sh $FLAGS --build-out=$BUILD_DIR/gdbserver-$1 --gdb-version=$GDB_VERSION $SRC_DIR $NDK_DIR $1
     if [ $? != 0 ] ; then
-        dump "ERROR: Could not build $1 toolchain!"
+        dump "ERROR: Could not build $1 gdbserver!"
         exit 1
     fi
     package_it "$1 gdbserver" "$1-gdbserver" "toolchains/$1/prebuilt/gdbserver"

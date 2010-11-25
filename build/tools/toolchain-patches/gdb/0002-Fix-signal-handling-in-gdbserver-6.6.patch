@@ -1,0 +1,22 @@
+diff -burN gdb-org/gdb-6.6/gdb/gdbserver/linux-low.c gdb/gdb-6.6/gdb/gdbserver/linux-low.c
+--- gdb-org/gdb-6.6/gdb/gdbserver/linux-low.c	2010-11-26 09:33:53.446951831 +0100
++++ gdb/gdb-6.6/gdb/gdbserver/linux-low.c	2010-11-26 10:03:01.905288172 +0100
+@@ -778,6 +778,18 @@
+       errno = 0;
+       tkill_failed = 1;
+     }
++#elif defined(__ANDROID__)
++  extern int tkill(int, int);
++  if (!tkill_failed)
++    {
++      int ret = tkill(lwpid, signo);
++      if (errno != ENOSYS)
++        return ret;
++      errno = 0;
++      tkill_failed = 1;
++    }
++#else
++#  error SIGNAL HANDLING WILL NOT WORK!!
+ #endif
+ 
+   return kill (lwpid, signo);
