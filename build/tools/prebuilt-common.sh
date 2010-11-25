@@ -414,6 +414,23 @@ fix_sysroot ()
     fi
 }
 
+# Use the check for the availability of a compatibility SDK in Darwin
+# this can be used to generate binaries compatible with either Tiger or
+# Leopard.
+#
+# $1: SDK root path
+# $2: MacOS X minimum version (e.g. 10.4)
+check_darwin_sdk ()
+{
+    if [ -d "$1" ] ; then
+        HOST_CFLAGS="-isysroot $1 -mmacosx-version-min=$2 -DMAXOSX_DEPLOYEMENT_TARGET=$2"
+        HOST_LDFLAGS="-Wl,-syslibroot,$sdk -mmacosx-version-min=$2"
+        return 0  # success
+    fi
+    return 1
+}
+
+
 prepare_host_flags ()
 {
     # detect build tag
@@ -446,7 +463,22 @@ prepare_host_flags ()
     CC=${CC:-gcc}
     CXX=${CXX:-g++}
     case $HOST_TAG in
+        darwin-*)
+            # Try to build with Tiger SDK if available
+            if check_darwin_sdk /Developer/SDKs/MacOSX10.4.sdku 10.4; then
+                log "Generating Tiger-compatible binaries!"
+            # Otherwise with Leopard SDK
+            elif check_darwin_sdk /Developer/SDKs/MacOSX10.5.sdk 10.5; then
+                log "Generating Leopard-compatible binaries!"
+            else
+                local version=`sw_vers -productVersion`
+                log "Generating $version-compatible binaries!"
+            fi
+            ;;
         *-x86_64)
+            # NOTE: We need to modify the definitions of CC and CXX directly
+            #        here. Just changing the value of CFLAGS / HOST_CFLAGS
+            #        will not work well with the GCC toolchain scripts.
             CC="$CC -m32"
             CXX="$CXX -m32"
             HOST_GMP_ABI="32"
@@ -478,6 +510,9 @@ parse_toolchain_name ()
         exit 1
     fi
 
+    ABI_CFLAGS_FOR_TARGET=
+    ABI_CXXFLAGS_FOR_TARGET=
+
     # Determine ABI based on toolchain name
     #
     case "$TOOLCHAIN" in
@@ -490,9 +525,15 @@ parse_toolchain_name ()
         ABI_CONFIGURE_TARGET="arm-linux-androideabi"
         ABI_CONFIGURE_EXTRA_FLAGS="--with-gmp-version=4.2.4 --with-mpfr-version=2.4.1
 --with-arch=armv5te"
-        # Disabled until Gold is fixed for Cortex-A8 CPU bug
-        #ABI_CONFIGURE_EXTRA_FLAGS="$ABI_CONFIGURE_EXTRA_FLAGS --enable-gold=both/gold"
-        GDB_VERSION=7.1.x
+        # Enable ARM Gold linker
+        ABI_CONFIGURE_EXTRA_FLAGS="$ABI_CONFIGURE_EXTRA_FLAGS --enable-gold=both/gold"
+        # Enable C++ exceptions, RTTI and GNU libstdc++ at the same time
+        # You can't really build these separately at the moment.
+        ABI_CFLAGS_FOR_TARGET="-fexceptions"
+        ABI_CXXFLAGS_FOR_TARGET="-frtti"
+        ABI_CONFIGURE_EXTRA_FLAGS="$ABI_CONFIGURE_EXTRA_FLAGS --enable-libstdc__-v3"
+        # Stick to 6.6 for now.
+        # GDB_VERSION=7.1.x
         ;;
     x86-*)
         ARCH="x86"
