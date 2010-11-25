@@ -30,6 +30,10 @@ PROGDIR=`cd $PROGDIR && pwd`
 ROOTDIR=`dirname $PROGDIR`
 . $ROOTDIR/build/core/ndk-common.sh
 
+# The list of tests that are too long to be part of a normal run of
+# run-tests.sh
+LONG_TESTS="prebuild-stlport test-stlport"
+
 #
 # Parse options
 #
@@ -38,6 +42,8 @@ NDK_ROOT=
 JOBS=$BUILD_NUM_CPUS
 find_program ADB_CMD adb
 TESTABLES="samples build device"
+FULL_TESTS=no
+RUN_TESTS=
 NDK_PACKAGE=
 
 while [ -n "$1" ]; do
@@ -56,6 +62,12 @@ while [ -n "$1" ]; do
             ;;
         --ndk=*)
             NDK_ROOT="$optarg"
+            ;;
+        --full)
+            FULL_TESTS=yes;
+            ;;
+        --test=*)
+            RUN_TESTS="$RUN_TESTS $optarg"
             ;;
         --package=*)
             NDK_PACKAGE="$optarg"
@@ -103,6 +115,7 @@ if [ "$OPTION_HELP" = "yes" ] ; then
     echo ""
     echo "    --help|-h|-?      Print this help"
     echo "    --verbose         Enable verbose mode"
+    echo "    --test=<name>     Run selected test (all if not used)"
     echo "    --ndk=<path>      Path to NDK to test [$ROOTDIR]"
     echo "    --package=<path>  Path to NDK package to test"
     echo "    -j<N> --jobs=<N>  Launch parallel builds [$JOBS]"
@@ -110,22 +123,81 @@ if [ "$OPTION_HELP" = "yes" ] ; then
     echo "    --only-samples    Only rebuild samples"
     echo "    --only-build      Only rebuild build tests"
     echo "    --only-device     Only rebuild & run device tests"
+    echo "    --full            Run all device tests, even very long ones."
     echo ""
     echo "NOTE: You cannot use --ndk and --package at the same time."
+    echo ""
+    echo "You can use --test=<name> several times to run several tests"
+    echo "during the same invokation."
     exit 0
 fi
+
+# Run a command in ADB and return 0 in case of success, or 1 otherwise.
+# This is needed because "adb shell" does not return the proper status
+# of the launched command.
+#
+# NOTE: You must call set_adb_cmd_log before that to set the location
+#        of the temporary log file that will be used.
+#
+adb_cmd ()
+{
+    local RET
+    if [ -z "$ADB_CMD_LOG" ] ; then
+        dump "INTERNAL ERROR: ADB_CMD_LOG not set!"
+        exit 1
+    fi
+    if [ $VERBOSE = "yes" ] ; then
+        echo "$ADB_CMD shell $@"
+        $ADB_CMD shell "$@ && echo 'OK' || echo 'KO'" | tee $ADB_CMD_LOG
+    else
+        $ADB_CMD shell "$@ && echo 'OK' || echo 'KO'" > $ADB_CMD_LOG
+    fi
+    # Get last line in log, should be OK or KO
+    RET=`tail -n1 $ADB_CMD_LOG`
+    # Get rid of \r at the end of lines
+    RET=`echo "$RET" | sed -e 's![[:cntrl:]]!!g'`
+    [ "$RET" = "OK" ]
+}
+
+set_adb_cmd_log ()
+{
+    ADB_CMD_LOG="$1"
+}
+
+# Returns 0 if a variable containing one or more items separated
+# by spaces contains a given value.
+# $1: variable name (e.g. FOO)
+# $2: value to test
+var_list_contains ()
+{
+    echo `var_value $1` | tr ' ' '\n' | fgrep -q -e "$2"
+}
 
 #
 # List of stuff to actually tests
 #
 is_testable () {
-    echo "$TESTABLES" | tr ' ' '\n' | grep -q -e "^$1$"
-    if [ $? = 0 ]; then
-        return 0
-    else
-        return 1
-    fi
+    var_list_contains TESTABLES "$1"
 }
+
+# is_buildable returns 0 if a test should be built/run for this invocation
+# $1: test path
+if [ -n "$RUN_TESTS" ] ; then
+    is_buildable () {
+        test -f $1/jni/Android.mk &&
+        var_list_contains RUN_TESTS "`basename $1`"
+    }
+elif [ "$FULL_TESTS" = "yes" ] ; then
+    is_buildable () {
+        test -f $1/jni/Android.mk
+    }
+else # !FULL_TESTS
+    is_buildable () {
+        test -f $1/jni/Android.mk || return 1
+        ! var_list_contains LONG_TESTS "`basename $1`" || return 1
+    }
+fi # !FULL_TESTS
+
 
 mkdir -p /tmp/ndk-tests
 setup_default_log_file /tmp/ndk-tests/build-tests.log
@@ -166,6 +238,7 @@ fi
 #
 
 BUILD_DIR=`mktemp -d /tmp/ndk-tests/build-XXXXXX`
+set_adb_cmd_log "$BUILD_DIR/adb-cmd.log"
 
 NDK_BUILD_FLAGS="-B"
 # Use --verbose twice to see build commands for the tests
@@ -237,7 +310,7 @@ if is_testable samples; then
 
     for DIR in $SAMPLES_DIRS; do
         for SUBDIR in `ls -d $DIR/*`; do
-            if [ -f "$SUBDIR/jni/Android.mk" ] ; then
+            if is_buildable $SUBDIR; then
                 build_sample $SUBDIR
             fi
         done
@@ -256,7 +329,7 @@ if is_testable build; then
     }
 
     for DIR in `ls -d $ROOTDIR/tests/build/*`; do
-        if [ -f "$DIR/jni/Android.mk" ] ; then
+        if is_buildable $DIR; then
             build_build_test $DIR
         fi
     done
@@ -305,7 +378,7 @@ if is_testable device; then
         done
         for PROGRAM in $PROGRAMS; do
             dump "Running device test: `basename $PROGRAM`"
-            run $ADB_CMD shell /data/local/$PROGRAM
+            adb_cmd $PROGRAM
             if [ $? != 0 ] ; then
                 dump "   ---> TEST FAILED!!"
             fi
@@ -319,7 +392,7 @@ if is_testable device; then
     }
 
     for DIR in `ls -d $ROOTDIR/tests/device/*`; do
-        if [ -f "$DIR/jni/Android.mk" ] ; then
+        if is_buildable $DIR; then
             build_device_test $DIR
         fi
     done
@@ -347,7 +420,7 @@ if is_testable device; then
         dump "SKIPPING RUNNING TESTS ON DEVICE!"
     else
         for DIR in `ls -d $ROOTDIR/tests/device/*`; do
-            if [ -f "$DIR/jni/Android.mk" ] ; then
+            if is_buildable $DIR; then
                 run_device_test $DIR /data/local
             fi
         done
