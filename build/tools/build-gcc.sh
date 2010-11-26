@@ -190,8 +190,21 @@ export CC CXX &&
 export ABI=$HOST_GMP_ABI &&
 run make -j$JOBS
 if [ $? != 0 ] ; then
-    echo "Error while building toolchain. See $TMPLOG"
-    exit 1
+    # Unfortunately, there is a bug in the GCC build scripts that prevent
+    # parallel mingw builds to work properly on some multi-core machines
+    # (but not all, sounds like a race condition). Detect this and restart
+    # in single-process mode!
+    if [ "$MINGW" = "yes" ] ; then
+        dump "Parallel mingw build failed - continuing in single process mode!"
+        run make -j1
+        if [ $? != 0 ] ; then
+            echo "Error while building mingw toolchain. See $TMPLOG"
+            exit 1
+        fi
+    else
+        echo "Error while building toolchain. See $TMPLOG"
+        exit 1
+    fi
 fi
 ABI="$OLD_ABI"
 
