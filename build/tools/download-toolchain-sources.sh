@@ -32,6 +32,9 @@ register_option "--branch=<name>" BRANCH "Specify release branch"
 RELEASE=`date +%Y%m%d`
 register_var_option "--release=<name>" RELEASE "Specify release name"
 
+GIT_DATE=$TOOLCHAIN_GIT_DATE
+register_var_option "--git-date=<date>" GIT_DATE "Only sources that existed until specified <date>"
+
 GITCMD=git
 register_var_option "--git=<executable>" GITCMD "Use this version of the git tool"
 
@@ -46,6 +49,15 @@ PROGRAM_DESCRIPTION=\
 "Download the NDK toolchain sources from android.git.kernel.org into <src-dir>.
 You will need to run this script before being able to rebuilt the NDK toolchain
 binaries from scratch with build/tools/build-gcc.sh."
+
+if [ -n "$TOOLCHAIN_GIT_DATE" ] ; then
+  PROGRAM_DESCRIPTION="$PROGRAM_DESCRIPTION\
+
+
+By default, this script will download sources from android.git.kernel.org that
+correspond to the date of $TOOLCHAIN_GIT_DATE. If you want to use the tip of
+tree, use '--git-date=now' instead."
+fi
 
 extract_parameters $@
 
@@ -102,6 +114,16 @@ toolchain_clone ()
         if [ $? != 0 ] ; then
             dump "Could not checkout $1 ?"
             exit 1
+        fi
+        # If --git-date is used, or we have a default
+        if [ -n "$GIT_DATE" ] ; then
+            REVISION=`git rev-list -n 1 --until="$GIT_DATE" HEAD`
+            dump "Using sources for date '$GIT_DATE': toolchain/$1 revision $REVISION"
+            run git checkout $REVISION
+            if [ $? != 0 ] ; then
+                dump "Could not checkout $1 ?"
+                exit 1
+            fi
         fi
     fi
     # get rid of .git directory, we won't need it.
