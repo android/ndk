@@ -1,5 +1,8 @@
 <html><body><pre>'ndk-gdb' Overview
 
+IMPORTANT: IF YOU ARE DEBUGGING THREADED PROGRAMS, PLEASE READ THE
+           SECTION BELOW TITLED 'Thread Support'.
+
 I. Usage:
 ---------
 
@@ -169,4 +172,39 @@ Cygwin is required to run it on Windows. We hope to get rid of this
 limitation in a future NDK release.
 
 The other NDK requirements apply: e.g. GNU Make 3.81 or higher.
+
+
+IV. Thread Support:
+-------------------
+
+If your application runs on a platform older than Android 2.3, ndk-gdb will
+not be able to debug native threads properly. Instead, the debugger will only
+be able to put breakpoints on the main thread, completely ignoring the
+execution of other ones.
+
+The root of the problem is complex, but is essentially due to a very unfortunate
+bug in the platform, which was only discovered lately.
+
+The gdbserver binary that comes with this NDK has special code to detect this
+condition at runtime and adapt its behaviour automatically (in other words,
+you don't have anything special to do when building your code).
+
+What this means in practical terms are:
+
+- If you are on Android 2.3, or a prior platform release which has had the
+  platform bugfix back-ported to it, you will be able to debug native
+  threads automatically.
+
+- If you are not, you will only be able to debug the main thread
+  (as in previous NDK releases). You will also see the following message
+  when launching ndk-gdb (just before the gdb prompt):
+
+     Thread debugging is unsupported on this Android platform!
+
+  If you place a breakpoint on a function executed on a non-main thread, the
+  program will exit with the following message in GDB:
+
+        Program terminated with signal SIGTRAP, Trace/breakpoint trap.
+        The program no longer exists.
+
 </pre></body></html>

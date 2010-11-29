@@ -30,32 +30,36 @@ Where <src-dir> is the location of the gdbserver sources,
 <ndk-dir> is the top-level NDK installation path and <toolchain>
 is the name of the toolchain to use (e.g. arm-eabi-4.4.0).
 
+The final binary is placed under:
+
+    <ndk-dir>/toolchains <toolchain>/prebuilt/gdbserver
+
 NOTE: The --platform option is ignored if --sysroot is used."
 
-RELEASE=`date +%Y%m%d`
-BUILD_OUT=`random_temp_directory`
-PLATFORM=android-3
 VERBOSE=no
-JOBS=$HOST_NUM_CPUS
 
-OPTION_HELP=no
 OPTION_BUILD_OUT=
-OPTION_SYSROOT=
+BUILD_OUT=`random_temp_directory`
+register_option "--build-out=<path>" do_build_out "Set temporary build directory" "/tmp/<random>"
+do_build_out () { OPTION_BUILD_OUT="$1"; }
+
+PLATFORM=android-3
+register_var_option "--platform=<name>"  PLATFORM "Target specific platform"
 
 SYSROOT=
 if [ -d $TOOLCHAIN_PATH/sysroot ] ; then
   SYSROOT=$TOOLCHAIN_PATH/sysroot
 fi
+register_var_option "--sysroot=<path>" SYSROOT "Specify sysroot directory directly"
 
-register_option "--build-out=<path>" do_build_out "Set temporary build directory" "/tmp/random"
-register_option "--platform=<name>"  do_platform  "Target specific platform" "$PLATFORM"
-register_option "--sysroot=<path>"   do_sysroot   "Specify sysroot directory directly [$SYSROOT]."
-register_option "-j<number>"         do_jobs      "Use <number> build jobs in parallel" "$JOBS"
+NOTHREADS=no
+register_var_option "--disable-threads" NOTHREADS "Disable threads support"
 
-do_build_out () { OPTION_BUILD_OUT=$1; }
-do_platform () { OPTION_PLATFORM=$1; }
-do_sysroot () { OPTION_SYSROOT=$1; }
-do_jobs () { JOBS=$1; }
+JOBS=$HOST_NUM_CPUS
+register_var_option "-j<number>" JOBS "Use <number> build jobs in parallel"
+
+GDB_VERSION=6.6
+register_var_option "--gdb-version=<name>" GDB_VERSION "Use specific gdb version."
 
 extract_parameters $@
 
@@ -74,8 +78,14 @@ set_parameters ()
         exit 1
     fi
 
+    SRC_DIR2="$SRC_DIR/gdb/gdb-$GDB_VERSION/gdb/gdbserver"
+    if [ -d "$SRC_DIR2" ] ; then
+        SRC_DIR="$SRC_DIR2"
+        log "Found gdbserver source directory: $SRC_DIR"
+    fi
+
     if [ ! -f "$SRC_DIR/gdbreplay.c" ] ; then
-        echo "ERROR: Source directory does not contain gdb sources: $SRC_DIR"
+        echo "ERROR: Source directory does not contain gdbserver sources: $SRC_DIR"
         exit 1
     fi
 
@@ -112,37 +122,86 @@ check_toolchain_install $NDK_DIR
 
 # Check build directory
 #
-fix_option BUILD_OUT "$OPTION_BUILD_OUT" "build out directory"
-fix_option PLATFORM "$OPTION_PLATFORM" "platform"
-fix_sysroot "$OPTION_SYSROOT"
+fix_sysroot "$SYSROOT"
+log "Using sysroot: $SYSROOT"
+
+if [ -n "$OPTION_BUILD_OUT" ] ; then
+    BUILD_OUT="$OPTION_BUILD_OUT"
+fi
+log "Using build directory: $BUILD_OUT"
+run mkdir -p "$BUILD_OUT"
+
+# Copy the sysroot to a temporary build directory
+BUILD_SYSROOT="$BUILD_OUT/sysroot"
+run mkdir -p "$BUILD_SYSROOT"
+run cp -rp "$SYSROOT/*" "$BUILD_SYSROOT"
+
+# Remove libthread_db to ensure we use exactly the one we want.
+rm -f $BUILD_SYSROOT/usr/lib/libthread_db*
+rm -f $BUILD_SYSROOT/usr/include/thread_db.h
+
+if [ "$NOTHREADS" != "yes" ] ; then
+    # We're going to rebuild libthread_db.o from its source
+    # that is under sources/android/libthread_db and place its header
+    # and object file into the build sysroot.
+    LIBTHREAD_DB_DIR=$ANDROID_NDK_ROOT/sources/android/libthread_db/gdb-$GDB_VERSION
+    if [ ! -d "$LIBTHREAD_DB_DIR" ] ; then
+        dump "ERROR: Missing directory: $LIBTHREAD_DB_DIR"
+        exit 1
+    fi
+    # Small trick, to avoid calling ar, we store the single object file
+    # with an .a suffix. The linker will handle that seamlessly.
+    run cp $LIBTHREAD_DB_DIR/thread_db.h $BUILD_SYSROOT/usr/include/
+    run $TOOLCHAIN_PREFIX-gcc --sysroot=$BUILD_SYSROOT -o $BUILD_SYSROOT/usr/lib/libthread_db.a -c $LIBTHREAD_DB_DIR/libthread_db.c
+    if [ $? != 0 ] ; then
+        dump "ERROR: Could not compile libthread_db.c!"
+        exit 1
+    fi
+fi
+
+log "Using build sysroot: $BUILD_SYSROOT"
 
 # configure the gdbserver build now
-dump "Configure: $TOOLCHAIN gdbserver build."
-run mkdir -p $BUILD_OUT
+dump "Configure: $TOOLCHAIN gdbserver-$GDB_VERSION build."
 OLD_CC="$CC"
 OLD_CFLAGS="$CFLAGS"
 OLD_LDFLAGS="$LDFLAGS"
 
 INCLUDE_DIRS=\
 "-I$TOOLCHAIN_PATH/lib/gcc/$ABI_CONFIGURE_TARGET/$GCC_VERSION/include \
--I$SYSROOT/usr/include"
-CRTBEGIN="$SYSROOT/usr/lib/crtbegin_static.o"
-CRTEND="$SYSROOT/usr/lib/crtend_android.o"
+-I$BUILD_SYSROOT/usr/include"
+CRTBEGIN="$BUILD_SYSROOT/usr/lib/crtbegin_static.o"
+CRTEND="$BUILD_SYSROOT/usr/lib/crtend_android.o"
 
 # Note: we must put a second -lc after -lgcc to resolve a cyclical
 #       dependency on arm-linux-androideabi, where libgcc.a contains
 #       a function (__div0) which depends on raise(), implemented
 #       in the C library.
 #
-LIBRARY_LDFLAGS="$CRTBEGIN -L$SYSROOT/usr/lib -lc -lm -lgcc -lc $CRTEND "
+LIBRARY_LDFLAGS="$CRTBEGIN -lc -lm -lgcc -lc $CRTEND "
+
+case "$GDB_VERSION" in
+    6.6)
+        CONFIGURE_FLAGS="--with-sysroot=$BUILD_SYSROOT"
+        ;;
+    7.1.x)
+        # This flag is required to link libthread_db statically to our
+        # gdbserver binary. Otherwise, the program will try to dlopen()
+        # the threads binary, which is not possible since we build a
+        # static executable.
+        CONFIGURE_FLAGS="--with-libthread-db=$BUILD_SYSROOT/usr/lib/libthread_db.a"
+        ;;
+    *)
+        CONFIGURE_FLAGS=""
+esac
 
 cd $BUILD_OUT &&
-export CC="$TOOLCHAIN_PREFIX-gcc" &&
+export CC="$TOOLCHAIN_PREFIX-gcc --sysroot=$BUILD_SYSROOT" &&
 export CFLAGS="-O2 -nostdinc -nostdlib -D__ANDROID__ -DANDROID -DSTDC_HEADERS $INCLUDE_DIRS $GDBSERVER_CFLAGS"  &&
 export LDFLAGS="-static -Wl,-z,nocopyreloc -Wl,--no-undefined $LIBRARY_LDFLAGS" &&
 run $SRC_DIR/configure \
 --host=$GDBSERVER_HOST \
---with-sysroot=$SYSROOT
+$CONFIGURE_FLAGS
 if [ $? != 0 ] ; then
     dump "Could not configure gdbserver build. See $TMPLOG"
     exit 1
@@ -165,16 +224,23 @@ fi
 # note that we install it in the toolchain bin directory
 # not in $SYSROOT/usr/bin
 #
-dump "Install  : $TOOLCHAIN gdbserver."
+if [ "$NOTHREADS" = "yes" ] ; then
+    DSTFILE="gdbserver-nothreads"
+else
+    DSTFILE="gdbserver"
+fi
+dump "Install  : $TOOLCHAIN $DSTFILE."
 DEST=`dirname $TOOLCHAIN_PATH`
 mkdir -p $DEST &&
-run $TOOLCHAIN_PREFIX-objcopy --strip-unneeded $BUILD_OUT/gdbserver $DEST/gdbserver
+run $TOOLCHAIN_PREFIX-objcopy --strip-unneeded $BUILD_OUT/gdbserver $DEST/$DSTFILE
 if [ $? != 0 ] ; then
-    dump "Could not install gdbserver. See $TMPLOG"
+    dump "Could not install $DSTFILE. See $TMPLOG"
     exit 1
 fi
 
-dump "Done."
-if [ -n "$OPTION_BUILD_OUT" ] ; then
-    rm -rf $BUILD_OUT
+log "Cleaning up."
+if [ -z "$OPTION_BUILD_OUT" ] ; then
+    run rm -rf $BUILD_OUT
 fi
+
+dump "Done."
