@@ -627,5 +627,10 @@ API_LEVELS="3 4 5 8 9"
 
 # Location of the STLport sources, relative to the NDK root directory
 STLPORT_SUBDIR=sources/android/stlport
+
 # Default ABIs for the prebuilt STLport binaries
 STLPORT_ABIS="armeabi armeabi-v7a"
+
+# The date to use when downloading toolchain sources from android.git.kernel.org
+# Leave it empty for tip of tree.
+TOOLCHAIN_GIT_DATE=2010-11-25
