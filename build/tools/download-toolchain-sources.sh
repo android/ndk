@@ -29,7 +29,11 @@ BRANCH=master
 register_option "--branch=<name>" BRANCH "Specify release branch"
 
 # the default release name (use today's date)
-RELEASE=`date +%Y%m%d`
+if [ "$TOOLCHAIN_GIT_DATE" -a "$TOOLCHAIN_GIT_DATE" != "now" ] ; then
+    RELEASE=`echo $TOOLCHAIN_GIT_DATE | sed -e 's!-!!g'`
+else
+    RELEASE=`date +%Y%m%d`
+fi
 register_var_option "--release=<name>" RELEASE "Specify release name"
 
 GIT_DATE=$TOOLCHAIN_GIT_DATE
