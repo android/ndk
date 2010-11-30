@@ -31,8 +31,8 @@ ROOTDIR=`dirname $PROGDIR`
 . $ROOTDIR/build/core/ndk-common.sh
 
 # The list of tests that are too long to be part of a normal run of
-# run-tests.sh
-LONG_TESTS="prebuild-stlport test-stlport"
+# run-tests.sh. Most of these do not run properly at the moment.
+LONG_TESTS="prebuild-stlport test-stlport test-gnustl"
 
 #
 # Parse options
@@ -255,6 +255,10 @@ build_project ()
 {
     local NAME=`basename $1`
     local DIR="$BUILD_DIR/$NAME"
+    if [ -f "$DIR/BROKEN_BUILD" ] ; then
+        echo "Skipping $1: (build)"
+        return 0
+    fi
     cp -r "$1" "$DIR"
     cd "$DIR" && run_ndk_build $NDK_BUILD_FLAGS
     if [ $? != 0 ] ; then
@@ -343,6 +347,11 @@ fi
 if is_testable device; then
     build_device_test ()
     {
+        # Do not build test if BROKEN_BUILD is defined
+        if [ -f "$1/BROKEN_BUILD" ] ; then
+            echo "Skipping broken device test build: `basename $1`"
+            return 0
+        fi
         echo "Building NDK device test: `basename $1`"
         build_project $1
     }
@@ -355,9 +364,14 @@ if is_testable device; then
         local DSTFILE
         local PROGRAMS=
         local PROGRAM
+        # Do not run the test if BROKEN_RUN is defined
+        if [ -f "$1/BROKEN_RUN" ] ; then
+            dump "Skipping NDK device test run: `basename $1`"
+            return 0
+        fi
         # First, copy all files to /data/local, except for gdbserver
         # or gdb.setup.
-        $ADB_CMD shell mkdir $DSTDIR
+        adb_cmd mkdir $DSTDIR
         for SRCFILE in `ls $SRCDIR`; do
             DSTFILE=`basename $SRCFILE`
             if [ "$DSTFILE" = "gdbserver" -o "$DSTFILE" = "gdb.setup" ] ; then
@@ -384,11 +398,7 @@ if is_testable device; then
             fi
         done
         # Cleanup
-        $ADB_CMD shell rm -r $DSTDIR
-        #for SRCFILE in `ls $SRCDIR`; do
-        #    DSTFILE=`basename $SRCFILE`
-        #    $ADB_CMD shell rm $DSTDIR/$DSTFILE
-        #done
+        adb_cmd rm -r $DSTDIR
     }
 
     for DIR in `ls -d $ROOTDIR/tests/device/*`; do
@@ -405,13 +415,21 @@ if is_testable device; then
         dump "WARNING: No 'adb' in your path!"
         SKIP_TESTS=yes
     else
-        ADB_DEVCOUNT=`$ADB_CMD devices | wc -l`
-        ADB_DEVCOUNT=`expr $ADB_DEVCOUNT - 2`
+        ADB_DEVICES=`$ADB_CMD devices`
+        log2 "ADB devices: $ADB_DEVICES"
+        ADB_DEVCOUNT=`echo "$ADB_DEVICES" | wc -l`
+        ADB_DEVCOUNT=`expr $ADB_DEVCOUNT - 1`
+        log2 "ADB Device count: $ADB_DEVCOUNT"
         if [ "$ADB_DEVCOUNT" = "0" ]; then
             dump "WARNING: No device connected to adb!"
             SKIP_TESTS=yes
         elif [ "$ADB_DEVCOUNT" != 1 -a -z "$ADB_SERIAL" ] ; then
             dump "WARNING: More than one device connected to adb. Please define ADB_SERIAL!"
+            SKIP_TESTS=yes
+        fi
+        echo "$ADB_DEVICES" | grep -q -e "offline"
+        if [ $? = 0 ] ; then
+            dump "WARNING: Device is offline, can't run device tests!"
             SKIP_TESTS=yes
         fi
     fi
@@ -420,6 +438,7 @@ if is_testable device; then
         dump "SKIPPING RUNNING TESTS ON DEVICE!"
     else
         for DIR in `ls -d $ROOTDIR/tests/device/*`; do
+            log "Running device test: $DIR"
             if is_buildable $DIR; then
                 run_device_test $DIR /data/local
             fi
