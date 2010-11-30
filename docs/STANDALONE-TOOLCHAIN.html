@@ -52,18 +52,17 @@ being currently supported). For example, if you're targetting Android 2.1
 2/ Invoking the compiler (the hard way):
 ----------------------------------------
 
-Invoke the compiler using the -sysroot option to indicate where the system
+Invoke the compiler using the --sysroot option to indicate where the system
 files for the platform you're targetting are located. For example, do:
 
-    export CC="$NDK/toolchains/&lt;name&gt;/prebuilt/&lt;system&gt;/bin/&lt;prefix&gt;gcc -sysroot
-$SYSROOT"
+    export CC="$NDK/toolchains/&lt;name&gt;/prebuilt/&lt;system&gt;/bin/&lt;prefix&gt;gcc --sysroot=$SYSROOT"
     $CC -o foo.o -c foo.c
 
 Where &lt;name&gt; is the toolchain's name, &lt;system&gt; is the host tag for your system,
 and &lt;prefix&gt; is a toolchain-specific prefix. For example, if you are on Linux
 using the NDK r5 toolchain, you would use:
 
-    export CC="$NDK/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc -sysroot $SYSROOT"
+    export CC="$NDK/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc --sysroot=$SYSROOT"
 
 As you can see, this is rather verbose, but it works!
 
@@ -94,7 +93,7 @@ IMPORTANT: The toolchain binaries do not depend or contain host-specific paths,
            in other words, they can be installed in any location, or even
            moved if you need to.
 
-NOTE: You can still use the -sysroot option with the new toolchain, but it
+NOTE: You can still use the --sysroot option with the new toolchain, but it
       is now simply optional!
 
 
