@@ -285,6 +285,10 @@ for SYSTEM in $SYSTEMS; do
             for STL_ABI in $STLPORT_ABIS; do
                 copy_prebuilt "$STLPORT_SUBDIR/libs/$STL_ABI" "$STLPORT_SUBDIR/libs"
             done
+            copy_prebuilt "$GNUSTL_SUBDIR/include" "$GNUSTL_SUBDIR"
+            for STL_ABI in $STLPORT_ABIS; do
+                copy_prebuilt "$GNUSTL_SUBDIR/libs/$STL_ABI" "$GNUSTL_SUBDIR/libs"
+            done
         else
             echo "WARNING: Could not find STLport source tree!"
         fi
@@ -299,6 +303,12 @@ for SYSTEM in $SYSTEMS; do
         unpack_prebuilt stlport-libs-armeabi-v7a.tar.bz2
         if [ "$TRY_X86" = "yes" ] ; then
             unpack_prebuilt stlport-prebuilt-x86.tar.bz2
+        fi
+        unpack_prebuilt gnu-libstdc++-headers.tar.bz2
+        unpack_prebuilt gnu-libstdc++-libs-armeabi.tar.bz2
+        unpack_prebuilt gnu-libstdc++-libs-armeabi-v7a.tar.bz2
+        if [ "$TRY_X86" = "yes" ] ; then
+            unpack_prebuilt gnu-libstdc++-libs-x86.tar.bz2
         fi
     fi
 

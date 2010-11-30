@@ -1,0 +1,10 @@
+This directory contains the headers and prebuilt binaries for the
+GNU libstdc++-v3 C++ Standard Template Library implementation.
+
+These are generated from the toolchain sources by the rebuild-all-prebuilt.sh
+script under build/tools.
+
+To use it, define APP_STL to 'gnustl_static' in your Application.mk.
+See docs/CPLUSPLUS-SUPPORT.html for more details.
+
+This implementation fully supports C++ exceptions and RTTI.
