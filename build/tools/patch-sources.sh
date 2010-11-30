@@ -68,10 +68,7 @@ for PATCH in $PATCHES; do
     PATCHNAME=`basename $PATCH`
     log "Applying $PATCHNAME into $SRC_DIR/$PATCHDIR"
     cd $SRC_DIR/$PATCHDIR && patch -p1 < $PATCHES_DIR/$PATCH
-    if [ $? != 0 ] ; then
-        dump "ERROR: Patch failure !! Please check your patches directory!"
-        exit 1
-    fi
+    fail_panic "Patch failure!! Please check your patches directory!"
 done
 
 dump "Done!"
