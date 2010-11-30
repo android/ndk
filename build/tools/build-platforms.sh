@@ -243,13 +243,13 @@ fi
 # $1: source directory (relative to $SRCDIR)
 # $2: destination directory (relative to $DSTDIR)
 # $3: description of directory contents (e.g. "sysroot" or "samples")
-copy_directory ()
+copy_src_directory ()
 {
     local SDIR="$SRCDIR/$1"
     local DDIR="$DSTDIR/$2"
     if [ -d "$SDIR" ] ; then
         log "Copying $3 from \$SRC/$1 to \$DST/$2."
-        mkdir -p "$DDIR" && cp -rf "$SDIR"/* "$DDIR"
+        mkdir -p "$DDIR" && (cd "$SDIR" && tar chf - *) | (tar xf - -C "$DDIR")
         if [ $? != 0 ] ; then
             echo "ERROR: Could not copy $3 directory $SDIR into $DDIR !"
             exit 5
@@ -262,7 +262,7 @@ copy_directory ()
 #
 # $1: source directory (relative to $SRCDIR)
 # $2: destination directory (relative to $DSTDIR)
-symlink_directory ()
+symlink_src_directory ()
 {
     mkdir -p "$DSTDIR/$2"
     local files=`cd $DSTDIR/$1 && ls -1p | grep -v -e '.*/'`
@@ -273,32 +273,7 @@ symlink_directory ()
         ln -s $rev/$1/$file $DSTDIR/$2/$file
     done
     for subdir in $subdirs; do
-        symlink_directory $1/$subdir $2/$subdir
-    done
-}
-
-# Overwrite the content of a symlink-copy with new content.
-# This takes care of removing the symlinks before copying the new content
-#
-# $1: source directory (relative to $SRCDIR)
-# $2: destination directory (relative to $DSTDIR)
-overcopy_directory ()
-{
-    if [ ! -d "$SRCDIR/$1" ] ; then
-        return
-    fi
-    local files=`cd $SRCDIR/$1 && ls -1p | grep -v -e '.*/'`
-    local subdirs=`cd $SRCDIR/$1 && ls -1p | grep -e '.*/' | sed -e 's!/$!!g'`
-    local file subdir
-    mkdir -p $DSTDIR/$2
-    for file in $files; do
-        # remove symlink, if already there
-        rm -f $DSTDIR/$2/$file
-        cp -f $SRCDIR/$1/$file $DSTDIR/$2/$file
-        #log2 "copy: $SRCDIR/$1/$file --> $DSTDIR/$2/$file"
-    done
-    for subdir in $subdirs; do
-        overcopy_directory $1/$subdir $2/$subdir
+        symlink_src_directory $1/$subdir $2/$subdir
     done
 }
 
@@ -321,13 +296,15 @@ for PLATFORM in $PLATFORMS; do
     NEW_PLATFORM=platforms/android-$PLATFORM
     PLATFORM_SRC=$NEW_PLATFORM
     PLATFORM_DST=$NEW_PLATFORM
+    dump "Copying android-$PLATFORM platform files"
     if [ -n "$PREV_PLATFORM_DST" ] ; then
         if [ "$OPTION_NO_SYMLINKS" = "yes" ] ; then
             log "Copying \$DST/$PREV_PLATFORM_DST to \$DST/$PLATFORM_DST"
-            cp -r $DSTDIR/$PREV_PLATFORM_DST $DSTDIR/$PLATFORM_DST
+            #cp -r $DSTDIR/$PREV_PLATFORM_DST $DSTDIR/$PLATFORM_DST
+            copy_directory "$DSTDIR/$PREV_PLATFORM_DST" "$DSTDIR/$PLATFORM_DST"
         else
             log "Symlink-copying \$DST/$PREV_PLATFORM_DST to \$DST/$PLATFORM_DST"
-            symlink_directory $PREV_PLATFORM_DST $PLATFORM_DST
+            symlink_src_directory $PREV_PLATFORM_DST $PLATFORM_DST
         fi
         if [ $? != 0 ] ; then
             echo "ERROR: Could not copy previous sysroot to $DSTDIR/$NEW_PLATFORM"
@@ -336,10 +313,11 @@ for PLATFORM in $PLATFORMS; do
     fi
     for ABI in $ABIS; do
         SYSROOT=arch-$ABI/usr
-        overcopy_directory $PLATFORM_SRC/include           $PLATFORM_DST/$SYSROOT/include "sysroot headers"
-        overcopy_directory $PLATFORM_SRC/arch-$ABI/include $PLATFORM_DST/$SYSROOT/include "sysroot headers"
-        overcopy_directory $PLATFORM_SRC/arch-$ABI/lib     $PLATFORM_DST/$SYSROOT/lib "sysroot libs"
-        overcopy_directory $PLATFORM_SRC/$SYSROOT          $PLATFORM_DST/$SYSROOT "sysroot"
+        log "Copy $ABI sysroot files from \$SRC/android-$PLATFORM over \$DST/android-$PLATFORM/arch-$ABI"
+        copy_src_directory $PLATFORM_SRC/include           $PLATFORM_DST/$SYSROOT/include "sysroot headers"
+        copy_src_directory $PLATFORM_SRC/arch-$ABI/include $PLATFORM_DST/$SYSROOT/include "sysroot headers"
+        copy_src_directory $PLATFORM_SRC/arch-$ABI/lib     $PLATFORM_DST/$SYSROOT/lib "sysroot libs"
+        copy_src_directory $PLATFORM_SRC/$SYSROOT          $PLATFORM_DST/$SYSROOT "sysroot"
     done
     PREV_PLATFORM_DST=$PLATFORM_DST
 done
@@ -350,12 +328,14 @@ if [ "$OPTION_NO_SAMPLES" = no ] ; then
     # $SRC/samples/ --> $DST/samples/
     # $SRC/android-$PLATFORM/samples/ --> $DST/samples
     #
+    dump "Copying generic samples"
     rm -rf $DSTDIR/samples && mkdir -p $DSTDIR/samples
-    copy_directory  samples samples samples
+    copy_src_directory  samples samples samples
 
     for PLATFORM in $PLATFORMS; do
+        dump "Copy android-$PLATFORM samples"
         # $SRC/platform-$PLATFORM/samples --> $DST/samples
-        copy_directory platforms/android-$PLATFORM/samples samples samples
+        copy_src_directory platforms/android-$PLATFORM/samples samples samples
     done
 
     # Cleanup generated files in samples
