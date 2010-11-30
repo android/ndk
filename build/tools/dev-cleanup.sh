@@ -19,7 +19,7 @@
 # Remove any intermediate files (e.g. object files) from the development
 # directories.
 #
-. `dirname $0`/../core/ndk-common.sh
+. `dirname $0`/prebuilt-common.sh
 
 DIR=$ANDROID_NDK_ROOT
 
@@ -32,15 +32,16 @@ if [ ! -d $DIR/.git ] ; then
     exit 1
 fi
 
+# Remove generated directories
 rm -rf $DIR/platforms
 rm -rf $DIR/toolchains/*/prebuilt
 rm -rf $DIR/samples
 
-DIR=`dirname $ANDROID_NDK_ROOT`/development/ndk
-if [ ! -d $DIR ] ; then
-    echo "WARNING: Development directory missing: $DIR"
-    exit 0
-fi
+# Remove prebuilt binaries
+rm -rf $DIR/$STLPORT_SUBDIR/libs
+
+#rm -rf $DIR/$GNUSTL_SUBDIR/include
+#rm -rf $DIR/$GNUSTL_SUBDIR/libs/*
 
 clean_dir ()
 {
@@ -68,15 +69,24 @@ cleanup_project ()
     clean_file $1/local.properties
 }
 
-for PROJECT in $DIR/samples/*; do
-    cleanup_project $PROJECT
-done
-for PROJECT in $DIR/platforms/android-*/samples/*; do
-    cleanup_project $PROJECT
-done
+# Cleanup the tests
+DIR=$ANDROID_NDK_ROOT
 for PROJECT in $DIR/tests/build/*; do
     cleanup_project $PROJECT
 done
 for PROJECT in $DIR/tests/device/*; do
+    cleanup_project $PROJECT
+done
+
+# Cleanup development/ndk
+DIR=`dirname $ANDROID_NDK_ROOT`/development/ndk
+if [ ! -d $DIR ] ; then
+    echo "WARNING: Development directory missing: $DIR"
+    exit 0
+fi
+for PROJECT in $DIR/samples/*; do
+    cleanup_project $PROJECT
+done
+for PROJECT in $DIR/platforms/android-*/samples/*; do
     cleanup_project $PROJECT
 done
