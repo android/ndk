@@ -158,7 +158,7 @@ package_it ()
     if [ -n "$PACKAGE_DIR" ] ; then
         dump "Packaging $1 ($2.tar.bz2) ..."
         PREBUILT_PACKAGE="$PACKAGE_DIR/$2".tar.bz2
-        (cd $NDK_DIR && tar cjf $PREBUILT_PACKAGE "$3")
+        (cd $NDK_DIR && tar cjf $PREBUILT_PACKAGE $3)
         fail_panic "Could not package $1!"
     fi
 }
@@ -186,11 +186,19 @@ build_gdbserver ()
     package_it "$1 gdbserver" "$1-gdbserver" "toolchains/$1/prebuilt/gdbserver"
 }
 
-build_toolchain arm-eabi-4.4.0
-build_gdbserver arm-eabi-4.4.0
+#build_toolchain arm-eabi-4.4.0
+#build_gdbserver arm-eabi-4.4.0
 
 build_toolchain arm-linux-androideabi-4.4.3 --copy-libstdcxx
 build_gdbserver arm-linux-androideabi-4.4.3
+
+# We need to package the libsupc++ binaries on Linux since the GCC build
+# scripts cannot build them with --mingw option.
+if [ "$HOST_OS" = "linux" ] ; then
+    LIBSUPC_DIR="toolchains/arm-linux-androideabi-4.4.3/prebuilt/$HOST_TAG/arm-linux-androideabi/lib"
+    package_it "GNU libsupc++ armeabi libs" "gnu-libsupc++-armeabi" "$LIBSUPC_DIR/libsupc++.a $LIBSUPC_DIR/thumb/libsupc++.a"
+    package_it "GNU libsupc++ armeabi-v7a libs" "gnu-libsupc++-armeabi-v7a" "$LIBSUPC_DIR/armv7-a/libsupc++.a $LIBSUPC_DIR/armv7-a/thumb/libsupc++.a"
+fi
 
 if [ "$MINGW" != "yes" ] ; then
     package_it "GNU libstdc++ headers" "gnu-libstdc++-headers" "sources/cxx-stl/gnu-libstdc++/include"

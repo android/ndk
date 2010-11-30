@@ -250,9 +250,9 @@ fi
 # strip binaries to reduce final package size
 run strip $TOOLCHAIN_PATH/bin/*
 run strip $TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/bin/*
-run strip $TOOLCHAIN_PATH/libexec/gcc/*/*/cc1
-run strip $TOOLCHAIN_PATH/libexec/gcc/*/*/cc1plus
-run strip $TOOLCHAIN_PATH/libexec/gcc/*/*/collect2
+run strip $TOOLCHAIN_PATH/libexec/gcc/*/*/cc1$HOST_EXE
+run strip $TOOLCHAIN_PATH/libexec/gcc/*/*/cc1plus$HOST_EXE
+run strip $TOOLCHAIN_PATH/libexec/gcc/*/*/collect2$HOST_EXE
 
 dump "Done."
 if [ -z "$OPTION_BUILD_OUT" ] ; then
