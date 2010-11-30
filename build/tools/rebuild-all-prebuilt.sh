@@ -79,10 +79,7 @@ fi
 
 if [ -z "$NDK_DIR" ] ; then
     mkdir -p "$PACKAGE_DIR"
-    if [ $? != 0 ] ; then
-        echo "ERROR: Could not create directory: $PACKAGE_DIR"
-        exit 1
-    fi
+    fail_panic "Could not create directory: $PACKAGE_DIR"
     NDK_DIR=/tmp/ndk-toolchain/ndk-prebuilt-$$
     mkdir -p $NDK_DIR
 else
@@ -132,22 +129,8 @@ if [ -z "$OPTION_TOOLCHAIN_SRC_DIR" ] ; then
             dump "ERROR: Invalid toolchain source package: $OPTION_TOOLCHAIN_SRC_PKG"
             exit 1
         fi
-        TARFLAGS="xf"
-        if [ $VERBOSE2 = yes ] ; then
-            TARFLAGS="v$TARFLAGS"
-        fi
-        if pattern_match '\.tar\.gz$' "$OPTION_TOOLCHAIN_SRC_PKG"; then
-            TARFLAGS="z$TARFLAGS"
-        fi
-        if pattern_match '\.tar\.bz2$' "$OPTION_TOOLCHAIN_SRC_PKG"; then
-            TARFLAGS="j$TARFLAGS"
-        fi
-        dump "Unpack sources from $OPTION_TOOLCHAIN_SRC_PKG"
-        mkdir -p $SRC_DIR && tar $TARFLAGS $OPTION_TOOLCHAIN_SRC_PKG -C $SRC_DIR
-        if [ $? != 0 ] ; then
-            dump "ERROR: Could not unpack toolchain sources!"
-            exit 1
-        fi
+        unpack_archive "$OPTION_TOOLCHAIN_SRC_PKG" "$SRC_DIR"
+        fail_panic "Could not unpack toolchain sources!"
     else
         # Download the toolchain sources
         dump "Download sources from android.git.kernel.org"
@@ -156,10 +139,7 @@ if [ -z "$OPTION_TOOLCHAIN_SRC_DIR" ] ; then
             DOWNLOAD_FLAGS="$DOWNLOAD_FLAGS --git-http"
         fi
         $PROGDIR/download-toolchain-sources.sh $DOWNLOAD_FLAGS $SRC_DIR
-        if [ $? != 0 ] ; then
-            dump "ERROR: Could not download toolchain sources!"
-            exit 1
-        fi
+        fail_panic "Could not download toolchain sources!"
     fi
 fi # ! $TOOLCHAIN_SRC_DIR
 
@@ -178,10 +158,7 @@ package_it ()
         dump "Packaging $1 ($2.tar.bz2) ..."
         PREBUILT_PACKAGE="$PACKAGE_DIR/$2".tar.bz2
         (cd $NDK_DIR && tar cjf $PREBUILT_PACKAGE "$3")
-        if [ $? != 0 ] ; then
-            dump "ERROR: Could not package $1!"
-            exit 1
-        fi
+        fail_panic "Could not package $1!"
     fi
 }
 
@@ -190,10 +167,7 @@ build_toolchain ()
 {
     dump "Building $1 toolchain... (this can be long)"
     run $PROGDIR/build-gcc.sh $FLAGS --build-out=$BUILD_DIR/toolchain-$1 $SRC_DIR $NDK_DIR $1
-    if [ $? != 0 ] ; then
-        dump "ERROR: Could not build $1 toolchain!"
-        exit 1
-    fi
+    fail_panic "Could bot build $1 toolchain!"
     package_it "$1 toolchain" "$1-$HOST_TAG" "toolchains/$1/prebuilt/$HOST_TAG"
 }
 
@@ -205,10 +179,7 @@ build_gdbserver ()
     fi
     dump "Build $1 gdbserver..."
     $PROGDIR/build-gdbserver.sh $FLAGS --build-out=$BUILD_DIR/gdbserver-$1 --gdb-version=$GDB_VERSION $SRC_DIR $NDK_DIR $1
-    if [ $? != 0 ] ; then
-        dump "ERROR: Could not build $1 gdbserver!"
-        exit 1
-    fi
+    fail_panic "Could not build $1 gdbserver!"
     package_it "$1 gdbserver" "$1-gdbserver" "toolchains/$1/prebuilt/gdbserver"
 }
 
@@ -227,12 +198,17 @@ fi
 if [ "$MINGW" != "yes" ] ; then
     if [ -z "$PACKAGE_DIR" ] ; then
         BUILD_STLPORT_FLAGS="--ndk-dir=\"$NDK_DIR\""
+        TOOLCHAIN_FLAGS=
     else
         BUILD_STLPORT_FLAGS="--package-dir=\"$PACKAGE_DIR\""
+        TOOLCHAIN_FLAGS="--toolchain-pkg=\"$PACKAGE_DIR/arm-linux-androideabi-4.4.3-$HOST_TAG.tar.bz2\""
     fi
-    $ANDROID_NDK_ROOT/build/tools/build-stlport.sh $BUILD_STLPORT_FLAGS
+    $ANDROID_NDK_ROOT/build/tools/build-stlport.sh $BUILD_STLPORT_FLAGS $TOOLCHAIN_FLAGS
     if [ "$OPTION_TRY_X86" = "yes" ]; then
-        $ANDROID_NDK_ROOT/build/tools/build-stlport.sh $BUILD_STLPORT_FLAGS--abis=x86
+        if [ -n "$PACKAGE_DIR" ] ; then
+            TOOLCHAIN_FLAGS="--toolchain-pkg=\"$PACKAGE_DIR/x86-4.2.1-$HOST_TAG.tar.bz2\""
+        fi
+        $ANDROID_NDK_ROOT/build/tools/build-stlport.sh $BUILD_STLPORT_FLAGS--abis=x86 $TOOLCHAIN_FLAGS
     fi
 else
     dump "Skipping STLport binaries build (--mingw option being used)"
