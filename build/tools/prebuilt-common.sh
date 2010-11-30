@@ -499,6 +499,7 @@ prepare_host_flags ()
         ABI_CONFIGURE_HOST=i586-mingw32msvc
         HOST_OS=windows
         HOST_TAG=windows
+        HOST_EXE=.exe
         HOST_GMP_ABI=
     fi
 }

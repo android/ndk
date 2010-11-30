@@ -247,6 +247,32 @@ unpack_prebuilt ()
     fi
 }
 
+# Special handling for libsupcxx, that's because the files are
+# stored under toolchains/<name>/prebuilt/linux-x86/arm-linux-androideabi/
+# and we need to unpack them under toolchains/<name>/prebuilt/<system>/arm-linux-androideabi/
+# if we are not on linux-x86
+# $1: prebuilt name, relative to $PREBUILT_DIR
+unpack_libsupcxx ()
+{
+    if [ $SYSTEM = linux-x86 ] ; then
+        unpack_prebuilt $1
+        return
+    fi
+    local PREBUILT=$1
+    echo "Unpacking $PREBUILT"
+    if [ -f "$PREBUILT_DIR/$PREBUILT" ] ; then
+        TMPUNPACKDIR=`random_temp_directory`
+        unpack_archive "$PREBUILT_DIR/$PREBUILT" "$TMPUNPACKDIR"
+        fail_panic "Could not unpack prebuilt $PREBUILT. Aborting."
+        (cd $TMPUNPACKDIR/toolchains/*/prebuilt && mv linux-x86 $SYSTEM)
+        fail_panic "Could not rename temp directory to $SYSTEM"
+        copy_directory $TMPUNPACKDIR "$DSTDIR"
+        rm -rf $TMPUNPACKDIR
+    else
+        echo "WARNING: Could not find $PREBUILT in $PREBUILT_DIR"
+    fi
+}
+
 # $1: Source directory relative to
 copy_prebuilt ()
 {
@@ -299,6 +325,11 @@ for SYSTEM in $SYSTEMS; do
             rm -rf $DSTDIR/toolchains/$TC/prebuilt/$SYSTEM/sysroot
             unpack_prebuilt $TC-gdbserver.tar.bz2
         done
+        unpack_libsupcxx gnu-libsupc++-armeabi.tar.bz2
+        unpack_libsupcxx gnu-libsupc++-armeabi-v7a.tar.bz2
+        if [ "$TRY_X86" = "yes" ] ; then
+            unpack_libsupcxx gnu-libsupc++-x86.tar.bz2
+        fi
         unpack_prebuilt stlport-libs-armeabi.tar.bz2
         unpack_prebuilt stlport-libs-armeabi-v7a.tar.bz2
         if [ "$TRY_X86" = "yes" ] ; then
