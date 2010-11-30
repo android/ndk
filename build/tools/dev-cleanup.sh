@@ -39,9 +39,8 @@ rm -rf $DIR/samples
 
 # Remove prebuilt binaries
 rm -rf $DIR/$STLPORT_SUBDIR/libs
-
-#rm -rf $DIR/$GNUSTL_SUBDIR/include
-#rm -rf $DIR/$GNUSTL_SUBDIR/libs/*
+rm -rf $DIR/$GNUSTL_SUBDIR/include
+rm -rf $DIR/$GNUSTL_SUBDIR/libs/*
 
 clean_dir ()
 {
