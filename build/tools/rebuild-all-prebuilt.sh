@@ -25,8 +25,6 @@
 . `dirname $0`/prebuilt-common.sh
 PROGDIR=`dirname $0`
 
-prepare_host_flags
-
 NDK_DIR=
 register_var_option "--ndk-dir=<path>" NDK_DIR "Don't package, copy binaries to target NDK directory"
 
@@ -71,6 +69,9 @@ script.
 "
 
 extract_parameters $@
+
+# Needed to set HOST_TAG to windows if --mingw is used.
+prepare_host_flags
 
 if [ -n "$PACKAGE_DIR" -a -n "$NDK_DIR" ] ; then
     echo "ERROR: You cannot use both --package-dir and --ndk-dir at the same time!"
@@ -121,6 +122,9 @@ FLAGS=""
 if [ $VERBOSE = yes ] ; then
     FLAGS="--verbose"
 fi
+if [ "$MINGW" = "yes" ] ; then
+    FLAGS="$FLAGS --mingw"
+fi
 
 if [ -z "$OPTION_TOOLCHAIN_SRC_DIR" ] ; then
     if [ -n "$OPTION_TOOLCHAIN_SRC_PKG" ] ; then
@@ -143,9 +147,6 @@ if [ -z "$OPTION_TOOLCHAIN_SRC_DIR" ] ; then
     fi
 fi # ! $TOOLCHAIN_SRC_DIR
 
-# Needed to set HOST_TAG to windows if --mingw is used.
-prepare_host_flags
-
 # Package a directory in a .tar.bz2 archive
 #
 # $1: textual description
@@ -163,10 +164,12 @@ package_it ()
 }
 
 # Build the toolchain from sources
+# $1: toolchain name (e.g. arm-linux-androideabi-4.4.3)
+# $2: extra flags, if needed
 build_toolchain ()
 {
     dump "Building $1 toolchain... (this can be long)"
-    run $PROGDIR/build-gcc.sh $FLAGS --build-out=$BUILD_DIR/toolchain-$1 $SRC_DIR $NDK_DIR $1
+    run $PROGDIR/build-gcc.sh $FLAGS $2 --build-out=$BUILD_DIR/toolchain-$1 $SRC_DIR $NDK_DIR $1
     fail_panic "Could bot build $1 toolchain!"
     package_it "$1 toolchain" "$1-$HOST_TAG" "toolchains/$1/prebuilt/$HOST_TAG"
 }
@@ -186,8 +189,17 @@ build_gdbserver ()
 build_toolchain arm-eabi-4.4.0
 build_gdbserver arm-eabi-4.4.0
 
-build_toolchain arm-linux-androideabi-4.4.3
+build_toolchain arm-linux-androideabi-4.4.3 --copy-libstdcxx
 build_gdbserver arm-linux-androideabi-4.4.3
+
+if [ "$MINGW" != "yes" ] ; then
+    package_it "GNU libstdc++ headers" "gnu-libstdc++-headers" "sources/cxx-stl/gnu-libstdc++/include"
+    package_it "GNU libstdc++ armeabi libs" "gnu-libstdc++-libs-armeabi" "sources/cxx-stl/gnu-libstdc++/libs/armeabi"
+    package_it "GNU libstdc++ armeabi-v7a libs" "gnu-libstdc++-libs-armeabi-v7a" "sources/cxx-stl/gnu-libstdc++/libs/armeabi-v7a"
+    if [ "$OPTION_TRY_X86" = "yes" ] ; then
+        package_it "GNU libstdc++ x86 libs" "gnu-libstdc++-libs-x86" "sources/cxx-stl/gnu-libstdc++/libs/x86"
+    fi
+fi
 
 if [ "$OPTION_TRY_X86" = "yes" ] ; then
     build_toolchain x86-4.2.1
