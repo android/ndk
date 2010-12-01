@@ -169,18 +169,25 @@ and switch to better representations. The support provided in Android is only
 there to help you migrate existing code.
 
 
-5.3/ Exceptions and RTTI:
-- - - - - - - - - - - - -
+5.3/ Exceptions, RTTI and STL:
+- - - - - - - - - - - - - - -
 
 The toolchain binaries *do* support C++ exceptions and RTTI by default.
-However, it does not come with a full libstdc++, and you will need to
-explicitely link to libsupc++.a to use these features in your code. As in:
+They are enabled by default, so use -fno-exceptions and -fno-rtti if you
+want to disable them when building sources with them (e.g. to generate
+smaller machine code).
+
+NOTE: You will need to explicitely link with libsupc++ if you use these
+      features. To do this, use -lsupc++ when linking binaries, as in:
 
     arm-linux-androideabi-g++ .... -lsupc++
 
-Proper toolchain configuration to avoid this is planned for the future.
 
-If you don't need these features, consider using -fno-exceptions and -fno-rtti
-to generate smaller machine code.
+The toolchain also comes with a working GNU libstdc++ implementation, which
+provides a working C++ Standard Template Library implementation. You will
+need to explicitely link against -lstdc++ to use it.
+
+Proper toolchain configuration to avoid these explicit link flags is
+planned for the future.
 
 </pre></body></html>
