@@ -154,10 +154,7 @@ else
     # Check that the name ends with the proper host tag
     HOST_NDK_SUFFIX="$HOST_TAG.zip"
     echo "$PREBUILT_NDK" | grep -q "$HOST_NDK_SUFFIX"
-    if [ $? != 0 ] ; then
-        echo "ERROR: the name of the prebuilt NDK must end in $HOST_NDK_SUFFIX"
-        exit 1
-    fi
+    fail_panic "The name of the prebuilt NDK must end in $HOST_NDK_SUFFIX"
     SYSTEMS=$HOST_TAG
 fi
 
@@ -186,16 +183,19 @@ umask 0022
 
 rm -rf $TMPDIR && mkdir -p $TMPDIR
 
+echo "$TOOLCHAINS" | tr ' ' '\n' | grep -q x86
+if [ $? = 0 ] ; then
+    TRY_X86=yes
+else
+    TRY_X86=no
+fi
+
 # first create the reference ndk directory from the git reference
 echo "Creating reference from source files"
-REFERENCE=$TMPDIR/reference &&
-mkdir -p $REFERENCE &&
-(cd $NDK_ROOT_DIR && tar cf - $GIT_FILES) | (cd $REFERENCE && tar xf -) &&
+REFERENCE=$TMPDIR/reference && rm -rf $REFERENCE/* &&
+copy_file_list "$NDK_ROOT_DIR" "$REFERENCE" "$GIT_FILES" &&
 rm -f $REFERENCE/Android.mk
-if [ $? != 0 ] ; then
-    echo "Could not create reference. Aborting."
-    exit 2
-fi
+fail_panic "Could not create reference. Aborting."
 
 # copy platform and sample files
 echo "Copying platform and sample files"
@@ -209,11 +209,9 @@ if [ -n "$PLATFORMS" ] ; then
 else
     $NDK_ROOT_DIR/build/tools/build-platforms.sh $FLAGS $PLATFORM_FLAGS
 fi
-if [ $? != 0 ] ; then
-    echo "Could not copy platform files. Aborting."
-    exit 2
-fi
+fail_panic "Could not copy platform files. Aborting."
 
+# Remove leftovers, just in case...
 rm -rf $REFERENCE/samples/*/{obj,libs,build.xml,local.properties,Android.mk} &&
 rm -rf $REFERENCE/tests/build/*/{obj,libs} &&
 rm -rf $REFERENCE/tests/device/*/{obj,libs}
@@ -221,11 +219,8 @@ rm -rf $REFERENCE/tests/device/*/{obj,libs}
 # copy sources files
 if [ -d $DEVELOPMENT_ROOT/sources ] ; then
     echo "Copying NDK sources files"
-    (cd $DEVELOPMENT_ROOT && tar cf - sources) | (cd $REFERENCE && tar xf -)
-    if [ $? != 0 ] ; then
-        echo "Could not copy sources. Aborting."
-        exit 2
-    fi
+    copy_file_list "$DEVELOPMENT_ROOT" "$REFERENCE" "sources"
+    fail_panic "Could not copy sources. Aborting."
 fi
 
 # create a release file named 'RELEASE.TXT' containing the release
@@ -245,13 +240,22 @@ unpack_prebuilt ()
     local PREBUILT=$1
     echo "Unpacking $PREBUILT"
     if [ -f "$PREBUILT_DIR/$PREBUILT" ] ; then
-        (cd $DSTDIR && run tar xjf "$PREBUILT_DIR/$PREBUILT") 2>/dev/null 1>&2
-        if [ $? != 0 ] ; then
-            echo "Could not unpack prebuilt $PREBUILT. Aborting."
-            exit 1
-        fi
+        unpack_archive "$PREBUILT_DIR/$PREBUILT" "$DSTDIR"
+        fail_panic "Could not unpack prebuilt $PREBUILT. Aborting."
     else
         echo "WARNING: Could not find $PREBUILT in $PREBUILT_DIR"
+    fi
+}
+
+# $1: Source directory relative to
+copy_prebuilt ()
+{
+    local SUBDIR="$1"
+    if [ -d "$1" ] ; then
+        echo "Copying: $SUBDIR"
+        copy_directory "$SUBDIR" "$DSTDIR/$2"
+    else
+        echo "Ignored: $SUBDIR"
     fi
 }
 
@@ -261,38 +265,25 @@ for SYSTEM in $SYSTEMS; do
     echo "Preparing package for system $SYSTEM."
     BIN_RELEASE=$RELEASE_PREFIX-$SYSTEM
     DSTDIR=$TMPDIR/$RELEASE_PREFIX
-    rm -rf $DSTDIR && mkdir -p $DSTDIR &&
-    cp -rp $REFERENCE/* $DSTDIR
-    if [ $? != 0 ] ; then
-        echo "Could not copy reference. Aborting."
-        exit 2
-    fi
+    rm -rf $DSTDIR &&
+    copy_file_list "$REFERENCE" "$DSTDIR" "*"
+    fail_panic "Could not copy reference. Aborting."
 
     if [ -n "$PREBUILT_NDK" ] ; then
         echo "Unpacking prebuilt toolchains from $PREBUILT_NDK"
         UNZIP_DIR=$TMPDIR/prev-ndk
         rm -rf $UNZIP_DIR && mkdir -p $UNZIP_DIR
-        if [ $? != 0 ] ; then
-            echo "Could not create temporary directory: $UNZIP_DIR"
-            exit 1
-        fi
-        cd $UNZIP_DIR && unzip -q $PREBUILT_NDK 1>/dev/null 2>&1
-        if [ $? != 0 ] ; then
-            echo "ERROR: Could not unzip NDK package $PREBUILT_NDK"
-            exit 1
-        fi
+        fail_panic "Could not create temporary directory: $UNZIP_DIR"
+        unpack_archive "$PREBUILT_NDK" "$UNZIP_DIR"
+        fail_panic "Could not unzip NDK package $PREBUILT_NDK"
         cd $UNZIP_DIR/android-ndk-* && cp -rP toolchains/* $DSTDIR/toolchains/
+        fail_panic "Could not copy toolchain files from $PREBUILT_NDK"
 
         if [ -d "$DSTDIR/$STLPORT_SUBDIR" ] ; then
             STLPORT_ABIS="armeabi armeabi-v7a x86"
             cd $UNZIP_DIR/android-ndk-*
             for STL_ABI in $STLPORT_ABIS; do
-                if [ -d "$STLPORT_SUBDIR/$STL_ABI" ] ; then
-                    echo "Copying: $STLPORT_SUBDIR/$STL_ABI"
-                    run cp -rp $STLPORT_SUBDIR/$STL_ABI $DSTDIR/$STLPORT_SUBDIR
-                else
-                    echo "Ignored: $STLPORT_SUBDIR/$STL_ABI"
-                fi
+                copy_prebuilt "$STLPORT_SUBDIR/libs/$STL_ABI" "$STLPORT_SUBDIR/libs"
             done
         else
             echo "WARNING: Could not find STLport source tree!"
@@ -306,11 +297,9 @@ for SYSTEM in $SYSTEMS; do
         done
         unpack_prebuilt stlport-libs-armeabi.tar.bz2
         unpack_prebuilt stlport-libs-armeabi-v7a.tar.bz2
-        echo "$TOOLCHAINS" | tr ' ' '\n' | grep -q x86
-        if [ $? = 0 ] ; then
+        if [ "$TRY_X86" = "yes" ] ; then
             unpack_prebuilt stlport-prebuilt-x86.tar.bz2
         fi
-
     fi
 
     # Create an archive for the final package. Extension depends on the
@@ -318,20 +307,14 @@ for SYSTEM in $SYSTEMS; do
     case "$SYSTEM" in
         windows)
             ARCHIVE="$BIN_RELEASE.zip"
-            PACKER="zip -9qr"
             ;;
         *)
             ARCHIVE="$BIN_RELEASE.tar.bz2"
-            PACKER="tar cjf"
             ;;
     esac
     echo "Creating $ARCHIVE"
-    (cd $TMPDIR && $PACKER $OUT_DIR/$ARCHIVE $RELEASE_PREFIX && rm -rf $DSTDIR) 2>/dev/null 1>&2
-    if [ $? != 0 ] ; then
-        echo "Could not create archive. Aborting."
-        exit 1
-    fi
-
+    pack_archive "$OUT_DIR/$ARCHIVE" "$TMPDIR" "$RELEASE_PREFIX"
+    fail_panic "Could not create archive: $OUT_DIR/$ARCHIVE"
 #    chmod a+r $TMPDIR/$ARCHIVE
 done
 
