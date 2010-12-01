@@ -121,6 +121,7 @@ define cmd-build-shared-library
 $(TARGET_CXX) \
     -Wl,-soname,$(notdir $@) \
     -shared \
+    --sysroot=$(call host-path,$(SYSROOT)) \
     $(call host-path, $(PRIVATE_OBJECTS)) \
     $(call whole-archive-list-flags,$(PRIVATE_WHOLE_STATIC_LIBRARIES)) \
     $(call host-path,\
@@ -133,9 +134,10 @@ $(TARGET_CXX) \
 endef
 
 define cmd-build-executable
-$(TARGET_CC) \
+$(TARGET_CXX) \
     -Wl,--gc-sections \
     -Wl,-z,nocopyreloc \
+    --sysroot=$(call host-path,$(SYSROOT)) \
     $(call host-path, $(PRIVATE_OBJECTS)) \
     $(call whole-archive-list-flags,$(PRIVATE_WHOLE_STATIC_LIBRARIES)) \
     $(call host-path,\
