@@ -124,13 +124,11 @@ log2 ()
 run ()
 {
     if [ "$VERBOSE" = "yes" ] ; then
-        echo "##### NEW COMMAND"
-        echo "$@"
+        echo "## COMMAND: $@"
         $@ 2>&1
     else
         if [ -n "$TMPLOG" ] ; then
-            echo "##### NEW COMMAND" >> $TMPLOG
-            echo "$@" >> $TMPLOG
+            echo "## COMMAND: $@" >> $TMPLOG
             $@ >>$TMPLOG 2>&1
         else
             $@ > /dev/null 2>&1
@@ -138,10 +136,25 @@ run ()
     fi
 }
 
+panic ()
+{
+    dump "ERROR: $@"
+    exit 1
+}
+
+fail_panic ()
+{
+    if [ $? != 0 ] ; then
+        dump "ERROR: $@"
+        exit 1
+    fi
+}
+
+
 ## Utilities
 ##
 
-# return the value of a given named variable
+# Return the value of a given named variable
 # $1: variable name
 #
 # example:
@@ -569,22 +582,115 @@ unpack_archive ()
 {
     local ARCHIVE="$1"
     local DIR=${2-.}
-    local RESULT
+    local RESULT TARFLAGS ZIPFLAGS
+    mkdir -p "$DIR"
+    if [ "$VERBOSE2" = "yes" ] ; then
+        TARFLAGS="vxpf"
+        ZIPFLAGS=""
+    else
+        TARFLAGS="xpf"
+        ZIPFLAGS="q"
+    fi
     case "$ARCHIVE" in
         *.zip)
-            (cd $DIR && run unzip -q "$ARCHIVE")
+            (cd $DIR && run unzip $ZIPFLAGS "$ARCHIVE")
             ;;
         *.tar)
-            run tar xf "$ARCHIVE" -C $DIR
+            run tar $TARFLAGS "$ARCHIVE" -C $DIR
             ;;
         *.tar.gz)
-            run tar xzf "$ARCHIVE" -C $DIR
+            run tar z$TARFLAGS "$ARCHIVE" -C $DIR
             ;;
         *.tar.bz2)
-            run tar xjf "$ARCHIVE" -C $DIR
+            run tar j$TARFLAGS "$ARCHIVE" -C $DIR
             ;;
         *)
-            dump "ERROR: Cannot unpack archive with unknown extension: $ARCHIVE"
+            panic "Cannot unpack archive with unknown extension: $ARCHIVE"
             ;;
     esac
+}
+
+# Pack a given archive
+#
+# $1: archive file path (including extension)
+# $2: source directory for archive content
+# $3+: list of files (including patterns), all if empty
+pack_archive ()
+{
+    local ARCHIVE="$1"
+    local SRCDIR="$2"
+    local SRCFILES
+    local TARFLAGS ZIPFLAGS
+    shift; shift;
+    if [ -z "$1" ] ; then
+        SRCFILES="*"
+    else
+        SRCFILES="$@"
+    fi
+    if [ "`basename $ARCHIVE`" = "$ARCHIVE" ] ; then
+        ARCHIVE="`pwd`/$ARCHIVE"
+    fi
+    mkdir -p `dirname $ARCHIVE`
+    if [ "$VERBOSE2" = "yes" ] ; then
+        TARFLAGS="vcf"
+        ZIPFLAGS="-9r"
+    else
+        TARFLAGS="cf"
+        ZIPFLAGS="-9qr"
+    fi
+    case "$ARCHIVE" in
+        *.zip)
+            (cd $SRCDIR && run zip $ZIPFLAGS "$ARCHIVE" $SRCFILES)
+            ;;
+        *.tar)
+            (cd $SRCDIR && run tar $TARFLAGS "$ARCHIVE" $SRCFILES)
+            ;;
+        *.tar.gz)
+            (cd $SRCDIR && run tar z$TARFLAGS "$ARCHIVE" $SRCFILES)
+            ;;
+        *.tar.bz2)
+            (cd $SRCDIR && run tar j$TARFLAGS "$ARCHIVE" $SRCFILES)
+            ;;
+        *)
+            panic "Unsupported archive format: $ARCHIVE"
+            ;;
+    esac
+}
+
+# Copy a directory, create target location if needed
+#
+# $1: source directory
+# $2: target directory location
+#
+copy_directory ()
+{
+    local SRCDIR="$1"
+    local DSTDIR="$2"
+    if [ ! -d "$SRCDIR" ] ; then
+        panic "Can't copy from non-directory: $SRCDIR"
+    fi
+    log "Copying directory: "
+    log "  from $SRCDIR"
+    log "  to $DSTDIR"
+    mkdir -p "$DSTDIR" && (cd "$SRCDIR" && tar cf - *) | (tar xf - -C "$DSTDIR")
+    fail_panic "Cannot copy to directory: $DSTDIR"
+}
+
+# Copy certain files from one directory to another one
+# $1: source directory
+# $2: target directory
+# $3+: file list (including patterns)
+copy_file_list ()
+{
+    local SRCDIR="$1"
+    local DSTDIR="$2"
+    shift; shift;
+    if [ ! -d "$SRCDIR" ] ; then
+        panic "Cant' copy from non-directory: $SRCDIR"
+    fi
+    log "Copying file: $@"
+    log "  from $SRCDIR"
+    log "  to $DSTDIR"
+    mkdir -p "$DSTDIR" && (cd "$SRCDIR" && tar cf - $@) | (tar xf - -C "$DSTDIR")
+    fail_panic "Cannot copy files to directory: $DSTDIR"
 }
