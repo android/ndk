@@ -24,25 +24,6 @@ a working sysroot. The result is something that can more easily be
 used as a standalone cross-compiler, e.g. to run configure and
 make scripts."
 
-# $1: Source directory
-# $2: Destination directory
-copy_directory () {
-    if [ ! -d "$1" ] ; then
-        dump "Error: Trying to copy from non-existing directory: $1"
-        exit 1
-    fi
-    mkdir -p "$2"
-    if [ $? != 0 ] ; then
-        dump "Error: Could not create target directory: $2"
-        exit 1
-    fi
-    (cd "$1" && tar cf - *) | (tar xpf - -C "$2")
-    if [ $? != 0 ] ; then
-        dump "Error: Could not copy files from '$1' to '$2'"
-        exit 1
-    fi
-}
-
 force_32bit_binaries
 
 # For now, this is the only toolchain that works reliably.
@@ -149,6 +130,10 @@ dump "Copying sysroot headers and libraries..."
 # expect the sysroot files to be placed there!
 run copy_directory "$SRC_SYSROOT" "$TMPDIR/sysroot"
 
+dump "Copying libstdc++ headers and libraries..."
+`dirname $0`/copy-libstdcxx.sh --reverse "$TMPDIR" "$NDK_DIR"
+fail_panic "Could not copy libstdc++!"
+
 # Install or Package
 if [ -n "$INSTALL_DIR" ] ; then
     dump "Copying files to: $INSTALL_DIR"
@@ -156,11 +141,8 @@ if [ -n "$INSTALL_DIR" ] ; then
 else
     PACKAGE_FILE="$PACKAGE_DIR/$TOOLCHAIN_NAME.tar.bz2"
     dump "Creating package file: $PACKAGE_FILE"
-    (cd "`dirname $TMPDIR`" && run tar cjf "$PACKAGE_FILE" "$TOOLCHAIN_NAME")
-    if [ $? != 0 ] ; then
-        dump "Error: Could not create tarball from $TMPDIR"
-        exit 1
-    fi
+    pack_archive "$PACKAGE_FILE" "`dirname $TMPDIR`" "$TOOLCHAIN_NAME"
+    fail_panic "Could not create tarball from $TMPDIR"
 fi
 dump "Cleaning up..."
 run rm -rf $TMPDIR
