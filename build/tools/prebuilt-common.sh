@@ -526,10 +526,11 @@ parse_toolchain_name ()
         ABI_CONFIGURE_TARGET="arm-linux-androideabi"
         ABI_CONFIGURE_EXTRA_FLAGS="--with-gmp-version=4.2.4 --with-mpfr-version=2.4.1
 --with-arch=armv5te"
-        # Enable ARM Gold linker, except for Windows where it doesn't build
-        if [ "$MINGW" != "yes" ] ; then
-            ABI_CONFIGURE_EXTRA_FLAGS="$ABI_CONFIGURE_EXTRA_FLAGS --enable-gold=both/gold"
-        fi
+        # Disable ARM Gold linker for now, it doesn't build on Windows, it
+        # crashes with SIGBUS on Darwin, and produces weird executables on
+        # linux that strip complains about... Sigh.
+        #ABI_CONFIGURE_EXTRA_FLAGS="$ABI_CONFIGURE_EXTRA_FLAGS --enable-gold=both/gold"
+
         # Enable C++ exceptions, RTTI and GNU libstdc++ at the same time
         # You can't really build these separately at the moment.
         ABI_CFLAGS_FOR_TARGET="-fexceptions"
