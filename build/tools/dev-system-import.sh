@@ -328,7 +328,7 @@ copy_system_shared_library ()
         dump "ERROR: Missing system library: $src"
         exit 1
     fi
-    local dst="$PLATFORM_ROOT/arch-$ARCH/lib/$1.so"
+    local dst="$PLATFORM_ROOT/lib/$1.so"
     mkdir -p `dirname "$dst"` &&
     generate_shell_library "$src" "$dst"
 }
@@ -340,7 +340,7 @@ copy_system_static_library ()
         dump "ERROR: Missing system static library: $src"
         exit 1
     fi
-    local dst="$PLATFORM_ROOT/arch-$ARCH/lib/$1.a"
+    local dst="$PLATFORM_ROOT/lib/$1.a"
     dump "Copying system static library: $1.a"
     mkdir -p `dirname "$dst"` && cp -f "$src" "$dst"
 }
@@ -352,7 +352,7 @@ copy_system_object_file ()
         dump "ERROR: Missing system object file: $src"
         exit 1
     fi
-    local dst="$PLATFORM_ROOT/arch-$ARCH/lib/$1.o"
+    local dst="$PLATFORM_ROOT/lib/$1.o"
     dump "Copying system object file: $1.o"
     mkdir -p `dirname "$dst"` &&
     cp -f "$src" "$dst"
@@ -370,7 +370,7 @@ copy_system_headers ()
     for header; do
         dump "  $header"
         local src="$srcdir/$header"
-        local dst="$PLATFORM_ROOT/include/$header"
+        local dst="$PLATFORM_ROOT/../include/$header"
         if [ ! -f "$srcdir/$header" ] ; then
             dump "ERROR: Missing system header: $srcdir/$header"
             exit 1
@@ -403,7 +403,7 @@ copy_arch_system_headers ()
     for header; do
         dump "Copying $arch system header: $header from $srcdir"
         local src="$srcdir/$header"
-        local dst="$PLATFORM_ROOT/arch-$ARCH/include/$header"
+        local dst="$PLATFORM_ROOT/include/$header"
         if [ ! -f "$srcdir/$header" ] ; then
             dump "ERROR: Missing $ARCH system header: $srcdir/$header"
             exit 1
