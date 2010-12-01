@@ -95,7 +95,7 @@ if [ -z "$NDK_DIR" ] ; then
     run cp -rf $ANDROID_NDK_ROOT/* $NDK_DIR/
     if [ -n "$TOOLCHAIN_PKG" ] ; then
         dump "Extracting prebuilt toolchain binaries."
-        run tar -C $NDK_DIR xjf $TOOLCHAIN_PKG
+        unpack_archive "$TOOLCHAIN_PKG" "$NDK_DIR"
     fi
 else
     if [ ! -d "$NDK_DIR" ] ; then
@@ -154,21 +154,9 @@ for ABI in $ABIS; do
 
     if [ -z "$PACKAGE_DIR" ] ; then
        # Copy files to target NDK
-        LIBDIR="$OUT_DIR/libs/$ABI"
-        mkdir -p "$LIBDIR"
-        if [ $? != 0 ] ; then
-            dump "ERROR: Can't create ABI directory: $LIBDIR"
-            exit 1
-        fi
-        for LIB in $LIBRARIES; do
-            SRCLIB="$PROJECT_SUBDIR/obj/local/$ABI/$LIB"
-            cp -f "$SRCLIB" "$LIBDIR/$LIB"
-            if [ $? != 0 ] ; then
-                dump "ERROR: Could not copy library: $SRCLIB"
-                exit 1
-            fi
-            dump "Copy: $OUT_DIR/$ABI/$LIB"
-        done
+        SRCDIR="$PROJECT_SUBDIR/obj/local/$ABI"
+        DSTDIR="$OUT_DIR/libs/$ABI"
+        copy_file_list "$SRCDIR" "$DSTDIR" "$LIBRARIES"
     fi
 done
 
@@ -177,23 +165,20 @@ if [ -n "$PACKAGE_DIR" ] ; then
     for ABI in $ABIS; do
         FILES=""
         for LIB in $LIBRARIES; do
-            SRCFILE="$PROJECT_SUBDIR/obj/local/$ABI/$LIB"
-            DSTFILE="$STLPORT_SUBDIR/libs/$ABI/$LIB"
-            mkdir -p `dirname $BUILD_DIR/$DSTFILE` && cp -f "$SRCFILE" "$BUILD_DIR/$DSTFILE"
-            log "Installing: $DSTFILE"
-            FILES="$FILES $DSTFILE"
+            SRCDIR="$PROJECT_SUBDIR/obj/local/$ABI"
+            DSTDIR="$STLPORT_SUBDIR/libs/$ABI"
+            copy_file_list "$SRCDIR" "$NDK_DIR/$DSTDIR" "$LIB"
+            log "Installing: $DSTDIR/$LIB"
+            FILES="$FILES $DSTDIR/$LIB"
         done
         PACKAGE="$PACKAGE_DIR/stlport-libs-$ABI.tar.bz2"
-        (cd $BUILD_DIR && run tar cjf "$PACKAGE" $FILES)
-        if [ $? != 0 ] ; then
-            dump "ERROR: Could not package $ABI STLport binaries!"
-            exit 1
-        fi
+        pack_archive "$PACKAGE" "$NDK_DIR" "$FILES"
+        fail_panic "Could not package $ABI STLport binaries!"
         dump "Packaging: $PACKAGE"
     done
 fi
 
-if [ -z "$PACKAGE_DIR" ] ; then
+if [ -n "$PACKAGE_DIR" ] ; then
     dump "Cleaning up..."
     rm -rf $NDK_DIR
 fi
