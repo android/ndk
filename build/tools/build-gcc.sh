@@ -59,7 +59,7 @@ register_var_option "--keep-libstdcxx" KEEP_LIBSTDCXX "Experimental: keep libstd
 
 register_mingw_option
 
-extract_parameters $@
+extract_parameters "$@"
 
 setup_default_log_file
 
