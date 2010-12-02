@@ -1328,3 +1328,11 @@ $(call ndk-stl-register,\
     stlport_shared\
     )
 
+# Register the 'gnustl_static' STL implementation
+#
+$(call ndk-stl-register,\
+    gnustl_static,\
+    cxx-stl/gnu-libstdc++,\
+    gnustl_static,\
+    \
+    )
