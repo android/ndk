@@ -630,7 +630,7 @@ random_temp_directory ()
 API_LEVELS="3 4 5 8 9"
 
 # Location of the STLport sources, relative to the NDK root directory
-STLPORT_SUBDIR=sources/android/stlport
+STLPORT_SUBDIR=sources/cxx-stl/stlport
 
 # Default ABIs for the prebuilt STLport binaries
 STLPORT_ABIS="armeabi armeabi-v7a"

@@ -1315,7 +1315,7 @@ $(call ndk-stl-register,\
 #
 $(call ndk-stl-register,\
     stlport_static,\
-    android/stlport,\
+    cxx-stl/stlport,\
     stlport_static,\
     )
 
@@ -1323,7 +1323,8 @@ $(call ndk-stl-register,\
 #
 $(call ndk-stl-register,\
     stlport_shared,\
-    android/stlport,\
+    cxx-stl/stlport,\
     ,\
     stlport_shared\
     )
+
