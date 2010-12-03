@@ -676,6 +676,22 @@ copy_directory ()
     fail_panic "Cannot copy to directory: $DSTDIR"
 }
 
+# This is the same than copy_directory(), but symlinks will be replaced
+# by the file they actually point to instead.
+copy_directory_nolinks ()
+{
+    local SRCDIR="$1"
+    local DSTDIR="$2"
+    if [ ! -d "$SRCDIR" ] ; then
+        panic "Can't copy from non-directory: $SRCDIR"
+    fi
+    log "Copying directory (without symlinks): "
+    log "  from $SRCDIR"
+    log "  to $DSTDIR"
+    mkdir -p "$DSTDIR" && (cd "$SRCDIR" && tar chf - *) | (tar xf - -C "$DSTDIR")
+    fail_panic "Cannot copy to directory: $DSTDIR"
+}
+
 # Copy certain files from one directory to another one
 # $1: source directory
 # $2: target directory
