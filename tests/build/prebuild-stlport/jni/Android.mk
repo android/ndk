@@ -13,4 +13,4 @@ LOCAL_SRC_FILES := build_stlport.cpp
 LOCAL_SHARED_LIBRARIES := stlport_shared
 include $(BUILD_EXECUTABLE)
 
-$(call import-module,android/stlport)
+$(call import-module,cxx-stl/stlport)

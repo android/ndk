@@ -26,8 +26,8 @@ IMPORTANT CHANGES:
   native features to the platform:
 
      - Native audio API through the OpenSL ES Standard.
-       New headers &lt;SLES/OpenSLES.h&gt; and &lt;SLES/OpenSLES_Android.h&gt; are
-       provided to allow applications targetting this API level to perform
+       New headers &lt;SLES/OpenSLES.h&gt; and &lt;SLES/OpenSLES_Android.h&gt;
+       are provided to allow applications targetting this API level to perform
        low-latency audio input, output and processing directly from native
        code.
 
@@ -100,6 +100,10 @@ IMPORTANT CHANGES:
   it at build time by defining APP_STL in your Application.mk. See
   docs/APPLICATION-MK.html and docs/CPLUSPLUS-SUPPORT.html for all details.
 
+- GNU libstdc++ implementation: Available as a static library that you can
+  select for your application through APP_STL. See docs/CPLUSPLUS-SUPPORT.html
+  for all details.
+
 - Add support for prebuilt libraries with the PREBUILT_SHARED_LIBRARY and
   PREBUILT_STATIC_LIBRARIES build scripts. See the new documentation
   file named docs/PREBUILTS.html for explanations and usage examples.
@@ -148,12 +152,10 @@ IMPORTANT CHANGES:
   Use NDK_TOOLCHAIN=arm-eabi-4.4.0 in your environment to force its usage.
   Note that it is now deprecated and will be removed in a future NDK release.
 
+  IMPORTANT: The old toolchain doesn't properly support exceptions, RTTI,
+             STLport and GNU libstdc++.
+
   The binaries for the already-deprecated gcc-4.2.1 have been removed.
-
-- This NDK comes with a port of the STLport library, provided as an import
-  module. See sources/android/stlport/README for usage instructions.
-
-  Warning: C++ exceptions and RTTI are still not supported.
 
 - The 'cpufeatures' library has been updated to provide better architecture
   and features detection (including a work-around for buggy ARMv6 kernels
@@ -205,8 +207,8 @@ OTHER FIXES AND CHANGES:
 
 - ndk-gdb: properly launch activities for which name does not contain any dot.
 
-- ndk-gdb: add --delay=&lt;timeout&gt; option to specify a delay in seconds between
-  activity launch and gdbserver attach. This is needed because certain
+- ndk-gdb: add --delay=&lt;timeout&gt; option to specify a delay in seconds
+  between activity launch and gdbserver attach. This is needed because certain
   activities can take a long time to properly launch. The default delay is
   also increased to 2 seconds (instead of 1).
 
@@ -219,9 +221,9 @@ OTHER FIXES AND CHANGES:
   $NDK/build/toolchains and $NDK/build/prebuilt.
 
 - Release and debug objects are stored under two different directories now
-  (i.e. obj/local/&lt;abi&gt;/objs and obj/local/&lt;abi&gt;/objs-debug). This prevents
-  rebuilding *everything* when you switch between these two modes, which can
-  be a real time-saver for complex projects.
+  (i.e. obj/local/&lt;abi&gt;/objs and obj/local/&lt;abi&gt;/objs-debug). This
+  prevents rebuilding *everything* when you switch between these two modes,
+  which can be a real time-saver for complex projects.
 
 - Fixed a bug that duplicated the LOCAL_LDFLAGS in the final link command
   when LOCAL_ALLOW_UNDEFINED_SYMBOLS was not set to 'true'
