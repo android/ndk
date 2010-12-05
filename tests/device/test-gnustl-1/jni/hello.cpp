@@ -13,40 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <stdexcept>
+#include <cstdlib>
 #include <cstdio>
 
-class Foo
+int main(void)
 {
-public:
-  virtual ~Foo() { }
-  virtual void print()
-  {
-    std::printf("in Foo!\n");
-  }
-};
-
-class Bar: public Foo
-{
-  public:
-  void print()
-  {
-    std::printf("in Bar!\n");
-  }
-};
-
-int main()
-{
-    Foo* foo = new Bar();
-    Bar* bar;
-
-    bar = dynamic_cast<Bar*>(foo);
-    if (bar != NULL) {
-        printf("OK: 'foo' is pointing to a Bar class instance.\n");
-    } else {
-        fprintf(stderr, "KO: Could not dynamically cast 'foo' to a 'Bar*'\n");
+    try {
+        if (std::getenv("UNKNOWN_VARIABLE") == NULL)
+            throw std::runtime_error("OK: Hello, world (with full C++ support) !");
+        std::printf("KO: Exception was not thrown!\n");
         return 1;
     }
-
-    delete foo;
+    catch (std::exception &ex)
+    {
+        std::printf("%s\n", ex.what());
+    }
     return 0;
 }
