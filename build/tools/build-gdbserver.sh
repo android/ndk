@@ -61,7 +61,7 @@ register_var_option "-j<number>" JOBS "Use <number> build jobs in parallel"
 GDB_VERSION=6.6
 register_var_option "--gdb-version=<name>" GDB_VERSION "Use specific gdb version."
 
-extract_parameters $@
+extract_parameters "$@"
 
 setup_default_log_file
 

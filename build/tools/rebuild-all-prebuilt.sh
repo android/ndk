@@ -50,6 +50,11 @@ register_var_option "--try-x86" OPTION_TRY_X86 "Build experimental x86 toolchain
 OPTION_GIT_HTTP=no
 register_var_option "--git-http" OPTION_GIT_HTTP "Download sources with http."
 
+DARWIN_SSH=
+if [ "$HOST_OS" = "linux" ] ; then
+register_var_option "--darwin-ssh=<hostname>" DARWIN_SSH "Specify Darwin hostname to ssh to for the build."
+fi
+
 register_mingw_option
 
 PROGRAM_PARAMETERS=
@@ -68,7 +73,7 @@ Please read docs/DEVELOPMENT.TXT for more usage information about this
 script.
 "
 
-extract_parameters $@
+extract_parameters "$@"
 
 # Needed to set HOST_TAG to windows if --mingw is used.
 prepare_host_flags
@@ -147,6 +152,46 @@ if [ -z "$OPTION_TOOLCHAIN_SRC_DIR" ] ; then
     fi
 fi # ! $TOOLCHAIN_SRC_DIR
 
+# Special treatment when building remotely on a Darwin machine through ssh
+# For now, we will have to prompt the user several times.
+#
+if [ -n "$DARWIN_SSH" ] ; then
+    # 1/ Copy the NDK toolchain build scripts
+    # 2/ Copy the toolchain sources/package
+    # 3/ Ssh to unpack the build scripts, and run them
+    # 4/ Copy back the generated prebuilt binaries
+    #
+    dump "Preparing remote build on $DARWIN_SSH..."
+    dump "Creating remote temp directory"
+    TMPREMOTE=/tmp/ndk-darwin-prebuild
+    run ssh $DARWIN_SSH "mkdir -p $TMPREMOTE && rm -rf $TMPREMOTE/*"
+    TMPDARWIN=`random_temp_directory`  # Where we're going to package stuff
+    log "Using temporary work directory: $TMPDARWIN"
+    dump "Prepare NDK build scripts"
+    copy_directory "$ANDROID_NDK_ROOT/build" "$TMPDARWIN/ndk/build"
+    copy_file_list "$ANDROID_NDK_ROOT" "$TMPDARWIN/ndk" sources/android/libthread_db
+    copy_file_list "$ANDROID_NDK_ROOT" "$TMPDARWIN/ndk" "$STLPORT_SUBDIR"
+    dump "Prepare platforms files"
+    `dirname $0`/build-platforms.sh --no-samples --dst-dir="$TMPDARWIN/ndk"
+    dump "Copying NDK build scripts and platform files to remote..."
+    (cd "$TMPDARWIN" && tar czf - ndk) | (ssh $DARWIN_SSH tar xzf - -C $TMPREMOTE)
+    fail_panic "Could not copy!"
+    rm -rf $TMPDARWIN
+    dump "Copy toolchain sources to remote"
+    ssh $DARWIN_SSH mkdir -p $TMPREMOTE/toolchain &&
+    (cd "$SRC_DIR" && tar czf - .) | (ssh $DARWIN_SSH tar xzf - -C $TMPREMOTE/toolchain)
+    fail_panic "Could not copy toolchain!"
+    dump "Running remote build..."
+    run ssh $DARWIN_SSH "$TMPREMOTE/ndk/build/tools/rebuild-all-prebuilt.sh --toolchain-src-dir=$TMPREMOTE/toolchain --package-dir=$TMPREMOTE/packages"
+    fail_panic "Could not build prebuilt packages on Darwin!"
+    dump "Copying back Darwin prebuilt packages..."
+    run scp $DARWIN_SSH:$TMPREMOTE/packages/*-darwin-* $PACKAGE_DIR/
+    fail_panic "Could not grab Darwin packages!"
+    dump "Cleaning up remote machine..."
+    run ssh $DARWIN_SSH rm -rf $TMPREMOTE
+    exit 0
+fi
+
 # Package a directory in a .tar.bz2 archive
 #
 # $1: textual description
@@ -186,8 +231,8 @@ build_gdbserver ()
     package_it "$1 gdbserver" "$1-gdbserver" "toolchains/$1/prebuilt/gdbserver"
 }
 
-#build_toolchain arm-eabi-4.4.0
-#build_gdbserver arm-eabi-4.4.0
+build_toolchain arm-eabi-4.4.0
+build_gdbserver arm-eabi-4.4.0
 
 build_toolchain arm-linux-androideabi-4.4.3 --copy-libstdcxx
 build_gdbserver arm-linux-androideabi-4.4.3

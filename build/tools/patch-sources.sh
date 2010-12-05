@@ -54,7 +54,7 @@ parse_parameters ()
     fi
 }
 
-extract_parameters $@
+extract_parameters "$@"
 parse_parameters $PARAMETERS
 
 PATCHES=`(cd $PATCHES_DIR && find . -name "*.patch") 2> /dev/null`

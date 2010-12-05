@@ -95,7 +95,7 @@ The generated release packages will be stored in a temporary directory that
 will be printed at the end of the generation process.
 "
 
-extract_parameters $@
+extract_parameters "$@"
 
 # Check the prebuilt path
 #

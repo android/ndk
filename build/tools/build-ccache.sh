@@ -48,7 +48,7 @@ register_option "--build-out=<path>" do_build_out "Set temporary build directory
 do_from () { CCACHE_URL=$1; CCACHE_PACKAGE=`basename $1`; }
 do_build_out () { OPTION_BUILD_OUT=$1; }
 
-extract_parameters $@
+extract_parameters "$@"
 
 set_parameters ()
 {

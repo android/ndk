@@ -70,7 +70,7 @@ download the sources from another set of git repostories."
 
 fi
 
-extract_parameters $@
+extract_parameters "$@"
 
 if [ -n "$OPTION_GIT_BASE" -a "$OPTION_GIT_HTTP" = "yes" ] ; then
     echo "ERROR: You can't use --git-base and --git-http at the same time."

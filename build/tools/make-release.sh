@@ -48,6 +48,11 @@ register_var_option "--force" FORCE "Force build (do not ask initial question)"
 INCREMENTAL=no
 register_var_option "--incremental" INCREMENTAL "Enable incremental packaging (debug only)."
 
+DARWIN_SSH=
+if [ "$HOST_OS" = "linux" ] ; then
+register_var_option "--darwin-ssh=<hostname>" DARWIN_SSH "Specify Darwin hostname to ssh to for the build."
+fi
+
 # Determine the host platforms we can build for.
 # This is the current host platform, and eventually windows if
 # we are on Linux and have the mingw32 compiler installed and
@@ -62,6 +67,10 @@ if [ "$HOST_TAG" == "linux-x86" ] ; then
         HOST_SYSTEMS="$HOST_SYSTEMS windows"
     fi
 fi
+if [ -n "$DARWIN_SSH" ] ; then
+    HOST_SYSTEMS="$HOST_SYSTEMS darwin-x86"
+fi
+
 register_var_option "--systems=<list>" HOST_SYSTEMS "List of host systems to build for"
 
 TOOLCHAIN_SRCDIR=
@@ -174,6 +183,9 @@ else
         fi
         timestamp_set   toolchain-download-sources
         timestamp_clear build-prebuilts
+        timestamp_clear build-host-prebuilts
+        timestamp_clear build-darwin-prebuilts
+        timestamp_clear build-mingw-prebuilts
     fi
 fi
 
@@ -183,20 +195,23 @@ if timestamp_check build-prebuilts; then
     if timestamp_check build-host-prebuilts; then
         dump "Building host toolchain binaries..."
         $ANDROID_NDK_ROOT/build/tools/rebuild-all-prebuilt.sh --toolchain-src-dir="$TOOLCHAIN_SRCDIR" --package-dir="$PREBUILT_DIR" --build-dir="$RELEASE_DIR/build"
-        if [ "$?" != 0 ] ; then
-            dump "ERROR: Can't build $HOST_SYSTEM binaries."
-            exit 1
-        fi
+        fail_panic "Can't build $HOST_SYSTEM binaries."
         timestamp_set build-host-prebuilts
+    fi
+    if [ -n "$DARWIN_SSH" ] ; then
+        if timestamp_check build-darwin-prebuilts; then
+            dump "Building Darwin prebuilts through ssh to $DARWIN_SSH..."
+            $ANDROID_NDK_ROOT/build/tools/rebuild-all-prebuilt.sh --toolchain-src-dir="$TOOLCHAIN_SRCDIR" --package-dir="$PREBUILT_DIR" --darwin-ssh="$DARWIN_SSH"
+            fail_panic "Can't build Darwin binaries!"
+            timestamp_set build-darwin-prebuilts
+        fi
     fi
     if [ -n "$MINGW_GCC" ] ; then
         if timestamp_check build-mingw-prebuilts; then
             dump "Building windows toolchain binaries..."
             $ANDROID_NDK_ROOT/build/tools/rebuild-all-prebuilt.sh --toolchain-src-dir="$TOOLCHAIN_SRCDIR" --package-dir="$PREBUILT_DIR" --build-dir="$RELEASE_DIR/build-mingw" --mingw
-            if [ "$?" != 0 ] ; then
-                dump "ERROR: Can't build windows binaries."
-                exit 1
-            fi
+            fail_panic "Can't build windows binaries."
+            timestamp_set build-mingw-prebuilt
         fi
     fi
     timestamp_set build-prebuilts
