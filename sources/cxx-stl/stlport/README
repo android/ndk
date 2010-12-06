@@ -27,26 +27,16 @@ You can either use it as a static or shared library.
    of the same global variables (which can easily conflict or result in
    undefined behaviour).
 
-To use the *static* library, do the following:
+To use the *static* library, define APP_STL in your Application.mk as follows:
 
-  a. Add 'stlport_static' to your module's LOCAL_STATIC_LIBRARIES
-     variable.
+    APP_STL := stlport_static
 
-  b. At the end of your Android.mk, import the module with:
+To use the *shared* library, use "stlport_shared" instead:
 
-        $(call import-module,android/stlport)
+    APP_STL := stlport_shared
 
-
-To use the *shared* library, do the following:
-
-  a. Add 'stlport_shared' to your module's LOCAL_SHARED_LIBRARIES
-     variable.
-
-  b. At the end of your Android.mk, import them module with
-     the same line described above for the static case.
-
-Note that you will need, in your application, to explicitely load
-the 'stlport_shared' library before any library that depends on it.
+Note that, in this case, you will need, in your application, to explicitely
+load the 'stlport_shared' library before any library that depends on it.
 For example:
 
     static {
@@ -59,20 +49,14 @@ If both libfoo.so and libbar.so depend on STLport.
 
 You can build the STLport unit test program by doing the following:
 
-  cd $NDK/sources/android/stlport/test
-  $NDK/ndk-build
+  cd $NDK
+  tests/run-tests.sh --test=test-stlport
 
-This generates a standalone executable under libs/armeabi/test_stlport.
-Note that it must be run in a writable directory (it needs to write then
-read a few files). Here's an example on how to run it:
+If you have an Android device connected to your machine, this will
+automatically try to run the generated test command. Note that for now
+a few tests are still failing (mostly related to wchar_t and locales).
 
-  adb push libs/armeabi/test_stlport /data/local/
-  adb shell chmod 755 /data/local/test_stlport
-  adb shell 'cd /data/local; test_stlport'
-
-Note that a few unit tests fail at the moment, they should hopefully
-fixed in a later release of this library.
-
+They should be fixed hopefully by a later release of this library.
 
 The NDK comes with prebuilt binaries for this library to speed up development.
 You can however rebuild them from sources in your own application build by
@@ -81,5 +65,5 @@ defining STLPORT_FORCE_REBUILD to 'true' in your Application.mk as in:
     STLPORT_FORCE_REBUILD := true
 
 
-VERSION INFORMATION: This module is based on STLport version 5.x.y (TODO)
+VERSION INFORMATION: This module is based on STLport version 5.2.0
 
