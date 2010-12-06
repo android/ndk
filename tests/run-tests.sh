@@ -365,7 +365,7 @@ if is_testable device; then
         local PROGRAMS=
         local PROGRAM
         # Do not run the test if BROKEN_RUN is defined
-        if [ -f "$1/BROKEN_RUN" ] ; then
+        if [ -f "$1/BROKEN_RUN" -o -f "$1/BROKEN_BUILD" ] ; then
             dump "Skipping NDK device test run: `basename $1`"
             return 0
         fi
