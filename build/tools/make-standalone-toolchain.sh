@@ -128,7 +128,7 @@ run copy_directory "$TOOLCHAIN_PATH" "$TMPDIR"
 dump "Copying sysroot headers and libraries..."
 # Copy the sysroot under $TMPDIR/sysroot. The toolchain was built to
 # expect the sysroot files to be placed there!
-run copy_directory "$SRC_SYSROOT" "$TMPDIR/sysroot"
+run copy_directory_nolinks "$SRC_SYSROOT" "$TMPDIR/sysroot"
 
 dump "Copying libstdc++ headers and libraries..."
 `dirname $0`/copy-libstdcxx.sh --reverse "$TMPDIR" "$NDK_DIR"
