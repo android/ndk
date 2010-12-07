@@ -66,7 +66,7 @@ fi
 if [ "$OSTYPE" = "cygwin" ] ; then
     GNUMAKE=`cygpath -u $GNUMAKE`
     PROGDIR_MIXED=`cygpath -m $PROGDIR`
-    CYGWIN_GNUMAKE=`$GNUMAKE -f $PROGDIR_MIXED/build/core/check-cygwin-make.mk 2>&1`
+    CYGWIN_GNUMAKE=`$GNUMAKE -f "$PROGDIR_MIXED/build/core/check-cygwin-make.mk" 2>&1`
     if [ $? != 0 ] ; then
         echo "ERROR: You are using a non-Cygwin compatible Make program."
         echo "Currently using: `cygpath -m $GNUMAKE`"
