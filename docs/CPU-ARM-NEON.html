@@ -70,7 +70,7 @@ In other words, 'foo.c.arm.neon' works, but 'foo.c.neon.arm' does NOT.
 Build Requirements:
 ------------------
 
-Neon support only works when targetting the 'armeabi-v7a' ABI, otherwise the
+Neon support only works when targeting the 'armeabi-v7a' ABI, otherwise the
 NDK build scripts will complain and abort. It is important to use checks like
 the following in your Android.mk:
 
@@ -91,7 +91,7 @@ As said previously, NOT ALL ARMv7-BASED ANDROID DEVICES WILL SUPPORT NEON !
 It is thus crucial to perform runtime detection to know if the NEON-capable
 machine code can be run on the target device.
 
-To do that, use the 'cpufeatures' library that comes with this NDK. To lean
+To do that, use the 'cpufeatures' library that comes with this NDK. To learn
 more about it, see docs/CPU-FEATURES.html.
 
 You should explicitly check that android_getCpuFamily() returns

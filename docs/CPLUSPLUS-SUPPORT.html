@@ -77,7 +77,7 @@ WARNING: END OF IMPORTANT CAVEAT
   and more importantly of global variables (e.g. std::cout) in each one of
   them, which can have surprising results.
 
-  On the other hand, you will have to load it explicitely when starting your
+  On the other hand, you will have to load it explicitly when starting your
   application, as in the following example:
 
      static {
@@ -96,7 +96,7 @@ WARNING: END OF IMPORTANT CAVEAT
   "stlport_static" is preferred if you have only one shared library in your
   project: only the STL functions and variables you actually need will be
   linked to your machine code, reducing its code size, and you won't need
-  to load the dynamic stlport_shared at startup.
+  to load the dynamic stlport_shared at start-up.
 
 
 IV. STLport-specific issues:

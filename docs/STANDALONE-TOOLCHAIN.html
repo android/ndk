@@ -43,7 +43,7 @@ Usually, this will be something like:
    SYSROOT=$NDK/platforms/android-&lt;level&gt;/arch-&lt;arch&gt;/
 
 Where &lt;level&gt; is the API level number, and &lt;arch&gt; is the architecture ("arm"
-being currently supported). For example, if you're targetting Android 2.1
+being currently supported). For example, if you're targeting Android 2.1
 (a.k.a. Froyo), you would use:
 
    SYSROOT=$NDK/platforms/android-8/arch-arm
@@ -53,7 +53,7 @@ being currently supported). For example, if you're targetting Android 2.1
 ----------------------------------------
 
 Invoke the compiler using the --sysroot option to indicate where the system
-files for the platform you're targetting are located. For example, do:
+files for the platform you're targeting are located. For example, do:
 
     export CC="$NDK/toolchains/&lt;name&gt;/prebuilt/&lt;system&gt;/bin/&lt;prefix&gt;gcc --sysroot=$SYSROOT"
     $CC -o foo.o -c foo.c
@@ -177,7 +177,7 @@ They are enabled by default, so use -fno-exceptions and -fno-rtti if you
 want to disable them when building sources with them (e.g. to generate
 smaller machine code).
 
-NOTE: You will need to explicitely link with libsupc++ if you use these
+NOTE: You will need to explicitly link with libsupc++ if you use these
       features. To do this, use -lsupc++ when linking binaries, as in:
 
     arm-linux-androideabi-g++ .... -lsupc++
@@ -185,7 +185,7 @@ NOTE: You will need to explicitely link with libsupc++ if you use these
 
 The toolchain also comes with a working GNU libstdc++ implementation, which
 provides a working C++ Standard Template Library implementation. You will
-need to explicitely link against -lstdc++ to use it.
+need to explicitly link against -lstdc++ to use it.
 
 Proper toolchain configuration to avoid these explicit link flags is
 planned for the future.

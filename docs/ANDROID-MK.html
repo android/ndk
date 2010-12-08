@@ -232,7 +232,7 @@ TARGET_ARCH_ABI
     Two values are supported at the moment:
 
        armeabi
-            For Armv5TE
+            For ARMv5TE
 
        armeabi-v7a
 
@@ -249,7 +249,7 @@ TARGET_ARCH_ABI
     'TARGET_ARCH_ABI'
 
 TARGET_ABI
-    The concatenation of target platform and abi, it really is defined
+    The concatenation of target platform and ABI, it really is defined
     as $(TARGET_PLATFORM)-$(TARGET_ARCH_ABI) and is useful when you want
     to test against a specific target system image for a real device.
 
@@ -528,12 +528,12 @@ LOCAL_ARM_MODE
       LOCAL_ARM_MODE := arm
 
     Note that you can also instruct the build system to only build specific
-    sources in arm mode by appending an '.arm' suffix to its source file
+    sources in ARM mode by appending an '.arm' suffix to its source file
     name. For example, with:
 
        LOCAL_SRC_FILES := foo.c bar.c.arm
 
-    Tells the build system to always compile 'bar.c' in arm mode, and to
+    Tells the build system to always compile 'bar.c' in ARM mode, and to
     build foo.c according to the value of LOCAL_ARM_MODE.
 
     NOTE: Setting APP_OPTIM to 'debug' in your Application.mk will also force
@@ -545,11 +545,11 @@ LOCAL_ARM_NEON
     (a.k.a. NEON) GCC intrinsics in your C and C++ sources, as well as
     NEON instructions in Assembly files.
 
-    You should only define it when targetting the 'armeabi-v7a' ABI that
+    You should only define it when targeting the 'armeabi-v7a' ABI that
     corresponds to the ARMv7 instruction set. Note that not all ARMv7
     based CPUs support the NEON instruction set extensions and that you
     should perform runtime detection to be able to use this code at runtime
-    safely. To lean more about this, please read the documentation at
+    safely. To learn more about this, please read the documentation at
     docs/CPU-ARM-NEON.html and docs/CPU-FEATURES.html.
 
     Alternatively, you can also specify that only specific source files
@@ -571,7 +571,7 @@ LOCAL_DISABLE_NO_EXECUTE
     need to by setting this variable to 'true'.
 
     NOTE: This feature does not modify the ABI and is only enabled on
-          kernels targetting ARMv6+ CPU devices. Machine code generated
+          kernels targeting ARMv6+ CPU devices. Machine code generated
           with this feature enabled will run unmodified on devices
           running earlier CPU architectures.
 

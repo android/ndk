@@ -27,7 +27,7 @@ IMPORTANT CHANGES:
 
      - Native audio API through the OpenSL ES Standard.
        New headers &lt;SLES/OpenSLES.h&gt; and &lt;SLES/OpenSLES_Android.h&gt;
-       are provided to allow applications targetting this API level to perform
+       are provided to allow applications targeting this API level to perform
        audio input, output and processing directly from native code.
 
      - Native activity support, i.e. the ability to build applications that
@@ -49,7 +49,7 @@ IMPORTANT CHANGES:
 
        See the documentation in docs/STABLE-APIS.html for more details.
 
-       Note that most of these new features are targetted at game developers.
+       Note that most of these new features are targeted at game developers.
 
 - Improved gdbserver binary to allow debugging _threaded_ programs properly
   with ndk-gdb (the previous binary could only set breakpoints on the main
@@ -609,7 +609,7 @@ OTHER FIXES AND CHANGES
 
 - Ensure that the __ANDROID__ macro is always defined when building code
   with the NDK. Normally, the macro must be defined by the toolchain
-  automatically to indicate that you're targetting the Android runtime.
+  automatically to indicate that you're targeting the Android runtime.
 
   This works for the new arm-linux-androideabi toolchain, but there is
   a bug in the way we built the arm-eabi one, so add the flag manually
@@ -623,7 +623,7 @@ OTHER FIXES AND CHANGES
 - Add support for LOCAL_ARM_MODE in Android.mk.
 
 - Add support for the '.arm' suffix in source file names to force the
-  compilation of a single source in arm (32-bit) mode.
+  compilation of a single source in ARM (32-bit) mode.
 
 - Generate proper unoptimized versions of binaries when APP_OPTIM := debug
 
