@@ -63,12 +63,15 @@ Value APP_STL values are the following:
    system              -&gt; Use the default minimal C++ runtime library.
    stlport_static      -&gt; Use STLport built as a static library.
    stlport_shared      -&gt; Use STLport built as a shared library.
+   gnustl_static       -&gt; Use GNU libstdc++ as a static library.
 
 WARNING: IMPORTANT CAVEAT
 
      AT THE MOMENT, OUR STLPORT IMPLEMENTATION DOES NOT SUPPORT EXCEPTIONS
      AND RTTI. PLEASE BE SURE TO NOT USE -fexceptions OR -frtti IN ALL
      MODULES THAT USE IT.
+
+     IF YOU NEED THESE, PLEASE USE "gnustl_static".
 
 WARNING: END OF IMPORTANT CAVEAT
 
@@ -99,6 +102,10 @@ WARNING: END OF IMPORTANT CAVEAT
   to load the dynamic stlport_shared at start-up.
 
 
+  "gnustl_static" is preferred (and required) if you need C++ Exceptions
+  and RTTI support at the moment.
+
+
 IV. STLport-specific issues:
 ----------------------------
 
@@ -116,7 +123,7 @@ V. Future Plans:
 ----------------
 
   - Make STLport compatible with C++ exceptions and RTTI
-  - Full GNU libstdc++ support
+  - Shared GNU libstdc++ support
   - uSTL support?
 
 </pre></body></html>
