@@ -475,16 +475,38 @@ prepare_host_flags ()
                 log "Generating $version-compatible binaries!"
             fi
             ;;
-        *-x86_64)
-            # NOTE: We need to modify the definitions of CC and CXX directly
-            #        here. Just changing the value of CFLAGS / HOST_CFLAGS
-            #        will not work well with the GCC toolchain scripts.
-            CC="$CC -m32"
-            CXX="$CXX -m32"
-            HOST_GMP_ABI="32"
-            force_32bit_binaries  # to modify HOST_TAG and others
-            ;;
     esac
+
+    # Force generation of 32-bit binaries on 64-bit systems.
+    # We used to test the value of $HOST_TAG for *-x86_64, but this is
+    # not sufficient on certain systems.
+    #
+    # For example, Snow Leopard can be booted with a 32-bit kernel, running
+    # a 64-bit userland, with a compiler that generates 64-bit binaries by
+    # default *even* though "gcc -v" will report --target=i686-apple-darwin10!
+    #
+    # So know, simply probe for the size of void* by performing a small runtime
+    # compilation test.
+    #
+    cat > $TMPC <<EOF
+    /* this test should fail if the compiler generates 64-bit machine code */
+    int test_array[1-2*(sizeof(void*) != 4)];
+EOF
+    echo -n "Checking whether the compiler generates 32-bit binaries..."
+    log $CC $HOST_CFLAGS -c -o $TMPO $TMPC
+    $CC $HOST_CFLAGS -c -o $TMPO $TMPC >$TMPL 2>&1
+    if [ $? != 0 ] ; then
+        echo "no"
+        # NOTE: We need to modify the definitions of CC and CXX directly
+        #        here. Just changing the value of CFLAGS / HOST_CFLAGS
+        #        will not work well with the GCC toolchain scripts.
+        CC="$CC -m32"
+        CXX="$CXX -m32"
+        HOST_GMP_ABI="32"
+        force_32bit_binaries  # to modify HOST_TAG and others
+    else
+        echo "yes"
+    fi
 
     # Now handle the --mingw flag
     if [ "$MINGW" = "yes" ] ; then
