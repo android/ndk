@@ -502,11 +502,13 @@ EOF
         #        will not work well with the GCC toolchain scripts.
         CC="$CC -m32"
         CXX="$CXX -m32"
-        HOST_GMP_ABI="32"
-        force_32bit_binaries  # to modify HOST_TAG and others
     else
         echo "yes"
     fi
+
+    # For now, we only support building 32-bit binaries anyway
+    force_32bit_binaries  # to modify HOST_TAG and others
+    HOST_GMP_ABI="32"
 
     # Now handle the --mingw flag
     if [ "$MINGW" = "yes" ] ; then
@@ -522,7 +524,7 @@ EOF
         HOST_OS=windows
         HOST_TAG=windows
         HOST_EXE=.exe
-        HOST_GMP_ABI=
+        #HOST_GMP_ABI=
     fi
 }
 
