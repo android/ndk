@@ -29,7 +29,7 @@ ifdef NDK_MODULE_PATH
 endif
 
 $(call import-init)
-$(foreach __path,$(patsubst $(HOST_DIRSEP),$(space),$(NDK_MODULE_PATH)),\
+$(foreach __path,$(subst $(HOST_DIRSEP),$(space),$(NDK_MODULE_PATH)),\
   $(call import-add-path,$(__path))\
 )
 $(call import-add-path-optional,$(NDK_ROOT)/sources)

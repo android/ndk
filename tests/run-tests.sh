@@ -329,7 +329,15 @@ if is_testable build; then
     build_build_test ()
     {
         echo "Building NDK build test: `basename $1`"
-        build_project $1
+        if [ -f $1/build.sh ]; then
+            run $1/build.sh
+            if [ $? != 0 ]; then
+                echo "!!! BUILD FAILURE [$1]!!! See $NDK_LOGFILE for details or use --verbose option!"
+                exit 1
+            fi
+        else
+            build_project $1
+        fi
     }
 
     for DIR in `ls -d $ROOTDIR/tests/build/*`; do
