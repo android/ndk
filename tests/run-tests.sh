@@ -148,9 +148,9 @@ adb_cmd ()
     fi
     if [ $VERBOSE = "yes" ] ; then
         echo "$ADB_CMD shell $@"
-        $ADB_CMD shell "$@ && echo 'OK' || echo 'KO'" | tee $ADB_CMD_LOG
+        $ADB_CMD shell $@ "&&" echo OK "||" echo KO | tee $ADB_CMD_LOG
     else
-        $ADB_CMD shell "$@ && echo 'OK' || echo 'KO'" > $ADB_CMD_LOG
+        $ADB_CMD shell $@ "&&" echo OK "||" echo KO > $ADB_CMD_LOG
     fi
     # Get last line in log, should be OK or KO
     RET=`tail -n1 $ADB_CMD_LOG`
@@ -371,7 +371,7 @@ if is_testable device; then
         fi
         # First, copy all files to /data/local, except for gdbserver
         # or gdb.setup.
-        adb_cmd mkdir $DSTDIR
+        adb_cmd mkdir -p $DSTDIR
         for SRCFILE in `ls $SRCDIR`; do
             DSTFILE=`basename $SRCFILE`
             if [ "$DSTFILE" = "gdbserver" -o "$DSTFILE" = "gdb.setup" ] ; then
