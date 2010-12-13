@@ -44,7 +44,11 @@
 static const char *_C_name = "C";
 static const char *_empty_str = "";
 #ifndef _STLP_NO_WCHAR_T
+#if defined(WCHAR_MAX) && WCHAR_MAX == 255
+static const wchar_t *_empty_wstr = "";
+#else
 static const wchar_t *_empty_wstr = L"";
+#endif
 #endif
 
 static _Locale_mask_t ctable[256];
@@ -207,14 +211,14 @@ _Locale_mask_t _WLocale_ctype(struct _Locale_ctype *lctype, wint_t wc, _Locale_m
   _Locale_mask_t ret = 0;
   if ((mask & _Locale_ALPHA) != 0 && iswalpha(wc))
     ret |= _Locale_ALPHA;
-  
+
   if ((mask & _Locale_CNTRL) != 0 && iswcntrl(wc))
     ret |= _Locale_CNTRL;
 
   if ((mask & _Locale_DIGIT) != 0 && iswdigit(wc))
     ret |= _Locale_DIGIT;
 
-  if ((mask & _Locale_PRINT) != 0 && iswprint(wc)) 
+  if ((mask & _Locale_PRINT) != 0 && iswprint(wc))
     ret |= _Locale_PRINT;
 
   if ((mask & _Locale_PUNCT) != 0 && iswpunct(wc))
@@ -344,10 +348,17 @@ wchar_t _WLocale_decimal_point(struct _Locale_numeric* lnum)
 { return L'.'; }
 wchar_t _WLocale_thousands_sep(struct _Locale_numeric* lnum)
 { return L','; }
+#if defined(WCHAR_MAX) && WCHAR_MAX == 255
+const wchar_t * _WLocale_true(struct _Locale_numeric* lnum, wchar_t* buf, size_t bufSize)
+{ return "true"; }
+const wchar_t * _WLocale_false(struct _Locale_numeric* lnum, wchar_t* buf, size_t bufSize)
+{ return "false"; }
+#else
 const wchar_t * _WLocale_true(struct _Locale_numeric* lnum, wchar_t* buf, size_t bufSize)
 { return L"true"; }
 const wchar_t * _WLocale_false(struct _Locale_numeric* lnum, wchar_t* buf, size_t bufSize)
 { return L"false"; }
+#endif
 #endif
 
 /* Monetary */
@@ -441,6 +452,40 @@ const char* _Locale_pm_str(struct _Locale_time* ltime)
 { return "PM"; }
 
 #ifndef _STLP_NO_WCHAR_T
+#if defined(WCHAR_MAX) && WCHAR_MAX == 255
+static const wchar_t* full_wmonthname[] =
+{ "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December" };
+const wchar_t * _WLocale_full_monthname(struct _Locale_time * ltime, int n,
+                                        wchar_t* buf, size_t bufSize)
+{ return full_wmonthname[n]; }
+
+static const wchar_t* abbrev_wmonthname[] =
+{ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+const wchar_t * _WLocale_abbrev_monthname(struct _Locale_time * ltime, int n,
+                                          wchar_t* buf, size_t bufSize)
+{ return abbrev_wmonthname[n]; }
+
+static const wchar_t* full_wdayname[] =
+{ "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
+const wchar_t * _WLocale_full_dayofweek(struct _Locale_time * ltime, int n,
+                                        wchar_t* buf, size_t bufSize)
+{ return full_wdayname[n]; }
+
+static const wchar_t* abbrev_wdayname[] =
+{ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+const wchar_t * _WLocale_abbrev_dayofweek(struct _Locale_time * ltime, int n,
+                                          wchar_t* buf, size_t bufSize)
+{ return abbrev_wdayname[n]; }
+
+const wchar_t* _WLocale_am_str(struct _Locale_time* ltime,
+                               wchar_t* buf, size_t bufSize)
+{ return "AM"; }
+const wchar_t* _WLocale_pm_str(struct _Locale_time* ltime,
+                               wchar_t* buf, size_t bufSize)
+{ return "PM"; }
+#else /* WCHAR_MAX != 255 */
 static const wchar_t* full_wmonthname[] =
 { L"January", L"February", L"March", L"April", L"May", L"June",
   L"July", L"August", L"September", L"October", L"November", L"December" };
@@ -473,6 +518,7 @@ const wchar_t* _WLocale_am_str(struct _Locale_time* ltime,
 const wchar_t* _WLocale_pm_str(struct _Locale_time* ltime,
                                wchar_t* buf, size_t bufSize)
 { return L"PM"; }
+#endif /* WCHAR_MAX != 255 */
 #endif
 
 /* Messages */
