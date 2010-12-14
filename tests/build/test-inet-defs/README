@@ -1,0 +1,3 @@
+This test is there to check that certain declarations are correctly provided
+by <inet/in.h> and <inet/in6.h>. These are mainly required to build the Boost
+library for Android.
