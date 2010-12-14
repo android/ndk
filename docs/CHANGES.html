@@ -5,15 +5,29 @@ android-ndk-r5b
 
 This release fixes a few bugs in r5. There are no new features.
 
+IMPORTANT BUG FIXES:
+
+- Fix a compiler bug in the arm-linux-androideabi-4.4.3 toolchain.
+  The previous binary generated invalid thumb instruction sequences when
+  dealing with signed chars. This problem was first reported on the
+  android-ndk forum and fixed by the following change in the toolchain
+  sources:
+
+        https://review.source.android.com/#change,19474
+
+- docs/CPLUSPLUS-SUPPORT.html: Add missing documentation for the
+  "gnustl_static" value for APP_STL, that allows you to link against
+  a static library version of GNU libstdc++.
+
+- ndk-build: Fix a bug that created inconsistent dependency files when a
+  compilation error occured on Windows, preventing building properly after
+  the error was fixed in the source code.
+
 OTHER FIXES &amp; CHANGES:
 
 - ndk-build: Handle installation paths containing spaces when checking
   cygwin installation. Before that, the script complained that the user
   was using an incorrect version of GNU Make (even if he had the right one).
-
-- docs/CPLUSPLUS-SUPPORT.html: Add missing documentation for the
-  "gnustl_static" value for APP_STL, that allows you to link against
-  a static library version of GNU libstdc++.
 
 - Fixed a typo that prevented several NDK_MODULE_PATH to work properly when
   it contained multiple directories separated with ":"
@@ -24,10 +38,6 @@ OTHER FIXES &amp; CHANGES:
 
 - prebuilt-common.sh: Fix the toolchain rebuild scripts to work when
   using a 32-bit host toolchain.
-
-- ndk-build: Fix a bug that created inconsistent dependency files when a
-  compilation error occured on Windows, preventing building properly after
-  the error was fixed in the source code.
 
 -------------------------------------------------------------------------------
 android-ndk-r5
