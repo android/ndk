@@ -524,7 +524,10 @@ EOF
         HOST_OS=windows
         HOST_TAG=windows
         HOST_EXE=.exe
-        #HOST_GMP_ABI=
+        # It turns out that we need to undefine this to be able to
+        # perform a canadian-cross build with mingw. Otherwise, the
+        # GMP configure scripts will not be called with the right options
+        HOST_GMP_ABI=
     fi
 }
 
