@@ -15,15 +15,19 @@ OTHER FIXES &amp; CHANGES:
   "gnustl_static" value for APP_STL, that allows you to link against
   a static library version of GNU libstdc++.
 
-- prebuild-common.sh: Make the script check the compiler directly for 64-bit
-  generated machine code, instead of relying on the host tag. That should
-  allow the 32-bit toolchain to rebuild properly on Snow Leopard.
-
 - Fixed a typo that prevented several NDK_MODULE_PATH to work properly when
   it contained multiple directories separated with ":"
 
+- prebuilt-common.sh: Make the script check the compiler directly for 64-bit
+  generated machine code, instead of relying on the host tag. That should
+  allow the 32-bit toolchain to rebuild properly on Snow Leopard.
+
 - prebuilt-common.sh: Fix the toolchain rebuild scripts to work when
   using a 32-bit host toolchain.
+
+- ndk-build: Fix a bug that created inconsistent dependency files when a
+  compilation error occured on Windows, preventing building properly after
+  the error was fixed in the source code.
 
 -------------------------------------------------------------------------------
 android-ndk-r5
