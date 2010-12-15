@@ -1,0 +1,271 @@
+From b9bc8aa759030219f895071ea7edb6b80a7e1346 Mon Sep 17 00:00:00 2001
+From: David 'Digit' Turner <digit@android.com>
+Date: Mon, 13 Dec 2010 15:11:16 +0100
+Subject: [PATCH] libstdc++-v3: fix setlocale()-related crash.
+
+The Android setlocale() returns NULL, which was not handled properly
+by the standard library code. Add a simple test the check for
+this condition and avoid saving the old locale when it happens.
+
+Change-Id: I264aa5bfb98e9fd584d32c55fcf9661a93081070
+---
+ .../libstdc++-v3/config/locale/generic/c_locale.cc |   78 ++++++++++++-------
+ .../libstdc++-v3/config/locale/generic/c_locale.h  |    2 +-
+ .../config/locale/generic/time_members.cc          |   48 ++++++++----
+ 3 files changed, 81 insertions(+), 47 deletions(-)
+
+diff --git a/gcc-4.4.3/libstdc++-v3/config/locale/generic/c_locale.cc b/gcc-4.4.3/libstdc++-v3/config/locale/generic/c_locale.cc
+index 3b9f1bd..a2ad801 100644
+--- a/gcc-4.4.3/libstdc++-v3/config/locale/generic/c_locale.cc
++++ b/gcc-4.4.3/libstdc++-v3/config/locale/generic/c_locale.cc
+@@ -46,15 +46,19 @@ _GLIBCXX_BEGIN_NAMESPACE(std)
+ 
+   template<>
+     void
+-    __convert_to_v(const char* __s, float& __v, ios_base::iostate& __err, 
+-		   const __c_locale&) 	      
++    __convert_to_v(const char* __s, float& __v, ios_base::iostate& __err,
++		   const __c_locale&)
+     {
+       // Assumes __s formatted for "C" locale.
+       char* __old = setlocale(LC_ALL, NULL);
+-      const size_t __len = strlen(__old) + 1;
+-      char* __sav = new char[__len];
+-      memcpy(__sav, __old, __len);
+-      setlocale(LC_ALL, "C");
++      char* __sav = NULL;
++      if (__old != NULL)
++        {
++          const size_t __len = strlen(__old) + 1;
++          char* __sav = new char[__len];
++          memcpy(__sav, __old, __len);
++          setlocale(LC_ALL, "C");
++        }
+       char* __sanity;
+       bool __overflow = false;
+ 
+@@ -105,21 +109,28 @@ _GLIBCXX_BEGIN_NAMESPACE(std)
+ 	  __err = ios_base::failbit;
+ 	}
+ 
+-      setlocale(LC_ALL, __sav);
+-      delete [] __sav;
++      if (__sav != NULL)
++        {
++          setlocale(LC_ALL, __sav);
++          delete [] __sav;
++        }
+     }
+ 
+   template<>
+     void
+-    __convert_to_v(const char* __s, double& __v, ios_base::iostate& __err, 
+-		   const __c_locale&) 
++    __convert_to_v(const char* __s, double& __v, ios_base::iostate& __err,
++		   const __c_locale&)
+     {
+       // Assumes __s formatted for "C" locale.
+       char* __old = setlocale(LC_ALL, NULL);
+-      const size_t __len = strlen(__old) + 1;
+-      char* __sav = new char[__len];
+-      memcpy(__sav, __old, __len);
+-      setlocale(LC_ALL, "C");
++      char* __sav = NULL;
++      if (__old != NULL)
++        {
++          const size_t __len = strlen(__old) + 1;
++          char* __sav = new char[__len];
++          memcpy(__sav, __old, __len);
++          setlocale(LC_ALL, "C");
++        }
+       char* __sanity;
+ 
+ #if !__DBL_HAS_INFINITY__
+@@ -139,7 +150,7 @@ _GLIBCXX_BEGIN_NAMESPACE(std)
+ #if __DBL_HAS_INFINITY__
+ 	       __v == numeric_limits<double>::infinity()
+ 	       || __v == -numeric_limits<double>::infinity())
+-#else          
++#else
+ 	       (__v > 1.0 || __v < -1.0) && errno == ERANGE)
+ #endif
+ 	{
+@@ -150,21 +161,28 @@ _GLIBCXX_BEGIN_NAMESPACE(std)
+ 	  __err = ios_base::failbit;
+ 	}
+ 
+-      setlocale(LC_ALL, __sav);
+-      delete [] __sav;
++      if (__sav != NULL)
++        {
++          setlocale(LC_ALL, __sav);
++          delete [] __sav;
++        }
+     }
+ 
+   template<>
+     void
+-    __convert_to_v(const char* __s, long double& __v, 
+-		   ios_base::iostate& __err, const __c_locale&) 
++    __convert_to_v(const char* __s, long double& __v,
++		   ios_base::iostate& __err, const __c_locale&)
+     {
+       // Assumes __s formatted for "C" locale.
+       char* __old = setlocale(LC_ALL, NULL);
+-      const size_t __len = strlen(__old) + 1;
+-      char* __sav = new char[__len];
+-      memcpy(__sav, __old, __len);
+-      setlocale(LC_ALL, "C");
++      char* __sav = NULL;
++      if (__old != NULL)
++        {
++          const size_t __len = strlen(__old) + 1;
++          char* __sav = new char[__len];
++          memcpy(__sav, __old, __len);
++          setlocale(LC_ALL, "C");
++        }
+ 
+ #if !__LDBL_HAS_INFINITY__
+       errno = 0;
+@@ -202,12 +220,14 @@ _GLIBCXX_BEGIN_NAMESPACE(std)
+ 	  __err = ios_base::failbit;
+ 	}
+ 
+-      setlocale(LC_ALL, __sav);
+-      delete [] __sav;
++      if (__sav != NULL) {
++        setlocale(LC_ALL, __sav);
++        delete [] __sav;
++      }
+     }
+ 
+   void
+-  locale::facet::_S_create_c_locale(__c_locale& __cloc, const char* __s, 
++  locale::facet::_S_create_c_locale(__c_locale& __cloc, const char* __s,
+ 				    __c_locale)
+   {
+     // Currently, the generic model only supports the "C" locale.
+@@ -232,10 +252,10 @@ _GLIBCXX_BEGIN_NAMESPACE(__gnu_cxx)
+ 
+   const char* const category_names[6 + _GLIBCXX_NUM_CATEGORIES] =
+     {
+-      "LC_CTYPE", 
++      "LC_CTYPE",
+       "LC_NUMERIC",
+-      "LC_TIME",   
+-      "LC_COLLATE", 
++      "LC_TIME",
++      "LC_COLLATE",
+       "LC_MONETARY",
+       "LC_MESSAGES"
+     };
+diff --git a/gcc-4.4.3/libstdc++-v3/config/locale/generic/c_locale.h b/gcc-4.4.3/libstdc++-v3/config/locale/generic/c_locale.h
+index 472ef55..e27a9cd 100644
+--- a/gcc-4.4.3/libstdc++-v3/config/locale/generic/c_locale.h
++++ b/gcc-4.4.3/libstdc++-v3/config/locale/generic/c_locale.h
+@@ -59,7 +59,7 @@ _GLIBCXX_BEGIN_NAMESPACE(std)
+   {
+     char* __old = std::setlocale(LC_NUMERIC, NULL);
+     char* __sav = NULL;
+-    if (__builtin_strcmp(__old, "C"))
++    if (__old != NULL && __builtin_strcmp(__old, "C"))
+       {
+ 	const size_t __len = __builtin_strlen(__old) + 1;
+ 	__sav = new char[__len];
+diff --git a/gcc-4.4.3/libstdc++-v3/config/locale/generic/time_members.cc b/gcc-4.4.3/libstdc++-v3/config/locale/generic/time_members.cc
+index 86c9249..d5013f4 100644
+--- a/gcc-4.4.3/libstdc++-v3/config/locale/generic/time_members.cc
++++ b/gcc-4.4.3/libstdc++-v3/config/locale/generic/time_members.cc
+@@ -39,26 +39,33 @@ _GLIBCXX_BEGIN_NAMESPACE(std)
+   template<>
+     void
+     __timepunct<char>::
+-    _M_put(char* __s, size_t __maxlen, const char* __format, 
++    _M_put(char* __s, size_t __maxlen, const char* __format,
+ 	   const tm* __tm) const
+     {
+       char* __old = setlocale(LC_ALL, NULL);
+-      const size_t __llen = strlen(__old) + 1;
+-      char* __sav = new char[__llen];
+-      memcpy(__sav, __old, __llen);
++      char* __sav = NULL;
++      if (__old != NULL)
++        {
++          const size_t __llen = strlen(__old) + 1;
++          __sav = new char[__llen];
++          memcpy(__sav, __old, __llen);
++        }
+       setlocale(LC_ALL, _M_name_timepunct);
+       const size_t __len = strftime(__s, __maxlen, __format, __tm);
+-      setlocale(LC_ALL, __sav);
+-      delete [] __sav;
++      if (__sav != NULL)
++        {
++          setlocale(LC_ALL, __sav);
++          delete [] __sav;
++        }
+       // Make sure __s is null terminated.
+       if (__len == 0)
+ 	__s[0] = '\0';
+     }
+ 
+-  template<> 
++  template<>
+     void
+     __timepunct<char>::_M_initialize_timepunct(__c_locale)
+-    { 
++    {
+       // "C" locale.
+       if (!_M_data)
+ 	_M_data = new __timepunct_cache<char>;
+@@ -72,7 +79,7 @@ _GLIBCXX_BEGIN_NAMESPACE(std)
+       _M_data->_M_am = "AM";
+       _M_data->_M_pm = "PM";
+       _M_data->_M_am_pm_format = "";
+-	  
++
+       // Day names, starting with "C"'s Sunday.
+       _M_data->_M_day1 = "Sunday";
+       _M_data->_M_day2 = "Monday";
+@@ -124,23 +131,30 @@ _GLIBCXX_BEGIN_NAMESPACE(std)
+   template<>
+     void
+     __timepunct<wchar_t>::
+-    _M_put(wchar_t* __s, size_t __maxlen, const wchar_t* __format, 
++    _M_put(wchar_t* __s, size_t __maxlen, const wchar_t* __format,
+ 	   const tm* __tm) const
+     {
+       char* __old = setlocale(LC_ALL, NULL);
+-      const size_t __llen = strlen(__old) + 1;
+-      char* __sav = new char[__llen];
+-      memcpy(__sav, __old, __llen);
++      char* __sav = NULL;
++      if (__old != NULL)
++        {
++          const size_t __llen = strlen(__old) + 1;
++          char* __sav = new char[__llen];
++          memcpy(__sav, __old, __llen);
++        }
+       setlocale(LC_ALL, _M_name_timepunct);
+       const size_t __len = wcsftime(__s, __maxlen, __format, __tm);
+-      setlocale(LC_ALL, __sav);
+-      delete [] __sav;
++      if (__sav != NULL)
++        {
++          setlocale(LC_ALL, __sav);
++          delete [] __sav;
++        }
+       // Make sure __s is null terminated.
+       if (__len == 0)
+-	__s[0] = L'\0';      
++	__s[0] = L'\0';
+     }
+ 
+-  template<> 
++  template<>
+     void
+     __timepunct<wchar_t>::_M_initialize_timepunct(__c_locale)
+     {
+-- 
+1.7.3.1
+
