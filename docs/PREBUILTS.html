@@ -61,7 +61,7 @@ For example, a naive example of a module using libfoo.so would be:
     include $(CLEAR_VARS)
     LOCAL_MODULE := foo-user
     LOCAL_SRC_FILES := foo-user.c
-    LOCAL_SHARED_LIBRARY := foo-prebuilt
+    LOCAL_SHARED_LIBRARIES := foo-prebuilt
     include $(BUILD_SHARED_LIBRARY)
 
 
