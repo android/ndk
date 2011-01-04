@@ -125,8 +125,7 @@ check-required-vars = $(foreach __varname,$1,\
 #            return its argument.
 # -----------------------------------------------------------------------------
 ifeq ($(HOST_OS),windows)
-# Note that we want mixed paths, which are supported by our toolchain binaries.
-host-path = $(if $(strip $1),$(shell cygpath -m $1),)
+host-path = $(if $(strip $1),$(call cygwin-to-host-path,$1))
 else
 host-path = $1
 endif
