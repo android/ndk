@@ -1,0 +1,2 @@
+D:/Stuff/source.o: D:/Stuff/source.h C:/NDK/sysroot/include/string.h \
+ C:/NDK/sysroot/include/malloc.h

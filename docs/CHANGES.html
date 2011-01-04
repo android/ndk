@@ -23,6 +23,11 @@ IMPORTANT BUG FIXES:
   compilation error occured on Windows, preventing building properly after
   the error was fixed in the source code.
 
+- ndk-build: Fix a Cygwin-specific bug where using very short paths for
+  the Android NDK installation or the project path could lead to the
+  generation of invalid dependency files, making incremental builds
+  impossible.
+
 - Fix a typo that prevented the cpufeatures library to work correctly
   with the new NDK toolchain.
 

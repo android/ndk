@@ -38,15 +38,20 @@ BEGIN {
 }
 
 {
-    # First case: D:/Stuff/source.o: \
-    if ( $0 ~ /^[A-Za-z]:/ ) {
-        print CYGDRIVE_PREFIX tolower(substr($0,1,1)) "/" substr($0,4)
+    LINE=""
+    SEP=""
+    for (nn = 1; nn <= NF; nn++) {
+        if ($nn ~ /^[A-Za-z]:/) {
+            LINE = LINE SEP CYGDRIVE_PREFIX tolower(substr($nn,1,1)) "/" substr($nn,4)
+        } else {
+            LINE = LINE SEP $nn
+        }
+        SEP=" "
     }
-    # Second case: <space>D:/Stuff/source.h
-    else if ( $0 ~ /^ [A-Za-z]:/ ) {
-        print " " CYGDRIVE_PREFIX tolower(substr($0,2,1)) "/" substr($0,5)
+    # Any leading space on the original line should be preserved
+    MARGIN=""
+    if (match($0,"^[[:space:]]+")) {
+        MARGIN=substr($0,RSTART,RLENGTH)
     }
-    else {
-        print $0
-    }
+    printf("%s%s\n", MARGIN, LINE)
 }
