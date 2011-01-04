@@ -1,0 +1,4 @@
+/cygdrive/d/Stuff/source.o: \
+ /cygdrive/d/Stuff/source.h \
+ /cygdrive/c/NDK/sysroot/include/string.h \
+ /cygdrive/c/NDK/sysroot/include/malloc.h
