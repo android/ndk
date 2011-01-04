@@ -41,7 +41,7 @@ VERBOSE=no
 NDK_ROOT=
 JOBS=$BUILD_NUM_CPUS
 find_program ADB_CMD adb
-TESTABLES="samples build device"
+TESTABLES="samples build device awk"
 FULL_TESTS=no
 RUN_TESTS=
 NDK_PACKAGE=
@@ -91,6 +91,9 @@ while [ -n "$1" ]; do
         --only-device)
             TESTABLES=device
             ;;
+        --only-awk)
+            TESTABLES=awk
+            ;;
         -*) # unknown options
             echo "ERROR: Unknown option '$opt', use --help for list of valid ones."
             exit 1
@@ -123,6 +126,7 @@ if [ "$OPTION_HELP" = "yes" ] ; then
     echo "    --only-samples    Only rebuild samples"
     echo "    --only-build      Only rebuild build tests"
     echo "    --only-device     Only rebuild & run device tests"
+    echo "    --only-awk        Only run awk tests."
     echo "    --full            Run all device tests, even very long ones."
     echo ""
     echo "NOTE: You cannot use --ndk and --package at the same time."
@@ -240,6 +244,83 @@ fi
 BUILD_DIR=`mktemp -d /tmp/ndk-tests/build-XXXXXX`
 set_adb_cmd_log "$BUILD_DIR/adb-cmd.log"
 
+###
+### RUN AWK TESTS
+###
+
+# Run a simple awk script
+# $1: awk script to run
+# $2: input file
+# $3: expected output file
+# $4+: optional additional command-line arguments for the awk command
+run_awk_test ()
+{
+    local SCRIPT="$1"
+    local SCRIPT_NAME="`basename $SCRIPT`"
+    local INPUT="$2"
+    local INPUT_NAME="`basename $INPUT`"
+    local EXPECTED="$3"
+    local EXPECTED_NAME="`basename $EXPECTED`"
+    shift; shift; shift;
+    local OUTPUT="$BUILD_DIR/$EXPECTED_NAME"
+    if [ "$VERBOSE2" = "yes" ]; then
+        echo "### COMMAND: awk -f \"$SCRIPT\" $@ < \"$INPUT\" > \"$OUTPUT\""
+    fi
+    awk -f "$SCRIPT" $@ < "$INPUT" > "$OUTPUT"
+    fail_panic "Can't run awk script: $SCRIPT"
+    if [ "$VERBOSE2" = "yes" ]; then
+        echo "OUTPUT FROM SCRIPT:"
+        cat "$OUTPUT"
+        echo "EXPECTED VALUES:"
+        cat "$EXPECTED"
+    fi
+    cmp -s "$OUTPUT" "$EXPECTED"
+    if [ $? = 0 ] ; then
+        echo "Awk script: $SCRIPT_NAME: passed $INPUT_NAME"
+        if [ "$VERBOSE2" = "yes" ]; then
+            cat "$OUTPUT"
+        fi
+    else
+        if [ "$VERBOSE" = "yes" ]; then
+            run diff -burN "$EXPECTED" "$OUTPUT"
+        fi
+        echo "Awk script: $SCRIPT_NAME: $INPUT_NAME FAILED!!"
+        rm -f "$OUTPUT"
+        exit 1
+    fi
+}
+
+run_awk_test_dir ()
+{
+    local SCRIPT_NAME="`basename \"$DIR\"`"
+    local SCRIPT="$ROOTDIR/build/awk/$SCRIPT_NAME.awk"
+    local INPUT
+    local OUTPUT
+    if [ ! -f "$SCRIPT" ]; then
+        echo "Awk script: $SCRIPT_NAME: Missing script: $SCRIPT"
+        continue
+    fi
+    for INPUT in `ls "$PROGDIR"/tests/awk/$SCRIPT_NAME/*.in`; do
+        OUTPUT=`echo $INPUT | sed 's/\.in$/.out/g'`
+        if [ ! -f "$OUTPUT" ]; then
+            echo "Awk script: $SCRIPT_NAME: Missing awk output file: $OUTPUT"
+            continue
+        fi
+        run_awk_test "$SCRIPT" "$INPUT" "$OUTPUT"
+    done
+}
+
+if is_testable awk; then
+    AWKDIR="$ROOTDIR/build/awk"
+    for DIR in `ls -d "$PROGDIR"/tests/awk/*`; do
+        run_awk_test_dir "$DIR"
+    done
+fi
+
+###
+###  REBUILD ALL SAMPLES FIRST
+###
+
 NDK_BUILD_FLAGS="-B"
 # Use --verbose twice to see build commands for the tests
 if [ "$VERBOSE2" = "yes" ] ; then
@@ -266,10 +347,6 @@ build_project ()
         exit 1
     fi
 }
-
-###
-###  REBUILD ALL SAMPLES FIRST
-###
 
 #
 # Determine list of samples directories.
