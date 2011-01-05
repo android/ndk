@@ -1,0 +1,8 @@
+$(patsubst /%,C:/cygwin/%,
+$(patsubst /usr/bin/%,C:/cygwin/bin/%,
+$(patsubst /usr/lib/%,C:/cygwin/lib/%,
+$(patsubst /cygdrive/C/%,C:/%,
+$(patsubst /cygdrive/D/%,D:/%,
+$(patsubst /cygdrive/c/%,C:/%,
+$(patsubst /cygdrive/d/%,D:/%,
+$1)))))))
