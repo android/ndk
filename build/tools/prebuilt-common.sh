@@ -459,6 +459,22 @@ prepare_host_flags ()
     # By default, assume host == build
     ABI_CONFIGURE_HOST="$ABI_CONFIGURE_BUILD"
 
+    # On Linux, detect our legacy-compatible toolchain when in the Android
+    # source tree, and use it to force the generation of glibc-2.7 compatible
+    # binaries.
+    #
+    # We only do this if the CC variable is not defined to a given value
+    # and the --mingw option is not used.
+    #
+    if [ "$HOST_OS" = "linux" -a -z "$CC" -a "$MINGW" != "yes" ]; then
+        LEGACY_TOOLCHAIN_DIR="$ANDROID_NDK_ROOT/../prebuilt/linux-x86/toolchain/i686-linux-glibc2.7-4.4.3"
+        if [ -d "$LEGACY_TOOLCHAIN_DIR" ] ; then
+            dump "Forcing generation of Linux binaries with legacy toolchain"
+            CC="$LEGACY_TOOLCHAIN_DIR/bin/i686-linux-gcc"
+            CXX="$LEGACY_TOOLCHAIN_DIR/bin/i686-linux-g++"
+        fi
+    fi
+
     # Force generation of 32-bit binaries on 64-bit systems
     CC=${CC:-gcc}
     CXX=${CXX:-g++}

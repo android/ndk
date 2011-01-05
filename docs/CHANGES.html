@@ -31,6 +31,12 @@ IMPORTANT BUG FIXES:
 - Fix a typo that prevented the cpufeatures library to work correctly
   with the new NDK toolchain.
 
+- Linux toolchain binaries now run on Ubuntu 8.04 or higher.
+  More specifically, the r5 binaries did require GLibc 2.11 on the host
+  system, and refused to run with previous releases due to an ABI mismatch
+  in the GNU C Library. The r5b binaries are generated with a special
+  toolchain that instead targets GLibc 2.7 or higher.
+
 OTHER FIXES &amp; CHANGES:
 
 - ndk-build: Speed-up the Cygwin build by avoiding calling "cygpath -m"
@@ -60,6 +66,9 @@ OTHER FIXES &amp; CHANGES:
 - &lt;netinet/in.h&gt;: Add missing declaration for INET_ADDRSTRLEN
 - &lt;netinet/in6.h&gt;: Add missing declaration for IN6_IS_ADDR_MC_NODELOCAL
   and IN6_IS_ADDR_MC_GLOBAL.
+
+- &lt;asm/byteorder.&gt;: Replaced 'asm' with '__asm__' to allow compilation
+  with -std=c99. See https://review.source.android.com/#change,20076
 
 -------------------------------------------------------------------------------
 android-ndk-r5
