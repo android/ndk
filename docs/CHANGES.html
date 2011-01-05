@@ -33,6 +33,16 @@ IMPORTANT BUG FIXES:
 
 OTHER FIXES &amp; CHANGES:
 
+- ndk-build: Speed-up the Cygwin build by avoiding calling "cygpath -m"
+  from GNU Make for each and every source or object file. This was a problem
+  for users with very large source trees.
+
+  In case this doesn't work properly, define NDK_USE_CYGPATH=1 in your
+  environment to use 'cygpath -m' as usual.
+
+  Also, if 'cygpath' is not in your path, completely ignore it
+  (seems to be enough to run the NDK under MSys).
+
 - ndk-build: Handle installation paths containing spaces when checking
   cygwin installation. Before that, the script complained that the user
   was using an incorrect version of GNU Make (even if he had the right one).
