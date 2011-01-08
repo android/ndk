@@ -70,6 +70,13 @@ OTHER FIXES &amp; CHANGES:
 - &lt;asm/byteorder.&gt;: Replaced 'asm' with '__asm__' to allow compilation
   with -std=c99. See https://review.source.android.com/#change,20076
 
+- standalone toolchain: The -fpic flag is now the default for the
+  arm-linux-androideabi toolchain, instead of -fPIC. This avoids a performance
+  degradation when compared to the old android-eabi configuration.
+
+  This only affects users of the standalone toolchain. The NDK build script
+  always enforced -fpic implicitely.
+
 -------------------------------------------------------------------------------
 android-ndk-r5
 
