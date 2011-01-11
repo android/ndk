@@ -11,7 +11,7 @@
 <h1>OpenSL ES for Android</h1>
 
 This article describes the Android native audio APIs based on the
-Khronos Group OpenSL ES 1.0.1 standard, as of Android API level 9 (Android
+Khronos Group OpenSL ES&#0153; 1.0.1 standard, as of Android API level 9 (Android
 version 2.3).
 <p>
 OpenSL ES provides a C language interface that is also callable from C++, and
@@ -603,6 +603,8 @@ above).
 <code>Engine::IsExtensionSupported</code> report these extensions:
 <ul>
 <li><code>ANDROID_SDK_LEVEL_9</code>
+(platforms that support a higher API level will report an extension of
+<code>ANDROID_SDK_LEVEL_#</code> where # is that API level)
 </ul>
 
 <h2>Programming notes</h2>
