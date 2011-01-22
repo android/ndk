@@ -133,13 +133,13 @@ toolchain_clone ()
     if [ "$BRANCH" != "master" ] ; then
         run git checkout -b $BRANCH origin/$BRANCH
         fail_panic "Could not checkout $1 ?"
-        # If --git-date is used, or we have a default
-        if [ -n "$GIT_DATE" ] ; then
-            REVISION=`git rev-list -n 1 --until="$GIT_DATE" HEAD`
-            dump "Using sources for date '$GIT_DATE': toolchain/$1 revision $REVISION"
-            run git checkout $REVISION
-            fail_panic "Could not checkout $1 ?"
-        fi
+    fi
+    # If --git-date is used, or we have a default
+    if [ -n "$GIT_DATE" ] ; then
+        REVISION=`git rev-list -n 1 --until="$GIT_DATE" HEAD`
+        dump "Using sources for date '$GIT_DATE': toolchain/$1 revision $REVISION"
+        run git checkout $REVISION
+        fail_panic "Could not checkout $1 ?"
     fi
     # get rid of .git directory, we won't need it.
     cd ..
