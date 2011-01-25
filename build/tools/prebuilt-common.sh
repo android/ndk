@@ -178,6 +178,14 @@ register_mingw_option ()
     fi
 }
 
+TRY64=no
+do_try64_option () { TRY64=yes; }
+
+register_try64_option ()
+{
+    register_option "--try-64" do_try64_option "Generate 64-bit binaries."
+}
+
 # Print the help, including a list of registered options for this program
 # Note: Assumes PROGRAM_PARAMETERS and PROGRAM_DESCRIPTION exist and
 #       correspond to the parameters list and the program description
@@ -464,9 +472,9 @@ prepare_host_flags ()
     # binaries.
     #
     # We only do this if the CC variable is not defined to a given value
-    # and the --mingw option is not used.
+    # and the --mingw or --try-64 options are not used.
     #
-    if [ "$HOST_OS" = "linux" -a -z "$CC" -a "$MINGW" != "yes" ]; then
+    if [ "$HOST_OS" = "linux" -a -z "$CC" -a "$MINGW" != "yes" -a "$TRY64" != "yes" ]; then
         LEGACY_TOOLCHAIN_DIR="$ANDROID_NDK_ROOT/../prebuilt/linux-x86/toolchain/i686-linux-glibc2.7-4.4.3"
         if [ -d "$LEGACY_TOOLCHAIN_DIR" ] ; then
             dump "Forcing generation of Linux binaries with legacy toolchain"
@@ -509,22 +517,29 @@ prepare_host_flags ()
     int test_array[1-2*(sizeof(void*) != 4)];
 EOF
     echo -n "Checking whether the compiler generates 32-bit binaries..."
+    HOST_GMP_ABI=32
     log $CC $HOST_CFLAGS -c -o $TMPO $TMPC
     $CC $HOST_CFLAGS -c -o $TMPO $TMPC >$TMPL 2>&1
     if [ $? != 0 ] ; then
         echo "no"
-        # NOTE: We need to modify the definitions of CC and CXX directly
-        #        here. Just changing the value of CFLAGS / HOST_CFLAGS
-        #        will not work well with the GCC toolchain scripts.
-        CC="$CC -m32"
-        CXX="$CXX -m32"
+        if [ "$TRY64" != "yes" ]; then
+            # NOTE: We need to modify the definitions of CC and CXX directly
+            #        here. Just changing the value of CFLAGS / HOST_CFLAGS
+            #        will not work well with the GCC toolchain scripts.
+            CC="$CC -m32"
+            CXX="$CXX -m32"
+        else
+            HOST_GMP_ABI=64
+        fi
     else
         echo "yes"
     fi
 
     # For now, we only support building 32-bit binaries anyway
-    force_32bit_binaries  # to modify HOST_TAG and others
-    HOST_GMP_ABI="32"
+    if [ "$TRY64" != "yes" ]; then
+        force_32bit_binaries  # to modify HOST_TAG and others
+        HOST_GMP_ABI="32"
+    fi
 
     # Now handle the --mingw flag
     if [ "$MINGW" = "yes" ] ; then
@@ -536,7 +551,11 @@ EOF
                 exit 1
                 ;;
         esac
-        ABI_CONFIGURE_HOST=i586-mingw32msvc
+        if [ "$TRY64" = "yes" ]; then
+            ABI_CONFIGURE_HOST=amd64-mingw32msvc
+        else
+            ABI_CONFIGURE_HOST=i586-mingw32msvc
+        fi
         HOST_OS=windows
         HOST_TAG=windows
         HOST_EXE=.exe
