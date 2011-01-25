@@ -58,6 +58,7 @@ KEEP_LIBSTDCXX=no
 register_var_option "--keep-libstdcxx" KEEP_LIBSTDCXX "Experimental: keep libstdc++ inside toolchain"
 
 register_mingw_option
+register_try64_option
 
 extract_parameters "$@"
 
