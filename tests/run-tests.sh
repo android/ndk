@@ -27,7 +27,7 @@ PROGDIR=`cd $PROGDIR && pwd`
 # Assume that we are under tests/
 # and that the samples will be under samples/ and platforms/android-N/samples/
 #
-ROOTDIR=`dirname $PROGDIR`
+ROOTDIR=`cd $PROGDIR/.. && pwd`
 . $ROOTDIR/build/core/ndk-common.sh
 
 # The list of tests that are too long to be part of a normal run of
@@ -300,7 +300,7 @@ run_awk_test_dir ()
         echo "Awk script: $SCRIPT_NAME: Missing script: $SCRIPT"
         continue
     fi
-    for INPUT in `ls "$PROGDIR"/tests/awk/$SCRIPT_NAME/*.in`; do
+    for INPUT in `ls "$PROGDIR"/awk/$SCRIPT_NAME/*.in`; do
         OUTPUT=`echo $INPUT | sed 's/\.in$/.out/g'`
         if [ ! -f "$OUTPUT" ]; then
             echo "Awk script: $SCRIPT_NAME: Missing awk output file: $OUTPUT"
@@ -312,7 +312,7 @@ run_awk_test_dir ()
 
 if is_testable awk; then
     AWKDIR="$ROOTDIR/build/awk"
-    for DIR in `ls -d "$PROGDIR"/tests/awk/*`; do
+    for DIR in `ls -d "$PROGDIR"/awk/*`; do
         run_awk_test_dir "$DIR"
     done
 fi
