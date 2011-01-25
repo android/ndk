@@ -27,7 +27,7 @@ NDK_LOG := $(strip $(NDK_LOG))
 #
 MAKE_TEST := $(lastword a b c d e f)
 ifneq ($(MAKE_TEST),f)
-    $(error Android NDK: GNU Make version $(MAKE_VERSION) is too low (should be >= 3.81)
+    $(error Android NDK: GNU Make version $(MAKE_VERSION) is too low (should be >= 3.81))
 endif
 ifdef NDK_LOG
     $(info Android NDK: GNU Make version $(MAKE_VERSION) detected)
