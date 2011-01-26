@@ -60,7 +60,7 @@ compile_and_link_cxx ()
 
 install_toolchain android-9
 
-for CXXSRC in $PROGDIR/standalone/*/*.cpp; do
+for CXXSRC in $PROGDIR/standalone/*/*.cpp $PROGDIR/standalone/*/*.c; do
     compile_and_link_cxx $CXXSRC
 done
 
