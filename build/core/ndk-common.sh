@@ -20,25 +20,38 @@
 # Get current script name into PROGNAME
 PROGNAME=`basename $0`
 
+# Find the Android NDK root, assuming we are invoked from a script
+# within its directory structure.
+#
+# $1: Variable name that will receive the path
+# $2: Path of invoking script
+find_ndk_root ()
+{
+    # Try to auto-detect the NDK root by walking up the directory
+    # path to the current script.
+    local PROGDIR="`dirname \"$2\"`"
+    while [ -n "1" ] ; do
+        if [ -d "$PROGDIR/build/core" ] ; then
+            break
+        fi
+        if [ -z "$PROGDIR" -o "$PROGDIR" = '/' ] ; then
+            return 1
+        fi
+        PROGDIR="`cd \"$PROGDIR/..\" && pwd`"
+    done
+    eval $1="$PROGDIR"
+}
+
 # Put location of Android NDK into ANDROID_NDK_ROOT and
 # perform a tiny amount of sanity check
 #
 if [ -z "$ANDROID_NDK_ROOT" ] ; then
-    # Try to auto-detect the NDK root by walking up the directory
-    # path to the current script.
-    PROGDIR=`dirname $0`
-    while [ -n "1" ] ; do
-        if [ -d $PROGDIR/build/core ] ; then
-            break
-        fi
-        if [ -z $PROGDIR -o $PROGDIR = '.' ] ; then
-            echo "Please define ANDROID_NDK_ROOT to point to the root of your"
-            echo "Android NDK installation."
-            exit 1
-        fi
-        PROGDIR=`dirname $PROGDIR`
-    done
-    ANDROID_NDK_ROOT=`cd $PROGDIR && pwd`
+    find_ndk_root ANDROID_NDK_ROOT "$0"
+    if [ $? != 0 ]; then
+        echo "Please define ANDROID_NDK_ROOT to point to the root of your"
+        echo "Android NDK installation."
+        exit 1
+    fi
 fi
 
 echo "$ANDROID_NDK_ROOT" | grep -q -e " "
