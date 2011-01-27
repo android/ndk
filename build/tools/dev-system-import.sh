@@ -105,6 +105,10 @@ else
 fi
 register_var_option "--out-dir=<path>" OUT_DIR "Specify output directory."
 
+TOOLCHAIN_PREFIX=$ANDROID_NDK_ROOT/toolchains/$TOOLCHAIN/prebuilt/$HOST_TAG/bin/$PREFIX
+register_var_option "--toolchain-prefix=<path>" TOOLCHAIN_PREFIX "Path and prefix for the toolchain"
+log "Toolchain prefix: $TOOLCHAIN_PREFIX"
+
 extract_parameters "$@"
 
 if [ -z "$PARAMETERS" ] ; then
@@ -137,7 +141,7 @@ platform_check ()
         # Not listed, return an error code for 'if'
         return 1
     else
-        PLATFORM_ROOT="$OUT_DIR/platforms/android-$1/arch-$ARCH"
+        PLATFORM_ROOT="$OUT_DIR/platforms/android-$1/"
         log "Platform root: $PLATFORM_ROOT"
         return 0
     fi
@@ -154,17 +158,14 @@ case $ARCH in
         PREFIX=arm-linux-androideabi
         ;;
     x86)
-        TOOLCHAIN=x86-4.2.1
-        PREFIX=i686-android-linux-gnu
+        TOOLCHAIN=x86-4.4.x
+        PREFIX=i686-android-linux
         ;;
     *)
         echo "ERROR: Unsupported architecture: $ARCH"
         exit 1
 esac
 
-
-TOOLCHAIN_PREFIX=$ANDROID_NDK_ROOT/toolchains/$TOOLCHAIN/prebuilt/$HOST_TAG/bin/$PREFIX
-log "Toolchain prefix: $TOOLCHAIN_PREFIX"
 
 if [ -z "$OUT_DIR" ] ; then
     dump "ERROR: Could not find valid output directory (e.g. \$NDK/../development/ndk)."
@@ -446,7 +447,14 @@ if platform_check 3; then
     copy_system_shared_library libm
     copy_system_static_library libm
     copy_system_headers $ANDROID_ROOT/bionic/libm/include math.h
-    copy_arch_system_headers $ANDROID_ROOT/bionic/libm/$ARCH fenv.h
+    case "$ARCH" in
+    x86 )
+        copy_arch_system_headers $ANDROID_ROOT/bionic/libm/include/i387 fenv.h
+        ;;
+    * )
+        copy_arch_system_headers $ANDROID_ROOT/bionic/libm/$ARCH fenv.h
+        ;;
+    esac
 
     # The <dlfcn.h> header was already copied from bionic/libc/include
     copy_system_shared_library libdl
@@ -474,7 +482,7 @@ if platform_check 3; then
     # in copying the shared library (which by the way has an unstable ABI
     # anyway).
     copy_system_static_library libthread_db
-    copy_system_headers $ANDROID_ROOT/bionic/libthread_db/include thread_db.h
+    copy_system_headers $ANDROID_ROOT/bionic/libthread_db/include thread_db.h sys/procfs.h
 
     copy_system_headers $ANDROID_ROOT/dalvik/libnativehelper/include/nativehelper jni.h
 fi
