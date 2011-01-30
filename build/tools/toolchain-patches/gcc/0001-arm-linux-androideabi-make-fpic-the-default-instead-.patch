@@ -1,0 +1,36 @@
+From 8fb36c2f3114aec33c84a43eb5fd14c845f65bfc Mon Sep 17 00:00:00 2001
+From: David 'Digit' Turner <digit@android.com>
+Date: Sat, 8 Jan 2011 14:46:50 +0100
+Subject: [PATCH] arm-linux-androideabi: make -fpic the default, instead of -fPIC
+
+This patch modifies the arm-linux-androideabi configuration to use
+-fpic by default, instead of -fPIC.
+
+This should only affect users the standalone Android NDK toolchain,
+since both the Android platform and NDK build scripts will append
+the -fpic flag at compile time for all generated object files.
+
+Note that this doesn't change the arm-eabi configuration to avoid
+breaking stuff when building the kernel.
+
+Change-Id: Ib7f97a05bf1bb83778863f885628c1741896fb0a
+---
+ gcc-4.4.3/gcc/config/linux-android.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/gcc-4.4.3/gcc/config/linux-android.h b/gcc-4.4.3/gcc/config/linux-android.h
+index a43bab5..ae4b26f 100644
+--- a/gcc-4.4.3/gcc/config/linux-android.h
++++ b/gcc-4.4.3/gcc/config/linux-android.h
+@@ -37,7 +37,7 @@
+ 
+ #define ANDROID_CC1_SPEC						\
+   "%{!mglibc:%{!muclibc:%{!mbionic: -mbionic}}} "			\
+-  "%{!fno-pic:%{!fno-PIC:%{!fpic:%{!fPIC: -fPIC}}}}"
++  "%{!fno-pic:%{!fno-PIC:%{!fpic:%{!fPIC: -fpic}}}}"
+ 
+ #define ANDROID_CC1PLUS_SPEC						\
+   "%{!fexceptions:%{!fno-exceptions: -fno-exceptions}} "		\
+-- 
+1.7.3.1
+
