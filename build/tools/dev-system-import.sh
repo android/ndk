@@ -447,7 +447,14 @@ if platform_check 3; then
     copy_system_shared_library libm
     copy_system_static_library libm
     copy_system_headers $ANDROID_ROOT/bionic/libm/include math.h
-    copy_arch_system_headers $ANDROID_ROOT/bionic/libm/$ARCH fenv.h
+    case "$ARCH" in
+    x86 )
+        copy_arch_system_headers $ANDROID_ROOT/bionic/libm/include/i387 fenv.h
+        ;;
+    * )
+        copy_arch_system_headers $ANDROID_ROOT/bionic/libm/$ARCH fenv.h
+        ;;
+    esac
 
     # The <dlfcn.h> header was already copied from bionic/libc/include
     copy_system_shared_library libdl
@@ -475,7 +482,7 @@ if platform_check 3; then
     # in copying the shared library (which by the way has an unstable ABI
     # anyway).
     copy_system_static_library libthread_db
-    copy_system_headers $ANDROID_ROOT/bionic/libthread_db/include thread_db.h
+    copy_system_headers $ANDROID_ROOT/bionic/libthread_db/include thread_db.h sys/procfs.h
 
     copy_system_headers $ANDROID_ROOT/dalvik/libnativehelper/include/nativehelper jni.h
 fi
