@@ -105,6 +105,10 @@ else
 fi
 register_var_option "--out-dir=<path>" OUT_DIR "Specify output directory."
 
+TOOLCHAIN_PREFIX=$ANDROID_NDK_ROOT/toolchains/$TOOLCHAIN/prebuilt/$HOST_TAG/bin/$PREFIX
+register_var_option "--toolchain-prefix=<path>" TOOLCHAIN_PREFIX "Path and prefix for the toolchain"
+log "Toolchain prefix: $TOOLCHAIN_PREFIX"
+
 extract_parameters "$@"
 
 if [ -z "$PARAMETERS" ] ; then
@@ -162,9 +166,6 @@ case $ARCH in
         exit 1
 esac
 
-
-TOOLCHAIN_PREFIX=$ANDROID_NDK_ROOT/toolchains/$TOOLCHAIN/prebuilt/$HOST_TAG/bin/$PREFIX
-log "Toolchain prefix: $TOOLCHAIN_PREFIX"
 
 if [ -z "$OUT_DIR" ] ; then
     dump "ERROR: Could not find valid output directory (e.g. \$NDK/../development/ndk)."
