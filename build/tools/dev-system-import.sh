@@ -158,8 +158,8 @@ case $ARCH in
         PREFIX=arm-linux-androideabi
         ;;
     x86)
-        TOOLCHAIN=x86-4.2.1
-        PREFIX=i686-android-linux-gnu
+        TOOLCHAIN=x86-4.4.x
+        PREFIX=i686-android-linux
         ;;
     *)
         echo "ERROR: Unsupported architecture: $ARCH"
