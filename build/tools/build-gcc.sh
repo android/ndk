@@ -152,6 +152,7 @@ TOOLCHAIN_LICENSES=$ANDROID_NDK_ROOT/build/tools/toolchain-licenses
 # Copy the sysroot to the installation prefix. This prevents the generated
 # binaries from containing hard-coding host paths
 TOOLCHAIN_SYSROOT=$TOOLCHAIN_PATH/sysroot
+TMPLOG=$OPTION_BUILD_OUT/config.log
 dump "Sysroot  : Copying: $SYSROOT --> $TOOLCHAIN_SYSROOT"
 mkdir -p $TOOLCHAIN_SYSROOT && (cd $SYSROOT && tar ch *) | (cd $TOOLCHAIN_SYSROOT && tar x)
 if [ $? != 0 ] ; then
