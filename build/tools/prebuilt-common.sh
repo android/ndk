@@ -616,7 +616,7 @@ parse_toolchain_name ()
 
     log "Targetting CPU: $ARCH"
 
-    GCC_VERSION=`expr -- "$TOOLCHAIN" : '.*-\([0-9\.]*\)'`
+    GCC_VERSION=`expr -- "$TOOLCHAIN" : '.*-\([0-9x\.]*\)'`
     log "Using GCC version: $GCC_VERSION"
 
     # Determine --host value when building gdbserver
