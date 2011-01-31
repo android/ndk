@@ -173,6 +173,7 @@ export CFLAGS="-Wno-error"
 #export LDFLAGS="$HOST_LDFLAGS"
 mkdir -p $BUILD_OUT && cd $BUILD_OUT && run \
 $BUILD_SRCDIR/configure --target=$ABI_CONFIGURE_TARGET \
+                        --enable-initfini-array \
                         --host=$ABI_CONFIGURE_HOST \
                         --build=$ABI_CONFIGURE_BUILD \
                         --disable-nls \
