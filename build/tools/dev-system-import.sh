@@ -141,7 +141,7 @@ platform_check ()
         # Not listed, return an error code for 'if'
         return 1
     else
-        PLATFORM_ROOT="$OUT_DIR/platforms/android-$1/arch-$ARCH"
+        PLATFORM_ROOT="$OUT_DIR/platforms/android-$1/"
         log "Platform root: $PLATFORM_ROOT"
         return 0
     fi
