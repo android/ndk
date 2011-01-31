@@ -40,6 +40,9 @@ register_var_option "--binutils-version=<version>" BINUTILS_VERSION "Specify bin
 MPFR_VERSION=2.3.0
 register_var_option "--mpfr-version=<version>" MPFR_VERSION "Specify mpfr version"
 
+ARCH=arm
+register_var_option "--arch=<arch>" ARCH "Specify architecture"
+
 OPTION_SYSROOT=
 register_var_option "--sysroot=<dir>" OPTION_SYSROOT "Specify sysroot"
 
@@ -52,9 +55,6 @@ register_var_option "--toolchain-src-dir=<path>" OPTION_TOOLCHAIN_SRC_DIR "Use t
 RELEASE=`date +%Y%m%d`
 PACKAGE_DIR=/tmp/ndk-prebuilt/prebuilt-$RELEASE
 register_var_option "--package-dir=<path>" PACKAGE_DIR "Put prebuilt tarballs into <path>."
-
-OPTION_TRY_X86=no
-register_var_option "--try-x86" OPTION_TRY_X86 "Build experimental x86 toolchain too."
 
 OPTION_GIT_HTTP=no
 register_var_option "--git-http" OPTION_GIT_HTTP "Download sources with http."
@@ -240,32 +240,51 @@ build_gdbserver ()
     package_it "$1 gdbserver" "$1-gdbserver" "toolchains/$1/prebuilt/gdbserver"
 }
 
-build_toolchain arm-eabi-4.4.0
-build_gdbserver arm-eabi-4.4.0
+case "$ARCH" in
+arm )
+    build_toolchain arm-eabi-4.4.0
+    build_gdbserver arm-eabi-4.4.0
 
-build_toolchain arm-linux-androideabi-4.4.3 --copy-libstdcxx
-build_gdbserver arm-linux-androideabi-4.4.3
+    build_toolchain arm-linux-androideabi-4.4.3 --copy-libstdcxx
+    build_gdbserver arm-linux-androideabi-4.4.3
+    ;;
+x86 )
+    build_toolchain x86-4.2.1
+    build_gdbserver x86-4.2.1
+
+    build_toolchain x86-4.4.x --copy-libstdcxx
+    build_gdbserver x86-4.4.x
+    ;;
+esac
 
 # We need to package the libsupc++ binaries on Linux since the GCC build
 # scripts cannot build them with --mingw option.
 if [ "$HOST_OS" = "linux" ] ; then
-    LIBSUPC_DIR="toolchains/arm-linux-androideabi-4.4.3/prebuilt/$HOST_TAG/arm-linux-androideabi/lib"
-    package_it "GNU libsupc++ armeabi libs" "gnu-libsupc++-armeabi" "$LIBSUPC_DIR/libsupc++.a $LIBSUPC_DIR/thumb/libsupc++.a"
-    package_it "GNU libsupc++ armeabi-v7a libs" "gnu-libsupc++-armeabi-v7a" "$LIBSUPC_DIR/armv7-a/libsupc++.a $LIBSUPC_DIR/armv7-a/thumb/libsupc++.a"
+    case "$ARCH" in
+    arm )
+        LIBSUPC_DIR="toolchains/arm-linux-androideabi-4.4.3/prebuilt/$HOST_TAG/arm-linux-androideabi/lib"
+        package_it "GNU libsupc++ armeabi libs" "gnu-libsupc++-armeabi" "$LIBSUPC_DIR/libsupc++.a $LIBSUPC_DIR/thumb/libsupc++.a"
+        package_it "GNU libsupc++ armeabi-v7a libs" "gnu-libsupc++-armeabi-v7a" "$LIBSUPC_DIR/armv7-a/libsupc++.a $LIBSUPC_DIR/armv7-a/thumb/libsupc++.a"
+        ;;
+    x86 )
+        LIBSUPC_DIR="toolchains/x86-4.4.x/prebuilt/$HOST_TAG/i686-android-linux/lib"
+        package_it "GNU libsupc++ x86 libs" "gnu-libsupc++-x86" "$LIBSUPC_DIR/libsupc++.a"
+        ;;
+    esac
 fi
 
 if [ "$MINGW" != "yes" ] ; then
     package_it "GNU libstdc++ headers" "gnu-libstdc++-headers" "sources/cxx-stl/gnu-libstdc++/include"
-    package_it "GNU libstdc++ armeabi libs" "gnu-libstdc++-libs-armeabi" "sources/cxx-stl/gnu-libstdc++/libs/armeabi"
-    package_it "GNU libstdc++ armeabi-v7a libs" "gnu-libstdc++-libs-armeabi-v7a" "sources/cxx-stl/gnu-libstdc++/libs/armeabi-v7a"
-    if [ "$OPTION_TRY_X86" = "yes" ] ; then
-        package_it "GNU libstdc++ x86 libs" "gnu-libstdc++-libs-x86" "sources/cxx-stl/gnu-libstdc++/libs/x86"
-    fi
-fi
 
-if [ "$OPTION_TRY_X86" = "yes" ] ; then
-    build_toolchain x86-4.2.1
-    build_gdbserver x86-4.2.1
+    case "$ARCH" in
+    arm )
+        package_it "GNU libstdc++ armeabi libs" "gnu-libstdc++-libs-armeabi" "sources/cxx-stl/gnu-libstdc++/libs/armeabi"
+        package_it "GNU libstdc++ armeabi-v7a libs" "gnu-libstdc++-libs-armeabi-v7a" "sources/cxx-stl/gnu-libstdc++/libs/armeabi-v7a"
+        ;;
+    x86 )
+        package_it "GNU libstdc++ x86 libs" "gnu-libstdc++-libs-x86" "sources/cxx-stl/gnu-libstdc++/libs/x86"
+        ;;
+    esac
 fi
 
 # Rebuild prebuilt libraries
@@ -275,15 +294,18 @@ if [ "$MINGW" != "yes" ] ; then
         TOOLCHAIN_FLAGS=
     else
         BUILD_STLPORT_FLAGS="--package-dir=\"$PACKAGE_DIR\""
-        TOOLCHAIN_FLAGS="--toolchain-pkg=\"$PACKAGE_DIR/arm-linux-androideabi-4.4.3-$HOST_TAG.tar.bz2\""
+        TOOLCHAIN_FLAGS_ARM="--toolchain-pkg=\"$PACKAGE_DIR/arm-linux-androideabi-4.4.3-$HOST_TAG.tar.bz2\""
+        TOOLCHAIN_FLAGS_X86="--toolchain-pkg=\"$PACKAGE_DIR/x86-4.4.x-$HOST_TAG.tar.bz2\""
     fi
-    $ANDROID_NDK_ROOT/build/tools/build-stlport.sh $BUILD_STLPORT_FLAGS $TOOLCHAIN_FLAGS
-    if [ "$OPTION_TRY_X86" = "yes" ]; then
-        if [ -n "$PACKAGE_DIR" ] ; then
-            TOOLCHAIN_FLAGS="--toolchain-pkg=\"$PACKAGE_DIR/x86-4.2.1-$HOST_TAG.tar.bz2\""
-        fi
-        $ANDROID_NDK_ROOT/build/tools/build-stlport.sh $BUILD_STLPORT_FLAGS--abis=x86 $TOOLCHAIN_FLAGS
-    fi
+
+    case "$ARCH" in
+    arm )
+        $ANDROID_NDK_ROOT/build/tools/build-stlport.sh $BUILD_STLPORT_FLAGS $TOOLCHAIN_FLAGS_ARM
+        ;;
+    x86 )
+        $ANDROID_NDK_ROOT/build/tools/build-stlport.sh $BUILD_STLPORT_FLAGS --abis=x86 $TOOLCHAIN_FLAGS_X86
+        ;;
+    esac
 else
     dump "Skipping STLport binaries build (--mingw option being used)"
 fi
