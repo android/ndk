@@ -49,6 +49,10 @@ register_var_option "--prebuilt-ndk=<file>" PREBUILT_NDK "Specify prebuilt ndk p
 SYSTEMS="linux-x86 darwin-x86 windows"
 register_var_option "--systems=<list>" SYSTEMS "Specify host systems"
 
+# ABI to build for
+ABI="arm"
+register_var_option "--abi=<abi>" ABI "Specify target ABI"
+
 # set to 'yes' if we should use 'git ls-files' to list the files to
 # be copied into the archive.
 NO_GIT=no
@@ -205,9 +209,9 @@ if [ "$VERBOSE2" = "yes" ] ; then
 fi
 PLATFORM_FLAGS=
 if [ -n "$PLATFORMS" ] ; then
-    $NDK_ROOT_DIR/build/tools/build-platforms.sh $FLAGS --platform="$PLATFORMS"
+    $NDK_ROOT_DIR/build/tools/build-platforms.sh $FLAGS --platform="$PLATFORMS" --abi=$ABI
 else
-    $NDK_ROOT_DIR/build/tools/build-platforms.sh $FLAGS $PLATFORM_FLAGS
+    $NDK_ROOT_DIR/build/tools/build-platforms.sh $FLAGS $PLATFORM_FLAGS --abi=$ABI
 fi
 fail_panic "Could not copy platform files. Aborting."
 
