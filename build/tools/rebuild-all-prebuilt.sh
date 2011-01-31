@@ -34,6 +34,15 @@ register_var_option "--build-dir=<path>" BUILD_DIR "Specify temporary build dire
 GDB_VERSION=6.6
 register_var_option "--gdb-version=<version>" GDB_VERSION "Specify gdb version"
 
+BINUTILS_VERSION=2.19
+register_var_option "--binutils-version=<version>" BINUTILS_VERSION "Specify binutils version"
+
+MPFR_VERSION=2.3.0
+register_var_option "--mpfr-version=<version>" MPFR_VERSION "Specify mpfr version"
+
+OPTION_SYSROOT=
+register_var_option "--sysroot=<dir>" OPTION_SYSROOT "Specify sysroot"
+
 OPTION_TOOLCHAIN_SRC_PKG=
 register_var_option "--toolchain-src-pkg=<file>" OPTION_TOOLCHAIN_SRC_PKG "Use toolchain source package."
 
@@ -214,7 +223,7 @@ package_it ()
 build_toolchain ()
 {
     dump "Building $1 toolchain... (this can be long)"
-    run $PROGDIR/build-gcc.sh $FLAGS $2 --build-out=$BUILD_DIR/toolchain-$1 $SRC_DIR $NDK_DIR $1
+    run $PROGDIR/build-gcc.sh $FLAGS $2 --sysroot=$OPTION_SYSROOT --mpfr-version=$MPFR_VERSION --binutils-version=$BINUTILS_VERSION --build-out=$BUILD_DIR/toolchain-$1 $SRC_DIR $NDK_DIR $1
     fail_panic "Could bot build $1 toolchain!"
     package_it "$1 toolchain" "$1-$HOST_TAG" "toolchains/$1/prebuilt/$HOST_TAG"
 }
@@ -226,7 +235,7 @@ build_gdbserver ()
         return
     fi
     dump "Build $1 gdbserver..."
-    $PROGDIR/build-gdbserver.sh $FLAGS --build-out=$BUILD_DIR/gdbserver-$1 --gdb-version=$GDB_VERSION $SRC_DIR $NDK_DIR $1
+    $PROGDIR/build-gdbserver.sh $FLAGS --sysroot=$OPTION_SYSROOT --build-out=$BUILD_DIR/gdbserver-$1 --gdb-version=$GDB_VERSION $SRC_DIR $NDK_DIR $1
     fail_panic "Could not build $1 gdbserver!"
     package_it "$1 gdbserver" "$1-gdbserver" "toolchains/$1/prebuilt/gdbserver"
 }
