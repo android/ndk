@@ -604,8 +604,7 @@ parse_toolchain_name ()
     x86-*)
         ARCH="x86"
         ABI_INSTALL_NAME="x86"
-        ABI_CONFIGURE_TARGET="i686-android-linux-gnu"
-        PLATFORM=android-5
+        ABI_CONFIGURE_TARGET="i686-android-linux"
         ;;
     * )
         echo "Invalid toolchain specified. Expected (arm-eabi-*|x86-*)"
@@ -617,7 +616,7 @@ parse_toolchain_name ()
 
     log "Targetting CPU: $ARCH"
 
-    GCC_VERSION=`expr -- "$TOOLCHAIN" : '.*-\([0-9\.]*\)'`
+    GCC_VERSION=`expr -- "$TOOLCHAIN" : '.*-\([0-9x\.]*\)'`
     log "Using GCC version: $GCC_VERSION"
 
     # Determine --host value when building gdbserver

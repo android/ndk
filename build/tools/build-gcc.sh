@@ -48,6 +48,9 @@ register_var_option "--gdb-version=<version>"  GDB_VERSION "Specify gdb version"
 BINUTILS_VERSION=2.19
 register_var_option "--binutils-version=<version>" BINUTILS_VERSION "Specify binutils version"
 
+MPFR_VERSION=2.3.0
+register_var_option "--mpfr-version=<version>" MPFR_VERSION "Specify mpfr version"
+
 JOBS=$BUILD_NUM_CPUS
 register_var_option "-j<number>" JOBS "Use <number> parallel build jobs"
 
@@ -131,6 +134,13 @@ if [ ! -d $SRC_DIR/binutils/binutils-$BINUTILS_VERSION ] ; then
     exit 1
 fi
 
+fix_option MPFR_VERSION "$OPTION_MPFR_VERSION" "mpfr version"
+if [ ! -f $SRC_DIR/mpfr/mpfr-$MPFR_VERSION.tar.bz2 ] ; then
+    echo "ERROR: Missing mpfr sources: $SRC_DIR/mpfr/mpfr-$MPFR_VERSION.tar.bz2"
+    echo "       Use --mpfr-version=<version> to specify alternative."
+    exit 1
+fi
+
 set_toolchain_ndk $NDK_DIR
 
 dump "Using C compiler: $CC"
@@ -142,6 +152,7 @@ TOOLCHAIN_LICENSES=$ANDROID_NDK_ROOT/build/tools/toolchain-licenses
 # Copy the sysroot to the installation prefix. This prevents the generated
 # binaries from containing hard-coding host paths
 TOOLCHAIN_SYSROOT=$TOOLCHAIN_PATH/sysroot
+TMPLOG=$OPTION_BUILD_OUT/config.log
 dump "Sysroot  : Copying: $SYSROOT --> $TOOLCHAIN_SYSROOT"
 mkdir -p $TOOLCHAIN_SYSROOT && (cd $SYSROOT && tar ch *) | (cd $TOOLCHAIN_SYSROOT && tar x)
 if [ $? != 0 ] ; then
@@ -173,12 +184,14 @@ export CFLAGS="-Wno-error"
 #export LDFLAGS="$HOST_LDFLAGS"
 mkdir -p $BUILD_OUT && cd $BUILD_OUT && run \
 $BUILD_SRCDIR/configure --target=$ABI_CONFIGURE_TARGET \
+                        --enable-initfini-array \
                         --host=$ABI_CONFIGURE_HOST \
                         --build=$ABI_CONFIGURE_BUILD \
                         --disable-nls \
                         --prefix=$TOOLCHAIN_PATH \
                         --with-sysroot=$TOOLCHAIN_SYSROOT \
                         --with-binutils-version=$BINUTILS_VERSION \
+                        --with-mpfr-version=$MPFR_VERSION \
                         --with-gcc-version=$GCC_VERSION \
                         --with-gdb-version=$GDB_VERSION \
                         $ABI_CONFIGURE_EXTRA_FLAGS
