@@ -604,8 +604,7 @@ parse_toolchain_name ()
     x86-*)
         ARCH="x86"
         ABI_INSTALL_NAME="x86"
-        ABI_CONFIGURE_TARGET="i686-android-linux-gnu"
-        PLATFORM=android-5
+        ABI_CONFIGURE_TARGET="i686-android-linux"
         ;;
     * )
         echo "Invalid toolchain specified. Expected (arm-eabi-*|x86-*)"
