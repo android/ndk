@@ -123,7 +123,7 @@ $(TARGET_CXX) \
     -shared \
     --sysroot=$(call host-path,$(SYSROOT)) \
     $(call host-path, $(PRIVATE_OBJECTS)) \
-    $(call whole-archive-list-flags,$(PRIVATE_WHOLE_STATIC_LIBRARIES)) \
+    $(call link-whole-archives,$(PRIVATE_WHOLE_STATIC_LIBRARIES)) \
     $(call host-path,\
         $(PRIVATE_STATIC_LIBRARIES) \
         $(PRIVATE_SHARED_LIBRARIES)) \
@@ -139,7 +139,7 @@ $(TARGET_CXX) \
     -Wl,-z,nocopyreloc \
     --sysroot=$(call host-path,$(SYSROOT)) \
     $(call host-path, $(PRIVATE_OBJECTS)) \
-    $(call whole-archive-list-flags,$(PRIVATE_WHOLE_STATIC_LIBRARIES)) \
+    $(call link-whole-archives,$(PRIVATE_WHOLE_STATIC_LIBRARIES)) \
     $(call host-path,\
         $(PRIVATE_STATIC_LIBRARIES) \
         $(PRIVATE_SHARED_LIBRARIES)) \
