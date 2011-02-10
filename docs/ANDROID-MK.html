@@ -499,6 +499,17 @@ LOCAL_SHARED_LIBRARIES
     This is necessary at link time and to embed the corresponding information
     in the generated file.
 
+LOCAL_WHOLE_STATIC_LIBRARIES
+    A variant of LOCAL_STATIC_LIBRARIES used to express that the corresponding
+    library module should be used as "whole archives" to the linker. See the
+    GNU linker's documentation for the --whole-archive flag.
+
+    This is generally useful when there are circular dependencies between
+    several static libraries. Note that when used to build a shared library,
+    this will force all object files from your whole static libraries to be
+    added to the final binary. This is not true when generating executables
+    though.
+
 LOCAL_LDLIBS
     The list of additional linker flags to be used when building your
     module. This is useful to pass the name of specific system libraries
