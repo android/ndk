@@ -158,7 +158,7 @@ code.
 If you use them, your native module should link to /system/lib/libGLESv1_CM.so
 as in:
 
-  LOCAL_LDLIBS := -lGLESv1_CM.so
+  LOCAL_LDLIBS := -lGLESv1_CM
 
 
 The '1.x' here refers to both versions 1.0 and 1.1 of the OpenGL ES APIs.
@@ -216,7 +216,7 @@ GLSL language.
 If you use them, your native module should link to /system/lib/libGLESv2.so
 as in:
 
-  LOCAL_LDLIBS := -lGLESv2.so
+  LOCAL_LDLIBS := -lGLESv2
 
 Not all devices support OpenGL ES 2.0, developers should thus query the
 implementation's version and extension strings, and put a &lt;uses-feature&gt;
