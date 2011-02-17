@@ -158,7 +158,7 @@ case $ARCH in
         PREFIX=arm-linux-androideabi
         ;;
     x86)
-        TOOLCHAIN=x86-4.4.x
+        TOOLCHAIN=x86-4.4.3
         PREFIX=i686-android-linux
         ;;
     *)

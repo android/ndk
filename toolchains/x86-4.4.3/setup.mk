@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 
-# this file is used to prepare the NDK to build with the x86-4.4.x
+# this file is used to prepare the NDK to build with the x86-4.4.3
 # toolchain any number of source files
 #
 # its purpose is to define (or re-define) templates used to build
@@ -23,7 +23,7 @@
 # revisions of the NDK.
 #
 
-TOOLCHAIN_NAME   := x86-4.4.x
+TOOLCHAIN_NAME   := x86-4.4.3
 TOOLCHAIN_PREFIX := $(TOOLCHAIN_PREBUILT_ROOT)/bin/i686-android-linux-
 
 TARGET_CFLAGS.common := \
