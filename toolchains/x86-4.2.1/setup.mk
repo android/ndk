@@ -26,7 +26,7 @@
 TOOLCHAIN_PREFIX := $(TOOLCHAIN_PREBUILT_ROOT)/bin/i686-android-linux-gnu-
 
 TARGET_CFLAGS := \
-    -msoft-float -fpic \
+    -fpic \
     -ffunction-sections \
     -funwind-tables \
     -fstack-protector \
