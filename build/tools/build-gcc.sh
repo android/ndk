@@ -65,7 +65,8 @@ register_try64_option
 
 extract_parameters "$@"
 
-setup_default_log_file
+fix_option BUILD_OUT "$OPTION_BUILD_OUT" "build directory"
+setup_default_log_file $BUILD_OUT/config.log
 
 set_parameters ()
 {
@@ -118,7 +119,6 @@ prepare_host_flags
 
 parse_toolchain_name
 
-fix_option BUILD_OUT "$OPTION_BUILD_OUT" "build directory"
 fix_sysroot "$OPTION_SYSROOT"
 
 if [ ! -d $SRC_DIR/gdb/gdb-$GDB_VERSION ] ; then
@@ -152,7 +152,6 @@ TOOLCHAIN_LICENSES=$ANDROID_NDK_ROOT/build/tools/toolchain-licenses
 # Copy the sysroot to the installation prefix. This prevents the generated
 # binaries from containing hard-coding host paths
 TOOLCHAIN_SYSROOT=$TOOLCHAIN_PATH/sysroot
-TMPLOG=$OPTION_BUILD_OUT/config.log
 dump "Sysroot  : Copying: $SYSROOT --> $TOOLCHAIN_SYSROOT"
 mkdir -p $TOOLCHAIN_SYSROOT && (cd $SYSROOT && tar ch *) | (cd $TOOLCHAIN_SYSROOT && tar x)
 if [ $? != 0 ] ; then
