@@ -944,7 +944,6 @@ LOCAL_DEPENDENCY_DIRS += $$(dir $$(_OBJ))
 ifndef LOCAL_FILTER_ASM
   # Trivial case: Directly generate an object file
   $$(eval $$(call ev-build-file))
-  LOCAL_OBJECTS += $$(_OBJ)
 else
   # This is where things get hairy, we first transform
   # the source into an assembler file, send it to the
@@ -1008,8 +1007,6 @@ else
   _FLAGS := $$(filter -Wa%,$$(_ORG_FLAGS)) -c
   _TEXT  := "Assembly     "
   $$(eval $$(call ev-build-file))
-
-  LOCAL_OBJECTS += $$(_ORG_OBJ)
 endif
 endef
 

@@ -14,6 +14,10 @@ IMPORTANT BUG FIXES:
 
 OTHER FIXES &amp; CHANGES:
 
+- Object files are now always linked in the order they appear in
+  LOCAL_SRC_FILES. This was not the case previously because the files
+  were grouped by source extensions instead.
+
 - download-toolchain-sources.sh: Fixed a silly bug that prevented the
   --git-date option to work properly when downloading the master branch.
 
