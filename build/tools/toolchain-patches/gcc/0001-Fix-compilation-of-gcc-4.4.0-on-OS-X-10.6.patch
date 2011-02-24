@@ -1,0 +1,35 @@
+From d2ab68887a158721770985b4abbab12f9a1f9d7e Mon Sep 17 00:00:00 2001
+From: Martin Storsjo <martin@martin.st>
+Date: Thu, 24 Feb 2011 11:17:45 +0200
+Subject: [PATCH] Fix compilation of gcc-4.4.0 on OS X 10.6
+
+This backports the fix for
+http://gcc.gnu.org/bugzilla/show_bug.cgi?id=41180, that avoids
+linking redundant code. The root cause is that Xcode 3.2's linker
+doesn't properly ignore duplicate symbols from static libraries
+(radar 6320843). The same fix is already present in upstream gcc
+since gcc 4.4.2.
+
+Change-Id: Ia5bebe91fde522bb5af95a01ecb9d47a6b7ee87c
+---
+ gcc-4.4.0/gcc/cp/Make-lang.in |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/gcc-4.4.0/gcc/cp/Make-lang.in b/gcc-4.4.0/gcc/cp/Make-lang.in
+index 55e3df4..cd9900d 100644
+--- a/gcc-4.4.0/gcc/cp/Make-lang.in
++++ b/gcc-4.4.0/gcc/cp/Make-lang.in
+@@ -73,8 +73,8 @@ g++-cross$(exeext): g++$(exeext)
+ # Shared with C front end:
+ CXX_C_OBJS = attribs.o c-common.o c-format.o c-pragma.o c-semantics.o c-lex.o \
+ 	c-dump.o $(CXX_TARGET_OBJS) c-pretty-print.o c-opts.o c-pch.o \
+-	incpath.o cppdefault.o c-ppoutput.o c-cppbuiltin.o prefix.o \
+-	c-gimplify.o c-omp.o tree-inline.o
++	incpath.o c-ppoutput.o c-cppbuiltin.o prefix.o \
++	c-gimplify.o c-omp.o
+ 
+ # Language-specific object files for C++ and Objective C++.
+ CXX_AND_OBJCXX_OBJS = cp/call.o cp/decl.o cp/expr.o cp/pt.o cp/typeck2.o \
+-- 
+1.7.3.1
+
