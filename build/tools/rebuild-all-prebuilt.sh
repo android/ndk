@@ -224,7 +224,7 @@ build_toolchain ()
 {
     dump "Building $1 toolchain... (this can be long)"
     run $PROGDIR/build-gcc.sh $FLAGS $2 --sysroot=$OPTION_SYSROOT --mpfr-version=$MPFR_VERSION --binutils-version=$BINUTILS_VERSION --build-out=$BUILD_DIR/toolchain-$1 $SRC_DIR $NDK_DIR $1
-    fail_panic "Could bot build $1 toolchain!"
+    fail_panic "Could not build $1 toolchain!"
     package_it "$1 toolchain" "$1-$HOST_TAG" "toolchains/$1/prebuilt/$HOST_TAG"
 }
 
@@ -252,8 +252,8 @@ x86 )
     build_toolchain x86-4.2.1
     build_gdbserver x86-4.2.1
 
-    build_toolchain x86-4.4.x --copy-libstdcxx
-    build_gdbserver x86-4.4.x
+    build_toolchain x86-4.4.3 --copy-libstdcxx
+    build_gdbserver x86-4.4.3
     ;;
 esac
 
@@ -267,7 +267,7 @@ if [ "$HOST_OS" = "linux" ] ; then
         package_it "GNU libsupc++ armeabi-v7a libs" "gnu-libsupc++-armeabi-v7a" "$LIBSUPC_DIR/armv7-a/libsupc++.a $LIBSUPC_DIR/armv7-a/thumb/libsupc++.a"
         ;;
     x86 )
-        LIBSUPC_DIR="toolchains/x86-4.4.x/prebuilt/$HOST_TAG/i686-android-linux/lib"
+        LIBSUPC_DIR="toolchains/x86-4.4.3/prebuilt/$HOST_TAG/i686-android-linux/lib"
         package_it "GNU libsupc++ x86 libs" "gnu-libsupc++-x86" "$LIBSUPC_DIR/libsupc++.a"
         ;;
     esac
@@ -295,7 +295,7 @@ if [ "$MINGW" != "yes" ] ; then
     else
         BUILD_STLPORT_FLAGS="--package-dir=\"$PACKAGE_DIR\""
         TOOLCHAIN_FLAGS_ARM="--toolchain-pkg=\"$PACKAGE_DIR/arm-linux-androideabi-4.4.3-$HOST_TAG.tar.bz2\""
-        TOOLCHAIN_FLAGS_X86="--toolchain-pkg=\"$PACKAGE_DIR/x86-4.4.x-$HOST_TAG.tar.bz2\""
+        TOOLCHAIN_FLAGS_X86="--toolchain-pkg=\"$PACKAGE_DIR/x86-4.4.3-$HOST_TAG.tar.bz2\""
     fi
 
     case "$ARCH" in

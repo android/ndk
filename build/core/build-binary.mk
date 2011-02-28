@@ -170,7 +170,7 @@ LOCAL_SRC_FILES := $(LOCAL_SRC_FILES:%.neon=%)
 arm_sources     := $(filter %.arm,$(LOCAL_SRC_FILES))
 arm_sources     := $(arm_sources:%.arm=%)
 thumb_sources   := $(filter-out %.arm,$(LOCAL_SRC_FILES))
-LOCAL_SRC_FILES := $(arm_sources) $(thumb_sources)
+LOCAL_SRC_FILES := $(LOCAL_SRC_FILES:%.arm=%)
 
 ifeq ($(LOCAL_ARM_MODE),arm)
     arm_sources := $(LOCAL_SRC_FILES)
@@ -189,7 +189,27 @@ $(call TARGET-process-src-files-tags)
 #$(dump-src-file-tags)
 
 LOCAL_DEPENDENCY_DIRS :=
-LOCAL_OBJECTS :=
+
+# all_source_patterns contains the list of filename patterns that correspond
+# to source files recognized by our build system
+all_source_extensions := .c .s .S $(LOCAL_CPP_EXTENSION)
+all_source_patterns   := $(foreach _ext,$(all_source_extensions),%$(_ext))
+
+unknown_sources := $(strip $(filter-out $(all_source_patterns),$(LOCAL_SRC_FILES)))
+ifdef unknown_sources
+    $(call __ndk_info,WARNING: Unsupported source file extensions in $(LOCAL_MAKEFILE) for module $(LOCAL_MODULE))
+    $(call __ndk_info,  $(unknown_sources))
+endif
+
+# LOCAL_OBJECTS will list all object files corresponding to the sources
+# listed in LOCAL_SRC_FILES, in the *same* order.
+#
+LOCAL_OBJECTS := $(LOCAL_SRC_FILES)
+$(foreach _ext,$(all_source_extensions),\
+    $(eval LOCAL_OBJECTS := $$(LOCAL_OBJECTS:%$(_ext)=%.o))\
+)
+LOCAL_OBJECTS := $(filter %.o,$(LOCAL_OBJECTS))
+LOCAL_OBJECTS := $(foreach _obj,$(LOCAL_OBJECTS),$(LOCAL_OBJS_DIR)/$(_obj))
 
 # Build the sources to object files
 #
@@ -199,12 +219,6 @@ $(foreach src,$(filter %.S %.s,$(LOCAL_SRC_FILES)), $(call compile-s-source,$(sr
 
 $(foreach src,$(filter %$(LOCAL_CPP_EXTENSION),$(LOCAL_SRC_FILES)),\
     $(call compile-cpp-source,$(src)))
-
-unknown_sources := $(strip $(filter-out %.c %.S %.s %$(LOCAL_CPP_EXTENSION),$(LOCAL_SRC_FILES)))
-ifdef unknown_sources
-    $(call __ndk_info,WARNING: Unsupported source file extensions in $(LOCAL_MAKEFILE) for module $(LOCAL_MODULE))
-    $(call __ndk_info,  $(unknown_sources))
-endif
 
 #
 # The compile-xxx-source calls updated LOCAL_OBJECTS and LOCAL_DEPENDENCY_DIRS
