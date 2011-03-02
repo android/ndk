@@ -21,6 +21,16 @@ OTHER FIXES &amp; CHANGES:
 - download-toolchain-sources.sh: Fixed a silly bug that prevented the
   --git-date option to work properly when downloading the master branch.
 
+- Fix an issue where a module could import itself, resulting in an infinite
+  loop in GNU Make.
+
+- When import-module fails, it now prints the list of directories
+  that were searched. This is useful to check that the NDK_MODULE_PATH
+  definition used by the build system is correct.
+
+- When import-module succeeds, it now prints the directory where the module
+  was found to the log (visible with NDK_LOG=1).
+
 -------------------------------------------------------------------------------
 android-ndk-r5b
 

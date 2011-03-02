@@ -1152,6 +1152,20 @@ import-find-module = $(strip \
 # described in docs/IMPORT-MODULE.TXT
 # $1: tag name for the lookup
 #
+# Small technical note on __ndk_import_depth: we use this variable to
+# record the depth of recursive import-module calls. The variable is
+# initially empty, and we append a "x" to it each time import-module is
+# called. I.e. for three recursive calls to import-module, we would get
+# the values:
+#
+#   first call:   x
+#   second call:  xx
+#   third call:   xxx
+#
+# This is used in module-add to add the top-level modules (i.e. those
+# that are not added with import-module) to __ndk_top_modules, corresponding
+# to the default list of wanted modules (see setup-toolchain.mk).
+#
 import-module = \
     $(eval __import_tag := $(strip $1))\
     $(if $(call seq,$(words $(__import_tag)),1),,\
@@ -1163,16 +1177,21 @@ import-module = \
       $(call ndk_log,Looking for imported module with tag '$(__import_tag)')\
       $(eval __imported_path := $(call import-find-module,$(__import_tag)))\
       $(if $(__imported_path),\
-        $(eval __ndk_import_depth += x) \
+        $(call ndk_log,    Found in $(__imported_path))\
+        $(eval __ndk_import_depth := $(__ndk_import_depth)x) \
+        $(eval __ndk_import_list := $(call set_insert,$(__ndk_import_list),$(__import_tag)))\
         $(eval include $(__imported_path)/Android.mk)\
-        $(eval __ndk_import_depth := $(call rest,$(__ndk_import_depth)))\
+        $(eval __ndk_import_depth := $(__ndk_import_depth:%x=%))\
       ,\
         $(call __ndk_info,$(call local-makefile): Cannot find module with tag '$(__import_tag)' in import path)\
         $(call __ndk_info,Are you sure your NDK_MODULE_PATH variable is properly defined ?)\
+        $(call __ndk_info,The following directories were searched:)\
+        $(for __import_dir,$(__ndk_import_dirs),\
+          $(call __ndk_info,    $(__import_dir))\
+        )\
         $(call __ndk_error,Aborting.)\
       )\
-      $(eval __ndk_import_list := $(call set_insert,$(__ndk_import_list),$(__import_tag)))\
-    )
+   )
 
 # Only used for debugging
 #
