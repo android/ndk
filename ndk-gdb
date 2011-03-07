@@ -465,7 +465,14 @@ log "Using app out directory: $APP_OUT"
 
 # Find the <dataDir> of the package on the device
 DATA_DIR=`adb_shell run-as $PACKAGE_NAME /system/bin/sh -c pwd`
-log "Found data directory: '$DATA_DIR'"
+RUN_AS_EXISTS=`adb shell run-as $PACKAGE_NAME echo -n 1`
+if [ "$RUN_AS_EXISTS" != "1" ] ; then
+    DATA_DIR="/data/data/$PACKAGE_NAME/"
+    log "It seems you are using a faulty device (such as the Samsung Galaxy S), root will be required."
+    log "Trying to guess data directory: '$DATA_DIR'"
+else
+    log "Found data directory: '$DATA_DIR'"
+fi
 if [ $? != 0 -o -z "$DATA_DIR" ] ; then
     echo "ERROR: Could not extract package's data directory. Are you sure that"
     echo "       your installed application is debuggable?"
@@ -536,19 +543,26 @@ if [ -n "$GDBSERVER_PS" ] ; then
     log "Killing existing debugging session"
     GDBSERVER_PID=`echo $GDBSERVER_PS | $AWK_CMD -f $AWK_SCRIPTS/extract-pid.awk -v PACKAGE=lib/gdbserver`
     if [ $GDBSERVER_PID != 0 ] ; then
-        run $ADB_CMD shell kill -9 $GDBSERVER_PID
+        if [ "$RUN_AS_EXISTS" = "1" ] ; then
+            run $ADB_CMD shell kill -9 $GDBSERVER_PID
+        else
+            run $ADB_CMD shell su -c \" "kill -9 $GDBSERVER_PID" \"
+        fi
     fi
 fi
 
 # Launch gdbserver now
 DEBUG_SOCKET=debug-socket
-run $ADB_CMD shell run-as $PACKAGE_NAME lib/gdbserver +$DEBUG_SOCKET --attach $PID &
-if [ $? != 0 ] ; then
-    echo "ERROR: Could not launch gdbserver on the device?"
-    exit 1
+if [ "$RUN_AS_EXISTS" = "1" ] ; then
+    run $ADB_CMD shell run-as $PACKAGE_NAME lib/gdbserver +$DEBUG_SOCKET --attach $PID &
+    if [ $? != 0 ] ; then
+        echo "ERROR: Could not launch gdbserver on the device?"
+        exit 1
+    fi
+else
+    run $ADB_CMD shell su -c \" "cd $DATA_DIR && lib/gdbserver +$DEBUG_SOCKET --attach $PID " \" &
+    read -p "Press the return key when root access is granted to continue." NULL
 fi
-log "Launched gdbserver succesfully."
-
 # Setup network redirection
 log "Setup network redirection"
 run $ADB_CMD forward tcp:$DEBUG_PORT localfilesystem:$DATA_DIR/$DEBUG_SOCKET
