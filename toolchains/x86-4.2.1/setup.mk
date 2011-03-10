@@ -60,7 +60,7 @@ TARGET_x86_debug_CFLAGS := $(TARGET_x86_release_CFLAGS) \
 #
 TARGET-process-src-files-tags = \
 $(eval __debug_sources := $(call get-src-files-with-tag,debug)) \
-$(eval __release_sources := $(call get-sr-files-without-tag,debug)) \
+$(eval __release_sources := $(call get-src-files-without-tag,debug)) \
 $(call set-src-files-target-cflags, $(__debug_sources), $(TARGET_x86_debug_CFLAGS)) \
 $(call set-src-files-target-cflags, $(__release_sources),$(TARGET_x86_release_CFLAGS)) \
 $(call set-src-files-text,$(LOCAL_SRC_FILES),x86$(space)$(space)) \
