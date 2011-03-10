@@ -1,7 +1,9 @@
 <html><body><pre>Android NDK ChangeLog:
 
 -------------------------------------------------------------------------------
-android-ndk-r??
+android-ndk-r5c
+
+This release fixes a few bugs in r5b. There are no new features.
 
 IMPORTANT BUG FIXES:
 
@@ -30,6 +32,9 @@ OTHER FIXES &amp; CHANGES:
 
 - When import-module succeeds, it now prints the directory where the module
   was found to the log (visible with NDK_LOG=1).
+
+- <pthread.h>: Fixed the definition of PTHREAD_RWLOCK_INITIALIZER for
+  android-9 API level and higher.
 
 -------------------------------------------------------------------------------
 android-ndk-r5b
