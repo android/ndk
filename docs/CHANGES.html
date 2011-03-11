@@ -36,6 +36,9 @@ OTHER FIXES &amp; CHANGES:
 - <pthread.h>: Fixed the definition of PTHREAD_RWLOCK_INITIALIZER for
   android-9 API level and higher.
 
+- Fixed a bug where LOCAL_ARM_NEON was defined to true would make the build
+  fail (typo in build/core/build-binary.mk)
+
 -------------------------------------------------------------------------------
 android-ndk-r5b
 
