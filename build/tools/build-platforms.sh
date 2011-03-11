@@ -264,10 +264,10 @@ copy_src_directory ()
 # $2: destination directory (relative to $DSTDIR)
 symlink_src_directory ()
 {
+    local files subdirs file subdir rev
     mkdir -p "$DSTDIR/$2"
-    local files=`cd $DSTDIR/$1 && ls -1p | grep -v -e '.*/'`
-    local subdirs=`cd $DSTDIR/$1 && ls -1p | grep -e '.*/' | sed -e 's!/$!!g'`
-    local file subdir rev
+    files=`cd $DSTDIR/$1 && ls -1p | grep -v -e '.*/'`
+    subdirs=`cd $DSTDIR/$1 && ls -1p | grep -e '.*/' | sed -e 's!/$!!g'`
     rev=`reverse_path $1`
     for file in $files; do
         ln -s $rev/$1/$file $DSTDIR/$2/$file
