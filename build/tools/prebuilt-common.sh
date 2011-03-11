@@ -702,4 +702,4 @@ GNUSTL_SUBDIR=sources/cxx-stl/gnu-libstdc++
 
 # The date to use when downloading toolchain sources from android.git.kernel.org
 # Leave it empty for tip of tree.
-TOOLCHAIN_GIT_DATE=2010-12-13
+TOOLCHAIN_GIT_DATE=2011-02-22
