@@ -149,7 +149,7 @@ ifdef LOCAL_ARM_NEON
   )
 endif
 ifeq ($(LOCAL_ARM_NEON),true)
-  neon_sources += $(LOCAL_SRC_FILES:%.neon=%))
+  neon_sources += $(LOCAL_SRC_FILES:%.neon=%)
 endif
 
 neon_sources := $(strip $(neon_sources))
