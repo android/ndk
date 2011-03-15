@@ -286,8 +286,8 @@ $(foreach _config_mk,$(TOOLCHAIN_CONFIGS),\
   $(eval include $(BUILD_SYSTEM)/add-toolchain.mk)\
 )
 
-NDK_ALL_TOOLCHAINS   := $(call uniq,$(NDK_ALL_TOOLCHAINS))
-NDK_ALL_ABIS         := $(call uniq,$(NDK_ALL_ABIS))
+NDK_ALL_TOOLCHAINS   := $(call remove-duplicates,$(NDK_ALL_TOOLCHAINS))
+NDK_ALL_ABIS         := $(call remove-duplicates,$(NDK_ALL_ABIS))
 
 # The default toolchain is now arm-eabi-4.4.0, however its
 # C++ compiler is a tad bit more pedantic with certain
