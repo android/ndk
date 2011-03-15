@@ -62,6 +62,25 @@ last2 = $(word $(words $1), x $1)
 last3 = $(word $(words $1), x x $1)
 
 # -----------------------------------------------------------------------------
+# Function : remove-duplicates
+# Arguments: a list
+# Returns  : the list with duplicate items removed, order is preserved.
+# Usage    : $(call remove-duplicates, <LIST>)
+# Note     : This is equivalent to the 'uniq' function provided by GMSL,
+#            however this implementation is non-recursive and *much*
+#            faster. It will also not explode the stack with a lot of
+#            items like 'uniq' does.
+# -----------------------------------------------------------------------------
+remove-duplicates = $(strip \
+  $(eval __uniq_ret :=) \
+  $(foreach __uniq_item,$1,\
+    $(if $(findstring $(__uniq_item),$(__uniq_ret)),,\
+      $(eval __uniq_ret += $(__uniq_item))\
+    )\
+  )\
+  $(__uniq_ret))
+
+# -----------------------------------------------------------------------------
 # Macro    : this-makefile
 # Returns  : the name of the current Makefile in the inclusion stack
 # Usage    : $(this-makefile)

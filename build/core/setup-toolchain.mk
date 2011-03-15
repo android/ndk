@@ -129,7 +129,7 @@ $(NDK_APP_GDBSETUP): PRIVATE_SRC_DIRS := $(SYSROOT)/usr/include
 $(NDK_APP_GDBSETUP):
 	@ echo "Gdbsetup       : $(call pretty-dir,$(PRIVATE_DST))"
 	$(hide) echo "set solib-search-path $(call host-path,$(PRIVATE_SOLIB_PATH))" > $(PRIVATE_DST)
-	$(hide) echo "directory $(call host-path,$(call uniq,$(PRIVATE_SRC_DIRS)))" >> $(PRIVATE_DST)
+	$(hide) echo "directory $(call host-path,$(call remove-duplicates,$(PRIVATE_SRC_DIRS)))" >> $(PRIVATE_DST)
 
 # This prevents parallel execution to clear gdb.setup after it has been written to
 $(NDK_APP_GDBSETUP): clean-installed-binaries
