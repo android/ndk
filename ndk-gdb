@@ -268,14 +268,52 @@ log "ADB version found: $ADB_VERSION"
 ADB_CMD="${ADB_CMD}${ADB_FLAGS}"
 log "Using final ADB command: '$ADB_CMD'"
 
-adb_shell ()
+
+# Used internally by adb_var_shell and adb_var_shell2. This expected
+# ADB_CMD_ERRFD to be defined to a file describing where to send the
+# error output.
+_adb_var_shell ()
 {
-    # Run an adb shell command and return its output.
-    #
-    # We need to filter weird control characters like \r that are
-    # included in the output.
-    #
-    $ADB_CMD shell $@ | sed -e 's![[:cntrl:]]!!g'
+    # We need a temporary file to store the output of our command
+    local CMD_OUT RET OUTPUT VARNAME
+    VARNAME=$1
+    shift
+    CMD_OUT=`mktemp`
+    # Run the command, while storing the standard output to CMD_OUT
+    # and appending the exit code as the last line.
+    $ADB_CMD shell $@ ";" echo \$? | sed -e 's![[:cntrl:]]!!g' > $CMD_OUT 2>$ADB_CMD_ERRFD
+    # Get last line in log, which contains the exit code from the command
+    RET=`sed -e '$!d' $CMD_OUT`
+    # Get output, which corresponds to everything except the last line
+    OUT=`sed -e '$d' $CMD_OUT`
+    rm -f $CMD_OUT
+    eval $VARNAME=\"\$OUT\"
+    return $RET
+}
+
+# Run a command through 'adb shell' and captures its standard output
+# into a variable. The function's exit code is the same than the command's.
+#
+# This is required because there is a bug where "adb shell" always returns
+# 0 on the host, even if the command fails on the device.
+#
+# $1: Variable name (e.g. FOO)
+# On exit, $FOO is set to the command's standard output
+#
+# The return status will be 0 (success) if the command succeeded
+# or 1 (failure) otherwise.
+adb_var_shell ()
+{
+    local ADB_CMD_ERRFD="&2"
+    _adb_var_shell $@
+}
+
+# A variant of adb_var_shell that stores both stdout and stderr in the output
+# $1: Variable name
+adb_var_shell2 ()
+{
+    local ADB_CMD_ERRFD="&1"
+    _adb_var_shell $@
 }
 
 # Check the awk tool
@@ -359,7 +397,7 @@ fi
 
 # Check that the device is running Froyo (API Level 8) or higher
 #
-API_LEVEL=`adb_shell getprop ro.build.version.sdk`
+adb_var_shell API_LEVEL getprop ro.build.version.sdk
 if [ $? != 0 -o -z "$API_LEVEL" ] ; then
     echo "ERROR: Could not find target device's supported API level!"
     echo "ndk-gdb will only work if your device is running Android 2.2 or higher."
@@ -376,7 +414,7 @@ fi
 # And check that they are supported by the application
 #
 COMPAT_ABI=none
-CPU_ABI=`adb_shell getprop ro.product.cpu.abi`
+adb_var_shell CPU_ABI getprop ro.product.cpu.abi
 for ABI in $APP_ABIS; do
     if [ "$ABI" = "$CPU_ABI" ] ; then
         COMPAT_ABI=$CPU_ABI
@@ -384,8 +422,9 @@ for ABI in $APP_ABIS; do
     fi
 done
 
-CPU_ABI2=`adb_shell getprop ro.product.cpu.abi2`
-if [ -z "$CPU_ABI2" ] ; then
+adb_var_shell CPU_ABI2 getprop ro.product.cpu.abi2
+if [ $? != 0 -o -z "$CPU_ABI2" ] ; then
+    CPU_ABI2=
     log "Device CPU ABI: $CPU_ABI"
 else
     log "Device CPU ABIs: $CPU_ABI $CPU_ABI2"
@@ -445,13 +484,13 @@ fi
 # Let's check that 'gdbserver' is properly installed on the device too. If this
 # is not the case, the user didn't install the proper package after rebuilding.
 #
-DEVICE_GDBSERVER=`adb_shell ls /data/data/$PACKAGE_NAME/lib/gdbserver`
-log "Found device gdbserver: $DEVICE_GDBSERVER"
-if pattern_match "No such file or directory" "$DEVICE_GDBSERVER" ] ; then
+adb_var_shell2 DEVICE_GDBSERVER ls /data/data/$PACKAGE_NAME/lib/gdbserver
+if [ $? != 0 ]; then
     echo "ERROR: Non-debuggable application installed on the target device."
     echo "       Please re-install the debuggable version!"
     exit 1
 fi
+log "Found device gdbserver: $DEVICE_GDBSERVER"
 
 # Get information from the build system
 GDBSETUP_INIT=`get_build_var_for_abi NDK_APP_GDBSETUP $COMPAT_ABI`
@@ -464,13 +503,13 @@ APP_OUT=`get_build_var_for_abi TARGET_OUT $COMPAT_ABI`
 log "Using app out directory: $APP_OUT"
 
 # Find the <dataDir> of the package on the device
-DATA_DIR=`adb_shell run-as $PACKAGE_NAME /system/bin/sh -c pwd`
-log "Found data directory: '$DATA_DIR'"
+adb_var_shell2 DATA_DIR run-as $PACKAGE_NAME /system/bin/sh -c pwd
 if [ $? != 0 -o -z "$DATA_DIR" ] ; then
     echo "ERROR: Could not extract package's data directory. Are you sure that"
     echo "       your installed application is debuggable?"
     exit 1
 fi
+log "Found data directory: '$DATA_DIR'"
 
 # Launch the activity if needed
 if [ "$OPTION_START" = "yes" ] ; then

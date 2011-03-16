@@ -136,36 +136,26 @@ if [ "$OPTION_HELP" = "yes" ] ; then
     exit 0
 fi
 
-# Run a command in ADB and return 0 in case of success, or 1 otherwise.
-# This is needed because "adb shell" does not return the proper status
-# of the launched command.
+# Run a command in ADB.
 #
-# NOTE: You must call set_adb_cmd_log before that to set the location
-#        of the temporary log file that will be used.
+# This is needed because "adb shell" does not return the proper status
+# of the launched command, so we need to
 #
 adb_cmd ()
 {
-    local RET
-    if [ -z "$ADB_CMD_LOG" ] ; then
-        dump "INTERNAL ERROR: ADB_CMD_LOG not set!"
-        exit 1
-    fi
+    local RET ADB_CMD_LOG
+    ADB_CMD_LOG=$(mktemp)
     if [ $VERBOSE = "yes" ] ; then
         echo "$ADB_CMD shell $@"
-        $ADB_CMD shell $@ "&&" echo OK "||" echo KO | tee $ADB_CMD_LOG
+        $ADB_CMD shell $@ ";" echo \$? | tee $ADB_CMD_LOG
     else
-        $ADB_CMD shell $@ "&&" echo OK "||" echo KO > $ADB_CMD_LOG
+        $ADB_CMD shell $@ ";" echo \$? > $ADB_CMD_LOG
     fi
     # Get last line in log, should be OK or KO
-    RET=`tail -n1 $ADB_CMD_LOG`
-    # Get rid of \r at the end of lines
-    RET=`echo "$RET" | sed -e 's![[:cntrl:]]!!g'`
-    [ "$RET" = "OK" ]
-}
-
-set_adb_cmd_log ()
-{
-    ADB_CMD_LOG="$1"
+    # +Get rid of \r at the end of lines
+    RET=`sed -e 's![[:cntrl:]]!!g' $ADB_CMD_LOG | tail -n1`
+    rm -f $ADB_CMD_LOG
+    return $RET
 }
 
 # Returns 0 if a variable containing one or more items separated
@@ -242,7 +232,6 @@ fi
 #
 
 BUILD_DIR=`mktemp -d /tmp/ndk-tests/build-XXXXXX`
-set_adb_cmd_log "$BUILD_DIR/adb-cmd.log"
 
 ###
 ### RUN AWK TESTS
