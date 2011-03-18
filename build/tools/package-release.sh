@@ -337,7 +337,7 @@ for SYSTEM in $SYSTEMS; do
         unpack_prebuilt stlport-libs-armeabi.tar.bz2
         unpack_prebuilt stlport-libs-armeabi-v7a.tar.bz2
         if [ "$TRY_X86" = "yes" ] ; then
-            unpack_prebuilt stlport-prebuilt-x86.tar.bz2
+            unpack_prebuilt stlport-libs-x86.tar.bz2
         fi
         unpack_prebuilt gnu-libstdc++-headers.tar.bz2
         unpack_prebuilt gnu-libstdc++-libs-armeabi.tar.bz2

@@ -58,7 +58,7 @@ LOCAL_OBJECTS :=
 
 # always define ANDROID when building binaries
 #
-LOCAL_CFLAGS := -DANDROID $(LOCAL_CFLAGS)
+LOCAL_CFLAGS := -DANDROID -D__ANDROID__ $(LOCAL_CFLAGS)
 
 #
 # Add the default system shared libraries to the build

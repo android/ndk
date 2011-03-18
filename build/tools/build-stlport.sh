@@ -146,7 +146,7 @@ LIBRARIES="libstlport_static.a libstlport_shared.so"
 
 for ABI in $ABIS; do
     dump "Building $ABI STLport binaries..."
-    (run cd "$PROJECT_SUBDIR" && run "$NDK_DIR"/ndk-build -B APP_ABI=$ABI -j$BUILD_JOBS STLPORT_FORCE_REBUILD=true)
+    (run cd "$NDK_DIR/$PROJECT_SUBDIR" && run "$NDK_DIR"/ndk-build -B APP_ABI=$ABI -j$BUILD STLPORT_FORCE_REBUILD=true)
     if [ $? != 0 ] ; then
         dump "ERROR: Could not build $ABI STLport binaries!!"
         exit 1
@@ -154,7 +154,7 @@ for ABI in $ABIS; do
 
     if [ -z "$PACKAGE_DIR" ] ; then
        # Copy files to target NDK
-        SRCDIR="$PROJECT_SUBDIR/obj/local/$ABI"
+        SRCDIR="$NDK_DIR/$PROJECT_SUBDIR/obj/local/$ABI"
         DSTDIR="$OUT_DIR/libs/$ABI"
         copy_file_list "$SRCDIR" "$DSTDIR" "$LIBRARIES"
     fi
@@ -165,7 +165,7 @@ if [ -n "$PACKAGE_DIR" ] ; then
     for ABI in $ABIS; do
         FILES=""
         for LIB in $LIBRARIES; do
-            SRCDIR="$PROJECT_SUBDIR/obj/local/$ABI"
+            SRCDIR="$NDK_DIR/$PROJECT_SUBDIR/obj/local/$ABI"
             DSTDIR="$STLPORT_SUBDIR/libs/$ABI"
             copy_file_list "$SRCDIR" "$NDK_DIR/$DSTDIR" "$LIB"
             log "Installing: $DSTDIR/$LIB"

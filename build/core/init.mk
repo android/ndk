@@ -330,28 +330,13 @@ $(foreach tc,$(NDK_ALL_TOOLCHAINS),\
 #
 NDK_PLATFORMS_ROOT := $(strip $(NDK_PLATFORMS_ROOT))
 ifndef NDK_PLATFORMS_ROOT
-    NDK_PLATFORMS_ROOT := $(strip $(wildcard $(NDK_ROOT)/platforms))
-    ifndef NDK_PLATFORMS_ROOT
-        NDK_PLATFORMS_ROOT := $(strip $(wildcard $(NDK_ROOT)/build/platforms))
-    endif
-
-    ifndef NDK_PLATFORMS_ROOT
-        $(call __ndk_info,Could not find platform files (headers and libraries))
-        $(if $(strip $(wildcard $(NDK_ROOT)/RELEASE.TXT)),\
-            $(call __ndk_info,Please define NDK_PLATFORMS_ROOT to point to a valid directory.)\
-        ,\
-            $(call __ndk_info,Please run build/tools/build-platforms.sh to build the corresponding directory.)\
-        )
-        $(call __ndk_error,Aborting)
-    endif
-
+    NDK_PLATFORMS_ROOT := $(strip $(wildcard $(NDK_ROOT)/build/platforms))
     $(call ndk_log,Found platform root directory: $(NDK_PLATFORMS_ROOT))
-else
-    ifeq ($(strip $(wildcard $(NDK_PLATFORMS_ROOT)/android-*)),)
-        $(call __ndk_info,Your NDK_PLATFORMS_ROOT points to an invalid directory)
-        $(call __ndk_info,Current value: $(NDK_PLATFORMS_ROOT))
-        $(call __ndk_error,Aborting)
-    endif
+endif
+ifeq ($(strip $(wildcard $(NDK_PLATFORMS_ROOT)/android-*)),)
+    $(call __ndk_info,Your NDK_PLATFORMS_ROOT points to an invalid directory)
+    $(call __ndk_info,Current value: $(NDK_PLATFORMS_ROOT))
+    $(call __ndk_error,Aborting)
 endif
 
 NDK_ALL_PLATFORMS := $(strip $(notdir $(wildcard $(NDK_PLATFORMS_ROOT)/android-*)))
