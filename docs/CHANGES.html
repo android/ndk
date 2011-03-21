@@ -14,6 +14,22 @@ IMPORTANT BUG FIXES:
 - Fixed a bug where code linked against gnustl_static would crash when run
   on Android platform releases older than 2.2.
 
+- &lt;android/input.h&gt;: Two functions in this header file, introduced
+  by API level 9 (a.k.a. 2.3) were incorrect and have been fixed. While
+  this breaks the source API, the binary interface to the system is
+  unchanged.
+
+  The functions missing a third 'history_index' parameter. They correct
+  definition is now:
+
+      float AMotionEvent_getHistoricalRawX(const AInputEvent* motion_event,
+                                           size_t pointer_index,
+                                           size_t history_index);
+
+      float AMotionEvent_getHistoricalRawY(const AInputEvent* motion_event,
+                                           size_t pointer_index,
+                                           size_t history_index);
+
 OTHER FIXES &amp; CHANGES:
 
 - Object files are now always linked in the order they appear in
@@ -33,7 +49,7 @@ OTHER FIXES &amp; CHANGES:
 - When import-module succeeds, it now prints the directory where the module
   was found to the log (visible with NDK_LOG=1).
 
-- <pthread.h>: Fixed the definition of PTHREAD_RWLOCK_INITIALIZER for
+- &lt;pthread.h&gt;: Fixed the definition of PTHREAD_RWLOCK_INITIALIZER for
   android-9 API level and higher.
 
 - Fixed a bug where LOCAL_ARM_NEON was defined to true would make the build
