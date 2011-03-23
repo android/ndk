@@ -109,6 +109,26 @@ native_path ()
 }
 fi # HOST_OS != windows
 
+# We need to ensure the ANDROID_NDK_ROOT is absolute, otherwise calls
+# to get_build_var, get_build_var_for_abi and run_awk_manifest_script
+# might fail, e.g. when invoked with:
+#
+#   cd $NDKROOT
+#   ./ndk-gdb --project=/path/to/project
+#
+path_is_absolute ()
+{
+    local P P2
+    P=$1       # copy path
+    P2=${P#/}  # remove / prefix, if any
+    [ "$P" != "$P2" ]
+}
+
+if ! path_is_absolute "$ANDROID_NDK_ROOT"; then
+    ANDROID_NDK_ROOT=$(pwd)/$ANDROID_NDK_ROOT
+fi
+
+
 VERBOSE=no
 while [ -n "$1" ]; do
     opt="$1"
@@ -269,19 +289,25 @@ ADB_CMD="${ADB_CMD}${ADB_FLAGS}"
 log "Using final ADB command: '$ADB_CMD'"
 
 
-# Used internally by adb_var_shell and adb_var_shell2. This expected
-# ADB_CMD_ERRFD to be defined to a file describing where to send the
-# error output.
+# Used internally by adb_var_shell and adb_var_shell2.
+# $1: 1 to redirect stderr to $1, 0 otherwise.
+# $2: Variable name that will contain the result
+# $3+: Command options
 _adb_var_shell ()
 {
     # We need a temporary file to store the output of our command
-    local CMD_OUT RET OUTPUT VARNAME
-    VARNAME=$1
-    shift
-    CMD_OUT=`mktemp`
+    local CMD_OUT RET OUTPUT VARNAME REDIRECT_STDERR
+    REDIRECT_STDERR=$1
+    VARNAME=$2
+    shift; shift;
+    CMD_OUT=`mktemp /tmp/ndk-gdb-cmdout-XXXXXX`
     # Run the command, while storing the standard output to CMD_OUT
     # and appending the exit code as the last line.
-    $ADB_CMD shell $@ ";" echo \$? | sed -e 's![[:cntrl:]]!!g' > $CMD_OUT 2>$ADB_CMD_ERRFD
+    if [ "$REDIRECT_STDERR" != 0 ]; then
+        $ADB_CMD shell $@ ";" echo \$? | sed -e 's![[:cntrl:]]!!g' > $CMD_OUT 2>&1
+    else
+        $ADB_CMD shell $@ ";" echo \$? | sed -e 's![[:cntrl:]]!!g' > $CMD_OUT
+    fi
     # Get last line in log, which contains the exit code from the command
     RET=`sed -e '$!d' $CMD_OUT`
     # Get output, which corresponds to everything except the last line
@@ -304,16 +330,14 @@ _adb_var_shell ()
 # or 1 (failure) otherwise.
 adb_var_shell ()
 {
-    local ADB_CMD_ERRFD="&2"
-    _adb_var_shell $@
+    _adb_var_shell 0 $@
 }
 
 # A variant of adb_var_shell that stores both stdout and stderr in the output
 # $1: Variable name
 adb_var_shell2 ()
 {
-    local ADB_CMD_ERRFD="&1"
-    _adb_var_shell $@
+    _adb_var_shell 1 $@
 }
 
 # Check the awk tool
