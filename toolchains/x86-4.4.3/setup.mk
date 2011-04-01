@@ -26,15 +26,18 @@
 TOOLCHAIN_NAME   := x86-4.4.3
 TOOLCHAIN_PREFIX := $(TOOLCHAIN_PREBUILT_ROOT)/bin/i686-android-linux-
 
-TARGET_CFLAGS.common := \
+TARGET_CFLAGS := \
+    -D__ANDROID__ \
     -mbionic \
     -I$(SYSROOT)/usr/include \
     -march=atom -mstackrealign -DUSE_SSSE3 -DUSE_SSE2 -mfpmath=sse \
     -fpic \
     -ffunction-sections \
     -funwind-tables \
-    -fstack-protector \
     -fno-short-enums
+
+# Fix this after ssp.c is fixed for x86
+# TARGET_CFLAGS := -fstack-protector
 
 TARGET_x86_release_CFLAGS :=  -O2 \
                               -fomit-frame-pointer \
