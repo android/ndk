@@ -26,7 +26,8 @@
 TOOLCHAIN_NAME   := x86-4.4.3
 TOOLCHAIN_PREFIX := $(TOOLCHAIN_PREBUILT_ROOT)/bin/i686-android-linux-
 
-TARGET_CFLAGS.common := \
+TARGET_CFLAGS := \
+    -D__ANDROID__ \
     -mbionic \
     -I$(SYSROOT)/usr/include \
     -march=atom -mstackrealign -DUSE_SSSE3 -DUSE_SSE2 -mfpmath=sse \
