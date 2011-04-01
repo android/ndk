@@ -242,15 +242,18 @@ build_gdbserver ()
 
 case "$ARCH" in
 arm )
-    build_toolchain arm-eabi-4.4.0
-    build_gdbserver arm-eabi-4.4.0
+    # Recent commits seem to have broken the 4.4.0 build. We don't really need it anyway,
+    # so let's disable building it for now
+    # build_toolchain arm-eabi-4.4.0
+    # build_gdbserver arm-eabi-4.4.0
 
     build_toolchain arm-linux-androideabi-4.4.3 --copy-libstdcxx
     build_gdbserver arm-linux-androideabi-4.4.3
     ;;
 x86 )
-    build_toolchain x86-4.2.1
-    build_gdbserver x86-4.2.1
+    # The 4.2.1 toolchain is no longer supported
+    # build_toolchain x86-4.2.1
+    # build_gdbserver x86-4.2.1
 
     build_toolchain x86-4.4.3 --copy-libstdcxx
     build_gdbserver x86-4.4.3
