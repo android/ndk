@@ -144,6 +144,35 @@ rm -rf "$PROJECT_DIR/obj"
 
 LIBRARIES="libstlport_static.a libstlport_shared.so"
 
+# Building libstlport and the test code requires *.so. The versions of the .so files
+# in development/platforms are skeletons and do not allow us to fully link. We'll copy
+# the version that we built for the NDK to our temp platforms/ directory before the build.
+#
+# The following is a complete hack and work around until I can get some feedback on how to do this correctly.
+for ABI in $ABIS
+do
+    case "$ABI" in
+    x86 )
+        _arch=x86
+        ;;
+    *arm* )
+        _arch=arm
+        ;;
+    esac
+
+    # At a minimum, we need to find a better way to determine the -# number in the next line.
+    if [ -d $NDK_DIR/build/platforms/android-9/arch-$_arch/ -a -d $NDK_DIR/platforms/android-3/ ]; then
+        run cp $NDK_DIR/build/platforms/android-9/arch-$_arch/usr/lib/*.so $NDK_DIR/platforms/android-3/arch-$_arch/usr/lib/.
+        if [ $? != 0 ]; then
+            dump "ERROR: Unable to apply work around for dynamic libraries"
+            exit 1
+        fi
+    else
+        dump "WARNING: $NDK_DIR/build/platforms/android-9/arch-$_arch/ -a -d $NDK_DIR/platforms/android-3/ not available for fixup."
+        run env
+    fi
+done
+
 for ABI in $ABIS; do
     dump "Building $ABI STLport binaries..."
     (run cd "$PROJECT_SUBDIR" && run "$NDK_DIR"/ndk-build -B APP_ABI=$ABI -j$BUILD_JOBS STLPORT_FORCE_REBUILD=true)
