@@ -300,7 +300,9 @@ if [ "$MINGW" != "yes" ] ; then
         TOOLCHAIN_FLAGS_ARM="--toolchain-pkg=\"$PACKAGE_DIR/arm-linux-androideabi-4.4.3-$HOST_TAG.tar.bz2\""
         TOOLCHAIN_FLAGS_X86="--toolchain-pkg=\"$PACKAGE_DIR/x86-4.4.3-$HOST_TAG.tar.bz2\""
     fi
-
+    if [ $VERBOSE = yes ] ; then
+        BUILD_STLPORT_FLAGS="$BUILD_STLPORT_FLAGS --verbose"
+    fi
     case "$ARCH" in
     arm )
         $ANDROID_NDK_ROOT/build/tools/build-stlport.sh $BUILD_STLPORT_FLAGS $TOOLCHAIN_FLAGS_ARM
