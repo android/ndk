@@ -62,6 +62,9 @@ register_var_option "--out-dir=<path>" OUT_DIR "Specify output directory directl
 ABIS="$STLPORT_ABIS"
 register_var_option "--abis=<list>" ABIS "Specify list of target ABIs."
 
+BUILD_JOBS="$BUILD_NUM_CPUS"
+register_var_option "--build_jobs=<jobs>" BUILD_JOBS "Specify the j-factor"
+
 extract_parameters "$@"
 
 if [ -n "$PACKAGE_DIR" -a -n "$NDK_DIR" ] ; then
