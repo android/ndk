@@ -346,12 +346,11 @@ ifndef NDK_PLATFORMS_ROOT
     endif
 
     $(call ndk_log,Found platform root directory: $(NDK_PLATFORMS_ROOT))
-else
-    ifeq ($(strip $(wildcard $(NDK_PLATFORMS_ROOT)/android-*)),)
-        $(call __ndk_info,Your NDK_PLATFORMS_ROOT points to an invalid directory)
-        $(call __ndk_info,Current value: $(NDK_PLATFORMS_ROOT))
-        $(call __ndk_error,Aborting)
-    endif
+endif
+ifeq ($(strip $(wildcard $(NDK_PLATFORMS_ROOT)/android-*)),)
+    $(call __ndk_info,Your NDK_PLATFORMS_ROOT points to an invalid directory)
+    $(call __ndk_info,Current value: $(NDK_PLATFORMS_ROOT))
+    $(call __ndk_error,Aborting)
 endif
 
 NDK_ALL_PLATFORMS := $(strip $(notdir $(wildcard $(NDK_PLATFORMS_ROOT)/android-*)))
