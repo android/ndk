@@ -147,7 +147,13 @@ LIBRARIES="libstlport_static.a libstlport_shared.so"
 
 for ABI in $ABIS; do
     dump "Building $ABI STLport binaries..."
-    (run cd "$NDK_DIR/$PROJECT_SUBDIR" && run "$NDK_DIR"/ndk-build -B APP_ABI=$ABI -j$BUILD_JOBS STLPORT_FORCE_REBUILD=true)
+    case $ABI in
+        x86) PLATFORM=android-9
+        ;;
+        *) PLATFORM=android-3
+        ;;
+    esac
+    (run cd "$NDK_DIR/$PROJECT_SUBDIR" && run "$NDK_DIR"/ndk-build -B APP_PLATFORM=$PLATFORM APP_ABI=$ABI -j$BUILD_JOBS STLPORT_FORCE_REBUILD=true)
     if [ $? != 0 ] ; then
         dump "ERROR: Could not build $ABI STLport binaries!!"
         exit 1
