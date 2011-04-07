@@ -249,9 +249,6 @@ arm )
     build_gdbserver arm-linux-androideabi-4.4.3
     ;;
 x86 )
-    build_toolchain x86-4.2.1
-    build_gdbserver x86-4.2.1
-
     build_toolchain x86-4.4.3 --copy-libstdcxx
     build_gdbserver x86-4.4.3
     ;;
