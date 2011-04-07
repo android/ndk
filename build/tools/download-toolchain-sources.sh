@@ -48,6 +48,9 @@ register_var_option "--git-http" OPTION_GIT_HTTP "Use http to download sources f
 OPTION_GIT_BASE=
 register_var_option "--git-base=<git-uri>" OPTION_GIT_BASE "Use specific git repository base"
 
+OPTION_GIT_REFERENCE=
+register_var_option "--git-reference=<path>" OPTION_GIT_REFERENCE "Use local git reference base"
+
 OPTION_PACKAGE=no
 register_var_option "--package" OPTION_PACKAGE "Create source package in /tmp"
 
@@ -66,7 +69,13 @@ correspond to the date of $TOOLCHAIN_GIT_DATE. If you want to use the tip of
 tree, use '--git-date=now' instead.
 
 If you don't want to use the official servers, use --git-base=<path> to
-download the sources from another set of git repostories."
+download the sources from another set of git repostories.
+
+You can also speed-up the download if you maintain a local copy of the
+toolchain repositories on your machine. Use --git-reference=<path> to
+specify the base path that contains all copies, and its subdirectories will
+be used as git clone shared references.
+"
 
 fi
 
@@ -117,15 +126,30 @@ else
 fi
 dump "Using git clone prefix: $GITPREFIX"
 
+GITREFERENCE=
+if [ -n "$OPTION_GIT_REFERENCE" ] ; then
+    GITREFERENCE=$OPTION_GIT_REFERENCE
+    if [ ! -d "$GITREFERENCE" -o ! -d "$GITREFERENCE/build" ]; then
+        echo "ERROR: Invalid reference repository directory path: $GITREFERENCE"
+        exit 1
+    fi
+    dump "Using git clone reference: $GITREFERENCE"
+fi
+
 toolchain_clone ()
 {
+    local GITFLAGS
+    GITFLAGS=
+    if [ "$GITREFERENCE" ]; then
+        GITFLAGS="$GITFLAGS --shared --reference $GITREFERENCE/$1"
+    fi
     dump "downloading sources for toolchain/$1"
     if [ -d "$GITPREFIX/$1" ]; then
         log "cloning $GITPREFIX/$1"
-        run git clone $GITPREFIX/$1 $1
+        run git clone $GITFLAGS $GITPREFIX/$1 $1
     else
         log "cloning $GITPREFIX/$1.git"
-        run git clone $GITPREFIX/$1.git $1
+        run git clone $GITFLAGS $GITPREFIX/$1.git $1
     fi
     fail_panic "Could not clone $GITPREFIX/$1.git ?"
     log "checking out $BRANCH branch of $1.git"
