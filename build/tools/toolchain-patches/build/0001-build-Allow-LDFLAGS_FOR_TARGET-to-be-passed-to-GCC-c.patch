@@ -1,0 +1,60 @@
+From dfd5acc639daf945e9afd190678b781d83368eeb Mon Sep 17 00:00:00 2001
+From: David 'Digit' Turner <digit@android.com>
+Date: Thu, 7 Apr 2011 16:02:23 +0200
+Subject: [PATCH] build: Allow LDFLAGS_FOR_TARGET to be passed to GCC configure script.
+
+This patch is a small hack that allows the value of LDFLAGS_FOR_TARGET
+as defined when the build configure script is invoked to be passed
+also to the GCC build script.
+
+This is necessary to build the x86 NDK toolchain. Probably not the
+cleanest way to do it though, so the compiler team may want something
+else for the sources on android.git.kernel.org.
+
+Change-Id: I2b34ad6c28ede29a8b8244dd54ec607369661b5a
+---
+ Makefile.in  |    2 +-
+ configure    |    1 +
+ configure.ac |    1 +
+ 3 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/Makefile.in b/Makefile.in
+index e445deb..85c0060 100644
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -123,7 +123,7 @@ export	CC_FOR_TARGET="$(TARGET_GCC_BUILDDIR)/gcc/xgcc \
+ #
+ CFLAGS_FOR_TARGET+= -O2 -Os -g
+ CXXFLAGS_FOR_TARGET+=$(CFLAGS_FOR_TARGET)
+-LDFLAGS_FOR_TARGET=
++LDFLAGS_FOR_TARGET=@LDFLAGS_FOR_TARGET@
+ 
+ # Helper
+ prefix-list = $(foreach e, $(2), $(join $1, $e))
+diff --git a/configure b/configure
+index d6e17ff..15a1ac4 100755
+--- a/configure
++++ b/configure
+@@ -2773,6 +2773,7 @@ s,@INSTALL_SCRIPT@,$INSTALL_SCRIPT,;t t
+ s,@INSTALL_DATA@,$INSTALL_DATA,;t t
+ s,@BUILD_ANDROID_GCC@,$BUILD_ANDROID_GCC,;t t
+ s,@GDB_TARGET@,$GDB_TARGET,;t t
++s,@LDFLAGS_FOR_TARGET@,$LDFLAGS_FOR_TARGET,;t t
+ s,@TOPLEVEL_CONFIGURE_ARGUMENTS@,$TOPLEVEL_CONFIGURE_ARGUMENTS,;t t
+ s,@baseargs@,$baseargs,;t t
+ s,@gold_baseargs@,$gold_baseargs,;t t
+diff --git a/configure.ac b/configure.ac
+index 3bfcea7..27d5a1f 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -44,6 +44,7 @@ case $target in
+ esac
+ AC_SUBST(BUILD_ANDROID_GCC)
+ AC_SUBST(GDB_TARGET)
++AC_SUBST(LDFLAGS_FOR_TARGET)
+ AC_ARG_PROGRAM
+ 
+ # TOPLEVEL_CONFIGURE_ARGUMENTS lifted from top-level configure.ac in gcc.
+-- 
+1.7.3.1
+
