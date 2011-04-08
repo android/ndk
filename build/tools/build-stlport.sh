@@ -62,6 +62,9 @@ register_var_option "--out-dir=<path>" OUT_DIR "Specify output directory directl
 ABIS="$STLPORT_ABIS"
 register_var_option "--abis=<list>" ABIS "Specify list of target ABIs."
 
+JOBS="$BUILD_NUM_CPUS"
+register_var_option "-j<number>" JOBS "Use <number> build jobs in parallel"
+
 extract_parameters "$@"
 
 if [ -n "$PACKAGE_DIR" -a -n "$NDK_DIR" ] ; then
@@ -153,7 +156,7 @@ for ABI in $ABIS; do
         *) PLATFORM=android-3
         ;;
     esac
-    (run cd "$NDK_DIR/$PROJECT_SUBDIR" && run "$NDK_DIR"/ndk-build -B APP_PLATFORM=$PLATFORM APP_ABI=$ABI -j$BUILD_JOBS STLPORT_FORCE_REBUILD=true)
+    (run cd "$NDK_DIR/$PROJECT_SUBDIR" && run "$NDK_DIR"/ndk-build -B APP_PLATFORM=$PLATFORM APP_ABI=$ABI -j$JOBS STLPORT_FORCE_REBUILD=true)
     if [ $? != 0 ] ; then
         dump "ERROR: Could not build $ABI STLport binaries!!"
         exit 1
