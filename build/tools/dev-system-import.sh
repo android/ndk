@@ -219,7 +219,7 @@ clear_symbol_excludes ()
 # $1: path to symbol list file
 filter_symbols ()
 {
-    (grep -v -f $SYMBOL_EXCLUDES $1 && grep -f $SYMBOL_INCLUDES $1) | sort -u
+    (grep -v -f $SYMBOL_EXCLUDES $1 ; grep -f $SYMBOL_INCLUDES $1) | sort -u
 }
 
 #
@@ -258,8 +258,8 @@ generate_shell_library ()
 {
     # First, extract the list of functions and variables exported by the
     # reference library.
-    local funcs=`extract_shared_library_functions $1`
-    local vars=`extract_shared_library_variables $1`
+    local funcs="`extract_shared_library_functions $1`"
+    local vars="`extract_shared_library_variables $1`"
     local numfuncs=`echo $funcs | wc -w`
     local numvars=`echo $vars | wc -w`
     dump "Generating shell library for `basename $1` ($numfuncs functions + $numvars variables)"
@@ -285,8 +285,8 @@ generate_shell_library ()
 
     # Sanity check: the generated shared library must export the same
     # functions and variables, or something is really rotten!
-    local newfuncs=`extract_shared_library_functions $TMPO`
-    local newvars=`extract_shared_library_variables $TMPO`
+    local newfuncs="`extract_shared_library_functions $TMPO`"
+    local newvars="`extract_shared_library_variables $TMPO`"
     if [ "$newfuncs" != "$funcs" ] ; then
         dump "ERROR: mismatch in generated functions list"
         exit 1
@@ -511,6 +511,7 @@ fi
 # API level 8
 if platform_check 8; then
     copy_system_shared_library libandroid
+    copy_system_shared_library libjnigraphics
     copy_system_headers $ANDROID_ROOT/frameworks/base/native/include \
         android/bitmap.h
 fi
