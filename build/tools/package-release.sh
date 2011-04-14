@@ -46,12 +46,12 @@ PREBUILT_NDK=
 register_var_option "--prebuilt-ndk=<file>" PREBUILT_NDK "Specify prebuilt ndk package"
 
 # the list of supported host development systems
-SYSTEMS="linux-x86 darwin-x86 windows"
+SYSTEMS="linux-x86,darwin-x86,windows"
 register_var_option "--systems=<list>" SYSTEMS "Specify host systems"
 
-# ABI to build for
-ABI="arm"
-register_var_option "--abi=<abi>" ABI "Specify target ABI"
+# ARCH to build for
+ARCHS="arm"
+register_var_option "--arch=<arch>" ARCHS "Specify target architecture(s)"
 
 # set to 'yes' if we should use 'git ls-files' to list the files to
 # be copied into the archive.
@@ -59,8 +59,9 @@ NO_GIT=no
 register_var_option "--no-git" NO_GIT "Don't use git to list input files, take all of them."
 
 # set of toolchain prebuilts we need to package
-TOOLCHAINS="arm-eabi-4.4.0 arm-linux-androideabi-4.4.3"
-register_var_option "--toolchains=<list>" TOOLCHAINS "Specify list of toolchains."
+TOOLCHAINS="arm-eabi-4.4.0,arm-linux-androideabi-4.4.3"
+OPTION_TOOLCHAINS=$TOOLCHAINS
+register_var_option "--toolchains=<list>" OPTION_TOOLCHAINS "Specify list of toolchains."
 
 # set of platforms to package (all by default)
 register_var_option "--platforms=<list>" PLATFORMS "Specify API levels"
@@ -100,6 +101,46 @@ will be printed at the end of the generation process.
 "
 
 extract_parameters "$@"
+
+# Ensure that SYSTEMS is space-separated
+SYSTEMS=$(commas_to_spaces $SYSTEMS)
+
+# Do we need to support x86?
+ARCHS=$(commas_to_spaces $ARCHS)
+echo "$ARCHS" | tr ' ' '\n' | grep -q x86
+if [ $? = 0 ] ; then
+    TRY_X86=yes
+else
+    TRY_X86=no
+fi
+
+# Compute ABIS from ARCHS
+ABIS=
+for ARCH in $ARCHS; do
+    case $ARCH in
+        arm)
+            ABIS="$ABIS armeabi armeabi-v7a"
+            ;;
+        *)
+            ABIS="$ABIS $ARCH"
+            ;;
+    esac
+done
+
+# If --arch is used to list x86 as a target architecture, Add x86-4.4.3 to
+# the list of default toolchains to package. That is, unless you also
+# explicitely use --toolchains=<list>
+#
+# Ensure that TOOLCHAINS is space-separated after this.
+#
+if [ "$OPTION_TOOLCHAINS" != "$TOOLCHAINS" ]; then
+    TOOLCHAINS=$(commas_to_spaces $OPTION_TOOLCHAINS)
+else
+    if [ "$TRY_X86" = "yes" ]; then
+        TOOLCHAINS="$TOOLCHAINS x86-4.4.3"
+    fi
+    TOOLCHAINS=$(commas_to_spaces $TOOLCHAINS)
+fi
 
 # Check the prebuilt path
 #
@@ -162,6 +203,12 @@ else
     SYSTEMS=$HOST_TAG
 fi
 
+echo "Architectures: $ARCHS"
+echo "CPU ABIs: $ABIS"
+echo "Toolchains: $TOOLCHAINS"
+echo "Host systems: $SYSTEMS"
+
+
 # The list of git files to copy into the archives
 if [ "$NO_GIT" != "yes" ] ; then
     echo "Collecting sources from git (use --no-git to copy all files instead)."
@@ -187,13 +234,6 @@ umask 0022
 
 rm -rf $TMPDIR && mkdir -p $TMPDIR
 
-echo "$TOOLCHAINS" | tr ' ' '\n' | grep -q x86
-if [ $? = 0 ] ; then
-    TRY_X86=yes
-else
-    TRY_X86=no
-fi
-
 # first create the reference ndk directory from the git reference
 echo "Creating reference from source files"
 REFERENCE=$TMPDIR/reference && rm -rf $REFERENCE/* &&
@@ -207,12 +247,10 @@ FLAGS="--src-dir=$DEVELOPMENT_ROOT --dst-dir=$REFERENCE"
 if [ "$VERBOSE2" = "yes" ] ; then
   FLAGS="$FLAGS --verbose"
 fi
-PLATFORM_FLAGS=
-if [ -n "$PLATFORMS" ] ; then
-    $NDK_ROOT_DIR/build/tools/build-platforms.sh $FLAGS --platform="$PLATFORMS" --abi=$ABI
-else
-    $NDK_ROOT_DIR/build/tools/build-platforms.sh $FLAGS $PLATFORM_FLAGS --abi=$ABI
-fi
+
+FLAGS="$FLAGS --platform=$(spaces_to_commas $PLATFORMS)"
+FLAGS="$FLAGS --arch=$(spaces_to_commas $ARCHS)"
+$NDK_ROOT_DIR/build/tools/build-platforms.sh $FLAGS
 fail_panic "Could not copy platform files. Aborting."
 
 # Remove leftovers, just in case...
@@ -323,28 +361,21 @@ for SYSTEM in $SYSTEMS; do
             echo "WARNING: Could not find STLport source tree!"
         fi
     else
+        # Unpack gdbserver
         for TC in $TOOLCHAINS; do
             unpack_prebuilt $TC-$SYSTEM.tar.bz2
             echo "Removing sysroot for $TC"
             rm -rf $DSTDIR/toolchains/$TC/prebuilt/$SYSTEM/sysroot
             unpack_prebuilt $TC-gdbserver.tar.bz2
         done
-        unpack_libsupcxx gnu-libsupc++-armeabi.tar.bz2
-        unpack_libsupcxx gnu-libsupc++-armeabi-v7a.tar.bz2
-        if [ "$TRY_X86" = "yes" ] ; then
-            unpack_libsupcxx gnu-libsupc++-x86.tar.bz2
-        fi
-        unpack_prebuilt stlport-libs-armeabi.tar.bz2
-        unpack_prebuilt stlport-libs-armeabi-v7a.tar.bz2
-        if [ "$TRY_X86" = "yes" ] ; then
-            unpack_prebuilt stlport-libs-x86.tar.bz2
-        fi
+
+        # Unpack prebuilt STL headers and libraries
         unpack_prebuilt gnu-libstdc++-headers.tar.bz2
-        unpack_prebuilt gnu-libstdc++-libs-armeabi.tar.bz2
-        unpack_prebuilt gnu-libstdc++-libs-armeabi-v7a.tar.bz2
-        if [ "$TRY_X86" = "yes" ] ; then
-            unpack_prebuilt gnu-libstdc++-libs-x86.tar.bz2
-        fi
+        for ABI in $ABIS; do
+            unpack_libsupcxx gnu-libsupc++-$ABI.tar.bz2
+            unpack_prebuilt stlport-libs-$ABI.tar.bz2
+            unpack_prebuilt gnu-libstdc++-libs-$ABI.tar.bz2
+        done
     fi
 
     # Create an archive for the final package. Extension depends on the
