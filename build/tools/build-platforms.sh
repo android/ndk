@@ -36,7 +36,7 @@
 # Repeat after that for N+1, N+2, etc..
 #
 
-. `dirname $0`/../core/ndk-common.sh
+. `dirname $0`/prebuilt-common.sh
 
 # Return the list of platform supported from $1/platforms
 # as a single space-separated list of levels. (e.g. "3 4 5 8 9")
@@ -93,7 +93,7 @@ test_reverse_path foo/bar/zoo/ ../../..
 SRCDIR="../development/ndk"
 DSTDIR="$ANDROID_NDK_ROOT"
 
-ABIS="arm"
+ARCHS="arm"
 PLATFORMS=`extract_platforms_from "$SRCDIR"`
 
 OPTION_HELP=no
@@ -102,6 +102,8 @@ OPTION_SRCDIR=
 OPTION_DSTDIR=
 OPTION_NO_SAMPLES=no
 OPTION_NO_SYMLINKS=no
+OPTION_ARCH=
+OPTION_ABI=
 
 VERBOSE=no
 VERBOSE2=no
@@ -127,7 +129,10 @@ for opt do
   --platform=*)
     OPTION_PLATFORM=$optarg
     ;;
-  --abi=*)
+  --arch=*)
+    OPTION_ARCH=$optarg
+    ;;
+  --abi=*)  # We still support this for backwards-compatibility
     OPTION_ABI=$optarg
     ;;
   --no-samples)
@@ -152,8 +157,8 @@ if [ $OPTION_HELP = "yes" ] ; then
     echo "  --verbose          Enable verbose messages"
     echo "  --src-dir=<path>   Source directory for development platform files [$SRCDIR]"
     echo "  --dst-dir=<path>   Destination directory [$DSTDIR]"
-    echo "  --platform=<list>  Space-separated list of API levels [$PLATFORMS]"
-    echo "  --abi=<list>       Space-separated list of ABIs [$ABIS]"
+    echo "  --platform=<list>  List of API levels [$PLATFORMS]"
+    echo "  --arch=<list>      List of CPU architectures [$ARCHS]"
     echo "  --no-samples       Ignore samples"
     echo "  --no-symlinks      Don't create symlinks, copy files instead"
     echo ""
@@ -177,13 +182,15 @@ else
 fi
 
 if [ -n "$OPTION_PLATFORM" ] ; then
-    PLATFORMS="$OPTION_PLATFORM"
+    PLATFORMS=$(commas_to_spaces $OPTION_PLATFORM)
 else
     # Build the list from the content of SRCDIR
     PLATFORMS=`extract_platforms_from "$SRCDIR"`
     log "Using platforms: $PLATFORMS"
 fi
 
+# Remove the android- prefix of any platform name
+PLATFORMS=$(echo $PLATFORMS | tr ' ' '\n' | sed -e 's!android-!!g' | tr '\n' ' ')
 
 if [ -n "$OPTION_DSTDIR" ] ; then
     DSTDIR="$OPTION_DSTDIR"
@@ -191,9 +198,29 @@ else
     log "Using destination directory: $DSTDIR"
 fi
 
-if [ -n "$OPTION_ABI" ] ; then
-    ABIS="$OPTION_ABI"
+# Handle architecture list
+#
+# We support both --arch and --abi for backwards compatibility reasons
+# --arch is the new hotness, --abi is deprecated.
+#
+if [ -n "$OPTION_ARCH" ]; then
+    OPTION_ARCH=$(commas_to_spaces $OPTION_ARCH)
 fi
+
+if [ -n "$OPTION_ABI" ] ; then
+    echo "WARNING: --abi=<names> is deprecated. Use --arch=<names> instead!"
+    OPTION_ABI=$(commas_to_spaces $OPTION_ABI)
+    if [ -n "$OPTION_ARCH" -a "$OPTION_ARCH" != "$OPTION_ABI" ]; then
+        echo "ERROR: You can't use both --abi and --arch with different values!"
+        exit 1
+    fi
+    OPTION_ARCH=$OPTION_ABI
+fi
+
+if [ -n "$OPTION_ARCH" ] ; then
+    ARCHS="$OPTION_ARCH"
+fi
+log "Using architectures: $(commas_to_spaces $ARCHS)"
 
 log "Checking source platforms."
 for PLATFORM in $PLATFORMS; do
@@ -207,36 +234,36 @@ for PLATFORM in $PLATFORMS; do
     fi
 done
 
-log "Checking source platform ABIs."
-BAD_ABIS=
-for ABI in $ABIS; do
-    eval CHECK_$ABI=no
+log "Checking source platform architectures."
+BAD_ARCHS=
+for ARCH in $ARCHS; do
+    eval CHECK_$ARCH=no
 done
 for PLATFORM in $PLATFORMS; do
-    for ABI in $ABIS; do
-        DIR="$SRCDIR/platforms/android-$PLATFORM/arch-$ABI"
+    for ARCH in $ARCHS; do
+        DIR="$SRCDIR/platforms/android-$PLATFORM/arch-$ARCH"
         if [ -d $DIR ] ; then
             log "  $DIR"
-            eval CHECK_$ABI=yes
+            eval CHECK_$ARCH=yes
         fi
     done
 done
 
-BAD_ABIS=
-for ABI in $ABIS; do
-    CHECK=`var_value CHECK_$ABI`
-    log "  $ABI check: $CHECK"
+BAD_ARCHS=
+for ARCH in $ARCHS; do
+    CHECK=`var_value CHECK_$ARCH`
+    log "  $ARCH check: $CHECK"
     if [ "$CHECK" = no ] ; then
-        if [ -z "$BAD_ABIS" ] ; then
-            BAD_ABIS=$ABI
+        if [ -z "$BAD_ARCHS" ] ; then
+            BAD_ARCHS=$ARCH
         else
-            BAD_ABIS="$BAD_ABIS $ABI"
+            BAD_ARCHS="$BAD_ARCHS $ARCH"
         fi
     fi
 done
 
-if [ -n "$BAD_ABIS" ] ; then
-    echo "ERROR: Source directory doesn't support these ABIs: $BAD_ABIS"
+if [ -n "$BAD_ARCHS" ] ; then
+    echo "ERROR: Source directory doesn't support these ARCHs: $BAD_ARCHS"
     exit 3
 fi
 
@@ -280,14 +307,14 @@ symlink_src_directory ()
 # Copy platform sysroot and samples into your destination
 #
 
-# $SRC/android-$PLATFORM/include --> $DST/platforms/android-$PLATFORM/arch-$ABI/usr/include
-# $SRC/android-$PLATFORM/arch-$ABI/include --> $DST/platforms/android-$PLATFORM/arch-$ABI/usr/include
+# $SRC/android-$PLATFORM/include --> $DST/platforms/android-$PLATFORM/arch-$ARCH/usr/include
+# $SRC/android-$PLATFORM/arch-$ARCH/include --> $DST/platforms/android-$PLATFORM/arch-$ARCH/usr/include
 # for compatibility:
-# $SRC/android-$PLATFORM/arch-$ABI/usr/include --> $DST/platforms/android-$PLATFORM/arch-$ABI/usr/include
+# $SRC/android-$PLATFORM/arch-$ARCH/usr/include --> $DST/platforms/android-$PLATFORM/arch-$ARCH/usr/include
 
 
 
-# $SRC/android-$PLATFORM/arch-$ABI/usr --> $DST/platforms/android-$PLATFORM/arch-$ABI/usr
+# $SRC/android-$PLATFORM/arch-$ARCH/usr --> $DST/platforms/android-$PLATFORM/arch-$ARCH/usr
 # $SRC/android-$PLATFORM/samples       --> $DST/samples
 #
 rm -rf $DSTDIR/platforms && mkdir -p $DSTDIR/platforms
@@ -311,12 +338,12 @@ for PLATFORM in $PLATFORMS; do
             exit 4
         fi
     fi
-    for ABI in $ABIS; do
-        SYSROOT=arch-$ABI/usr
-        log "Copy $ABI sysroot files from \$SRC/android-$PLATFORM over \$DST/android-$PLATFORM/arch-$ABI"
+    for ARCH in $ARCHS; do
+        SYSROOT=arch-$ARCH/usr
+        log "Copy $ARCH sysroot files from \$SRC/android-$PLATFORM over \$DST/android-$PLATFORM/arch-$ARCH"
         copy_src_directory $PLATFORM_SRC/include           $PLATFORM_DST/$SYSROOT/include "sysroot headers"
-        copy_src_directory $PLATFORM_SRC/arch-$ABI/include $PLATFORM_DST/$SYSROOT/include "sysroot headers"
-        copy_src_directory $PLATFORM_SRC/arch-$ABI/lib     $PLATFORM_DST/$SYSROOT/lib "sysroot libs"
+        copy_src_directory $PLATFORM_SRC/arch-$ARCH/include $PLATFORM_DST/$SYSROOT/include "sysroot headers"
+        copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib     $PLATFORM_DST/$SYSROOT/lib "sysroot libs"
         copy_src_directory $PLATFORM_SRC/$SYSROOT          $PLATFORM_DST/$SYSROOT "sysroot"
     done
     PREV_PLATFORM_DST=$PLATFORM_DST

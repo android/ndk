@@ -33,6 +33,30 @@ underscores_to_dashes ()
     echo $@ | tr '_' '-'
 }
 
+# Translate commas to spaces
+# Usage: str=`commas_to_spaces <list>`
+commas_to_spaces ()
+{
+    echo $@ | tr ',' ' '
+}
+
+# Translate spaces to commas
+# Usage: list=`spaces_to_commas <string>`
+spaces_to_commas ()
+{
+    echo $@ | tr ' ' ','
+}
+
+# Predicate: true iff a space-separated list contains a given item regex pattern
+# $1: item regex pattern
+# $2+: list
+list_contains ()
+{
+    local KEY="$1"
+    shift
+    echo $@ | tr ' ' '\n' | grep -q -F -e "$KEY"
+}
+
 #====================================================
 #
 #  OPTION PROCESSING
