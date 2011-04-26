@@ -17,4 +17,5 @@ include $(BUILD_SHARED_LIBRARY)
 include $(CLEAR_VARS)
 LOCAL_MODULE := test_whole_static_libs
 LOCAL_SRC_FILES := main.c
+LOCAL_LDLIBS := -ldl
 include $(BUILD_EXECUTABLE)
