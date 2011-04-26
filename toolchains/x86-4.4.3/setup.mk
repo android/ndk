@@ -31,10 +31,13 @@ TARGET_CFLAGS := \
     -mbionic \
     -I$(SYSROOT)/usr/include \
     -march=atom -mstackrealign -DUSE_SSSE3 -DUSE_SSE2 -mfpmath=sse \
-    -fpic \
+    -Ulinux -m32 -fPIC \
     -ffunction-sections \
     -funwind-tables \
     -fno-short-enums
+
+# Add and LDFLAGS for the target here
+# TARGET_LDFLAGS :=
 
 # Fix this after ssp.c is fixed for x86
 # TARGET_CFLAGS += -fstack-protector
@@ -63,3 +66,48 @@ $(call set-src-files-text,$(LOCAL_SRC_FILES),x86$(space)$(space)) \
 # The ABI-specific sub-directory that the SDK tools recognize for
 # this toolchain's generated binaries
 TARGET_ABI_SUBDIR := x86
+
+
+#
+# We need to add -lsupc++ to the final link command to make exceptions
+# and RTTI work properly (when -fexceptions and -frtti are used).
+#
+# Normally, the toolchain should be configured to do that automatically,
+# this will be debugged later.
+#
+
+define cmd-build-shared-library
+$(TARGET_CXX) \
+    -nostdlib -Wl,-soname,$(notdir $@) \
+    -Wl,-shared,-Bsymbolic \
+    $(call host-path, $(TARGET_CRTBEGIN_SO_O)) \
+    $(call host-path, $(PRIVATE_OBJECTS)) \
+    $(call link-whole-archives,$(PRIVATE_WHOLE_STATIC_LIBRARIES)) \
+    $(call host-path,\
+        $(PRIVATE_STATIC_LIBRARIES) \
+        $(PRIVATE_SHARED_LIBRARIES)) \
+    $(PRIVATE_LDFLAGS) \
+    $(PRIVATE_LDLIBS) \
+    -lsupc++ -lgcc \
+    $(call host-path, $(TARGET_CRTEND_SO_O)) \
+    -o $(call host-path,$@)
+endef
+
+define cmd-build-executable
+$(TARGET_CXX) \
+    -nostdlib -Bdynamic \
+    -Wl,-dynamic-linker,/system/bin/linker \
+    -Wl,--gc-sections \
+    -Wl,-z,nocopyreloc \
+    $(call host-path, $(TARGET_CRTBEGIN_DYNAMIC_O)) \
+    $(call host-path, $(PRIVATE_OBJECTS)) \
+    $(call link-whole-archives,$(PRIVATE_WHOLE_STATIC_LIBRARIES)) \
+    $(call host-path,\
+        $(PRIVATE_STATIC_LIBRARIES) \
+        $(PRIVATE_SHARED_LIBRARIES)) \
+    $(PRIVATE_LDFLAGS) \
+    $(PRIVATE_LDLIBS) \
+    -lsupc++ -lgcc \
+    $(call host-path, $(TARGET_CRTEND_O)) \
+    -o $(call host-path,$@)
+endef
