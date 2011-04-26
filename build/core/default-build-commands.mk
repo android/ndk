@@ -74,7 +74,7 @@ endef
 cmd-strip = $(TOOLCHAIN_PREFIX)strip --strip-unneeded $(call host-path,$1)
 
 TARGET_LIBGCC = $(shell $(TARGET_CC) -print-libgcc-file-name)
-TARGET_LDLIBS := -Wl,-rpath-link=$(call host-path,$(SYSROOT)/usr/lib)
+TARGET_LDLIBS := -lc -lm
 
 #
 # IMPORTANT: The following definitions must use lazy assignment because
