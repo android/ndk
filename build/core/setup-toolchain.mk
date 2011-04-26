@@ -66,8 +66,7 @@ TARGET_CRTEND_O           := $(SYSROOT)/usr/lib/crtend_android.o
 TARGET_CRTBEGIN_SO_O := $(strip $(wildcard $(SYSROOT)/usr/lib/crtbegin_so.o))
 TARGET_CRTEND_SO_O   := $(strip $(wildcard $(SYSROOT)/usr/lib/crtend_so.o))
 
-TARGET_PREBUILT_SHARED_LIBRARIES := libc libstdc++ libm
-TARGET_PREBUILT_SHARED_LIBRARIES := $(TARGET_PREBUILT_SHARED_LIBRARIES:%=$(SYSROOT)/usr/lib/%.so)
+TARGET_PREBUILT_SHARED_LIBRARIES :=
 
 # Define default values for TOOLCHAIN_NAME, this can be overriden in
 # the setup file.
