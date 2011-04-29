@@ -1,0 +1,54 @@
+From 018ee29a56875dbed15f3927f2b99cb0bb3ee9fa Mon Sep 17 00:00:00 2001
+From: Bruce Beare <bruce.j.beare@intel.com>
+Date: Fri, 29 Apr 2011 09:00:39 -0700
+Subject: [PATCH] Options brought in from core/combo/* for IA
+
+Signed-off-by: Bruce Beare <bruce.j.beare@intel.com>
+Author: Mark D Horn <mark.d.horn@intel.com>
+---
+ Makefile.in |   29 +++++++++++++++++++++++++++++
+ 1 files changed, 29 insertions(+), 0 deletions(-)
+
+diff --git a/Makefile.in b/Makefile.in
+index 9a2851d..61e5643 100644
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -317,6 +317,35 @@ GCC_CONFIG_ARGS += $(GCC_CONFIG_LIBSTDCXX_V3) --disable-libssp \
+ 	--disable-libstdc__-v3 --disable-sjlj-exceptions --disable-shared \
+ 	--disable-tls
+ CFLAGS_FOR_TARGET += -DTARGET_POSIX_IO -fno-short-enums
++
++ifeq ($(target_cpu),x86)
++# Options brought in from core/combo/* for IA
++CFLAGS_FOR_TARGET += \
++	-DANDROID -D__ANDROID__ -Ulinux \
++	-fPIC -Wa,--noexecstack -m32 \
++	-W -Wall -Werror=address -Werror=format-security -Werror=non-virtual-dtor -Werror=return-type \
++	-Werror=sequence-point -Winit-self -Wno-multichar -Wno-unused -Wpointer-arith -Wstrict-aliasing=2 \
++	-fexceptions -ffunction-sections -finline-functions \
++	-finline-limit=300 -fmessage-length=0 -fno-inline-functions-called-once \
++	-fno-strict-aliasing -frtti \
++	-fstrict-aliasing -funswitch-loops -funwind-tables \
++	-march=atom -mbionic -mfpmath=sse -mstackrealign -DUSE_SSE2 -DUSE_SSSE3
++
++LDFLAGS_FOR_TARGET += \
++	-m32 -O2 -g -fPIC \
++	-nostartfiles \
++	-Wl,-z,noexecstack -Wl,--gc-sections -nostdlib \
++	-fexceptions -frtti -fstrict-aliasing -ffunction-sections -finline-functions  \
++	-finline-limit=300 -fno-inline-functions-called-once \
++	-funswitch-loops -funwind-tables -mstackrealign \
++	-ffunction-sections -funwind-tables -fmessage-length=0 \
++	-march=atom -mstackrealign -mfpmath=sse -mbionic \
++	-Wno-multichar -Wl,-z,noexecstack -Werror=format-security -Wstrict-aliasing=2 \
++	-W -Wall -Wno-unused -Winit-self -Wpointer-arith -Werror=return-type -Werror=non-virtual-dtor \
++	-Werror=address -Werror=sequence-point \
++	-Werror=format-security -Wl,--no-undefined
++endif
++
+ # ARM specific options.
+ ifeq ($(target_cpu),arm)
+ GCC_CONFIG_ARGS += --with-float=soft --with-fpu=vfp --with-arch=armv5te \
+-- 
+1.7.0.4
+
