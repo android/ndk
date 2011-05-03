@@ -34,6 +34,7 @@
  * Standard C++ Library wrapper around the C stdlib.h header file.
  */
 #include <stdlib.h>
+#include <android/api-level.h>
 
 extern "C++" {
 
@@ -50,7 +51,9 @@ using ::getenv;
 using ::putenv;
 using ::setenv;
 using ::unsetenv;
+#if __ANDROID_API__ >= 8 /* MISSING FROM BIONIC before API level 8 */
 using ::clearenv;
+#endif
 
 using ::mktemp;
 using ::mkstemp;
