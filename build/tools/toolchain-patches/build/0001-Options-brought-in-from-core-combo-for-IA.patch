@@ -22,7 +22,7 @@ index 9a2851d..61e5643 100644
 +# Options brought in from core/combo/* for IA
 +CFLAGS_FOR_TARGET += \
 +	-DANDROID -D__ANDROID__ -Ulinux \
-+	-fPIC -Wa,--noexecstack -m32 \
++	-fPIC -Wa,--noexecstack -m32 -fstack-protector \
 +	-W -Wall -Werror=address -Werror=format-security -Werror=non-virtual-dtor -Werror=return-type \
 +	-Werror=sequence-point -Winit-self -Wno-multichar -Wno-unused -Wpointer-arith -Wstrict-aliasing=2 \
 +	-fexceptions -ffunction-sections -finline-functions \
