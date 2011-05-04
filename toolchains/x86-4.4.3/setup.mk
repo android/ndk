@@ -39,8 +39,7 @@ TARGET_CFLAGS := \
 # Add and LDFLAGS for the target here
 # TARGET_LDFLAGS :=
 
-# Fix this after ssp.c is fixed for x86
-# TARGET_CFLAGS += -fstack-protector
+TARGET_CFLAGS += -fstack-protector
 
 TARGET_x86_release_CFLAGS :=  -O2 \
                               -fomit-frame-pointer \
