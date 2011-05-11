@@ -80,6 +80,7 @@ define cmd-build-shared-library
 $(TARGET_CXX) \
     -nostdlib -Wl,-soname,$(notdir $@) \
     -Wl,-shared,-Bsymbolic \
+    --sysroot=$(call host-path,$(SYSROOT)) \
     $(call host-path, $(TARGET_CRTBEGIN_SO_O)) \
     $(call host-path, $(PRIVATE_OBJECTS)) \
     $(call link-whole-archives,$(PRIVATE_WHOLE_STATIC_LIBRARIES)) \
@@ -99,6 +100,7 @@ $(TARGET_CXX) \
     -Wl,-dynamic-linker,/system/bin/linker \
     -Wl,--gc-sections \
     -Wl,-z,nocopyreloc \
+    --sysroot=$(call host-path,$(SYSROOT)) \
     $(call host-path, $(TARGET_CRTBEGIN_DYNAMIC_O)) \
     $(call host-path, $(PRIVATE_OBJECTS)) \
     $(call link-whole-archives,$(PRIVATE_WHOLE_STATIC_LIBRARIES)) \
