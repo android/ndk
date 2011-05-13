@@ -206,7 +206,7 @@ rm -rf $TMPDIR/binutils/binutils-2.17
 # if you don't have exactly the configuration expected by
 # the scripts.
 #
-find $TMPDIR -type f -a -name "*.info" -print0 | xargs -0 rm -f
+find $TMPDIR -type f -a -name "*.info" ! -name sysroff.info -print0 | xargs -0 rm -f
 
 if [ $OPTION_PACKAGE = "yes" ] ; then
     # create the package
