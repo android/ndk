@@ -608,7 +608,7 @@ parse_toolchain_name ()
         ABI_CONFIGURE_EXTRA_FLAGS="--with-gmp-version=4.2.4 --with-mpfr-version=2.4.1"
         # Enable C++ exceptions, RTTI and GNU libstdc++ at the same time
         # You can't really build these separately at the moment.
-        ABI_CFLAGS_FOR_TARGET="-fexceptions"
+        ABI_CFLAGS_FOR_TARGET="-fexceptions -fPIC"
         ABI_CXXFLAGS_FOR_TARGET="-frtti"
         ABI_CONFIGURE_EXTRA_FLAGS="$ABI_CONFIGURE_EXTRA_FLAGS --enable-libstdc__-v3"
         ;;
