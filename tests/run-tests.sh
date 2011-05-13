@@ -38,6 +38,7 @@ LONG_TESTS="prebuild-stlport test-stlport test-gnustl"
 # Parse options
 #
 VERBOSE=no
+NDK_APP_ABI=armeabi
 NDK_ROOT=
 JOBS=$BUILD_NUM_CPUS
 find_program ADB_CMD adb
@@ -59,6 +60,9 @@ while [ -n "$1" ]; do
             else
                 VERBOSE=yes
             fi
+            ;;
+        --abi=*)
+            NDK_APP_ABI="$optarg"
             ;;
         --ndk=*)
             NDK_ROOT="$optarg"
@@ -158,6 +162,40 @@ adb_cmd ()
     return $RET
 }
 
+# Make a directory path on device
+#
+# The 'mkdir' command on the Android device does not
+# support the '-p' option. This function will test
+# for the existence of the parent directory and recursively
+# call itself until it files a parent which exists; then
+# create the requested directory.
+adb_cmd_mkdir ()
+{
+    local FULLDIR BASEDIR
+    FULLDIR=$1
+    BASEDIR=`dirname $FULLDIR`
+
+    #run $ADB_CMD shell "ls $BASEDIR 1>/dev/null 2>&1"
+    adb_cmd "ls $BASEDIR 1>/dev/null 2>&1"
+    if [ $? != 0 ] ; then
+        if [ $BASEDIR = "/" ] ; then
+            dump "ERROR: Could not find the root (/) directory on the device!"
+            exit 1
+        else
+            adb_cmd_mkdir $BASEDIR
+            adb_cmd_mkdir $FULLDIR
+        fi
+    else
+        #run $ADB_CMD shell "mkdir $FULLDIR"
+        # If the directory doesn't exist, make it
+        adb_cmd "ls $FULLDIR 1>/dev/null 2>&1 || mkdir $FULLDIR"
+        if [ $? != 0 ] ; then
+            dump "ERROR: Could not mkdir '$FULLDIR' on the device!"
+            exit 1
+        fi
+    fi
+}
+
 # Returns 0 if a variable containing one or more items separated
 # by spaces contains a given value.
 # $1: variable name (e.g. FOO)
@@ -193,8 +231,9 @@ else # !FULL_TESTS
 fi # !FULL_TESTS
 
 
-mkdir -p /tmp/ndk-tests
-setup_default_log_file /tmp/ndk-tests/build-tests.log
+TEST_DIR="/tmp/ndk-tests-$USER"
+mkdir -p $TEST_DIR
+setup_default_log_file "$TEST_DIR/build-tests.log"
 
 if [ -n "$NDK_PACKAGE" ] ; then
     if [ -n "$NDK_ROOT" ] ; then
@@ -231,7 +270,7 @@ fi
 # Create log file
 #
 
-BUILD_DIR=`mktemp -d /tmp/ndk-tests/build-XXXXXX`
+BUILD_DIR=`mktemp -d $TEST_DIR/build-XXXXXX`
 
 ###
 ### RUN AWK TESTS
@@ -310,7 +349,11 @@ fi
 ###  REBUILD ALL SAMPLES FIRST
 ###
 
-NDK_BUILD_FLAGS="-B"
+if [ -z "$NDK_APP_ABI" ] ; then
+    NDK_BUILD_FLAGS="-B"
+else
+    NDK_BUILD_FLAGS="NDK_APP_ABI=$NDK_APP_ABI -B"
+fi
 # Use --verbose twice to see build commands for the tests
 if [ "$VERBOSE2" = "yes" ] ; then
     NDK_BUILD_FLAGS="$NDK_BUILD_FLAGS V=1"
@@ -396,7 +439,7 @@ if is_testable build; then
     {
         echo "Building NDK build test: `basename $1`"
         if [ -f $1/build.sh ]; then
-            run $1/build.sh
+            run $1/build.sh "$NDK_BUILD_FLAGS"
             if [ $? != 0 ]; then
                 echo "!!! BUILD FAILURE [$1]!!! See $NDK_LOGFILE for details or use --verbose option!"
                 exit 1
@@ -432,7 +475,7 @@ if is_testable device; then
 
     run_device_test ()
     {
-        local SRCDIR="$BUILD_DIR/`basename $1`/libs/armeabi"
+        local SRCDIR="$BUILD_DIR/`basename $1`/libs/$NDK_APP_ABI"
         local DSTDIR="$2/ndk-tests"
         local SRCFILE
         local DSTFILE
@@ -445,7 +488,7 @@ if is_testable device; then
         fi
         # First, copy all files to /data/local, except for gdbserver
         # or gdb.setup.
-        adb_cmd mkdir -p $DSTDIR
+        adb_cmd_mkdir $DSTDIR
         for SRCFILE in `ls $SRCDIR`; do
             DSTFILE=`basename $SRCFILE`
             if [ "$DSTFILE" = "gdbserver" -o "$DSTFILE" = "gdb.setup" ] ; then
@@ -497,8 +540,8 @@ if is_testable device; then
         if [ "$ADB_DEVCOUNT" = "0" ]; then
             dump "WARNING: No device connected to adb!"
             SKIP_TESTS=yes
-        elif [ "$ADB_DEVCOUNT" != 1 -a -z "$ADB_SERIAL" ] ; then
-            dump "WARNING: More than one device connected to adb. Please define ADB_SERIAL!"
+        elif [ "$ADB_DEVCOUNT" != 1 -a -z "$ANDROID_SERIAL" ] ; then
+            dump "WARNING: More than one device connected to adb. Please define ANDROID_SERIAL!"
             SKIP_TESTS=yes
         fi
         echo "$ADB_DEVICES" | grep -q -e "offline"
