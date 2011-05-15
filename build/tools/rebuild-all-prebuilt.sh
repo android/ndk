@@ -180,8 +180,9 @@ if [ -n "$DARWIN_SSH" ] ; then
     copy_directory "$ANDROID_NDK_ROOT/build" "$TMPDARWIN/ndk/build"
     copy_file_list "$ANDROID_NDK_ROOT" "$TMPDARWIN/ndk" sources/android/libthread_db
     copy_file_list "$ANDROID_NDK_ROOT" "$TMPDARWIN/ndk" "$STLPORT_SUBDIR"
+    copy_file_list "$ANDROID_NDK_ROOT" "$TMPDARWIN/ndk" tests/build/prebuild-stlport
     dump "Prepare platforms files"
-    `dirname $0`/build-platforms.sh --no-samples --dst-dir="$TMPDARWIN/ndk"
+    `dirname $0`/build-platforms.sh --arch=$ARCH --no-samples --dst-dir="$TMPDARWIN/ndk"
     dump "Copying NDK build scripts and platform files to remote..."
     (cd "$TMPDARWIN" && tar czf - ndk) | (ssh $DARWIN_SSH tar xzf - -C $TMPREMOTE)
     fail_panic "Could not copy!"
@@ -191,7 +192,7 @@ if [ -n "$DARWIN_SSH" ] ; then
     (cd "$SRC_DIR" && tar czf - .) | (ssh $DARWIN_SSH tar xzf - -C $TMPREMOTE/toolchain)
     fail_panic "Could not copy toolchain!"
     dump "Running remote build..."
-    run ssh $DARWIN_SSH "$TMPREMOTE/ndk/build/tools/rebuild-all-prebuilt.sh --toolchain-src-dir=$TMPREMOTE/toolchain --package-dir=$TMPREMOTE/packages"
+    run ssh $DARWIN_SSH "$TMPREMOTE/ndk/build/tools/rebuild-all-prebuilt.sh --toolchain-src-dir=$TMPREMOTE/toolchain --package-dir=$TMPREMOTE/packages --arch=$ARCH"
     fail_panic "Could not build prebuilt packages on Darwin!"
     dump "Copying back Darwin prebuilt packages..."
     run scp $DARWIN_SSH:$TMPREMOTE/packages/*-darwin-* $PACKAGE_DIR/
