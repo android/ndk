@@ -48,7 +48,10 @@ register_var_option "--gdb-version=<version>"  GDB_VERSION "Specify gdb version"
 BINUTILS_VERSION=2.19
 register_var_option "--binutils-version=<version>" BINUTILS_VERSION "Specify binutils version"
 
-MPFR_VERSION=2.3.0
+GMP_VERSION=4.2.4
+register_var_option "--gmp-version=<version>" GMP_VERSION "Specify gmp version"
+
+MPFR_VERSION=2.4.1
 register_var_option "--mpfr-version=<version>" MPFR_VERSION "Specify mpfr version"
 
 JOBS=$BUILD_NUM_CPUS
@@ -201,6 +204,7 @@ $BUILD_SRCDIR/configure --target=$ABI_CONFIGURE_TARGET \
                         --with-sysroot=$TOOLCHAIN_SYSROOT \
                         --with-binutils-version=$BINUTILS_VERSION \
                         --with-mpfr-version=$MPFR_VERSION \
+                        --with-gmp-version=$GMP_VERSION \
                         --with-gcc-version=$GCC_VERSION \
                         --with-gdb-version=$GDB_VERSION \
                         $ABI_CONFIGURE_EXTRA_FLAGS
@@ -258,7 +262,7 @@ run rm -rf $TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/lib/*/libiberty.a
 
 # Copy libstdc++ headers and libraries if needed
 if [ "$COPY_LIBSTDCXX" = "yes" ] ; then
-    dump "Copying libstdc++ prebuild binaries."
+    dump "Copying libstdc++ prebuilt binaries."
     $ANDROID_NDK_ROOT/build/tools/copy-libstdcxx.sh "$TOOLCHAIN_PATH" "$NDK_DIR" --toolchain=$TOOLCHAIN
 fi
 

@@ -606,12 +606,12 @@ parse_toolchain_name ()
     arm-eabi-*)
         ARCH="arm"
         ABI_CONFIGURE_TARGET="arm-eabi"
+        ABI_CONFIGURE_EXTRA_FLAGS="--with-binutils-version=2.19 --with-mpfr-version=2.3.0 --with-gmp-version=4.2.2"
         ;;
     arm-linux-androideabi-*)
         ARCH="arm"
         ABI_CONFIGURE_TARGET="arm-linux-androideabi"
-        ABI_CONFIGURE_EXTRA_FLAGS="--with-gmp-version=4.2.4 --with-mpfr-version=2.4.1
---with-arch=armv5te"
+        ABI_CONFIGURE_EXTRA_FLAGS="--with-arch=armv5te"
         # Disable ARM Gold linker for now, it doesn't build on Windows, it
         # crashes with SIGBUS on Darwin, and produces weird executables on
         # linux that strip complains about... Sigh.
@@ -629,7 +629,6 @@ parse_toolchain_name ()
         ARCH="x86"
         ABI_INSTALL_NAME="x86"
         ABI_CONFIGURE_TARGET="i686-android-linux"
-        ABI_CONFIGURE_EXTRA_FLAGS="--with-gmp-version=4.2.4 --with-mpfr-version=2.4.1"
         # Enable C++ exceptions, RTTI and GNU libstdc++ at the same time
         # You can't really build these separately at the moment.
         ABI_CFLAGS_FOR_TARGET="-fexceptions -fPIC"
