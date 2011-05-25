@@ -443,6 +443,12 @@ if platform_check 3; then
     copy_system_object_file crtbegin_dynamic
     copy_system_object_file crtbegin_static
     copy_system_object_file crtend_android
+    case $ARCH in
+    x86)
+        copy_system_object_file crtbegin_so
+        copy_system_object_file crtend_so
+        ;;
+    esac
 
     copy_system_shared_library libm
     copy_system_static_library libm
@@ -518,8 +524,12 @@ fi
 
 # API level 9
 if platform_check 9; then
-    copy_system_object_file crtbegin_so
-    copy_system_object_file crtend_so
+    case $ARCH in
+    arm)
+        copy_system_object_file crtbegin_so
+        copy_system_object_file crtend_so
+        ;;
+    esac
 
     copy_system_shared_library libandroid
     copy_system_headers $ANDROID_ROOT/frameworks/base/native/include \
