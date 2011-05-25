@@ -38,7 +38,7 @@ LONG_TESTS="prebuild-stlport test-stlport test-gnustl"
 # Parse options
 #
 VERBOSE=no
-NDK_APP_ABI=armeabi
+ABI=armeabi
 NDK_ROOT=
 JOBS=$BUILD_NUM_CPUS
 find_program ADB_CMD adb
@@ -62,7 +62,7 @@ while [ -n "$1" ]; do
             fi
             ;;
         --abi=*)
-            NDK_APP_ABI="$optarg"
+            ABI="$optarg"
             ;;
         --ndk=*)
             NDK_ROOT="$optarg"
@@ -126,6 +126,7 @@ if [ "$OPTION_HELP" = "yes" ] ; then
     echo "    --ndk=<path>      Path to NDK to test [$ROOTDIR]"
     echo "    --package=<path>  Path to NDK package to test"
     echo "    -j<N> --jobs=<N>  Launch parallel builds [$JOBS]"
+    echo "    --abi=<name>      Only run tests for the specific ABI [$ABI]"
     echo "    --adb=<file>      Specify adb executable for device tests"
     echo "    --only-samples    Only rebuild samples"
     echo "    --only-build      Only rebuild build tests"
@@ -349,11 +350,23 @@ fi
 ###  REBUILD ALL SAMPLES FIRST
 ###
 
-if [ -z "$NDK_APP_ABI" ] ; then
-    NDK_BUILD_FLAGS="-B"
-else
-    NDK_BUILD_FLAGS="NDK_APP_ABI=$NDK_APP_ABI -B"
-fi
+# Special case, if ABI is 'armeabi' or 'armeabi-v7a'
+# we want to build both armeabi and armeabi-v7a machine code
+# even if we will only run the armeabi test programs on the
+# device. This is done by not forcing the definition of APP_ABI
+NDK_BUILD_FLAGS="-B"
+case $ABI in
+    armeabi|armeabi-v7a)
+        ;;
+    x86)
+        NDK_BUILD_FLAGS="$NDK_BUILD_FLAGS APP_ABI=$ABI"
+        ;;
+    *)
+        echo "ERROR: Unsupported abi value: $ABI"
+        exit 1
+        ;;
+esac
+
 # Use --verbose twice to see build commands for the tests
 if [ "$VERBOSE2" = "yes" ] ; then
     NDK_BUILD_FLAGS="$NDK_BUILD_FLAGS V=1"
@@ -475,7 +488,7 @@ if is_testable device; then
 
     run_device_test ()
     {
-        local SRCDIR="$BUILD_DIR/`basename $1`/libs/$NDK_APP_ABI"
+        local SRCDIR="$BUILD_DIR/`basename $1`/libs/$ABI"
         local DSTDIR="$2/ndk-tests"
         local SRCFILE
         local DSTFILE
@@ -484,6 +497,10 @@ if is_testable device; then
         # Do not run the test if BROKEN_RUN is defined
         if [ -f "$1/BROKEN_RUN" -o -f "$1/BROKEN_BUILD" ] ; then
             dump "Skipping NDK device test run: `basename $1`"
+            return 0
+        fi
+        if [ ! -d "$SRCDIR" ]; then
+            dump "Skipping NDK device test run (no $ABI binaries): `basename $1`"
             return 0
         fi
         # First, copy all files to /data/local, except for gdbserver
