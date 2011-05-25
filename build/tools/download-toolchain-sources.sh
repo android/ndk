@@ -54,6 +54,9 @@ register_var_option "--git-reference=<path>" OPTION_GIT_REFERENCE "Use local git
 OPTION_PACKAGE=no
 register_var_option "--package" OPTION_PACKAGE "Create source package in /tmp"
 
+OPTION_NO_PATCHES=no
+register_var_option "--no-patches" OPTION_NO_PATCHES "Do not patch sources"
+
 PROGRAM_PARAMETERS="<src-dir>"
 PROGRAM_DESCRIPTION=\
 "Download the NDK toolchain sources from android.git.kernel.org into <src-dir>.
@@ -181,13 +184,15 @@ toolchain_clone gold  # not sure about this one !
 toolchain_clone mpfr
 
 # Patch the toolchain sources
-PATCHES_DIR="$PROGDIR/toolchain-patches"
-if [ -d "$PATCHES_DIR" ] ; then
-    dump "Patching toolchain sources"
-    run $PROGDIR/patch-sources.sh $FLAGS $TMPDIR $PATCHES_DIR
-    if [ $? != 0 ] ; then
-        dump "ERROR: Could not patch sources."
-        exit 1
+if [ "$OPTION_NO_PATCHES" != "yes" ]; then
+    PATCHES_DIR="$PROGDIR/toolchain-patches"
+    if [ -d "$PATCHES_DIR" ] ; then
+        dump "Patching toolchain sources"
+        run $PROGDIR/patch-sources.sh $FLAGS $TMPDIR $PATCHES_DIR
+        if [ $? != 0 ] ; then
+            dump "ERROR: Could not patch sources."
+            exit 1
+        fi
     fi
 fi
 
