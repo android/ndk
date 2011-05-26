@@ -1,0 +1,55 @@
+From 2761d8d2cb59b5447a9ea1a5b10a1262a84211d6 Mon Sep 17 00:00:00 2001
+From: David 'Digit' Turner <digit@android.com>
+Date: Tue, 24 May 2011 23:34:22 +0200
+Subject: [PATCH] gcc: prevent crash on Eclair and older platforms.
+
+The point of this patch is to work-around a bug in the Eclair
+dynamic linker, which doesn't support weak symbols. By default,
+libsupc++ and libstdc++ generate static C++ constructors that
+reference weak symbols.
+
+When they are statically linked into shared libraries, the
+corresponding code is referenced in its .init_array section
+and run when the shared library is loaded.
+
+On Eclair and previous release, the weak symbol is not resolved
+before the constructor are launched, resulting in a crash when
+the PLT entry tries to jump to address 0.
+
+By not generating weak symbol references, we avoid the problem
+completely. And we don't need them because the pthread symbols
+are all in the C library on Android, unlike legacy Linux systems
+which put them in libpthread.so (and provide weak stubs in libc.so).
+
+Change-Id: I289db08a9ea567f0574bb2058516bfeb01c68a2c
+---
+ gcc-4.4.3/gcc/gthr-posix.h |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
+
+diff --git a/gcc-4.4.3/gcc/gthr-posix.h b/gcc-4.4.3/gcc/gthr-posix.h
+index 27652f9..a104d91 100644
+--- a/gcc-4.4.3/gcc/gthr-posix.h
++++ b/gcc-4.4.3/gcc/gthr-posix.h
+@@ -38,6 +38,19 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+ #define _REENTRANT 1
+ #endif
+ 
++/* The following should normally be in a different header file,
++ * but I couldn't find the right location. The point of the macro
++ * definition below is to prevent libsupc++ and libstdc++ to reference
++ * weak symbols in their static C++ constructors. Such code crashes
++ * when a shared object linked statically to these libraries is
++ * loaded on Android 2.1 (Eclair) and older platform releases, due
++ * to a dynamic linker bug.
++ */
++#ifdef __ANDROID__
++#undef GTHREAD_USE_WEAK
++#define GTHREAD_USE_WEAK 0
++#endif
++
+ #include <pthread.h>
+ #include <unistd.h>
+ 
+-- 
+1.7.3.1
+
