@@ -144,7 +144,7 @@ if [ ! -f $SRC_DIR/mpfr/mpfr-$MPFR_VERSION.tar.bz2 ] ; then
     exit 1
 fi
 
-set_toolchain_ndk $NDK_DIR
+set_toolchain_ndk $NDK_DIR $TOOLCHAIN
 
 dump "Using C compiler: $CC"
 dump "Using C++ compiler: $CXX"

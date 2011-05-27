@@ -43,7 +43,7 @@ BUILD_OUT=`random_temp_directory`
 register_option "--build-out=<path>" do_build_out "Set temporary build directory" "/tmp/<random>"
 do_build_out () { OPTION_BUILD_OUT="$1"; }
 
-PLATFORM=android-3
+PLATFORM=android-9
 register_var_option "--platform=<name>"  PLATFORM "Target specific platform"
 
 SYSROOT=
@@ -118,7 +118,7 @@ set_parameters $PARAMETERS
 prepare_host_flags
 
 parse_toolchain_name
-check_toolchain_install $NDK_DIR
+check_toolchain_install $NDK_DIR $TOOLCHAIN
 
 # Check build directory
 #
