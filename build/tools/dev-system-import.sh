@@ -97,6 +97,9 @@ corresponding to previous releases.
 ARCH=arm
 register_var_option "--arch=<name>" ARCH "Specify architecture name."
 
+FORCE=no
+register_var_option "--force" FORCE "Force-copy all files."
+
 DEVDIR="$ANDROID_NDK_ROOT/../development/ndk"
 if [ -d "$DEVDIR" ] ; then
     OUT_DIR=`cd $DEVDIR && pwd`
@@ -105,7 +108,7 @@ else
 fi
 register_var_option "--out-dir=<path>" OUT_DIR "Specify output directory."
 
-TOOLCHAIN_PREFIX=$ANDROID_NDK_ROOT/toolchains/$TOOLCHAIN/prebuilt/$HOST_TAG/bin/$PREFIX
+TOOLCHAIN_PREFIX=
 register_var_option "--toolchain-prefix=<path>" TOOLCHAIN_PREFIX "Path and prefix for the toolchain"
 log "Toolchain prefix: $TOOLCHAIN_PREFIX"
 
@@ -125,17 +128,46 @@ fi
 #
 normalize_platforms ()
 {
-    echo "$@" | tr ' ' '\n' | sed -e 's!android-!!g' | tr '\n' ' '
+    local RET=$(echo "$@" | tr ' ' '\n' | sed -e 's!android-!!g' | tr '\n' ' ')
+    echo ${RET%% }
 }
 
 PLATFORMS=`normalize_platforms $PARAMETERS`
 log "Target platform levels: $PLATFORMS"
+
+if [ "$FORCE" = "yes" ] ;then
+    # We can't accept several platform levels in --force mode.
+    NUM_PLATFORMS=$(echo $PLATFORMS | tr ' ' '\n' | wc -l)
+    if [ "$NUM_PLATFORMS" != 1 ]; then
+        echo "ERROR: You can only use a single platform level when using --force ($NUM_PLATFORMS)"
+        exit 1
+    fi
+fi
+
+# Return the list of files under a given directory
+# $1: directory
+# $2: (optional) file patterns
+list_regular_files_in ()
+{
+    local DIR="$1"
+    shift
+    local PATTERNS="$@"
+    if [ -z "$PATTERNS" ]; then
+        PATTERNS="."
+    fi
+    cd "$DIR" && find $PATTERNS -type f | sed -e 's!^./!!g'
+}
 
 # Check that a given platform level was listed on the command line
 # $1: Platform numerical level (e.g. '3')
 # returns true if the platform is listed
 platform_check ()
 {
+    if [ "$FORCE" = "yes" ]; then
+        PLATFORM_ROOT="$OUT_DIR/platforms/android-$PLATFORMS/arch-$ARCH"
+        log "Platform root (forced): $PLATFORM_ROOT"
+        return 0
+    fi
     echo "$PLATFORMS" | tr ' ' '\n' | fgrep -q "$1"
     if [ $? != 0 ] ; then
         # Not listed, return an error code for 'if'
@@ -166,6 +198,27 @@ case $ARCH in
         exit 1
 esac
 
+if [ -z "$TOOLCHAIN_PREFIX" ]; then
+    TOOLCHAIN_NAME=$(get_default_toolchain_for $ARCH)
+    TOOLCHAIN_PREFIX=$(get_default_toolchain_prefix_for $ARCH)
+    TOOLCHAIN_PREFIX=$(get_toolchain_install $ANDROID_NDK_ROOT $TOOLCHAIN_NAME)/bin/$TOOLCHAIN_PREFIX
+    TOOLCHAIN_PREFIX=${TOOLCHAIN_PREFIX%%-}
+    if [ -z "$TOOLCHAIN_PREFIX" ]; then
+        echo "ERROR: Unsupported architecture"
+        exit 1
+    fi
+    echo "Autoconfig: --toolchain-prefix=$TOOLCHAIN_PREFIX"
+fi
+
+if [ ! -d "$(dirname $TOOLCHAIN_PREFIX)" ]; then
+    echo "ERROR: Toolchain not installed, missing directory: $(dirname $TOOLCHAIN_PREFIX)"
+    exit 1
+fi
+
+if [ ! -f "$TOOLCHAIN_PREFIX-readelf" ]; then
+    echo "ERROR: Toolchain not installed, missing program: $TOOLCHAIN_PREFIX-readelf"
+    exit 1
+fi
 
 if [ -z "$OUT_DIR" ] ; then
     dump "ERROR: Could not find valid output directory (e.g. \$NDK/../development/ndk)."
@@ -177,7 +230,7 @@ fi
 #
 
 # Normalize the value: android-3 -> android-3   3 -> android-3
-PLATFORM=`echo $PLATFORM | sed -e 's!android-!!g'`
+PLATFORM=${PLATFORM##android-}
 PLATFORM=android-$PLATFORM
 
 
@@ -389,7 +442,7 @@ copy_system_headers ()
 # $1: source directory
 copy_system_headers_from ()
 {
-    local headers=`cd "$1" && find . -type f | sed -e 's!\./!!g'`
+    local headers=$(list_regular_files_in "$1")
     copy_system_headers $1 $headers
 }
 
@@ -418,6 +471,17 @@ copy_arch_system_headers ()
     done
 }
 
+copy_arch_system_headers_from ()
+{
+    local headers=$(list_regular_files_in "$1")
+    copy_arch_system_headers $1 $headers
+}
+
+copy_arch_kernel_headers_from ()
+{
+    local headers=$(list_regular_files_in "$1" asm)
+    copy_arch_system_headers $1 $headers
+}
 
 # Now do the work
 
@@ -438,7 +502,8 @@ if platform_check 3; then
     copy_system_shared_library libc
     copy_system_static_library libc
     copy_system_headers_from $ANDROID_ROOT/bionic/libc/include
-    copy_system_headers_from $ANDROID_ROOT/bionic/libc/arch-$ARCH/include
+    copy_arch_system_headers_from $ANDROID_ROOT/bionic/libc/arch-$ARCH/include
+    copy_arch_kernel_headers_from $ANDROID_ROOT/bionic/libc/kernel/arch-$ARCH
 
     copy_system_object_file crtbegin_dynamic
     copy_system_object_file crtbegin_static
@@ -481,6 +546,8 @@ if platform_check 3; then
     #        of the platform headers in order to make room for other STL
     #        implementations (e.g. STLport or GNU Libstdc++-v3)
     #
+    # This is the only library that is allowed to export C++ symbols for now.
+    set_symbol_includes '^_Z.*'
     copy_system_shared_library libstdc++
     copy_system_static_library libstdc++
 

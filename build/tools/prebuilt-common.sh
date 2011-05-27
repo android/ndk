@@ -662,23 +662,39 @@ parse_toolchain_name ()
 
 }
 
+# Return the default name for a given architecture
+# $1: Architecture name
+get_default_toolchain_for ()
+{
+    eval echo "\$DEFAULT_ARCH_TOOLCHAIN_$1"
+}
+
+# Return the default toolchain program prefix for a given architecture
+# $1: Architecture name
+get_default_toolchain_prefix_for ()
+{
+    eval echo "\$DEFAULT_ARCH_TOOLCHAIN_PREFIX_$1"
+}
+
 # Return the host/build specific path for prebuilt toolchain binaries
 # relative to $1.
 #
 # $1: target root NDK directory
+# $2: toolchain name
 #
 get_toolchain_install ()
 {
-    echo "$1/toolchains/$TOOLCHAIN/prebuilt/$HOST_TAG"
+    echo "$1/toolchains/$2/prebuilt/$HOST_TAG"
 }
 
 
 # Set the toolchain target NDK location.
 # this sets TOOLCHAIN_PATH and TOOLCHAIN_PREFIX
 # $1: target NDK path
+# $2: toolchain name
 set_toolchain_ndk ()
 {
-    TOOLCHAIN_PATH=`get_toolchain_install $1`
+    TOOLCHAIN_PATH=`get_toolchain_install $1 $2`
     log "Using toolchain path: $TOOLCHAIN_PATH"
 
     TOOLCHAIN_PREFIX=$TOOLCHAIN_PATH/bin/$ABI_CONFIGURE_TARGET
@@ -688,17 +704,18 @@ set_toolchain_ndk ()
 # Check that a toolchain is properly installed at a target NDK location
 #
 # $1: target root NDK directory
+# $2: toolchain name
 #
 check_toolchain_install ()
 {
-    TOOLCHAIN_PATH=`get_toolchain_install $1`
+    TOOLCHAIN_PATH=`get_toolchain_install $1 $2`
     if [ ! -d "$TOOLCHAIN_PATH" ] ; then
-        echo "ERROR: Toolchain '$TOOLCHAIN' not installed in '$NDK_DIR'!"
+        echo "ERROR: Toolchain '$2' not installed in '$NDK_DIR'!"
         echo "       Ensure that the toolchain has been installed there before."
         exit 1
     fi
 
-    set_toolchain_ndk $1
+    set_toolchain_ndk $1 $2
 }
 
 
@@ -732,3 +749,14 @@ GNUSTL_SUBDIR=sources/cxx-stl/gnu-libstdc++
 # The date to use when downloading toolchain sources from android.git.kernel.org
 # Leave it empty for tip of tree.
 TOOLCHAIN_GIT_DATE=2011-02-23
+
+# Default toolchain names and prefix
+#
+# This is used by get_default_toolchain_name and get_default_toolchain_prefix
+# defined above
+DEFAULT_ARCH_TOOLCHAIN_arm=arm-linux-androideabi-4.4.3
+DEFAULT_ARCH_TOOLCHAIN_PREFIX_arm=arm-linux-androideabi-
+
+DEFAULT_ARCH_TOOLCHAIN_x86=x86-4.4.3
+DEFAULT_ARCH_TOOLCHAIN_PREFIX_x86=i686-android-linux-
+
