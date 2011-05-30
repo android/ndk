@@ -28,8 +28,8 @@ PROGDIR=`dirname $0`
 NDK_DIR=
 register_var_option "--ndk-dir=<path>" NDK_DIR "Don't package, copy binaries to target NDK directory"
 
-BUILD_DIR=`random_temp_directory`
-register_var_option "--build-dir=<path>" BUILD_DIR "Specify temporary build directory" "/tmp/<random>"
+BUILD_DIR=/tmp/ndk-$USER/build
+register_var_option "--build-dir=<path>" BUILD_DIR "Specify temporary build directory"
 
 GDB_VERSION=6.6
 register_var_option "--gdb-version=<version>" GDB_VERSION "Specify gdb version"
@@ -53,7 +53,7 @@ OPTION_TOOLCHAIN_SRC_DIR=
 register_var_option "--toolchain-src-dir=<path>" OPTION_TOOLCHAIN_SRC_DIR "Use toolchain source directory."
 
 RELEASE=`date +%Y%m%d`
-PACKAGE_DIR=/tmp/ndk-prebuilt/prebuilt-$RELEASE
+PACKAGE_DIR=/tmp/ndk-$USER/prebuilt-$RELEASE
 register_var_option "--package-dir=<path>" PACKAGE_DIR "Put prebuilt tarballs into <path>."
 
 OPTION_GIT_HTTP=no
@@ -95,7 +95,7 @@ fi
 if [ -z "$NDK_DIR" ] ; then
     mkdir -p "$PACKAGE_DIR"
     fail_panic "Could not create directory: $PACKAGE_DIR"
-    NDK_DIR=/tmp/ndk-toolchain/ndk-prebuilt-$$
+    NDK_DIR=$BUILD_DIR/install
     mkdir -p $NDK_DIR
 else
     if [ ! -d "$NDK_DIR" ] ; then
@@ -172,9 +172,9 @@ if [ -n "$DARWIN_SSH" ] ; then
     #
     dump "Preparing remote build on $DARWIN_SSH..."
     dump "Creating remote temp directory"
-    TMPREMOTE=/tmp/ndk-darwin-prebuild
+    TMPREMOTE=/tmp/ndk-$USER/darwin-prebuild
     run ssh $DARWIN_SSH "mkdir -p $TMPREMOTE && rm -rf $TMPREMOTE/*"
-    TMPDARWIN=`random_temp_directory`  # Where we're going to package stuff
+    TMPDARWIN=$NDK_TMPDIR/darwin  # Where we're going to package stuff
     log "Using temporary work directory: $TMPDARWIN"
     dump "Prepare NDK build scripts"
     copy_directory "$ANDROID_NDK_ROOT/build" "$TMPDARWIN/ndk/build"
@@ -182,7 +182,7 @@ if [ -n "$DARWIN_SSH" ] ; then
     copy_file_list "$ANDROID_NDK_ROOT" "$TMPDARWIN/ndk" "$STLPORT_SUBDIR"
     copy_file_list "$ANDROID_NDK_ROOT" "$TMPDARWIN/ndk" tests/build/prebuild-stlport
     dump "Prepare platforms files"
-    `dirname $0`/build-platforms.sh --arch=$ARCH --no-samples --dst-dir="$TMPDARWIN/ndk"
+    $PROGDIR/build-platforms.sh --arch=$ARCH --no-samples --dst-dir="$TMPDARWIN/ndk"
     dump "Copying NDK build scripts and platform files to remote..."
     (cd "$TMPDARWIN" && tar czf - ndk) | (ssh $DARWIN_SSH tar xzf - -C $TMPREMOTE)
     fail_panic "Could not copy!"
@@ -200,6 +200,15 @@ if [ -n "$DARWIN_SSH" ] ; then
     dump "Cleaning up remote machine..."
     run ssh $DARWIN_SSH rm -rf $TMPREMOTE
     exit 0
+fi
+
+# If no sysroot is specified, build one explicitely
+if [ -z "$OPTION_SYSROOT" ]; then
+    SYSROOT=$BUILD_DIR/platforms/android-9/arch-$ARCH
+    mkdir -p $SYSROOT
+    dump "Creating sysroot: $SYSROOT"
+    $PROGDIR/build-platforms.sh --arch=$ARCH --no-samples --no-symlinks --dst-dir=$BUILD_DIR
+    OPTION_SYSROOT=$SYSROOT
 fi
 
 # Package a directory in a .tar.bz2 archive

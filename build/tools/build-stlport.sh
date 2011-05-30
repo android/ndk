@@ -43,7 +43,7 @@ option.
 "
 
 RELEASE=`date +%Y%m%d`
-PACKAGE_DIR=/tmp/ndk-prebuilt/prebuilt-$RELEASE
+PACKAGE_DIR=/tmp/ndk-$USER/prebuilt/prebuilt-$RELEASE
 register_var_option "--package-dir=<path>" PACKAGE_DIR "Put prebuilt tarballs into <path>."
 
 NDK_DIR=
@@ -92,7 +92,7 @@ if [ -z "$NDK_DIR" ] ; then
         echo "ERROR: Could not create directory: $PACKAGE_DIR"
         exit 1
     fi
-    NDK_DIR=/tmp/ndk-toolchain/ndk-prebuilt-$$
+    NDK_DIR=$NDK_TMPDIR/ndk-prebuilt
     mkdir -p $NDK_DIR &&
     dump "Copying NDK files to temporary dir: $NDK_DIR"
     run cp -rf $ANDROID_NDK_ROOT/* $NDK_DIR/

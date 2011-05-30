@@ -719,11 +719,21 @@ check_toolchain_install ()
 }
 
 
-random_temp_directory ()
-{
-    mkdir -p /tmp/ndk-toolchain
-    mktemp -d /tmp/ndk-toolchain/build-XXXXXX
-}
+#
+# The NDK_TMPDIR variable is used to specify a root temporary directory
+# when invoking toolchain build scripts. If it is not defined, we will
+# create one here, and export the value to ensure that any scripts we
+# call after that use the same one.
+#
+if [ -z "$NDK_TMPDIR" ]; then
+    NDK_TMPDIR=/tmp/ndk-$USER/tmp/build-$$
+    mkdir -p $NDK_TMPDIR
+    if [ $? != 0 ]; then
+        echo "ERROR: Could not create NDK_TMPDIR: $NDK_TMPDIR"
+        exit 1
+    fi
+    export NDK_TMPDIR
+fi
 
 #
 # Common definitions

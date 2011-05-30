@@ -39,8 +39,8 @@ NOTE: The --platform option is ignored if --sysroot is used."
 VERBOSE=no
 
 OPTION_BUILD_OUT=
-BUILD_OUT=`random_temp_directory`
-register_option "--build-out=<path>" do_build_out "Set temporary build directory" "/tmp/<random>"
+BUILD_OUT=/tmp/ndk-$USER/build/gdbserver
+register_option "--build-out=<path>" do_build_out "Set temporary build directory"
 do_build_out () { OPTION_BUILD_OUT="$1"; }
 
 PLATFORM=android-9

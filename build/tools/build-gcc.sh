@@ -31,9 +31,9 @@ the top-level NDK installation path and <toolchain> is the name of
 the toolchain to use (e.g. arm-eabi-4.4.0)."
 
 RELEASE=`date +%Y%m%d`
-BUILD_OUT=`random_temp_directory`
+BUILD_OUT=/tmp/ndk-$USER/build/toolchain
 OPTION_BUILD_OUT=
-register_var_option "--build-out=<path>" OPTION_BUILD_OUT "Set temporary build directory" "/tmp/<random>"
+register_var_option "--build-out=<path>" OPTION_BUILD_OUT "Set temporary build directory"
 
 # Note: platform API level 9 or higher is needed for proper C++ support
 PLATFORM=android-9
