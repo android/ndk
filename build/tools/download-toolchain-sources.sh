@@ -52,7 +52,7 @@ OPTION_GIT_REFERENCE=
 register_var_option "--git-reference=<path>" OPTION_GIT_REFERENCE "Use local git reference base"
 
 OPTION_PACKAGE=no
-register_var_option "--package" OPTION_PACKAGE "Create source package in /tmp"
+register_var_option "--package" OPTION_PACKAGE "Create source package in /tmp/ndk-$USER"
 
 OPTION_NO_PATCHES=no
 register_var_option "--no-patches" OPTION_NO_PATCHES "Do not patch sources"
@@ -112,7 +112,7 @@ fi
 # Create temp directory where everything will be copied first
 #
 PKGNAME=android-ndk-toolchain-$RELEASE
-TMPDIR=/tmp/$PKGNAME
+TMPDIR=/tmp/ndk-$USER/$PKGNAME
 log "Creating temporary directory $TMPDIR"
 rm -rf $TMPDIR && mkdir $TMPDIR
 fail_panic "Could not create temporary directory: $TMPDIR"
@@ -216,7 +216,7 @@ find $TMPDIR -type f -a -name "*.info" ! -name sysroff.info -print0 | xargs -0 r
 
 if [ $OPTION_PACKAGE = "yes" ] ; then
     # create the package
-    PACKAGE=/tmp/$PKGNAME.tar.bz2
+    PACKAGE=/tmp/ndk-$USER/$PKGNAME.tar.bz2
     dump "Creating package archive $PACKAGE"
     pack_archive "$PACKAGE" "$TMPDIR" "."
     fail_panic "Could not package toolchain source archive ?. See $TMPLOG"
