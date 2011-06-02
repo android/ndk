@@ -726,3 +726,50 @@ copy_file_list ()
     mkdir -p "$DSTDIR" && (cd "$SRCDIR" && tar cf - $@) | (tar xf - -C "$DSTDIR")
     fail_panic "Cannot copy files to directory: $DSTDIR"
 }
+
+# Rotate a log file
+# If the given log file exist, add a -1 to the end of the file.
+# If older log files exist, rename them to -<n+1>
+# $1: log file
+# $2: maximum version to retain [optional]
+rotate_log ()
+{
+    # Default Maximum versions to retain
+    local MAXVER="5"
+    local LOGFILE="$1"
+    shift;
+    if [ ! -z "$1" ] ; then
+        local tmpmax="$1"
+        shift;
+        tmpmax=`expr $tmpmax + 0`
+        if [ $tmpmax -lt 1 ] ; then
+            panic "Invalid maximum log file versions '$tmpmax' invalid; defaulting to $MAXVER"
+        else
+            MAXVER=$tmpmax;
+        fi
+    fi
+
+    # Do Nothing if the log file does not exist
+    if [ ! -f ${LOGFILE} ] ; then
+        return
+    fi
+
+    # Rename existing older versions
+    ver=$MAXVER
+    while [ $ver -ge 1 ]
+    do
+        local prev=`expr $ver - 1`
+        local old="-$prev"
+
+        # Instead of old version 0; use the original filename
+        if [ $ver -eq 1 ] ; then
+            old=""
+        fi
+
+        if [ -f "${LOGFILE}${old}" ] ; then
+            mv -f ${LOGFILE}${old} ${LOGFILE}-${ver}
+        fi
+
+        ver=$prev
+    done
+}
