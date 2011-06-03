@@ -252,9 +252,6 @@ build_gdbserver ()
 
 case "$ARCH" in
 arm )
-    build_toolchain arm-eabi-4.4.0
-    build_gdbserver arm-eabi-4.4.0
-
     build_toolchain arm-linux-androideabi-4.4.3 --copy-libstdcxx
     build_gdbserver arm-linux-androideabi-4.4.3
     ;;

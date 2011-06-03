@@ -610,11 +610,6 @@ parse_toolchain_name ()
     # Determine ABI based on toolchain name
     #
     case "$TOOLCHAIN" in
-    arm-eabi-*)
-        ARCH="arm"
-        ABI_CONFIGURE_TARGET="arm-eabi"
-        ABI_CONFIGURE_EXTRA_FLAGS="--with-binutils-version=2.19 --with-mpfr-version=2.3.0 --with-gmp-version=4.2.2"
-        ;;
     arm-linux-androideabi-*)
         ARCH="arm"
         ABI_CONFIGURE_TARGET="arm-linux-androideabi"
@@ -643,7 +638,7 @@ parse_toolchain_name ()
         ABI_CONFIGURE_EXTRA_FLAGS="$ABI_CONFIGURE_EXTRA_FLAGS --enable-libstdc__-v3"
         ;;
     * )
-        echo "Invalid toolchain specified. Expected (arm-eabi-*|x86-*)"
+        echo "Invalid toolchain specified. Expected (arm-linux-androideabi-*|x86-*)"
         echo ""
         print_help
         exit 1
