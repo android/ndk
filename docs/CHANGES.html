@@ -3,11 +3,6 @@
 -------------------------------------------------------------------------------
 android-ndk-r5c
 
-OTHER FIXES &amp; CHANGES:
-
-- ndk-build: Fix a rare bug that appeared when trying to perform parallel
-  builds of debuggable projects.
-
 This release fixes a few bugs in r5b. There are no new features.
 
 IMPORTANT BUG FIXES:
@@ -37,6 +32,9 @@ IMPORTANT BUG FIXES:
 
 - Updated the android-9 C library arm binary to correctly expose at link time
   new functions that were added to it in Gingerbread (e.g. pthread_rwlock_init).
+
+- Fixed a bug that made gdbserver crash on misc. Honeycomb devices (e.g.
+  the Motorola Xoom).
 
 OTHER FIXES &amp; CHANGES:
 
@@ -70,6 +68,10 @@ OTHER FIXES &amp; CHANGES:
   large number of include directories in a project.
 
 - ndk-gdb: Better detection of 'adb shell' failures (improves error messages).
+
+- ndk-build: Fix a rare bug that appeared when trying to perform parallel
+  builds of debuggable projects.
+
 
 -------------------------------------------------------------------------------
 android-ndk-r5b
