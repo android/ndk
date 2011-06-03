@@ -71,7 +71,7 @@ PREFIX=android-ndk
 register_var_option "--prefix=<name>" PREFIX "Specify package prefix"
 
 # default location for generated packages
-OUT_DIR=/tmp/ndk-release
+OUT_DIR=/tmp/ndk-$USER/release
 OPTION_OUT_DIR=
 register_var_option "--out-dir=<path>" OPTION_OUT_DIR "Specify output package directory" "$OUT_DIR"
 
@@ -225,7 +225,7 @@ else
 fi
 
 # temporary directory used for packaging
-TMPDIR=/tmp/ndk-release
+TMPDIR=$NDK_TMPDIR
 
 RELEASE_PREFIX=$PREFIX-$RELEASE
 
@@ -303,7 +303,7 @@ unpack_libsupcxx ()
     local PREBUILT=$1
     echo "Unpacking $PREBUILT"
     if [ -f "$PREBUILT_DIR/$PREBUILT" ] ; then
-        TMPUNPACKDIR=`random_temp_directory`
+        TMPUNPACKDIR=$NDK_TMPDIR/unpack
         unpack_archive "$PREBUILT_DIR/$PREBUILT" "$TMPUNPACKDIR"
         fail_panic "Could not unpack prebuilt $PREBUILT. Aborting."
         (cd $TMPUNPACKDIR/toolchains/*/prebuilt && mv linux-x86 $SYSTEM)

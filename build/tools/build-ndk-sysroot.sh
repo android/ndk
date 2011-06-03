@@ -295,7 +295,7 @@ arch_headers   $LIBC_ROOT/arch-$ARCH/include
 # Do we need to package the result
 if [ $OPTION_PACKAGE = yes ] ; then
     DATE=`date +%Y%m%d`
-    PKGFILE=/tmp/android-ndk-sysroot-$DATE.tar.bz2
+    PKGFILE=/tmp/ndk-$USER/android-ndk-sysroot-$DATE.tar.bz2
     tar cjf $PKGFILE build/platforms/$PLATFORM/arch-$ARCH
     echo "Packaged in $PKGFILE"
 fi

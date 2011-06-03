@@ -38,7 +38,7 @@ register_var_option "--ndk-dir=<path>" NDK_DIR "Take source files from NDK at <p
 SYSTEM=$HOST_TAG
 register_var_option "--system=<name>" SYSTEM "Specify host system"
 
-PACKAGE_DIR=/tmp/ndk
+PACKAGE_DIR=/tmp/ndk-$USER
 register_var_option "--package-dir=<path>" PACKAGE_DIR "Place package file in <path>"
 
 INSTALL_DIR=
@@ -119,7 +119,7 @@ fi
 TOOLCHAIN_PATH="$TOOLCHAIN_PATH/prebuilt/$SYSTEM"
 
 # Create temporary directory
-TMPDIR=`random_temp_directory`/$TOOLCHAIN_NAME
+TMPDIR=$NDK_TMPDIR/standalone/$TOOLCHAIN_NAME
 
 dump "Copying prebuilt binaries..."
 # Now copy the toolchain prebuilt binaries

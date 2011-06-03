@@ -333,10 +333,12 @@ disable_cygwin ()
 }
 
 # Various probes are going to need to run a small C program
-TMPC=/tmp/android-$$-test.c
-TMPO=/tmp/android-$$-test.o
-TMPE=/tmp/android-$$-test$EXE
-TMPL=/tmp/android-$$-test.log
+mkdir -p /tmp/ndk-$USER/tmp/tests
+
+TMPC=/tmp/ndk-$USER/tmp/tests/test-$$.c
+TMPO=/tmp/ndk-$USER/tmp/tests/test-$$.o
+TMPE=/tmp/ndk-$USER/tmp/tests/test-$$$EXE
+TMPL=/tmp/ndk-$USER/tmp/tests/test-$$.log
 
 # cleanup temporary files
 clean_temp ()
@@ -373,6 +375,7 @@ setup_toolchain ()
     log2 "Using '$CC' as the C compiler"
 
     # check that we can compile a trivial C program with this compiler
+    mkdir -p $(dirname "$TMPC")
     cat > $TMPC <<EOF
 int main(void) {}
 EOF

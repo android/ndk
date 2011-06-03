@@ -36,7 +36,7 @@ DEVELOPMENT_ROOT=`dirname $ANDROID_NDK_ROOT`/development/ndk
 register_var_option "--development=<path>" DEVELOPMENT_ROOT "Path to development/ndk directory"
 
 # Default location for final packages
-OUT_DIR=/tmp/ndk-release
+OUT_DIR=/tmp/ndk-$USER/release
 register_var_option "--out-dir=<path>" OUT_DIR "Path to output directory"
 
 # Force the build
@@ -129,7 +129,7 @@ IMPORTANT:
 "
 
 # Create directory where everything will be performed.
-RELEASE_DIR=/tmp/ndk/release-$RELEASE
+RELEASE_DIR=$NDK_TMPDIR/release-$RELEASE
 if [ "$INCREMENTAL" = "no" ] ; then
     rm -rf $RELEASE_DIR && mkdir -p $RELEASE_DIR
 else
