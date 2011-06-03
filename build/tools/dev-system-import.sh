@@ -199,7 +199,7 @@ case $ARCH in
 esac
 
 if [ -z "$TOOLCHAIN_PREFIX" ]; then
-    TOOLCHAIN_NAME=$(get_default_toolchain_for $ARCH)
+    TOOLCHAIN_NAME=$(get_default_toolchain_name_for $ARCH)
     TOOLCHAIN_PREFIX=$(get_default_toolchain_prefix_for $ARCH)
     TOOLCHAIN_PREFIX=$(get_toolchain_install $ANDROID_NDK_ROOT $TOOLCHAIN_NAME)/bin/$TOOLCHAIN_PREFIX
     TOOLCHAIN_PREFIX=${TOOLCHAIN_PREFIX%%-}

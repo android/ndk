@@ -294,25 +294,19 @@ if [ "$MINGW" != "yes" ] ; then
     esac
 fi
 
-# Rebuild prebuilt libraries
+# Rebuild STLport prebuilt libraries
 if [ "$MINGW" != "yes" ] ; then
-    if [ -z "$PACKAGE_DIR" ] ; then
-        BUILD_STLPORT_FLAGS="--ndk-dir=\"$NDK_DIR\""
-        TOOLCHAIN_FLAGS=
-    else
-        BUILD_STLPORT_FLAGS="--package-dir=\"$PACKAGE_DIR\""
-        TOOLCHAIN_FLAGS_ARM="--toolchain-pkg=\"$PACKAGE_DIR/arm-linux-androideabi-4.4.3-$HOST_TAG.tar.bz2\""
-        TOOLCHAIN_FLAGS_X86="--toolchain-pkg=\"$PACKAGE_DIR/x86-4.4.3-$HOST_TAG.tar.bz2\""
-    fi
+    BUILD_STLPORT_FLAGS="--ndk-dir=\"$NDK_DIR\" --package-dir=\"$PACKAGE_DIR\""
     if [ $VERBOSE = yes ] ; then
         BUILD_STLPORT_FLAGS="$BUILD_STLPORT_FLAGS --verbose"
     fi
+    $ANDROID_NDK_ROOT/build/tools/build-platforms.sh --no-symlinks --no-samples --arch=$ARCH --dst-dir="$NDK_DIR"
     case "$ARCH" in
     arm )
-        $ANDROID_NDK_ROOT/build/tools/build-stlport.sh $BUILD_STLPORT_FLAGS $TOOLCHAIN_FLAGS_ARM
+        $ANDROID_NDK_ROOT/build/tools/build-stlport.sh $BUILD_STLPORT_FLAGS
         ;;
     x86 )
-        $ANDROID_NDK_ROOT/build/tools/build-stlport.sh $BUILD_STLPORT_FLAGS --abis=x86 $TOOLCHAIN_FLAGS_X86
+        $ANDROID_NDK_ROOT/build/tools/build-stlport.sh $BUILD_STLPORT_FLAGS --abis=x86
         ;;
     esac
 else

@@ -57,6 +57,13 @@ list_contains ()
     echo $@ | tr ' ' '\n' | grep -q -F -e "$KEY"
 }
 
+sort_uniq ()
+{
+    local RET
+    RET=$(echo $@ | tr ' ' '\n' | sort -u)
+    echo $RET
+}
+
 #====================================================
 #
 #  OPTION PROCESSING
@@ -662,9 +669,70 @@ parse_toolchain_name ()
 
 }
 
+
+get_prebuilt_host_tag ()
+{
+    local RET=$HOST_TAG
+    case $RET in
+        linux-x86_64)
+            if [ "$TRY64" = "no" ]; then
+                RET=linux-x86
+            fi
+            ;;
+        darwin_x86_64)
+            if [ "$TRY64" = "no" ]; then
+                RET=darwin-x86
+            fi
+            ;;
+    esac
+    echo $RET
+}
+
+# Convert an ABI name into an Architecture name
+# $1: ABI name
+# Result: Arch name
+convert_abi_to_arch ()
+{
+    local RET
+    case $1 in
+        armeabi|armeabi-v7a)
+            RET=arm
+            ;;
+        x86)
+            RET=x86
+            ;;
+        *)
+            2> echo "ERROR: Unsupported ABI name: $1, use one of: armeabi, armeabi-v7a or x86"
+            exit 1
+            ;;
+    esac
+    echo "$RET"
+}
+
+# Retrieve the list of default ABIs supported by a given architecture
+# $1: Architecture name
+# Result: space-separated list of ABI names
+get_default_abis_for_arch ()
+{
+    local RET
+    case $1 in
+        arm)
+            RET="armeabi armeabi-v7a"
+            ;;
+        x86)
+            RET="x86"
+            ;;
+        *)
+            2> echo "ERROR: Unsupported architecture name: $1, use one of: arm x86"
+            exit 1
+            ;;
+    esac
+    echo "$RET"
+}
+
 # Return the default name for a given architecture
 # $1: Architecture name
-get_default_toolchain_for ()
+get_default_toolchain_name_for ()
 {
     eval echo "\$DEFAULT_ARCH_TOOLCHAIN_$1"
 }
@@ -676,6 +744,49 @@ get_default_toolchain_prefix_for ()
     eval echo "\$DEFAULT_ARCH_TOOLCHAIN_PREFIX_$1"
 }
 
+# Return the default binary path prefix for a given architecture
+# For example: arm -> toolchains/arm-linux-androideabi-4.4.3/prebuilt/<system>/bin/arm-linux-androideabi-
+# $1: Architecture name
+get_default_toolchain_binprefix_for_arch ()
+{
+    local NAME PREFIX DIR BINPREFIX
+    NAME=$(get_default_toolchain_name_for $1)
+    PREFIX=$(get_default_toolchain_prefix_for $1)
+    DIR=$(get_toolchain_install . $NAME)
+    BINPREFIX=${DIR#./}/bin/$PREFIX
+    echo "$BINPREFIX"
+}
+
+# Return default API level for a given arch
+# This is the level used to build the toolchains.
+#
+# $1: Architecture name
+get_default_api_level_for_arch ()
+{
+    # For now, always build the toolchain against API level 9
+    # (We have local toolchain patches under build/tools/toolchain-patches
+    # to ensure that the result works on previous platforms properly).
+    local LEVEL=9
+    echo $LEVEL
+}
+
+# Return the default platform sysroot corresponding to a given architecture
+# This is the sysroot used to build the toolchain and other binaries like
+# the STLport libraries.
+# $1: Architecture name
+get_default_platform_sysroot_for_arch ()
+{
+    local LEVEL=$(get_default_api_level_for_arch $1)
+    echo "platforms/android-$LEVEL/arch-$1"
+}
+
+# Guess what?
+get_default_platform_sysroot_for_abi ()
+{
+    local ARCH=$(convert_abi_to_arch $1)
+    $(get_default_platform_sysroot_for_arch $ARCH)
+}
+
 # Return the host/build specific path for prebuilt toolchain binaries
 # relative to $1.
 #
@@ -684,7 +795,7 @@ get_default_toolchain_prefix_for ()
 #
 get_toolchain_install ()
 {
-    echo "$1/toolchains/$2/prebuilt/$HOST_TAG"
+    echo "$1/toolchains/$2/prebuilt/$(get_prebuilt_host_tag)"
 }
 
 
@@ -694,7 +805,7 @@ get_toolchain_install ()
 # $2: toolchain name
 set_toolchain_ndk ()
 {
-    TOOLCHAIN_PATH=`get_toolchain_install $1 $2`
+    TOOLCHAIN_PATH=`get_toolchain_install "$1" $2`
     log "Using toolchain path: $TOOLCHAIN_PATH"
 
     TOOLCHAIN_PREFIX=$TOOLCHAIN_PATH/bin/$ABI_CONFIGURE_TARGET
@@ -708,7 +819,7 @@ set_toolchain_ndk ()
 #
 check_toolchain_install ()
 {
-    TOOLCHAIN_PATH=`get_toolchain_install $1 $2`
+    TOOLCHAIN_PATH=`get_toolchain_install "$1" $2`
     if [ ! -d "$TOOLCHAIN_PATH" ] ; then
         echo "ERROR: Toolchain '$2' not installed in '$NDK_DIR'!"
         echo "       Ensure that the toolchain has been installed there before."
