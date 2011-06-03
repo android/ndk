@@ -200,9 +200,10 @@ fi
 # We only keep one version of gcc and binutils
 
 # we clearly don't need this
-log "getting rid of obsolete sources: gcc-4.2.1 gcc-4.3.1 gdb-6.8 binutils-2.17"
+log "getting rid of obsolete sources: gcc-4.2.1 gcc-4.3.1 gcc-4.4.0 gdb-6.8 binutils-2.17"
 rm -rf $TMPDIR/gcc/gcc-4.2.1
 rm -rf $TMPDIR/gcc/gcc-4.3.1
+rm -rf $TMPDIR/gcc/gcc-4.4.0
 rm -rf $TMPDIR/gcc/gdb-6.8
 rm -rf $TMPDIR/binutils/binutils-2.17
 

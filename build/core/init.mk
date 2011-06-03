@@ -266,7 +266,7 @@ include $(BUILD_SYSTEM)/definitions.mk
 # in build/toolchains/<name>/ that will be included here.
 #
 # Each one of these files should define the following variables:
-#   TOOLCHAIN_NAME   toolchain name (e.g. arm-eabi-4.2.1)
+#   TOOLCHAIN_NAME   toolchain name (e.g. arm-linux-androideabi-4.4.3)
 #   TOOLCHAIN_ABIS   list of target ABIs supported by the toolchain.
 #
 # Then, it should include $(ADD_TOOLCHAIN) which will perform
@@ -289,12 +289,9 @@ $(foreach _config_mk,$(TOOLCHAIN_CONFIGS),\
 NDK_ALL_TOOLCHAINS   := $(call remove-duplicates,$(NDK_ALL_TOOLCHAINS))
 NDK_ALL_ABIS         := $(call remove-duplicates,$(NDK_ALL_ABIS))
 
-# The default toolchain is now arm-eabi-4.4.0, however its
-# C++ compiler is a tad bit more pedantic with certain
-# constructs (e.g. templates) so allow users to switch back
-# to the old 4.2.1 instead if they really want to.
-#
-# NOTE: you won't get armeabi-v7a support though !
+# Allow the user to define NDK_TOOLCHAIN to a custom toolchain name.
+# This is normally used when the NDK release comes with several toolchains
+# for the same architecture (generally for backwards-compatibility).
 #
 NDK_TOOLCHAIN := $(strip $(NDK_TOOLCHAIN))
 ifdef NDK_TOOLCHAIN
