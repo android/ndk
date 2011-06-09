@@ -11,8 +11,7 @@
 */
 
 /*
- * Contains implementation of a class DumpFile of routines that implements
- * access to a log file.
+ * Contains implementation of main routine for ndk-stack utility.
  */
 
 #include <stdio.h>
@@ -36,7 +35,7 @@ int main(int argc, char **argv, char **envp)
 
     /* Parse command line. */
     {
-        for (int n; n < argc; n++) {
+        for (int n = 1; n < argc; n++) {
             if (!strcmp(argv[n], "-dump")) {
                 n++;
                 if (n < argc) {
