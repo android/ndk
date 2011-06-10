@@ -14,7 +14,7 @@
 #define NDK_CRASH_PARSER_H_
 
 /*
- * Contains declaration of a structures and routines that are used to parse ADB
+ * Contains declaration of structures and routines that are used to parse ADB
  * log output, filtering out and printing references related to the crash dump.
  */
 
@@ -52,7 +52,7 @@ void DestroyNdkCrashParser(NdkCrashParser* parser);
  *  0 If the line has been part of the crash dump.
  *  1 If the line has not been part of the crash dump.
  *  -1 If there was an error when parsing the line.
- *  
+ *
 */
 int ParseLine(NdkCrashParser* parser, const char* line);
 
