@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <regex.h>
+#include "regex/regex.h"
 #include "elff/elff_api.h"
 
 #include "ndk-stack-parser.h"
@@ -215,9 +215,9 @@ MatchRegex(const char* line, const char* regex, regmatch_t* match)
 {
   char rerr[4096];
   regex_t rex;
-  int ok = regcomp(&rex, regex, REG_ICASE);
+  int ok = regcomp(&rex, regex, REG_EXTENDED | REG_NEWLINE);
   if (!ok) {
-    ok = regexec(&rex, line, 1, match, REG_NOTEOL);
+    ok = regexec(&rex, line, 1, match, 0x00400/*REG_TRACE*/);
 #if 0
     if (ok) {
         regerror(ok, &rex, rerr, sizeof(rerr));

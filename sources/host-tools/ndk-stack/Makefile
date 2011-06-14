@@ -15,10 +15,15 @@ ELFF_SOURCES = elff/dwarf_cu.cc \
                elff/elff_api.cc \
                elff/mapfile.c
 
+REGEX_SOURCES = regex/regcomp.c \
+                regex/regerror.c \
+                regex/regexec.c \
+                regex/regfree.c
+
 NDK_STACK_SOURCES = ndk-stack.c \
                     ndk-stack-parser.c
 
-SOURCES = $(NDK_STACK_SOURCES) $(ELFF_SOURCES)
+SOURCES = $(NDK_STACK_SOURCES) $(ELFF_SOURCES) $(REGEX_SOURCES)
 OBJECTS=$(SOURCES:.c*=.o)
 EXECUTABLE=ndk-stack
 
