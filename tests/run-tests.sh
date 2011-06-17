@@ -154,7 +154,8 @@ fi
 adb_cmd ()
 {
     local RET ADB_CMD_LOG
-    ADB_CMD_LOG=$(mktemp)
+    # mktemp under Mac OS X requires the -t option
+    ADB_CMD_LOG=$(mktemp -t XXXXXXXX)
     if [ $VERBOSE = "yes" ] ; then
         echo "$ADB_CMD shell $@"
         $ADB_CMD shell $@ ";" echo \$? | tee $ADB_CMD_LOG
