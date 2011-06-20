@@ -22,6 +22,9 @@
 # Revamp of the 'ndk-buil.sh' based on feedback and NDK build
 # processes used by Google to generate the NDK>
 
+# Comment out the remote Mac OS X builds as it is currently
+# non-functional due to a change in AOSP
+# 3592767ce5ca9431eea728370c99d97aadb0800e
 
 # include common function and variable definitions
 . `dirname $0`/prebuilt-common.sh
@@ -37,9 +40,9 @@ register_var_option "--release=<rel_name>" OPTION_NDK_RELEASE "Version of releas
 OPTION_QUICK_BUILD="no"
 register_var_option "--quick" OPTION_QUICK_BUILD "Only build the Linux basics"
 
-# Name of the Mac OS Build host
-MAC_BUILD_HOST="macdroid"
-register_var_option "--mac-host=<name>" MAC_BUILD_HOST "Hostname of the Mac OS X system"
+# # Name of the Mac OS Build host
+# MAC_BUILD_HOST="macdroid"
+# register_var_option "--mac-host=<name>" MAC_BUILD_HOST "Hostname of the Mac OS X system"
 
 PROGRAM_PARAMETERS=""
 PROGRAM_DESCRIPTION=\
@@ -50,6 +53,19 @@ extract_parameters "$@"
 TOP=$PWD
 TODAY=`date '+%Y%m%d'`
 PACKAGE_DIR=$TOP/ndk-release-$TODAY
+HOST_OS=`uname -s | tr '[:upper:]' '[:lower:]'`
+# Set the list of Build Targets based on this Host OS
+case "$HOST_OS" in
+linux )
+    # Build for Local Linux and Cross-compile for Windows (MINGW)
+    BUILD_TARGET_PLATFORMS="linux-x86 windows"
+    ;;
+darwin )
+    # Build for Local Mac OS X
+    BUILD_TARGET_PLATFORMS="darwin-x86"
+    ;;
+esac
+
 #export ANDROID_NDK_ROOT=$TOP/ndk
 #export PATH=$PATH:$ANDROID_NDK_ROOT/build/tools
 export VERBOSE=--verbose
@@ -59,8 +75,16 @@ export VERBOSE=--verbose
 # run make commands in parallel, as in 'make -j$BUILD_NUM_CPUS'
 #
 if [ -z "$BUILD_NUM_CPUS" ] ; then
-    HOST_NUM_CPUS=`cat /proc/cpuinfo | grep -c processor`
-    export BUILD_NUM_CPUS=`expr $HOST_NUM_CPUS`
+    if [ -e /proc/cpuinfo ] ; then
+        HOST_NUM_CPUS=`cat /proc/cpuinfo | grep -c processor`
+        export BUILD_NUM_CPUS=$(($HOST_NUM_CPUS * 2 * 8 / 10))
+    elif [ -e /usr/sbin/sysctl ] ; then
+        HOST_NUM_CPUS=`/usr/sbin/sysctl -n hw.ncpu`
+        export BUILD_NUM_CPUS=$(($HOST_NUM_CPUS * 2 * 8 / 10))
+    else
+        export BUILD_NUM_CPUS=1
+        echo "WARNING: Could not find Host Number CPUs; defaulting to BUILD_NUM_CPUS=${BUILD_NUM_CPUS}"
+    fi
 fi
 
 # CLEAN
@@ -99,11 +123,10 @@ fi
 
 
 ALL_ARCH=""
-ALL_SYSTEMS=""
 for ARCH in arm x86
 do
     # Collect all Arch types for packaging
-    ALL_ARCH="${ALL_ARCH},$ARCH"
+    ALL_ARCH="${ALL_ARCH} $ARCH"
 
     # Set the Arch specific variables
     case "$ARCH" in
@@ -144,7 +167,7 @@ do
     if [ -f $logfile ]; then rm -f $logfile; fi
 
     # Rebuild all prebuilts for the arch type and platforms
-    for TARGET_PLATFORM in linux-x86 windows darwin-x86
+    for TARGET_PLATFORM in ${BUILD_TARGET_PLATFORMS}
     do
         # Set the Arch specific variables
         case "$TARGET_PLATFORM" in
@@ -160,14 +183,12 @@ do
             ;;
         darwin-x86 )
             TARGET_PLATFORM_OS="Mac OS X"
-            TARGET_PLATFORM_FLAGS="--darwin-ssh=$MAC_BUILD_HOST"
-            # Skip this Target Platform in Quick Build Mode
-            if [ "$OPTION_QUICK_BUILD" = "yes" ]; then break ; fi
+            TARGET_PLATFORM_FLAGS=""
+#            TARGET_PLATFORM_FLAGS="--darwin-ssh=$MAC_BUILD_HOST"
+#            # Skip this Target Platform in Quick Build Mode
+#            if [ "$OPTION_QUICK_BUILD" = "yes" ]; then break ; fi
             ;;
         esac
-
-        # Collect all Host System Platform types for packaging
-        ALL_SYSTEMS="${ALL_SYSTEMS},$TARGET_PLATFORM"
 
         # Rebuilt all prebuilts for the arch type
         echo
@@ -181,21 +202,24 @@ do
             $TARGET_PLATFORM_FLAGS \
             $VERBOSE >> $logfile 2>&1
         fail_panic "rebuild-all-prebuilt.sh failed. Logfile in $logfile"
-    done # with TARGET_PLATFORM
-done # with ARCH
+        done # with TARGET_PLATFORM
+    done # with ARCH
 
-# Remove the leading commas from the All Lists
-ALL_ARCH=`echo $ALL_ARCH | cut -c2-`
-ALL_SYSTEMS=`echo $ALL_SYSTEMS | cut -c2-`
+    # Remove the leading commas from the All Lists
+    #ALL_ARCH=`echo $ALL_ARCH | cut -c2-`
+    #ALL_SYSTEMS=`echo $ALL_SYSTEMS | cut -c2-`
+    ALL_ARCH=`echo $ALL_ARCH`
+    ALL_SYSTEMS=`echo ${BUILD_TARGET_PLATFORMS}`
 
-echo
-echo "Building the NDK release"
-cd $TOP
-$PROGDIR/package-release.sh \
-    --prebuilt-dir=$PACKAGE_DIR \
-    --systems=$ALL_SYSTEMS \
+    echo
+    echo "Building the NDK release"
+    cd $TOP
+    $PROGDIR/package-release.sh \
+        --prebuilt-dir=$PACKAGE_DIR \
+        --systems="$ALL_SYSTEMS" \
     --out-dir=$PACKAGE_DIR \
-    --arch=$ALL_ARCH \
+    --arch="$ALL_ARCH" \
+    --toolchains="arm-linux-androideabi-4.4.3,x86-4.4.3" \
     --prefix=android-ndk-${OPTION_NDK_RELEASE} \
     --no-git \
     $VERBOSE > $TOP/package-release.log 2>&1
