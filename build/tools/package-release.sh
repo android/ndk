@@ -59,7 +59,7 @@ NO_GIT=no
 register_var_option "--no-git" NO_GIT "Don't use git to list input files, take all of them."
 
 # set of toolchain prebuilts we need to package
-TOOLCHAINS="arm-eabi-4.4.0,arm-linux-androideabi-4.4.3"
+TOOLCHAINS="arm-linux-androideabi-4.4.3"
 OPTION_TOOLCHAINS=$TOOLCHAINS
 register_var_option "--toolchains=<list>" OPTION_TOOLCHAINS "Specify list of toolchains."
 

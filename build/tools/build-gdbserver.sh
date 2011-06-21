@@ -28,7 +28,7 @@ PROGRAM_DESCRIPTION=\
 
 Where <src-dir> is the location of the gdbserver sources,
 <ndk-dir> is the top-level NDK installation path and <toolchain>
-is the name of the toolchain to use (e.g. arm-eabi-4.4.0).
+is the name of the toolchain to use (e.g. arm-linux-androideabi-4.4.3).
 
 The final binary is placed under:
 
