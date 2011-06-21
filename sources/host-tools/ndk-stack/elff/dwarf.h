@@ -18,9 +18,9 @@
   any, provided herein do not apply to combinations of this program with
   other software, or any other product whatsoever.
 
-  You should have received a copy of the GNU Lesser General Public 
-  License along with this program; if not, write the Free Software 
-  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston MA 02110-1301, 
+  You should have received a copy of the GNU Lesser General Public
+  License along with this program; if not, write the Free Software
+  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston MA 02110-1301,
   USA.
 
   Contact information:  Silicon Graphics, Inc., 1500 Crittenden Lane,
@@ -150,7 +150,7 @@ extern "C" {
 /* ALTIUM extensions */
     /* DSP-C/Starcore __circ qualifier */
 #define DW_TAG_ALTIUM_circ_type         0x5101 /* ALTIUM */
-    /* Starcore __mwa_circ qualifier */ 
+    /* Starcore __mwa_circ qualifier */
 #define DW_TAG_ALTIUM_mwa_circ_type     0x5102 /* ALTIUM */
     /* Starcore __rev_carry qualifier */
 #define DW_TAG_ALTIUM_rev_carry_type    0x5103 /* ALTIUM */
@@ -180,7 +180,7 @@ extern "C" {
 #define DW_TAG_SUN_f90_interface        0x420c /* SUN */
 #define DW_TAG_SUN_fortran_vax_structure 0x420d /* SUN */
 #define DW_TAG_SUN_hi                   0x42ff /* SUN */
-    
+
 
 #define DW_TAG_hi_user                  0xffff
 
@@ -429,7 +429,7 @@ extern "C" {
 
 /* PGI (STMicroelectronics) extensions. */
 #define DW_AT_PGI_lbase                         0x3a00 /* PGI. Block, constant, reference. This attribute is an ASTPLAB extension used to describe the array local base.  */
-#define DW_AT_PGI_soffset                       0x3a01  /* PGI. Block, constant, reference. ASTPLAB adds this attribute to describe the section offset, or the offset to the first element in the dimension. */ 
+#define DW_AT_PGI_soffset                       0x3a01  /* PGI. Block, constant, reference. ASTPLAB adds this attribute to describe the section offset, or the offset to the first element in the dimension. */
 #define DW_AT_PGI_lstride                       0x3a02  /* PGI. Block, constant, reference. ASTPLAB adds this attribute to describe the linear stride or the distance between elements in the dimension. */
 
 /* Apple Extensions for closures  */
@@ -616,7 +616,7 @@ extern "C" {
 
 
    /* Apple extension. */
-#define DW_OP_APPLE_uninit              0xf0 /* Apple */ 
+#define DW_OP_APPLE_uninit              0xf0 /* Apple */
 
 #define DW_OP_hi_user                   0xff
 
@@ -693,7 +693,7 @@ extern "C" {
 #define DW_ATCF_SUN_branch_target       0x46 /* SUN */
 #define DW_ATCF_SUN_mop_stack_probe     0x47 /* SUN */
 #define DW_ATCF_SUN_func_epilog         0x48 /* SUN */
-#define DW_ATCF_hi_user                 0xff /* SUN */   
+#define DW_ATCF_hi_user                 0xff /* SUN */
 
 /* Accessibility code name. */
 #define DW_ACCESS_public                0x01
@@ -762,10 +762,10 @@ extern "C" {
 #define DW_CC_ALTIUM_near_system_stack  0x66  /*ALTIUM */
 
 /* Near function model, return address on user stack. */
-#define DW_CC_ALTIUM_near_user_stack    0x67  /* ALTIUM */  
+#define DW_CC_ALTIUM_near_user_stack    0x67  /* ALTIUM */
 
 /* Huge function model, return address on user stack.  */
-#define DW_CC_ALTIUM_huge_user_stack    0x68  /* ALTIUM */    
+#define DW_CC_ALTIUM_huge_user_stack    0x68  /* ALTIUM */
 
 
 #define DW_CC_hi_user                   0xff
@@ -827,7 +827,7 @@ extern "C" {
 #define DW_MACINFO_vendor_ext           0xff
 
 /* CFA operator compaction (a space saving measure, see
-   the DWARF standard) means DW_CFA_extended and DW_CFA_nop 
+   the DWARF standard) means DW_CFA_extended and DW_CFA_nop
    have the same value here.  */
 #define DW_CFA_advance_loc        0x40
 #define DW_CFA_offset             0x80
@@ -872,9 +872,9 @@ extern "C" {
 #define DW_CFA_high_user         0x3f
 
 /* GNU exception header encoding.  See the Generic
-   Elf Specification of the Linux Standard Base (LSB). 
+   Elf Specification of the Linux Standard Base (LSB).
    http://refspecs.freestandards.org/LSB_3.0.0/LSB-Core-generic/LSB-Core-generic/dwarfext.html
-   The upper 4 bits indicate how the value is to be applied. 
+   The upper 4 bits indicate how the value is to be applied.
    The lower 4 bits indicate the format of the data.
 */
 #define DW_EH_PE_absptr   0x00  /* GNU */
@@ -908,12 +908,12 @@ extern "C" {
    The DW_FRAME* names here are MIPS/SGI specfic.
    Libdwarf interfaces defined in 2008 make the FRAME definitions
    here (and the fixed table sizes they imply) obsolete.
-   They are left here for compatibility. 
-   
+   They are left here for compatibility.
+
 */
 /* Column used for CFA. Assumes reg 0 never appears as
    a register in DWARF info.  */
-#define DW_FRAME_CFA_COL 0  
+#define DW_FRAME_CFA_COL 0
 
 #define DW_FRAME_REG1   1  /* integer reg 1 */
 #define DW_FRAME_REG2   2  /* integer reg 2 */
@@ -986,7 +986,7 @@ extern "C" {
 #define DW_FRAME_FREG31 63 /* 64-bit floating point reg 31 */
 
 /*  ***IMPORTANT NOTE, TARGET DEPENDENCY ****
-    The following 4 #defines are dependent on 
+    The following 4 #defines are dependent on
     the target cpu(s) that you apply libdwarf to.
     Ensure that DW_FRAME_UNDEFINED_VAL  and DW_FRAME_SAME_VAL
     do not conflict with the range [0-DW_FRAME_STATIC_LINK].
@@ -1006,10 +1006,10 @@ extern "C" {
 #ifndef DW_FRAME_HIGHEST_NORMAL_REGISTER
 #define DW_FRAME_HIGHEST_NORMAL_REGISTER 63
 #endif
-/* This is the number of columns in the Frame Table. 
+/* This is the number of columns in the Frame Table.
    This constant should
-   be kept in sync with DW_REG_TABLE_SIZE defined in libdwarf.h 
-   It must also be large enough to be beyond the highest 
+   be kept in sync with DW_REG_TABLE_SIZE defined in libdwarf.h
+   It must also be large enough to be beyond the highest
    compiler-defined-register (meaning DW_FRAME_RA_COL DW_FRAME_STATIC_LINK
    in the MIPS/IRIX case */
 #ifndef DW_FRAME_LAST_REG_NUM
@@ -1017,7 +1017,7 @@ extern "C" {
 #endif
 
 
-/* Column recording ra (return addrress from a function call). 
+/* Column recording ra (return addrress from a function call).
    This is common to many architectures, but as a 'simple register'
    is not necessarily adequate for all architectures.
    For MIPS/IRIX this register number is actually recorded on disk
@@ -1025,7 +1025,7 @@ extern "C" {
    */
 #define DW_FRAME_RA_COL  (DW_FRAME_HIGHEST_NORMAL_REGISTER + 1)
 
-/* Column recording static link applicable to up-level      
+/* Column recording static link applicable to up-level
    addressing, as in IRIX mp code, pascal, etc.
    This is common to many architectures but
    is not necessarily adequate for all architectures.
