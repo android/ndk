@@ -1,0 +1,9 @@
+Code-Review+2: David Turner <digit@android.com>
+Verified+1: David Turner <digit@android.com>
+Code-Review-1: Thorsten Glaser <tg@mirbsd.org>
+Code-Review+1: Mark D Horn <mark.d.horn@intel.com>
+Submitted-by: David Turner <digit@android.com>
+Submitted-at: Tue, 21 Jun 2011 02:13:16 -0700
+Reviewed-on: https://review.source.android.com/23580
+Project: platform/ndk
+Branch: refs/heads/master
