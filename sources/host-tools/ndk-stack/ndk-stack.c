@@ -24,18 +24,22 @@
 /* Usage string. */
 static const char* _usage_str =
 "Usage:\n"
-"   ndk-stack -dump <path> -sym <path>\n"
+"   ndk-stack -sym <path> [-dump <path>]\n"
+"      -sym  Contains full path to the root directory for symbols.\n"
 "      -dump Contains full path to the file containing the crash dump.\n"
-"      -sym  Contains full path to the root directory for symbols.\n";
+"            This is an optional parameter. If ommited, ndk-stack will\n"
+"            read input data from stdin\n";
 
 int main(int argc, char **argv, char **envp)
 {
     const char* dump_file = NULL;
     const char* sym_path = NULL;
+    int use_stdin = 0;
 
     /* Parse command line. */
     {
-        for (int n = 1; n < argc; n++) {
+        int n;
+        for (n = 1; n < argc; n++) {
             if (!strcmp(argv[n], "-dump")) {
                 n++;
                 if (n < argc) {
@@ -51,16 +55,19 @@ int main(int argc, char **argv, char **envp)
                 return -1;
             }
         }
-        if (dump_file == NULL || sym_path == NULL) {
+        if (sym_path == NULL) {
             fprintf(stdout, "%s", _usage_str);
             return -1;
+        }
+        if (dump_file == NULL) {
+            use_stdin = 1;
         }
     }
 
     /* Create crash dump parser, open dump file, and parse it line by line. */
     NdkCrashParser* parser = CreateNdkCrashParser(stdout, sym_path);
     if (parser != NULL) {
-        FILE* handle = fopen(dump_file, "r");
+        FILE* handle = use_stdin ? stdin : fopen(dump_file, "r");
         if (handle != NULL) {
             char str[2048];
             while (fgets(str, sizeof(str), handle)) {
