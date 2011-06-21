@@ -35,7 +35,8 @@ int main(int argc, char **argv, char **envp)
 
     /* Parse command line. */
     {
-        for (int n = 1; n < argc; n++) {
+        int n;
+        for (n = 1; n < argc; n++) {
             if (!strcmp(argv[n], "-dump")) {
                 n++;
                 if (n < argc) {

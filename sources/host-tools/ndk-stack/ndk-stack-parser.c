@@ -66,7 +66,7 @@ static const char _pid_header[] = "pid: [0-9]+, tid: [0-9]+.*";
 static const char _sig_header[] = "signal*[ \t][0-9]+";
 
 /* Regular expression for the frame information line. */
-static const char _frame_header[] = "\#[0-9]{2}[ |\t]+[pc|eip]*[ |\t]+([0-9a-f]{8})*[ |\t]";
+static const char _frame_header[] = "\\#[0-9]{2}[ |\t]+[pc|eip]*[ |\t]+([0-9a-f]{8})*[ |\t]";
 
 #ifndef min
 #define min(a,b) (((a) < (b)) ? a : b)

@@ -1,10 +1,6 @@
-CC=g++
+CC=gcc
 CFLAGS=-c -Wall
-LDFLAGS=
-
-INCS = elff \
-       regex
-DEFS =
+LDFLAGS=-lstdc++
 
 ELFF_SOURCES = elff/dwarf_cu.cc \
                elff/dwarf_die.cc \
@@ -28,6 +24,9 @@ OBJECTS=$(SOURCES:.c*=.o)
 EXECUTABLE=ndk-stack
 
 all: $(SOURCES) $(EXECUTABLE)
+
+clean:
+	rm $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
