@@ -50,46 +50,6 @@ extract_platforms_from ()
     fi
 }
 
-# Remove trailing path of a path
-# $1: path
-remove_trailing_slash () {
-    echo $1 | sed -e 's!/$!!g'
-}
-
-# Reverse a file path directory
-# foo -> .
-# foo/bar -> ..
-# foo/bar/zoo -> ../..
-reverse_path ()
-{
-    local path cur item
-    path=`remove_trailing_slash $1`
-    cur="."
-    if [ "$path" != "." ] ; then
-        for item in `echo "$path" | tr '/' ' '`; do
-            cur="../$cur"
-        done
-    fi
-    echo `echo $cur | sed -e 's!/.$!!g'`
-}
-
-test_reverse_path ()
-{
-    rr=`reverse_path $1`
-    if [ "$rr" != "$2" ] ; then
-        echo "ERROR: reverse_path '$1' -> '$rr' (expected '$2')"
-    fi
-}
-
-test_reverse_path . .
-test_reverse_path ./ .
-test_reverse_path foo ..
-test_reverse_path foo/ ..
-test_reverse_path foo/bar ../..
-test_reverse_path foo/bar/ ../..
-test_reverse_path foo/bar/zoo ../../..
-test_reverse_path foo/bar/zoo/ ../../..
-
 SRCDIR="../development/ndk"
 DSTDIR="$ANDROID_NDK_ROOT"
 

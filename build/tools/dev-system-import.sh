@@ -71,7 +71,7 @@ This script is really in charge of the following tasks:
      locations in the full system source tree.
 
   2/ Locate system shared libraries from \$ANDROID_PRODUCT_OUT/system/lib
-     and convert them into small "shell" .so files that only export the
+     and convert them into small \"shell\" .so files that only export the
      same functions and variables. These can be used with the NDK at link
      time, are much smaller, and also do not require the use of special
      linker flags when used with the standalone NDK toolchain

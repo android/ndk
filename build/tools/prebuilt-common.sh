@@ -47,21 +47,66 @@ spaces_to_commas ()
     echo $@ | tr ' ' ','
 }
 
-# Predicate: true iff a space-separated list contains a given item regex pattern
-# $1: item regex pattern
-# $2+: list
-list_contains ()
-{
-    local KEY="$1"
-    shift
-    echo $@ | tr ' ' '\n' | grep -q -F -e "$KEY"
+# Remove trailing path of a path
+# $1: path
+remove_trailing_slash () {
+    echo ${1%%/}
 }
 
+# Reverse a file path directory
+# foo -> .
+# foo/bar -> ..
+# foo/bar/zoo -> ../..
+reverse_path ()
+{
+    local path cur item
+    path=`remove_trailing_slash $1`
+    cur="."
+    if [ "$path" != "." ] ; then
+        for item in `echo "$path" | tr '/' ' '`; do
+            cur="../$cur"
+        done
+    fi
+    echo `echo $cur | sed -e 's!/.$!!g'`
+}
+
+# test_reverse_path ()
+# {
+#     rr=`reverse_path $1`
+#     if [ "$rr" != "$2" ] ; then
+#         echo "ERROR: reverse_path '$1' -> '$rr' (expected '$2')"
+#     fi
+# }
+#
+# test_reverse_path . .
+# test_reverse_path ./ .
+# test_reverse_path foo ..
+# test_reverse_path foo/ ..
+# test_reverse_path foo/bar ../..
+# test_reverse_path foo/bar/ ../..
+# test_reverse_path foo/bar/zoo ../../..
+# test_reverse_path foo/bar/zoo/ ../../..
+
+# Sort a space-separated list and remove duplicates
+# $1+: slist
+# Output: new slist
 sort_uniq ()
 {
     local RET
     RET=$(echo $@ | tr ' ' '\n' | sort -u)
     echo $RET
+}
+
+# Return the list of all regular files under a given directory
+# $1: Directory path
+# Output: list of files, relative to $1
+list_files_under ()
+{
+    if [ -d "$1" ]; then
+        (cd $1 && find . -type f | sed -e "s!./!!" | sort -u)
+    else
+        echo ""
+    fi
 }
 
 #====================================================
