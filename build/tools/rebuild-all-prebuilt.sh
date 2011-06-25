@@ -300,7 +300,7 @@ if [ "$MINGW" != "yes" ] ; then
     $ANDROID_NDK_ROOT/build/tools/build-platforms.sh --no-symlinks --no-samples --arch=$ARCH --dst-dir="$NDK_DIR"
     case "$ARCH" in
     arm )
-        $ANDROID_NDK_ROOT/build/tools/build-stlport.sh $BUILD_STLPORT_FLAGS
+        $ANDROID_NDK_ROOT/build/tools/build-stlport.sh $BUILD_STLPORT_FLAGS --abis=armeabi,armeabi-v7a
         ;;
     x86 )
         $ANDROID_NDK_ROOT/build/tools/build-stlport.sh $BUILD_STLPORT_FLAGS --abis=x86
