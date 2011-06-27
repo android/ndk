@@ -1,11 +1,36 @@
 <html><body><pre>Android NDK ChangeLog:
 
 -------------------------------------------------------------------------------
-android-ndk-r??
+android-ndk-r6
+
+IMPORTANT CHANGES:
+
+- Official support for the x86 ABI.
+
+  This release of the Android NDK now provides support for the 'x86' ABI.
+  This allows you to generate machine code that runs on future x86-based
+  Android devices.
+
+  Note that by default, code is still generated for ARM-based devices.
+  You can however add 'x86' to your APP_PLATFORM definition in your
+  Application.mk. For example, the following line instructs ndk-build
+  to build your code for three distinct ABIs:
+
+    APP_ABI := armeabi armeabi-v7a x86
+
+  Unless you rely on ARM-based assembly sources, you shouldn't need to touch
+  your Android.mk files to build x86 machine code.
+
+  For all details regarding x86 support, please read the new documentation
+  file named docs/CPU-X86.html.
+
+  Don't hesitate to file NDK bugs related to x86 at http://b.android.com
+
 
 OTHER FIXES &amp; CHANGES:
 
-- Remove arm-eabi-4.4.0 support. The toolchain was deprecated in NDK r5.
+- The arm-eabi-4.4.0, which had been deprecated since NDK r5, has been
+  finally removed from the NDK distribution.
 
 -------------------------------------------------------------------------------
 android-ndk-r5c

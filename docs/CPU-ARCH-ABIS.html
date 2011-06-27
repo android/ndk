@@ -135,15 +135,10 @@ Each supported ABI is identified by a unique name.
     Amendment to System V Application Binary Interface
       Intel386 Processor Architecture Supplement
 
-  IMPORTANT IMPORTANT IMPORTANT IMPORTANT IMPORTANT IMPORTANT:
-
-      THE 'x86' ABI IS AN EXPERIMENTAL FEATURE THAT IS NOT FULLY
-      SUPPORTED YET BY THIS NDK RELEASE. TRYING TO USE IT WILL RESULT
-      IN AN ERROR DURING THE BUILD PROCESS.
-
-  Note that optional features like MOVBE must be explicitly tested at
-  runtime by the generated machine code and cannot be assumed to be
-  everywhere.
+  Note that optional features that are not part of this ABI, like SSSE3 or
+  the MOVBE instruction myst be explicitely tested at runtime by the generated
+  machine code and cannot be assumed to be on all devices supporting this
+  ABI.
 
 
 II. Generating code for a specific ABI:
@@ -202,11 +197,12 @@ native code in application packages.
     precisely by the steps described below; you will need to extract/install
     them manually in your application.
 
-    In the case of a "fat" binary, two distinct libraries are thus placed in
-    the  .apk, for example at:
+    In the case of a "fat" binary, up to three distinct libraries can be placed
+    in the  .apk, for example at:
 
         lib/armeabi/libfoo.so
         lib/armeabi-v7a/libfoo.so
+        lib/x86/libfoo.so
 
 
   III.2. Android Platform ABI support:
@@ -229,6 +225,8 @@ native code in application packages.
     primary ABI to 'armeabi-v7a' and the secondary one to 'armeabi'
     since it can run application native binaries generated for both
     of them.
+
+    A typical x86-based device only defines a primary abi named 'x86'.
 
 
   III.3. Automatic extraction of native code at install time:
