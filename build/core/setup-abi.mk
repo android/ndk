@@ -27,6 +27,16 @@ TARGET_ARCH := $(TARGET_ARCH_for_$(TARGET_ARCH_ABI))
 
 TARGET_OUT  := $(NDK_APP_OUT)/$(_app)/$(TARGET_ARCH_ABI)
 
+# Special handling for x86: The minimal platform is android-9 here
+# For now, handle this with a simple substitution. We may want to implement
+# more general filtering in the future when introducing other ABIs.
+TARGET_PLATFORM_SAVED := $(TARGET_PLATFORM)
+ifeq ($(TARGET_ARCH),x86)
+$(foreach _plat,3 4 5 8,\
+    $(eval TARGET_PLATFORM := $$(subst android-$(_plat),android-9,$$(TARGET_PLATFORM)))\
+)
+endif
+
 # Separate the debug and release objects. This prevents rebuilding
 # everything when you switch between these two modes. For projects
 # with lots of C++ sources, this can be a considerable time saver.
@@ -39,3 +49,6 @@ endif
 TARGET_GDB_SETUP := $(TARGET_OUT)/setup.gdb
 
 include $(BUILD_SYSTEM)/setup-toolchain.mk
+
+# Restore TARGET_PLATFORM, see above.
+TARGET_PLATFORM := $(TARGET_PLATFORM_SAVED)

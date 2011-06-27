@@ -50,7 +50,7 @@ SYSTEMS="linux-x86,darwin-x86,windows"
 register_var_option "--systems=<list>" SYSTEMS "Specify host systems"
 
 # ARCH to build for
-ARCHS="arm"
+ARCHS="arm,x86"
 register_var_option "--arch=<arch>" ARCHS "Specify target architecture(s)"
 
 # set to 'yes' if we should use 'git ls-files' to list the files to
