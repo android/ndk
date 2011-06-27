@@ -1,0 +1,72 @@
+<html><body><pre>Android NDK x86 (a.k.a. IA-32) instruction set support
+------------------------------------------------------
+
+Introduction:
+-------------
+
+Android NDK r6 added support for the 'x86' ABI, that allows native code to
+run on Android-based devices running on CPUs supporting the IA-32 instruction
+set.
+
+The Android x86 ABI itself is fully specified in docs/CPU-ARCH-ABIS.html.
+
+Overview:
+---------
+
+Generating x86 machine code is simple: just add 'x86' to your APP_ABI
+definition in your Application.mk file, for example:
+
+   APP_ABI := armeabi armeabi-v7a x86
+
+will generate machine code for all supported ABIs with this NDK. Doing so
+will ensure that your application package contains libraries for all target
+ABIs. Note that this has an impact on package size, since each ABI will
+correspond to its own set of native libraries built from the same sources.
+
+The default ABI is still 'armeabi', if unspecified in your project.
+
+As you would expect, generated libraries will go into $PROJECT/libs/x86/, and
+will be embedded into your .apk under /lib/x86/.
+
+And just like other ABIs, the Android package manager will extract these
+libraries on a *compatible* x86-based device automatically at install time,
+to put them under &lt;dataPath&gt;/lib, where &lt;dataPath&gt; is the
+application's private data directory.
+
+Similarly, the Android Market server is capable of filtering applications
+based on the native libraries they embed and your device's target CPU.
+
+Debugging with ndk-gdb should work exactly as described under docs/NDK-GDB.html.
+
+Standalone-toolchain:
+---------------------
+
+The x86 toolchain provided with NDK r6 *cannot* work as a stand-alone
+toolchain at the moment. This requires additionnal changes to the gcc
+sources and configuration files that will be performed in a future release.
+
+We very clearly do _not_ recommend using a normal Linux x86 toolchain to
+try generating code for Android at this point. Chances that the result will
+work are pretty slim, and this may introduce subtle issues that may make
+your code break when loaded on future platform releases.
+
+
+Compatibility:
+--------------
+
+The minimal native API level provided by official Android x86 platform builds
+is 9, which corresponds to all the native APIs provided by Android 2.3, i.e.
+Gingerbread (note also that no new native APIs were introduced by Honeycomb).
+
+You won't have to change anything to your project files if you target an older
+API level: the NDK build script will automatically select the right set of
+native platform headers/libraries for you.
+
+Note that, as of today (June 2011), *no* compatible x86 devices exist on the
+market.
+
+In particular, while there are various projects which have forked the
+official Android open-source tree and added their own x86-specific
+customizations, there is absolutely no guarantee that anything generated
+with the official Android NDK is going to run on them at the moment.
+</pre></body></html>
