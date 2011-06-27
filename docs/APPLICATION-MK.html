@@ -142,9 +142,13 @@ APP_ABI
 
         APP_ABI := armeabi-v7a
 
-    Or to support both ARMv5TE and ARMv7 based devices, use:
+    Or to support the IA-32 instruction set, use:
 
-        APP_ABI := armeabi armeabi-v7a
+        APP_ABI := x86
+
+    Or to support all three at the same time, use:
+
+        APP_ABI := armeabi armeabi-v7a x86
 
     For the list of all supported ABIs and details about their usage and
     limitations, please read docs/CPU-ARCH-ABIS.html
