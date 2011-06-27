@@ -901,7 +901,7 @@ API_LEVELS="3 4 5 8 9"
 STLPORT_SUBDIR=sources/cxx-stl/stlport
 
 # Default ABIs for the prebuilt STLport binaries
-STLPORT_ABIS="armeabi armeabi-v7a"
+STLPORT_ABIS="armeabi armeabi-v7a x86"
 
 # Location of the GNU libstdc++ headers and libraries, relative to the NDK
 # root directory.
