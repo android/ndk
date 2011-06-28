@@ -24,11 +24,13 @@
 /* Usage string. */
 static const char* _usage_str =
 "Usage:\n"
-"   ndk-stack -sym <path> [-dump <path>]\n"
+"   ndk-stack -sym <path> [-dump <path>]\n\n"
 "      -sym  Contains full path to the root directory for symbols.\n"
 "      -dump Contains full path to the file containing the crash dump.\n"
 "            This is an optional parameter. If ommited, ndk-stack will\n"
-"            read input data from stdin\n";
+"            read input data from stdin\n"
+"\n"
+"   See docs/NDK-STACK.html in your NDK installation tree for more details.\n\n";
 
 int main(int argc, char **argv, char **envp)
 {

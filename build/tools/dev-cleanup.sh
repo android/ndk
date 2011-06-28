@@ -42,6 +42,8 @@ rm -rf $DIR/$STLPORT_SUBDIR/libs
 rm -rf $DIR/$GNUSTL_SUBDIR/include
 rm -rf $DIR/$GNUSTL_SUBDIR/libs/*
 
+rm -f $DIR/ndk-stack*
+
 clean_dir ()
 {
     if [ -d "$1" ] ; then
