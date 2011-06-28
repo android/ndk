@@ -709,10 +709,15 @@ parse_toolchain_name ()
 
 }
 
-
+# Return the host "tag" used to identify prebuilt host binaries.
+# NOTE: Handles the case where '$MINGW = true'
+# For now, valid values are: linux-x86, darwin-x86 and windows
 get_prebuilt_host_tag ()
 {
     local RET=$HOST_TAG
+    if [ "$MINGW" = "yes" ]; then
+        RET=windows
+    fi
     case $RET in
         linux-x86_64)
             if [ "$TRY64" = "no" ]; then
@@ -726,6 +731,16 @@ get_prebuilt_host_tag ()
             ;;
     esac
     echo $RET
+}
+
+# Return the executable suffix corresponding to host executables
+get_prebuilt_host_exe_ext ()
+{
+    if [ "$MINGW" = "yes" ]; then
+        echo ".exe"
+    else
+        echo ""
+    fi
 }
 
 # Convert an ABI name into an Architecture name
@@ -838,6 +853,34 @@ get_toolchain_install ()
     echo "$1/toolchains/$2/prebuilt/$(get_prebuilt_host_tag)"
 }
 
+# Return the relative path of an installed prebuilt host executable
+# NOTE: This deals with MINGW==yes appropriately.
+#
+# $1: target root NDK directory
+# $2: executable name
+# Out: path to prebuilt host executable, relative
+get_prebuilt_host_exec ()
+{
+    local EXE=$(get_prebuilt_host_exe_ext)
+    local TAG=$(get_prebuilt_host_tag)
+    echo "$1/prebuilt/$TAG/bin/$2$EXE"
+}
+
+# Return the name of a given host executable
+# $1: executable base name
+# Out: executable name, with optional suffix (e.g. .exe for windows)
+get_host_exec_name ()
+{
+    local EXE=$(get_prebuilt_host_exe_ext)
+    echo "$1$EXE"
+}
+
+# Return the directory where host-specific binaries are installed.
+# $1: target root NDK directory
+get_host_install ()
+{
+    echo "$1/prebuilt/$(get_prebuilt_host_tag)"
+}
 
 # Set the toolchain target NDK location.
 # this sets TOOLCHAIN_PATH and TOOLCHAIN_PREFIX

@@ -50,6 +50,11 @@ struct NdkCrashParser {
 
   /* Current state of the parser. */
   NDK_CRASH_PARSER_STATE state;
+
+  /* Compiled regular expressions */
+  regex_t     re_pid_header;
+  regex_t     re_sig_header;
+  regex_t     re_frame_header;
 };
 
 /* Crash dumps begin with a string containing this substring. */
@@ -95,7 +100,7 @@ static int ParseFrame(NdkCrashParser* parser, const char* frame);
  *  Boolean: 1 if a match has been found, or 0 if match has not been found in
  *  the string.
  */
-static int MatchRegex(const char* line, const char* regex, regmatch_t* match);
+static int MatchRegex(const char* line, const regex_t* regex, regmatch_t* match);
 
 /* Returns pointer to the next separator (a space, or a tab) in the string. */
 static const char* next_separator(const char* str);
@@ -121,29 +126,43 @@ static const char* get_next_token(const char* str, char* token, size_t size);
 NdkCrashParser*
 CreateNdkCrashParser(FILE* out_handle, const char* sym_root)
 {
-  NdkCrashParser* parser = (NdkCrashParser*)malloc(sizeof(NdkCrashParser));
-  if (parser != NULL) {
-    parser->out_handle = out_handle;
-    parser->state = EXPECTS_CRASH_DUMP;
-    parser->sym_root = (char*)malloc(strlen(sym_root) + 1);
-    if (parser->sym_root != NULL) {
-      strcpy(parser->sym_root, sym_root);
-    } else {
-      free(parser);
-      parser = NULL;
-    }
-  }
+  int ok;
+  NdkCrashParser* parser;
+
+  parser = (NdkCrashParser*)calloc(sizeof(*parser), 1);
+  if (parser == NULL)
+      return NULL;
+
+  parser->out_handle = out_handle;
+  parser->state      = EXPECTS_CRASH_DUMP;
+
+  parser->sym_root = strdup(sym_root);
+  if (!parser->sym_root)
+      goto BAD_INIT;
+
+  if (regcomp(&parser->re_pid_header, _pid_header, REG_EXTENDED | REG_NEWLINE) ||
+      regcomp(&parser->re_sig_header, _sig_header, REG_EXTENDED | REG_NEWLINE) ||
+      regcomp(&parser->re_frame_header, _frame_header, REG_EXTENDED | REG_NEWLINE))
+      goto BAD_INIT;
 
   return parser;
+
+BAD_INIT:
+  DestroyNdkCrashParser(parser);
+  return NULL;
 }
 
 void
 DestroyNdkCrashParser(NdkCrashParser* parser)
 {
   if (parser != NULL) {
-    if (parser->sym_root != NULL) {
-      free(parser->sym_root);
-    }
+    /* Release compiled regular expressions */
+    regfree(&parser->re_frame_header);
+    regfree(&parser->re_sig_header);
+    regfree(&parser->re_pid_header);
+    /* Release symbol path */
+    free(parser->sym_root);
+    /* Release parser itself */
     free(parser);
   }
 }
@@ -182,7 +201,7 @@ ParseLine(NdkCrashParser* parser, const char* line)
       // Let it fall through to the EXPECTS_PID, in case the dump doesn't
       // contain build fingerprint.
     case EXPECTS_PID:
-      if (MatchRegex(line, _pid_header, &match)) {
+      if (MatchRegex(line, &parser->re_pid_header, &match)) {
         fprintf(parser->out_handle, "%s\n", line + match.rm_so);
         parser->state = EXPECTS_SIGNAL_OR_FRAME;
         return 0;
@@ -191,14 +210,14 @@ ParseLine(NdkCrashParser* parser, const char* line)
       }
 
     case EXPECTS_SIGNAL_OR_FRAME:
-      if (MatchRegex(line, _sig_header, &match)) {
+      if (MatchRegex(line, &parser->re_sig_header, &match)) {
         fprintf(parser->out_handle, "%s\n", line + match.rm_so);
         parser->state = EXPECTS_FRAME;
       }
       // Let it fall through to the EXPECTS_FRAME, in case the dump doesn't
       // contain signal fingerprint.
     case EXPECTS_FRAME:
-      if (MatchRegex(line, _frame_header, &match)) {
+      if (MatchRegex(line, &parser->re_frame_header, &match)) {
         parser->state = EXPECTS_FRAME;
         return ParseFrame(parser, line + match.rm_so);
       } else {
@@ -211,26 +230,19 @@ ParseLine(NdkCrashParser* parser, const char* line)
 }
 
 static int
-MatchRegex(const char* line, const char* regex, regmatch_t* match)
+MatchRegex(const char* line, const regex_t* regex, regmatch_t* match)
 {
   char rerr[4096];
   regex_t rex;
-  int ok = regcomp(&rex, regex, REG_EXTENDED | REG_NEWLINE);
-  if (!ok) {
-    ok = regexec(&rex, line, 1, match, 0x00400/*REG_TRACE*/);
+  int err = regexec(regex, line, 1, match, 0x00400/*REG_TRACE*/);
 #if 0
-    if (ok) {
-        regerror(ok, &rex, rerr, sizeof(rerr));
+    if (err) {
+        regerror(err, regex, rerr, sizeof(rerr));
         fprintf(stderr, "regexec(%s, %s) has failed: %s\n", line, regex, rerr);
     }
 #endif
-    regfree(&rex);
-  } else {
-    regerror(ok, &rex, rerr, sizeof(rerr));
-    fprintf(stderr, "regcomp(%s) has failed: %s\n", regex, rerr);
-  }
 
-  return ok == 0;
+  return err == 0;
 }
 
 static const char*
@@ -269,11 +281,12 @@ ParseFrame(NdkCrashParser* parser, const char* frame)
   char* eptr;
   char pc_address[17];
   char module_path[2048];
+  char* module_name;
   char sym_file[2048];
   ELFF_HANDLE elff_handle;
   Elf_AddressInfo pc_info;
 
-  fprintf(parser->out_handle, "Stack frame %s: ", frame);
+  fprintf(parser->out_handle, "Stack frame %s", frame);
 
   // Advance to the instruction pointer token.
   wrk = strstr(frame, "pc");
@@ -298,26 +311,46 @@ ParseFrame(NdkCrashParser* parser, const char* frame)
   // Next token is module path.
   get_next_token(wrk, module_path, sizeof(module_path));
 
+  // Extract basename of module, we should not care about its path
+  // on the device.
+  module_name = strrchr(module_path,'/');
+  if (module_name == NULL)
+      module_name = module_path;
+  else {
+      module_name += 1;
+      if (*module_name == '\0') {
+          /* Trailing slash in the module path, this should not happen */
+          /* Back-off with the full module-path */
+          module_name = module_path;
+      }
+  }
+
   // Build path to the symbol file.
-  strcpy(sym_file, parser->sym_root);
-  strcat(sym_file, module_path);
+  strncpy(sym_file, parser->sym_root, sizeof(sym_file));
+  strncat(sym_file, "/", sizeof(sym_file));
+  strncat(sym_file, module_name, sizeof(sym_file));
+  sym_file[sizeof(sym_file)-1] = '\0';
 
   // Init ELFF wrapper for the symbol file.
   elff_handle = elff_init(sym_file);
   if (elff_handle == NULL) {
-    fprintf(parser->out_handle,
-            "Unable to open symbol file %s. Error code is %d\n",
-            sym_file, errno);
+    if (errno == ENOENT) {
+        fprintf(parser->out_handle, "\n");
+    } else {
+        fprintf(parser->out_handle,
+                ": Unable to open symbol file %s. Error (%d): %s\n",
+                sym_file, errno, strerror(errno));
+    }
     return -1;
   }
   // Extract address info from the symbol file.
   if (!elff_get_pc_address_info(elff_handle, address, &pc_info)) {
     if (pc_info.dir_name != NULL) {
-      fprintf(parser->out_handle, "Routine %s in %s/%s:%d\n",
+      fprintf(parser->out_handle, ": Routine %s in %s/%s:%d\n",
               pc_info.routine_name, pc_info.dir_name, pc_info.file_name,
               pc_info.line_number);
     } else {
-      fprintf(parser->out_handle, "Routine %s in %s:%d\n",
+      fprintf(parser->out_handle, ": Routine %s in %s:%d\n",
               pc_info.routine_name, pc_info.file_name, pc_info.line_number);
     }
     elff_free_pc_address_info(elff_handle, &pc_info);
@@ -325,7 +358,7 @@ ParseFrame(NdkCrashParser* parser, const char* frame)
     return 0;
   } else {
     fprintf(parser->out_handle,
-            "Unable to locate routine information for address %x in module %s\n",
+            ": Unable to locate routine information for address %x in module %s\n",
             (uint32_t)address, sym_file);
     elff_close(elff_handle);
     return -1;

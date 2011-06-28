@@ -376,6 +376,9 @@ for SYSTEM in $SYSTEMS; do
             unpack_prebuilt stlport-libs-$ABI.tar.bz2
             unpack_prebuilt gnu-libstdc++-libs-$ABI.tar.bz2
         done
+
+        # Unpack prebuilt ndk-stack
+        unpack_prebuilt ndk-stack-$SYSTEM.tar.bz2
     fi
 
     # Create an archive for the final package. Extension depends on the

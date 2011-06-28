@@ -7,3 +7,4 @@ build.xml
 samples/
 platforms/
 toolchains/*/prebuilt/
+/ndk-stack*
