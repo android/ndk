@@ -30,7 +30,7 @@ TARGET_CFLAGS := \
     -D__ANDROID__ \
     -mbionic \
     -I$(call host-path,$(SYSROOT))/usr/include \
-    -march=atom -mstackrealign -DUSE_SSSE3 -DUSE_SSE2 -mfpmath=sse \
+    -march=i686 -mtune=atom -mstackrealign -msse3 -mfpmath=sse \
     -Ulinux -m32 -fPIC \
     -ffunction-sections \
     -funwind-tables \
