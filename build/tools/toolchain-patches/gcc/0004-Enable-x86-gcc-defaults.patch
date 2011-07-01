@@ -1,7 +1,7 @@
 From fc0c72d824b194f5c5e2c16ae5e706eed3a359fc Mon Sep 17 00:00:00 2001
 From: Mark D Horn <mark.d.horn@intel.com>
 Date: Tue, 28 Jun 2011 15:35:46 -0700
-Subject: [PATCH] Enable x86 gcc defaults
+Subject: [PATCH 4/4] Enable x86 gcc defaults
 
 Enabling the same built-in defaults for the x86
 toolchain as is currently done for ARM.

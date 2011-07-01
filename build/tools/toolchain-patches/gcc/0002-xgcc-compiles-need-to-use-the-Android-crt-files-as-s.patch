@@ -1,0 +1,41 @@
+From 55f3c413cef5e642f05b94ada9cd2365422e8de5 Mon Sep 17 00:00:00 2001
+From: Bruce Beare <bruce.j.beare@intel.com>
+Date: Thu, 17 Mar 2011 11:55:23 -0700
+Subject: [PATCH 2/4] xgcc compiles need to use the Android crt files as specified in LDFLAGS_FOR_TARGET
+
+Change-Id: If494615b055cd5c001ffd7a1722bcbdf9b88abd8
+Signed-off-by: Bruce Beare <bruce.j.beare@intel.com>
+---
+ gcc-4.4.3/Makefile.in  |    2 +-
+ gcc-4.4.3/Makefile.tpl |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/gcc-4.4.3/Makefile.in b/gcc-4.4.3/Makefile.in
+index 53a5146..c29eab7 100644
+--- a/gcc-4.4.3/Makefile.in
++++ b/gcc-4.4.3/Makefile.in
+@@ -466,7 +466,7 @@ CXXFLAGS_FOR_TARGET = @CXXFLAGS_FOR_TARGET@
+ 
+ LIBCFLAGS_FOR_TARGET = $(CFLAGS_FOR_TARGET)
+ LIBCXXFLAGS_FOR_TARGET = $(CXXFLAGS_FOR_TARGET) -fno-implicit-templates
+-LDFLAGS_FOR_TARGET = 
++LDFLAGS_FOR_TARGET = @LDFLAGS_FOR_TARGET@
+ 
+ FLAGS_FOR_TARGET = @FLAGS_FOR_TARGET@
+ DEBUG_PREFIX_CFLAGS_FOR_TARGET = @DEBUG_PREFIX_CFLAGS_FOR_TARGET@
+diff --git a/gcc-4.4.3/Makefile.tpl b/gcc-4.4.3/Makefile.tpl
+index ac36409..c05b935 100644
+--- a/gcc-4.4.3/Makefile.tpl
++++ b/gcc-4.4.3/Makefile.tpl
+@@ -436,7 +436,7 @@ CXXFLAGS_FOR_TARGET = @CXXFLAGS_FOR_TARGET@
+ 
+ LIBCFLAGS_FOR_TARGET = $(CFLAGS_FOR_TARGET)
+ LIBCXXFLAGS_FOR_TARGET = $(CXXFLAGS_FOR_TARGET) -fno-implicit-templates
+-LDFLAGS_FOR_TARGET = 
++LDFLAGS_FOR_TARGET = @LDFLAGS_FOR_TARGET@
+ 
+ FLAGS_FOR_TARGET = @FLAGS_FOR_TARGET@
+ DEBUG_PREFIX_CFLAGS_FOR_TARGET = @DEBUG_PREFIX_CFLAGS_FOR_TARGET@
+-- 
+1.7.1
+
