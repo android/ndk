@@ -1,0 +1,779 @@
+From fe2afdf3f3701489c05d2a7509752d6f0c7616f7 Mon Sep 17 00:00:00 2001
+From: Doug Kwan <dougkwan@google.com>
+Date: Fri, 10 Jun 2011 16:02:39 -0700
+Subject: [PATCH 3/4] Sync internal and external version:
+
+Changes:
+-x86 security patch (for ChromeOS)
+-Fix bug in inlining.
+-Fix freestanding C++ library build:
+ http://gcc.gnu.org/viewcvs?view=revision&revision=173220
+-Fix out-of-range branches in Thumb-2 mode.
+-Fix gcda file corruption problem.
+-Hanlde LDFLAGS_FOR_TARGETS in configure.  This is a backport of upstrem
+ patch r173558.
+-Backport upstream fix for Atom performance at r164379.
+
+Change-Id: Id5a6cfb8949cbd390a0bb3546d55d83383ee4f8c
+---
+ gcc-4.4.3/README.google                          |   62 ++++++++++
+ gcc-4.4.3/configure                              |    5 +-
+ gcc-4.4.3/configure.ac                           |    2 +
+ gcc-4.4.3/gcc/config/arm/thumb2.md               |   10 +-
+ gcc-4.4.3/gcc/config/i386/i386.c                 |  137 +++++++++++++++++++++-
+ gcc-4.4.3/gcc/config/i386/i386.h                 |    3 +
+ gcc-4.4.3/gcc/config/i386/i386.md                |   34 ++++++
+ gcc-4.4.3/gcc/esp.h                              |   16 +++-
+ gcc-4.4.3/gcc/gcc.c                              |    7 +-
+ gcc-4.4.3/gcc/ipa-inline.c                       |    3 +-
+ gcc-4.4.3/gcc/libgcov.c                          |    2 +
+ gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-1.c  |    9 ++
+ gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-10.c |   18 +++
+ gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-2.c  |    9 ++
+ gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-3.c  |   15 +++
+ gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-4.c  |   13 ++
+ gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-5a.c |   12 ++
+ gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-5b.c |   12 ++
+ gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-6a.c |   12 ++
+ gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-6b.c |   12 ++
+ gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-7.c  |   11 ++
+ gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-8.c  |   11 ++
+ gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-9.c  |   15 +++
+ gcc-4.4.3/libstdc++-v3/include/Makefile.am       |    1 +
+ gcc-4.4.3/libstdc++-v3/include/Makefile.in       |    1 +
+ 25 files changed, 415 insertions(+), 17 deletions(-)
+ create mode 100644 gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-1.c
+ create mode 100644 gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-10.c
+ create mode 100644 gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-2.c
+ create mode 100644 gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-3.c
+ create mode 100644 gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-4.c
+ create mode 100644 gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-5a.c
+ create mode 100644 gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-5b.c
+ create mode 100644 gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-6a.c
+ create mode 100644 gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-6b.c
+ create mode 100644 gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-7.c
+ create mode 100644 gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-8.c
+ create mode 100644 gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-9.c
+
+diff --git a/gcc-4.4.3/README.google b/gcc-4.4.3/README.google
+index f36db91..f626550 100644
+--- a/gcc-4.4.3/README.google
++++ b/gcc-4.4.3/README.google
+@@ -3386,3 +3386,65 @@ libstdc++/include/Makefile.in
+   Installed cpu_defines.h in freestanding standing mode (libstdc++/48123)
+   Owner: dougkwan
+   Status: In gcc trunk rev 171019
++
++gcc/gcc.c
++gcc/esp.h
++  Added the ability to have the driver always pass in -D_FORTIFY_SOURCE=2
++  when doing compiles.
++  Also guarded -z,now and -z,relro with other defines.
++  Owner: asharif
++  Status: local, derived from Gentoo patchset:
++  http://distfiles.gentoo.org/distfiles/gcc-4.4.3-patches-1.4.tar.bz2
++
++gcc/ipa-inline.c
++  Fix updating of inlining priority for corner-case in which callsites of
++  always_inline functions are promoted from indirect calls during inlining.
++  Owner: meheff
++  Status: local
++
++libstdc++-v3/include/Makefile.am
++libstdc++-v3/include/Makefile.in
++  Backport r173220 from trunk to fix freestanding C++ library.
++  http://gcc.gnu.org/viewcvs?view=revision&revision=173220
++  Owner: dougkwan
++  Status: upstream
++
++gcc/config/arm/thumb2.md
++  Fix out-of-range branches in Thumb-2 mode. b/2961998
++  Owner: dougkwan
++  Status: In upstream r149501.
++
++gcc/libgcov.c
++  Fix gcda corruption problem in b/4462929 reported by an external user.
++  Fix contributed by <nkondrashov@nvidia.com>
++  Owner: dougkwan
++  Status: local
++
++Makefile.in
++Makefile.tpl
++configure
++configure.ac
++  Propagate LDFLAGS_FOR_TARGETS in top level configure.
++  This is required to build x86 Android toolchain properly.
++  Owner: dougkwan
++  Status: backport of upstream r173558
++
++gcc/config/i386/i386.c
++gcc/config/i386/i386.h
++gcc/config/i386/i386.md
++gcc/testsuite/gcc.target/i386/pad-1.c
++gcc/testsuite/gcc.target/i386/pad-10.c
++gcc/testsuite/gcc.target/i386/pad-2.c
++gcc/testsuite/gcc.target/i386/pad-3.c
++gcc/testsuite/gcc.target/i386/pad-4.c
++gcc/testsuite/gcc.target/i386/pad-5a.c
++gcc/testsuite/gcc.target/i386/pad-5b.c
++gcc/testsuite/gcc.target/i386/pad-6a.c
++gcc/testsuite/gcc.target/i386/pad-6b.c
++gcc/testsuite/gcc.target/i386/pad-7.c
++gcc/testsuite/gcc.target/i386/pad-8.c
++gcc/testsuite/gcc.target/i386/pad-9.c
++  Backport r164379 from trunk to help Atom performance on small functions.
++  http://gcc.gnu.org/viewcvs?view=revision&revision=164379
++  Owner: asharif
++  Status: upstream in r164379
+diff --git a/gcc-4.4.3/configure b/gcc-4.4.3/configure
+index 2804923..e713c32 100755
+--- a/gcc-4.4.3/configure
++++ b/gcc-4.4.3/configure
+@@ -272,7 +272,7 @@ PACKAGE_STRING=
+ PACKAGE_BUGREPORT=
+ 
+ ac_unique_file="move-if-change"
+-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS TOPLEVEL_CONFIGURE_ARGUMENTS build build_cpu build_vendor build_os build_noncanonical host_noncanonical target_noncanonical host host_cpu host_vendor host_os target target_cpu target_vendor target_os INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA LN LN_S build_libsubdir build_subdir host_subdir target_subdir enable_esp CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CXX CXXFLAGS ac_ct_CXX GNATBIND ac_ct_GNATBIND GNATMAKE ac_ct_GNATMAKE do_compare gmplibs gmpinc extra_mpfr_configure_flags ppllibs pplinc clooglibs clooginc stage1_languages DEBUG_PREFIX_CFLAGS_FOR_TARGET CFLAGS_FOR_TARGET CXXFLAGS_FOR_TARGET RPATH_ENVVAR GCC_SHLIB_SUBDIR tooldir build_tooldir CONFIGURE_GDB_TK GDB_TK INSTALL_GDB_TK build_configargs build_configdirs host_configargs configdirs target_configargs AR_FOR_BUILD AS_FOR_BUILD CC_FOR_BUILD CFLAGS_FOR_BUILD CXXFLAGS_FOR_BUILD CXX_FOR_BUILD DLLTOOL_FOR_BUILD GCJ_FOR_BUILD GFORTRAN_FOR_BUILD LDFLAGS_FOR_BUILD LD_FOR_BUILD NM_FOR_BUILD RANLIB_FOR_BUILD WINDMC_FOR_BUILD WINDRES_FOR_BUILD config_shell YACC BISON M4 LEX FLEX MAKEINFO EXPECT RUNTEST AR AS DLLTOOL LD LIPO NM RANLIB STRIP WINDRES WINDMC OBJCOPY OBJDUMP CC_FOR_TARGET CXX_FOR_TARGET GCC_FOR_TARGET GCJ_FOR_TARGET GFORTRAN_FOR_TARGET AR_FOR_TARGET AS_FOR_TARGET DLLTOOL_FOR_TARGET LD_FOR_TARGET LIPO_FOR_TARGET NM_FOR_TARGET OBJDUMP_FOR_TARGET RANLIB_FOR_TARGET STRIP_FOR_TARGET WINDRES_FOR_TARGET WINDMC_FOR_TARGET RAW_CXX_FOR_TARGET FLAGS_FOR_TARGET COMPILER_AS_FOR_TARGET COMPILER_LD_FOR_TARGET COMPILER_NM_FOR_TARGET MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT stage1_cflags stage1_checking stage2_werror_flag datarootdir docdir pdfdir htmldir LIBOBJS LTLIBOBJS'
++ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS TOPLEVEL_CONFIGURE_ARGUMENTS build build_cpu build_vendor build_os build_noncanonical host_noncanonical target_noncanonical host host_cpu host_vendor host_os target target_cpu target_vendor target_os INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA LN LN_S build_libsubdir build_subdir host_subdir target_subdir enable_esp CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CXX CXXFLAGS ac_ct_CXX GNATBIND ac_ct_GNATBIND GNATMAKE ac_ct_GNATMAKE do_compare gmplibs gmpinc extra_mpfr_configure_flags ppllibs pplinc clooglibs clooginc stage1_languages DEBUG_PREFIX_CFLAGS_FOR_TARGET CFLAGS_FOR_TARGET CXXFLAGS_FOR_TARGET LDFLAGS_FOR_TARGET RPATH_ENVVAR GCC_SHLIB_SUBDIR tooldir build_tooldir CONFIGURE_GDB_TK GDB_TK INSTALL_GDB_TK build_configargs build_configdirs host_configargs configdirs target_configargs AR_FOR_BUILD AS_FOR_BUILD CC_FOR_BUILD CFLAGS_FOR_BUILD CXXFLAGS_FOR_BUILD CXX_FOR_BUILD DLLTOOL_FOR_BUILD GCJ_FOR_BUILD GFORTRAN_FOR_BUILD LDFLAGS_FOR_BUILD LD_FOR_BUILD NM_FOR_BUILD RANLIB_FOR_BUILD WINDMC_FOR_BUILD WINDRES_FOR_BUILD config_shell YACC BISON M4 LEX FLEX MAKEINFO EXPECT RUNTEST AR AS DLLTOOL LD LIPO NM RANLIB STRIP WINDRES WINDMC OBJCOPY OBJDUMP CC_FOR_TARGET CXX_FOR_TARGET GCC_FOR_TARGET GCJ_FOR_TARGET GFORTRAN_FOR_TARGET AR_FOR_TARGET AS_FOR_TARGET DLLTOOL_FOR_TARGET LD_FOR_TARGET LIPO_FOR_TARGET NM_FOR_TARGET OBJDUMP_FOR_TARGET RANLIB_FOR_TARGET STRIP_FOR_TARGET WINDRES_FOR_TARGET WINDMC_FOR_TARGET RAW_CXX_FOR_TARGET FLAGS_FOR_TARGET COMPILER_AS_FOR_TARGET COMPILER_LD_FOR_TARGET COMPILER_NM_FOR_TARGET MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT stage1_cflags stage1_checking stage2_werror_flag datarootdir docdir pdfdir htmldir LIBOBJS LTLIBOBJS'
+ ac_subst_files='serialization_dependencies host_makefile_frag target_makefile_frag alphaieee_frag ospace_frag'
+ ac_pwd=`pwd`
+ 
+@@ -5586,6 +5586,8 @@ if test "x$CXXFLAGS_FOR_TARGET" = x; then
+ fi
+ 
+ 
++
++
+ # Handle --with-headers=XXX.  If the value is not "yes", the contents of
+ # the named directory are copied to $(tooldir)/sys-include.
+ if test x"${with_headers}" != x && test x"${with_headers}" != xno ; then
+@@ -13289,6 +13291,7 @@ s,@stage1_languages@,$stage1_languages,;t t
+ s,@DEBUG_PREFIX_CFLAGS_FOR_TARGET@,$DEBUG_PREFIX_CFLAGS_FOR_TARGET,;t t
+ s,@CFLAGS_FOR_TARGET@,$CFLAGS_FOR_TARGET,;t t
+ s,@CXXFLAGS_FOR_TARGET@,$CXXFLAGS_FOR_TARGET,;t t
++s,@LDFLAGS_FOR_TARGET@,$LDFLAGS_FOR_TARGET,;t t
+ s,@RPATH_ENVVAR@,$RPATH_ENVVAR,;t t
+ s,@GCC_SHLIB_SUBDIR@,$GCC_SHLIB_SUBDIR,;t t
+ s,@tooldir@,$tooldir,;t t
+diff --git a/gcc-4.4.3/configure.ac b/gcc-4.4.3/configure.ac
+index 40aea37..5ae58cc 100644
+--- a/gcc-4.4.3/configure.ac
++++ b/gcc-4.4.3/configure.ac
+@@ -1891,6 +1891,8 @@ if test "x$CXXFLAGS_FOR_TARGET" = x; then
+ fi
+ AC_SUBST(CXXFLAGS_FOR_TARGET)
+ 
++AC_SUBST(LDFLAGS_FOR_TARGET)
++
+ # Handle --with-headers=XXX.  If the value is not "yes", the contents of
+ # the named directory are copied to $(tooldir)/sys-include.
+ if test x"${with_headers}" != x && test x"${with_headers}" != xno ; then
+diff --git a/gcc-4.4.3/gcc/config/arm/thumb2.md b/gcc-4.4.3/gcc/config/arm/thumb2.md
+index 6e03e8b..c982ea7 100644
+--- a/gcc-4.4.3/gcc/config/arm/thumb2.md
++++ b/gcc-4.4.3/gcc/config/arm/thumb2.md
+@@ -1190,7 +1190,7 @@
+    (clobber (reg:CC CC_REGNUM))]
+   "TARGET_THUMB2"
+   "*
+-  if (get_attr_length (insn) == 2 && which_alternative == 0)
++  if (get_attr_length (insn) == 2)
+     return \"cbz\\t%0, %l1\";
+   else
+     return \"cmp\\t%0, #0\;beq\\t%l1\";
+@@ -1198,7 +1198,8 @@
+   [(set (attr "length") 
+         (if_then_else
+ 	    (and (ge (minus (match_dup 1) (pc)) (const_int 2))
+-	         (le (minus (match_dup 1) (pc)) (const_int 128)))
++	         (le (minus (match_dup 1) (pc)) (const_int 128))
++	         (eq (symbol_ref ("which_alternative")) (const_int 0)))
+ 	    (const_int 2)
+ 	    (const_int 8)))]
+ )
+@@ -1212,7 +1213,7 @@
+    (clobber (reg:CC CC_REGNUM))]
+   "TARGET_THUMB2"
+   "*
+-  if (get_attr_length (insn) == 2 && which_alternative == 0)
++  if (get_attr_length (insn) == 2)
+     return \"cbnz\\t%0, %l1\";
+   else
+     return \"cmp\\t%0, #0\;bne\\t%l1\";
+@@ -1220,7 +1221,8 @@
+   [(set (attr "length") 
+         (if_then_else
+ 	    (and (ge (minus (match_dup 1) (pc)) (const_int 2))
+-	         (le (minus (match_dup 1) (pc)) (const_int 128)))
++	         (le (minus (match_dup 1) (pc)) (const_int 128))
++	         (eq (symbol_ref ("which_alternative")) (const_int 0)))
+ 	    (const_int 2)
+ 	    (const_int 8)))]
+ )
+diff --git a/gcc-4.4.3/gcc/config/i386/i386.c b/gcc-4.4.3/gcc/config/i386/i386.c
+index fa148be..b237ed8 100644
+--- a/gcc-4.4.3/gcc/config/i386/i386.c
++++ b/gcc-4.4.3/gcc/config/i386/i386.c
+@@ -1481,6 +1481,9 @@ static unsigned int initial_ix86_tune_features[X86_TUNE_LAST] = {
+   /* X86_TUNE_PAD_RETURNS */
+   m_AMD_MULTIPLE | m_CORE2 | m_GENERIC,
+ 
++  /* X86_TUNE_PAD_SHORT_FUNCTION: Pad short funtion.  */
++  m_ATOM,
++
+   /* X86_TUNE_EXT_80387_CONSTANTS */
+   m_K6_GEODE | m_ATHLON_K8 | m_ATOM | m_PENT4 | m_NOCONA | m_PPRO
+   | m_CORE2 | m_GENERIC,
+@@ -7640,6 +7643,11 @@ ix86_file_end (void)
+ 
+       xops[0] = gen_rtx_REG (Pmode, regno);
+       xops[1] = gen_rtx_MEM (Pmode, stack_pointer_rtx);
++      /* Pad stack IP move with 4 instructions.  2 NOPs count as 1
++         instruction.  */
++      if (TARGET_PAD_SHORT_FUNCTION)
++	output_asm_insn ("nop; nop; nop; nop; nop; nop; nop; nop",
++			 xops);
+       output_asm_insn ("mov%z0\t{%1, %0|%0, %1}", xops);
+       output_asm_insn ("ret", xops);
+     }
+@@ -27911,17 +27919,134 @@ ix86_pad_returns (void)
+     }
+ }
+ 
++/* Count the minimum number of instructions in BB.  Return 4 if the
++   number of instructions >= 4.  */
++
++static int 
++ix86_count_insn_bb (basic_block bb)
++{
++  rtx insn;
++  int insn_count = 0;
++
++  /* Count number of instructions in this block.  Return 4 if the number
++     of instructions >= 4.  */
++  FOR_BB_INSNS (bb, insn)
++    {
++      /* Only happen in exit blocks.  */
++      if (JUMP_P (insn)
++	  && GET_CODE (PATTERN (insn)) == RETURN)
++	break;
++
++      if (NONDEBUG_INSN_P (insn)
++	  && GET_CODE (PATTERN (insn)) != USE
++	  && GET_CODE (PATTERN (insn)) != CLOBBER)
++	{
++	  insn_count++;
++	  if (insn_count >= 4)
++	    return insn_count;
++	}
++    }
++
++  return insn_count;
++}
++
++
++/* Count the minimum number of instructions in code path in BB.  
++   Return 4 if the number of instructions >= 4.  */
++
++static int 
++ix86_count_insn (basic_block bb)
++{
++  edge e;
++  edge_iterator ei;
++  int min_prev_count;
++
++  /* Only bother counting instructions along paths with no
++     more than 2 basic blocks between entry and exit.  Given
++     that BB has an edge to exit, determine if a predecessor
++     of BB has an edge from entry.  If so, compute the number
++     of instructions in the predecessor block.  If there
++     happen to be multiple such blocks, compute the minimum.  */
++  min_prev_count = 4;
++  FOR_EACH_EDGE (e, ei, bb->preds)
++    {
++      edge prev_e;
++      edge_iterator prev_ei;
++
++      if (e->src == ENTRY_BLOCK_PTR)
++	{
++	  min_prev_count = 0;
++	  break;
++	}
++      FOR_EACH_EDGE (prev_e, prev_ei, e->src->preds)
++	{
++	  if (prev_e->src == ENTRY_BLOCK_PTR)
++	    {
++	      int count = ix86_count_insn_bb (e->src);
++	      if (count < min_prev_count)
++		min_prev_count = count;
++	      break;
++	    }
++	}
++    }
++
++  if (min_prev_count < 4)
++    min_prev_count += ix86_count_insn_bb (bb);
++
++  return min_prev_count;
++}
++
++/* Pad short funtion to 4 instructions.   */
++
++static void
++ix86_pad_short_function (void)
++{
++  edge e;
++  edge_iterator ei;
++
++  FOR_EACH_EDGE (e, ei, EXIT_BLOCK_PTR->preds)
++    {
++      rtx ret = BB_END (e->src);
++      if (JUMP_P (ret) && GET_CODE (PATTERN (ret)) == RETURN)
++	{
++	  int insn_count = ix86_count_insn (e->src);
++
++	  /* Pad short function.  */
++	  if (insn_count < 4)
++	    {
++	      rtx insn = ret;
++
++	      /* Find epilogue.  */
++	      while (insn
++		     && (!NOTE_P (insn)
++			 || NOTE_KIND (insn) != NOTE_INSN_EPILOGUE_BEG))
++		insn = PREV_INSN (insn);
++
++	      if (!insn)
++		insn = ret;
++
++	      /* Two NOPs are counted as one instruction.  */
++	      insn_count = 2 * (4  - insn_count);
++	      emit_insn_before (gen_nops (GEN_INT (insn_count)), insn);
++	    }
++	}
++    }
++}
++
+ /* Implement machine specific optimizations.  We implement padding of returns
+    for K8 CPUs and pass to avoid 4 jumps in the single 16 byte window.  */
+ static void
+ ix86_reorg (void)
+ {
+-  if (TARGET_PAD_RETURNS && optimize
+-      && optimize_function_for_speed_p (cfun))
+-    ix86_pad_returns ();
+-  if (TARGET_FOUR_JUMP_LIMIT && optimize
+-      && optimize_function_for_speed_p (cfun))
+-    ix86_avoid_jump_misspredicts ();
++  if (optimize && optimize_function_for_speed_p (cfun))
++    {
++      if (TARGET_PAD_SHORT_FUNCTION)
++	ix86_pad_short_function ();
++      else if (TARGET_PAD_RETURNS)
++	ix86_pad_returns ();
++      if (TARGET_FOUR_JUMP_LIMIT)
++	ix86_avoid_jump_misspredicts ();
++    }
+ }
+ 
+ /* Return nonzero when QImode register that must be represented via REX prefix
+diff --git a/gcc-4.4.3/gcc/config/i386/i386.h b/gcc-4.4.3/gcc/config/i386/i386.h
+index e9014b7..d7cb8ac 100644
+--- a/gcc-4.4.3/gcc/config/i386/i386.h
++++ b/gcc-4.4.3/gcc/config/i386/i386.h
+@@ -291,6 +291,7 @@ enum ix86_tune_indices {
+   X86_TUNE_USE_BT,
+   X86_TUNE_USE_INCDEC,
+   X86_TUNE_PAD_RETURNS,
++  X86_TUNE_PAD_SHORT_FUNCTION,
+   X86_TUNE_EXT_80387_CONSTANTS,
+   X86_TUNE_SHORTEN_X87_SSE,
+   X86_TUNE_AVOID_VECTOR_DECODE,
+@@ -372,6 +373,8 @@ extern unsigned char ix86_tune_features[X86_TUNE_LAST];
+ #define TARGET_USE_BT		ix86_tune_features[X86_TUNE_USE_BT]
+ #define TARGET_USE_INCDEC	ix86_tune_features[X86_TUNE_USE_INCDEC]
+ #define TARGET_PAD_RETURNS	ix86_tune_features[X86_TUNE_PAD_RETURNS]
++#define TARGET_PAD_SHORT_FUNCTION \
++	ix86_tune_features[X86_TUNE_PAD_SHORT_FUNCTION]
+ #define TARGET_EXT_80387_CONSTANTS \
+ 	ix86_tune_features[X86_TUNE_EXT_80387_CONSTANTS]
+ #define TARGET_SHORTEN_X87_SSE	ix86_tune_features[X86_TUNE_SHORTEN_X87_SSE]
+diff --git a/gcc-4.4.3/gcc/config/i386/i386.md b/gcc-4.4.3/gcc/config/i386/i386.md
+index bbe9151..7989c31 100644
+--- a/gcc-4.4.3/gcc/config/i386/i386.md
++++ b/gcc-4.4.3/gcc/config/i386/i386.md
+@@ -77,6 +77,7 @@
+    (UNSPEC_TLSDESC		23)
+ 
+    ; Other random patterns
++   (UNSPEC_NOPS			29)
+    (UNSPEC_SCAS			30)
+    (UNSPEC_FNSTSW		31)
+    (UNSPEC_SAHF			32)
+@@ -15323,6 +15324,39 @@
+    (set_attr "length_immediate" "0")
+    (set_attr "modrm" "0")])
+ 
++;; Generate nops.  Operand 0 is the number of nops, up to 8.
++(define_insn "nops"
++  [(unspec [(match_operand 0 "const_int_operand" "")]
++	   UNSPEC_NOPS)]
++  "reload_completed"
++{
++  switch (INTVAL (operands[0]))
++    {
++    case 1:
++      return "nop";
++    case 2:
++      return "nop; nop";
++    case 3:
++      return "nop; nop; nop";
++    case 4:
++      return "nop; nop; nop; nop";
++    case 5:
++      return "nop; nop; nop; nop; nop";
++    case 6:
++      return "nop; nop; nop; nop; nop; nop";
++    case 7:
++      return "nop; nop; nop; nop; nop; nop; nop";
++    case 8:
++      return "nop; nop; nop; nop; nop; nop; nop; nop";
++    default:
++      gcc_unreachable ();
++      break;
++  }
++}
++  [(set (attr "length") (symbol_ref "INTVAL (operands[0])"))
++   (set_attr "length_immediate" "0")
++   (set_attr "modrm" "0")])
++
+ ;; Align to 16-byte boundary, max skip in op0.  Used to avoid
+ ;; branch prediction penalty for the third jump in a 16-byte
+ ;; block on K8.
+diff --git a/gcc-4.4.3/gcc/esp.h b/gcc-4.4.3/gcc/esp.h
+index db2135b..cbcf9d1 100644
+--- a/gcc-4.4.3/gcc/esp.h
++++ b/gcc-4.4.3/gcc/esp.h
+@@ -34,8 +34,19 @@
+ 	/*	ESP_LINK_SPEC is added to LINK_PIE_SPEC if esp is enable
+ 		-z now will be added if we don't have -vanilla spec. We do a -pie incompatible check
+ 		Don't remove the specs in the end  */
+-	#define ESP_LINK_SPEC "%(esp_link_now) %(esp_link_pie_check) "
+-	#define ESP_LINK_NOW_SPEC "%{!nonow:-z now}"
++	#define ESP_LINK_SPEC "%(esp_link_now) %(esp_link_pie_check) %(esp_link_relro)"
++
++  #if defined EFAULT_BIND_NOW
++	  #define ESP_LINK_NOW_SPEC "%{!nonow:-z now}"
++  #else
++	  #define ESP_LINK_NOW_SPEC ""
++  #endif
++
++  #if defined EFAULT_RELRO
++	  #define ESP_LINK_RELRO_SPEC "%{!norelro:-z relro}"
++  #else
++	  #define ESP_LINK_RELRO_SPEC ""
++  #endif
+ 
+ 	/*	We use ESP_COMMAND_OPTIONS_SPEC to add pie command-line options.  */
+ 	#define ESP_COMMAND_OPTIONS_SPEC "%{!D__KERNEL__:%{!nopie:%(esp_options_pie) %(esp_link_pie)}}"
+@@ -120,6 +131,7 @@
+ 		{ "esp_cc1_strict_overflow",				ESP_CC1_STRICT_OVERFLOW_SPEC },	\
+ 		{ "esp_link",								ESP_LINK_SPEC },				\
+ 		{ "esp_link_now",							ESP_LINK_NOW_SPEC },			\
++		{ "esp_link_relro",							ESP_LINK_RELRO_SPEC },			\
+ 		{ "esp_link_pie",							ESP_LINK_PIE_SPEC },			\
+ 		{ "esp_link_pie_check",						ESP_LINK_PIE_CHECK_SPEC },		\
+ 		{ "esp_command_options",					ESP_COMMAND_OPTIONS_SPEC },		\
+diff --git a/gcc-4.4.3/gcc/gcc.c b/gcc-4.4.3/gcc/gcc.c
+index 3ce244c..afa6a01 100644
+--- a/gcc-4.4.3/gcc/gcc.c
++++ b/gcc-4.4.3/gcc/gcc.c
+@@ -829,8 +829,11 @@ static const char *cpp_unique_options =
+  %{remap} %{g3|ggdb3|gstabs3|gcoff3|gxcoff3|gvms3:-dD}\
+  %{H} %C %{D*&U*&A*} %{i*} %Z %i\
+  %{fmudflap:-D_MUDFLAP -include mf-runtime.h}\
+- %{fmudflapth:-D_MUDFLAP -D_MUDFLAPTH -include mf-runtime.h}\
+- %{E|M|MM:%W{o*}}";
++ %{fmudflapth:-D_MUDFLAP -D_MUDFLAPTH -include mf-runtime.h}"
++#ifdef EFAULT_FORTIFY_SOURCE
++" %{!D_FORTIFY_SOURCE:%{!D_FORTIFY_SOURCE=*:%{!U_FORTIFY_SOURCE:-D_FORTIFY_SOURCE=2}}}"
++#endif
++" %{E|M|MM:%W{o*}}";
+ 
+ /* This contains cpp options which are common with cc1_options and are passed
+    only when preprocessing only to avoid duplication.  We pass the cc1 spec
+diff --git a/gcc-4.4.3/gcc/ipa-inline.c b/gcc-4.4.3/gcc/ipa-inline.c
+index 48754d4..e2745dd 100644
+--- a/gcc-4.4.3/gcc/ipa-inline.c
++++ b/gcc-4.4.3/gcc/ipa-inline.c
+@@ -1495,8 +1495,7 @@ update_caller_keys (fibheap_t heap, struct cgraph_node *node,
+   struct cgraph_edge *edge;
+   const char *failed_reason;
+ 
+-  if (!node->local.inlinable || node->local.disregard_inline_limits
+-      || node->global.inlined_to)
++  if (!node->local.inlinable || node->global.inlined_to)
+     return;
+   if (bitmap_bit_p (updated_nodes, node->uid))
+     return;
+diff --git a/gcc-4.4.3/gcc/libgcov.c b/gcc-4.4.3/gcc/libgcov.c
+index 9b1c7bb..a39cee7 100644
+--- a/gcc-4.4.3/gcc/libgcov.c
++++ b/gcc-4.4.3/gcc/libgcov.c
+@@ -802,6 +802,8 @@ gcov_merge_gcda_file (struct gcov_info *info,
+   int error = 0;
+   gcov_unsigned_t tag, length;
+ 
++  eof_pos = 0;
++
+   tag = gcov_read_unsigned ();
+   if (tag)
+     {
+diff --git a/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-1.c b/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-1.c
+new file mode 100644
+index 0000000..87a9d6c
+--- /dev/null
++++ b/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-1.c
+@@ -0,0 +1,9 @@
++/* { dg-do compile } */
++/* { dg-options "-O2 -fomit-frame-pointer -mtune=generic -S" } */
++/* { dg-final { scan-assembler "rep" } } */
++/* { dg-final { scan-assembler-not "nop" } } */
++
++void
++foo ()
++{
++}
+diff --git a/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-10.c b/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-10.c
+new file mode 100644
+index 0000000..6ba3b78
+--- /dev/null
++++ b/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-10.c
+@@ -0,0 +1,18 @@
++/* { dg-do compile } */
++/* { dg-options "-O2 -fomit-frame-pointer -march=atom -S" } */
++/* { dg-final { scan-assembler-not "nop" } } */
++/* { dg-final { scan-assembler-not "rep" } } */
++
++extern void bar ();
++
++int
++foo2 (int z, int x)
++{
++  if (x == 1)
++    {
++      bar ();
++      return z;
++    }
++  else
++    return x + z;
++}
+diff --git a/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-2.c b/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-2.c
+new file mode 100644
+index 0000000..964547c
+--- /dev/null
++++ b/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-2.c
+@@ -0,0 +1,9 @@
++/* { dg-do compile } */
++/* { dg-options "-O2 -fomit-frame-pointer -march=atom -S" } */
++/* { dg-final { scan-assembler-times "nop; nop; nop; nop; nop; nop; nop; nop" 1 } } */
++/* { dg-final { scan-assembler-not "rep" } } */
++
++void
++foo ()
++{
++}
+diff --git a/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-3.c b/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-3.c
+new file mode 100644
+index 0000000..52442b4
+--- /dev/null
++++ b/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-3.c
+@@ -0,0 +1,15 @@
++/* { dg-do compile } */
++/* { dg-options "-O2 -fomit-frame-pointer -march=atom -S" } */
++/* { dg-final { scan-assembler-not "nop" } } */
++/* { dg-final { scan-assembler-not "rep" } } */
++
++int s[8] = {1, 2, 3, 4, 5, 6, 7, 8};
++int d[8] = {11, 22, 33, 44, 55, 66, 77, 88};
++
++void
++foo ()
++{
++  int i;
++  for (i = 0; i < 8; i++)
++    d[i] = s[i] + 0x1000;
++}
+diff --git a/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-4.c b/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-4.c
+new file mode 100644
+index 0000000..a7033fa
+--- /dev/null
++++ b/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-4.c
+@@ -0,0 +1,13 @@
++/* { dg-do compile } */
++/* { dg-require-effective-target ilp32 } */
++/* { dg-options "-O2 -fomit-frame-pointer -march=atom -S -fPIC" } */
++/* { dg-final { scan-assembler-times "nop; nop; nop; nop; nop; nop; nop; nop" 1 } } */
++/* { dg-final { scan-assembler-not "rep" } } */
++
++extern int bar;
++
++int
++foo ()
++{
++  return bar;
++}
+diff --git a/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-5a.c b/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-5a.c
+new file mode 100644
+index 0000000..9d0aa2a
+--- /dev/null
++++ b/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-5a.c
+@@ -0,0 +1,12 @@
++/* { dg-do compile } */
++/* { dg-require-effective-target ilp32 } */
++/* { dg-options "-O2 -fomit-frame-pointer -march=atom -S" } */
++/* { dg-final { scan-assembler-times "nop; nop" 1 } } */
++/* { dg-final { scan-assembler-not "nop; nop; nop" } } */
++/* { dg-final { scan-assembler-not "rep" } } */
++
++int
++foo (int x, int y, int z)
++{
++   return x + y + z;
++}
+diff --git a/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-5b.c b/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-5b.c
+new file mode 100644
+index 0000000..2e1cf12
+--- /dev/null
++++ b/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-5b.c
+@@ -0,0 +1,12 @@
++/* { dg-do compile } */
++/* { dg-require-effective-target lp64 } */
++/* { dg-options "-O2 -fomit-frame-pointer -march=atom -S" } */
++/* { dg-final { scan-assembler-times "nop; nop; nop; nop" 1 } } */
++/* { dg-final { scan-assembler-not "nop; nop; nop; nop; nop" } } */
++/* { dg-final { scan-assembler-not "rep" } } */
++
++int
++foo (int x, int y, int z)
++{
++   return x + y + z;
++}
+diff --git a/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-6a.c b/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-6a.c
+new file mode 100644
+index 0000000..e865967
+--- /dev/null
++++ b/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-6a.c
+@@ -0,0 +1,12 @@
++/* { dg-do compile } */
++/* { dg-require-effective-target ilp32 } */
++/* { dg-options "-O2 -fomit-frame-pointer -march=atom -S" } */
++/* { dg-final { scan-assembler-times "nop; nop; nop; nop" 1 } } */
++/* { dg-final { scan-assembler-not "nop; nop; nop; nop; nop" } } */
++/* { dg-final { scan-assembler-not "rep" } } */
++
++int
++foo (int x, int y)
++{
++   return x + y;
++}
+diff --git a/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-6b.c b/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-6b.c
+new file mode 100644
+index 0000000..41aeaee
+--- /dev/null
++++ b/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-6b.c
+@@ -0,0 +1,12 @@
++/* { dg-do compile } */
++/* { dg-require-effective-target lp64 } */
++/* { dg-options "-O2 -fomit-frame-pointer -march=atom -S" } */
++/* { dg-final { scan-assembler-times "nop; nop; nop; nop; nop; nop" 1 } } */
++/* { dg-final { scan-assembler-not "nop; nop; nop; nop; nop; nop; nop" } } */
++/* { dg-final { scan-assembler-not "rep" } } */
++
++int
++foo (int x, int y)
++{
++   return x + y;
++}
+diff --git a/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-7.c b/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-7.c
+new file mode 100644
+index 0000000..7a7493d
+--- /dev/null
++++ b/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-7.c
+@@ -0,0 +1,11 @@
++/* { dg-do compile } */
++/* { dg-require-effective-target ilp32 } */
++/* { dg-options "-O2 -fomit-frame-pointer -march=atom -S" } */
++/* { dg-final { scan-assembler-not "nop" } } */
++/* { dg-final { scan-assembler-not "rep" } } */
++
++int
++foo (int x, int y, int z)
++{
++   return x + y + z + y;
++}
+diff --git a/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-8.c b/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-8.c
+new file mode 100644
+index 0000000..873a0a4
+--- /dev/null
++++ b/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-8.c
+@@ -0,0 +1,11 @@
++/* { dg-do compile } */
++/* { dg-options "-O2 -fomit-frame-pointer -march=atom -S" } */
++/* { dg-final { scan-assembler-times "nop; nop; nop; nop; nop; nop" 1 } } */
++/* { dg-final { scan-assembler-not "nop; nop; nop; nop; nop; nop; nop" } } */
++/* { dg-final { scan-assembler-not "rep" } } */
++
++int
++foo (int x, int y)
++{
++   return y;
++}
+diff --git a/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-9.c b/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-9.c
+new file mode 100644
+index 0000000..3d68805
+--- /dev/null
++++ b/gcc-4.4.3/gcc/testsuite/gcc.target/i386/pad-9.c
+@@ -0,0 +1,15 @@
++/* { dg-do compile } */
++/* { dg-require-effective-target lp64 } */
++/* { dg-options "-O2 -fomit-frame-pointer -march=atom -S" } */
++/* { dg-final { scan-assembler-times "nop; nop; nop; nop" 1 } } */
++/* { dg-final { scan-assembler-not "nop; nop; nop; nop; nop" } } */
++/* { dg-final { scan-assembler-not "rep" } } */
++
++extern void bar (void);
++
++void
++foo (int x)
++{
++  if (x)
++    bar ();
++}
+diff --git a/gcc-4.4.3/libstdc++-v3/include/Makefile.am b/gcc-4.4.3/libstdc++-v3/include/Makefile.am
+index 162983a..9779550 100644
+--- a/gcc-4.4.3/libstdc++-v3/include/Makefile.am
++++ b/gcc-4.4.3/libstdc++-v3/include/Makefile.am
+@@ -1137,6 +1137,7 @@ install-freestanding-headers:
+ 	$(mkinstalldirs) $(DESTDIR)${gxx_include_dir}
+ 	$(mkinstalldirs) $(DESTDIR)${host_installdir}
+ 	for file in ${host_srcdir}/os_defines.h ${host_builddir}/c++config.h \
++	  ${glibcxx_srcdir}/$(ABI_TWEAKS_SRCDIR)/cxxabi_tweaks.h \
+ 	  ${glibcxx_srcdir}/$(CPU_DEFINES_SRCDIR)/cpu_defines.h; do \
+ 	  $(INSTALL_DATA) $${file} $(DESTDIR)${host_installdir}; done
+ 	$(mkinstalldirs) $(DESTDIR)${gxx_include_dir}/${std_builddir}
+diff --git a/gcc-4.4.3/libstdc++-v3/include/Makefile.in b/gcc-4.4.3/libstdc++-v3/include/Makefile.in
+index c4614f4..a790676 100644
+--- a/gcc-4.4.3/libstdc++-v3/include/Makefile.in
++++ b/gcc-4.4.3/libstdc++-v3/include/Makefile.in
+@@ -1538,6 +1538,7 @@ install-freestanding-headers:
+ 	$(mkinstalldirs) $(DESTDIR)${gxx_include_dir}
+ 	$(mkinstalldirs) $(DESTDIR)${host_installdir}
+ 	for file in ${host_srcdir}/os_defines.h ${host_builddir}/c++config.h \
++	  ${glibcxx_srcdir}/$(ABI_TWEAKS_SRCDIR)/cxxabi_tweaks.h \
+ 	  ${glibcxx_srcdir}/$(CPU_DEFINES_SRCDIR)/cpu_defines.h; do \
+ 	  $(INSTALL_DATA) $${file} $(DESTDIR)${host_installdir}; done
+ 	$(mkinstalldirs) $(DESTDIR)${gxx_include_dir}/${std_builddir}
+-- 
+1.7.1
+

@@ -1,0 +1,58 @@
+From d9394eebf42aee6de56a970df3c56e67e5455545 Mon Sep 17 00:00:00 2001
+From: Doug Kwan <dougkwan@google.com>
+Date: Wed, 16 Mar 2011 14:47:42 -0700
+Subject: [PATCH 1/4] Update gcc-4.4.3 for building libsupc++ in freestanding mode.
+
+-Backport upstream patch from gcc rev 171019.
+
+Change-Id: I177e4e11f38d57c6ca1d065ebf3e8a37d9bacc33
+---
+ gcc-4.4.3/README.google                    |    5 +++++
+ gcc-4.4.3/libstdc++-v3/include/Makefile.am |    3 ++-
+ gcc-4.4.3/libstdc++-v3/include/Makefile.in |    3 ++-
+ 3 files changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/gcc-4.4.3/README.google b/gcc-4.4.3/README.google
+index 47fe1fc..f36db91 100644
+--- a/gcc-4.4.3/README.google
++++ b/gcc-4.4.3/README.google
+@@ -3381,3 +3381,8 @@ gcc/crtstuff.c
+   Owner: dougkwan
+   Status: apply the patch http://gcc.gnu.org/ml/gcc-patches/2011-01/msg01942.html.
+   Not yet upstream.
++
++libstdc++/include/Makefile.in
++  Installed cpu_defines.h in freestanding standing mode (libstdc++/48123)
++  Owner: dougkwan
++  Status: In gcc trunk rev 171019
+diff --git a/gcc-4.4.3/libstdc++-v3/include/Makefile.am b/gcc-4.4.3/libstdc++-v3/include/Makefile.am
+index 99a627b..162983a 100644
+--- a/gcc-4.4.3/libstdc++-v3/include/Makefile.am
++++ b/gcc-4.4.3/libstdc++-v3/include/Makefile.am
+@@ -1136,7 +1136,8 @@ endif
+ install-freestanding-headers:
+ 	$(mkinstalldirs) $(DESTDIR)${gxx_include_dir}
+ 	$(mkinstalldirs) $(DESTDIR)${host_installdir}
+-	for file in ${host_srcdir}/os_defines.h ${host_builddir}/c++config.h; do \
++	for file in ${host_srcdir}/os_defines.h ${host_builddir}/c++config.h \
++	  ${glibcxx_srcdir}/$(CPU_DEFINES_SRCDIR)/cpu_defines.h; do \
+ 	  $(INSTALL_DATA) $${file} $(DESTDIR)${host_installdir}; done
+ 	$(mkinstalldirs) $(DESTDIR)${gxx_include_dir}/${std_builddir}
+ 	$(INSTALL_DATA) ${std_builddir}/limits $(DESTDIR)${gxx_include_dir}/${std_builddir}
+diff --git a/gcc-4.4.3/libstdc++-v3/include/Makefile.in b/gcc-4.4.3/libstdc++-v3/include/Makefile.in
+index cdaecac..c4614f4 100644
+--- a/gcc-4.4.3/libstdc++-v3/include/Makefile.in
++++ b/gcc-4.4.3/libstdc++-v3/include/Makefile.in
+@@ -1537,7 +1537,8 @@ ${pch3_output}: ${pch3_source} ${pch2_output}
+ install-freestanding-headers:
+ 	$(mkinstalldirs) $(DESTDIR)${gxx_include_dir}
+ 	$(mkinstalldirs) $(DESTDIR)${host_installdir}
+-	for file in ${host_srcdir}/os_defines.h ${host_builddir}/c++config.h; do \
++	for file in ${host_srcdir}/os_defines.h ${host_builddir}/c++config.h \
++	  ${glibcxx_srcdir}/$(CPU_DEFINES_SRCDIR)/cpu_defines.h; do \
+ 	  $(INSTALL_DATA) $${file} $(DESTDIR)${host_installdir}; done
+ 	$(mkinstalldirs) $(DESTDIR)${gxx_include_dir}/${std_builddir}
+ 	$(INSTALL_DATA) ${std_builddir}/limits $(DESTDIR)${gxx_include_dir}/${std_builddir}
+-- 
+1.7.1
+
