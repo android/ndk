@@ -27,14 +27,9 @@ TOOLCHAIN_NAME   := x86-4.4.3
 TOOLCHAIN_PREFIX := $(TOOLCHAIN_PREBUILT_ROOT)/bin/i686-android-linux-
 
 TARGET_CFLAGS := \
-    -D__ANDROID__ \
-    -mbionic \
     -I$(call host-path,$(SYSROOT))/usr/include \
-    -march=i686 -mtune=atom -mstackrealign -msse3 -mfpmath=sse \
-    -Ulinux -m32 -fPIC \
     -ffunction-sections \
-    -funwind-tables \
-    -fno-short-enums
+    -funwind-tables
 
 # Add and LDFLAGS for the target here
 # TARGET_LDFLAGS :=
@@ -78,10 +73,9 @@ TARGET_ABI_SUBDIR := x86
 
 define cmd-build-shared-library
 $(TARGET_CXX) \
-    -nostdlib -Wl,-soname,$(notdir $@) \
-    -Wl,-shared,-Bsymbolic \
+    -Wl,-soname,$(notdir $@) \
+    -shared \
     --sysroot=$(call host-path,$(SYSROOT)) \
-    $(call host-path, $(TARGET_CRTBEGIN_SO_O)) \
     $(call host-path, $(PRIVATE_OBJECTS)) \
     $(call link-whole-archives,$(PRIVATE_WHOLE_STATIC_LIBRARIES)) \
     $(call host-path,\
@@ -89,19 +83,15 @@ $(TARGET_CXX) \
         $(PRIVATE_SHARED_LIBRARIES)) \
     $(PRIVATE_LDFLAGS) \
     $(PRIVATE_LDLIBS) \
-    -lsupc++ -lgcc \
-    $(call host-path, $(TARGET_CRTEND_SO_O)) \
+    -lsupc++ \
     -o $(call host-path,$@)
 endef
 
 define cmd-build-executable
 $(TARGET_CXX) \
-    -nostdlib -Bdynamic \
-    -Wl,-dynamic-linker,/system/bin/linker \
     -Wl,--gc-sections \
     -Wl,-z,nocopyreloc \
     --sysroot=$(call host-path,$(SYSROOT)) \
-    $(call host-path, $(TARGET_CRTBEGIN_DYNAMIC_O)) \
     $(call host-path, $(PRIVATE_OBJECTS)) \
     $(call link-whole-archives,$(PRIVATE_WHOLE_STATIC_LIBRARIES)) \
     $(call host-path,\
@@ -109,7 +99,6 @@ $(TARGET_CXX) \
         $(PRIVATE_SHARED_LIBRARIES)) \
     $(PRIVATE_LDFLAGS) \
     $(PRIVATE_LDLIBS) \
-    -lsupc++ -lgcc \
-    $(call host-path, $(TARGET_CRTEND_O)) \
+    -lsupc++ \
     -o $(call host-path,$@)
 endef
