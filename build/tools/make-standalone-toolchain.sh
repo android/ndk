@@ -27,8 +27,12 @@ make scripts."
 force_32bit_binaries
 
 # For now, this is the only toolchain that works reliably.
-TOOLCHAIN_NAME=arm-linux-androideabi-4.4.3
+TOOLCHAIN_NAME=
 register_var_option "--toolchain=<name>" TOOLCHAIN_NAME "Specify toolchain name"
+
+ARCH=
+register_option "--arch=<name>" do_arch "Specify target architecture" "arm"
+do_arch () { ARCH=$1; }
 
 NDK_DIR=`dirname $0`
 NDK_DIR=`dirname $NDK_DIR`
@@ -44,8 +48,9 @@ register_var_option "--package-dir=<path>" PACKAGE_DIR "Place package file in <p
 INSTALL_DIR=
 register_var_option "--install-dir=<path>" INSTALL_DIR "Don't create package, install files to <path> instead."
 
-PLATFORM=android-3
-register_var_option "--platform=<name>" PLATFORM "Specify target Android platform/API level."
+PLATFORM=
+register_option "--platform=<name>" do_platform "Specify target Android platform/API level." "android-3"
+do_platform () { PLATFORM=$1; }
 
 extract_parameters "$@"
 
@@ -56,7 +61,40 @@ if [ ! -d "$NDK_DIR/build/core" ] ; then
     exit 1
 fi
 
+# Check ARCH
+if [ -z "$ARCH" ]; then
+    case $TOOLCHAIN_NAME in
+        arm-*)
+            ARCH=arm
+            ;;
+        x86-*)
+            ARCH=x86
+            ;;
+        *)
+            ARCH=arm
+            ;;
+    esac
+    log "Auto-config: --arch=$ARCH"
+fi
+
+# Check toolchain name
+if [ -z "$TOOLCHAIN_NAME" ]; then
+    TOOLCHAIN_NAME=$(get_default_toolchain_name_for $ARCH)
+    echo "Auto-config: --toolchain=$TOOLCHAIN_NAME"
+fi
+
 # Check PLATFORM
+if [ -z "$PLATFORM" ]; then
+    case $ARCH in
+        arm) PLATFORM=android-3
+            ;;
+        x86)
+            PLATFORM=android-9
+            ;;
+    esac
+    log "Auto-config: --platform=$PLATFORM"
+fi
+
 if [ ! -d "$NDK_DIR/platforms/$PLATFORM" ] ; then
     echo "Invalid platform name: $PLATFORM"
     echo "Please use --platform=<name> with one of:" `(cd "$NDK_DIR/platforms" && ls)`
@@ -75,10 +113,8 @@ fi
 # Extract architecture from platform name
 case "$TOOLCHAIN_NAME" in
     arm-*)
-        ARCH=arm
         ;;
     x86-*)
-        ARCH=x86
         ;;
     *)
         echo "Unsupported toolchain name: $TOOLCHAIN_NAME"
