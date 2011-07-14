@@ -1,0 +1,6 @@
+This test checks that we can build the same binary for multiple architectures
+in a single ndk-build invokation, i.e. when using:
+
+  APP_ABI := armeabi armeabi-v7a x86
+
+This failed in NDK r6 due to a bug in the build scripts.

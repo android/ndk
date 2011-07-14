@@ -25,7 +25,7 @@ TARGET_NO_EXECUTE_LDFLAGS := -Wl,-z,noexecstack
 #       releases due to toolchain or library changes.
 #
 define cmd-build-shared-library
-$(TARGET_CC) \
+$(PRIVATE_CXX) \
     -nostdlib -Wl,-soname,$(notdir $@) \
     -Wl,-shared,-Bsymbolic \
     $(call host-path,\
@@ -34,7 +34,7 @@ $(TARGET_CC) \
     $(call link-whole-archives,$(PRIVATE_WHOLE_STATIC_LIBRARIES))\
     $(call host-path,\
         $(PRIVATE_STATIC_LIBRARIES) \
-        $(TARGET_LIBGCC) \
+        $(PRIVATE_LIBGCC) \
         $(PRIVATE_SHARED_LIBRARIES)) \
     $(PRIVATE_LDFLAGS) \
     $(PRIVATE_LDLIBS) \
@@ -44,7 +44,7 @@ $(TARGET_CC) \
 endef
 
 define cmd-build-executable
-$(TARGET_CC) \
+$(PRIVATE_CXX) \
     -nostdlib -Bdynamic \
     -Wl,-dynamic-linker,/system/bin/linker \
     -Wl,--gc-sections \
@@ -55,7 +55,7 @@ $(TARGET_CC) \
     $(call link-whole-archives,$(PRIVATE_WHOLE_STATIC_LIBRARIES))\
     $(call host-path,\
         $(PRIVATE_STATIC_LIBRARIES) \
-        $(TARGET_LIBGCC) \
+        $(PRIVATE_LIBGCC) \
         $(PRIVATE_SHARED_LIBRARIES)) \
     $(PRIVATE_LDFLAGS) \
     $(PRIVATE_LDLIBS) \
@@ -65,13 +65,13 @@ $(TARGET_CC) \
 endef
 
 define cmd-build-static-library
-$(TARGET_AR) $(TARGET_ARFLAGS) $(call host-path,$@) $(call host-path,$(PRIVATE_OBJECTS))
+$(PRIVATE_AR) $(call host-path,$@) $(call host-path,$(PRIVATE_OBJECTS))
 endef
 
 # The strip command is only used for shared libraries and executables.
 # It is thus safe to use --strip-unneeded, which is only dangerous
 # when applied to static libraries or object files.
-cmd-strip = $(TOOLCHAIN_PREFIX)strip --strip-unneeded $(call host-path,$1)
+cmd-strip = $(PRIVATE_STRIP) --strip-unneeded $(call host-path,$1)
 
 TARGET_LIBGCC = $(shell $(TARGET_CC) -print-libgcc-file-name)
 TARGET_LDLIBS := -lc -lm
@@ -93,3 +93,5 @@ TARGET_LDFLAGS :=
 
 TARGET_AR       = $(TOOLCHAIN_PREFIX)ar
 TARGET_ARFLAGS := crs
+
+TARGET_STRIP    = $(TOOLCHAIN_PREFIX)strip
