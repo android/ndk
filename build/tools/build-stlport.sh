@@ -84,8 +84,10 @@ else
     fi
 fi
 
-if [ -z "$BUILD_DIR" ]; then
+if [ -z "$OPTION_BUILD_DIR" ]; then
     BUILD_DIR=$NDK_TMPDIR/build-stlport
+else
+    BUILD_DIR=$OPTION_BUILD_DIR
 fi
 mkdir -p "$BUILD_DIR"
 fail_panic "Could not create build directory: $BUILD_DIR"
@@ -157,16 +159,27 @@ fi
 make_command ()
 {
     if [ -z "$MAKEFILE" ]; then
+        if [ "$VERBOSE2" = "yes" ]; then
+            echo "$@"
+        fi
         $@
     else
-        echo "${TAB}@$@" >> $MAKEFILE
+        echo "${TAB}${HIDE}$@" >> $MAKEFILE
     fi
 }
+
+# HIDE is used to hide the Makefile output, unless --verbose --verbose
+# is used.
+if [ "$VERBOSE2" = "yes" ]; then
+    HIDE=""
+else
+    HIDE=@
+fi
 
 make_log ()
 {
     if [ "$VERBOSE" = "yes" ]; then
-        echo "${TAB}@echo $@" >> $MAKEFILE
+        echo "${TAB}${HIDE}echo $@" >> $MAKEFILE
     fi
 }
 
@@ -234,6 +247,14 @@ build_stlport_libs_for_abi ()
     else
         log "$ABI SharedLibrary: stlport_shared"
     fi
+    CRTBEGIN_SO_O=$SYSROOT/usr/lib/crtbegin_so.o
+    CRTEND_SO_O=$SYSROOT/usr/lib/crtend_so.o
+    if [ ! -f "$CRTBEGIN_SO_O" ]; then
+        CRTBEGIN_SO_O=$SYSROOT/usr/lib/crtbegin_dynamic.o
+    fi
+    if [ ! -f "$CRTEND_SO_O" ]; then
+        CRTEND_SO_O=$SYSROOT/usr/lib/crtend_android.o
+    fi
     make_command ${BINPREFIX}g++ \
         -nostdlib -Wl,-soname,libstlport_shared.so \
         -Wl,-shared,-Bsymbolic \
@@ -262,17 +283,21 @@ if [ -n "$PACKAGE_DIR" ] ; then
     for ABI in $ABIS; do
         FILES=""
         for LIB in libstlport_static.a libstlport_shared.so; do
-            FILES="$FILES $NDK_DIR/$STLPORT_SUBDIR/libs/$ABI/$LIB"
+            FILES="$FILES $STLPORT_SUBDIR/libs/$ABI/$LIB"
         done
         PACKAGE="$PACKAGE_DIR/stlport-libs-$ABI.tar.bz2"
         log "Packaging: $PACKAGE"
-        pack_archive "$PACKAGE" "$BUILD_DIR" "$FILES"
+        pack_archive "$PACKAGE" "$NDK_DIR" "$FILES"
         fail_panic "Could not package $ABI STLport binaries!"
         dump "Packaging: $PACKAGE"
     done
 fi
 
-log "Cleaning up..."
-rm -rf $BUILD_DIR
+if [ -z "$OPTION_BUILD_DIR" ]; then
+    log "Cleaning up..."
+    rm -rf $BUILD_DIR
+else
+    log "Don't forget to cleanup: $BUILD_DIR"
+fi
 
 log "Done!"
