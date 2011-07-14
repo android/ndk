@@ -33,7 +33,7 @@ PROGDIR=`cd $PROGDIR && pwd`
 
 
 # Name of this NDK release
-OPTION_NDK_RELEASE="r5x-eng"
+OPTION_NDK_RELEASE="r6x-eng"
 register_var_option "--release=<rel_name>" OPTION_NDK_RELEASE "Version of release"
 
 # Should we only Build for Linux platform?
@@ -92,7 +92,7 @@ if [ -z "$BUILD_NUM_CPUS" ] ; then
 fi
 
 # CLEAN
-rm -rf /tmp/ndk-$USER/*
+rm -rf /tmp/ndk-$USER/{build,tmp}
 
 
 #######################################
