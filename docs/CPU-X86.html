@@ -41,14 +41,13 @@ Debugging with ndk-gdb should work exactly as described under docs/NDK-GDB.html.
 Standalone-toolchain:
 ---------------------
 
-The x86 toolchain provided with NDK r6 *cannot* work as a stand-alone
-toolchain at the moment. This requires additionnal changes to the gcc
-sources and configuration files that will be performed in a future release.
+It is possible to use the x86 toolchain with NDK r6 in stand-alone mode.
+See docs/STANDALONE-TOOLCHAIN.html for more details. Briefly speaking,
+it is now possible to run:
 
-We very clearly do _not_ recommend using a normal Linux x86 toolchain to
-try generating code for Android at this point. Chances that the result will
-work are pretty slim, and this may introduce subtle issues that may make
-your code break when loaded on future platform releases.
+  $NDK/build/tools/make-standalone-toolchain.sh --arch=x86 --install-dir=<path>
+
+The toolchain binaries have the i686-android-linux- prefix.
 
 
 Compatibility:
