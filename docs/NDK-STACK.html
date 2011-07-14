@@ -65,6 +65,16 @@ Or you can use the -dump option to specify the logcat as an input file, e.g.:
    $NDK/ndk-stack -sym $PROJECT_PATH/obj/local/armeabi -dump foo.txt
 
 
+** IMPORTANT **:
+
+  The tool looks for the initial line containing starts in the logcat output,
+  i.e. something that looks like:
+
+    *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+
+  When copy/pasting traces, don't forget this line from the traces, or
+  ndk-stack won't work correctly.
+
 TODO:
 -----
 
