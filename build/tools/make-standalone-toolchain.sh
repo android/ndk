@@ -167,7 +167,7 @@ dump "Copying sysroot headers and libraries..."
 run copy_directory_nolinks "$SRC_SYSROOT" "$TMPDIR/sysroot"
 
 dump "Copying libstdc++ headers and libraries..."
-`dirname $0`/copy-libstdcxx.sh --reverse "$TMPDIR" "$NDK_DIR"
+`dirname $0`/copy-libstdcxx.sh --reverse "$TMPDIR" "$NDK_DIR" --toolchain=$TOOLCHAIN_NAME
 fail_panic "Could not copy libstdc++!"
 
 # Install or Package

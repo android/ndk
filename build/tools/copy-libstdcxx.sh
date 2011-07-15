@@ -26,7 +26,7 @@ PROGRAM_DESCRIPTION="\
 This program is used to extract fresh GNU libstdc++ binaries from a
 toolchain directory that was generated with a command like:
 
-  build-gcc.sh --keep-libstdcxx <toolchain-dir> <ndk-dir> <toolchain>
+  build-gcc.sh --keep-libstdcxx <toolchain-dir> <ndk-dir>
 
 It will copy the files (headers and libraries) under <ndk-dir>/$GNUSTL_SUBDIR
 unless you use the --out-dir option.

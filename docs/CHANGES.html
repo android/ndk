@@ -14,6 +14,12 @@ IMPORTANT BUG FIXES:
 
 - Fixed atexit() usage in shared libraries with the x86 standalone toolchain.
 
+- Fixed make-standalone-toolchain.sh --arch=x86 (it failed to copy the
+  proper GNU libstdc++ binaries to the right location).
+
+- Fixed standalone toolchain linker warnings about missing definition and
+  size for '__dso_handle' symbol (arm only).
+
 -------------------------------------------------------------------------------
 android-ndk-r6
 

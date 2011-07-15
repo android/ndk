@@ -238,7 +238,7 @@ else # !FULL_TESTS
 fi # !FULL_TESTS
 
 
-TEST_DIR="/tmp/ndk-tests-$USER"
+TEST_DIR="/tmp/ndk-$USER/tests"
 mkdir -p $TEST_DIR
 setup_default_log_file "$TEST_DIR/build-tests.log"
 
