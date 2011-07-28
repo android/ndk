@@ -872,17 +872,29 @@ get_toolchain_install ()
     echo "$1/toolchains/$2/prebuilt/$(get_prebuilt_host_tag)"
 }
 
-# Return the relative path of an installed prebuilt host executable
+# Return the relative install prefix for prebuilt host
+# executables (relative to the NDK top directory).
+# NOTE: This deals with MINGW==yes appropriately
+#
+# Out: relative path to prebuilt install prefix
+get_prebuilt_install_prefix ()
+{
+    local TAG=$(get_prebuilt_host_tag)
+    echo "prebuilt/$TAG"
+}
+
+# Return the relative path of an installed prebuilt host
+# executable
 # NOTE: This deals with MINGW==yes appropriately.
 #
-# $1: target root NDK directory
-# $2: executable name
+# $1: executable name
 # Out: path to prebuilt host executable, relative
 get_prebuilt_host_exec ()
 {
-    local EXE=$(get_prebuilt_host_exe_ext)
-    local TAG=$(get_prebuilt_host_tag)
-    echo "$1/prebuilt/$TAG/bin/$2$EXE"
+    local PREFIX EXE
+    PREFIX=$(get_prebuilt_install_prefix)
+    EXE=$(get_prebuilt_host_exe_ext)
+    echo "$(PREFIX)/bin/$2$EXE"
 }
 
 # Return the name of a given host executable
