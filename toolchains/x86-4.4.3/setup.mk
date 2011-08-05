@@ -27,9 +27,11 @@ TOOLCHAIN_NAME   := x86-4.4.3
 TOOLCHAIN_PREFIX := $(TOOLCHAIN_PREBUILT_ROOT)/bin/i686-android-linux-
 
 TARGET_CFLAGS := \
-    -I$(call host-path,$(SYSROOT))/usr/include \
     -ffunction-sections \
     -funwind-tables
+
+TARGET_C_INCLUDES := \
+    $(SYSROOT)/usr/include
 
 # Add and LDFLAGS for the target here
 # TARGET_LDFLAGS :=
