@@ -23,79 +23,27 @@ PROGNAME=$(basename $0)
 # Compute NDK directory, we assume we are under tests/
 NDK=$(dirname $PROGDIR)
 
+
+NDK_BUILDTOOLS_PATH=$NDK/build/tools
+. $NDK_BUILDTOOLS_PATH/prebuilt-common.sh
+
 # Prepare the temporary standalone toolchain
 ROOTDIR=/tmp/ndk-$USER/tests/standalone
 
-PARAMETERS=
-OPTION_HELP=
-VERBOSE=0
-while [ -n "$1" ]; do
-    opt="$1"
-    optarg=`expr "x$opt" : 'x[^=]*=\(.*\)'`
-    case "$opt" in
-        --help|-h|-\?)
-            OPTION_HELP=yes
-            ;;
-        --verbose)
-            VERBOSE=$(( $VERBOSE + 1 ))
-            ;;
-        --arch=*)
-            ARCH=$optarg
-            ;;
-        --platform=*)
-            PLATFORM=$optarg
-            PLATFORM=${PLATFORM##android-}
-            PLATFORM=android-$PLATFORM
-            ;;
-        -*) # unknown options
-            echo "ERROR: Unknown option '$opt', use --help for list of valid ones."
-            exit 1
-        ;;
-        *)  # Simply record parameter
-            if [ -z "$PARAMETERS" ] ; then
-                PARAMETERS=$opt
-            else
-                PARAMETERS=$PARAMETERS" $opt"
-            fi
-            ;;
-    esac
-    shift
-done
+PROGRAM_PARAMETERS=""
+PROGRAM_DESCRIPTION="Run the standalone toolchain tests."
 
-if [ "$OPTION_HELP" ] ; then
-    echo "Usage: $PROGNAME [options]"
-    echo ""
-    echo "Run the standalone toolchain tests."
-    echo ""
-    echo "Valid options:"
-    echo ""
-    echo "    --help|-h|-?        Print this help"
-    echo "    --verbose           Increment verbosity (can be used several times)"
-    echo "    --arch=<name>       Specify architecture [arm]"
-    echo "    --platform=<level>  Specify target platform [android-9]"
-    echo ""
-    exit 0
-fi
+ARCH=arm
+register_var_option "--arch=*" ARCH "Specify architecture"
 
+PLATFORM=android-9
+register_var_option "--platform=*" PLATFORM "Specify target platform"
+
+process_options $@
 
 # Where we're going to place generated files
 OBJDIR=$ROOTDIR/obj
 mkdir -p $OBJDIR
-
-get_default_toolchain_prefix_for ()
-{
-    case $1 in
-    arm)
-        echo "arm-linux-androideabi"
-        ;;
-    x86)
-        echo "i686-android-linux"
-        ;;
-    *)
-        echo "unknown-toolchain"
-        ;;
-    esac
-}
 
 # Install standalone toolchain
 # $1: API level (e.g. android-3)
@@ -103,7 +51,8 @@ get_default_toolchain_prefix_for ()
 # This sets TOOLCHAINDIR and TOOLCHAINPREFIX
 install_toolchain ()
 {
-    local LEVEL=`echo $1 | sed -e 's!android-!!g'`
+    local LEVEL
+    LEVEL=${1##android-}  # remove initial 'android-'
     TOOLCHAINDIR=$ROOTDIR/toolchain-$LEVEL
     mkdir -p $TOOLCHAINDIR
     echo "Installing $ARCH standalone toolchain into: $TOOLCHAINDIR"
