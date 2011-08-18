@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 # A nawk/gawk script used to extract the application's platform name from
-# its default.properties file. It is called from build/core/add-application.mk
+# its project.properties file. It is called from build/core/add-application.mk
 #
 
 # we look for a line that looks like one of:

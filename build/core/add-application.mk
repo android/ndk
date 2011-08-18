@@ -60,17 +60,19 @@ ifndef APP_PROJECT_PATH
     APP_PROJECT_PATH := $(NDK_PROJECT_PATH)
 endif
 
-# check whether APP_PLATFORM is defined. If not, look for default.properties in
+# check whether APP_PLATFORM is defined. If not, look for project.properties in
 # the $(APP_PROJECT_PATH) and extract the value with awk's help. If nothing is here,
 # revert to the default value (i.e. "android-3").
 #
-# NOTE: APP_PLATFORM is an experimental feature for now.
-#
 APP_PLATFORM := $(strip $(APP_PLATFORM))
 ifndef APP_PLATFORM
-    _local_props := $(strip $(wildcard $(APP_PROJECT_PATH)/default.properties))
+    _local_props := $(strip $(wildcard $(APP_PROJECT_PATH)/project.properties))
+    ifndef _local_props
+        # NOTE: project.properties was called default.properties before
+        _local_props := $(strip $(wildcard $(APP_PROJECT_PATH)/default.properties))
+    endif
     ifdef _local_props
-        APP_PLATFORM := $(strip $(shell $(HOST_AWK) -f $(BUILD_AWK)/extract-platform.awk < $(_local_props)))
+        APP_PLATFORM := $(strip $(shell $(HOST_AWK) -f $(BUILD_AWK)/extract-platform.awk $(_local_props)))
         $(call ndk_log,  Found APP_PLATFORM=$(APP_PLATFORM) in $(_local_props))
     else
         APP_PLATFORM := android-3
