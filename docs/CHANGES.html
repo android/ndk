@@ -1,6 +1,27 @@
 <html><body><pre>Android NDK ChangeLog:
 
 -------------------------------------------------------------------------------
+android-ndk-r7
+
+IMPORTANT CHANGES:
+
+- You can now set your APP_ABI to 'all' to indicate that you want to build
+  your NDK modules for all the ABIs supported by your given NDK release.
+
+  This means that either one of these two lines in your Application.mk are
+  equivalent with this release:
+
+        APP_ABI := all
+        APP_ABI := armeabi armeabi-v7a x86
+
+  This also works if you define APP_ABI on the command-line, as in:
+
+        ndk-build APP_ABI=all
+
+  Which is a quick way to check that your project builds for all supported
+  ABIs without changing its Application.mk file.
+
+-------------------------------------------------------------------------------
 android-ndk-r6b
 
 This is a bug-fix release for NDK r6, no new features are provided.

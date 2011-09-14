@@ -18,6 +18,10 @@ definition in your Application.mk file, for example:
 
    APP_ABI := armeabi armeabi-v7a x86
 
+Alternatively, since NDK r7, you can use:
+
+   APP_ABI := all
+
 will generate machine code for all supported ABIs with this NDK. Doing so
 will ensure that your application package contains libraries for all target
 ABIs. Note that this has an impact on package size, since each ABI will
