@@ -29,6 +29,20 @@ IMPORTANT CHANGES:
   Which is a quick way to check that your project builds for all supported
   ABIs without changing its Application.mk file.
 
+IMPORTANT BUG FIXES:
+
+- Imported shared libraries are now installed by default to the target
+  installation location (i.e. libs/%lt;abi%gt;) if APP_MODULES is not
+  defined in your Application.mk.
+
+  This means that if a top-level module "foo" imports a module "bar", then
+  both libfoo.so and libbar.so will be copied to the install location.
+
+  Previously, only libfoo.so was, unless you listed 'bar' in your APP_MODULES
+  too.
+
+  If you define APP_MODULES explicitely, the behaviour is unchanged.
+
 -------------------------------------------------------------------------------
 android-ndk-r6b
 

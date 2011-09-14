@@ -166,9 +166,10 @@ $(foreach __pass2_module,$(__ndk_modules),\
 #
 # If APP_MODULES is not defined in the Application.mk, we
 # will build all modules that were listed from the top-level Android.mk
+# and the installable imported ones they depend on
 #
 ifeq ($(strip $(NDK_APP_MODULES)),)
-    WANTED_MODULES := $(call modules-get-top-list)
+    WANTED_MODULES := $(call modules-get-all-installable,$(modules-get-top-list))
 else
     WANTED_MODULES := $(call module-get-all-dependencies,$(NDK_APP_MODULES))
 endif

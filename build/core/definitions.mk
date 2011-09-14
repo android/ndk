@@ -463,11 +463,11 @@ module-get-installed = $(__ndk_modules.$1.INSTALLED)
 # Usage    : $(call modules-all-get-dependencies,<list of module names>)
 # Rationale: This computes the closure of all module dependencies starting from $1
 # -----------------------------------------------------------------------------
-module-get-all-dependencies = \
-    $(strip $(call modules-get-closure,$1,depends))
+module-get-all-dependencies = $(strip \
+    $(call modules-get-closure,$1,depends))
 
 modules-get-closure = \
-    $(eval __closure_deps  := $(strip $1)) \
+    $(eval __closure_deps  := $(strip $(call strip-lib-prefix,$1))) \
     $(eval __closure_wq    := $(__closure_deps)) \
     $(eval __closure_field := $(strip $2)) \
     $(call modules-closure)\
@@ -481,10 +481,26 @@ modules-get-closure = \
 modules-closure = \
     $(eval __closure_mod := $(call first,$(__closure_wq))) \
     $(eval __closure_wq  := $(call rest,$(__closure_wq))) \
-    $(eval __closure_new := $(filter-out $(__closure_deps),$(__ndk_modules.$(__closure_mod).$(__closure_field))))\
+    $(eval __closure_val := $(call strip-lib-prefix,$(__ndk_modules.$(__closure_mod).$(__closure_field)))) \
+    $(eval __closure_new := $(filter-out $(__closure_deps),$(__closure_val)))\
     $(eval __closure_deps += $(__closure_new)) \
     $(eval __closure_wq   := $(strip $(__closure_wq) $(__closure_new)))\
     $(if $(__closure_wq),$(call modules-closure)) \
+
+# -----------------------------------------------------------------------------
+# Function : modules-get-all-installable
+# Arguments: 1: list of module names
+# Returns  : List of all the installable modules $1 depends on transitively.
+# Usage    : $(call modules-all-get-installable,<list of module names>)
+# Rationale: This computes the closure of all installable module dependencies starting from $1
+# -----------------------------------------------------------------------------
+
+# For now, only the closure of LOCAL_SHARED_LIBRARIES is enough
+modules-get-all-installable = $(strip \
+        $(call map,strip-lib-prefix,\
+            $(call modules-get-closure,$1,SHARED_LIBRARIES)\
+        )\
+    )
 
 # Return the C++ extension of a given module
 #

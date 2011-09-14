@@ -1,0 +1,3 @@
+The purpose of this test is to check that imported shared libraries
+are properly installed to the target location, i.e. libs/<abi>/
+
