@@ -277,7 +277,8 @@ fi
 # Create log file
 #
 
-BUILD_DIR=`mktemp -d $TEST_DIR/build-XXXXXX`
+BUILD_DIR=$TEST_DIR/build
+mkdir -p "$BUILD_DIR" && rm -rf "$BUILD_DIR/*"
 
 ###
 ### RUN AWK TESTS
@@ -538,7 +539,7 @@ if is_testable device; then
         done
         for PROGRAM in $PROGRAMS; do
             dump "Running device test: `basename $PROGRAM`"
-            adb_cmd $PROGRAM
+            adb_cmd LD_LIBRARY_PATH="$DSTDIR" $PROGRAM
             if [ $? != 0 ] ; then
                 dump "   ---> TEST FAILED!!"
             fi
