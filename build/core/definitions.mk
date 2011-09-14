@@ -1495,3 +1495,27 @@ $(call ndk-stl-register,\
     gnustl_static,\
     \
     )
+
+# Register the static version of the GAbi++ C++ runtime
+#
+$(call ndk-stl-register,\
+    gabi++_static,\
+    cxx-stl/gabi++,\
+    gabi++_static,\
+    )
+
+# Register the shared version of the GAbi++ C++ runtime
+#
+$(call ndk-stl-register,\
+    gabi++_shared,\
+    cxx-stl/gabi++,\
+    gabi++_shared,\
+    )
+
+# The 'none' APP_STL value corresponds to no C++ support at
+# all. Used by some of the STLport and GAbi++ test projects.
+#
+$(call ndk-stl-register,\
+    none,\
+    cxx-stl/system,\
+    )

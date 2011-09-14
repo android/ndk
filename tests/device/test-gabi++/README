@@ -1,0 +1,7 @@
+This test is meant to test the GABI++ library which provides, at the
+moment, basic RTTI support withtout using the GNU libsupc++.a
+
+This is really a way to check that the C++ compiler properly links against
+libgabi++_static and libgabi++_shared without any kind of conflict, and that
+the dynamic_cast<> really works.
+

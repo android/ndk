@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright (C) 2010 The Android Open Source Project
+# Copyright (C) 2011 The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-#  This shell script is used to rebuild the prebuilt STLport binaries from
+#  This shell script is used to rebuild the prebuilt GAbi++ binaries from
 #  their sources. It requires a working NDK installation.
 #
 
@@ -25,10 +25,10 @@
 PROGRAM_PARAMETERS=""
 
 PROGRAM_DESCRIPTION=\
-"Rebuild the prebuilt STLport binaries for the Android NDK.
+"Rebuild the prebuilt GAbi++ binaries for the Android NDK.
 
 This script is called when packaging a new NDK release. It will simply
-rebuild the STLport static and shared libraries from sources.
+rebuild the GAbi++ static and shared libraries from sources.
 
 This requires a temporary NDK installation containing platforms and
 toolchain binaries for all target architectures.
@@ -37,7 +37,7 @@ By default, this will try with the current NDK directory, unless
 you use the --ndk-dir=<path> option.
 
 The output will be placed in appropriate sub-directories of
-<ndk>/$STLPORT_SUBDIR, but you can override this with the --out-dir=<path>
+<ndk>/$GABIXX_SUBDIR, but you can override this with the --out-dir=<path>
 option.
 "
 
@@ -82,55 +82,23 @@ else
 fi
 
 if [ -z "$OPTION_BUILD_DIR" ]; then
-    BUILD_DIR=$NDK_TMPDIR/build-stlport
+    BUILD_DIR=$NDK_TMPDIR/build-gabi++
 else
     BUILD_DIR=$OPTION_BUILD_DIR
 fi
 mkdir -p "$BUILD_DIR"
 fail_panic "Could not create build directory: $BUILD_DIR"
 
-# Location of the STLPort source tree
-STLPORT_SRCDIR=$ANDROID_NDK_ROOT/$STLPORT_SUBDIR
+# Location of the GAbi++ source tree
+GABIXX_SRCDIR=$ANDROID_NDK_ROOT/$GABIXX_SUBDIR
 
 # Compiler flags we want to use
-STLPORT_CFLAGS="-DGNU_SOURCE -fPIC -O2 -I$STLPORT_SRCDIR/stlport -DANDROID -D__ANDROID__"
-STLPORT_CFLAGS=$STLPORT_CFLAGS" -I$ANDROID_NDK_ROOT/sources/cxx-stl/system/include"
-STLPORT_CXXFLAGS="-fuse-cxa-atexit -fno-exceptions -fno-rtti"
+GABIXX_CFLAGS="-fPIC -O2 -DANDROID -D__ANDROID__"
+GABIXX_CFLAGS=$GABIXX_CFLAGS" -I$GABIXX_SRCDIR/include"
+GABIXX_CXXFLAGS="-fuse-cxa-atexit -fno-exceptions -frtti"
 
 # List of sources to compile
-STLPORT_SOURCES=\
-"src/dll_main.cpp \
-src/fstream.cpp \
-src/strstream.cpp \
-src/sstream.cpp \
-src/ios.cpp \
-src/stdio_streambuf.cpp \
-src/istream.cpp \
-src/ostream.cpp \
-src/iostream.cpp \
-src/codecvt.cpp \
-src/collate.cpp \
-src/ctype.cpp \
-src/monetary.cpp \
-src/num_get.cpp \
-src/num_put.cpp \
-src/num_get_float.cpp \
-src/num_put_float.cpp \
-src/numpunct.cpp \
-src/time_facets.cpp \
-src/messages.cpp \
-src/locale.cpp \
-src/locale_impl.cpp \
-src/locale_catalog.cpp \
-src/facets_byname.cpp \
-src/complex.cpp \
-src/complex_io.cpp \
-src/complex_trig.cpp \
-src/string.cpp \
-src/bitset.cpp \
-src/allocators.cpp \
-src/c_locale.c \
-src/cxa.c"
+GABIXX_SOURCES=$(cd $GABIXX_SUBDIR && ls src/*.cc)
 
 # If the --no-makefile flag is not used, we're going to put all build
 # commands in a temporary Makefile that we will be able to invoke with
@@ -142,7 +110,7 @@ else
     MAKEFILE=
 fi
 
-build_stlport_libs_for_abi ()
+build_gabixx_libs_for_abi ()
 {
     local ARCH BINPREFIX SYSROOT
     local ABI=$1
@@ -154,42 +122,42 @@ build_stlport_libs_for_abi ()
 
     # If the output directory is not specified, use default location
     if [ -z "$DSTDIR" ]; then
-        DSTDIR=$NDK_DIR/$STLPORT_SUBDIR/libs/$ABI
+        DSTDIR=$NDK_DIR/$GABIXX_SUBDIR/libs/$ABI
     fi
 
     mkdir -p "$DSTDIR"
 
     builder_begin_android $ABI "$BUILDDIR" "$MAKEFILE"
-    builder_set_srcdir "$STLPORT_SRCDIR"
+    builder_set_srcdir "$GABIXX_SRCDIR"
     builder_set_dstdir "$DSTDIR"
 
-    builder_cflags "$STLPORT_CFLAGS"
-    builder_cxxflags "$STLPORT_CXXFLAGS"
-    builder_sources $STLPORT_SOURCES
+    builder_cflags "$GABIXX_CFLAGS"
+    builder_cxxflags "$GABIXX_CXXFLAGS"
+    builder_sources $GABIXX_SOURCES
 
-    log "Building $DSTDIR/libstlport_static.a"
-    builder_static_library libstlport_static
+    log "Building $DSTDIR/libgabi++_static.a"
+    builder_static_library libgabi++_static
 
-    log "Building $DSTDIR/libstlport_shared.so"
-    builder_shared_library libstlport_shared
+    log "Building $DSTDIR/libgabi++_shared.so"
+    builder_shared_library libgabi++_shared
     builder_end
 }
 
 for ABI in $ABIS; do
-    build_stlport_libs_for_abi $ABI "$BUILD_DIR/$ABI"
+    build_gabixx_libs_for_abi $ABI "$BUILD_DIR/$ABI"
 done
 
 # If needed, package files into tarballs
 if [ -n "$PACKAGE_DIR" ] ; then
     for ABI in $ABIS; do
         FILES=""
-        for LIB in libstlport_static.a libstlport_shared.so; do
-            FILES="$FILES $STLPORT_SUBDIR/libs/$ABI/$LIB"
+        for LIB in libgabi++_static.a libgabi++_shared.so; do
+            FILES="$FILES $GABIXX_SUBDIR/libs/$ABI/$LIB"
         done
-        PACKAGE="$PACKAGE_DIR/stlport-libs-$ABI.tar.bz2"
+        PACKAGE="$PACKAGE_DIR/gabixx-libs-$ABI.tar.bz2"
         log "Packaging: $PACKAGE"
         pack_archive "$PACKAGE" "$NDK_DIR" "$FILES"
-        fail_panic "Could not package $ABI STLport binaries!"
+        fail_panic "Could not package $ABI GAbi++ binaries!"
         dump "Packaging: $PACKAGE"
     done
 fi

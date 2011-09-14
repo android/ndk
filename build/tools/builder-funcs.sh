@@ -213,6 +213,12 @@ builder_sources ()
                 cc=g++
                 cflags="$cflags $_BUILD_CXXFLAGS"
                 ;;
+            *.cc)
+                obj=${obj%%.cc}
+                text="C++"
+                cc=g++
+                cflags="$cflags $_BUILD_CXXFLAGS"
+                ;;
             *)
                 echo "Unknown source file extension: $obj"
                 exit 1

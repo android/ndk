@@ -194,6 +194,7 @@ if [ -n "$DARWIN_SSH" ] ; then
     copy_directory "$ANDROID_NDK_ROOT/build" "$TMPDARWIN/ndk/build"
     copy_file_list "$ANDROID_NDK_ROOT" "$TMPDARWIN/ndk" sources/android/libthread_db
     copy_file_list "$ANDROID_NDK_ROOT" "$TMPDARWIN/ndk" "$STLPORT_SUBDIR"
+    copy_file_list "$ANDROID_NDK_ROOT" "$TMPDARWIN/ndk" "$GABIXX_SUBDIR"
     copy_file_list "$ANDROID_NDK_ROOT" "$TMPDARWIN/ndk" sources/host-tools/ndk-stack
     dump "Prepare platforms files"
     $PROGDIR/build-platforms.sh --arch=$ARCH --no-samples --dst-dir="$TMPDARWIN/ndk"
@@ -331,6 +332,27 @@ if [ -z "$HOST_ONLY" ]; then
         esac
     fi
 
+    # Rebuild GAbi++ prebuilt libraries
+    if [ "$MINGW" != "yes" ]; then
+        dump "Building GAbi++ binaries"
+        BUILD_GABIXX_FLAGS="--ndk-dir=\"$NDK_DIR\" --package-dir=\"$PACKAGE_DIR\""
+        if [ $VERBOSE = yes ] ; then
+            BUILD_GABIXX_FLAGS="$BUILD_GABIXX_FLAGS --verbose"
+        fi
+        $ANDROID_NDK_ROOT/build/tools/build-platforms.sh --no-symlinks --no-samples --arch=$ARCH --dst-dir="$NDK_DIR"
+        case "$ARCH" in
+        arm )
+			BUILD_GABIXX_FLAGS=$BUILD_GABIXX_FLAGS" --abis=armeabi,armeabi-v7a"
+            ;;
+        x86 )
+			BUILD_GABIXX_FLAGS=$BUILD_GABIXX_FLAGS" --abis=x86"
+            ;;
+        esac
+        $ANDROID_NDK_ROOT/build/tools/build-gabi++.sh $BUILD_GABIXX_FLAGS
+    else
+        dump "Skipping GAbi++ binaries build (--mingw option being used)"
+    fi
+
     # Rebuild STLport prebuilt libraries
     if [ "$MINGW" != "yes" ] ; then
         dump "Building STLport binaries"
@@ -341,12 +363,13 @@ if [ -z "$HOST_ONLY" ]; then
         $ANDROID_NDK_ROOT/build/tools/build-platforms.sh --no-symlinks --no-samples --arch=$ARCH --dst-dir="$NDK_DIR"
         case "$ARCH" in
         arm )
-            $ANDROID_NDK_ROOT/build/tools/build-stlport.sh $BUILD_STLPORT_FLAGS --abis=armeabi,armeabi-v7a
+            BUILD_STLPORT_FLAGS=$BUILD_STLPORT_FLAGS" --abis=armeabi,armeabi-v7a"
             ;;
         x86 )
-            $ANDROID_NDK_ROOT/build/tools/build-stlport.sh $BUILD_STLPORT_FLAGS --abis=x86
+            BUILD_STLPORT_FLAGS=$BUILD_STLPORT_FLAGS" --abis=x86"
             ;;
         esac
+        $ANDROID_NDK_ROOT/build/tools/build-stlport.sh $BUILD_STLPORT_FLAGS
     else
         dump "Skipping STLport binaries build (--mingw option being used)"
     fi

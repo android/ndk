@@ -347,19 +347,28 @@ for SYSTEM in $SYSTEMS; do
         cd $UNZIP_DIR/android-ndk-* && cp -rP toolchains/* $DSTDIR/toolchains/
         fail_panic "Could not copy toolchain files from $PREBUILT_NDK"
 
+        if [ -d "$DSTDIR/$GABIXX_SUBDIR" ]; then
+            GABIXX_ABIS=$PREBUILT_ABIS
+            for GABIXX_ABI in $GABIXX_ABIS; do
+                copy_prebuilt "$GABIXX_SUBDIR/libs/$GABIXX_ABI" "$GABIXX_SUBDIR/libs"
+            done
+        else
+            echo "WARNING: Could not find GAbi++ source tree!"
+        fi
+
         if [ -d "$DSTDIR/$STLPORT_SUBDIR" ] ; then
-            STLPORT_ABIS="armeabi armeabi-v7a x86"
-            cd $UNZIP_DIR/android-ndk-*
+            STLPORT_ABIS=$PREBUILT_ABIS
             for STL_ABI in $STLPORT_ABIS; do
                 copy_prebuilt "$STLPORT_SUBDIR/libs/$STL_ABI" "$STLPORT_SUBDIR/libs"
-            done
-            copy_prebuilt "$GNUSTL_SUBDIR/include" "$GNUSTL_SUBDIR"
-            for STL_ABI in $STLPORT_ABIS; do
-                copy_prebuilt "$GNUSTL_SUBDIR/libs/$STL_ABI" "$GNUSTL_SUBDIR/libs"
             done
         else
             echo "WARNING: Could not find STLport source tree!"
         fi
+
+        copy_prebuilt "$GNUSTL_SUBDIR/include" "$GNUSTL_SUBDIR"
+        for STL_ABI in $PREBUILT_ABIS; do
+            copy_prebuilt "$GNUSTL_SUBDIR/libs/$STL_ABI" "$GNUSTL_SUBDIR/libs"
+        done
     else
         # Unpack gdbserver
         for TC in $TOOLCHAINS; do
@@ -373,6 +382,7 @@ for SYSTEM in $SYSTEMS; do
         unpack_prebuilt gnu-libstdc++-headers.tar.bz2
         for ABI in $ABIS; do
             unpack_libsupcxx gnu-libsupc++-$ABI.tar.bz2
+            unpack_prebuilt gabixx-libs-$ABI.tar.bz2
             unpack_prebuilt stlport-libs-$ABI.tar.bz2
             unpack_prebuilt gnu-libstdc++-libs-$ABI.tar.bz2
         done

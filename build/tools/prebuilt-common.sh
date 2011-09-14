@@ -962,8 +962,11 @@ API_LEVELS="3 4 5 8 9"
 # Location of the STLport sources, relative to the NDK root directory
 STLPORT_SUBDIR=sources/cxx-stl/stlport
 
-# Default ABIs for the prebuilt STLport binaries
-STLPORT_ABIS="armeabi armeabi-v7a x86"
+# Location of the GAbi++ sources, relative to the NDK root directory
+GABIXX_SUBDIR=sources/cxx-stl/gabi++
+
+# Default ABIs for the prebuilt GAbi++ and STLport binaries
+PREBUILT_ABIS="armeabi armeabi-v7a x86"
 
 # Location of the GNU libstdc++ headers and libraries, relative to the NDK
 # root directory.
