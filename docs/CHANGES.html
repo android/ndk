@@ -29,6 +29,21 @@ IMPORTANT CHANGES:
   Which is a quick way to check that your project builds for all supported
   ABIs without changing its Application.mk file.
 
+- Shorter paths to source and object files used in build commands.
+  When invoking $NDK/ndk-build from your project path, the paths to the
+  source, object and binary files passed to the build commands will be
+  significantly shorter now because they are now passed relative to the
+  current directory.
+
+  This is useful when building projects with a lot of source files, to
+  avoid limits on the maximum command line length supported by your host
+  operating system.
+
+  The behaviour is unchanged if you invoked ndk-build from a sub-directory
+  of your project tree, or if you define NDK_PROJECT_PATH to point to a
+  specific directory.
+
+
 IMPORTANT BUG FIXES:
 
 - Imported shared libraries are now installed by default to the target

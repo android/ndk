@@ -44,6 +44,10 @@ include $(NDK_ROOT)/build/core/init.mk
 # path by looking at the manifest file in the current directory or
 # any of its parents. If none is found, try again with 'jni/Android.mk'
 #
+# Note that we first look at the current directory to avoid using
+# absolute NDK_PROJECT_PATH values. This reduces the length of all
+# source, object and binary paths that are passed to build commands.
+#
 # It turns out that some people use ndk-build to generate static
 # libraries without a full Android project tree.
 #
@@ -73,6 +77,18 @@ find-project-dir-inner-2 = \
     )
 
 NDK_PROJECT_PATH := $(strip $(NDK_PROJECT_PATH))
+ifndef NDK_PROJECT_PATH
+    ifneq (,$(strip $(wildcard AndroidManifest.xml)))
+        NDK_PROJECT_PATH := .
+    else
+        ifneq (,$(strip $(wildcard jni/Android.mk)))
+            NDK_PROJECT_PATH := .
+        endif
+    endif
+endif
+ifndef NDK_PROJECT_PATH
+    NDK_PROJECT_PATH := $(call find-project-dir,.,jni/Android.mk)
+endif
 ifndef NDK_PROJECT_PATH
     NDK_PROJECT_PATH := $(call find-project-dir,$(strip $(shell pwd)),AndroidManifest.xml)
 endif
