@@ -45,6 +45,8 @@ empty :=
 # -----------------------------------------------------------------------------
 space  := $(empty) $(empty)
 
+space4 := $(space)$(space)$(space)$(space)
+
 # -----------------------------------------------------------------------------
 # Function : last2
 # Arguments: a list
@@ -393,9 +395,18 @@ module-restore-locals = \
 modules-dump-database = \
     $(info Modules: $(__ndk_modules)) \
     $(foreach __mod,$(__ndk_modules),\
-        $(info $(space)$(space)$(__mod):)\
+        $(info $(space4)$(__mod):)\
         $(foreach __field,$(modules-fields),\
-            $(info $(space)$(space)$(space)$(space)$(__field): $(__ndk_modules.$(__mod).$(__field)))\
+            $(eval __fieldval := $(strip $(__ndk_modules.$(__mod).$(__field))))\
+            $(if $(__fieldval),\
+                $(if $(filter 1,$(words $(__fieldval))),\
+                    $(info $(space4)$(space4)$(__field): $(__fieldval)),\
+                    $(info $(space4)$(space4)$(__field): )\
+                    $(foreach __fielditem,$(__fieldval),\
+                        $(info $(space4)$(space4)$(space4)$(__fielditem))\
+                    )\
+                )\
+            )\
         )\
     )\
     $(info --- end of modules list)
@@ -462,7 +473,7 @@ modules-get-closure = \
     $(call modules-closure)\
     $(__closure_deps)
 
-# Used internally by modules-get-dependencies
+# Used internally by modules-get-all-dependencies
 # Note the tricky use of conditional recursion to work around the fact that
 # the GNU Make language does not have any conditional looping construct
 # like 'while'.
