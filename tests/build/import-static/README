@@ -1,0 +1,5 @@
+The purpose of this check is to verify that static library imports
+are transitive, i.e. that if foo imports a static library bar, which
+imports another static library zoo, then libfoo.so will be linked
+against both libbar.a and libzoo.a properly.
+

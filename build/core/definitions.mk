@@ -488,22 +488,28 @@ modules-closure = \
     $(if $(__closure_wq),$(call modules-closure)) \
 
 # -----------------------------------------------------------------------------
+# Function : module-get-depends
+# Arguments: 1: list of module names
+#            2: local module type (e.g. SHARED_LIBRARIES)
+# Returns  : List all the <local-type> modules $1 depends on transitively.
+# Usage    : $(call module-get-depends,<list of module names>,<local-type>)
+# Rationale: This computes the closure of all local module dependencies starting from $1
+# -----------------------------------------------------------------------------
+module-get-depends = $(strip $(call modules-get-closure,$1,$2))
+
+
+# -----------------------------------------------------------------------------
 # Function : modules-get-all-installable
 # Arguments: 1: list of module names
 # Returns  : List of all the installable modules $1 depends on transitively.
 # Usage    : $(call modules-all-get-installable,<list of module names>)
 # Rationale: This computes the closure of all installable module dependencies starting from $1
 # -----------------------------------------------------------------------------
-
 # For now, only the closure of LOCAL_SHARED_LIBRARIES is enough
-modules-get-all-installable = $(strip \
-        $(call map,strip-lib-prefix,\
-            $(call modules-get-closure,$1,SHARED_LIBRARIES)\
-        )\
-    )
+modules-get-all-installable = $(call module-get-depends,$1,SHARED_LIBRARIES)
 
 # Return the C++ extension of a given module
-#
+# $1: module name
 module-get-cpp-extension = $(strip \
     $(if $(__ndk_modules.$1.CPP_EXTENSION),\
         $(__ndk_modules.$1.CPP_EXTENSION),\

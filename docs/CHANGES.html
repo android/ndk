@@ -43,6 +43,10 @@ IMPORTANT BUG FIXES:
 
   If you define APP_MODULES explicitely, the behaviour is unchanged.
 
+- Static library imports are now properly transitive. If top-level module
+  'foo' imports static library 'bar' which imports static library 'zoo',
+  the libfoo.so will now be linked against both libbar.a and libzoo.a.
+
 -------------------------------------------------------------------------------
 android-ndk-r6b
 
