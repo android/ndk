@@ -1070,7 +1070,7 @@ _FLAGS := $$($$(my)CFLAGS) \
           -c \
 
 _TEXT := "Compile $$(call get-src-file-text,$1)"
-_CC   := $$(TARGET_CC)
+_CC   := $$(NDK_CCACHE) $$(TARGET_CC)
 
 $$(eval $$(call ev-build-source-file))
 endef
@@ -1118,7 +1118,7 @@ _FLAGS := $$($$(my)CXXFLAGS) \
           $$(call host-c-includes,$$($(my)C_INCLUDES)) \
           -c \
 
-_CC   := $$($$(my)CXX)
+_CC   := $$(NDK_CCACHE) $$($$(my)CXX)
 _TEXT := "Compile++ $$(call get-src-file-text,$1)"
 
 $$(eval $$(call ev-build-source-file))

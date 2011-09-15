@@ -5,6 +5,14 @@ android-ndk-r7
 
 IMPORTANT CHANGES:
 
+- CCache support. To speed up large rebuilds, simply define the NDK_CCACHE
+  environment variable to 'ccache' (or the path to your ccache binary), as in:
+
+        export NDK_CCACHE=ccache
+
+  The NDK build system will automatically use it when compiling any source
+  file. For more information about CCache, see http://ccache.samba.org  
+
 - You can now set your APP_ABI to 'all' to indicate that you want to build
   your NDK modules for all the ABIs supported by your given NDK release.
 
