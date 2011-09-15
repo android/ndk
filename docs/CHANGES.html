@@ -43,6 +43,12 @@ IMPORTANT CHANGES:
   of your project tree, or if you define NDK_PROJECT_PATH to point to a
   specific directory.
 
+- New LOCAL_CPP_FEATURES variable in Android.mk, used to declare which C++
+  features (RTTI or Exceptions) your module uses. This is especially handy
+  if you have prebuilt modules that depend on them since this will ensure
+  the final link will work correctly.
+
+  See docs/ANDROID-MK.html and docs/CPLUSPLUS-SUPPORT.html for more details
 
 IMPORTANT BUG FIXES:
 

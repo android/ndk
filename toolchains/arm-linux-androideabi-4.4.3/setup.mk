@@ -130,7 +130,6 @@ $(PRIVATE_CXX) \
         $(PRIVATE_SHARED_LIBRARIES)) \
     $(PRIVATE_LDFLAGS) \
     $(PRIVATE_LDLIBS) \
-    -lsupc++ \
     -o $(call host-path,$@)
 endef
 
@@ -147,6 +146,5 @@ $(PRIVATE_CXX) \
         $(PRIVATE_SHARED_LIBRARIES)) \
     $(PRIVATE_LDFLAGS) \
     $(PRIVATE_LDLIBS) \
-    -lsupc++ \
     -o $(call host-path,$@)
 endef

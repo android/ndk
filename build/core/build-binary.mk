@@ -211,6 +211,24 @@ $(foreach _ext,$(all_source_extensions),\
 LOCAL_OBJECTS := $(filter %.o,$(LOCAL_OBJECTS))
 LOCAL_OBJECTS := $(foreach _obj,$(LOCAL_OBJECTS),$(LOCAL_OBJS_DIR)/$(_obj))
 
+# If the module has any kind of C++ features, enable them in LOCAL_CPPFLAGS
+#
+ifneq (,$(call module-has-c++-features,$(LOCAL_MODULE),rtti))
+    LOCAL_CPPFLAGS += -frtti
+endif
+ifneq (,$(call module-has-c++-features,$(LOCAL_MODULE),exceptions))
+    LOCAL_CPPFLAGS += -fexceptions
+endif
+
+# If we're using the 'system' STL and use rtti or exceptions, then
+# automatically link against the GNU libsupc++ for now.
+#
+ifneq (,$(call module-has-c++-features),$(LOCAL_MODULE),rtti exceptions)
+    ifeq (system,$(NDK_APP_STL))
+      LOCAL_LDLIBS := $(LOCAL_LDLIBS) -lsupc++
+    endif
+endif
+
 # Build the sources to object files
 #
 

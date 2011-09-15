@@ -433,6 +433,29 @@ LOCAL_CPP_EXTENSION
 
         LOCAL_CPP_EXTENSION := .cxx
 
+LOCAL_CPP_FEATURES
+    This is an optional variable that can be defined to indicate
+    that your code relies on specific C++ features. To indicate that
+    your code uses RTTI (RunTime Type Information), use the following:
+
+        LOCAL_CPP_FEATURES := rtti
+
+    To indicate that your code uses C++ exceptions, use:
+
+        LOCAL_CPP_FEATURES := exceptions
+
+    You can also use both of them with (order is not important):
+
+        LOCAL_CPP_FEATURES := rtti features
+
+    The effect of this variable is to enable the right compiler/linker
+    flags when building your modules from sources. For prebuilt binaries,
+    this also helps declare which features the binary relies on to ensure
+    the final link works correctly.
+
+    It is recommended to use this variable instead of enabling -frtti and
+    -fexceptions directly in your LOCAL_CPPFLAGS definition.
+
 LOCAL_C_INCLUDES
     An optional list of paths, relative to the NDK *root* directory,
     which will be appended to the include search path when compiling
