@@ -2,7 +2,10 @@
 # This is included/sourced by other scripts
 #
 
-. `dirname $0`/../core/ndk-common.sh
+PREBUILT_TOOLS=`dirname $0`
+PREBUILT_TOOLS=$(cd $PREBUILT_TOOLS && pwd)
+
+. $PREBUILT_TOOLS/../core/ndk-common.sh
 
 #====================================================
 #
@@ -595,7 +598,7 @@ EOF
     echo -n "Checking whether the compiler generates 32-bit binaries..."
     HOST_GMP_ABI=32
     log $CC $HOST_CFLAGS -c -o $TMPO $TMPC
-    $CC $HOST_CFLAGS -c -o $TMPO $TMPC >$TMPL 2>&1
+    $NDK_CCACHE $CC $HOST_CFLAGS -c -o $TMPO $TMPC >$TMPL 2>&1
     if [ $? != 0 ] ; then
         echo "no"
         if [ "$TRY64" != "yes" ]; then
@@ -639,6 +642,22 @@ EOF
         # perform a canadian-cross build with mingw. Otherwise, the
         # GMP configure scripts will not be called with the right options
         HOST_GMP_ABI=
+    fi
+
+    # Support for ccache compilation
+    if [ "$NDK_CCACHE" ]; then
+        NDK_CCACHE_CC=$CC
+        NDK_CCACHE_CXX=$CXX
+        # Unfortunately, we can just do CC="$NDK_CCACHE $CC" because some
+        # configure scripts are not capable of dealing with this properly
+        # E.g. the ones used to rebuild the GCC toolchain from scratch.
+        # So instead, use a wrapper script
+        CC=$PREBUILT_TOOLS/ndk-ccache-gcc.sh
+        CXX=$PREBUILT_TOOLS/ndk-ccache-g++.sh
+        export NDK_CCACHE_CC NDK_CCACHE_CXX
+        log "Using ccache compilation"
+        log "NDK_CCACHE_CC=$NDK_CCACHE_CC"
+        log "NDK_CCACHE_CXX=$NDK_CCACHE_CXX"
     fi
 }
 
