@@ -88,7 +88,7 @@ script.
 extract_parameters "$@"
 
 # Needed to set HOST_TAG to windows if --mingw is used.
-prepare_host_flags
+handle_host
 
 if [ -n "$PACKAGE_DIR" -a -n "$NDK_DIR" ] ; then
     echo "ERROR: You cannot use both --package-dir and --ndk-dir at the same time!"

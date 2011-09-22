@@ -14,6 +14,8 @@ if [ -z "$NDK_BUILDTOOLS_PATH" ]; then
     fi
 fi
 
+NDK_BUILDTOOLS_ABSPATH=$(cd $NDK_BUILDTOOLS_PATH && pwd)
+
 . $NDK_BUILDTOOLS_PATH/../core/ndk-common.sh
 
 #====================================================
@@ -527,34 +529,60 @@ check_darwin_sdk ()
 }
 
 
-prepare_host_flags ()
+handle_mingw ()
 {
-    # detect build tag
-    case $HOST_TAG in
-        linux-x86)
-            ABI_CONFIGURE_BUILD=i386-linux-gnu
-            ;;
-        linux-x86_64)
-            ABI_CONFIGURE_BUILD=x86_64-linux-gnu
-            ;;
-        darwin-x86)
-            ABI_CONFIGURE_BUILD=i686-apple-darwin
-            ;;
-        darwin-x86_64)
-            ABI_CONFIGURE_BUILD=x86_64-apple-darwin
-            ;;
-        windows)
-            ABI_CONFIGURE_BUILD=i686-pc-cygwin
-            ;;
-        *)
-            echo "ERROR: Unsupported HOST_TAG: $HOST_TAG"
-            echo "Please update 'prepare_host_flags' in build/tools/prebuilt-common.sh"
-            ;;
-    esac
+    # Now handle the --mingw flag
+    if [ "$MINGW" = "yes" ] ; then
+        case $HOST_TAG in
+            linux-*)
+                ;;
+            *)
+                echo "ERROR: Can only enable mingw on Linux platforms !"
+                exit 1
+                ;;
+        esac
+        if [ "$TRY64" = "yes" ]; then
+            ABI_CONFIGURE_HOST=amd64-mingw32msvc
+        else
+            ABI_CONFIGURE_HOST=i586-mingw32msvc
+        fi
+        HOST_OS=windows
+        HOST_TAG=windows
+        HOST_EXE=.exe
+    fi
+}
 
-    # By default, assume host == build
-    ABI_CONFIGURE_HOST="$ABI_CONFIGURE_BUILD"
+handle_host ()
+{
+    # For now, we only support building 32-bit binaries anyway
+    if [ "$TRY64" != "yes" ]; then
+        force_32bit_binaries  # to modify HOST_TAG and others
+        HOST_BITS=32
+    fi
+    handle_mingw
+}
 
+setup_ccache ()
+{
+    # Support for ccache compilation
+    if [ "$NDK_CCACHE" ]; then
+        NDK_CCACHE_CC=$CC
+        NDK_CCACHE_CXX=$CXX
+        # Unfortunately, we can just do CC="$NDK_CCACHE $CC" because some
+        # configure scripts are not capable of dealing with this properly
+        # E.g. the ones used to rebuild the GCC toolchain from scratch.
+        # So instead, use a wrapper script
+        CC=$NDK_BUILDTOOLS_ABSPATH/ndk-ccache-gcc.sh
+        CXX=$NDK_BUILDTOOLS_ABSPATH/ndk-ccache-g++.sh
+        export NDK_CCACHE_CC NDK_CCACHE_CXX
+        log "Using ccache compilation"
+        log "NDK_CCACHE_CC=$NDK_CCACHE_CC"
+        log "NDK_CCACHE_CXX=$NDK_CCACHE_CXX"
+    fi
+}
+
+prepare_common_build ()
+{
     # On Linux, detect our legacy-compatible toolchain when in the Android
     # source tree, and use it to force the generation of glibc-2.7 compatible
     # binaries.
@@ -605,7 +633,7 @@ prepare_host_flags ()
     int test_array[1-2*(sizeof(void*) != 4)];
 EOF
     echo -n "Checking whether the compiler generates 32-bit binaries..."
-    HOST_GMP_ABI=32
+    HOST_BITS=32
     log $CC $HOST_CFLAGS -c -o $TMPO $TMPC
     $NDK_CCACHE $CC $HOST_CFLAGS -c -o $TMPO $TMPC >$TMPL 2>&1
     if [ $? != 0 ] ; then
@@ -617,7 +645,7 @@ EOF
             CC="$CC -m32"
             CXX="$CXX -m32"
         else
-            HOST_GMP_ABI=64
+            HOST_BITS=64
         fi
     else
         echo "yes"
@@ -626,48 +654,71 @@ EOF
     # For now, we only support building 32-bit binaries anyway
     if [ "$TRY64" != "yes" ]; then
         force_32bit_binaries  # to modify HOST_TAG and others
-        HOST_GMP_ABI="32"
+        HOST_BITS=32
     fi
+}
+
+prepare_host_build ()
+{
+    prepare_common_build
+
+    # Now deal with mingw
+    if [ "$MINGW" = "yes" ]; then
+        handle_mingw
+        CC=$ABI_CONFIGURE_HOST-gcc
+        CXX=$ABI_CONFIGURE_HOST-g++
+        LD=$ABI_CONFIGURE_HOST-ld
+        AR=$ABI_CONFIGURE_HOST-ar
+        AS=$ABI_CONFIGURE_HOST-as
+        RANLIB=$ABI_CONFIGURE_HOST-ranlib
+        export CC CXX LD AR AS RANLIB
+    fi
+
+    setup_ccache
+}
+
+
+prepare_target_build ()
+{
+    # detect build tag
+    case $HOST_TAG in
+        linux-x86)
+            ABI_CONFIGURE_BUILD=i386-linux-gnu
+            ;;
+        linux-x86_64)
+            ABI_CONFIGURE_BUILD=x86_64-linux-gnu
+            ;;
+        darwin-x86)
+            ABI_CONFIGURE_BUILD=i686-apple-darwin
+            ;;
+        darwin-x86_64)
+            ABI_CONFIGURE_BUILD=x86_64-apple-darwin
+            ;;
+        windows)
+            ABI_CONFIGURE_BUILD=i686-pc-cygwin
+            ;;
+        *)
+            echo "ERROR: Unsupported HOST_TAG: $HOST_TAG"
+            echo "Please update 'prepare_host_flags' in build/tools/prebuilt-common.sh"
+            ;;
+    esac
+
+    # By default, assume host == build
+    ABI_CONFIGURE_HOST="$ABI_CONFIGURE_BUILD"
+
+    prepare_common_build
+    HOST_GMP_ABI=$HOST_BITS
 
     # Now handle the --mingw flag
     if [ "$MINGW" = "yes" ] ; then
-        case $HOST_TAG in
-            linux-*)
-                ;;
-            *)
-                echo "ERROR: Can only enable mingw on Linux platforms !"
-                exit 1
-                ;;
-        esac
-        if [ "$TRY64" = "yes" ]; then
-            ABI_CONFIGURE_HOST=amd64-mingw32msvc
-        else
-            ABI_CONFIGURE_HOST=i586-mingw32msvc
-        fi
-        HOST_OS=windows
-        HOST_TAG=windows
-        HOST_EXE=.exe
+        handle_mingw
         # It turns out that we need to undefine this to be able to
         # perform a canadian-cross build with mingw. Otherwise, the
         # GMP configure scripts will not be called with the right options
         HOST_GMP_ABI=
     fi
 
-    # Support for ccache compilation
-    if [ "$NDK_CCACHE" ]; then
-        NDK_CCACHE_CC=$CC
-        NDK_CCACHE_CXX=$CXX
-        # Unfortunately, we can just do CC="$NDK_CCACHE $CC" because some
-        # configure scripts are not capable of dealing with this properly
-        # E.g. the ones used to rebuild the GCC toolchain from scratch.
-        # So instead, use a wrapper script
-        CC=$NDK_BUILDTOOLS_PATH/ndk-ccache-gcc.sh
-        CXX=$NDK_BUILDTOOLS_PATH/ndk-ccache-g++.sh
-        export NDK_CCACHE_CC NDK_CCACHE_CXX
-        log "Using ccache compilation"
-        log "NDK_CCACHE_CC=$NDK_CCACHE_CC"
-        log "NDK_CCACHE_CXX=$NDK_CCACHE_CXX"
-    fi
+    setup_ccache
 }
 
 parse_toolchain_name ()
@@ -903,7 +954,7 @@ get_prebuilt_host_exec ()
     local PREFIX EXE
     PREFIX=$(get_prebuilt_install_prefix)
     EXE=$(get_prebuilt_host_exe_ext)
-    echo "$(PREFIX)/bin/$2$EXE"
+    echo "$PREFIX/bin/$1$EXE"
 }
 
 # Return the name of a given host executable

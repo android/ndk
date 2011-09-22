@@ -115,7 +115,7 @@ set_parameters ()
 
 set_parameters $PARAMETERS
 
-prepare_host_flags
+prepare_target_build
 
 parse_toolchain_name
 check_toolchain_install $NDK_DIR $TOOLCHAIN

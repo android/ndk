@@ -72,7 +72,7 @@ set_parameters ()
 
 set_parameters $PARAMETERS
 
-prepare_host_flags
+prepare_host_build
 
 fix_option BUILD_OUT "$OPTION_BUILD_OUT" "build directory"
 
