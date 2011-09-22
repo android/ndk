@@ -120,14 +120,51 @@ else
     $(call ndk_log,Host OS from environment: $(HOST_OS))
 endif
 
+# For all systems, we will have HOST_OS_BASE defined as
+# $(HOST_OS), except on Cygwin where we will have:
+#
+#  HOST_OS      == cygwin
+#  HOST_OS_BASE == windows
+#
+# Trying to detect that we're running from Cygwin is tricky
+# because we can't use $(OSTYPE): It's a Bash shell variable
+# that is not exported to sub-processes, and isn't defined by
+# other shells (for those with really weird setups).
+#
+# Instead, we assume that a program named /bin/uname.exe
+# that can be invoked and returns a valid value corresponds
+# to a Cygwin installation.
+#
+HOST_OS_BASE := $(HOST_OS)
+
+ifeq ($(HOST_OS),windows)
+    ifneq (,$(strip $(wildcard /bin/uname.exe)))
+        $(call ndk_log,Found /bin/uname.exe on Windows host, checking for Cygwin)
+        UNAME := $(shell /bin/uname.exe -s 2>NUL)
+        $(call ndk_log,uname -s returned: $(UNAME))
+        ifneq (,$(filter CYGWIN%,$(UNAME)))
+            $(call ndk_log,Cygwin detected!)
+            HOST_OS := cygwin
+        else
+            $(call ndk_log,Cygwin *not* detected!)
+        endif
+    endif
+endif
+
+ifneq ($(HOST_OS),$(HOST_OS_BASE))
+    $(call ndk_log, Host operating system detected: $(HOST_OS), base OS: $(HOST_OS_BASE)))
+else
+    $(call ndk_log, Host operating system detected: $(HOST_OS))
+endif
+
 HOST_ARCH := $(strip $(HOST_ARCH))
 ifndef HOST_ARCH
-    ifeq ($(HOST_OS),windows)
+    ifeq ($(HOST_OS_BASE),windows)
         HOST_ARCH := $(PROCESSOR_ARCHITECTURE)
         ifeq ($(HOST_ARCH),AMD64)
             HOST_ARCH := x86
         endif
-    else # HOST_OS != windows
+    else # HOST_OS_BASE != windows
         UNAME := $(shell uname -m)
         ifneq (,$(findstring 86,$(UNAME)))
             HOST_ARCH := x86
@@ -140,38 +177,39 @@ ifndef HOST_ARCH
             $(call __ndk_info,Unsupported host architecture: $(UNAME))
             $(call __ndk_error,Aborting)
         endif
-    endif # HOST_OS != windows
+    endif # HOST_OS_BASE != windows
     $(call ndk_log,Host CPU was auto-detected: $(HOST_ARCH))
 else
     $(call ndk_log,Host CPU from environment: $(HOST_ARCH))
 endif
 
-HOST_TAG := $(HOST_OS)-$(HOST_ARCH)
+HOST_TAG := $(HOST_OS_BASE)-$(HOST_ARCH)
 
 # The directory separator used on this host
 HOST_DIRSEP := :
-
-# For now always use ":" since Windows is Cygwin
-#ifeq ($(HOST_OS),windows)
-#  HOST_DIRSEP := ;
-#endif
+ifeq ($(HOST_OS),windows)
+  HOST_DIRSEP := ;
+endif
 
 # If we are on Windows, we need to check that we are not running
 # Cygwin 1.5, which is deprecated and won't run our toolchain
 # binaries properly.
 #
 ifeq ($(HOST_TAG),windows-x86)
-    # On cygwin, 'uname -r' returns something like 1.5.23(0.225/5/3)
-    # We recognize 1.5. as the prefix to look for then.
-    CYGWIN_VERSION := $(shell uname -r)
-    ifneq ($(filter XX1.5.%,XX$(CYGWIN_VERSION)),)
-        $(call __ndk_info,You seem to be running Cygwin 1.5, which is not supported.)
-        $(call __ndk_info,Please upgrade to Cygwin 1.7 or higher.)
-        $(call __ndk_error,Aborting.)
+    ifeq ($(HOST_OS),cygwin)
+        # On cygwin, 'uname -r' returns something like 1.5.23(0.225/5/3)
+        # We recognize 1.5. as the prefix to look for then.
+        CYGWIN_VERSION := $(shell uname -r)
+        ifneq ($(filter XX1.5.%,XX$(CYGWIN_VERSION)),)
+            $(call __ndk_info,You seem to be running Cygwin 1.5, which is not supported.)
+            $(call __ndk_info,Please upgrade to Cygwin 1.7 or higher.)
+            $(call __ndk_error,Aborting.)
+        endif
     endif
     # special-case the host-tag
     HOST_TAG := windows
 endif
+
 $(call ndk_log,HOST_TAG set to $(HOST_TAG))
 
 #
@@ -197,7 +235,7 @@ ifneq ($(AWK_TEST),Pass)
 endif
 
 #
-# On windows, define the 'cygwin-to-host-path' function here depending on the
+# On Cygwin, define the 'cygwin-to-host-path' function here depending on the
 # environment. The rules are the following:
 #
 # 1/ If "cygpath' is not in your path, do not use it at all. It looks like
@@ -223,7 +261,7 @@ endif
 # drives as reported by "mount" and deals with drive letter cases (i.e.
 # '/cygdrive/c' and '/cygdrive/C')
 #
-ifeq ($(HOST_OS),windows)
+ifeq ($(HOST_OS),cygwin)
     CYGPATH := $(strip $(HOST_CYGPATH))
     ifndef CYGPATH
         $(call ndk_log, Probing for 'cygpath' program)
@@ -250,7 +288,7 @@ ifeq ($(HOST_OS),windows)
             $(eval cygwin-to-host-path = $(WINDOWS_HOST_PATH_FRAGMENT))
         endif
     endif
-endif # HOST_OS == windows
+endif # HOST_OS == cygwin
 
 # The location of the build system files
 BUILD_SYSTEM := $(NDK_ROOT)/build/core

@@ -142,10 +142,10 @@ check-required-vars = $(foreach __varname,$1,\
 # Returns  : file path, as understood by the host file system
 # Usage    : $(call host-path,<path>)
 # Rationale: This function is used to translate Cygwin paths into
-#            Windows-specific ones. On other platforms, it will just
+#            Cygwin-specific ones. On other platforms, it will just
 #            return its argument.
 # -----------------------------------------------------------------------------
-ifeq ($(HOST_OS),windows)
+ifeq ($(HOST_OS),cygwin)
 host-path = $(if $(strip $1),$(call cygwin-to-host-path,$1))
 else
 host-path = $1
@@ -157,10 +157,10 @@ endif
 # Returns  : list of include compiler options (e.g. "-Ifoo -Ibar")
 # Usage    : $(call host-c-includes,<paths>)
 # Rationale: This function is used to translate Cygwin paths into
-#            Windows-specific ones. On other platforms, it will just
+#            Cygwin-specific ones. On other platforms, it will just
 #            return its argument.
 # -----------------------------------------------------------------------------
-ifeq ($(HOST_OS),windows)
+ifeq ($(HOST_OS),cygwin)
 host-c-includes = $(patsubst %,-I%,$(call host-path,$1))
 else
 host-c-includes = $(1:%=-I%)
@@ -1051,7 +1051,7 @@ endif
 # convert-deps is used to compute the name of the compiler-generated dependency file
 # cmd-convert-deps is a command used to convert it to a Cygwin-specific path
 #
-ifeq ($(HOST_OS),windows)
+ifeq ($(HOST_OS),cygwin)
 convert-deps = $1.org
 cmd-convert-deps = \
     && ( if [ -f "$1.org" ]; then \
