@@ -2,10 +2,19 @@
 # This is included/sourced by other scripts
 #
 
-PREBUILT_TOOLS=`dirname $0`
-PREBUILT_TOOLS=$(cd $PREBUILT_TOOLS && pwd)
+# NDK_BUILDTOOLS_PATH should point to the directory containing
+# this script. If it is not defined, assume that this is one of
+# the scripts in the same directory that sourced this file.
+#
+if [ -z "$NDK_BUILDTOOLS_PATH" ]; then
+    NDK_BUILDTOOLS_PATH=$(dirname $0)
+    if [ ! -f "$NDK_BUILDTOOLS_PATH/prebuilt-common.sh" ]; then
+        echo "INTERNAL ERROR: Please define NDK_BUILDTOOLS_PATH to point to $$NDK/build/tools"
+        exit 1
+    fi
+fi
 
-. $PREBUILT_TOOLS/../core/ndk-common.sh
+. $NDK_BUILDTOOLS_PATH/../core/ndk-common.sh
 
 #====================================================
 #
@@ -652,8 +661,8 @@ EOF
         # configure scripts are not capable of dealing with this properly
         # E.g. the ones used to rebuild the GCC toolchain from scratch.
         # So instead, use a wrapper script
-        CC=$PREBUILT_TOOLS/ndk-ccache-gcc.sh
-        CXX=$PREBUILT_TOOLS/ndk-ccache-g++.sh
+        CC=$NDK_BUILDTOOLS_PATH/ndk-ccache-gcc.sh
+        CXX=$NDK_BUILDTOOLS_PATH/ndk-ccache-g++.sh
         export NDK_CCACHE_CC NDK_CCACHE_CXX
         log "Using ccache compilation"
         log "NDK_CCACHE_CC=$NDK_CCACHE_CC"
