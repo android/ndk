@@ -999,6 +999,15 @@ NDK_APP_VARS := $(NDK_APP_VARS_REQUIRED) \
 #
 # =============================================================================
 
+get-object-name = $(strip \
+    $(subst ../,__/,\
+        $(eval __obj := $1)\
+        $(foreach __ext,.c .s .S $(LOCAL_CPP_EXTENSION),\
+            $(eval __obj := $(__obj:%$(__ext)=%.o))\
+        )\
+        $(__obj)\
+    ))
+
 # -----------------------------------------------------------------------------
 # Macro    : hide
 # Returns  : nothing
@@ -1179,20 +1188,22 @@ endef
 # -----------------------------------------------------------------------------
 # Function  : compile-c-source
 # Arguments : 1: single C source file name (relative to LOCAL_PATH)
+#             2: object file
 # Returns   : None
-# Usage     : $(call compile-c-source,<srcfile>)
+# Usage     : $(call compile-c-source,<srcfile>,<objfile>)
 # Rationale : Setup everything required to build a single C source file
 # -----------------------------------------------------------------------------
-compile-c-source = $(eval $(call ev-compile-c-source,$1,$(1:%.c=%.o)))
+compile-c-source = $(eval $(call ev-compile-c-source,$1,$2))
 
 # -----------------------------------------------------------------------------
 # Function  : compile-s-source
 # Arguments : 1: single Assembly source file name (relative to LOCAL_PATH)
+#             2: object file
 # Returns   : None
-# Usage     : $(call compile-s-source,<srcfile>)
+# Usage     : $(call compile-s-source,<srcfile>,<objfile>)
 # Rationale : Setup everything required to build a single Assembly source file
 # -----------------------------------------------------------------------------
-compile-s-source = $(eval $(call ev-compile-c-source,$1,$(patsubst %.s,%.o,$(patsubst %.S,%.o,$1))))
+compile-s-source = $(eval $(call ev-compile-c-source,$1,$2))
 
 
 # -----------------------------------------------------------------------------
@@ -1228,11 +1239,12 @@ endef
 # -----------------------------------------------------------------------------
 # Function  : compile-cpp-source
 # Arguments : 1: single C++ source file name (relative to LOCAL_PATH)
+#           : 2: object file name
 # Returns   : None
 # Usage     : $(call compile-c-source,<srcfile>)
 # Rationale : Setup everything required to build a single C++ source file
 # -----------------------------------------------------------------------------
-compile-cpp-source = $(eval $(call ev-compile-cpp-source,$1,$(1:%$(LOCAL_CPP_EXTENSION)=%.o)))
+compile-cpp-source = $(eval $(call ev-compile-cpp-source,$1,$2))
 
 # -----------------------------------------------------------------------------
 # Command   : cmd-install-file

@@ -428,10 +428,14 @@ LOCAL_SRC_FILES
 
 LOCAL_CPP_EXTENSION
     This is an optional variable that can be defined to indicate
-    the file extension of C++ source files. The default is '.cpp'
-    but you can change it. For example:
+    the file extension(s) of C++ source files. They must begin with a dot.
+    The default is '.cpp' but you can change it. For example:
 
         LOCAL_CPP_EXTENSION := .cxx
+
+    Since NDK r7, you can list several extensions in this variable, as in:
+
+        LOCAL_CPP_EXTENSION := .cxx .cpp .cc
 
 LOCAL_CPP_FEATURES
     This is an optional variable that can be defined to indicate

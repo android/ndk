@@ -73,14 +73,15 @@ endif
 #
 # Check LOCAL_CPP_EXTENSION, use '.cpp' by default
 #
+bad_cpp_extensions := $(strip $(filter-out .%,$(LOCAL_CPP_EXTENSION)))
+ifdef bad_cpp_extensions
+    $(call __ndk_info,WARNING: Invalid LOCAL_CPP_EXTENSION values: $(bad_cpp_extensions))
+    LOCAL_CPP_EXTENSION := $(filter $(bad_cpp_extensions),$(LOCAL_CPP_EXTENSIONS))
+endif
 LOCAL_CPP_EXTENSION := $(strip $(LOCAL_CPP_EXTENSION))
 ifeq ($(LOCAL_CPP_EXTENSION),)
   LOCAL_CPP_EXTENSION := .cpp
 else
-  ifneq ($(words $(LOCAL_CPP_EXTENSION)),1)
-    $(call __ndk_info, LOCAL_CPP_EXTENSION in $(LOCAL_MAKEFILE) must be one word only, not '$(LOCAL_CPP_EXTENSION)')
-    $(call __ndk_error, Aborting)
-  endif
 endif
 
 #
@@ -194,6 +195,7 @@ LOCAL_DEPENDENCY_DIRS :=
 # to source files recognized by our build system
 all_source_extensions := .c .s .S $(LOCAL_CPP_EXTENSION)
 all_source_patterns   := $(foreach _ext,$(all_source_extensions),%$(_ext))
+all_cpp_patterns      := $(foreach _ext,$(LOCAL_CPP_EXTENSION),%$(_ext))
 
 unknown_sources := $(strip $(filter-out $(all_source_patterns),$(LOCAL_SRC_FILES)))
 ifdef unknown_sources
@@ -209,6 +211,7 @@ $(foreach _ext,$(all_source_extensions),\
     $(eval LOCAL_OBJECTS := $$(LOCAL_OBJECTS:%$(_ext)=%.o))\
 )
 LOCAL_OBJECTS := $(filter %.o,$(LOCAL_OBJECTS))
+LOCAL_OBJECTS := $(subst ../,__/,$(LOCAL_OBJECTS))
 LOCAL_OBJECTS := $(foreach _obj,$(LOCAL_OBJECTS),$(LOCAL_OBJS_DIR)/$(_obj))
 
 # If the module has any kind of C++ features, enable them in LOCAL_CPPFLAGS
@@ -232,11 +235,12 @@ endif
 # Build the sources to object files
 #
 
-$(foreach src,$(filter %.c,$(LOCAL_SRC_FILES)), $(call compile-c-source,$(src)))
-$(foreach src,$(filter %.S %.s,$(LOCAL_SRC_FILES)), $(call compile-s-source,$(src)))
+$(foreach src,$(filter %.c,$(LOCAL_SRC_FILES)), $(call compile-c-source,$(src),$(call get-object-name,$(src))))
+$(foreach src,$(filter %.S %.s,$(LOCAL_SRC_FILES)), $(call compile-s-source,$(src),$(call get-object-name,$(src))))
 
-$(foreach src,$(filter %$(LOCAL_CPP_EXTENSION),$(LOCAL_SRC_FILES)),\
-    $(call compile-cpp-source,$(src)))
+$(foreach src,$(filter $(all_cpp_patterns),$(LOCAL_SRC_FILES)),\
+    $(call compile-cpp-source,$(src),$(call get-object-name,$(src)))\
+)
 
 #
 # The compile-xxx-source calls updated LOCAL_OBJECTS and LOCAL_DEPENDENCY_DIRS
