@@ -748,8 +748,6 @@ parse_toolchain_name ()
         ABI_CFLAGS_FOR_TARGET="-fexceptions"
         ABI_CXXFLAGS_FOR_TARGET="-frtti"
         ABI_CONFIGURE_EXTRA_FLAGS="$ABI_CONFIGURE_EXTRA_FLAGS --enable-libstdc__-v3"
-        # Stick to 6.6 for now. 7.1.x doesn't seem to work right now.
-        #GDB_VERSION=7.1.x
         ;;
     x86-*)
         ARCH="x86"

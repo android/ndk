@@ -267,7 +267,7 @@ fi
 build_toolchain ()
 {
     dump "Building $1 toolchain... (this can be long)"
-    run $PROGDIR/build-gcc.sh $FLAGS $2 --sysroot=$OPTION_SYSROOT --mpfr-version=$MPFR_VERSION --binutils-version=$BINUTILS_VERSION --build-out=$BUILD_DIR/toolchain-$1 $SRC_DIR $NDK_DIR $1
+    run $PROGDIR/build-gcc.sh $FLAGS $2 --sysroot=$OPTION_SYSROOT --mpfr-version=$MPFR_VERSION --binutils-version=$BINUTILS_VERSION --gdb-version=$GDB_VERSION --build-out=$BUILD_DIR/toolchain-$1 $SRC_DIR $NDK_DIR $1
     fail_panic "Could not build $1 toolchain!"
     package_it "$1 toolchain" "$1-$HOST_TAG" "toolchains/$1/prebuilt/$HOST_TAG"
 }

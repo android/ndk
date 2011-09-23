@@ -58,7 +58,7 @@ register_var_option "--disable-threads" NOTHREADS "Disable threads support"
 JOBS=$HOST_NUM_CPUS
 register_var_option "-j<number>" JOBS "Use <number> build jobs in parallel"
 
-GDB_VERSION=6.6
+GDB_VERSION=7.1.x
 register_var_option "--gdb-version=<name>" GDB_VERSION "Use specific gdb version."
 
 extract_parameters "$@"

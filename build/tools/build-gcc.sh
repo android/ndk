@@ -42,7 +42,7 @@ register_var_option "--platform=<name>"  PLATFORM "Specify platform name"
 OPTION_SYSROOT=
 register_var_option "--sysroot=<path>"   OPTION_SYSROOT   "Specify sysroot directory directly"
 
-GDB_VERSION=6.6
+GDB_VERSION=7.1.x
 register_var_option "--gdb-version=<version>"  GDB_VERSION "Specify gdb version"
 
 BINUTILS_VERSION=2.19
