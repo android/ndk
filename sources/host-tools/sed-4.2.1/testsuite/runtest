@@ -1,0 +1,23 @@
+#! /bin/sh
+
+: ${MAKE=make}
+: ${srcdir=.}
+: ${SED="../sed/sed"}
+
+makefile="$srcdir/Makefile.tests"
+test=`echo "$@"| sed 's,.*/,,'`
+
+# As a convenience, suppress the output of make if the test passes
+if $MAKE SED="$SED" srcdir="$srcdir" -f "$makefile" $test > $test.test 2>&1; then
+  exitcode=0
+  rm -f $test.test
+else
+  exitcode=$?
+fi
+if test -f $test.skip; then
+  exitcode=77
+else
+  test -f $test.test && cat $test.test
+fi
+rm -f $test.test $test.skip
+exit $exitcode

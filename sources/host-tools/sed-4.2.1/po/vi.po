@@ -1,0 +1,511 @@
+# Vietnamese translation for Sed.
+# Copyright © 2008 Free Software Foundation, Inc.
+# This file is distributed under the same license as the sed-4.2.0 package.
+# Clytie Siddall <clytie@riverland.net.au>, 2005-2008.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: sed 4.2.0\n"
+"Report-Msgid-Bugs-To: bug-gnu-utils@gnu.org\n"
+"POT-Creation-Date: 2009-06-27 15:08+0200\n"
+"PO-Revision-Date: 2008-01-18 21:56+1030\n"
+"Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
+"Language-Team: Vietnamese <vi-VN@googlegroups.com> \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: LocFactory Editor 1.7b1\n"
+
+#: sed/compile.c:161
+msgid "multiple `!'s"
+msgstr "có nhiều dấu cảm « ! »"
+
+#: sed/compile.c:162
+msgid "unexpected `,'"
+msgstr "gặp dấu phẩy « , » bất thường"
+
+#: sed/compile.c:163
+msgid "invalid usage of +N or ~N as first address"
+msgstr "dùng « +N » hay « -N » như là địa chỉ đầu tiên một cách không là hợp lệ"
+
+#: sed/compile.c:164
+msgid "unmatched `{'"
+msgstr "có dấu ngoặc móc mở « { » riêng lẻ"
+
+#: sed/compile.c:165
+msgid "unexpected `}'"
+msgstr "gặp dấu ngoặc móc đóng « } » bất thường"
+
+#: sed/compile.c:166
+msgid "extra characters after command"
+msgstr "có ký tự thêm nằm sau lệnh"
+
+#: sed/compile.c:167
+msgid "expected \\ after `a', `c' or `i'"
+msgstr "yêu cầu « \\ » nằm sau « a », « c » hay « i »"
+
+#: sed/compile.c:168
+msgid "`}' doesn't want any addresses"
+msgstr "dấu ngoặc móc đóng « } » không yêu cầu địa chỉ"
+
+#: sed/compile.c:169
+msgid ": doesn't want any addresses"
+msgstr "dấu hai chấm « : » không yêu cầu địa chỉ"
+
+#: sed/compile.c:170
+msgid "comments don't accept any addresses"
+msgstr "chú thích không chấp nhận địa chỉ"
+
+#: sed/compile.c:171
+msgid "missing command"
+msgstr "thiếu lệnh"
+
+#: sed/compile.c:172
+msgid "command only uses one address"
+msgstr "lệnh chỉ dùng một địa chỉ riêng lẻ"
+
+#: sed/compile.c:173
+msgid "unterminated address regex"
+msgstr "biểu thức chính quy kiểu đia chỉ chưa kết thúc"
+
+#: sed/compile.c:174
+msgid "unterminated `s' command"
+msgstr "lệnh « s » chưa  kết thúc"
+
+#: sed/compile.c:175
+msgid "unterminated `y' command"
+msgstr "lệnh « y » chưa kết thúc"
+
+#: sed/compile.c:176
+msgid "unknown option to `s'"
+msgstr "« s » có tùy chọn không rõ"
+
+#: sed/compile.c:177
+msgid "multiple `p' options to `s' command"
+msgstr "lệnh « s » có nhiều tùy chọn kiểu « p »"
+
+#: sed/compile.c:178
+msgid "multiple `g' options to `s' command"
+msgstr "lệnh « s » có nhiều tùy chọn kiểu « g »"
+
+#: sed/compile.c:179
+msgid "multiple number options to `s' command"
+msgstr "lệnh « s » có nhiều tùy chọn kiểu con số"
+
+#: sed/compile.c:180
+msgid "number option to `s' command may not be zero"
+msgstr "không cho phép lệnh « s » có tùy chọn con số là số không"
+
+#: sed/compile.c:181
+msgid "strings for `y' command are different lengths"
+msgstr "lệnh « y » có các chuỗi có chiều dài khác nhau"
+
+#: sed/compile.c:182
+msgid "delimiter character is not a single-byte character"
+msgstr "ký tự định giới không phải là ký tự byte đơn"
+
+#: sed/compile.c:183
+msgid "expected newer version of sed"
+msgstr "yêu cầu phiên bản trình sed mới hơn"
+
+#: sed/compile.c:184
+msgid "invalid usage of line address 0"
+msgstr "sai dùng địa chỉ dòng 0"
+
+#: sed/compile.c:185
+#, c-format
+msgid "unknown command: `%c'"
+msgstr "không rõ lệnh: « %c »"
+
+#: sed/compile.c:208
+#, c-format
+msgid "%s: file %s line %lu: %s\n"
+msgstr "%s: tập tin %s dòng %lu: %s\n"
+
+#: sed/compile.c:211
+#, c-format
+msgid "%s: -e expression #%lu, char %lu: %s\n"
+msgstr "%s: -e biểu thức #%lu, ký tư %lu: %s\n"
+
+#: sed/compile.c:1665
+#, c-format
+msgid "can't find label for jump to `%s'"
+msgstr "không tìm thấy nhãn để nhảy tới « %s »"
+
+#: sed/execute.c:709
+#, c-format
+msgid "%s: can't read %s: %s\n"
+msgstr "%s: không thể đọc %s: %s\n"
+
+#: sed/execute.c:740
+#, c-format
+msgid "couldn't edit %s: is a terminal"
+msgstr "không thể chỉnh sửa %s: là thiết bị cuối"
+
+#: sed/execute.c:745
+#, c-format
+msgid "couldn't edit %s: not a regular file"
+msgstr "không thể chỉnh sửa %s: không phải là tập tin chuẩn"
+
+#: sed/execute.c:757
+#, c-format
+msgid "%s: warning: failed to set default file creation context to %s: %s"
+msgstr ""
+
+#: sed/execute.c:764
+#, c-format
+msgid "%s: warning: failed to get security context of %s: %s"
+msgstr ""
+
+#: sed/execute.c:783 sed/utils.c:227
+#, c-format
+msgid "couldn't open temporary file %s: %s"
+msgstr "không thể mở tập tin tạm thời %s: %s"
+
+#: sed/execute.c:1317 sed/execute.c:1497
+msgid "error in subprocess"
+msgstr "gặp lỗi trong tiến trình con"
+
+#: sed/execute.c:1319
+msgid "option `e' not supported"
+msgstr "không hỗ trợ tùy chọn « e »"
+
+#: sed/execute.c:1499
+msgid "`e' command not supported"
+msgstr "không hỗ trợ lệnh « e »"
+
+#: sed/execute.c:1843
+msgid "no input files"
+msgstr "không có tập tin nhập vào"
+
+#: sed/regexp.c:41
+msgid "no previous regular expression"
+msgstr "không có biểu thức chính quy nằm trước"
+
+#: sed/regexp.c:42
+msgid "cannot specify modifiers on empty regexp"
+msgstr "không thể ghi rõ cờ sửa đổi với biểu thức chính quy trống"
+
+#: sed/regexp.c:131
+#, c-format
+msgid "invalid reference \\%d on `s' command's RHS"
+msgstr "tham chiếu không hơp lệ « \\%d » bên phải lệnh « s »"
+
+#: sed/sed.c:97
+#, c-format
+msgid ""
+"GNU sed home page: <http://www.gnu.org/software/sed/>.\n"
+"General help using GNU software: <http://www.gnu.org/gethelp/>.\n"
+msgstr ""
+
+#: sed/sed.c:104
+#, fuzzy, c-format
+msgid ""
+"E-mail bug reports to: <%s>.\n"
+"Be sure to include the word ``%s'' somewhere in the ``Subject:'' field.\n"
+msgstr ""
+"Hãy thông báo lỗi cho: %s .\n"
+"Thư thông báo nên chứa từ « %s » trong trường « Chủ đề ».\n"
+
+#: sed/sed.c:117
+msgid ""
+"  -R, --regexp-perl\n"
+"                 use Perl 5's regular expressions syntax in the script.\n"
+msgstr ""
+"  -R, --regexp-perl\n"
+"                 sử dụng cú pháp của biểu thức chính quy kiểu Perl 5\n"
+"\t\t\ttrong văn lệnh.\n"
+
+#: sed/sed.c:122
+#, c-format
+msgid ""
+"Usage: %s [OPTION]... {script-only-if-no-other-script} [input-file]...\n"
+"\n"
+msgstr ""
+"Sử dụng: %s [TÙY_CHỌN]... {văn lệnh chỉ nếu không có văn bản khác} [tập tin "
+"nhập vào]...\n"
+"\n"
+
+#: sed/sed.c:126
+#, c-format
+msgid ""
+"  -n, --quiet, --silent\n"
+"                 suppress automatic printing of pattern space\n"
+msgstr ""
+"  -n, --quiet, --silent\n"
+"                 thu hồi chức năng tự động in ra khoảng cách mẫu\n"
+
+#: sed/sed.c:128
+#, c-format
+msgid ""
+"  -e script, --expression=script\n"
+"                 add the script to the commands to be executed\n"
+msgstr ""
+"  -e văn_lệnh, --expression=văn_lệnh\n"
+"                 thêm văn lệnh này vào các câu lệnh cần thực hiện\n"
+
+#: sed/sed.c:130
+#, c-format
+msgid ""
+"  -f script-file, --file=script-file\n"
+"                 add the contents of script-file to the commands to be "
+"executed\n"
+msgstr ""
+"  -f tập_tin_văn_lệnh --file=tập_tin_văn_lệnh\n"
+"                 thêm nội dụng của tập tin văn lệnh này\n"
+"\t\t\tvào các câu lệnh cần thực hiện\n"
+
+#: sed/sed.c:133
+#, c-format
+msgid ""
+"  --follow-symlinks\n"
+"                 follow symlinks when processing in place\n"
+msgstr ""
+"  --follow-symlinks\n"
+"                 theo liên kết tượng trưng khi xử lý tại chỗ\n"
+
+#: sed/sed.c:136
+#, c-format
+msgid ""
+"  -i[SUFFIX], --in-place[=SUFFIX]\n"
+"                 edit files in place (makes backup if extension supplied)\n"
+msgstr ""
+"  -i[HẬU_TỐ], --in-place[=HẬU_TỐ]\n"
+"                 chỉnh sửa tập tin tại chỗ\n"
+"\t\t\t(tạo bản sao lưu nếu phần mở rộng được cung cấp)\n"
+
+#: sed/sed.c:139
+#, c-format
+msgid ""
+"  -b, --binary\n"
+"                 open files in binary mode (CR+LFs are not processed "
+"specially)\n"
+msgstr ""
+"  -b, --binary\n"
+"                 mở tập tin ở chế độ nhị phân\n"
+"\t\t\t(không phải xử lý đặc biệt ký tự xuống dòng CR+LF)\n"
+
+#: sed/sed.c:142
+#, c-format
+msgid ""
+"  -l N, --line-length=N\n"
+"                 specify the desired line-wrap length for the `l' command\n"
+msgstr ""
+"  -l N, --line-length=N\n"
+"                 ghi rõ chiều dài ngắt dòng đá muốn cho lệnh « l »\n"
+
+#: sed/sed.c:144
+#, c-format
+msgid ""
+"  --posix\n"
+"                 disable all GNU extensions.\n"
+msgstr ""
+"  --posix\n"
+"                 tắt mọi phần mở rộng kiểu GNU\n"
+
+#: sed/sed.c:146
+#, c-format
+msgid ""
+"  -r, --regexp-extended\n"
+"                 use extended regular expressions in the script.\n"
+msgstr ""
+"  -r, --regexp-extended\n"
+"                 dùng biểu thức chính quy đã mở rộng trong văn lênh.\n"
+
+#: sed/sed.c:151
+#, c-format
+msgid ""
+"  -s, --separate\n"
+"                 consider files as separate rather than as a single "
+"continuous\n"
+"                 long stream.\n"
+msgstr ""
+"  -s, --separate\n"
+"                 thấy các tập tin là riêng với nhau, hơn là một luồng liên "
+"tục riêng lẻ.\n"
+
+#: sed/sed.c:154
+#, c-format
+msgid ""
+"  -u, --unbuffered\n"
+"                 load minimal amounts of data from the input files and "
+"flush\n"
+"                 the output buffers more often\n"
+msgstr ""
+"  -u, --unbuffered\n"
+"             nạp số lượng dữ liệu tối thiểu từ các tập tin nhấp vào,\n"
+"\t\t\tvà làm tràn thường xuyên hơn các bộ đệm xuất\n"
+
+#: sed/sed.c:157
+#, c-format
+msgid "      --help     display this help and exit\n"
+msgstr "      --help     \t\thiện trợ giúp này rồi thoát\n"
+
+#: sed/sed.c:158
+#, c-format
+msgid "      --version  output version information and exit\n"
+msgstr "      --version  \txuất thông tin phiên bản rồi thoát\n"
+
+#: sed/sed.c:159
+#, c-format
+msgid ""
+"\n"
+"If no -e, --expression, -f, or --file option is given, then the first\n"
+"non-option argument is taken as the sed script to interpret.  All\n"
+"remaining arguments are names of input files; if no input files are\n"
+"specified, then the standard input is read.\n"
+"\n"
+msgstr ""
+"\n"
+"Không đưa ra tùy chọn « -e », « --expression » (biểu thức),\n"
+"« -f » hay « --file » (tập tin) thì đối số khác tùy chọn thứ nhất\n"
+"được xử lý như là văn lệnh sed cần giải dịch. Tất cả các đối số\n"
+"còn lại là tên của tập tin nhập vào ; không ghi rõ tập tin nhập\n"
+"thì đọc đầu vào tiêu chuẩn.\n"
+
+#: sed/sed.c:315
+#, c-format
+msgid "super-sed version %s\n"
+msgstr "super-sed phiên bản %s\n"
+
+#: sed/sed.c:316
+#, c-format
+msgid ""
+"based on GNU sed version %s\n"
+"\n"
+msgstr ""
+"dựa vào trình sed phiên bản %s của GNU\n"
+"\n"
+
+#: sed/sed.c:318
+#, c-format
+msgid "GNU sed version %s\n"
+msgstr "sed phiên bản %s của GNU\n"
+
+#: sed/sed.c:320
+#, fuzzy, c-format
+msgid ""
+"Copyright (C) %d Free Software Foundation, Inc.\n"
+"This is free software; see the source for copying conditions.  There is NO\n"
+"warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE,\n"
+"to the extent permitted by law.\n"
+msgstr ""
+"%s\n"
+"Chương trình này là phần mềm tự do; xem mã nguồn để tìm điều kiện sao chép.\n"
+"KHÔNG CÓ BẢO HÀNH GÌ CẢ, THẬM CHÍ KHÔNG CÓ BẢO ĐẢM ĐƯỢC NGỤ Ý\n"
+"KHẢ NĂNG BÁN HAY KHẢ NĂNG LÀM ĐƯỢC VIỆC DỨT KHOÁT,\n"
+"với điều kiện được pháp luật cho phép.\n"
+
+#: sed/utils.c:93 sed/utils.c:438
+#, c-format
+msgid "cannot remove %s: %s"
+msgstr "không thể gỡ bỏ %s: %s"
+
+#: sed/utils.c:163
+#, c-format
+msgid "couldn't open file %s: %s"
+msgstr "không thể mở tập tin %s: %s"
+
+#: sed/utils.c:186
+#, c-format
+msgid "couldn't attach to %s: %s"
+msgstr "không thể gắn với %s: %s"
+
+#: sed/utils.c:245
+#, c-format
+msgid "couldn't write %d item to %s: %s"
+msgid_plural "couldn't write %d items to %s: %s"
+msgstr[0] "không thể ghi %d mục vào %s: %s"
+
+#: sed/utils.c:260 sed/utils.c:276
+#, c-format
+msgid "read error on %s: %s"
+msgstr "lỗi đọc trên %s: %s"
+
+#: sed/utils.c:378
+#, c-format
+msgid "couldn't follow symlink %s: %s"
+msgstr "không thể theo liên kết tượng trưng %s: %s"
+
+#: sed/utils.c:412
+#, c-format
+msgid "cannot stat %s: %s"
+msgstr "không thể lấy trạng thái về %s: %s"
+
+#: sed/utils.c:443
+#, c-format
+msgid "cannot rename %s: %s"
+msgstr "không thể thay đổi tên của %s: %s"
+
+#: lib/regcomp.c:134
+msgid "Success"
+msgstr "Thành công"
+
+#: lib/regcomp.c:137
+msgid "No match"
+msgstr "Không tìm thấy"
+
+#: lib/regcomp.c:140
+msgid "Invalid regular expression"
+msgstr "Biểu thức chính quy không hợp lệ"
+
+#: lib/regcomp.c:143
+msgid "Invalid collation character"
+msgstr "Ký tự đối chiếu không hợp lệ"
+
+#: lib/regcomp.c:146
+msgid "Invalid character class name"
+msgstr "Tên hạng ký tự không hợp lệ"
+
+#: lib/regcomp.c:149
+msgid "Trailing backslash"
+msgstr "Có dấu xuyệc ngược theo sau"
+
+#: lib/regcomp.c:152
+msgid "Invalid back reference"
+msgstr "Tham chiếu ngược không hợp lệ"
+
+#: lib/regcomp.c:155
+msgid "Unmatched [ or [^"
+msgstr "Có dấu ngoặc vu mở « [ » hay « [^ » riêng lẻ"
+
+#: lib/regcomp.c:158
+msgid "Unmatched ( or \\("
+msgstr "Có dấu ngoặc mở « ( » hay « \\( » riêng lẻ"
+
+#: lib/regcomp.c:161
+msgid "Unmatched \\{"
+msgstr "Có dấu ngoặc đơn mở « \\( » riêng lẻ"
+
+#: lib/regcomp.c:164
+msgid "Invalid content of \\{\\}"
+msgstr "« \\{\\} » có nội dung không hợp lệ"
+
+#: lib/regcomp.c:167
+msgid "Invalid range end"
+msgstr "Kết thúc phạm vị không hợp lệ"
+
+#: lib/regcomp.c:170
+msgid "Memory exhausted"
+msgstr "Cạn bộ nhớ"
+
+#: lib/regcomp.c:173
+msgid "Invalid preceding regular expression"
+msgstr "Biểu thức chính quy đi trước không hợp lệ"
+
+#: lib/regcomp.c:176
+msgid "Premature end of regular expression"
+msgstr "Biểu thức chính quy kết thúc quá sớm"
+
+#: lib/regcomp.c:179
+msgid "Regular expression too big"
+msgstr "Biểu thức chính quy quá lớn"
+
+#: lib/regcomp.c:182
+msgid "Unmatched ) or \\)"
+msgstr "Có dấu ngoặc đơn đóng « ) » hay « \\) » riêng lẻ"
+
+#: lib/regcomp.c:703
+msgid "No previous regular expression"
+msgstr "Không có biểu thức chính quy đi trước"

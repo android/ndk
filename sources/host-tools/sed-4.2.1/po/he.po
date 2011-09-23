@@ -1,0 +1,548 @@
+# Hebrew messages for GNU Sed          -*- coding: hebrew-iso-8bit -*-
+# Copyright (C) 2001 Free Software Foundation, Inc.
+# Eli Zaretskii <eliz@is.elta.co.il>, 2001.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: sed 3.02.80\n"
+"Report-Msgid-Bugs-To: bug-gnu-utils@gnu.org\n"
+"POT-Creation-Date: 2009-06-27 15:08+0200\n"
+"PO-Revision-Date: 2001-08-04 20:37+0300\n"
+"Last-Translator: Eli Zaretskii <eliz@gnu.org>\n"
+"Language-Team: Hebrew <eliz@gnu.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ISO-8859-8\n"
+"Content-Transfer-Encoding: 8-bit\n"
+
+#: sed/compile.c:161
+#, fuzzy
+msgid "multiple `!'s"
+msgstr "`!' יוביר"
+
+#: sed/compile.c:162
+#, fuzzy
+msgid "unexpected `,'"
+msgstr "יופצ-יתלב `,'"
+
+#: sed/compile.c:163
+#, fuzzy
+msgid "invalid usage of +N or ~N as first address"
+msgstr "הנושאר תבותככ ~N וא +N-ב שמתשהל ןתינ אל"
+
+#: sed/compile.c:164
+#, fuzzy
+msgid "unmatched `{'"
+msgstr "גוז-ןב ול ןיאש `{'"
+
+#: sed/compile.c:165
+#, fuzzy
+msgid "unexpected `}'"
+msgstr "יופצ-יתלב `}'"
+
+#: sed/compile.c:166
+#, fuzzy
+msgid "extra characters after command"
+msgstr "הדוקפה ירחא םירתוימ םיות"
+
+#: sed/compile.c:167
+msgid "expected \\ after `a', `c' or `i'"
+msgstr ""
+
+#: sed/compile.c:168
+msgid "`}' doesn't want any addresses"
+msgstr "תובותכ לבקמ וניא `}'"
+
+#: sed/compile.c:169
+msgid ": doesn't want any addresses"
+msgstr "תובותכ לבקמ וניא :"
+
+#: sed/compile.c:170
+#, fuzzy
+msgid "comments don't accept any addresses"
+msgstr "תובותכ תולבקמ ןניא תורעה"
+
+#: sed/compile.c:171
+#, fuzzy
+msgid "missing command"
+msgstr "הרסח הדוקפ"
+
+#: sed/compile.c:172
+#, fuzzy
+msgid "command only uses one address"
+msgstr "דבלב תחא תבותכ תלבקמ וז הדוקפ"
+
+#: sed/compile.c:173
+#, fuzzy
+msgid "unterminated address regex"
+msgstr "םויס אלל תבותכ לש ירלוגר יוטיב"
+
+#: sed/compile.c:174
+#, fuzzy
+msgid "unterminated `s' command"
+msgstr "םויס אלל `s' תדוקפ"
+
+#: sed/compile.c:175
+#, fuzzy
+msgid "unterminated `y' command"
+msgstr "םויס אלל `y' תדוקפ"
+
+#: sed/compile.c:176
+#, fuzzy
+msgid "unknown option to `s'"
+msgstr "`s' לש רכומ-יתלב ןייפאמ"
+
+#: sed/compile.c:177
+msgid "multiple `p' options to `s' command"
+msgstr "`s' הדוקפל םיבורמ `p' ינייפאמ"
+
+#: sed/compile.c:178
+msgid "multiple `g' options to `s' command"
+msgstr "`s' הדוקפל םיבורמ `g' ינייפאמ"
+
+#: sed/compile.c:179
+msgid "multiple number options to `s' command"
+msgstr "`s' הדוקפל םיבורמ רפסמ ינייפאמ"
+
+#: sed/compile.c:180
+msgid "number option to `s' command may not be zero"
+msgstr "ספא תויהל לוכי וניא `s' הדוקפל ירפסמ ןייפאמ"
+
+#: sed/compile.c:181
+#, fuzzy
+msgid "strings for `y' command are different lengths"
+msgstr "הנוש ךרואב ןניה `y' הדוקפל תוזורחמ"
+
+#: sed/compile.c:182
+msgid "delimiter character is not a single-byte character"
+msgstr ""
+
+#: sed/compile.c:183
+msgid "expected newer version of sed"
+msgstr ""
+
+#: sed/compile.c:184
+#, fuzzy
+msgid "invalid usage of line address 0"
+msgstr "תבותכה ןייצמב יוגש שומיש"
+
+#: sed/compile.c:185
+#, fuzzy, c-format
+msgid "unknown command: `%c'"
+msgstr "תרכומ-יתלב הדוקפ הניה"
+
+#: sed/compile.c:208
+#, c-format
+msgid "%s: file %s line %lu: %s\n"
+msgstr "%s תינכתב (%s ץבוק לש %lu הרוש) %s האיגש\n"
+
+#: sed/compile.c:211
+#, c-format
+msgid "%s: -e expression #%lu, char %lu: %s\n"
+msgstr "%s תינכתב (%lu 'סמ -e יוטיב לש %lu 'סמ ות) %s האיגש\n"
+
+#: sed/compile.c:1665
+#, fuzzy, c-format
+msgid "can't find label for jump to `%s'"
+msgstr "האצמנ אל `%s' הציפק תיוות"
+
+#: sed/execute.c:709
+#, c-format
+msgid "%s: can't read %s: %s\n"
+msgstr "%s תינכתב %s תאירקב (%s) האיגש\n"
+
+#: sed/execute.c:740
+#, c-format
+msgid "couldn't edit %s: is a terminal"
+msgstr ""
+
+#: sed/execute.c:745
+#, c-format
+msgid "couldn't edit %s: not a regular file"
+msgstr ""
+
+#: sed/execute.c:757
+#, c-format
+msgid "%s: warning: failed to set default file creation context to %s: %s"
+msgstr ""
+
+#: sed/execute.c:764
+#, c-format
+msgid "%s: warning: failed to get security context of %s: %s"
+msgstr ""
+
+#: sed/execute.c:783 sed/utils.c:227
+#, fuzzy, c-format
+msgid "couldn't open temporary file %s: %s"
+msgstr "%s ץבוק תחיתפב הלקת"
+
+#: sed/execute.c:1317 sed/execute.c:1497
+msgid "error in subprocess"
+msgstr ""
+
+#: sed/execute.c:1319
+msgid "option `e' not supported"
+msgstr ""
+
+#: sed/execute.c:1499
+msgid "`e' command not supported"
+msgstr ""
+
+#: sed/execute.c:1843
+msgid "no input files"
+msgstr ""
+
+#: sed/regexp.c:41
+msgid "no previous regular expression"
+msgstr ""
+
+#: sed/regexp.c:42
+msgid "cannot specify modifiers on empty regexp"
+msgstr ""
+
+#: sed/regexp.c:131
+#, c-format
+msgid "invalid reference \\%d on `s' command's RHS"
+msgstr ""
+
+#: sed/sed.c:97
+#, c-format
+msgid ""
+"GNU sed home page: <http://www.gnu.org/software/sed/>.\n"
+"General help using GNU software: <http://www.gnu.org/gethelp/>.\n"
+msgstr ""
+
+#: sed/sed.c:104
+#, fuzzy, c-format
+msgid ""
+"E-mail bug reports to: <%s>.\n"
+"Be sure to include the word ``%s'' somewhere in the ``Subject:'' field.\n"
+msgstr ""
+"              .%s תבותכל (bugs) הלקת יחוויד חולשל אנ\n"
+"   .(``Subject'') ``ןודנה'' תרושב ``%s'' הלימ לולכל ודיפקה אנא\n"
+
+#: sed/sed.c:117
+msgid ""
+"  -R, --regexp-perl\n"
+"                 use Perl 5's regular expressions syntax in the script.\n"
+msgstr ""
+
+#: sed/sed.c:122
+#, c-format
+msgid ""
+"Usage: %s [OPTION]... {script-only-if-no-other-script} [input-file]...\n"
+"\n"
+msgstr ""
+
+#: sed/sed.c:126
+#, c-format
+msgid ""
+"  -n, --quiet, --silent\n"
+"                 suppress automatic printing of pattern space\n"
+msgstr ""
+
+#: sed/sed.c:128
+#, c-format
+msgid ""
+"  -e script, --expression=script\n"
+"                 add the script to the commands to be executed\n"
+msgstr ""
+
+#: sed/sed.c:130
+#, c-format
+msgid ""
+"  -f script-file, --file=script-file\n"
+"                 add the contents of script-file to the commands to be "
+"executed\n"
+msgstr ""
+
+#: sed/sed.c:133
+#, c-format
+msgid ""
+"  --follow-symlinks\n"
+"                 follow symlinks when processing in place\n"
+msgstr ""
+
+#: sed/sed.c:136
+#, c-format
+msgid ""
+"  -i[SUFFIX], --in-place[=SUFFIX]\n"
+"                 edit files in place (makes backup if extension supplied)\n"
+msgstr ""
+
+#: sed/sed.c:139
+#, c-format
+msgid ""
+"  -b, --binary\n"
+"                 open files in binary mode (CR+LFs are not processed "
+"specially)\n"
+msgstr ""
+
+#: sed/sed.c:142
+#, c-format
+msgid ""
+"  -l N, --line-length=N\n"
+"                 specify the desired line-wrap length for the `l' command\n"
+msgstr ""
+
+#: sed/sed.c:144
+#, c-format
+msgid ""
+"  --posix\n"
+"                 disable all GNU extensions.\n"
+msgstr ""
+
+#: sed/sed.c:146
+#, c-format
+msgid ""
+"  -r, --regexp-extended\n"
+"                 use extended regular expressions in the script.\n"
+msgstr ""
+
+#: sed/sed.c:151
+#, c-format
+msgid ""
+"  -s, --separate\n"
+"                 consider files as separate rather than as a single "
+"continuous\n"
+"                 long stream.\n"
+msgstr ""
+
+#: sed/sed.c:154
+#, c-format
+msgid ""
+"  -u, --unbuffered\n"
+"                 load minimal amounts of data from the input files and "
+"flush\n"
+"                 the output buffers more often\n"
+msgstr ""
+
+#: sed/sed.c:157
+#, c-format
+msgid "      --help     display this help and exit\n"
+msgstr ""
+
+#: sed/sed.c:158
+#, c-format
+msgid "      --version  output version information and exit\n"
+msgstr ""
+
+#: sed/sed.c:159
+#, c-format
+msgid ""
+"\n"
+"If no -e, --expression, -f, or --file option is given, then the first\n"
+"non-option argument is taken as the sed script to interpret.  All\n"
+"remaining arguments are names of input files; if no input files are\n"
+"specified, then the standard input is read.\n"
+"\n"
+msgstr ""
+
+#: sed/sed.c:315
+#, c-format
+msgid "super-sed version %s\n"
+msgstr ""
+
+#: sed/sed.c:316
+#, c-format
+msgid ""
+"based on GNU sed version %s\n"
+"\n"
+msgstr ""
+
+#: sed/sed.c:318
+#, c-format
+msgid "GNU sed version %s\n"
+msgstr ""
+
+#: sed/sed.c:320
+#, fuzzy, c-format
+msgid ""
+"Copyright (C) %d Free Software Foundation, Inc.\n"
+"This is free software; see the source for copying conditions.  There is NO\n"
+"warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE,\n"
+"to the extent permitted by law.\n"
+msgstr ""
+"%s\n"
+"הוולמ הניא תינכתה .רוקמה יצבק תא האר ,טוריפ רתיל ;תישפח הנכת הניה וז תינכת\n"
+"    הדימב תאזו ,איהש תילכת וזיאל המאתה וא תוריחס םשל אל וליפא ;תוירחא בתכב\n"
+"                                                          .תאז רשפאמ קוחהש\n"
+
+#: sed/utils.c:93 sed/utils.c:438
+#, fuzzy, c-format
+msgid "cannot remove %s: %s"
+msgstr "%s תינכתב %s תאירקב (%s) האיגש\n"
+
+#: sed/utils.c:163
+#, fuzzy, c-format
+msgid "couldn't open file %s: %s"
+msgstr "%s ץבוק תחיתפב הלקת"
+
+#: sed/utils.c:186
+#, fuzzy, c-format
+msgid "couldn't attach to %s: %s"
+msgstr "%s-ל טלפהמ קלח תביתכב (%s) הלקת"
+
+#: sed/utils.c:245
+#, fuzzy, c-format
+msgid "couldn't write %d item to %s: %s"
+msgid_plural "couldn't write %d items to %s: %s"
+msgstr[0] "טלפהמ םיקלח %d לש %s-ל הביתכב (%s) הלקת"
+msgstr[1] "טלפהמ םיקלח %d לש %s-ל הביתכב (%s) הלקת"
+
+#: sed/utils.c:260 sed/utils.c:276
+#, c-format
+msgid "read error on %s: %s"
+msgstr "%s תאירקב (%s) הלקת"
+
+#: sed/utils.c:378
+#, fuzzy, c-format
+msgid "couldn't follow symlink %s: %s"
+msgstr "%s-ל טלפהמ קלח תביתכב (%s) הלקת"
+
+#: sed/utils.c:412
+#, fuzzy, c-format
+msgid "cannot stat %s: %s"
+msgstr "%s תינכתב %s תאירקב (%s) האיגש\n"
+
+#: sed/utils.c:443
+#, fuzzy, c-format
+msgid "cannot rename %s: %s"
+msgstr "%s תינכתב %s תאירקב (%s) האיגש\n"
+
+#: lib/regcomp.c:134
+msgid "Success"
+msgstr ""
+
+#: lib/regcomp.c:137
+msgid "No match"
+msgstr ""
+
+#: lib/regcomp.c:140
+msgid "Invalid regular expression"
+msgstr ""
+
+#: lib/regcomp.c:143
+msgid "Invalid collation character"
+msgstr ""
+
+#: lib/regcomp.c:146
+msgid "Invalid character class name"
+msgstr ""
+
+#: lib/regcomp.c:149
+msgid "Trailing backslash"
+msgstr ""
+
+#: lib/regcomp.c:152
+msgid "Invalid back reference"
+msgstr ""
+
+#: lib/regcomp.c:155
+#, fuzzy
+msgid "Unmatched [ or [^"
+msgstr "גוז-ןב ול ןיאש `{'"
+
+#: lib/regcomp.c:158
+#, fuzzy
+msgid "Unmatched ( or \\("
+msgstr "גוז-ןב ול ןיאש `{'"
+
+#: lib/regcomp.c:161
+#, fuzzy
+msgid "Unmatched \\{"
+msgstr "גוז-ןב ול ןיאש `{'"
+
+#: lib/regcomp.c:164
+msgid "Invalid content of \\{\\}"
+msgstr ""
+
+#: lib/regcomp.c:167
+msgid "Invalid range end"
+msgstr ""
+
+#: lib/regcomp.c:170
+msgid "Memory exhausted"
+msgstr ""
+
+#: lib/regcomp.c:173
+msgid "Invalid preceding regular expression"
+msgstr ""
+
+#: lib/regcomp.c:176
+msgid "Premature end of regular expression"
+msgstr ""
+
+#: lib/regcomp.c:179
+msgid "Regular expression too big"
+msgstr ""
+
+#: lib/regcomp.c:182
+#, fuzzy
+msgid "Unmatched ) or \\)"
+msgstr "גוז-ןב ול ןיאש `{'"
+
+#: lib/regcomp.c:703
+msgid "No previous regular expression"
+msgstr ""
+
+#~ msgid "bad regexp: %s\n"
+#~ msgstr "%s ירלוגר יוטיבב האיגש\n"
+
+#~ msgid "Unexpected End-of-file"
+#~ msgstr "ידמ םדקומ םייתסמ ץבוק"
+
+#~ msgid "Called savchar() with unexpected pushback (%x)"
+#~ msgstr "(%x) יופצ-יתלב pushback םע הארקנ savchar() היצקנופ"
+
+#~ msgid "input read error: %s"
+#~ msgstr "האירק תעב (%s) האיגש"
+
+#~ msgid "INTERNAL ERROR: bad address type"
+#~ msgstr "עודי-יתלב תבותכ גוס :הרומח הנכת תלקת"
+
+#~ msgid "INTERNAL ERROR: Bad cmd %c"
+#~ msgstr "%c תשבושמ הדוקפ :הרומח הנכת תלקת"
+
+#~ msgid ""
+#~ "Usage: %s [OPTION]... {script-only-if-no-other-script} [input-file]...\n"
+#~ "\n"
+#~ "  -n, --quiet, --silent\n"
+#~ "                 suppress automatic printing of pattern space\n"
+#~ "  -e script, --expression=script\n"
+#~ "                 add the script to the commands to be executed\n"
+#~ "  -f script-file, --file=script-file\n"
+#~ "                 add the contents of script-file to the commands to be "
+#~ "executed\n"
+#~ "  -l N, --line-length=N\n"
+#~ "                 specify the desired line-wrap length for the `l' "
+#~ "command\n"
+#~ "  -u, --unbuffered\n"
+#~ "\n"
+#~ "      --help     display this help and exit\n"
+#~ "  -V, --version  output version information and exit\n"
+#~ "\n"
+#~ "If no -e, --expression, -f, or --file option is given, then the first\n"
+#~ "non-option argument is taken as the sed script to interpret.  All\n"
+#~ "remaining arguments are names of input files; if no input files are\n"
+#~ "specified, then the standard input is read.\n"
+#~ "\n"
+#~ msgstr ""
+#~ "%s [םינייפאמ]... {םירחא-םיטירסת-רדעיהב-טירסת} [טלק ץבוק]... :שומיש ןפוא\n"
+#~ "\n"
+#~ "                                                  -n, --quiet, --silent\n"
+#~ "                  יטמוטוא ןפואב תוינבתה בחרמ תא סיפדת לא\n"
+#~ "                                         -e script, --expression=script\n"
+#~ "                        עצבל שי ןתוא תודוקפל script ףסוה\n"
+#~ "                                     -f script-file, --file=script-file\n"
+#~ "          עצבל שי ןתוא תודוקפל script-file לש ןכותה ףסוה\n"
+#~ "                                                  -l N, --line-length=N\n"
+#~ "                       תדוקפ רובע יברימ הרוש לדוגכ N עבק\n"
+#~ "                                                       -u, --unbuffered\n"
+#~ "\n"
+#~ "                                תינכתהמ אצו וז הכרדה גצה         --help\n"
+#~ "                                     אצו תימעתה תסרג גצה  -V, --version\n"
+#~ "\n"
+#~ "       ןושארה טנמוגראה ,--file וא ,-f ,--expression ,-e םינייפאמ רדעיהב\n"
+#~ "       םניה םירתונה םיטנמוגראה לכ .עוציבל sed תירסתכ שרפתי ןייפאמ וניאש\n"
+#~ "                .ינקת טלק קיפא ארקיי ,טלק יצבק לכ רדעיהב ;טלק יצבק תומש\n"
+#~ "\n"

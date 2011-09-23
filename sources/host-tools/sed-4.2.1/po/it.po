@@ -1,0 +1,580 @@
+# traduzione di sed
+# Copyright (C) 1999, 2008 Free Software Foundation, Inc.
+# This file is distributed under the same license as the sed package.
+# Paolo Bonzini <bonzini@gnu.org>, 2008
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: sed 4.2.0\n"
+"Report-Msgid-Bugs-To: bug-gnu-utils@gnu.org\n"
+"POT-Creation-Date: 2009-06-27 15:08+0200\n"
+"PO-Revision-Date: 2008-01-16 12:44+0100\n"
+"Last-Translator: Paolo Bonzini <bonzini@gnu.org>\n"
+"Language-Team: Italian <tp@lists.linux.it>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ISO-8859-1\n"
+"Content-Transfer-Encoding: 8-bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+
+# sed/compile.c:166
+#: sed/compile.c:161
+msgid "multiple `!'s"
+msgstr "`!' multipli"
+
+# sed/compile.c:167
+#: sed/compile.c:162
+msgid "unexpected `,'"
+msgstr "`,' inattesa"
+
+# sed/compile.c:169
+#: sed/compile.c:163
+msgid "invalid usage of +N or ~N as first address"
+msgstr "impossibile usare +N o ~N come primo indirizzo"
+
+# sed/compile.c:170
+#: sed/compile.c:164
+msgid "unmatched `{'"
+msgstr "`{' non bilanciata"
+
+# sed/compile.c:171
+#: sed/compile.c:165
+msgid "unexpected `}'"
+msgstr "`}' inattesa"
+
+# sed/compile.c:172
+#: sed/compile.c:166
+msgid "extra characters after command"
+msgstr "ci sono altri caratteri dopo il comando"
+
+# sed/compile.c:173
+#: sed/compile.c:167
+msgid "expected \\ after `a', `c' or `i'"
+msgstr "atteso \\ dopo `a', `c' o `i'"
+
+# sed/compile.c:174
+#: sed/compile.c:168
+msgid "`}' doesn't want any addresses"
+msgstr "`}' non accetta indirizzi"
+
+# sed/compile.c:175
+#: sed/compile.c:169
+msgid ": doesn't want any addresses"
+msgstr ": non accetta indirizzi"
+
+# sed/compile.c:176
+#: sed/compile.c:170
+msgid "comments don't accept any addresses"
+msgstr "i commenti non accettano indirizzi"
+
+# sed/compile.c:177
+#: sed/compile.c:171
+msgid "missing command"
+msgstr "manca il comando"
+
+# sed/compile.c:178
+#: sed/compile.c:172
+msgid "command only uses one address"
+msgstr "il comando usa solo un indirizzo"
+
+# sed/compile.c:179
+#: sed/compile.c:173
+msgid "unterminated address regex"
+msgstr "espressione regolare non terminata nell'indirizzo"
+
+# sed/compile.c:180
+#: sed/compile.c:174
+msgid "unterminated `s' command"
+msgstr "comando `s' non terminato"
+
+# sed/compile.c:181
+#: sed/compile.c:175
+msgid "unterminated `y' command"
+msgstr "comando `y' non terminato"
+
+# sed/compile.c:182
+#: sed/compile.c:176
+msgid "unknown option to `s'"
+msgstr "opzione di `s' sconosciuta"
+
+# sed/compile.c:183
+#: sed/compile.c:177
+msgid "multiple `p' options to `s' command"
+msgstr "opzioni `p' multiple al comando `s'"
+
+# sed/compile.c:184
+#: sed/compile.c:178
+msgid "multiple `g' options to `s' command"
+msgstr "opzioni `g' multiple al comando `s'"
+
+# sed/compile.c:186
+#: sed/compile.c:179
+msgid "multiple number options to `s' command"
+msgstr "opzioni numeriche multiple al comando `s'"
+
+# sed/compile.c:188
+#: sed/compile.c:180
+msgid "number option to `s' command may not be zero"
+msgstr "l'opzione numerica del comando `s' non può essere zero"
+
+# sed/compile.c:190
+#: sed/compile.c:181
+msgid "strings for `y' command are different lengths"
+msgstr "le stringhe per il comandi `y' hanno lunghezze diverse"
+
+#: sed/compile.c:182
+msgid "delimiter character is not a single-byte character"
+msgstr "il carattere delimitatore è multi-byte"
+
+#: sed/compile.c:183
+msgid "expected newer version of sed"
+msgstr "attesa una versione piu' recente di sed"
+
+# sed/compile.c:178
+#: sed/compile.c:184
+msgid "invalid usage of line address 0"
+msgstr "utilizzo non valido dell'indirizzo 0"
+
+# sed/compile.c:1319
+#: sed/compile.c:185
+#, c-format
+msgid "unknown command: `%c'"
+msgstr "comando sconosciuto: `%c'"
+
+# sed/compile.c:1340
+#: sed/compile.c:208
+#, c-format
+msgid "%s: file %s line %lu: %s\n"
+msgstr "%s: file %s riga %lu: %s\n"
+
+# sed/compile.c:1343
+#: sed/compile.c:211
+#, c-format
+msgid "%s: -e expression #%lu, char %lu: %s\n"
+msgstr "%s: espressione -e #%lu, carattere %lu: %s\n"
+
+# sed/compile.c:1543
+#: sed/compile.c:1665
+#, c-format
+msgid "can't find label for jump to `%s'"
+msgstr "impossibile trovare un'etichetta per il salto a `%s'"
+
+# sed/execute.c:516
+#: sed/execute.c:709
+#, c-format
+msgid "%s: can't read %s: %s\n"
+msgstr "%s: impossibile leggere %s: %s\n"
+
+# sed/execute.c:675
+#: sed/execute.c:740
+#, c-format
+msgid "couldn't edit %s: is a terminal"
+msgstr "impossibile modificare %s: è un terminale"
+
+#: sed/execute.c:745
+#, c-format
+msgid "couldn't edit %s: not a regular file"
+msgstr "impossibile modificare %s: non è un file normale"
+
+#: sed/execute.c:757
+#, c-format
+msgid "%s: warning: failed to set default file creation context to %s: %s"
+msgstr ""
+
+#: sed/execute.c:764
+#, c-format
+msgid "%s: warning: failed to get security context of %s: %s"
+msgstr ""
+
+# lib/utils.c:131
+#: sed/execute.c:783 sed/utils.c:227
+#, c-format
+msgid "couldn't open temporary file %s: %s"
+msgstr "impossibile aprire il file temporaneo %s: %s"
+
+# sed/execute.c:1003 sed/execute.c:1183
+#: sed/execute.c:1317 sed/execute.c:1497
+msgid "error in subprocess"
+msgstr "errore in un sottoprocesso"
+
+# sed/execute.c:1005
+#: sed/execute.c:1319
+msgid "option `e' not supported"
+msgstr "opzione `e' non supportata"
+
+# sed/execute.c:1185
+#: sed/execute.c:1499
+msgid "`e' command not supported"
+msgstr "comando `e' non supportato"
+
+#: sed/execute.c:1843
+msgid "no input files"
+msgstr "nessun file in ingresso"
+
+# lib/regcomp.c:658 sed/regex.c:47
+#: sed/regexp.c:41
+msgid "no previous regular expression"
+msgstr "occorre un'espressione regolare precedente"
+
+# sed/regex.c:48
+#: sed/regexp.c:42
+msgid "cannot specify modifiers on empty regexp"
+msgstr "non è possibile specificare dei modificatori per l'espressione vuota"
+
+# sed/regex.c:146
+#: sed/regexp.c:131
+#, c-format
+msgid "invalid reference \\%d on `s' command's RHS"
+msgstr "riferimento non valido \\%d nel secondo membro del comando `s'"
+
+#: sed/sed.c:97
+#, c-format
+msgid ""
+"GNU sed home page: <http://www.gnu.org/software/sed/>.\n"
+"General help using GNU software: <http://www.gnu.org/gethelp/>.\n"
+msgstr ""
+
+# sed/sed.c:132
+#: sed/sed.c:104
+#, fuzzy, c-format
+msgid ""
+"E-mail bug reports to: <%s>.\n"
+"Be sure to include the word ``%s'' somewhere in the ``Subject:'' field.\n"
+msgstr ""
+"Segnalare eventuali bug a: %s .\n"
+"Assicurarsi di includere la parola ``%s'' nell'oggetto del messaggio.\n"
+
+# sed/sed.c:98
+#: sed/sed.c:117
+msgid ""
+"  -R, --regexp-perl\n"
+"                 use Perl 5's regular expressions syntax in the script.\n"
+msgstr ""
+"  -R, --regexp-perl\n"
+"                 usa la sintassi Perl 5 per le espressioni regolari\n"
+
+#: sed/sed.c:122
+#, c-format
+msgid ""
+"Usage: %s [OPTION]... {script-only-if-no-other-script} [input-file]...\n"
+"\n"
+msgstr ""
+"Utilizzo: %s [OPZIONE]... {script-se-nessun-altro-specificato} [input-"
+"file]...\n"
+"\n"
+
+#: sed/sed.c:126
+#, c-format
+msgid ""
+"  -n, --quiet, --silent\n"
+"                 suppress automatic printing of pattern space\n"
+msgstr ""
+"  -n, --quiet, --silent\n"
+"                 sopprime la stampa automatica del pattern space\n"
+
+#: sed/sed.c:128
+#, c-format
+msgid ""
+"  -e script, --expression=script\n"
+"                 add the script to the commands to be executed\n"
+msgstr ""
+"  -e script, --expression=script\n"
+"                 aggiunge lo script ai comandi da eseguire\n"
+
+#: sed/sed.c:130
+#, c-format
+msgid ""
+"  -f script-file, --file=script-file\n"
+"                 add the contents of script-file to the commands to be "
+"executed\n"
+msgstr ""
+"  -f script-file, --file=file-script\n"
+"                 aggiunge il contenuto di file-script ai comandi da "
+"eseguire\n"
+
+#: sed/sed.c:133
+#, c-format
+msgid ""
+"  --follow-symlinks\n"
+"                 follow symlinks when processing in place\n"
+msgstr ""
+"  --follow-symlinks\n"
+"                 segue i link simbolici quando viene utilizzato -i\n"
+
+#: sed/sed.c:136
+#, c-format
+msgid ""
+"  -i[SUFFIX], --in-place[=SUFFIX]\n"
+"                 edit files in place (makes backup if extension supplied)\n"
+msgstr ""
+"  -i[SUFFIX], --in-place[=SUFFIX]\n"
+"                 scrive il risultato sul file originale (facendo una copia\n"
+"                 se è fornita un'estensione)\n"
+
+#: sed/sed.c:139
+#, c-format
+msgid ""
+"  -b, --binary\n"
+"                 open files in binary mode (CR+LFs are not processed "
+"specially)\n"
+msgstr ""
+"  -b, --binary\n"
+"                 apre i file in modo binario (lasciando le sequenze CR+LF "
+"immutate)\n"
+
+#: sed/sed.c:142
+#, c-format
+msgid ""
+"  -l N, --line-length=N\n"
+"                 specify the desired line-wrap length for the `l' command\n"
+msgstr ""
+"  -l N, --line-length=N\n"
+"                 specifica la lunghezza delle linee generate dal comando "
+"`l'\n"
+
+#: sed/sed.c:144
+#, c-format
+msgid ""
+"  --posix\n"
+"                 disable all GNU extensions.\n"
+msgstr ""
+"  --posix\n"
+"                 disabilita tutte le estensioni GNU.\n"
+
+# sed/sed.c:98
+#: sed/sed.c:146
+#, c-format
+msgid ""
+"  -r, --regexp-extended\n"
+"                 use extended regular expressions in the script.\n"
+msgstr ""
+"  -r, --regexp-extended\n"
+"                 usa la sintassi di `egrep' per le espressioni regolari\n"
+
+#: sed/sed.c:151
+#, c-format
+msgid ""
+"  -s, --separate\n"
+"                 consider files as separate rather than as a single "
+"continuous\n"
+"                 long stream.\n"
+msgstr ""
+"  -s, --separate\n"
+"                 considera i file di input come separati invece che come un\n"
+"                 unico file lungo.\n"
+
+#: sed/sed.c:154
+#, c-format
+msgid ""
+"  -u, --unbuffered\n"
+"                 load minimal amounts of data from the input files and "
+"flush\n"
+"                 the output buffers more often\n"
+msgstr ""
+"  -u, --unbuffered\n"
+"                 carica e visualizza i dati una a pezzetti piu' piccoli\n"
+
+#: sed/sed.c:157
+#, c-format
+msgid "      --help     display this help and exit\n"
+msgstr "      --help     mostra questo aiuto ed esce\n"
+
+#: sed/sed.c:158
+#, c-format
+msgid "      --version  output version information and exit\n"
+msgstr "      --version  stampa le informazioni sulla versione ed esce\n"
+
+#: sed/sed.c:159
+#, c-format
+msgid ""
+"\n"
+"If no -e, --expression, -f, or --file option is given, then the first\n"
+"non-option argument is taken as the sed script to interpret.  All\n"
+"remaining arguments are names of input files; if no input files are\n"
+"specified, then the standard input is read.\n"
+"\n"
+msgstr ""
+"\n"
+"Se non è usata nessuna delle opzioni -e, --expression, -f o --file allora "
+"il\n"
+"primo argomento che non è una opzione sarà usato come lo script sed da\n"
+"interpretare. Tutti gli argomenti rimanenti sono nomi di file di input; se "
+"non\n"
+"sono specificati file di input sarà letto lo standard input.\n"
+"\n"
+
+# sed/sed.c:255
+#: sed/sed.c:315
+#, c-format
+msgid "super-sed version %s\n"
+msgstr "super-sed versione %s\n"
+
+# sed/sed.c:256
+#: sed/sed.c:316
+#, c-format
+msgid ""
+"based on GNU sed version %s\n"
+"\n"
+msgstr ""
+"basato su GNU sed versione %s\n"
+"\n"
+
+# sed/sed.c:258
+#: sed/sed.c:318
+#, c-format
+msgid "GNU sed version %s\n"
+msgstr "GNU sed versione %s\n"
+
+# sed/sed.c:260
+#: sed/sed.c:320
+#, fuzzy, c-format
+msgid ""
+"Copyright (C) %d Free Software Foundation, Inc.\n"
+"This is free software; see the source for copying conditions.  There is NO\n"
+"warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE,\n"
+"to the extent permitted by law.\n"
+msgstr ""
+"%s\n"
+"Questo è software libero; si veda il sorgente per le condizioni di "
+"copiatura.\n"
+"NON c'è garanzia; neppure di COMMERCIABILITA' o IDONEITA' AD UN PARTICOLARE\n"
+"SCOPO, nei limiti permessi dalla legge.\n"
+
+# sed/execute.c:516
+#: sed/utils.c:93 sed/utils.c:438
+#, c-format
+msgid "cannot remove %s: %s"
+msgstr "impossibile rimuovere %s: %s"
+
+# lib/utils.c:131
+#: sed/utils.c:163
+#, c-format
+msgid "couldn't open file %s: %s"
+msgstr "impossibile aprire il file %s: %s"
+
+# lib/utils.c:161
+#: sed/utils.c:186
+#, c-format
+msgid "couldn't attach to %s: %s"
+msgstr "impossibile accedere a %s: %s"
+
+# lib/utils.c:161
+#: sed/utils.c:245
+#, c-format
+msgid "couldn't write %d item to %s: %s"
+msgid_plural "couldn't write %d items to %s: %s"
+msgstr[0] "impossibile scrivere %d elemento su %s: %s"
+msgstr[1] "impossibile scrivere %d elementi su %s: %s"
+
+# lib/utils.c:176
+#: sed/utils.c:260 sed/utils.c:276
+#, c-format
+msgid "read error on %s: %s"
+msgstr "errore di lettura su %s: %s"
+
+# lib/utils.c:131
+#: sed/utils.c:378
+#, c-format
+msgid "couldn't follow symlink %s: %s"
+msgstr "impossibile seguire il link simbolico %s: %s"
+
+# sed/execute.c:516
+#: sed/utils.c:412
+#, c-format
+msgid "cannot stat %s: %s"
+msgstr "impossibile ottenere informazioni su %s: %s"
+
+# sed/execute.c:516
+#: sed/utils.c:443
+#, c-format
+msgid "cannot rename %s: %s"
+msgstr "impossibile rinominare %s: %s"
+
+# lib/regcomp.c:179
+#: lib/regcomp.c:134
+msgid "Success"
+msgstr "Successo"
+
+# lib/regcomp.c:182
+#: lib/regcomp.c:137
+msgid "No match"
+msgstr "Nessuna corrispondenza trovata"
+
+# lib/regcomp.c:185
+#: lib/regcomp.c:140
+msgid "Invalid regular expression"
+msgstr "Espressione regolare non valida"
+
+# lib/regcomp.c:188
+#: lib/regcomp.c:143
+msgid "Invalid collation character"
+msgstr "Carattere di ordinamento non valido"
+
+# lib/regcomp.c:191
+#: lib/regcomp.c:146
+msgid "Invalid character class name"
+msgstr "Nome non valido per una classe di caratteri"
+
+# lib/regcomp.c:194
+#: lib/regcomp.c:149
+msgid "Trailing backslash"
+msgstr "Barra rovesciata alla fine dell'espressione regolare"
+
+# lib/regcomp.c:197
+#: lib/regcomp.c:152
+msgid "Invalid back reference"
+msgstr "Riferimento non valido"
+
+# lib/regcomp.c:200
+#: lib/regcomp.c:155
+msgid "Unmatched [ or [^"
+msgstr "`[' non bilanciata"
+
+# lib/regcomp.c:203
+#: lib/regcomp.c:158
+msgid "Unmatched ( or \\("
+msgstr "`(' o `\\(' non bilanciata"
+
+# lib/regcomp.c:206
+#: lib/regcomp.c:161
+msgid "Unmatched \\{"
+msgstr "`\\{' non bilanciata"
+
+# lib/regcomp.c:209
+#: lib/regcomp.c:164
+msgid "Invalid content of \\{\\}"
+msgstr "numero di ripetizioni specificato tra graffe non valido"
+
+# lib/regcomp.c:212
+#: lib/regcomp.c:167
+msgid "Invalid range end"
+msgstr "Fine dell'intervallo non valida"
+
+# lib/regcomp.c:215
+#: lib/regcomp.c:170
+msgid "Memory exhausted"
+msgstr "Memoria esaurita"
+
+# lib/regcomp.c:218
+#: lib/regcomp.c:173
+msgid "Invalid preceding regular expression"
+msgstr "Espressione regolare precedente non valida"
+
+# lib/regcomp.c:221
+#: lib/regcomp.c:176
+msgid "Premature end of regular expression"
+msgstr "Fine prematura dell'espressione regolare"
+
+# lib/regcomp.c:224
+#: lib/regcomp.c:179
+msgid "Regular expression too big"
+msgstr "Espressione regolare troppo grande"
+
+# lib/regcomp.c:227
+#: lib/regcomp.c:182
+msgid "Unmatched ) or \\)"
+msgstr "`)' o `\\)' non bilanciata"
+
+# lib/regcomp.c:658 sed/regex.c:47
+#: lib/regcomp.c:703
+msgid "No previous regular expression"
+msgstr "Occorre un'espressione regolare precedente"

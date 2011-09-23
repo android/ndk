@@ -1,0 +1,582 @@
+# Serbian translation of `sed'.
+# Copyright (C) 2006 Free Software Foundation, Inc.
+# This file is distributed under the same license as the `sed' package.
+# Aleksandar Jelenak <jelenak@verizon.net>, 2006.
+msgid ""
+msgstr ""
+"Project-Id-Version: sed 4.1.5\n"
+"Report-Msgid-Bugs-To: bug-gnu-utils@gnu.org\n"
+"POT-Creation-Date: 2009-06-27 15:08+0200\n"
+"PO-Revision-Date: 2006-12-07 11:42-0500\n"
+"Last-Translator: Aleksandar Jelenak <jelenak@verizon.net>\n"
+"Language-Team: Serbian <gnu@prevod.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3;    plural=n%10==1 && n%100!=11 ? 0 :  (n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+#: sed/compile.c:161
+msgid "multiple `!'s"
+msgstr "више „!“"
+
+#: sed/compile.c:162
+msgid "unexpected `,'"
+msgstr "неочекиван „,“"
+
+#: sed/compile.c:163
+msgid "invalid usage of +N or ~N as first address"
+msgstr "неважећа употреба +N или ~N као прве адресе"
+
+#: sed/compile.c:164
+msgid "unmatched `{'"
+msgstr "неспарена „{“"
+
+#: sed/compile.c:165
+msgid "unexpected `}'"
+msgstr "неочекивана „}“"
+
+#: sed/compile.c:166
+msgid "extra characters after command"
+msgstr "вишак знакова после наредбе"
+
+#: sed/compile.c:167
+msgid "expected \\ after `a', `c' or `i'"
+msgstr "очекивано \\ после „a“, „c“ или „i“"
+
+#: sed/compile.c:168
+msgid "`}' doesn't want any addresses"
+msgstr "„}“ не захтева икакве адресе"
+
+#: sed/compile.c:169
+msgid ": doesn't want any addresses"
+msgstr ": не захтева икакве адресе"
+
+#: sed/compile.c:170
+msgid "comments don't accept any addresses"
+msgstr "коментари не прихватају икакве адресе"
+
+#: sed/compile.c:171
+msgid "missing command"
+msgstr "недостаје наредба"
+
+#: sed/compile.c:172
+msgid "command only uses one address"
+msgstr "наредба користи само једну адресу"
+
+#: sed/compile.c:173
+msgid "unterminated address regex"
+msgstr "незавршена адреса рег. израза"
+
+#: sed/compile.c:174
+msgid "unterminated `s' command"
+msgstr "незавршена наредба „s“"
+
+#: sed/compile.c:175
+msgid "unterminated `y' command"
+msgstr "незавршена наредба „y“"
+
+#: sed/compile.c:176
+msgid "unknown option to `s'"
+msgstr "непозната опција за „s“"
+
+#: sed/compile.c:177
+msgid "multiple `p' options to `s' command"
+msgstr "више „p“ опција за „s“ наредбу"
+
+#: sed/compile.c:178
+msgid "multiple `g' options to `s' command"
+msgstr "више „g“ опција за „s“ наредбу"
+
+#: sed/compile.c:179
+msgid "multiple number options to `s' command"
+msgstr "више бројчаних опција за „s“ наредбу"
+
+#: sed/compile.c:180
+msgid "number option to `s' command may not be zero"
+msgstr "бројчана опција наредбе „s“ не може бити нула"
+
+#: sed/compile.c:181
+msgid "strings for `y' command are different lengths"
+msgstr "ниске за команду „y“ су различитих дужина"
+
+#: sed/compile.c:182
+msgid "delimiter character is not a single-byte character"
+msgstr "раздвојник није једнобајтни знак"
+
+#: sed/compile.c:183
+msgid "expected newer version of sed"
+msgstr "очекивана новија верзија sed-а"
+
+#: sed/compile.c:184
+msgid "invalid usage of line address 0"
+msgstr "неправилна употреба адресе реда 0"
+
+#: sed/compile.c:185
+#, c-format
+msgid "unknown command: `%c'"
+msgstr "непозната наредба: „%c“"
+
+#: sed/compile.c:208
+#, c-format
+msgid "%s: file %s line %lu: %s\n"
+msgstr "%s: датотека %s ред %lu: %s\n"
+
+#: sed/compile.c:211
+#, c-format
+msgid "%s: -e expression #%lu, char %lu: %s\n"
+msgstr "%s: -e израз #%lu, знак %lu: %s\n"
+
+#: sed/compile.c:1665
+#, c-format
+msgid "can't find label for jump to `%s'"
+msgstr "не могу да нађем ознаку за скок на „%s“"
+
+#: sed/execute.c:709
+#, c-format
+msgid "%s: can't read %s: %s\n"
+msgstr "%s: не може читати  %s: %s\n"
+
+#: sed/execute.c:740
+#, c-format
+msgid "couldn't edit %s: is a terminal"
+msgstr "не могу уредити %s: терминал је"
+
+#: sed/execute.c:745
+#, c-format
+msgid "couldn't edit %s: not a regular file"
+msgstr "не може уредити %s: није обична датотека"
+
+#: sed/execute.c:757
+#, c-format
+msgid "%s: warning: failed to set default file creation context to %s: %s"
+msgstr ""
+
+#: sed/execute.c:764
+#, c-format
+msgid "%s: warning: failed to get security context of %s: %s"
+msgstr ""
+
+#: sed/execute.c:783 sed/utils.c:227
+#, c-format
+msgid "couldn't open temporary file %s: %s"
+msgstr "не могу отворити привремену датотеку %s: %s"
+
+#: sed/execute.c:1317 sed/execute.c:1497
+msgid "error in subprocess"
+msgstr "грешка у потпроцесу"
+
+#: sed/execute.c:1319
+msgid "option `e' not supported"
+msgstr "опција „e“ није подржана"
+
+#: sed/execute.c:1499
+msgid "`e' command not supported"
+msgstr "наредба „e“ није подржана"
+
+#: sed/execute.c:1843
+msgid "no input files"
+msgstr "нема улазних датотека"
+
+#: sed/regexp.c:41
+msgid "no previous regular expression"
+msgstr "без претходног регуларног израза"
+
+#: sed/regexp.c:42
+msgid "cannot specify modifiers on empty regexp"
+msgstr "не може навести измењивач празном рег. изразу"
+
+#: sed/regexp.c:131
+#, c-format
+msgid "invalid reference \\%d on `s' command's RHS"
+msgstr "неисправна референца \\%d на десној страни наредбе „s“"
+
+#: sed/sed.c:97
+#, c-format
+msgid ""
+"GNU sed home page: <http://www.gnu.org/software/sed/>.\n"
+"General help using GNU software: <http://www.gnu.org/gethelp/>.\n"
+msgstr ""
+
+#: sed/sed.c:104
+#, fuzzy, c-format
+msgid ""
+"E-mail bug reports to: <%s>.\n"
+"Be sure to include the word ``%s'' somewhere in the ``Subject:'' field.\n"
+msgstr ""
+"Епошта за пријаву грешака: %s .\n"
+"Постарајте се да укључите реч „%s“ негде у „Subject:“ пољу.\n"
+
+#: sed/sed.c:117
+msgid ""
+"  -R, --regexp-perl\n"
+"                 use Perl 5's regular expressions syntax in the script.\n"
+msgstr ""
+"  -R, --regexp-perl\n"
+"                 користи у спису синтаксу Перла 5 за регуларне изразе.\n"
+
+#: sed/sed.c:122
+#, c-format
+msgid ""
+"Usage: %s [OPTION]... {script-only-if-no-other-script} [input-file]...\n"
+"\n"
+msgstr ""
+"Употреба: %s [ОПЦИЈА]... {скрипт-само-ако-нема-другог-скрипта} [улаз-"
+"датотека]...\n"
+"\n"
+
+#: sed/sed.c:126
+#, c-format
+msgid ""
+"  -n, --quiet, --silent\n"
+"                 suppress automatic printing of pattern space\n"
+msgstr ""
+"  -n, --quiet, --silent\n"
+"                 обустави аутоматски испис простора образаца\n"
+
+#: sed/sed.c:128
+#, c-format
+msgid ""
+"  -e script, --expression=script\n"
+"                 add the script to the commands to be executed\n"
+msgstr ""
+"  -e спис, --expression=спис\n"
+"                 додај спис извршним наредбама\n"
+
+#: sed/sed.c:130
+#, c-format
+msgid ""
+"  -f script-file, --file=script-file\n"
+"                 add the contents of script-file to the commands to be "
+"executed\n"
+msgstr ""
+"  -f списотека, --file=списотека\n"
+"                 додај садржај списотеке извршним наредбама\n"
+
+#: sed/sed.c:133
+#, c-format
+msgid ""
+"  --follow-symlinks\n"
+"                 follow symlinks when processing in place\n"
+msgstr ""
+
+#: sed/sed.c:136
+#, c-format
+msgid ""
+"  -i[SUFFIX], --in-place[=SUFFIX]\n"
+"                 edit files in place (makes backup if extension supplied)\n"
+msgstr ""
+"  -i[СУФИКС], --in-place[=СУФИКС]\n"
+"                 уређуј датотеке у месту (прави резервну копију ако је дат\n"
+"                 наставак)\n"
+
+#: sed/sed.c:139
+#, c-format
+msgid ""
+"  -b, --binary\n"
+"                 open files in binary mode (CR+LFs are not processed "
+"specially)\n"
+msgstr ""
+
+#: sed/sed.c:142
+#, c-format
+msgid ""
+"  -l N, --line-length=N\n"
+"                 specify the desired line-wrap length for the `l' command\n"
+msgstr ""
+"  -l N, --line-length=N\n"
+"                 задај жељену ширину реда за наредбу „l“\n"
+
+#: sed/sed.c:144
+#, c-format
+msgid ""
+"  --posix\n"
+"                 disable all GNU extensions.\n"
+msgstr ""
+"  --posix\n"
+"                 онемогући све ГНУ додатке.\n"
+
+#: sed/sed.c:146
+#, c-format
+msgid ""
+"  -r, --regexp-extended\n"
+"                 use extended regular expressions in the script.\n"
+msgstr ""
+"  -r, --regexp-extended\n"
+"                 користи проширене регуларне изразе у спису.\n"
+
+#: sed/sed.c:151
+#, c-format
+msgid ""
+"  -s, --separate\n"
+"                 consider files as separate rather than as a single "
+"continuous\n"
+"                 long stream.\n"
+msgstr ""
+"  -s, --separate\n"
+"                 посматрај датотеке одвојено а не као један непрекидан ток\n"
+
+#: sed/sed.c:154
+#, c-format
+msgid ""
+"  -u, --unbuffered\n"
+"                 load minimal amounts of data from the input files and "
+"flush\n"
+"                 the output buffers more often\n"
+msgstr ""
+"  -u, --unbuffered\n"
+"                 учитавај минималне количине података из улазних датотека и\n"
+"                 чешће празни излазне бафере\n"
+
+#: sed/sed.c:157
+#, c-format
+msgid "      --help     display this help and exit\n"
+msgstr "      --help     прикажи ово објашњење и заврши\n"
+
+#: sed/sed.c:158
+#, c-format
+msgid "      --version  output version information and exit\n"
+msgstr "      --version  испиши верзију и заврши\n"
+
+#: sed/sed.c:159
+#, c-format
+msgid ""
+"\n"
+"If no -e, --expression, -f, or --file option is given, then the first\n"
+"non-option argument is taken as the sed script to interpret.  All\n"
+"remaining arguments are names of input files; if no input files are\n"
+"specified, then the standard input is read.\n"
+"\n"
+msgstr ""
+"\n"
+"Уколико „-e“, „--expression“, „-f“, или „--file“ опција није задата онда\n"
+"се први ванопциони аргумент узима као сед спис за тумачење. Сви преостали\n"
+"аргументи су имена улазних датотека; ако они нису задати, онда се чита са\n"
+"стандардног улаза.\n"
+"\n"
+
+#: sed/sed.c:315
+#, c-format
+msgid "super-sed version %s\n"
+msgstr "super-sed верзија %s\n"
+
+#: sed/sed.c:316
+#, c-format
+msgid ""
+"based on GNU sed version %s\n"
+"\n"
+msgstr ""
+"засновано на ГНУ sed верзија %s\n"
+"\n"
+
+#: sed/sed.c:318
+#, c-format
+msgid "GNU sed version %s\n"
+msgstr "ГНУ sed верзија %s\n"
+
+#: sed/sed.c:320
+#, fuzzy, c-format
+msgid ""
+"Copyright (C) %d Free Software Foundation, Inc.\n"
+"This is free software; see the source for copying conditions.  There is NO\n"
+"warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE,\n"
+"to the extent permitted by law.\n"
+msgstr ""
+"%s\n"
+"Ово је слободан софтвер; видети изворни кôд за услове умножавања. БЕЗ "
+"икакве\n"
+"гаранције; чак ни о ТРЖИШНОСТИ или ИСПУЊАВАЊУ ОДРЕЂЕНЕ ПОТРЕБЕ.\n"
+
+#: sed/utils.c:93 sed/utils.c:438
+#, c-format
+msgid "cannot remove %s: %s"
+msgstr "не може уклонити %s: %s"
+
+#: sed/utils.c:163
+#, c-format
+msgid "couldn't open file %s: %s"
+msgstr "не може отворити датотеку %s: %s"
+
+#: sed/utils.c:186
+#, fuzzy, c-format
+msgid "couldn't attach to %s: %s"
+msgstr "неуспешан запис %d ставке на %s: %s"
+
+#: sed/utils.c:245
+#, c-format
+msgid "couldn't write %d item to %s: %s"
+msgid_plural "couldn't write %d items to %s: %s"
+msgstr[0] "неуспешан запис %d ставке на %s: %s"
+msgstr[1] "неуспешан запис %d ставке на %s: %s"
+msgstr[2] "неуспешан запис %d ставки на %s: %s"
+
+#: sed/utils.c:260 sed/utils.c:276
+#, c-format
+msgid "read error on %s: %s"
+msgstr "грешка учитавања на %s: %s"
+
+#: sed/utils.c:378
+#, fuzzy, c-format
+msgid "couldn't follow symlink %s: %s"
+msgstr "не може отворити датотеку %s: %s"
+
+#: sed/utils.c:412
+#, fuzzy, c-format
+msgid "cannot stat %s: %s"
+msgstr "не може променити име %s: %s"
+
+#: sed/utils.c:443
+#, c-format
+msgid "cannot rename %s: %s"
+msgstr "не може променити име %s: %s"
+
+#: lib/regcomp.c:134
+msgid "Success"
+msgstr "Успех"
+
+#: lib/regcomp.c:137
+msgid "No match"
+msgstr "Без поклапања"
+
+#: lib/regcomp.c:140
+msgid "Invalid regular expression"
+msgstr "Неисправни регуларни израз"
+
+#: lib/regcomp.c:143
+msgid "Invalid collation character"
+msgstr "Неисправни знак прикупљања"
+
+#: lib/regcomp.c:146
+msgid "Invalid character class name"
+msgstr "Неисправно име класе знакова"
+
+#: lib/regcomp.c:149
+msgid "Trailing backslash"
+msgstr "Пратећа обрнута коса црта"
+
+#: lib/regcomp.c:152
+msgid "Invalid back reference"
+msgstr "Неисправна повратна референца"
+
+#: lib/regcomp.c:155
+msgid "Unmatched [ or [^"
+msgstr "Неспарено [ или ^["
+
+#: lib/regcomp.c:158
+msgid "Unmatched ( or \\("
+msgstr "Неспарено ( или \\("
+
+#: lib/regcomp.c:161
+msgid "Unmatched \\{"
+msgstr "Неспарено \\{"
+
+#: lib/regcomp.c:164
+msgid "Invalid content of \\{\\}"
+msgstr "Неисправни садржај у \\{\\}"
+
+#: lib/regcomp.c:167
+msgid "Invalid range end"
+msgstr "Неисправни крај опсега"
+
+#: lib/regcomp.c:170
+msgid "Memory exhausted"
+msgstr "Меморија исцрпљена"
+
+#: lib/regcomp.c:173
+msgid "Invalid preceding regular expression"
+msgstr "Неисправан претходећи регуларни израз"
+
+#: lib/regcomp.c:176
+msgid "Premature end of regular expression"
+msgstr "Преран крај регуларног израза"
+
+#: lib/regcomp.c:179
+msgid "Regular expression too big"
+msgstr "Регуларни израз сувише велик"
+
+#: lib/regcomp.c:182
+msgid "Unmatched ) or \\)"
+msgstr "Неспарено ) или \\)"
+
+#: lib/regcomp.c:703
+msgid "No previous regular expression"
+msgstr "Без претходног регуларног израза"
+
+# Тражи се бољи превод за „pushback“.
+#~ msgid "Called savchar() with unexpected pushback (%x)"
+#~ msgstr "Позван savchar() са неочекиваном вредношћу аргумента (%x)"
+
+#~ msgid "INTERNAL ERROR: bad address type"
+#~ msgstr "УНУТРАШЊА ГРЕШКА: лоша врста адресе"
+
+#~ msgid "INTERNAL ERROR: Bad cmd %c"
+#~ msgstr "УНУТРАШЊА ГРЕШКА: Лоша наредба %c"
+
+#~ msgid ""
+#~ "Usage: %s [OPTION]... {script-only-if-no-other-script} [input-file]...\n"
+#~ "\n"
+#~ "  -n, --quiet, --silent\n"
+#~ "                 suppress automatic printing of pattern space\n"
+#~ "  -e script, --expression=script\n"
+#~ "                 add the script to the commands to be executed\n"
+#~ "  -f script-file, --file=script-file\n"
+#~ "                 add the contents of script-file to the commands to be "
+#~ "executed\n"
+#~ "  -i[suffix], --in-place[=suffix]\n"
+#~ "                 edit files in place (makes backup if extension "
+#~ "supplied)\n"
+#~ "  -l N, --line-length=N\n"
+#~ "                 specify the desired line-wrap length for the `l' "
+#~ "command\n"
+#~ "  -r, --regexp-extended\n"
+#~ "                 use extended regular expressions in the script.\n"
+#~ "%s  -s, --separate\n"
+#~ "                 consider files as separate rather than as a single "
+#~ "continuous\n"
+#~ "                 long stream.\n"
+#~ "  -u, --unbuffered\n"
+#~ "                 load minimal amounts of data from the input files and "
+#~ "flush\n"
+#~ "                 the output buffers more often\n"
+#~ "      --help     display this help and exit\n"
+#~ "  -V, --version  output version information and exit\n"
+#~ "\n"
+#~ "If no -e, --expression, -f, or --file option is given, then the first\n"
+#~ "non-option argument is taken as the sed script to interpret.  All\n"
+#~ "remaining arguments are names of input files; if no input files are\n"
+#~ "specified, then the standard input is read.\n"
+#~ "\n"
+#~ msgstr ""
+#~ "Употреба: %s [ОПЦИЈА]... {спис-само-ако-без-другог-списа} [улаз-"
+#~ "датотека]...\n"
+#~ "\n"
+#~ "  -n, --quiet, --silent\n"
+#~ "                 спречи аутоматско исписивање образаца\n"
+#~ "  -e СПИС, --expression=СПИС\n"
+#~ "                 додај СПИС наредбама за извршавање\n"
+#~ "  -f СПИС, --file=СПИС\n"
+#~ "                 додај садржај СПИС наредбама за извршавање\n"
+#~ "  -i[суфикс], --in-place[=суфикс]\n"
+#~ "                 уређуј датотеке у месту (прави резервне ако је дата "
+#~ "екстензија)\n"
+#~ "  -l БРОЈ, --line-length=БРОЈ\n"
+#~ "                 задај жељену дужину реда за наредбу „l“\n"
+#~ "  -r, --regexp-extended\n"
+#~ "                 користи проширене регуларне изразе у спису\n"
+#~ "%s  -s, --separate\n"
+#~ "                  разматрај датотеке понаособ а не заједно као једну\n"
+#~ "  -u, --unbuffered\n"
+#~ "                 учитавај минималне количине података из улазних датотека "
+#~ "и празни\n"
+#~ "                 излазне бафере чешће\n"
+#~ "      --help     прикажи ово објашњење и заврши\n"
+#~ "  -V, --version  испиши верзију и заврши\n"
+#~ "\n"
+#~ "Ако опције „-e“, „--expression“, „-f“, или „--file“ нису дате, онда се "
+#~ "први\n"
+#~ "аргумент који није опција узима за sed спис који треба извршити. Сви "
+#~ "преостали\n"
+#~ "аргументи су имена улазних датотека; ако улазне датотеке нису задате, "
+#~ "онда се\n"
+#~ "чита стандардни улаз.\n"
+#~ "\n"

@@ -1,0 +1,22 @@
+1
+s%@CFLAGS@%%g
+3
+s%@CXXFLAGS@%-x c++%g
+5
+s%@LDFLAGS@%-L/usr/lib%g
+7
+s%@exec_prefix@%%g
+9
+s%@RANLIB@%$RANLIB%g
+11
+s%@CPP@%$CPP%g
+13
+s%@XINCLUDES@%$XINCLUDES%g
+15
+s%@XPROGS@%$XPROGS%g
+17
+s%@TCLLIB@%$TCLLIB%g
+19
+s%@TKLIB@%$TKLIB%g
+21
+s%@EVENT_TYPE@%$EVENT_TYPE%g

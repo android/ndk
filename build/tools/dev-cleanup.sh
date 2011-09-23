@@ -36,6 +36,7 @@ fi
 rm -rf $DIR/platforms
 rm -rf $DIR/toolchains/*/prebuilt
 rm -rf $DIR/samples
+rm -rf $DIR/prebuilt
 
 # Remove prebuilt binaries
 rm -rf $DIR/$STLPORT_SUBDIR/libs

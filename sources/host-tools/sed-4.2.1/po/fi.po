@@ -1,0 +1,515 @@
+# translation of sed.pot to Finnish
+# Finnish translations for GNU sed.
+# Copyright © 2002, 2007, 2008 Free Software Foundation, Inc.
+#
+# Sami J. Laine <sami.laine@iki.fi>, 2002.
+# Jorma Karvonen <karvjorm@users.sf.net>, 2007, 2008.
+msgid ""
+msgstr ""
+"Project-Id-Version: sed 4.2.0\n"
+"Report-Msgid-Bugs-To: bug-gnu-utils@gnu.org\n"
+"POT-Creation-Date: 2009-06-27 15:08+0200\n"
+"PO-Revision-Date: 2008-01-18 07:16+0200\n"
+"Last-Translator: Jorma Karvonen <karvjorm@users.sf.net>\n"
+"Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: KBabel 1.11.2\n"
+
+#: sed/compile.c:161
+msgid "multiple `!'s"
+msgstr "Useita ”!”-merkkejä"
+
+#: sed/compile.c:162
+msgid "unexpected `,'"
+msgstr "Odottamaton ”,”"
+
+#: sed/compile.c:163
+msgid "invalid usage of +N or ~N as first address"
+msgstr "Ensimmäisenä osoitteena ei voi olla ”+N” eikä ”~N”"
+
+#: sed/compile.c:164
+msgid "unmatched `{'"
+msgstr "Pariton ”{”"
+
+#: sed/compile.c:165
+msgid "unexpected `}'"
+msgstr "Pariton ”}”"
+
+#: sed/compile.c:166
+msgid "extra characters after command"
+msgstr "Ylimääräisiä merkkejä komennon jälkeen"
+
+#: sed/compile.c:167
+msgid "expected \\ after `a', `c' or `i'"
+msgstr "\\ odotettiin merkkien ”a”, ”c” tai ”i” jälkeen"
+
+#: sed/compile.c:168
+msgid "`}' doesn't want any addresses"
+msgstr "”}” ei tarvitse osoitteita"
+
+#: sed/compile.c:169
+msgid ": doesn't want any addresses"
+msgstr ": ei tarvitse osoitteita"
+
+#: sed/compile.c:170
+msgid "comments don't accept any addresses"
+msgstr "kommentit eivät hyväksy osoitteita"
+
+#: sed/compile.c:171
+msgid "missing command"
+msgstr "Puuttuva komento"
+
+#: sed/compile.c:172
+msgid "command only uses one address"
+msgstr "Komento käyttää vain yhtä osoitetta"
+
+#: sed/compile.c:173
+msgid "unterminated address regex"
+msgstr "Päättymätön osoite vakiolauseessa"
+
+#: sed/compile.c:174
+msgid "unterminated `s' command"
+msgstr "Päättymätön ”s”-komento"
+
+#: sed/compile.c:175
+msgid "unterminated `y' command"
+msgstr "Päättymätön ”y”-komento"
+
+#: sed/compile.c:176
+msgid "unknown option to `s'"
+msgstr "Tuntematon valitsin ”s”:lle"
+
+#: sed/compile.c:177
+msgid "multiple `p' options to `s' command"
+msgstr "useita ”p”-valitsimia ”s”-komennolle"
+
+#: sed/compile.c:178
+msgid "multiple `g' options to `s' command"
+msgstr "useita ”g”-valitsimia ”s”-komennolle"
+
+#: sed/compile.c:179
+msgid "multiple number options to `s' command"
+msgstr "useita valitsimia ”s”-komennolle"
+
+#: sed/compile.c:180
+msgid "number option to `s' command may not be zero"
+msgstr "numeerinen valitsin ”s”-komennolle ei voi olla nolla"
+
+#: sed/compile.c:181
+msgid "strings for `y' command are different lengths"
+msgstr "merkkijonot ”y”-komennolle ovat pituudeltaan vaihtelevia"
+
+#: sed/compile.c:182
+msgid "delimiter character is not a single-byte character"
+msgstr "erotinmerkki ei ole yksitavuinen merkki"
+
+#: sed/compile.c:183
+msgid "expected newer version of sed"
+msgstr "odotettiin uudempaa sed-versiota"
+
+#: sed/compile.c:184
+msgid "invalid usage of line address 0"
+msgstr "riviosoitteen nolla virheellinen käyttö"
+
+#: sed/compile.c:185
+#, c-format
+msgid "unknown command: `%c'"
+msgstr "Tuntematon komento: ”%c”"
+
+#: sed/compile.c:208
+#, c-format
+msgid "%s: file %s line %lu: %s\n"
+msgstr "%s: tiedosto %s rivi %lu: %s\n"
+
+#: sed/compile.c:211
+#, c-format
+msgid "%s: -e expression #%lu, char %lu: %s\n"
+msgstr "%s: -e lauseke #%lu, merkki %lu: %s\n"
+
+#: sed/compile.c:1665
+#, c-format
+msgid "can't find label for jump to `%s'"
+msgstr "Nimikettä hypylle kohteeseen ”%s” ei löydy"
+
+#: sed/execute.c:709
+#, c-format
+msgid "%s: can't read %s: %s\n"
+msgstr "%s: ei voida lukea syötettä %s: %s\n"
+
+#: sed/execute.c:740
+#, c-format
+msgid "couldn't edit %s: is a terminal"
+msgstr "ei voitu muokata %s: se on pääte"
+
+#: sed/execute.c:745
+#, c-format
+msgid "couldn't edit %s: not a regular file"
+msgstr "ei voitu muokata %s: se ei ole tavallinen tiedosto"
+
+#: sed/execute.c:757
+#, c-format
+msgid "%s: warning: failed to set default file creation context to %s: %s"
+msgstr ""
+
+#: sed/execute.c:764
+#, c-format
+msgid "%s: warning: failed to get security context of %s: %s"
+msgstr ""
+
+#: sed/execute.c:783 sed/utils.c:227
+#, c-format
+msgid "couldn't open temporary file %s: %s"
+msgstr "Väliaikaistiedostoa %s ei voitu avata: %s"
+
+#: sed/execute.c:1317 sed/execute.c:1497
+msgid "error in subprocess"
+msgstr "virhe lapsiprosessissa"
+
+#: sed/execute.c:1319
+msgid "option `e' not supported"
+msgstr "valitsin ”e” ei ole tuettu"
+
+#: sed/execute.c:1499
+msgid "`e' command not supported"
+msgstr "komento ”e” ei ole tuettu"
+
+#: sed/execute.c:1843
+msgid "no input files"
+msgstr "ei syötetiedostoja"
+
+#: sed/regexp.c:41
+msgid "no previous regular expression"
+msgstr "Ei aikaisempaa säännöllistä lauseketta"
+
+#: sed/regexp.c:42
+msgid "cannot specify modifiers on empty regexp"
+msgstr "Muuttajia ei voida määritellä tyhjään säännölliseen lausekkeeseen"
+
+#: sed/regexp.c:131
+#, c-format
+msgid "invalid reference \\%d on `s' command's RHS"
+msgstr "Virheellinen viittaus \\%d komennon ”s” oikealla puolella"
+
+#: sed/sed.c:97
+#, c-format
+msgid ""
+"GNU sed home page: <http://www.gnu.org/software/sed/>.\n"
+"General help using GNU software: <http://www.gnu.org/gethelp/>.\n"
+msgstr ""
+
+#: sed/sed.c:104
+#, fuzzy, c-format
+msgid ""
+"E-mail bug reports to: <%s>.\n"
+"Be sure to include the word ``%s'' somewhere in the ``Subject:'' field.\n"
+msgstr ""
+"Lähetä virheraportit osoitteeseen %s .\n"
+"Sisällytä sana ”%s” viestin aihekenttään (”Subject”-kenttään).\n"
+
+#: sed/sed.c:117
+msgid ""
+"  -R, --regexp-perl\n"
+"                 use Perl 5's regular expressions syntax in the script.\n"
+msgstr ""
+"  -R, --regexp-perl\n"
+"                 käytä Perl 5:n mukaista säännöllisten lauseiden\n"
+"                 syntaksia skriptissä.\n"
+
+#: sed/sed.c:122
+#, c-format
+msgid ""
+"Usage: %s [OPTION]... {script-only-if-no-other-script} [input-file]...\n"
+"\n"
+msgstr ""
+"Käyttö: %s [VALITSIN]... {skripti-vain-jos-ei-ole-muita-skriptejä} "
+"[syötetiedosto]...\n"
+"\n"
+
+#: sed/sed.c:126
+#, c-format
+msgid ""
+"  -n, --quiet, --silent\n"
+"                 suppress automatic printing of pattern space\n"
+msgstr ""
+"  -n, --quiet, --silent\n"
+"                 vaienna automaattinen mallitilan tulostus\n"
+
+#: sed/sed.c:128
+#, c-format
+msgid ""
+"  -e script, --expression=script\n"
+"                 add the script to the commands to be executed\n"
+msgstr ""
+"  -e script, --expression=skripti\n"
+"                 lisää skripti suoritettaviin komentoihin\n"
+
+#: sed/sed.c:130
+#, c-format
+msgid ""
+"  -f script-file, --file=script-file\n"
+"                 add the contents of script-file to the commands to be "
+"executed\n"
+msgstr ""
+"  -f script-file, --file=skriptitiedosto\n"
+"                 lisää skriptitiedoston sisältö suoritettaviin komentoihin\n"
+
+#: sed/sed.c:133
+#, c-format
+msgid ""
+"  --follow-symlinks\n"
+"                 follow symlinks when processing in place\n"
+msgstr ""
+"  --follow-symlinks\n"
+"                 seuraa symbolisia linkkejä, kun prosessoidaan paikallaan\n"
+
+#: sed/sed.c:136
+#, c-format
+msgid ""
+"  -i[SUFFIX], --in-place[=SUFFIX]\n"
+"                 edit files in place (makes backup if extension supplied)\n"
+msgstr ""
+"  -i[SUFFIKSI], --in-place[=SUFFIKSI]\n"
+"                 muokkaa tiedostoja paikallaan (tekee varmuuskopion, jos "
+"tiedostotarkennin on annettu)\n"
+
+#: sed/sed.c:139
+#, c-format
+msgid ""
+"  -b, --binary\n"
+"                 open files in binary mode (CR+LFs are not processed "
+"specially)\n"
+msgstr ""
+"  -b, --binary\n"
+"                 avaa tiedostot binääritilassa (rivinvaihtomerkkejä CR+LF ei "
+"erityisemmin prosessoida)\n"
+
+#: sed/sed.c:142
+#, c-format
+msgid ""
+"  -l N, --line-length=N\n"
+"                 specify the desired line-wrap length for the `l' command\n"
+msgstr ""
+"  -l N, --line-length=N\n"
+"                 määrittelee halutun rivinvaihtopituuden komennolle ”l”\n"
+
+#: sed/sed.c:144
+#, c-format
+msgid ""
+"  --posix\n"
+"                 disable all GNU extensions.\n"
+msgstr ""
+"  --posix\n"
+"                 passivoi kaikki GNU-laajennukset.\n"
+
+#: sed/sed.c:146
+#, c-format
+msgid ""
+"  -r, --regexp-extended\n"
+"                 use extended regular expressions in the script.\n"
+msgstr ""
+"  -r, --regexp-extended\n"
+"                 käytä laajennettuja säännöllisiä lausekkeita skriptissä.\n"
+
+#: sed/sed.c:151
+#, c-format
+msgid ""
+"  -s, --separate\n"
+"                 consider files as separate rather than as a single "
+"continuous\n"
+"                 long stream.\n"
+msgstr ""
+"  -s, --separate\n"
+"                 pidä tiedostoja erillisinä pikemmin kuin yhtenä jatkuvana\n"
+"                 pitkänä virtana.\n"
+
+#: sed/sed.c:154
+#, c-format
+msgid ""
+"  -u, --unbuffered\n"
+"                 load minimal amounts of data from the input files and "
+"flush\n"
+"                 the output buffers more often\n"
+msgstr ""
+"  -u, --unbuffered\n"
+"                 lataa syötetiedostoista minimimäärä dataa ja tyhjennä\n"
+"                 tulostepuskurit useammin\n"
+
+#: sed/sed.c:157
+#, c-format
+msgid "      --help     display this help and exit\n"
+msgstr "      --help     näytä tämä opaste ja poistu\n"
+
+#: sed/sed.c:158
+#, c-format
+msgid "      --version  output version information and exit\n"
+msgstr "      --version  tulosta versiotiedot ja poistu\n"
+
+#: sed/sed.c:159
+#, c-format
+msgid ""
+"\n"
+"If no -e, --expression, -f, or --file option is given, then the first\n"
+"non-option argument is taken as the sed script to interpret.  All\n"
+"remaining arguments are names of input files; if no input files are\n"
+"specified, then the standard input is read.\n"
+"\n"
+msgstr ""
+"\n"
+"Jos valitsimia ”-e”, ”--expression”, ”-f”, tai ”--file” ei ole annettu, "
+"silloin\n"
+"ensimmäistä ei-valitsinargumenttia pidetään tulkittavana sed-skriptinä.  "
+"Kaikki\n"
+"jäljelle jäävät argumentit ovat syötetiedostojen nimiä; jos syötetiedostoja "
+"ei\n"
+"ole määritelty, luetaan vakiosyötettä.\n"
+"\n"
+
+#: sed/sed.c:315
+#, c-format
+msgid "super-sed version %s\n"
+msgstr "super-sed versio %s\n"
+
+#: sed/sed.c:316
+#, c-format
+msgid ""
+"based on GNU sed version %s\n"
+"\n"
+msgstr ""
+"perustuu GNU sed versioon %s\n"
+"\n"
+
+#: sed/sed.c:318
+#, c-format
+msgid "GNU sed version %s\n"
+msgstr "GNU sed versio %s\n"
+
+#: sed/sed.c:320
+#, fuzzy, c-format
+msgid ""
+"Copyright (C) %d Free Software Foundation, Inc.\n"
+"This is free software; see the source for copying conditions.  There is NO\n"
+"warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE,\n"
+"to the extent permitted by law.\n"
+msgstr ""
+"%s\n"
+"Tämä ohjelma on vapaa ohjelmisto; tarkista jakeluehdot lähdekoodista.\n"
+"Tälle ohjelmalle ei anneta minkäänlaista takuuta; ei edes takuuta\n"
+"kaupallisesti hyväksyttävästä laadusta tai soveltuvuudesta tiettyyn\n"
+"tarkoitukseen.\n"
+
+#: sed/utils.c:93 sed/utils.c:438
+#, c-format
+msgid "cannot remove %s: %s"
+msgstr "ei voida siirtää %s: %s"
+
+#: sed/utils.c:163
+#, c-format
+msgid "couldn't open file %s: %s"
+msgstr "ei voitu avata tiedostoa %s: %s"
+
+#: sed/utils.c:186
+#, c-format
+msgid "couldn't attach to %s: %s"
+msgstr "ei voitu liittyä kohteeseen %s: %s"
+
+#: sed/utils.c:245
+#, c-format
+msgid "couldn't write %d item to %s: %s"
+msgid_plural "couldn't write %d items to %s: %s"
+msgstr[0] "%d kohdetta ei voitu kirjoittaa tulosteeseen %s: %s"
+msgstr[1] "%d kohdetta ei voitu kirjoittaa tulosteeseen %s: %s"
+
+#: sed/utils.c:260 sed/utils.c:276
+#, c-format
+msgid "read error on %s: %s"
+msgstr "lukuvirhe syötteessä %s: %s"
+
+#: sed/utils.c:378
+#, c-format
+msgid "couldn't follow symlink %s: %s"
+msgstr "ei voitu seurata symbolista linkkiä %s: %s"
+
+#: sed/utils.c:412
+#, c-format
+msgid "cannot stat %s: %s"
+msgstr "ei voida suorittaa stat-käskyä %s: %s"
+
+#: sed/utils.c:443
+#, c-format
+msgid "cannot rename %s: %s"
+msgstr "ei voida nimetä uudelleen %s: %s"
+
+#: lib/regcomp.c:134
+msgid "Success"
+msgstr "Onnistui"
+
+#: lib/regcomp.c:137
+msgid "No match"
+msgstr "Ei osumaa"
+
+#: lib/regcomp.c:140
+msgid "Invalid regular expression"
+msgstr "Virheellinen säännöllinen lauseke"
+
+#: lib/regcomp.c:143
+msgid "Invalid collation character"
+msgstr "Virheellinen vertailumerkki"
+
+#: lib/regcomp.c:146
+msgid "Invalid character class name"
+msgstr "Virheellinen merkkiluokan nimi"
+
+#: lib/regcomp.c:149
+msgid "Trailing backslash"
+msgstr "Seuraava kenoviiva"
+
+#: lib/regcomp.c:152
+msgid "Invalid back reference"
+msgstr "Virheellinen takaisinviittaus"
+
+#: lib/regcomp.c:155
+msgid "Unmatched [ or [^"
+msgstr "Pariton ”[” tai ”[^”"
+
+#: lib/regcomp.c:158
+msgid "Unmatched ( or \\("
+msgstr "Pariton ”(” tai ”\\(”"
+
+#: lib/regcomp.c:161
+msgid "Unmatched \\{"
+msgstr "Pariton ”\\{”"
+
+#: lib/regcomp.c:164
+msgid "Invalid content of \\{\\}"
+msgstr "Virheellinen sisältö \\{\\}:ssä"
+
+#: lib/regcomp.c:167
+msgid "Invalid range end"
+msgstr "Virheellinen lukualueen loppu"
+
+#: lib/regcomp.c:170
+msgid "Memory exhausted"
+msgstr "Muisti loppui"
+
+#: lib/regcomp.c:173
+msgid "Invalid preceding regular expression"
+msgstr "Virheellinen edeltävä säännöllinen lauseke"
+
+#: lib/regcomp.c:176
+msgid "Premature end of regular expression"
+msgstr "Ennenaikainen säännöllisen lausekkeen loppu"
+
+#: lib/regcomp.c:179
+msgid "Regular expression too big"
+msgstr "Säännöllinen lauseke on liian suuri"
+
+#: lib/regcomp.c:182
+msgid "Unmatched ) or \\)"
+msgstr "Pariton ”)” tai ”\\)”"
+
+#: lib/regcomp.c:703
+msgid "No previous regular expression"
+msgstr "Ei aikaisempaa säännöllistä lausetta"

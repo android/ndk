@@ -8,3 +8,4 @@ samples/
 platforms/
 toolchains/*/prebuilt/
 /ndk-stack*
+prebuilt/

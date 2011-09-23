@@ -1,0 +1,10 @@
+GNU sed version @VERSION@
+Copyright (C) @COPYRIGHT_YEAR@ Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE,
+to the extent permitted by law.
+
+GNU sed home page: <http://www.gnu.org/software/sed/>.
+General help using GNU software: <http://www.gnu.org/gethelp/>.
+E-mail bug reports to: <@PACKAGE_BUGREPORT@>.
+Be sure to include the word ``sed'' somewhere in the ``Subject:'' field.
