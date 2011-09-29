@@ -281,6 +281,11 @@ run strip $TOOLCHAIN_PATH/libexec/gcc/*/*/cc1$HOST_EXE
 run strip $TOOLCHAIN_PATH/libexec/gcc/*/*/cc1plus$HOST_EXE
 run strip $TOOLCHAIN_PATH/libexec/gcc/*/*/collect2$HOST_EXE
 
+# copy SOURCES file if present
+if [ -f "$SRC_DIR/SOURCES" ]; then
+    cp "$SRC_DIR/SOURCES" "$TOOLCHAIN_PATH/SOURCES"
+fi
+
 dump "Done."
 if [ -z "$OPTION_BUILD_OUT" ] ; then
     rm -rf $BUILD_OUT

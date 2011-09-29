@@ -168,6 +168,7 @@ toolchain_clone ()
         run git checkout $REVISION
         fail_panic "Could not checkout $1 ?"
     fi
+    (printf "%-32s " "toolchain/$1.git"; git log -1 --format=oneline) >> $SOURCES_LIST
     # get rid of .git directory, we won't need it.
     cd ..
     log "getting rid of .git directory for $1."
@@ -175,6 +176,10 @@ toolchain_clone ()
 }
 
 cd $TMPDIR
+
+SOURCES_LIST=$(pwd)/SOURCES
+rm -f $SOURCES_LIST && touch $SOURCES_LIST
+
 toolchain_clone binutils
 toolchain_clone build
 toolchain_clone gcc
@@ -227,6 +232,7 @@ else
     rm -rf $SRC_DIR && mkdir -p $SRC_DIR
     fail_panic "Could not create target source directory: $SRC_DIR"
     copy_directory "$TMPDIR" "$SRC_DIR"
+    cp $SOURCES_LIST $SRC_DIR/SOURCES
     fail_panic "Could not copy downloaded sources to: $SRC_DIR"
     dump "Toolchain sources downloaded and copied to $SRC_DIR"
 fi
