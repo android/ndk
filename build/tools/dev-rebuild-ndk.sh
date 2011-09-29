@@ -142,10 +142,6 @@ do
         ;;
     x86 )
         PRODUCT=generic_$ARCH
-
-        MPFR_VERSION="--mpfr-version=2.4.1"
-        GDB_VERSION="--gdb-version=7.1.x"
-        BINUTILS_VERSION="--binutils-version=2.20.1"
         ;;
     esac
 

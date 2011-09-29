@@ -45,7 +45,7 @@ register_var_option "--sysroot=<path>"   OPTION_SYSROOT   "Specify sysroot direc
 GDB_VERSION=7.1.x
 register_var_option "--gdb-version=<version>"  GDB_VERSION "Specify gdb version"
 
-BINUTILS_VERSION=2.19
+BINUTILS_VERSION=2.20.1
 register_var_option "--binutils-version=<version>" BINUTILS_VERSION "Specify binutils version"
 
 GMP_VERSION=4.2.4
