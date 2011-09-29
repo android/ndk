@@ -15,8 +15,8 @@
 // Use unix for streams
 #define _STLP_USE_UNIX_IO 1
 
-// No rtti support
-#define _STLP_NO_RTTI 1
+// We do have rtti support now through GAbi++
+#undef _STLP_NO_RTTI
 
 // C library is in the global namespace.
 #define _STLP_VENDOR_GLOBAL_CSTD 1
@@ -56,8 +56,8 @@
 // Define how to include our native headers.
 #define _STLP_NATIVE_HEADER(header) <usr/include/header>
 #define _STLP_NATIVE_C_HEADER(header) <../include/header>
-#define _STLP_NATIVE_CPP_C_HEADER(header) <../../system/include/header>
-#define _STLP_NATIVE_CPP_RUNTIME_HEADER(header) <../../system/include/header>
+#define _STLP_NATIVE_CPP_C_HEADER(header) <../../gabi++/include/header>
+#define _STLP_NATIVE_CPP_RUNTIME_HEADER(header) <../../gabi++/include/header>
 #define _STLP_NATIVE_OLD_STREAMS_HEADER(header) <usr/include/header>
 
 // Include most of the gcc settings.

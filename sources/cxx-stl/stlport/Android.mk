@@ -14,7 +14,7 @@ ifndef STLPORT_FORCE_REBUILD
   endif
 endif
 
-libstlport_path := $(call my-dir)
+libstlport_path := $(LOCAL_PATH)
 
 libstlport_src_files := \
         src/dll_main.cpp \
@@ -54,10 +54,17 @@ libstlport_cflags := -D_GNU_SOURCE
 libstlport_cppflags := -fuse-cxa-atexit
 libstlport_c_includes := $(libstlport_path)/stlport
 
-# Note: For now, this implementation depends on the system libstdc++
-#       We may want to avoid that in the future, i.e. in order to
-#       properly support exceptions and RTTI.
-libstlport_static_libs := libstdc++
+#It is much more practical to include the sources of GAbi++ in our builds
+# of STLport. This is similar to what the GNU libstdc++ does (it includes
+# its own copy of libsupc++)
+#
+# This simplifies usage, since you only have to list a single library
+# as a dependency, instead of two, especially when using the standalone
+# toolchain.
+#
+include $(dir $(LOCAL_PATH))/gabi++/sources.mk
+
+libstlport_c_includes += $(libgabi++_c_includes)
 
 ifneq ($(STLPORT_FORCE_REBUILD),true)
 
@@ -66,15 +73,15 @@ $(call ndk_log,Using prebuilt STLport libraries)
 include $(CLEAR_VARS)
 LOCAL_MODULE := stlport_static
 LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).a
-LOCAL_STATIC_LIBRARIES := $(libstlport_static_libs)
 LOCAL_EXPORT_C_INCLUDES := $(libstlport_c_includes)
+LOCAL_CPP_FEATURES := rtti
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := stlport_shared
 LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).so
-LOCAL_STATIC_LIBRARIES := $(libstlport_static_libs)
 LOCAL_EXPORT_C_INCLUDES := $(libstlport_c_includes)
+LOCAL_CPP_FEATURES := rtti
 include $(PREBUILT_SHARED_LIBRARY)
 
 else # STLPORT_FORCE_REBUILD == true
@@ -83,25 +90,26 @@ $(call ndk_log,Rebuilding STLport libraries from sources)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := stlport_static
+LOCAL_CPP_EXTENSION := .cpp .cc
 LOCAL_SRC_FILES := $(libstlport_src_files)
+LOCAL_SRC_FILES += $(libgabi++_src_files:%=../gabi++/%)
 LOCAL_CFLAGS := $(libstlport_cflags)
 LOCAL_CPPFLAGS := $(libstlport_cppflags)
 LOCAL_C_INCLUDES := $(libstlport_c_includes)
-LOCAL_STATIC_LIBRARIES := $(libstlport_static_libs)
 LOCAL_EXPORT_C_INCLUDES := $(libstlport_c_includes)
+LOCAL_CPP_FEATURES := rtti
 include $(BUILD_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := stlport_shared
+LOCAL_CPP_EXTENSION := .cpp .cc
 LOCAL_SRC_FILES := $(libstlport_src_files)
+LOCAL_SRC_FILES += $(libgabi++_src_files:%=../gabi++/%)
 LOCAL_CFLAGS := $(libstlport_cflags)
 LOCAL_CPPFLAGS := $(libstlport_cppflags)
 LOCAL_C_INCLUDES := $(libstlport_c_includes)
-LOCAL_STATIC_LIBRARIES := $(libstlport_static_libs)
 LOCAL_EXPORT_C_INCLUDES := $(libstlport_c_includes)
+LOCAL_CPP_FEATURES := rtti
 include $(BUILD_SHARED_LIBRARY)
 
 endif # STLPORT_FORCE_REBUILD == true
-
-# See above not above libstdc++ dependency.
-$(call import-module,cxx-stl/system)

@@ -165,6 +165,21 @@ builder_c_includes ()
     _builder_varadd _BUILD_C_INCLUDES $@
 }
 
+builder_reset_cflags ()
+{
+    _BUILD_CFLAGS=
+}
+
+builder_reset_cxxflags ()
+{
+    _BUILD_CXXFLAGS=
+}
+
+builder_reset_c_includes ()
+{
+    _BUILD_C_INCLUDES=
+}
+
 builder_link_with ()
 {
     local LIB

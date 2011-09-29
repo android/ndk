@@ -89,15 +89,17 @@ fi
 mkdir -p "$BUILD_DIR"
 fail_panic "Could not create build directory: $BUILD_DIR"
 
+GABIXX_SRCDIR=$ANDROID_NDK_ROOT/$GABIXX_SUBDIR
+GABIXX_CFLAGS="-O2 -DANDROID -D__ANDROID__ -I$GABIXX_SRCDIR/include"
+GABIXX_CXXFLAGS="-fno-exceptions -frtti"
+GABIXX_SOURCES=$(cd $ANDROID_NDK_ROOT/$GABIXX_SUBDIR && ls src/*.cc)
+GABIXX_LDFLAGS="-lstdc++"
+
 # Location of the STLPort source tree
 STLPORT_SRCDIR=$ANDROID_NDK_ROOT/$STLPORT_SUBDIR
-
-# Compiler flags we want to use
 STLPORT_CFLAGS="-DGNU_SOURCE -fPIC -O2 -I$STLPORT_SRCDIR/stlport -DANDROID -D__ANDROID__"
-STLPORT_CFLAGS=$STLPORT_CFLAGS" -I$ANDROID_NDK_ROOT/sources/cxx-stl/system/include"
-STLPORT_CXXFLAGS="-fuse-cxa-atexit -fno-exceptions -fno-rtti"
-
-# List of sources to compile
+STLPORT_CFLAGS=$STLPORT_CFLAGS" -I$ANDROID_NDK_ROOT/$GABIXX_SUBDIR/include"
+STLPORT_CXXFLAGS="-fuse-cxa-atexit -fno-exceptions -frtti"
 STLPORT_SOURCES=\
 "src/dll_main.cpp \
 src/fstream.cpp \
@@ -160,10 +162,19 @@ build_stlport_libs_for_abi ()
     mkdir -p "$DSTDIR"
 
     builder_begin_android $ABI "$BUILDDIR" "$MAKEFILE"
-    builder_set_srcdir "$STLPORT_SRCDIR"
+
     builder_set_dstdir "$DSTDIR"
 
+    builder_set_srcdir "$GABIXX_SRCDIR"
+    builder_cflags "$GABIXX_CFLAGS"
+    builder_cxxflags "$GABIXX_CXXFLAGS"
+    builder_ldflags "$GABIXX_LDFLAGS"
+    builder_sources $GABIXX_SOURCES
+
+    builder_set_srcdir "$STLPORT_SRCDIR"
+    builder_reset_cflags
     builder_cflags "$STLPORT_CFLAGS"
+    builder_reset_cxxflags
     builder_cxxflags "$STLPORT_CXXFLAGS"
     builder_sources $STLPORT_SOURCES
 

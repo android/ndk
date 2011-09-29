@@ -1,21 +1,6 @@
 LOCAL_PATH:= $(call my-dir)
 
-libgabi++_common_src_files := \
-	src/array_type_info.cc \
-	src/class_type_info.cc \
-        src/delete.cc \
-	src/dynamic_cast.cc \
-	src/enum_type_info.cc \
-	src/function_type_info.cc \
-        src/new.cc \
-	src/pbase_type_info.cc \
-	src/pointer_type_info.cc \
-	src/pointer_to_member_type_info.cc \
-	src/si_class_type_info.cc \
-	src/type_info.cc \
-	src/vmi_class_type_info.cc
-
-libgabi++_c_includes := $(LOCAL_PATH)/include
+include $(LOCAL_PATH)/sources.mk
 
 ifneq (,$(GABIXX_FORCE_REBUILD))
 
@@ -44,7 +29,7 @@ else # ! GABIXX_FORCE_REBUILD
   include $(CLEAR_VARS)
   LOCAL_MODULE:= libgabi++_shared
   LOCAL_CPP_EXTENSION := .cc
-  LOCAL_SRC_FILES:= $(libgabi++_common_src_files)
+  LOCAL_SRC_FILES:= $(libgabi++_src_files)
   LOCAL_EXPORT_C_INCLUDES := $(libgabi++_c_includes)
   LOCAL_EXPORT_LDLIBS := -lstdc++
   LOCAL_C_INCLUDES := $(libgabi++_c_includes)
@@ -55,7 +40,7 @@ else # ! GABIXX_FORCE_REBUILD
   #
   include $(CLEAR_VARS)
   LOCAL_MODULE:= libgabi++_static
-  LOCAL_SRC_FILES:= $(libgabi++_common_src_files)
+  LOCAL_SRC_FILES:= $(libgabi++_src_files)
   LOCAL_CPP_EXTENSION := .cc
   LOCAL_EXPORT_C_INCLUDES := $(libgabi++_c_includes)
   LOCAL_EXPORT_LDLIBS := -lstdc++
@@ -64,4 +49,3 @@ else # ! GABIXX_FORCE_REBUILD
   include $(BUILD_STATIC_LIBRARY)
 
 endif # ! GABIXX_FORCE_REBUILD
-
