@@ -2,6 +2,9 @@
 # This is included/sourced by other scripts
 #
 
+# ensure stable sort order
+export LC_ALL=C
+
 # NDK_BUILDTOOLS_PATH should point to the directory containing
 # this script. If it is not defined, assume that this is one of
 # the scripts in the same directory that sourced this file.
@@ -74,14 +77,14 @@ remove_trailing_slash () {
 reverse_path ()
 {
     local path cur item
-    path=`remove_trailing_slash $1`
+    path=${1%%/} # remove trailing slash
     cur="."
     if [ "$path" != "." ] ; then
-        for item in `echo "$path" | tr '/' ' '`; do
+        for item in $(echo "$path" | tr '/' ' '); do
             cur="../$cur"
         done
     fi
-    echo `echo $cur | sed -e 's!/.$!!g'`
+    echo ${cur%%/.}
 }
 
 # test_reverse_path ()
