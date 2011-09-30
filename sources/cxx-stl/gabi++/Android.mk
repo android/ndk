@@ -2,19 +2,19 @@ LOCAL_PATH:= $(call my-dir)
 
 include $(LOCAL_PATH)/sources.mk
 
-ifneq (,$(GABIXX_FORCE_REBUILD))
+ifeq (,$(GABIXX_FORCE_REBUILD))
 
   include $(CLEAR_VARS)
-  LOCAL_MODULE:= libgabi++_shared
-  LOCAL_SRC_FILES:= $(LOCAL_PATH)/libs/$(TARGET_ARCH_ABI)/libgabi++_shared
+  LOCAL_MODULE:= gabi++_shared
+  LOCAL_SRC_FILES:= libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).so
   LOCAL_EXPORT_C_INCLUDES := $(libgabi++_c_includes)
   LOCAL_EXPORT_LDLIBS := -lstdc++
   LOCAL_CPP_FEATURES := rtti
   include $(PREBUILT_SHARED_LIBRARY)
 
   include $(CLEAR_VARS)
-  LOCAL_MODULE:= libgabi++_static
-  LOCAL_SRC_FILES:= $(LOCAL_PATH)/libs/$(TARGET_ARCH_ABI)/libgabi++_static
+  LOCAL_MODULE:= gabi++_static
+  LOCAL_SRC_FILES:= libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).a
   LOCAL_EXPORT_C_INCLUDES := $(libgabi++_c_includes)
   LOCAL_EXPORT_LDLIBS := -lstdc++
   LOCAL_CPP_FEATURES := rtti

@@ -508,7 +508,10 @@ module-get-depends = $(strip $(call modules-get-closure,$1,$2))
 # Rationale: This computes the closure of all installable module dependencies starting from $1
 # -----------------------------------------------------------------------------
 # For now, only the closure of LOCAL_SHARED_LIBRARIES is enough
-modules-get-all-installable = $(call module-get-depends,$1,SHARED_LIBRARIES)
+modules-get-all-installable = $(strip \
+    $(foreach __alldep,$(call module-get-depends,$1,depends),\
+        $(if $(call module-is-installable,$(__alldep)),$(__alldep))\
+    ))
 
 # Return the C++ extension of a given module
 # $1: module name
