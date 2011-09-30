@@ -23,6 +23,7 @@ ifneq (,$(GABIXX_FORCE_REBUILD))
   LOCAL_MODULE:= libgabi++_shared
   LOCAL_SRC_FILES:= $(LOCAL_PATH)/libs/$(TARGET_ARCH_ABI)/libgabi++_shared
   LOCAL_EXPORT_C_INCLUDES := $(libgabi++_c_includes)
+  LOCAL_EXPORT_LDLIBS := -lstdc++
   LOCAL_CPP_FEATURES := rtti
   include $(PREBUILT_SHARED_LIBRARY)
 
@@ -30,6 +31,7 @@ ifneq (,$(GABIXX_FORCE_REBUILD))
   LOCAL_MODULE:= libgabi++_static
   LOCAL_SRC_FILES:= $(LOCAL_PATH)/libs/$(TARGET_ARCH_ABI)/libgabi++_static
   LOCAL_EXPORT_C_INCLUDES := $(libgabi++_c_includes)
+  LOCAL_EXPORT_LDLIBS := -lstdc++
   LOCAL_CPP_FEATURES := rtti
   include $(PREBUILT_STATIC_LIBRARY)
 
@@ -44,6 +46,7 @@ else # ! GABIXX_FORCE_REBUILD
   LOCAL_CPP_EXTENSION := .cc
   LOCAL_SRC_FILES:= $(libgabi++_common_src_files)
   LOCAL_EXPORT_C_INCLUDES := $(libgabi++_c_includes)
+  LOCAL_EXPORT_LDLIBS := -lstdc++
   LOCAL_C_INCLUDES := $(libgabi++_c_includes)
   LOCAL_CPP_FEATURES := rtti
   include $(BUILD_SHARED_LIBRARY)
@@ -55,6 +58,7 @@ else # ! GABIXX_FORCE_REBUILD
   LOCAL_SRC_FILES:= $(libgabi++_common_src_files)
   LOCAL_CPP_EXTENSION := .cc
   LOCAL_EXPORT_C_INCLUDES := $(libgabi++_c_includes)
+  LOCAL_EXPORT_LDLIBS := -lstdc++
   LOCAL_C_INCLUDES := $(libgabi++_c_includes)
   LOCAL_CPP_FEATURES := rtti
   include $(BUILD_STATIC_LIBRARY)

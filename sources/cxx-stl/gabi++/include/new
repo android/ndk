@@ -42,15 +42,17 @@ namespace std
 // FIXME: Need to handle exceptions.
 void* operator new(std::size_t size) throw(/*std::bad_alloc*/);
 void* operator new(std::size_t size, const std::nothrow_t&) throw();
-void  operator delete(void* ptr) throw();
-void  operator delete(void*, const std::nothrow_t&) throw();
 void* operator new[](std::size_t size) throw(/*std::bad_alloc*/);
 void* operator new[](std::size_t size, const std::nothrow_t&) throw();
+
 void  operator delete[](void* ptr) throw();
 void  operator delete[](void* const, std::nothrow_t&) throw();
-void* operator new(std::size_t size, void* ptr) throw();
-void* operator new[](std::size_t size, void* ptr) throw();
-void  operator delete(void* ptr, void*) throw();
-void  operator delete[](void* ptr, void*) throw();
+void  operator delete(void* ptr) throw();
+void  operator delete(void*, const std::nothrow_t&) throw();
+
+inline void* operator new(std::size_t, void* p) throw() { return p; }
+inline void* operator new[](std::size_t, void* p) throw() { return p; }
+inline void  operator delete(void*, void*) throw() {}
+inline void  operator delete[](void*, void*) throw() {}
 
 #endif // __GABIXX_NEW__

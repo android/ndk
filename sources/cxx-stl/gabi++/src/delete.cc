@@ -36,3 +36,22 @@ operator delete(void* ptr) throw()
   if (ptr)
     free(ptr);
 }
+
+void
+operator delete[](void* ptr) throw()
+{
+    ::operator delete(ptr);
+}
+
+void
+operator delete(void* ptr, const std::nothrow_t &)
+{
+    if (ptr)
+        free(ptr);
+}
+
+void
+operator delete[](void* ptr, const std::nothrow_t &nt)
+{
+    ::operator delete(ptr, nt);
+}

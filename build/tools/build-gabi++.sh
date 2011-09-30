@@ -96,6 +96,7 @@ GABIXX_SRCDIR=$ANDROID_NDK_ROOT/$GABIXX_SUBDIR
 GABIXX_CFLAGS="-fPIC -O2 -DANDROID -D__ANDROID__"
 GABIXX_CFLAGS=$GABIXX_CFLAGS" -I$GABIXX_SRCDIR/include"
 GABIXX_CXXFLAGS="-fuse-cxa-atexit -fno-exceptions -frtti"
+GABIXX_LDFLAGS="-lstdc++"
 
 # List of sources to compile
 GABIXX_SOURCES=$(cd $GABIXX_SUBDIR && ls src/*.cc)
@@ -133,6 +134,7 @@ build_gabixx_libs_for_abi ()
 
     builder_cflags "$GABIXX_CFLAGS"
     builder_cxxflags "$GABIXX_CXXFLAGS"
+    builder_ldflags "$GABIXX_LDFLAGS"
     builder_sources $GABIXX_SOURCES
 
     log "Building $DSTDIR/libgabi++_static.a"

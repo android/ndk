@@ -40,3 +40,22 @@ operator new(std::size_t size) throw (/*std::bad_alloc*/)
 #endif
   return ptr;
 }
+
+void*
+operator new[](std::size_t size) throw(/*std::bad_alloc*/)
+{
+    return ::operator new(size);
+}
+
+
+void*
+operator new(std::size_t size, const std::nothrow_t&)
+{
+    return malloc(size);
+}
+
+void*
+operator new[](std::size_t size, const std::nothrow_t& nt)
+{
+    return ::operator new(size, nt);
+}
