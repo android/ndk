@@ -8,6 +8,7 @@ libgabi++_src_files := \
         src/enum_type_info.cc \
         src/function_type_info.cc \
         src/new.cc \
+        src/one_time_construction.cc \
         src/pbase_type_info.cc \
         src/pointer_type_info.cc \
         src/pointer_to_member_type_info.cc \
