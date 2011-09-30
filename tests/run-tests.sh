@@ -209,7 +209,7 @@ adb_cmd_mkdir ()
 # $2: value to test
 var_list_contains ()
 {
-    echo `var_value $1` | tr ' ' '\n' | fgrep -q -e "$2"
+    echo `var_value $1` | tr ' ' '\n' | grep -q -F -x -e "$2"
 }
 
 #
