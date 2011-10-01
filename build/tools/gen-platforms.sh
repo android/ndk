@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# build-platforms.sh
+# gen-platforms.sh
 #
 # This tool is used when packaging a new release, or when developing
 # the NDK itself. It will populate DST ($NDK/platforms by default)
@@ -44,7 +44,7 @@
 extract_platforms_from ()
 {
     if [ -d "$1" ] ; then
-        (cd "$1/platforms" && ls -d android-*) | sed -e "s!android-!!" | tr '\n' ' '
+        (cd "$1/platforms" && ls -d android-*) | sed -e "s!android-!!" | sort -g | tr '\n' ' '
     else
         echo ""
     fi
@@ -288,7 +288,7 @@ gen_shell_lib ()
         echo "void $func(void) {}" >> $TMPC
     done
     for var in $3; do
-        echo "int $var;" >> $TMPC
+        echo "int $var = 0;" >> $TMPC
     done
 
     # Build it with our cross-compiler. It will complain about conflicting
@@ -326,6 +326,12 @@ gen_shell_libraries ()
     if [ ! -f "$TOOLCHAIN_PREFIX-readelf" ]; then
         dump "ERROR: $ARCH toolchain not installed: $TOOLCHAIN_PREFIX-gcc"
         exit 1
+    fi
+
+    # In certain cases, the symbols directory doesn't exist,
+    # e.g. on x86 for PLATFORM < 9
+    if [ ! -d "$SYMDIR" ]; then
+        return
     fi
 
     # Let's list the libraries we're going to generate
