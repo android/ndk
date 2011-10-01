@@ -82,13 +82,13 @@ READELF=readelf
 # $1: shared library path
 get_library_functions ()
 {
-    $READELF -s -D -W $1 | awk '$5 ~ /FUNC/ && $6 ~ /GLOBAL/ && $8 !~ /UND/ { print $9; }' | sort -u
+    $READELF -s -D -W $1 | awk '$5 ~ /FUNC/ && $6 ~ /GLOBAL|WEAK/ && $8 !~ /UND/ { print $9; }' | sort -u
 }
 
 # $1: shared library path
 get_library_variables ()
 {
-    $READELF -s -D -W $1 | awk '$5 ~ /OBJECT/ && $6 ~ /GLOBAL/ && $8 !~ /UND/ { print $9; }' | sort -u
+    $READELF -s -D -W $1 | awk '$5 ~ /OBJECT/ && $6 ~ /GLOBAL|WEAK/ && $8 !~ /UND/ { print $9; }' | sort -u
 }
 
 # Temp file used to list shared library symbol exclusions
