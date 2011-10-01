@@ -60,8 +60,9 @@ OPTION_HELP=no
 OPTION_PLATFORMS=
 OPTION_SRCDIR=
 OPTION_DSTDIR=
-OPTION_NO_SAMPLES=no
-OPTION_NO_SYMLINKS=no
+OPTION_SAMPLES=
+OPTION_FAST_COPY=
+OPTION_MINIMAL=
 OPTION_ARCH=
 OPTION_ABI=
 
@@ -95,11 +96,14 @@ for opt do
   --abi=*)  # We still support this for backwards-compatibility
     OPTION_ABI=$optarg
     ;;
-  --no-samples)
-    OPTION_NO_SAMPLES=yes
+  --samples)
+    OPTION_SAMPLES=yes
     ;;
-  --no-symlinks)
-    OPTION_NO_SYMLINKS=yes
+  --fast-copy)
+    OPTION_FAST_COPY=yes
+    ;;
+  --minimal)
+    OPTION_MINIMAL=yes
     ;;
   *)
     echo "unknown option '$opt', use --help"
@@ -119,9 +123,14 @@ if [ $OPTION_HELP = "yes" ] ; then
     echo "  --dst-dir=<path>   Destination directory [$DSTDIR]"
     echo "  --platform=<list>  List of API levels [$PLATFORMS]"
     echo "  --arch=<list>      List of CPU architectures [$ARCHS]"
-    echo "  --no-samples       Ignore samples"
-    echo "  --no-symlinks      Don't create symlinks, copy files instead"
+    echo "  --minimal          Ignore samples, symlinks and generated shared libs."
+    echo "  --fast-copy        Don't create symlinks, copy files instead"
+    echo "  --samples          Also generate samples directories."
     echo ""
+    echo "Use the --minimal flag if you want to generate minimal sysroot directories"
+    echo "that will be used to generate prebuilt toolchains. Otherwise, the script"
+    echo "will require these toolchains to be pre-installed and will use them to"
+    echo "generate shell system shared libraries from the symbol list files."
     exit 0
 fi
 
@@ -208,6 +217,11 @@ for PLATFORM in $PLATFORMS; do
         fi
     done
 done
+
+if [ "$OPTION_MINIMAL" ]; then
+    OPTION_SAMPLES=
+    OPTION_FAST_COPY=yes
+fi
 
 BAD_ARCHS=
 for ARCH in $ARCHS; do
@@ -325,6 +339,8 @@ gen_shell_libraries ()
     TOOLCHAIN_PREFIX=${TOOLCHAIN_PREFIX%-}
     if [ ! -f "$TOOLCHAIN_PREFIX-readelf" ]; then
         dump "ERROR: $ARCH toolchain not installed: $TOOLCHAIN_PREFIX-gcc"
+        dump "Important: Use the --minimal flag to use this script without generated system shared libraries."
+        dump "This is generally useful when you want to generate the host cross-toolchain programs."
         exit 1
     fi
 
@@ -372,7 +388,7 @@ for PLATFORM in $PLATFORMS; do
     PLATFORM_DST=$NEW_PLATFORM
     dump "Copying android-$PLATFORM platform files"
     if [ -n "$PREV_PLATFORM_DST" ] ; then
-        if [ "$OPTION_NO_SYMLINKS" = "yes" ] ; then
+        if [ "$OPTION_FAST_COPY" ] ; then
             log "Copying \$DST/$PREV_PLATFORM_DST to \$DST/$PLATFORM_DST"
             #cp -r $DSTDIR/$PREV_PLATFORM_DST $DSTDIR/$PLATFORM_DST
             copy_directory "$DSTDIR/$PREV_PLATFORM_DST" "$DSTDIR/$PLATFORM_DST"
@@ -393,13 +409,15 @@ for PLATFORM in $PLATFORMS; do
         copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib     $PLATFORM_DST/$SYSROOT/lib "sysroot libs"
         copy_src_directory $PLATFORM_SRC/$SYSROOT          $PLATFORM_DST/$SYSROOT "sysroot"
 
-        # Generate shell libraries from symbol files
-        gen_shell_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $PLATFORM_DST/$SYSROOT/lib
+        if [ -z "$OPTION_MINIMAL" ]; then
+            # Generate shell libraries from symbol files
+            gen_shell_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $PLATFORM_DST/$SYSROOT/lib
+        fi
     done
     PREV_PLATFORM_DST=$PLATFORM_DST
 done
 
-if [ "$OPTION_NO_SAMPLES" = no ] ; then
+if [ "$OPTION_SAMPLES" ] ; then
     # Copy platform samples and generic samples into your destination
     #
     # $SRC/samples/ --> $DST/samples/
