@@ -688,7 +688,7 @@ copy_directory ()
     log "Copying directory: "
     log "  from $SRCDIR"
     log "  to $DSTDIR"
-    mkdir -p "$DSTDIR" && (cd "$SRCDIR" && tar cf - *) | (tar xf - -C "$DSTDIR")
+    mkdir -p "$DSTDIR" && (cd "$SRCDIR" && 2>/dev/null tar cf - *) | (tar xf - -C "$DSTDIR")
     fail_panic "Cannot copy to directory: $DSTDIR"
 }
 
