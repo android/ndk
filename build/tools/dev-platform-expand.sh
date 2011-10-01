@@ -42,7 +42,7 @@ extract_platforms_from ()
 {
     local RET
     if [ -d "$1" ] ; then
-        RET=$((cd "$1/platforms" && ls -d android-*) | sed -e "s!android-!!")
+        RET=$((cd "$1/platforms" && ls -d android-*) | sed -e "s!android-!!" | sort -g)
     else
         RET=""
     fi
@@ -59,7 +59,7 @@ SRCDIR="$(cd $ANDROID_NDK_ROOT/../development/ndk/platforms && pwd)"
 register_var_option "--src-dir=<path>" SRCDIR "Source for compressed platforms"
 
 # The default destination directory is a temporary one
-DSTDIR=/tmp/ndk-$USER/platforms/$PLATFORM
+DSTDIR=/tmp/ndk-$USER/platforms
 register_var_option "--dst-dir=<path>" DSTDIR "Destination directory"
 
 # Default architecture, note we can have several ones here
@@ -73,19 +73,19 @@ PROGRAM_DESCRIPTION=\
 platform into a single directory. The main idea is that the files are stored
 in a platform-specific way under SRC=$$NDK/../development/ndk, i.e.:
 
-  $$SRC/platforms/android-3/  -> all files corresponding to API level 3
-  $$SRC/platforms/android-4/  -> only new/modified files corresponding to API level 4
-  $$SRC/platforms/android-5/  -> only new/modified files corresponding to API level 5
+  \$SRC/platforms/android-3/  -> all files corresponding to API level 3
+  \$SRC/platforms/android-4/  -> only new/modified files corresponding to API level 4
+  \$SRC/platforms/android-5/  -> only new/modified files corresponding to API level 5
   ...
 
 As an example, expanding android-5 would mean:
 
-  1 - copy all files from android-3 to $$DST directory
+  1 - copy all files from android-3 to \$DST directory
 
-  2 - copy all files from android-4 to $$DST, eventually overwriting stuff
+  2 - copy all files from android-4 to \$DST, eventually overwriting stuff
       from android-3 that was modified in API level 4
 
-  3 - copy all files from android-5 to $$DST, eventually overwriting stuff
+  3 - copy all files from android-5 to \$DST, eventually overwriting stuff
       from android-4 that was modified in API level 5
 
 The script 'dev-platform-compress.sh' can be used to perform the opposite
@@ -144,36 +144,36 @@ fi
 ARCHS=$(commas_to_spaces $ARCHS)
 log "Using architectures: $(commas_to_spaces $ARCHS)"
 
-log "Checking source platform architectures."
-BAD_ARCHS=
-for ARCH in $ARCHS; do
-    eval CHECK_$ARCH=no
-done
-for ARCH in $ARCHS; do
-    DIR="$SRCDIR/android-$PLATFORM/arch-$ARCH"
-    if [ -d $DIR ] ; then
-        log "  $DIR"
-        eval CHECK_$ARCH=yes
-    fi
-done
-
-BAD_ARCHS=
-for ARCH in $ARCHS; do
-    CHECK=`var_value CHECK_$ARCH`
-    log "  $ARCH check: $CHECK"
-    if [ "$CHECK" = no ] ; then
-        if [ -z "$BAD_ARCHS" ] ; then
-            BAD_ARCHS=$ARCH
-        else
-            BAD_ARCHS="$BAD_ARCHS $ARCH"
-        fi
-    fi
-done
-
-if [ -n "$BAD_ARCHS" ] ; then
-    echo "ERROR: Source directory doesn't support these ARCHs: $BAD_ARCHS"
-    exit 3
-fi
+# log "Checking source platform architectures."
+# BAD_ARCHS=
+# for ARCH in $ARCHS; do
+#     eval CHECK_$ARCH=no
+# done
+# for ARCH in $ARCHS; do
+#     DIR="$SRCDIR/android-$PLATFORM/arch-$ARCH"
+#     if [ -d $DIR ] ; then
+#         log "  $DIR"
+#         eval CHECK_$ARCH=yes
+#     fi
+# done
+# 
+# BAD_ARCHS=
+# for ARCH in $ARCHS; do
+#     CHECK=`var_value CHECK_$ARCH`
+#     log "  $ARCH check: $CHECK"
+#     if [ "$CHECK" = no ] ; then
+#         if [ -z "$BAD_ARCHS" ] ; then
+#             BAD_ARCHS=$ARCH
+#         else
+#             BAD_ARCHS="$BAD_ARCHS $ARCH"
+#         fi
+#     fi
+# done
+# 
+# if [ -n "$BAD_ARCHS" ] ; then
+#     echo "ERROR: Source directory doesn't support these ARCHs: $BAD_ARCHS"
+#     exit 3
+# fi
 
 copy_optional_directory ()
 {
@@ -202,10 +202,19 @@ for LEVEL in $API_LEVELS; do
     log "Copying android-$LEVEL platform files"
     for ARCH in $ARCHS; do
         SDIR="$SRCDIR/android-$LEVEL"
-        DDIR="$DSTDIR/arch-$ARCH/usr"
-        copy_directory "$SDIR/include" "$DDIR/include"
-        copy_optional_directory "$SDIR/arch-$ARCH/include" "$DDIR/include"
-        copy_optional_directory "$SDIR/arch-$ARCH/lib" "$DDIR/lib"
+        DDIR="$DSTDIR/android-$PLATFORM"
+        if [ -d "$SDIR" ]; then
+            copy_directory "$SDIR/include" "$DDIR/include"
+        fi
+        ARCH_SDIR="$SDIR/arch-$ARCH"
+        ARCH_DDIR="$DDIR/arch-$ARCH"
+        if [ -d "$ARCH_SDIR" ]; then
+            copy_optional_directory "$ARCH_SDIR/include" "$ARCH_DDIR/include"
+            copy_optional_directory "$ARCH_SDIR/lib"     "$ARCH_DDIR/lib"
+            rm -f "$ARCH_DDIR"/lib/*.so
+            copy_optional_directory "$ARCH_SDIR/symbols" "$ARCH_DDIR/symbols"
+            rm -f "$ARCH_DDIR"/symbols/*.so.txt
+        fi
     done
 done
 
