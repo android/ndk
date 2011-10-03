@@ -746,6 +746,7 @@ parse_toolchain_name ()
     case "$TOOLCHAIN" in
     arm-linux-androideabi-*)
         ARCH="arm"
+        ABI="armeabi"
         ABI_CONFIGURE_TARGET="arm-linux-androideabi"
         ABI_CONFIGURE_EXTRA_FLAGS="--with-arch=armv5te"
         # Disable ARM Gold linker for now, it doesn't build on Windows, it
@@ -761,6 +762,7 @@ parse_toolchain_name ()
         ;;
     x86-*)
         ARCH="x86"
+        ABI=$ARCH
         ABI_INSTALL_NAME="x86"
         ABI_CONFIGURE_TARGET="i686-android-linux"
         # Enable C++ exceptions, RTTI and GNU libstdc++ at the same time
@@ -845,6 +847,24 @@ convert_abi_to_arch ()
             ;;
         *)
             2> echo "ERROR: Unsupported ABI name: $1, use one of: armeabi, armeabi-v7a or x86"
+            exit 1
+            ;;
+    esac
+    echo "$RET"
+}
+
+get_default_abi_for_arch ()
+{
+    local RET
+    case $1 in
+        arm)
+            RET="armeabi"
+            ;;
+        x86)
+            RET="x86"
+            ;;
+        *)
+            2> echo "ERROR: Unsupported architecture name: $1, use one of: arm x86"
             exit 1
             ;;
     esac
