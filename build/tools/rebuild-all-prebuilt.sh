@@ -288,13 +288,13 @@ get_toolchain_sources
 
 case "$ARCH" in
 arm )
-    build_toolchain arm-linux-androideabi-4.4.3 --copy-libstdcxx
+    build_toolchain arm-linux-androideabi-4.4.3
     if [ -z "$HOST_ONLY" ]; then
         build_gdbserver arm-linux-androideabi-4.4.3
     fi
     ;;
 x86 )
-    build_toolchain x86-4.4.3 --copy-libstdcxx
+    build_toolchain x86-4.4.3
     if [ -z "$HOST_ONLY" ]; then
         build_gdbserver x86-4.4.3
     fi

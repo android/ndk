@@ -54,12 +54,6 @@ register_var_option "--gmp-version=<version>" GMP_VERSION "Specify gmp version"
 MPFR_VERSION=2.4.1
 register_var_option "--mpfr-version=<version>" MPFR_VERSION "Specify mpfr version"
 
-COPY_LIBSTDCXX=no
-register_var_option "--copy-libstdcxx" COPY_LIBSTDCXX "Copy libstdc++ to <ndk-dir>/$GNUSTL_SUBDIR"
-
-KEEP_LIBSTDCXX=no
-register_var_option "--keep-libstdcxx" KEEP_LIBSTDCXX "Experimental: keep libstdc++ inside toolchain"
-
 register_jobs_option
 register_mingw_option
 register_try64_option
@@ -258,19 +252,11 @@ run rm -rf $TOOLCHAIN_PATH/lib32/libiberty.a
 run rm -rf $TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/lib/libiberty.a
 run rm -rf $TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/lib/*/libiberty.a
 
-# Copy libstdc++ headers and libraries if needed
-if [ "$COPY_LIBSTDCXX" = "yes" ] ; then
-    dump "Copying libstdc++ prebuilt binaries."
-    $ANDROID_NDK_ROOT/build/tools/copy-libstdcxx.sh "$TOOLCHAIN_PATH" "$NDK_DIR" --toolchain=$TOOLCHAIN
-fi
-
 # Remove libstdc++ for now (will add it differently later)
 # We had to build it to get libsupc++ which we keep.
-if [ "$KEEP_LIBSTDCXX" = "no" ] ; then
-    run rm -rf $TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/lib/libstdc++.*
-    run rm -rf $TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/lib/*/libstdc++.*
-    run rm -rf $TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/include/c++
-fi
+run rm -rf $TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/lib/libstdc++.*
+run rm -rf $TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/lib/*/libstdc++.*
+run rm -rf $TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/include/c++
 
 # strip binaries to reduce final package size
 run strip $TOOLCHAIN_PATH/bin/*
