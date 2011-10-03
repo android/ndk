@@ -1,0 +1,24 @@
+diff -burN gcc-a/gcc-4.4.3/libstdc++-v3/src/Makefile.am gcc-b/gcc-4.4.3/libstdc++-v3/src/Makefile.am
+--- gcc-a/gcc-4.4.3/libstdc++-v3/src/Makefile.am	2011-10-02 22:00:20.352164415 +0200
++++ gcc-b/gcc-4.4.3/libstdc++-v3/src/Makefile.am	2011-10-02 22:00:37.311501551 +0200
+@@ -206,7 +206,7 @@
+ 	$(top_builddir)/libsupc++/libsupc++convenience.la
+ 
+ libstdc___la_LDFLAGS = \
+-	-version-info $(libtool_VERSION) ${version_arg} -lm 
++	-avoid-version ${version_arg} -lm 
+ 
+ # Use special rules for the deprecated source files so that they find
+ # deprecated include files.
+diff -burN gcc-a/gcc-4.4.3/libstdc++-v3/src/Makefile.in gcc-b/gcc-4.4.3/libstdc++-v3/src/Makefile.in
+--- gcc-a/gcc-4.4.3/libstdc++-v3/src/Makefile.in	2011-10-02 22:00:20.352164415 +0200
++++ gcc-b/gcc-4.4.3/libstdc++-v3/src/Makefile.in	2011-10-02 22:00:37.311501551 +0200
+@@ -454,7 +454,7 @@
+ 	$(top_builddir)/libsupc++/libsupc++convenience.la
+ 
+ libstdc___la_LDFLAGS = \
+-	-version-info $(libtool_VERSION) ${version_arg} -lm 
++	-avoid-version ${version_arg} -lm 
+ 
+ 
+ # Use special rules for the deprecated source files so that they find
