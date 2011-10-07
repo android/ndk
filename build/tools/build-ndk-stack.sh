@@ -32,8 +32,7 @@ CUSTOM_CC=
 register_option "--cc=<path>" do_cc "Specify host compiler"
 do_cc () { CC=$1; CUSTOM_CC=yes; }
 
-NUM_JOBS=$HOST_NUM_CPUS
-register_var_option "-j<number>" NUM_JOBS "Specify number of parallel builds"
+register_jobs_option
 
 BUILD_DIR=
 register_var_option "--build-dir=<path>" BUILD_DIR "Specify build directory"

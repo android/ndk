@@ -55,11 +55,10 @@ register_var_option "--sysroot=<path>" SYSROOT "Specify sysroot directory direct
 NOTHREADS=no
 register_var_option "--disable-threads" NOTHREADS "Disable threads support"
 
-JOBS=$HOST_NUM_CPUS
-register_var_option "-j<number>" JOBS "Use <number> build jobs in parallel"
-
-GDB_VERSION=7.1.x
+GDB_VERSION=$DEFAULT_GDB_VERSION
 register_var_option "--gdb-version=<name>" GDB_VERSION "Use specific gdb version."
+
+register_jobs_option
 
 extract_parameters "$@"
 
@@ -214,7 +213,7 @@ LDFLAGS="$OLD_LDFLAGS"
 # build gdbserver
 dump "Building : $TOOLCHAIN gdbserver."
 cd $BUILD_OUT &&
-run make -j$JOBS
+run make -j$NUM_JOBS
 if [ $? != 0 ] ; then
     dump "Could not build $TOOLCHAIN gdbserver. Use --verbose to see why."
     exit 1

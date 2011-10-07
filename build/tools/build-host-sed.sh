@@ -26,9 +26,7 @@ PROGRAM_DESCRIPTION=\
 
 register_try64_option
 register_mingw_option
-
-NUM_JOBS=$BUILD_NUM_CPUS
-register_var_option "-j<count>" NUM_JOBS "Specify parallel build jobs"
+register_jobs_option
 
 OUT=
 CUSTOM_OUT=

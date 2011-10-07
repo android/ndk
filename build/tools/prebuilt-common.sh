@@ -279,6 +279,13 @@ register_try64_option ()
     register_option "--try-64" do_try64_option "Generate 64-bit binaries."
 }
 
+
+register_jobs_option ()
+{
+    NUM_JOBS=$BUILD_NUM_CPUS
+    register_var_option "-j<number>" NUM_JOBS "Use <number> parallel build jobs"
+}
+
 # Print the help, including a list of registered options for this program
 # Note: Assumes PROGRAM_PARAMETERS and PROGRAM_DESCRIPTION exist and
 #       correspond to the parameters list and the program description

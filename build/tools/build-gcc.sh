@@ -54,15 +54,13 @@ register_var_option "--gmp-version=<version>" GMP_VERSION "Specify gmp version"
 MPFR_VERSION=2.4.1
 register_var_option "--mpfr-version=<version>" MPFR_VERSION "Specify mpfr version"
 
-JOBS=$BUILD_NUM_CPUS
-register_var_option "-j<number>" JOBS "Use <number> parallel build jobs"
-
 COPY_LIBSTDCXX=no
 register_var_option "--copy-libstdcxx" COPY_LIBSTDCXX "Copy libstdc++ to <ndk-dir>/$GNUSTL_SUBDIR"
 
 KEEP_LIBSTDCXX=no
 register_var_option "--keep-libstdcxx" KEEP_LIBSTDCXX "Experimental: keep libstdc++ inside toolchain"
 
+register_jobs_option
 register_mingw_option
 register_try64_option
 
@@ -218,7 +216,7 @@ dump "Building : $TOOLCHAIN toolchain [this can take a long time]."
 cd $BUILD_OUT &&
 export CC CXX &&
 export ABI=$HOST_GMP_ABI &&
-run make -j$JOBS
+run make -j$NUM_JOBS
 if [ $? != 0 ] ; then
     # Unfortunately, there is a bug in the GCC build scripts that prevent
     # parallel mingw builds to work properly on some multi-core machines

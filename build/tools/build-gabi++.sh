@@ -57,14 +57,10 @@ register_var_option "--out-dir=<path>" OUT_DIR "Specify output directory directl
 ABIS="$PREBUILT_ABIS"
 register_var_option "--abis=<list>" ABIS "Specify list of target ABIs."
 
-JOBS="$BUILD_NUM_CPUS"
-register_var_option "-j<number>" JOBS "Use <number> build jobs in parallel"
-
 NO_MAKEFILE=
 register_var_option "--no-makefile" NO_MAKEFILE "Do not use makefile to speed-up build"
 
-NUM_JOBS=$BUILD_NUM_CPUS
-register_var_option "-j<number>" NUM_JOBS "Run <number> build jobs in parallel"
+register_jobs_option
 
 extract_parameters "$@"
 
@@ -113,7 +109,7 @@ fi
 
 build_gabixx_libs_for_abi ()
 {
-    local ARCH BINPREFIX SYSROOT
+    local ARCH BINPREFIX
     local ABI=$1
     local BUILDDIR="$2"
     local DSTDIR="$3"
