@@ -604,7 +604,7 @@ prepare_common_build ()
     if [ "$HOST_OS" = "linux" -a -z "$CC" -a "$MINGW" != "yes" -a "$TRY64" != "yes" ]; then
         LEGACY_TOOLCHAIN_DIR="$ANDROID_NDK_ROOT/../prebuilt/linux-x86/toolchain/i686-linux-glibc2.7-4.4.3"
         if [ -d "$LEGACY_TOOLCHAIN_DIR" ] ; then
-            dump "Forcing generation of Linux binaries with legacy toolchain"
+            log "Forcing generation of Linux binaries with legacy toolchain"
             CC="$LEGACY_TOOLCHAIN_DIR/bin/i686-linux-gcc"
             CXX="$LEGACY_TOOLCHAIN_DIR/bin/i686-linux-g++"
         fi
@@ -643,9 +643,9 @@ prepare_common_build ()
     /* this test should fail if the compiler generates 64-bit machine code */
     int test_array[1-2*(sizeof(void*) != 4)];
 EOF
-    echo -n "Checking whether the compiler generates 32-bit binaries..."
+    log -n "Checking whether the compiler generates 32-bit binaries..."
     HOST_BITS=32
-    log $CC $HOST_CFLAGS -c -o $TMPO $TMPC
+    log2 $CC $HOST_CFLAGS -c -o $TMPO $TMPC
     $NDK_CCACHE $CC $HOST_CFLAGS -c -o $TMPO $TMPC >$TMPL 2>&1
     if [ $? != 0 ] ; then
         echo "no"
@@ -659,7 +659,7 @@ EOF
             HOST_BITS=64
         fi
     else
-        echo "yes"
+        log "yes"
     fi
 
     # For now, we only support building 32-bit binaries anyway
@@ -857,13 +857,15 @@ convert_abi_to_arch ()
 # Return the default binary path prefix for a given architecture
 # For example: arm -> toolchains/arm-linux-androideabi-4.4.3/prebuilt/<system>/bin/arm-linux-androideabi-
 # $1: Architecture name
+# $2: optional, system name, defaults to $HOST_TAG
 get_default_toolchain_binprefix_for_arch ()
 {
     local NAME PREFIX DIR BINPREFIX
+    local SYSTEM=${2:-$(get_prebuilt_host_tag)}
     NAME=$(get_default_toolchain_name_for_arch $1)
     PREFIX=$(get_default_toolchain_prefix_for_arch $1)
-    DIR=$(get_toolchain_install . $NAME)
-    BINPREFIX=${DIR#./}/bin/$PREFIX
+    DIR=$(get_toolchain_install . $NAME $SYSTEM)
+    BINPREFIX=${DIR#./}/bin/$PREFIX-
     echo "$BINPREFIX"
 }
 
@@ -897,25 +899,39 @@ get_default_platform_sysroot_for_abi ()
     $(get_default_platform_sysroot_for_arch $ARCH)
 }
 
+
+
 # Return the host/build specific path for prebuilt toolchain binaries
 # relative to $1.
 #
 # $1: target root NDK directory
 # $2: toolchain name
+# $3: optional, host system name
 #
 get_toolchain_install ()
 {
-    echo "$1/toolchains/$2/prebuilt/$(get_prebuilt_host_tag)"
+    local NDK="$1"
+    shift
+    echo "$NDK/$(get_toolchain_install_subdir $@)"
+}
+
+# $1: toolchain name
+# $2: optional, host system name
+get_toolchain_install_subdir ()
+{
+    local SYSTEM=${2:-$(get_prebuilt_host_tag)}
+    echo "toolchains/$1/prebuilt/$SYSTEM"
 }
 
 # Return the relative install prefix for prebuilt host
 # executables (relative to the NDK top directory).
 # NOTE: This deals with MINGW==yes appropriately
 #
+# $1: optional, system name
 # Out: relative path to prebuilt install prefix
 get_prebuilt_install_prefix ()
 {
-    local TAG=$(get_prebuilt_host_tag)
+    local TAG=${1:-$(get_prebuilt_host_tag)}
     echo "prebuilt/$TAG"
 }
 
@@ -924,11 +940,12 @@ get_prebuilt_install_prefix ()
 # NOTE: This deals with MINGW==yes appropriately.
 #
 # $1: executable name
+# $2: optional, host system name
 # Out: path to prebuilt host executable, relative
 get_prebuilt_host_exec ()
 {
     local PREFIX EXE
-    PREFIX=$(get_prebuilt_install_prefix)
+    PREFIX=$(get_prebuilt_install_prefix $2)
     EXE=$(get_prebuilt_host_exe_ext)
     echo "$PREFIX/bin/$1$EXE"
 }
@@ -946,7 +963,7 @@ get_host_exec_name ()
 # $1: target root NDK directory
 get_host_install ()
 {
-    echo "$1/prebuilt/$(get_prebuilt_host_tag)"
+    echo "$1/$(get_prebuilt_install_prefix)"
 }
 
 # Set the toolchain target NDK location.
@@ -995,3 +1012,12 @@ if [ -z "$NDK_TMPDIR" ]; then
     fi
     export NDK_TMPDIR
 fi
+
+# Define HOST_TAG32, as the 32-bit version of HOST_TAG
+# We do this by replacing an -x86_64 suffix by -x86
+HOST_TAG32=$HOST_TAG
+case $HOST_TAG32 in
+    *-x86_64)
+        HOST_TAG32=${HOST_TAG%%_64}
+        ;;
+esac
