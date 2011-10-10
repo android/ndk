@@ -59,7 +59,7 @@ NO_GIT=no
 register_var_option "--no-git" NO_GIT "Don't use git to list input files, take all of them."
 
 # set of toolchain prebuilts we need to package
-TOOLCHAINS="$DEFAULT_ARCH_TOOLCHAIN_NAME_arm"
+TOOLCHAINS="$DEFAULT_ARCH_TOOLCHAIN_arm"
 OPTION_TOOLCHAINS=$TOOLCHAINS
 register_var_option "--toolchains=<list>" OPTION_TOOLCHAINS "Specify list of toolchains."
 
@@ -135,7 +135,7 @@ if [ "$OPTION_TOOLCHAINS" != "$TOOLCHAINS" ]; then
     TOOLCHAINS=$(commas_to_spaces $OPTION_TOOLCHAINS)
 else
     if [ "$TRY_X86" = "yes" ]; then
-        TOOLCHAINS="$TOOLCHAINS $DEFAULT_ARCH_TOOLCHAIN_NAME_x86"
+        TOOLCHAINS="$TOOLCHAINS $DEFAULT_ARCH_TOOLCHAIN_x86"
     fi
     TOOLCHAINS=$(commas_to_spaces $TOOLCHAINS)
 fi
@@ -239,17 +239,29 @@ copy_file_list "$NDK_ROOT_DIR" "$REFERENCE" "$GIT_FILES" &&
 rm -f $REFERENCE/Android.mk
 fail_panic "Could not create reference. Aborting."
 
-# copy platform and sample files
-echo "Copying platform and sample files"
-FLAGS="--src-dir=$DEVELOPMENT_ROOT --dst-dir=$REFERENCE"
-if [ "$VERBOSE2" = "yes" ] ; then
-  FLAGS="$FLAGS --verbose"
-fi
+# Copy platform and sample files
+if [ "$PREBUILT_DIR" ]; then
+    echo "Unpacking platform files" &&
+    unpack_archive "$PREBUILT_DIR/platforms.tar.bz2" "$REFERENCE" &&
+    echo "Unpacking samples files" &&
+    unpack_archive "$PREBUILT_DIR/samples.tar.bz2" "$REFERENCE"
+    fail_panic "Could not unpack platform and sample files"
+elif [ "$PREBUILT_NDK" ]; then
+    echo "ERROR: NOT IMPLEMENTED!"
+    exit 1
+else
+    # copy platform and sample files
+    echo "Copying platform and sample files"
+    FLAGS="--src-dir=$DEVELOPMENT_ROOT --dst-dir=$REFERENCE"
+    if [ "$VERBOSE2" = "yes" ] ; then
+        FLAGS="$FLAGS --verbose"
+    fi
 
-FLAGS="$FLAGS --platform=$(spaces_to_commas $PLATFORMS)"
-FLAGS="$FLAGS --arch=$(spaces_to_commas $ARCHS)"
-$NDK_ROOT_DIR/build/tools/build-platforms.sh $FLAGS
-fail_panic "Could not copy platform files. Aborting."
+    FLAGS="$FLAGS --platform=$(spaces_to_commas $PLATFORMS)"
+    FLAGS="$FLAGS --arch=$(spaces_to_commas $ARCHS)"
+    $NDK_ROOT_DIR/build/tools/gen-platforms.sh $FLAGS
+    fail_panic "Could not copy platform files. Aborting."
+fi
 
 # Remove leftovers, just in case...
 rm -rf $REFERENCE/samples/*/{obj,libs,build.xml,local.properties,Android.mk} &&
@@ -379,7 +391,7 @@ for SYSTEM in $SYSTEMS; do
         # Unpack prebuilt STL headers and libraries
         unpack_prebuilt gnu-libstdc++-headers.tar.bz2
         for ABI in $ABIS; do
-            unpack_libsupcxx gnu-libsupc++-$ABI.tar.bz2
+            #unpack_libsupcxx gnu-libsupc++-$ABI.tar.bz2
             unpack_prebuilt gabixx-libs-$ABI.tar.bz2
             unpack_prebuilt stlport-libs-$ABI.tar.bz2
             unpack_prebuilt gnu-libstdc++-libs-$ABI.tar.bz2
