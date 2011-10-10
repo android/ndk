@@ -186,12 +186,12 @@ log "Android product out: $ANDROID_PRODUCT_OUT"
 
 case $ARCH in
     arm)
-        TOOLCHAIN=arm-linux-androideabi-4.4.3
-        PREFIX=arm-linux-androideabi
+        TOOLCHAIN=$DEFAULT_ARCH_TOOLCHAIN_NAME_arm
+        PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_arm
         ;;
     x86)
-        TOOLCHAIN=x86-4.4.3
-        PREFIX=i686-android-linux
+        TOOLCHAIN=$DEFAULT_ARCH_TOOLCHAIN_NAME_x86
+        PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_x86
         ;;
     *)
         echo "ERROR: Unsupported architecture: $ARCH"
@@ -199,8 +199,8 @@ case $ARCH in
 esac
 
 if [ -z "$TOOLCHAIN_PREFIX" ]; then
-    TOOLCHAIN_NAME=$(get_default_toolchain_name_for $ARCH)
-    TOOLCHAIN_PREFIX=$(get_default_toolchain_prefix_for $ARCH)
+    TOOLCHAIN_NAME=$(get_default_toolchain_name_for_arch $ARCH)
+    TOOLCHAIN_PREFIX=$(get_default_toolchain_prefix_for_arch $ARCH)
     TOOLCHAIN_PREFIX=$(get_toolchain_install $ANDROID_NDK_ROOT $TOOLCHAIN_NAME)/bin/$TOOLCHAIN_PREFIX
     TOOLCHAIN_PREFIX=${TOOLCHAIN_PREFIX%%-}
     if [ -z "$TOOLCHAIN_PREFIX" ]; then

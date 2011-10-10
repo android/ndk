@@ -79,7 +79,7 @@ fi
 
 # Check toolchain name
 if [ -z "$TOOLCHAIN_NAME" ]; then
-    TOOLCHAIN_NAME=$(get_default_toolchain_name_for $ARCH)
+    TOOLCHAIN_NAME=$(get_default_toolchain_name_for_arch $ARCH)
     echo "Auto-config: --toolchain=$TOOLCHAIN_NAME"
 fi
 

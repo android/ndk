@@ -20,6 +20,7 @@ fi
 NDK_BUILDTOOLS_ABSPATH=$(cd $NDK_BUILDTOOLS_PATH && pwd)
 
 . $NDK_BUILDTOOLS_PATH/../core/ndk-common.sh
+. $NDK_BUILDTOOLS_PATH/dev-defaults.sh
 
 #====================================================
 #
@@ -853,67 +854,14 @@ convert_abi_to_arch ()
     echo "$RET"
 }
 
-get_default_abi_for_arch ()
-{
-    local RET
-    case $1 in
-        arm)
-            RET="armeabi"
-            ;;
-        x86)
-            RET="x86"
-            ;;
-        *)
-            2> echo "ERROR: Unsupported architecture name: $1, use one of: arm x86"
-            exit 1
-            ;;
-    esac
-    echo "$RET"
-}
-
-# Retrieve the list of default ABIs supported by a given architecture
-# $1: Architecture name
-# Result: space-separated list of ABI names
-get_default_abis_for_arch ()
-{
-    local RET
-    case $1 in
-        arm)
-            RET="armeabi armeabi-v7a"
-            ;;
-        x86)
-            RET="x86"
-            ;;
-        *)
-            2> echo "ERROR: Unsupported architecture name: $1, use one of: arm x86"
-            exit 1
-            ;;
-    esac
-    echo "$RET"
-}
-
-# Return the default name for a given architecture
-# $1: Architecture name
-get_default_toolchain_name_for ()
-{
-    eval echo "\$DEFAULT_ARCH_TOOLCHAIN_$1"
-}
-
-# Return the default toolchain program prefix for a given architecture
-# $1: Architecture name
-get_default_toolchain_prefix_for ()
-{
-    eval echo "\$DEFAULT_ARCH_TOOLCHAIN_PREFIX_$1"
-}
-
 # Return the default binary path prefix for a given architecture
 # For example: arm -> toolchains/arm-linux-androideabi-4.4.3/prebuilt/<system>/bin/arm-linux-androideabi-
 # $1: Architecture name
 get_default_toolchain_binprefix_for_arch ()
 {
     local NAME PREFIX DIR BINPREFIX
-    NAME=$(get_default_toolchain_name_for $1)
-    PREFIX=$(get_default_toolchain_prefix_for $1)
+    NAME=$(get_default_toolchain_name_for_arch $1)
+    PREFIX=$(get_default_toolchain_prefix_for_arch $1)
     DIR=$(get_toolchain_install . $NAME)
     BINPREFIX=${DIR#./}/bin/$PREFIX
     echo "$BINPREFIX"
@@ -1047,42 +995,3 @@ if [ -z "$NDK_TMPDIR" ]; then
     fi
     export NDK_TMPDIR
 fi
-
-#
-# Common definitions
-#
-
-# Current list of platform levels we support
-#
-# Note: levels 6 and 7 are omitted since they have the same native
-# APIs as level 5.
-#
-API_LEVELS="3 4 5 8 9"
-
-# Location of the STLport sources, relative to the NDK root directory
-STLPORT_SUBDIR=sources/cxx-stl/stlport
-
-# Location of the GAbi++ sources, relative to the NDK root directory
-GABIXX_SUBDIR=sources/cxx-stl/gabi++
-
-# Default ABIs for the prebuilt GAbi++ and STLport binaries
-PREBUILT_ABIS="armeabi armeabi-v7a x86"
-
-# Location of the GNU libstdc++ headers and libraries, relative to the NDK
-# root directory.
-GNUSTL_SUBDIR=sources/cxx-stl/gnu-libstdc++
-
-# The date to use when downloading toolchain sources from android.git.kernel.org
-# Leave it empty for tip of tree.
-TOOLCHAIN_GIT_DATE=2011-02-23
-
-# Default toolchain names and prefix
-#
-# This is used by get_default_toolchain_name and get_default_toolchain_prefix
-# defined above
-DEFAULT_ARCH_TOOLCHAIN_arm=arm-linux-androideabi-4.4.3
-DEFAULT_ARCH_TOOLCHAIN_PREFIX_arm=arm-linux-androideabi-
-
-DEFAULT_ARCH_TOOLCHAIN_x86=x86-4.4.3
-DEFAULT_ARCH_TOOLCHAIN_PREFIX_x86=i686-android-linux-
-

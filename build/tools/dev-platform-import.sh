@@ -178,8 +178,8 @@ log "Android build tree root: $ANDROID_ROOT"
 log "Android product out: $ANDROID_PRODUCT_OUT"
 
 if [ -z "$TOOLCHAIN_PREFIX" ]; then
-    TOOLCHAIN_NAME=$(get_default_toolchain_name_for $ARCH)
-    TOOLCHAIN_PREFIX=$(get_default_toolchain_prefix_for $ARCH)
+    TOOLCHAIN_NAME=$(get_default_toolchain_name_for_arch $ARCH)
+    TOOLCHAIN_PREFIX=$(get_default_toolchain_prefix_for_arch $ARCH)
     TOOLCHAIN_PREFIX=$(get_toolchain_install $ANDROID_NDK_ROOT $TOOLCHAIN_NAME)/bin/$TOOLCHAIN_PREFIX
     TOOLCHAIN_PREFIX=${TOOLCHAIN_PREFIX%%-}
     if [ -z "$TOOLCHAIN_PREFIX" ]; then

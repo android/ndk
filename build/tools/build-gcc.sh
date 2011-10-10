@@ -36,22 +36,22 @@ OPTION_BUILD_OUT=
 register_var_option "--build-out=<path>" OPTION_BUILD_OUT "Set temporary build directory"
 
 # Note: platform API level 9 or higher is needed for proper C++ support
-PLATFORM=android-9
+PLATFORM=$DEFAULT_PLATFORM
 register_var_option "--platform=<name>"  PLATFORM "Specify platform name"
 
 OPTION_SYSROOT=
 register_var_option "--sysroot=<path>"   OPTION_SYSROOT   "Specify sysroot directory directly"
 
-GDB_VERSION=7.1.x
+GDB_VERSION=$DEFAULT_GDB_VERSION
 register_var_option "--gdb-version=<version>"  GDB_VERSION "Specify gdb version"
 
-BINUTILS_VERSION=2.20.1
+BINUTILS_VERSION=$DEFAULT_BINUTILS_VERSION
 register_var_option "--binutils-version=<version>" BINUTILS_VERSION "Specify binutils version"
 
-GMP_VERSION=4.2.4
+GMP_VERSION=$DEFAULT_GMP_VERSION
 register_var_option "--gmp-version=<version>" GMP_VERSION "Specify gmp version"
 
-MPFR_VERSION=2.4.1
+MPFR_VERSION=$DEFAULT_MPFR_VERSION
 register_var_option "--mpfr-version=<version>" MPFR_VERSION "Specify mpfr version"
 
 register_jobs_option

@@ -41,7 +41,7 @@ register_var_option "--out-dir=<path>" OUT_DIR "Alternate installation location.
 CLEAN_NDK=no
 register_var_option "--clean-ndk" CLEAN_NDK "Remove binaries from NDK installation."
 
-TOOLCHAIN=arm-linux-androideabi-4.4.3
+TOOLCHAIN=$DEFAULT_ARCH_TOOLCHAIN_NAME_arm
 register_var_option "--toolchain=<name>" TOOLCHAIN "Specify toolchain name."
 
 REVERSE=no

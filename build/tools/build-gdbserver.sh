@@ -43,7 +43,7 @@ BUILD_OUT=/tmp/ndk-$USER/build/gdbserver
 register_option "--build-out=<path>" do_build_out "Set temporary build directory"
 do_build_out () { OPTION_BUILD_OUT="$1"; }
 
-PLATFORM=android-9
+PLATFORM=$DEFAULT_PLATFORM
 register_var_option "--platform=<name>"  PLATFORM "Target specific platform"
 
 SYSROOT=

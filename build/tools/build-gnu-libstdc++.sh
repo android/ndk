@@ -76,7 +76,7 @@ if [ -z "$SRCDIR" ]; then
     exit 1
 fi
 
-GNUSTL_SRCDIR=$SRCDIR/gcc/gcc-4.4.3/libstdc++-v3
+GNUSTL_SRCDIR=$SRCDIR/gcc/gcc-$DEFAULT_GCC_VERSION/libstdc++-v3
 if [ ! -d "$GNUSTL_SRCDIR" ]; then
     echo "ERROR: Not a valid toolchain source tree."
     echo "Can't find: $GNUSTL_SRCDIR"
@@ -186,7 +186,7 @@ copy_gnustl_libs ()
     local BUILDDIR="$2"
     local ARCH=$(convert_abi_to_arch $ABI)
     local VERSION=$DEFAULT_GCC_VERSION
-    local PREFIX=$(get_default_toolchain_prefix_for $ARCH)
+    local PREFIX=$(get_default_toolchain_prefix_for_arch $ARCH)
     PREFIX=${PREFIX%%-}
 
     local SDIR="$BUILDDIR/install"

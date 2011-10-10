@@ -46,11 +46,11 @@ PREBUILT_NDK=
 register_var_option "--prebuilt-ndk=<file>" PREBUILT_NDK "Specify prebuilt ndk package"
 
 # the list of supported host development systems
-SYSTEMS="linux-x86,darwin-x86,windows"
+SYSTEMS=$DEFAULT_SYSTEMS
 register_var_option "--systems=<list>" SYSTEMS "Specify host systems"
 
 # ARCH to build for
-ARCHS="arm,x86"
+ARCHS=$DEFAULT_ARCHS
 register_var_option "--arch=<arch>" ARCHS "Specify target architecture(s)"
 
 # set to 'yes' if we should use 'git ls-files' to list the files to
@@ -59,7 +59,7 @@ NO_GIT=no
 register_var_option "--no-git" NO_GIT "Don't use git to list input files, take all of them."
 
 # set of toolchain prebuilts we need to package
-TOOLCHAINS="arm-linux-androideabi-4.4.3"
+TOOLCHAINS="$DEFAULT_ARCH_TOOLCHAIN_NAME_arm"
 OPTION_TOOLCHAINS=$TOOLCHAINS
 register_var_option "--toolchains=<list>" OPTION_TOOLCHAINS "Specify list of toolchains."
 
@@ -117,14 +117,12 @@ fi
 # Compute ABIS from ARCHS
 ABIS=
 for ARCH in $ARCHS; do
-    case $ARCH in
-        arm)
-            ABIS="$ABIS armeabi armeabi-v7a"
-            ;;
-        *)
-            ABIS="$ABIS $ARCH"
-            ;;
-    esac
+    DEFAULT_ABIS=$(get_default_abis_for_arch $ARCH)
+    if [ -z "$ABIS" ]; then
+        ABIS=$DEFAULT_ABIS
+    else
+        ABIS=$ABIS" $DEFAULT_ABIS"
+    fi
 done
 
 # If --arch is used to list x86 as a target architecture, Add x86-4.4.3 to
@@ -137,7 +135,7 @@ if [ "$OPTION_TOOLCHAINS" != "$TOOLCHAINS" ]; then
     TOOLCHAINS=$(commas_to_spaces $OPTION_TOOLCHAINS)
 else
     if [ "$TRY_X86" = "yes" ]; then
-        TOOLCHAINS="$TOOLCHAINS x86-4.4.3"
+        TOOLCHAINS="$TOOLCHAINS $DEFAULT_ARCH_TOOLCHAIN_NAME_x86"
     fi
     TOOLCHAINS=$(commas_to_spaces $TOOLCHAINS)
 fi

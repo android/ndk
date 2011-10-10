@@ -31,13 +31,13 @@ register_var_option "--ndk-dir=<path>" NDK_DIR "Don't package, copy binaries to 
 BUILD_DIR=/tmp/ndk-$USER/build
 register_var_option "--build-dir=<path>" BUILD_DIR "Specify temporary build directory"
 
-GDB_VERSION=6.6
+GDB_VERSION=$DEFAULT_GDB_VERSION
 register_var_option "--gdb-version=<version>" GDB_VERSION "Specify gdb version"
 
-BINUTILS_VERSION=2.19
+BINUTILS_VERSION=$DEFAULT_BINUTILS_VERSION
 register_var_option "--binutils-version=<version>" BINUTILS_VERSION "Specify binutils version"
 
-MPFR_VERSION=2.3.0
+MPFR_VERSION=$DEFAULT_MPFR_VERSION
 register_var_option "--mpfr-version=<version>" MPFR_VERSION "Specify mpfr version"
 
 ARCH=arm
@@ -288,15 +288,15 @@ get_toolchain_sources
 
 case "$ARCH" in
 arm )
-    build_toolchain arm-linux-androideabi-4.4.3
+    build_toolchain $DEFAULT_ARCH_TOOLCHAIN_NAME_arm
     if [ -z "$HOST_ONLY" ]; then
-        build_gdbserver arm-linux-androideabi-4.4.3
+        build_gdbserver $DEFAULT_ARCH_TOOLCHAIN_NAME_arm
     fi
     ;;
 x86 )
-    build_toolchain x86-4.4.3
+    build_toolchain $DEFAULT_ARCH_TOOLCHAIN_NAME_x86
     if [ -z "$HOST_ONLY" ]; then
-        build_gdbserver x86-4.4.3
+        build_gdbserver $DEFAULT_ARCH_TOOLCHAIN_NAME_x86
     fi
     ;;
 esac
@@ -307,12 +307,12 @@ if [ -z "$HOST_ONLY" ]; then
     if [ "$HOST_OS" = "linux" ] ; then
         case "$ARCH" in
         arm )
-            LIBSUPC_DIR="toolchains/arm-linux-androideabi-4.4.3/prebuilt/$HOST_TAG/arm-linux-androideabi/lib"
+            LIBSUPC_DIR="toolchains/$DEFAULT_ARCH_TOOLCHAIN_NAME_arm/prebuilt/$HOST_TAG/$DEFAULT_ARCH_TOOLCHAIN_PREFIX_arm/lib"
             package_it "GNU libsupc++ armeabi libs" "gnu-libsupc++-armeabi" "$LIBSUPC_DIR/libsupc++.a $LIBSUPC_DIR/thumb/libsupc++.a"
             package_it "GNU libsupc++ armeabi-v7a libs" "gnu-libsupc++-armeabi-v7a" "$LIBSUPC_DIR/armv7-a/libsupc++.a $LIBSUPC_DIR/armv7-a/thumb/libsupc++.a"
             ;;
         x86 )
-            LIBSUPC_DIR="toolchains/x86-4.4.3/prebuilt/$HOST_TAG/i686-android-linux/lib"
+            LIBSUPC_DIR="toolchains/$DEFAULT_ARCH_TOOLCHAIN_NAME_x86/prebuilt/$HOST_TAG/$DEFAULT_ARCH_TOOLCHAIN_PREFIX_x86/lib"
             package_it "GNU libsupc++ x86 libs" "gnu-libsupc++-x86" "$LIBSUPC_DIR/libsupc++.a"
             ;;
         esac

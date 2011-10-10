@@ -41,7 +41,7 @@ OPTION_QUICK_BUILD="no"
 register_var_option "--quick" OPTION_QUICK_BUILD "Only build the Linux basics"
 
 # List of toolchains to package
-OPTION_TOOLCHAINS="arm-linux-androideabi-4.4.3,x86-4.4.3"
+OPTION_TOOLCHAINS="$DEFAULT_ARCH_TOOLCHAIN_NAME_arm,$DEFAULT_ARCH_TOOLCHAIN_NAME_x86"
 register_var_option "--toolchains=<toolchain[,toolchain]>" OPTION_TOOLCHAINS "Toolchain(s) to package"
 
 # # Name of the Mac OS Build host
