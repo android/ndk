@@ -53,7 +53,7 @@ extract_platforms_from ()
 SRCDIR="../development/ndk"
 DSTDIR="$ANDROID_NDK_ROOT"
 
-ARCHS="arm"
+ARCHS="$DEFAULT_ARCHS"
 PLATFORMS=`extract_platforms_from "$SRCDIR"`
 
 OPTION_HELP=no
