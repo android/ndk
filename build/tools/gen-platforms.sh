@@ -65,6 +65,7 @@ OPTION_FAST_COPY=
 OPTION_MINIMAL=
 OPTION_ARCH=
 OPTION_ABI=
+PACKAGE_DIR=
 
 VERBOSE=no
 VERBOSE2=no
@@ -105,6 +106,9 @@ for opt do
   --minimal)
     OPTION_MINIMAL=yes
     ;;
+  --package-dir=*)
+    PACKAGE_DIR=$optarg
+    ;;
   *)
     echo "unknown option '$opt', use --help"
     exit 1
@@ -117,15 +121,16 @@ if [ $OPTION_HELP = "yes" ] ; then
     echo ""
     echo "options:"
     echo ""
-    echo "  --help             Print this message"
-    echo "  --verbose          Enable verbose messages"
-    echo "  --src-dir=<path>   Source directory for development platform files [$SRCDIR]"
-    echo "  --dst-dir=<path>   Destination directory [$DSTDIR]"
-    echo "  --platform=<list>  List of API levels [$PLATFORMS]"
-    echo "  --arch=<list>      List of CPU architectures [$ARCHS]"
-    echo "  --minimal          Ignore samples, symlinks and generated shared libs."
-    echo "  --fast-copy        Don't create symlinks, copy files instead"
-    echo "  --samples          Also generate samples directories."
+    echo "  --help                Print this message"
+    echo "  --verbose             Enable verbose messages"
+    echo "  --src-dir=<path>      Source directory for development platform files [$SRCDIR]"
+    echo "  --dst-dir=<path>      Destination directory [$DSTDIR]"
+    echo "  --platform=<list>     List of API levels [$PLATFORMS]"
+    echo "  --arch=<list>         List of CPU architectures [$ARCHS]"
+    echo "  --minimal             Ignore samples, symlinks and generated shared libs."
+    echo "  --fast-copy           Don't create symlinks, copy files instead"
+    echo "  --samples             Also generate samples directories."
+    echo "  --package-dir=<path>  Package platforms archive in specific path."
     echo ""
     echo "Use the --minimal flag if you want to generate minimal sysroot directories"
     echo "that will be used to generate prebuilt toolchains. Otherwise, the script"
@@ -484,6 +489,21 @@ if [ "$OPTION_SAMPLES" ] ; then
     # Cleanup generated files in samples
     rm -rf "$DSTDIR/samples/*/obj"
     rm -rf "$DSTDIR/samples/*/libs"
+fi
+
+if [ "$PACKAGE_DIR" ]; then
+    mkdir -p "$PACKAGE_DIR"
+    fail_panic "Could not create package directory: $PACKAGE_DIR"
+    ARCHIVE=platforms.tar.bz2
+    dump "Packaging $ARCHIVE"
+    pack_archive "$PACKAGE_DIR/$ARCHIVE" "$DSTDIR" "platforms"
+    fail_panic "Could not package platforms"
+    if [ "$OPTION_SAMPLES" ]; then
+        ARCHIVE=samples.tar.bz2
+        dump "Packaging $ARCHIVE"
+        pack_archive "$PACKAGE_DIR/$ARCHIVE" "$DSTDIR" "samples"
+        fail_panoc "Could not package samples"
+    fi
 fi
 
 log "Done !"
