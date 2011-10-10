@@ -139,14 +139,17 @@ if [ "$REVERSE" = "no" ] ; then
         arm)
             # We use the thumb version by default.
             copy_directory "$OUT_INCLUDE_ABI/thumb/bits" "$OUT_LIBS/armeabi/include/bits"
-            copy_file_list "$ABI_STL/lib/thumb" "$OUT_LIBS/armeabi" "libstdc++.*"
+            copy_file_list "$ABI_STL/lib/thumb" "$OUT_LIBS/armeabi" "libstdc++.so libgnustl_shared.so"
+            cp "$ABI_STL/lib/thumb/libstdc++.a" "$OUT_LIBS/armeabi-v7a/libgnustl_static.a"
 
             copy_directory "$OUT_INCLUDE_ABI/armv7-a/bits" "$OUT_LIBS/armeabi-v7a/include/bits"
-            copy_file_list "$ABI_STL/lib/armv7-a" "$OUT_LIBS/armeabi-v7a" "libstdc++.*"
+            copy_file_list "$ABI_STL/lib/armv7-a" "$OUT_LIBS/armeabi-v7a" "libstdc++.so libgnustl_shared.so"
+            cp "$ABI_STL/lib/armv7-a/libstdc++.a" "$OUT_LIBS/armeabi/libgnustl_static.a"
             ;;
         x86)
             copy_directory "$OUT_INCLUDE_ABI/bits" "$OUT_LIBS/x86/include/bits"
-            copy_file_list "$ABI_STL/lib" "$OUT_LIBS/x86" "libstdc++.*"
+            copy_file_list "$ABI_STL/lib" "$OUT_LIBS/x86" "libstdc++.so"
+            cp "$ABI_STL/lib/libstdc++.a" "$OUT_LIBS/x86/libgnustl_static.a"
             ;;
         *)
             dump "ERROR: Unsupported NDK architecture!"
@@ -165,15 +168,21 @@ else # REVERSE = yes
     case "$ARCH" in
         arm)
             copy_directory "$OUT_LIBS/armeabi/include/bits" "$ABI_STL_INCLUDE_TARGET/bits"
-            copy_file_list "$OUT_LIBS/armeabi" "$ABI_STL/lib" "libstdc++.*"
+            copy_file_list "$OUT_LIBS/armeabi" "$ABI_STL/lib" "libstdc++.so"
+            cp "$OUT_LIBS/armeabi/libgnustl_static.a" "$ABI_STL/lib/libstdc++.a"
+
             copy_directory "$OUT_LIBS/armeabi/include/bits" "$ABI_STL_INCLUDE_TARGET/thumb/bits"
-            copy_file_list "$OUT_LIBS/armeabi" "$ABI_STL/lib/thumb" "libstdc++.*"
+            copy_file_list "$OUT_LIBS/armeabi" "$ABI_STL/lib/thumb" "libstdc++.so"
+            cp "$OUT_LIBS/armeabi/libgnustl_static.a" "$ABI_STL/lib/thumb/libstdc++.a"
+
             copy_directory "$OUT_LIBS/armeabi-v7a/include/bits" "$ABI_STL_INCLUDE_TARGET/armv7-a/bits"
-            copy_file_list "$OUT_LIBS/armeabi-v7a" "$ABI_STL/lib/armv7-a" "libstdc++.*"
+            copy_file_list "$OUT_LIBS/armeabi-v7a" "$ABI_STL/lib/armv7-a" "libstdc++.so"
+            cp "$OUT_LIBS/armeabi-v7a/libgnustl_static.a" "$ABI_STL/lib/armv7-a/libstdc++.a"
             ;;
         x86)
             copy_directory "$OUT_LIBS/x86/include/bits" "$ABI_STL_INCLUDE_TARGET/bits"
-            copy_file_list "$OUT_LIBS/x86" "$ABI_STL/lib" "libstdc++.*"
+            copy_file_list "$OUT_LIBS/x86" "$ABI_STL/lib" "libstdc++.so"
+            cp "$OUT_LIBS/x86/libgnustl_static.a" "$ABI_STL/lib/libstdc++.a"
             ;;
         *)
             dump "ERROR: Unsupported NDK architecture!"

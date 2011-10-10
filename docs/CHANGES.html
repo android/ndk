@@ -73,7 +73,17 @@ OTHER CHANGES:
 - Add a new C++ support runtime named "gabi++". More details about it
   are available in the updated docs/CPLUSPLUS-SUPPORT.html.
 
-- You can now list several file extensions in LOCAL_CPP_EXTENSION.
+- The STLport C++ runtimes now support RTTI (no exceptions yet though).
+
+- Add a new C++ support runtime named "gnustl_shared" corresponding to the
+  shared library version of GNU libstdc++ v3 (GPLv3 license). See more
+  info at docs/CPLUSPLUS-SUPPORT.html
+
+- You can now list several file extensions in LOCAL_CPP_EXTENSION. As in:
+
+        LOCAL_CPP_EXTENSION := .cpp .cxx
+
+  To compile both foo.cpp and bar.cxx as C++ sources.
 
 -------------------------------------------------------------------------------
 android-ndk-r6b

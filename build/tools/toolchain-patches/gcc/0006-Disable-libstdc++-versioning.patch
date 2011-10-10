@@ -1,6 +1,6 @@
 diff -burN gcc-a/gcc-4.4.3/libstdc++-v3/src/Makefile.am gcc-b/gcc-4.4.3/libstdc++-v3/src/Makefile.am
---- gcc-a/gcc-4.4.3/libstdc++-v3/src/Makefile.am	2011-10-02 22:00:20.352164415 +0200
-+++ gcc-b/gcc-4.4.3/libstdc++-v3/src/Makefile.am	2011-10-02 22:00:37.311501551 +0200
+--- gcc-a/gcc-4.4.3/libstdc++-v3/src/Makefile.am	2011-10-10 17:32:21.983349054 +0200
++++ gcc-b/gcc-4.4.3/libstdc++-v3/src/Makefile.am	2011-10-10 17:10:06.474674579 +0200
 @@ -206,7 +206,7 @@
  	$(top_builddir)/libsupc++/libsupc++convenience.la
  
@@ -11,8 +11,17 @@ diff -burN gcc-a/gcc-4.4.3/libstdc++-v3/src/Makefile.am gcc-b/gcc-4.4.3/libstdc+
  # Use special rules for the deprecated source files so that they find
  # deprecated include files.
 diff -burN gcc-a/gcc-4.4.3/libstdc++-v3/src/Makefile.in gcc-b/gcc-4.4.3/libstdc++-v3/src/Makefile.in
---- gcc-a/gcc-4.4.3/libstdc++-v3/src/Makefile.in	2011-10-02 22:00:20.352164415 +0200
-+++ gcc-b/gcc-4.4.3/libstdc++-v3/src/Makefile.in	2011-10-02 22:00:37.311501551 +0200
+--- gcc-a/gcc-4.4.3/libstdc++-v3/src/Makefile.in	2011-10-10 17:32:21.983349054 +0200
++++ gcc-b/gcc-4.4.3/libstdc++-v3/src/Makefile.in	2011-10-10 17:10:06.514673034 +0200
+@@ -350,7 +350,7 @@
+ AM_CPPFLAGS = $(GLIBCXX_INCLUDES)
+ 
+ # Cross compiler support.
+-toolexeclib_LTLIBRARIES = libstdc++.la
++toolexeclib_LTLIBRARIES = libstdc++.la libgnustl_shared.la
+ @ENABLE_SYMVERS_DARWIN_TRUE@@ENABLE_SYMVERS_TRUE@version_arg = -Wl,-exported_symbols_list,libstdc++-symbols.explist
+ @ENABLE_SYMVERS_FALSE@version_arg = 
+ @ENABLE_SYMVERS_GNU_NAMESPACE_TRUE@@ENABLE_SYMVERS_TRUE@version_arg = -Wl,--version-script=libstdc++-symbols.ver
 @@ -454,7 +454,7 @@
  	$(top_builddir)/libsupc++/libsupc++convenience.la
  
@@ -22,3 +31,13 @@ diff -burN gcc-a/gcc-4.4.3/libstdc++-v3/src/Makefile.in gcc-b/gcc-4.4.3/libstdc+
  
  
  # Use special rules for the deprecated source files so that they find
+@@ -576,6 +576,9 @@
+ libstdc++.la: $(libstdc___la_OBJECTS) $(libstdc___la_DEPENDENCIES) 
+ 	$(CXXLINK) -rpath $(toolexeclibdir) $(libstdc___la_LDFLAGS) $(libstdc___la_OBJECTS) $(libstdc___la_LIBADD) $(LIBS)
+ 
++libgnustl_shared.la: $(libstdc___la_OBJECTS) $(libstdc___la_DEPENDENCIES) 
++	$(CXXLINK) -rpath $(toolexeclibdir) $(libstdc___la_LDFLAGS) $(libstdc___la_OBJECTS) $(libstdc___la_LIBADD) $(LIBS)
++
+ mostlyclean-compile:
+ 	-rm -f *.$(OBJEXT)
+ 

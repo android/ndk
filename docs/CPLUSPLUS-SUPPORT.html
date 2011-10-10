@@ -24,11 +24,10 @@ Application.mk to one of the following values:
     stlport_static  -&gt; Use the STLport runtime as a static library.
     stlport_shared  -&gt; Use the STLport runtime as a shared library.
     gnustl_static   -&gt; Use the GNU STL as a static library.
-
-Note that there is no 'gnustl_shared' runtime available for now.
+    gnustl_shared   -&gt; Use the GNU STL as a shared library.
 
 The 'system' runtime is the default if there is no APP_STL definition in
-your Application.mk. As an example, to use the GNU STL, add a line like:
+your Application.mk. As an example, to use the static GNU STL, add a line like:
 
    APP_STL := gnustl_static
 
@@ -48,7 +47,7 @@ The capabilities of the various runtimes vary. See this table:
 
     system        no       no        no
     gabi++        no      yes        no
-    stlport       no       no       yes
+    stlport       no      yes       yes
     gnustl       yes      yes       yes
 
 
@@ -91,7 +90,9 @@ I.3. STLport runtime:
 
 This is a port of STLport (http://www.stlport.org) that can be used on
 Android. It will provide you with a complete set of C++ standard library
-headers, however it CURRENTLY DOES NOT SUPPORT EXCEPTIONS OR RTTI!
+headers, however it ONLY SUPPORTS RTTI, AND NO EXCEPTIONS!
+
+That's because the library embeds its own copy of GAbi++.
 
 Available as both both static and shared libraries. To use it, use either
 one of these two lines in your Application.mk:
@@ -107,7 +108,8 @@ I.4. GNU STL runtime:
 - - - - - - - - - - -
 
 This is the GNU Standard C++ Library (a.k.a. libstdc++-v3), providing the
-more features. Note that it is currently only available as a static library.
+more features. Note that the shared library file is named "libgnustl_shared.so"
+instead of "libstdc++.so" as on other platforms.
 
 If you want to use it, please read the "C++ Exceptions support",
 "RTTI Support" and "Static runtime considerations" sections below.
@@ -125,8 +127,15 @@ The NDK toolchain supports C++ exceptions, since NDK r5, however all C++
 sources are compiled with -fno-exceptions support by default, for
 compatibility reasons with previous releases.
 
-To enable it, use the '-fexceptions' C++ compiler flag. This can be done
-by adding the following to every module definition in your Android.mk:
+To enable it, use the new LOCAL_CPP_FEATURES variable in your Android.mk,
+as in:
+
+    LOCAL_CPP_FEATURES += exceptions
+
+See docs/ANDROID-MK.html for more details about this varibale.
+
+Another way to do the same is to define it in your LOCAL_CPPFLAGS definition
+(but using LOCAL_CPP_FEATURES is preferred), as in:
 
     LOCAL_CPPFLAGS += -fexceptions
 
@@ -137,7 +146,7 @@ automatically apply to all your project's NDK modules:
 
 IMPORTANT: You *will* have to select a C++ runtime that supports
            exceptions to be able to link / run your code. At this point
-           this means only 'gnustl_static'!
+           this means only 'gnustl_static' or "gnustl_shared'!
 
 
 II.2. RTTI support:
@@ -148,16 +157,15 @@ since NDK r5, but all C++ sources are built with -fno-rtti by default for
 compatibility reasons. To enable it, add the following to your module
 declarations:
 
+    LOCAL_CPP_FEATURES += rtti
+
+This will be equivalent to:
+
     LOCAL_CPPFLAGS += -frtti
 
 Or more simply to your Application.mk:
 
     APP_CPPFLAGS += -frtti
-
-IMPORTANT: You *will* have to select an C++ runtime that supports
-           RTTI to be able to link / run your code. At this point
-           this means only 'gabi++_static/shared' or 'gnustl_static'
-
 
 
 II.3. Static runtimes:
@@ -228,6 +236,17 @@ in your environment or your Application.mk before building:
 
 STLport is licensed under a BSD-style open-source license. See
 sources/cxx-stl/stlport/README for more details about the library.
+
+
+III.2. GNU libstdc++ license is GPLv3 + linking exception!
+----------------------------------------------------------
+
+Be aware that the GNU libstdc++ is covered by the GPLv3 license (and *not*
+the LGPLv2 or LGPLv3 as some assume), full details available here:
+
+    http://gcc.gnu.org/onlinedocs/libstdc++/manual/license.html
+
+Be sure that you comply with all clauses of this license.
 
 
 IV. Future Plans:

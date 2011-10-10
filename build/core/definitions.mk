@@ -1511,6 +1511,13 @@ $(call ndk-stl-register,\
     \
     )
 
+$(call ndk-stl-register,\
+    gnustl_shared,\
+    cxx-stl/gnu-libstdc++,\
+    ,\
+    gnustl_shared\
+    )
+
 # Register the static version of the GAbi++ C++ runtime
 #
 $(call ndk-stl-register,\

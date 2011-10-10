@@ -127,7 +127,8 @@ build_gnustl_for_abi ()
     mkdir -p $DSTDIR
 
     ARCH=$(convert_abi_to_arch $ABI)
-    BINPREFIX=${TOOLCHAIN_PREFIX%%-}-
+    BINPREFIX=$NDK_DIR/$(get_default_toolchain_binprefix_for_arch $ARCH)
+    SYSROOT=$NDK_DIR/$(get_default_platform_sysroot_for_arch $ARCH)
 
     # Sanity check
     if [ ! -f "$SYSROOT/usr/lib/libc.a" ]; then
@@ -149,7 +150,19 @@ build_gnustl_for_abi ()
             ;;
     esac
 
-    export CXXFLAGS="-fexceptions -frtti -D__BIONIC__ -O2"
+    export CXXFLAGS="$CXXFLAGS --sysroot=$SYSROOT -fexceptions -frtti -D__BIONIC__ -O2 -fvisibility=hidden -fvisibility-inlines-hidden"
+
+    export CC=${BINPREFIX}gcc
+    export CXX=${BINPREFIX}g++
+    export AS=${BINPREFIX}as
+    export LD=${BINPREFIX}ld
+    export AR=${BINPREFIX}ar
+    export RANLIB=${BINPREFIX}ranlib
+    export STRIP=${BINPREFIX}strip
+
+    setup_ccache
+
+    export LDFLAGS="-nostdinc -L$SYSROOT/usr/lib -lc"
 
     PROJECT="GNU libstdc++ $ABI"
     echo "$PROJECT: configuring"
@@ -205,7 +218,12 @@ copy_gnustl_libs ()
     copy_directory "$SDIR/include/c++/$VERSION/$PREFIX" "$DDIR/libs/$ABI/include"
 
     # Copy the ABI-specific libraries
-    copy_file_list "$SDIR/lib" "$DDIR/libs/$ABI" libsupc++.a libstdc++.a libstdc++.so
+    # Note: the shared library name is libgnustl_shared.so due our custom toolchain patch
+    # We need to copy libstdc++.so which is identical to libgnustl_shared.so except for the DT_LIBRARY entry
+    # within the ELF file, since it will be needed by the standalone toolchain installation later.
+    copy_file_list "$SDIR/lib" "$DDIR/libs/$ABI" libsupc++.a libstdc++.so libgnustl_shared.so
+    # Note: we need to rename libgnustl_shared.a to libgnustl_static.a
+    cp "$SDIR/lib/libgnustl_shared.a" "$DDIR/libs/$ABI/libgnustl_static.a"
 }
 
 
@@ -225,7 +243,7 @@ if [ -n "$PACKAGE_DIR" ] ; then
     # Then, one package per ABI for libraries
     for ABI in $ABIS; do
         FILES=""
-        for LIB in libsupc++.a libstdc++.a libstdc++.so; do
+        for LIB in libsupc++.a libgnustl_static.a libstdc++.so libgnustl_shared.so; do
             FILES="$FILES $GNUSTL_SUBDIR/libs/$ABI/$LIB"
         done
         PACKAGE="$PACKAGE_DIR/gnu-libstdc++-libs-$ABI.tar.bz2"
