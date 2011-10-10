@@ -212,10 +212,11 @@ copy_gnustl_libs ()
         HAS_COMMON_HEADERS=true
     fi
 
-    # Copy the ABI-specific headers
     rm -rf "$DIR/libs/$ABI" && 
-    mkdir -p "$DDIR/libs/$ABI"
-    copy_directory "$SDIR/include/c++/$VERSION/$PREFIX" "$DDIR/libs/$ABI/include"
+    mkdir -p "$DDIR/libs/$ABI/include"
+
+    # Copy the ABI-specific headers
+    copy_directory "$SDIR/include/c++/$VERSION/$PREFIX/bits" "$DDIR/libs/$ABI/include/bits"
 
     # Copy the ABI-specific libraries
     # Note: the shared library name is libgnustl_shared.so due our custom toolchain patch
@@ -243,7 +244,7 @@ if [ -n "$PACKAGE_DIR" ] ; then
     # Then, one package per ABI for libraries
     for ABI in $ABIS; do
         FILES=""
-        for LIB in libsupc++.a libgnustl_static.a libstdc++.so libgnustl_shared.so; do
+        for LIB in include/bits libsupc++.a libgnustl_static.a libstdc++.so libgnustl_shared.so; do
             FILES="$FILES $GNUSTL_SUBDIR/libs/$ABI/$LIB"
         done
         PACKAGE="$PACKAGE_DIR/gnu-libstdc++-libs-$ABI.tar.bz2"

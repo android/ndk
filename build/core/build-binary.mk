@@ -226,9 +226,9 @@ endif
 # If we're using the 'system' STL and use rtti or exceptions, then
 # automatically link against the GNU libsupc++ for now.
 #
-ifneq (,$(call module-has-c++-features),$(LOCAL_MODULE),rtti exceptions)
+ifneq (,$(call module-has-c++-features,$(LOCAL_MODULE),rtti exceptions))
     ifeq (system,$(NDK_APP_STL))
-      LOCAL_LDLIBS := $(LOCAL_LDLIBS) -lsupc++
+      LOCAL_LDLIBS := $(LOCAL_LDLIBS) $(NDK_ROOT)/sources/cxx-stl/gnu-libstdc++/libs/$(TARGET_ARCH_ABI)/libsupc++.a
     endif
 endif
 
