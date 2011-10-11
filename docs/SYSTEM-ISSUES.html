@@ -11,25 +11,15 @@ The following issues correspond to the official Android 1.5
 system images:
 
 
-No standard C++ library support:
---------------------------------
+C++ Runtime Support:
+--------------------
 
-The Android 1.5 system does not use any C++ standard library, and does
-not provide one to applicative native code. Instead, a very limited set
-of headers are provided (see docs/STABLE-APIS.html) which correspond to
-the C++ support code used to build the Android platform.
+The Android C++ system runtime only provides very little support for
+C++ features (i.e. RTTI, exceptions and Standard Library). However,
+the NDK provides more advanced runtimes that can be linked into your
+application, if you need them.
 
-It is possible to hack existing C++ STL implementations to work on top
-of this, but this is not supported yet. We recommend trying with uSTL
-and STLport at this point if you really need this.
-
-
-No support for C++ exceptions and RTTI:
----------------------------------------
-
-The Android 1.5 system image lacks several features necessary to reliably
-implement C++ exceptions and RTTI. C++ code that depends on these features
-will simply not link or run appropriately on Android 1.5
+See docs/CPLUSPLUS-SUPPORT.html for more details.
 
 
 C Library limitations:
