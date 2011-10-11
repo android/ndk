@@ -183,10 +183,9 @@ the documentation linked below for details:
 
  http://developer.android.com/guide/topics/manifest/uses-feature-element.html
 
-Please note that, at the moment, native headers and libraries for the EGL APIs
-are *not* available. EGL is used to perform surface creation and flipping
-(instead of rendering). The corresponding operations must be performed in your
-VM application instead, for example with a GLSurfaceView, as described here:
+Please note that EGL APIs are only available starting from API level 9. You
+can however perform the corresponding operations (surface creation and flipping)
+by using the VM. For example, with a GLSurfaceView as described here:
 
 http://android-developers.blogspot.com/2009/04/introducing-glsurfaceview.html
 
@@ -222,12 +221,7 @@ Not all devices support OpenGL ES 2.0, developers should thus query the
 implementation's version and extension strings, and put a &lt;uses-feature&gt;
 tag in their Android manifest. See Section III above for details.
 
-Please note that, at the moment, native headers and libraries for the EGL APIs
-are *not* available. EGL is used to perform surface creation and flipping
-(instead of rendering). The corresponding operations must be performed in your
-VM application instead, for example with a GLSurfaceView, as described here:
-
-http://android-developers.blogspot.com/2009/04/introducing-glsurfaceview.html
+Please note that EGL APIs are only available starting from API level 9.
 
 The "hello-gl2" sample application demonstrate this. It is used to draw a very
 simple triangle with the help of a vertex and fragment shaders.
@@ -280,6 +274,32 @@ V. Android-9 Stable Native APIs:
 
 All the APIs listed below are available for developing native code that runs
 on Android &gt; 2.2 system images and above.
+
+The EGL graphics library:
+-------------------------
+
+EGL provides a native platform interface to allocate and manage OpenGLES
+surfaces. For more information about its features, please see:
+
+    http://www.khronos.org/egl
+
+In a nutshell, this will allow you to do the following directly from
+native code:
+
+    - List supported EGL configurations
+    - Allocate and release OpenGLES surfaces
+    - Swap/Flip surfaces for display  (eglSwapBuffers)
+
+This is provided through the following headers:
+
+    &lt;EGL/egl.h&gt;        -> Main EGL API definitions
+    &lt;EGL/eglext.h&gt;     -> EGL extension-related definitions
+
+You cal link against the system's EGL library by adding the following
+to your NDK module definition:
+
+    LOCAL_LDLIBS += -lEGL
+
 
 The OpenSL ES native audio Library:
 -----------------------------------
