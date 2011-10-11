@@ -85,6 +85,81 @@ OTHER CHANGES:
 
   To compile both foo.cpp and bar.cxx as C++ sources.
 
+- Refreshed the EGL and OpenGLES Khronos headers to support more extensions.
+  Note that this does *not* change the NDK ABIs for the corresponding
+  libraries, since each extension must be probed at runtime by the client
+  application.
+
+  Which extensions are available depends on your actual device (and GPU
+  drivers), not the version of the platform it provides.
+
+  The header changes simply add new constants and types to make it easier
+  to use the extensions why they have been probed with eglGetProcAddress() or
+  glGetProcAddress(). Here is the list of newly supported extensions:
+
+    GLES 1.x
+    --------
+    GL_OES_vertex_array_object
+    GL_OES_EGL_image_external
+    GL_APPLE_texture_2D_limited_npot
+    GL_EXT_blend_minmax
+    GL_EXT_discard_framebuffer
+    GL_EXT_multi_draw_arrays
+    GL_EXT_read_format_bgra
+    GL_EXT_texture_filter_anisotropic
+    GL_EXT_texture_format_BGRA8888
+    GL_EXT_texture_lod_bias
+    GL_IMG_read_format
+    GL_IMG_texture_compression_pvrtc
+    GL_IMG_texture_env_enhanced_fixed_function
+    GL_IMG_user_clip_plane
+    GL_IMG_multisampled_render_to_texture
+    GL_NV_fence
+    GL_QCOM_driver_control
+    GL_QCOM_extended_get
+    GL_QCOM_extended_get2
+    GL_QCOM_perfmon_global_mode
+    GL_QCOM_writeonly_rendering
+    GL_QCOM_tiled_rendering
+
+    GLES 2.0
+    --------
+    GL_OES_element_index_uint
+    GL_OES_get_program_binary
+    GL_OES_mapbuffer
+    GL_OES_packed_depth_stencil
+    GL_OES_texture_3D
+    GL_OES_texture_float
+    GL_OES_texture_float_linear
+    GL_OES_texture_half_float_linear
+    GL_OES_texture_npot
+    GL_OES_vertex_array_object
+    GL_OES_EGL_image_external
+    GL_AMD_program_binary_Z400
+    GL_EXT_blend_minmax
+    GL_EXT_discard_framebuffer
+    GL_EXT_multi_draw_arrays
+    GL_EXT_read_format_bgra
+    GL_EXT_texture_format_BGRA8888
+    GL_EXT_texture_compression_dxt1
+    GL_IMG_program_binary
+    GL_IMG_read_format
+    GL_IMG_shader_binary
+    GL_IMG_texture_compression_pvrtc
+    GL_IMG_multisampled_render_to_texture
+    GL_NV_coverage_sample
+    GL_NV_depth_nonlinear
+    GL_QCOM_extended_get
+    GL_QCOM_extended_get2
+    GL_QCOM_writeonly_rendering
+    GL_QCOM_tiled_rendering
+
+    EGL:
+    ----
+    EGL_ANDROID_recordable
+    EGL_NV_system_time
+
+
 -------------------------------------------------------------------------------
 android-ndk-r6b
 
