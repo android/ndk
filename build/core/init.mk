@@ -152,7 +152,7 @@ ifeq ($(HOST_OS),windows)
 endif
 
 ifneq ($(HOST_OS),$(HOST_OS_BASE))
-    $(call ndk_log, Host operating system detected: $(HOST_OS), base OS: $(HOST_OS_BASE)))
+    $(call ndk_log, Host operating system detected: $(HOST_OS), base OS: $(HOST_OS_BASE))
 else
     $(call ndk_log, Host operating system detected: $(HOST_OS))
 endif
