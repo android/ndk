@@ -36,7 +36,8 @@
 # Repeat after that for N+1, N+2, etc..
 #
 
-. `dirname $0`/prebuilt-common.sh
+PROGDIR=$(dirname "$0")
+. "$PROGDIR/prebuilt-common.sh"
 
 # Return the list of platform supported from $1/platforms
 # as a single space-separated list of levels. (e.g. "3 4 5 8 9")
@@ -293,6 +294,16 @@ symlink_src_directory ()
     symlink_src_directory_inner "$1" "$2" "$(reverse_path $1)"
 }
 
+# $1: Architecture name
+# $2+: List of symbols
+# out: Input list, without any libgcc symbol
+remove_libgcc_symbols ()
+{
+    local ARCH=$1
+    shift
+    echo "$@" | tr ' ' '\n' | grep -v -F -f $PROGDIR/toolchain-symbols/$ARCH/libgcc.a.functions.txt
+}
+
 # $1: library name
 # $2: functions list
 # $3: variables list
@@ -364,6 +375,7 @@ gen_shell_libraries ()
         if [ -f "$SYMDIR/$LIB.variables.txt" ]; then
             vars=$(cat "$SYMDIR/$LIB.variables.txt")
         fi
+        funcs=$(remove_libgcc_symbols $ARCH $funcs)
         numfuncs=$(echo $funcs | wc -w)
         numvars=$(echo $vars | wc -w)
         log "Generating shell library for $LIB ($numfuncs functions + $numvars variables)"

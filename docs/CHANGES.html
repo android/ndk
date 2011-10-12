@@ -165,6 +165,12 @@ OTHER CHANGES:
 - docs/NATIVE-ACTIVITY.HTML: Fixed typo, the minimum API level
   should be 9, not 8 for native activities.
 
+- removed many unwanted exported symbols from the link-time shared
+  system libraries provided by the NDK. This ensures that code generated
+  with the standalone toolchain doesn't risk to accidentally depend
+  on a non-stable ABI symbol (e.g. any libgcc.a symbol that changes
+  each time the toolchain used to build the platform is changed).
+
 -------------------------------------------------------------------------------
 android-ndk-r6b
 
