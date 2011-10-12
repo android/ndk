@@ -62,30 +62,34 @@ BEGIN {
         # we enter the corresponding elements within the intent-filter.
         else if ( event == "BEGIN-INTENT-FILTER" &&
                  XML_RPATH == "INTENT-FILTER/ACTIVITY/APPLICATION/MANIFEST/" ) {
-            action = ""
-            category = ""
+            action_main = 0;
+            category_launcher = 0;
         }
         # When exiting an <intent-filter>, set the 'launchable' flag to true
         # for the current activity if both 'action' and 'category' have the
         # correct name.
         else if ( event == "END-INTENT-FILTER" &&
                   XML_RPATH == "ACTIVITY/APPLICATION/MANIFEST/" ) {
-            if ( action == "android.intent.action.MAIN" &&
-                    category == "android.intent.category.LAUNCHER" ) {
-                    launchable = 1;
+            if ( category_launcher ) {
+                launchable = 1;
             }
         }
         # When entering an <action> element inside an <intent-filter>, record
         # its name.
         else if ( event == "BEGIN-ACTION" &&
                   XML_RPATH == "ACTION/INTENT-FILTER/ACTIVITY/APPLICATION/MANIFEST/" ) {
-            action = XML_ATTR["android:name"];
+            action_main = 0;
+            if ( XML_ATTR["android:name"] == "android.intent.action.MAIN" ) {
+                action_main = 1;
+            }
         }
         # When entering a <category> element inside an <intent-filter>, record
         # its name.
         else if ( event == "BEGIN-CATEGORY" &&
                   XML_RPATH == "CATEGORY/INTENT-FILTER/ACTIVITY/APPLICATION/MANIFEST/" ) {
-            category = XML_ATTR["android:name"];
+            if ( action_main && XML_ATTR["android:name"] == "android.intent.category.LAUNCHER" ) {
+                category_launcher = 1;
+            }
         }
     }
 }
