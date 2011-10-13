@@ -56,6 +56,7 @@ DSTDIR="$ANDROID_NDK_ROOT"
 
 ARCHS="$DEFAULT_ARCHS"
 PLATFORMS=`extract_platforms_from "$SRCDIR"`
+NDK_DIR=$ANDROID_NDK_ROOT
 
 OPTION_HELP=no
 OPTION_PLATFORMS=
@@ -88,6 +89,9 @@ for opt do
     ;;
   --dst-dir=*)
     OPTION_DSTDIR="$optarg"
+    ;;
+  --ndk-dir=*)
+    NDK_DIR=$optarg
     ;;
   --platform=*)
     OPTION_PLATFORM=$optarg
@@ -126,6 +130,7 @@ if [ $OPTION_HELP = "yes" ] ; then
     echo "  --verbose             Enable verbose messages"
     echo "  --src-dir=<path>      Source directory for development platform files [$SRCDIR]"
     echo "  --dst-dir=<path>      Destination directory [$DSTDIR]"
+    echo "  --ndk-dir=<path>      Use toolchains from this NDK directory [$NDK_DIR]"
     echo "  --platform=<list>     List of API levels [$PLATFORMS]"
     echo "  --arch=<list>         List of CPU architectures [$ARCHS]"
     echo "  --minimal             Ignore samples, symlinks and generated shared libs."
@@ -351,7 +356,7 @@ gen_shell_libraries ()
     local TOOLCHAIN_PREFIX funcs vars numfuncs numvars
 
     # Let's locate the toolchain we're going to use
-    local TOOLCHAIN_PREFIX="$ANDROID_NDK_ROOT/$(get_default_toolchain_binprefix_for_arch $1)"
+    local TOOLCHAIN_PREFIX="$NDK_DIR/$(get_default_toolchain_binprefix_for_arch $1)"
     TOOLCHAIN_PREFIX=${TOOLCHAIN_PREFIX%-}
     if [ ! -f "$TOOLCHAIN_PREFIX-readelf" ]; then
         dump "ERROR: $ARCH toolchain not installed: $TOOLCHAIN_PREFIX-gcc"
@@ -514,7 +519,7 @@ if [ "$PACKAGE_DIR" ]; then
         ARCHIVE=samples.tar.bz2
         dump "Packaging $ARCHIVE"
         pack_archive "$PACKAGE_DIR/$ARCHIVE" "$DSTDIR" "samples"
-        fail_panoc "Could not package samples"
+        fail_panic "Could not package samples"
     fi
 fi
 
