@@ -99,9 +99,8 @@ else
     force_32bit_binaries
 fi
 if [ "$PACKAGE_DIR" ]; then
-    if [ ! -d "$PACKAGE_DIR" ]; then
-        echo "ERROR: Package destination directory doesn't exist: $PACKAGE_DIR"
-    fi
+    mkdir -p "$PACKAGE_DIR"
+    fail_panic "Could not create package directory: $PACKAGE_DIR"
     FLAGS=$FLAGS" --package-dir=$PACKAGE_DIR"
 fi
 
@@ -207,7 +206,7 @@ for SYSTEM in $SYSTEMS; do
 
     # Then the toolchains
     for ARCH in $ARCHS; do
-        TOOLCHAIN_NAME=$(get_default_toolchain_name_for $ARCH)
+        TOOLCHAIN_NAME=$(get_default_toolchain_name_for_arch $ARCH)
         if [ -z "$TOOLCHAIN_NAME" ]; then
             echo "ERROR: Invalid architecture name: $ARCH"
             exit 1
