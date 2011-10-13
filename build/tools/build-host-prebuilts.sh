@@ -135,7 +135,7 @@ do_remote_host_build ()
     copy_file_list "$ANDROID_NDK_ROOT" "$TMPDARWIN/ndk" sources/android/libthread_db
     copy_file_list "$ANDROID_NDK_ROOT" "$TMPDARWIN/ndk" "$STLPORT_SUBDIR"
     copy_file_list "$ANDROID_NDK_ROOT" "$TMPDARWIN/ndk" "$GABIXX_SUBDIR"
-    copy_file_list "$ANDROID_NDK_ROOT" "$TMPDARWIN/ndk" sources/host-tools/ndk-stack
+    copy_file_list "$ANDROID_NDK_ROOT" "$TMPDARWIN/ndk" sources/host-tools
     dump "Prepare platforms files"
     copy_directory "$NDK_DIR/platforms" "$TMPDARWIN/ndk/platforms"
     dump "Copying NDK build scripts and platform files to remote..."
@@ -203,6 +203,18 @@ for SYSTEM in $SYSTEMS; do
     echo "Building $SYSTEM ndk-stack"
     run $BUILDTOOLS/build-ndk-stack.sh $TOOLCHAIN_FLAGS
     fail_panic "ndk-stack build failure!"
+
+    echo "Building $SYSTEM ndk-make"
+    run $BUILDTOOLS/build-host-make.sh $TOOLCHAIN_FLAGS
+    fail_panic "make build failure!"
+
+    echo "Building $SYSTEM ndk-awk"
+    run $BUILDTOOLS/build-host-awk.sh $TOOLCHAIN_FLAGS
+    fail_panic "awk build failure!"
+
+    echo "Building $SYSTEM ndk-sed"
+    run $BUILDTOOLS/build-host-sed.sh $TOOLCHAIN_FLAGS
+    fail_panic "sed build failure!"
 
     # Then the toolchains
     for ARCH in $ARCHS; do
