@@ -311,6 +311,14 @@ copy_arch_kernel_headers_from ()
     copy_arch_system_headers $1 $headers
 }
 
+# Probe for the location of the OpenSLES sources in the
+# platform tree. This used to be system/media/opensles but
+# was moved to system/media/wilhelm in Android 4.0
+OPENSLES_SUBDIR=system/media/wilhelm
+if [ ! -d "$ANDROID_ROOT/$OPENSLES_SUBDIR" ]; then
+    OPENSLES_SUBDIR=system/media/opensles
+fi
+
 # Now do the work
 
 # API level 3
@@ -428,11 +436,24 @@ if platform_check 9; then
         EGL/eglplatform.h
 
     copy_system_shared_library libOpenSLES
-    copy_system_headers $ANDROID_ROOT/system/media/opensles/include \
+    copy_system_headers $ANDROID_ROOT/$OPENSLES_SUBDIR/include \
         SLES/OpenSLES.h \
         SLES/OpenSLES_Android.h \
         SLES/OpenSLES_AndroidConfiguration.h \
         SLES/OpenSLES_Platform.h
+fi
+
+# API level 14
+if platform_check 14; then
+    copy_system_shared_library libOpenMAXAL
+    copy_system_headers $ANDROID_ROOT/system/media/wilhelm/include \
+	OMXAL/OpenMAXAL.h \
+        OMXAL/OpenMAXAL_Android.h \
+        OMXAL/OpenMAXAL_Platform.h
+
+    # This header is new in API level 14
+    copy_system_headers $ANDROID_ROOT/$OPENSLES_SUBDIR/include \
+        SLES/OpenSLES_AndroidMetadata.h
 fi
 
 # Now extract dynamic symbols from the copied shared libraries
