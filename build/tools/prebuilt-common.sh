@@ -613,6 +613,7 @@ prepare_common_build ()
     # Force generation of 32-bit binaries on 64-bit systems
     CC=${CC:-gcc}
     CXX=${CXX:-g++}
+    STRIP=${STRIP:-strip}
     case $HOST_TAG in
         darwin-*)
             # Try to build with Tiger SDK if available
@@ -648,7 +649,7 @@ EOF
     log2 $CC $HOST_CFLAGS -c -o $TMPO $TMPC
     $NDK_CCACHE $CC $HOST_CFLAGS -c -o $TMPO $TMPC >$TMPL 2>&1
     if [ $? != 0 ] ; then
-        echo "no"
+        log "no"
         if [ "$TRY64" != "yes" ]; then
             # NOTE: We need to modify the definitions of CC and CXX directly
             #        here. Just changing the value of CFLAGS / HOST_CFLAGS
@@ -682,7 +683,8 @@ prepare_host_build ()
         AR=$ABI_CONFIGURE_HOST-ar
         AS=$ABI_CONFIGURE_HOST-as
         RANLIB=$ABI_CONFIGURE_HOST-ranlib
-        export CC CXX LD AR AS RANLIB
+        STRIP=$ABI_CONFIGURE_HOST-strip
+        export CC CXX LD AR AS RANLIB STRIP
     fi
 
     setup_ccache

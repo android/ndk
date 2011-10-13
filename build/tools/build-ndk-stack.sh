@@ -27,20 +27,13 @@ PROGRAM_PARAMETERS=""
 PROGRAM_DESCRIPTION=\
 "This script is used to rebuild the host ndk-stack binary program."
 
-CC=gcc
-CUSTOM_CC=
-register_option "--cc=<path>" do_cc "Specify host compiler"
-do_cc () { CC=$1; CUSTOM_CC=yes; }
-
 register_jobs_option
 
 BUILD_DIR=
 register_var_option "--build-dir=<path>" BUILD_DIR "Specify build directory"
 
-OUT=$ANDROID_NDK_ROOT/$(get_host_exec_name ndk-stack)
-CUSTOM_OUT=
-register_option "--out=<file>" do_out "Specify output executable path" "$OUT"
-do_out () { CUSTOM_OUT=true; OUT=$1; }
+NDK_DIR=$ANDROID_NDK_ROOT
+register_var_option "--ndk-dir=<path>" NDK_DIR "Place binary in NDK installation path"
 
 GNUMAKE=
 register_var_option "--make=<path>" GNUMAKE "Specify GNU Make program"
@@ -48,9 +41,15 @@ register_var_option "--make=<path>" GNUMAKE "Specify GNU Make program"
 DEBUG=
 register_var_option "--debug" DEBUG "Build debug version"
 
+PACKAGE_DIR=
+register_var_option "--package-dir=<path>" PACKAGE_DIR "Archive binary into specific directory"
+
 register_mingw_option
+register_try64_option
 
 extract_parameters "$@"
+
+prepare_host_build
 
 # Choose a build directory if not specified by --build-dir
 if [ -z "$BUILD_DIR" ]; then
@@ -58,26 +57,17 @@ if [ -z "$BUILD_DIR" ]; then
     log "Auto-config: --build-dir=$BUILD_DIR"
 fi
 
-# Choose a host compiler if not specified by --cc
-# Note that --mingw implies we use the mingw32 cross-compiler.
-if [ -z "$CUSTOM_CC" ]; then
-    if [ "$MINGW" = "yes" ]; then
-        CC=i586-mingw32msvc-g++
-    else
-        CC=g++
-    fi
-    log "Auto-config: --cc=$CC"
-fi
-
-if [ -z "$CUSTOM_OUT" ]; then
-    OUT=$ANDROID_NDK_ROOT/$(get_host_exec_name ndk-stack)
-    log "Auto-config: --out=$OUT"
-fi
+OUT=$NDK_DIR/$(get_host_exec_name ndk-stack)
 
 # GNU Make
 if [ -z "$GNUMAKE" ]; then
     GNUMAKE=make
     log "Auto-config: --make=$GNUMAKE"
+fi
+
+if [ "$PACKAGE_DIR" ]; then
+    mkdir -p "$PACKAGE_DIR"
+    fail_panic "Could not create package directory: $PACKAGE_DIR"
 fi
 
 PROGNAME=ndk-stack
@@ -99,12 +89,21 @@ run $GNUMAKE -C $SRCDIR -f $SRCDIR/GNUMakefile \
     -B -j$NUM_JOBS \
     PROGNAME="$OUT" \
     BUILD_DIR="$BUILD_DIR" \
-    CC="$CC" \
+    CC="$CXX" CXX="$CXX" \
+    STRIP="$STRIP" \
     DEBUG=$DEBUG
 
 if [ $? != 0 ]; then
     echo "ERROR: Could not build host program!"
     exit 1
+fi
+
+if [ "$PACKAGE_DIR" ]; then
+    ARCHIVE=ndk-stack-$HOST_TAG.tar.bz2
+    SUBDIR=$(get_host_exec_name ndk-stack $HOST_TAG)
+    dump "Packaging: $ARCHIVE"
+    pack_archive "$PACKAGE_DIR/$ARCHIVE" "$NDK_DIR" "$SUBDIR"
+    fail_panic "Could not create package: $PACKAGE_DIR/$ARCHIVE from $OUT"
 fi
 
 log "Done!"
