@@ -28,20 +28,19 @@ register_try64_option
 register_mingw_option
 register_jobs_option
 
-OUT=
-CUSTOM_OUT=
-register_option "--out=<file>" do_out "Specify output executable path" "$OUT"
-do_out () { CUSTOM_OUT=true; OUT=$1; }
+NDK_DIR=$ANDROID_NDK_ROOT
+register_var_option "--ndk-dir=<path>" NDK_DIR "Specify NDK install directory"
+
+PACKAGE_DIR=
+register_var_option "--package-dir=<path>" PACKAGE_DIR "Archive to package directory"
 
 GNUMAKE=make
 register_var_option "--make=<path>" GNUMAKE "Specify GNU Make program"
 
 extract_parameters "$@"
 
-if [ -z "$CUSTOM_OUT" ]; then
-    OUT=$ANDROID_NDK_ROOT/$(get_prebuilt_host_exec sed)
-    log "Auto-config: --out=$OUT"
-fi
+SUBDIR=$(get_prebuilt_host_exec sed)
+OUT=$NDK_DIR/$(get_prebuilt_host_exec sed)
 
 SED_VERSION=4.2.1
 SED_SRCDIR=$ANDROID_NDK_ROOT/sources/host-tools/sed-$SED_VERSION
@@ -71,6 +70,14 @@ fail_panic "Failed to build the sed-$SED_VERSION executable!"
 log "Copying executable to prebuilt location"
 run mkdir -p $(dirname "$OUT") && cp sed/$(get_host_exec_name sed) $OUT
 fail_panic "Could not copy executable to: $OUT"
+
+if [ "$PACKAGE_DIR" ]; then
+    ARCHIVE=ndk-sed-$HOST_TAG.tar.bz2
+    dump "Packaging: $ARCHIVE"
+    mkdir -p "$PACKAGE_DIR" &&
+    pack_archive "$PACKAGE_DIR/$ARCHIVE" "$NDK_DIR" "$SUBDIR"
+    fail_panic "Could not package archive: $PACKAGE_DIR/$ARCHIVE"
+fi
 
 log "Cleaning up"
 rm -rf $BUILD_DIR

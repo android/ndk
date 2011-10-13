@@ -76,6 +76,7 @@ fail_panic "Could not copy executable to: $OUT"
 if [ "$PACKAGE_DIR" ]; then
     ARCHIVE=ndk-awk-$HOST_TAG.tar.bz2
     dump "Packaging: $ARCHIVE"
+    mkdir -p "$PACKAGE_DIR" &&
     pack_archive "$PACKAGE_DIR/$ARCHIVE" "$NDK_DIR" "$SUBDIR"
     fail_panic "Could not package archive: $PACKAGE_DIR/$ARCHIVE"
 fi
