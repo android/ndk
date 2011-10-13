@@ -54,6 +54,9 @@ register_var_option "--gmp-version=<version>" GMP_VERSION "Specify gmp version"
 MPFR_VERSION=$DEFAULT_MPFR_VERSION
 register_var_option "--mpfr-version=<version>" MPFR_VERSION "Specify mpfr version"
 
+PACKAGE_DIR=
+register_var_option "--package-dir=<path>" PACKAGE_DIR "Create archive tarball in specific directory"
+
 register_jobs_option
 register_mingw_option
 register_try64_option
@@ -134,6 +137,11 @@ if [ ! -f $SRC_DIR/mpfr/mpfr-$MPFR_VERSION.tar.bz2 ] ; then
     echo "ERROR: Missing mpfr sources: $SRC_DIR/mpfr/mpfr-$MPFR_VERSION.tar.bz2"
     echo "       Use --mpfr-version=<version> to specify alternative."
     exit 1
+fi
+
+if [ "$PACKAGE_DIR" ]; then
+    mkdir -p "$PACKAGE_DIR"
+    fail_panic "Could not create package directory: $PACKAGE_DIR"
 fi
 
 set_toolchain_ndk $NDK_DIR $TOOLCHAIN
@@ -268,6 +276,13 @@ run strip $TOOLCHAIN_PATH/libexec/gcc/*/*/collect2$HOST_EXE
 # copy SOURCES file if present
 if [ -f "$SRC_DIR/SOURCES" ]; then
     cp "$SRC_DIR/SOURCES" "$TOOLCHAIN_PATH/SOURCES"
+fi
+
+if [ "$PACKAGE_DIR" ]; then
+    ARCHIVE="$TOOLCHAIN-$HOST_TAG.tar.bz2"
+    SUBDIR=$(get_toolchain_install_subdir $TOOLCHAIN $HOST_TAG)
+    dump "Packaging $ARCHIVE"
+    pack_archive "$PACKAGE_DIR/$ARCHIVE" "$NDK_DIR" "$SUBDIR"
 fi
 
 dump "Done."
