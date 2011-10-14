@@ -991,6 +991,27 @@ check_toolchain_install ()
     set_toolchain_ndk $1 $2
 }
 
+# $1: toolchain source directory
+check_toolchain_src_dir ()
+{
+    local SRC_DIR="$1"
+    if [ -z "$SRC_DIR" ]; then
+        echo "ERROR: Please provide the path to the toolchain source tree. See --help"
+        exit 1
+    fi
+
+    if [ ! -d "$SRC_DIR" ]; then
+        echo "ERROR: Not a directory: '$SRC_DIR'"
+        exit 1
+    fi
+
+    if [ ! -f "$SRC_DIR/build/configure" -o ! -d "$SRC_DIR/gcc" ]; then
+        echo "ERROR: This is not the top of a toolchain tree: $SRC_DIR"
+        echo "You must give the path to a copy of the toolchain source directories"
+        echo "created by 'download-toolchain-sources.sh."
+        exit 1
+    fi
+}
 
 #
 # The NDK_TMPDIR variable is used to specify a root temporary directory

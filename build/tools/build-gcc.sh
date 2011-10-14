@@ -119,6 +119,8 @@ parse_toolchain_name
 
 fix_sysroot "$OPTION_SYSROOT"
 
+check_toolchain_src_dir "$SRC_DIR"
+
 if [ ! -d $SRC_DIR/gdb/gdb-$GDB_VERSION ] ; then
     echo "ERROR: Missing gdb sources: $SRC_DIR/gdb/gdb-$GDB_VERSION"
     echo "       Use --gdb-version=<version> to specify alternative."

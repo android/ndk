@@ -1,6 +1,20 @@
 #!/bin/sh
 #
-# Rebuild all host toolchains
+# Copyright (C) 2011 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Rebuild all host toolchains and programs
 #
 
 PROGDIR=$(dirname $0)
@@ -24,7 +38,7 @@ CUSTOM_SYSTEMS=
 register_option "--systems=<names>" do_SYSTEMS "List of host systems to build for"
 do_SYSTEMS () { CUSTOM_SYSTEMS=true; SYSTEMS=$1; }
 
-ARCHS="arm,x86"
+ARCHS=$DEFAULT_ARCHS
 register_var_option "--arch=<list>" ARCHS "List of target archs to build for"
 
 PACKAGE_DIR=
@@ -58,7 +72,7 @@ if [ ! -d "$SRC_DIR" ]; then
     exit 1
 fi
 
-if [ ! -f "$SRC_DIR/build/configure" -o ! -d "$SRC_DIR/gcc/gcc-4.4.3" ]; then
+if [ ! -f "$SRC_DIR/build/configure" -o ! -d "$SRC_DIR/gcc/gcc-$DEFAULT_GCC_VERSION" ]; then
     echo "ERROR: This is not the top of a toolchain tree: $SRC_DIR"
     echo "You must give the path to a copy of the toolchain source directories"
     echo "created by 'download-toolchain-sources.sh."

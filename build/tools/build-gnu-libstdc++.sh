@@ -71,10 +71,7 @@ register_var_option "-j<number>" NUM_JOBS "Run <number> build jobs in parallel"
 extract_parameters "$@"
 
 SRCDIR=$(echo $PARAMETERS | sed 1q)
-if [ -z "$SRCDIR" ]; then
-    echo "ERROR: Please provide the path to the toolchain source tree"
-    exit 1
-fi
+check_toolchain_src_dir "$SRCDIR"
 
 GNUSTL_SRCDIR=$SRCDIR/gcc/gcc-$DEFAULT_GCC_VERSION/libstdc++-v3
 if [ ! -d "$GNUSTL_SRCDIR" ]; then

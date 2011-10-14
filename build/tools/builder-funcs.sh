@@ -350,6 +350,8 @@ builder_begin_android ()
     builder_set_prefix "$ABI "
     builder_set_binprefix "$BINPREFIX"
 
+    build_cflags "--sysroot=$SYSROOT"
+    build_cxxflags "--sysroot=$SYSROOT"
     _BUILD_LDFLAGS_BEGIN_SO="--sysroot=$SYSROOT -nostdlib $CRTBEGIN_SO_O"
     _BUILD_LDFLAGS_BEGIN_EXE="--sysroot=$SYSROOT -nostdlib $CRTBEGIN_EXE_O"
 
