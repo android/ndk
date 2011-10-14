@@ -543,6 +543,7 @@ check_darwin_sdk ()
 handle_mingw ()
 {
     # Now handle the --mingw flag
+    HOST_EXE=
     if [ "$MINGW" = "yes" ] ; then
         case $HOST_TAG in
             linux-*)

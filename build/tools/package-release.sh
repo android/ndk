@@ -384,8 +384,15 @@ for SYSTEM in $SYSTEMS; do
             rm -rf $DSTDIR/toolchains/$TC/prebuilt/$SYSTEM/sysroot
         done
 
-        # Unpack prebuilt ndk-stack
+        # Unpack prebuilt ndk-stack and other host tools
         unpack_prebuilt ndk-stack-$SYSTEM.tar.bz2
+        unpack_prebuilt ndk-make-$SYSTEM.tar.bz2
+        unpack_prebuilt ndk-sed-$SYSTEM.tar.bz2
+        unpack_prebuilt ndk-awk-$SYSTEM.tar.bz2
+
+        if [ "$SYSTEM" = "windows" ]; then
+            unpack_prebuilt toolbox-$SYSTEM.tar.bz2
+        fi
     fi
 
     # Create an archive for the final package. Extension depends on the

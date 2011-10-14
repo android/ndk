@@ -152,6 +152,76 @@ host-path = $1
 endif
 
 # -----------------------------------------------------------------------------
+# Function : host-rm
+# Arguments: 1: list of files
+# Usage    : $(call host-rm,<files>)
+# Rationale: This function expands to the host-specific shell command used
+#            to remove some files.
+# -----------------------------------------------------------------------------
+ifeq ($(HOST_OS),windows)
+host-rm = del /f/q/e $1
+host-rm = $(foreach _filepattern,$1,$(if $(strip $(wildcard $(_filepattern))),del /f/q/e $(subst /,\,$(_filepattern))))
+else
+host-rm = rm -f $1
+endif
+
+# -----------------------------------------------------------------------------
+# Function : host-rmdir
+# Arguments: 1: list of files or directories
+# Usage    : $(call host-rm,<files>)
+# Rationale: This function expands to the host-specific shell command used
+#            to remove some files _and_ directories.
+# -----------------------------------------------------------------------------
+ifeq ($(HOST_OS),windows)
+host-rmdir = del /f/s/e/q $1
+else
+host-rmdir = rm -f $1
+endif
+
+# -----------------------------------------------------------------------------
+# Function : host-mkdir
+# Arguments: 1: directory path
+# Usage    : $(call host-mkdir,<path>
+# Rationale: This function expands to the host-specific shell command used
+#            to create a path if it doesn't exist.
+# -----------------------------------------------------------------------------
+ifeq ($(HOST_OS),windows)
+host-mkdir = md $(subst /,\,$1)
+else
+host-mkdir = mkdir -p $1
+endif
+
+# -----------------------------------------------------------------------------
+# Function : host-cp
+# Arguments: 1: source file
+#            2: target file
+# Usage    : $(call host-cp,<src-file>,<dst-file>)
+# Rationale: This function expands to the host-specific shell command used
+#            to copy a single file
+# -----------------------------------------------------------------------------
+ifeq ($(HOST_OS),windows)
+host-cp = copy /b/y $(subst /,\,$1 $2)
+else
+host-cp = cp -f $1 $2
+endif
+
+# -----------------------------------------------------------------------------
+# Function : host-install
+# Arguments: 1: source file
+#            2: target file
+# Usage    : $(call host-install,<src-file>,<dst-file>)
+# Rationale: This function expands to the host-specific shell command used
+#            to install a file or directory, while preserving its timestamps
+#            (if possible).
+# -----------------------------------------------------------------------------
+ifeq ($(HOST_OS),windows)
+host-install = copy /b/y $(subst /,\,$1 $2)
+else
+host-install = install -p $1 $2
+endif
+
+
+# -----------------------------------------------------------------------------
 # Function : host-c-includes
 # Arguments: 1: list of file paths (e.g. "foo bar")
 # Returns  : list of include compiler options (e.g. "-Ifoo -Ibar")
@@ -1059,7 +1129,7 @@ convert-deps = $1.org
 cmd-convert-deps = \
     && ( if [ -f "$1.org" ]; then \
           $(HOST_AWK) -f $(BUILD_AWK)/convert-deps-to-cygwin.awk $1.org > $1 && \
-          rm -f $1.org; \
+          $(call host-rm,$1.org); \
       fi )
 else
 convert-deps = $1
@@ -1082,9 +1152,9 @@ $$(_OBJ): PRIVATE_TEXT     := "$$(_TEXT)"
 $$(_OBJ): PRIVATE_CC       := $$(_CC)
 $$(_OBJ): PRIVATE_CFLAGS   := $$(_FLAGS)
 $$(_OBJ): $$(_SRC) $$(LOCAL_MAKEFILE) $$(NDK_APP_APPLICATION_MK)
-	@mkdir -p $$(dir $$(PRIVATE_OBJ))
-	@echo "$$(PRIVATE_TEXT)  : $$(PRIVATE_MODULE) <= $$(notdir $$(PRIVATE_SRC))"
-	$(hide) $$(PRIVATE_CC) -MMD -MP -MF $$(call convert-deps,$$(PRIVATE_DEPS)) $$(PRIVATE_CFLAGS) $$(call host-path,$$(PRIVATE_SRC)) -o $$(call host-path,$$(PRIVATE_OBJ)) \
+	@$$(call host-mkdir,$$(dir $$(PRIVATE_OBJ)))
+	@$$(HOST_ECHO) "$$(PRIVATE_TEXT)  : $$(PRIVATE_MODULE) <= $$(notdir $$(PRIVATE_SRC))"
+	$$(hide) $$(PRIVATE_CC) -MMD -MP -MF $$(call convert-deps,$$(PRIVATE_DEPS)) $$(PRIVATE_CFLAGS) $$(call host-path,$$(PRIVATE_SRC)) -o $$(call host-path,$$(PRIVATE_OBJ)) \
 	$$(call cmd-convert-deps,$$(PRIVATE_DEPS))
 endef
 
@@ -1148,8 +1218,8 @@ else
   $$(_OBJ_ASM_FILTERED): PRIVATE_FILTER := $$(LOCAL_FILTER_ASM)
   $$(_OBJ_ASM_FILTERED): PRIVATE_MODULE := $$(LOCAL_MODULE)
   $$(_OBJ_ASM_FILTERED): $$(_OBJ_ASM_ORIGINAL)
-	@echo "AsmFilter      : $$(PRIVATE_MODULE) <= $$(notdir $$(PRIVATE_SRC))"
-	$(hide) $$(PRIVATE_FILTER) $$(PRIVATE_SRC) $$(PRIVATE_DST)
+	@$$(HOST_ECHO) "AsmFilter      : $$(PRIVATE_MODULE) <= $$(notdir $$(PRIVATE_SRC))"
+	$$(hide) $$(PRIVATE_FILTER) $$(PRIVATE_SRC) $$(PRIVATE_DST)
 
   # Then, generate the final object, we need to keep assembler-specific
   # flags which look like -Wa,<option>:
@@ -1259,8 +1329,8 @@ compile-cpp-source = $(eval $(call ev-compile-cpp-source,$1,$2))
 #             a given location.
 # -----------------------------------------------------------------------------
 define cmd-install-file
-@mkdir -p $(dir $2)
-$(hide) cp -fp $1 $2
+@$$(call host-mkdir,$$(dir $2))
+$$(hide) cp -fp $$(subst /,\,$1 $2)
 endef
 
 

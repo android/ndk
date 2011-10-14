@@ -104,10 +104,10 @@ executables: $(EXECUTABLES)
 libraries: static_libraries shared_libraries
 
 clean-host-intermediates:
-	$(hide) rm -rf $(HOST_EXECUTABLES) $(HOST_STATIC_LIBRARIES)
+	$(hide) $(call host-rm,$(HOST_EXECUTABLES) $(HOST_STATIC_LIBRARIES))
 
 clean-intermediates: clean-host-intermediates
-	$(hide) rm -rf $(EXECUTABLES) $(STATIC_LIBRARIES) $(SHARED_LIBRARIES)
+	$(hide) $(call host-rm,$(EXECUTABLES) $(STATIC_LIBRARIES) $(SHARED_LIBRARIES))
 
 # include dependency information
 ALL_DEPENDENCY_DIRS := $(sort $(ALL_DEPENDENCY_DIRS))

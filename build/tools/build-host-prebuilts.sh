@@ -230,6 +230,11 @@ for SYSTEM in $SYSTEMS; do
     run $BUILDTOOLS/build-host-sed.sh $TOOLCHAIN_FLAGS
     fail_panic "sed build failure!"
 
+    if [ "$SYSTEM" = "windows" ]; then
+        run $BUILDTOOLS/build-host-toolbox.sh $FLAGS
+        fail_panic "Windows toolbox build failure!"
+    fi
+
     # Then the toolchains
     for ARCH in $ARCHS; do
         TOOLCHAIN_NAME=$(get_default_toolchain_name_for_arch $ARCH)

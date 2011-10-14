@@ -60,6 +60,29 @@ IMPORTANT CHANGES:
 
   See docs/ANDROID-MK.html and docs/CPLUSPLUS-SUPPORT.html for more details
 
+- WARNING: VERY EXPERIMENTAL!!
+
+     You can now build your NDK sources on Windows *without* Cygwin.
+     Simply call the script 'ndk-build.cmd' from the Windows cmd.exe
+     command-line, when in your project path.
+
+     The script takes exactly the same arguments than the original
+     ndk-build one.
+
+     Note that the Windows NDK package comes with its own prebuilt
+     binaries for GNU Make, Awk and other tools required by the build,
+     i.e. you shouldn't need to install anything else to get a working
+     build system.
+
+     IMPORTANT: ndk-gdb doesn't work. You still need Cygwin to debug
+                at the moment!
+
+     This feature is still very experimental, but feel free to try it
+     and report issues on the public forum (android-ndk@googlegroups.com)
+     or the public bug databse (http://b.android.com).
+
+     Note that all samples and unit tests succesfully compile with it.
+
 IMPORTANT BUG FIXES:
 
 - Imported shared libraries are now installed by default to the target

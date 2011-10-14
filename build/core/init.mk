@@ -191,6 +191,12 @@ ifeq ($(HOST_OS),windows)
   HOST_DIRSEP := ;
 endif
 
+# The host executable extension
+HOST_EXEEXT :=
+ifeq ($(HOST_OS),windows)
+  HOST_EXEEXT := .exe
+endif
+
 # If we are on Windows, we need to check that we are not running
 # Cygwin 1.5, which is deprecated and won't run our toolchain
 # binaries properly.
@@ -212,6 +218,26 @@ endif
 
 $(call ndk_log,HOST_TAG set to $(HOST_TAG))
 
+# Check for NDK-specific versions of our host tools
+HOST_PREBUILT := $(strip $(wildcard $(NDK_ROOT)/prebuilt/$(HOST_TAG)/bin))
+ifdef HOST_PREBUILT
+    $(call ndk_log,Host tools prebuilt directory: $(HOST_PREBUILT))
+    HOST_AWK := $(wildcard $(HOST_PREBUILT)/awk$(HOST_EXEEXT))
+    HOST_SED  := $(wildcard $(HOST_PREBUILT)/sed$(HOST_EXEEXT))
+    HOST_MAKE := $(wildcard $(HOST_PREBUILT)/make$(HOST_EXEEXT))
+else
+    $(call ndk_log,Host tols prebuilt directory not found, using system tools)
+endif
+
+HOST_ECHO := $(strip $(HOST_ECHO))
+ifndef HOST_ECHO
+    HOST_ECHO := $(strip $(wildcard $(NDK_ROOT)/prebuilt/$(HOST_TAG)/bin/echo$(HOST_EXEEXT)))
+endif
+ifndef HOST_ECHO
+    HOST_ECHO := echo
+endif
+$(call ndk_log,Host 'echo' tool: $(HOST_ECHO))
+
 #
 # Verify that the 'awk' tool has the features we need.
 # Both Nawk and Gawk do.
@@ -219,18 +245,16 @@ $(call ndk_log,HOST_TAG set to $(HOST_TAG))
 HOST_AWK := $(strip $(HOST_AWK))
 ifndef HOST_AWK
     HOST_AWK := awk
-    $(call ndk_log,Host awk tool was auto-detected: $(HOST_AWK))
-else
-    $(call ndk_log,Host awk tool from environment: $(HOST_AWK))
 endif
+$(call ndk_log,Host 'awk' tool: $(HOST_AWK))
 
 # Location of all awk scripts we use
 BUILD_AWK := $(NDK_ROOT)/build/awk
 
 AWK_TEST := $(shell $(HOST_AWK) -f $(BUILD_AWK)/check-awk.awk)
-$(call ndk_log,Host awk test returned: $(AWK_TEST))
+$(call ndk_log,Host 'awk' test returned: $(AWK_TEST))
 ifneq ($(AWK_TEST),Pass)
-    $(call __ndk_info,Host awk tool is outdated. Please define HOST_AWK to point to Gawk or Nawk !)
+    $(call __ndk_info,Host 'awk' tool is outdated. Please define HOST_AWK to point to Gawk or Nawk !)
     $(call __ndk_error,Aborting.)
 endif
 

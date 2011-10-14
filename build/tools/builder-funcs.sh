@@ -104,8 +104,11 @@ builder_set_prefix ()
 
 builder_begin_module ()
 {
-    _BUILD_CFLAGS=
+    _BUILD_CC=
+    _BUILD_CXX=
+    _BUILD_AR=
     _BUILD_C_INCLUDES=
+    _BUILD_CFLAGS=
     _BUILD_CXXFLAGS=
     _BUILD_LDFLAGS_BEGIN_SO=
     _BUILD_LDFLAGS_END_SO=
@@ -123,6 +126,9 @@ builder_begin_module ()
 builder_set_binprefix ()
 {
     _BUILD_BINPREFIX=$1
+    _BUILD_CC=${1}gcc
+    _BUILD_CXX=${1}g++
+    _BUILD_AR=${1}ar
 }
 
 builder_set_builddir ()
@@ -204,6 +210,12 @@ builder_sources ()
     if [ -z "$_BUILD_DIR" ]; then
         panic "Build directory not set!"
     fi
+    if [ -z "$_BUILD_CC" ]; then
+        _BUILD_CC=${CC:-gcc}
+    fi
+    if [ -z "$_BUILD_CXX" ]; then
+        _BUILD_CXX=${CXX:-g++}
+    fi
     for src in $@; do
         srcfull=$_BUILD_SRCDIR/$src
         if [ ! -f "$srcfull" ]; then
@@ -220,18 +232,18 @@ builder_sources ()
             *.c)
                 obj=${obj%%.c}
                 text="C"
-                cc=gcc
+                cc=$_BUILD_CC
                 ;;
             *.cpp)
                 obj=${obj%%.cpp}
                 text="C++"
-                cc=g++
+                cc=$_BUILD_CXX
                 cflags="$cflags $_BUILD_CXXFLAGS"
                 ;;
             *.cc)
                 obj=${obj%%.cc}
                 text="C++"
-                cc=g++
+                cc=$_BUILD_CXX
                 cflags="$cflags $_BUILD_CXXFLAGS"
                 ;;
             *)
@@ -244,7 +256,7 @@ builder_sources ()
             echo "$obj: $srcfull" >> $_BUILD_MK
         fi
         builder_log "${_BUILD_PREFIX}$text: $src"
-        builder_command $NDK_CCACHE ${_BUILD_BINPREFIX}$cc -c -o "$obj" "$srcfull" $cflags
+        builder_command $NDK_CCACHE $cc -c -o "$obj" "$srcfull" $cflags
         fail_panic "Could not compile ${_BUILD_PREFIX}$src"
         _BUILD_OBJECTS=$_BUILD_OBJECTS" $obj"
     done
@@ -265,6 +277,27 @@ builder_static_library ()
     fi
     builder_log "${_BUILD_PREFIX}Archive: $libname"
     builder_command ${_BUILD_BINPREFIX}ar crs "$lib" "$_BUILD_OBJECTS"
+    fail_panic "Could not archive ${_BUILD_PREFIX}$libname objects!"
+}
+
+builder_host_static_library ()
+{
+    local lib libname
+    libname=$1
+    if [ -z "$_BUILD_DSTDIR" ]; then
+        panic "Destination directory not set"
+    fi
+    lib=$_BUILD_DSTDIR/$libname
+    lib=${lib%%.a}.a
+    if [ "$_BUILD_MK" ]; then
+        _BUILD_TARGETS=$_BUILD_TARGETS" $lib"
+        echo "$lib: $_BUILD_OBJECTS" >> $_BUILD_MK
+    fi
+    if [ -z "$BUILD_AR" ]; then
+        _BUILD_AR=${AR:-ar}
+    fi
+    builder_log "${_BUILD_PREFIX}Archive: $libname"
+    builder_command ${_BUILD_AR} crs "$lib" "$_BUILD_OBJECTS"
     fail_panic "Could not archive ${_BUILD_PREFIX}$libname objects!"
 }
 
@@ -297,6 +330,64 @@ builder_shared_library ()
         -o $lib
     fail_panic "Could not create ${_BUILD_PREFIX}shared library $libname"
 }
+
+builder_host_shared_library ()
+{
+    local lib libname
+    libname=$1
+    lib=$_BUILD_DSTDIR/$libname
+    lib=${lib%%.so}.so
+    if [ "$_BUILD_MK" ]; then
+        _BUILD_TARGETS=$_BUILD_TARGETS" $lib"
+        echo "$lib: $_BUILD_OBJECTS" >> $_BUILD_MK
+    fi
+    builder_log "${_BUILD_PREFIX}SharedLibrary: $libname"
+
+    if [ -z "$_BUILD_CXX" ]; then
+        _BUILD_CXX=${CXX:-g++}
+    fi
+
+    # Important: -lgcc must appear after objects and static libraries,
+    #            but before shared libraries for Android. It doesn't hurt
+    #            for other platforms.
+    builder_command ${_BUILD_CXX} \
+        -shared -s \
+        $_BUILD_OBJECTS \
+        $_BUILD_STATIC_LIBRARIES \
+        $_BUILD_SHARED_LIBRARIES \
+        $_BUILD_LDFLAGS \
+        -o $lib
+    fail_panic "Could not create ${_BUILD_PREFIX}shared library $libname"
+}
+
+builder_host_executable ()
+{
+    local exe exename
+    exename=$1
+    exe=$_BUILD_DSTDIR/$exename$HOST_EXE
+    if [ "$_BUILD_MK" ]; then
+        _BUILD_TARGETS=$_BUILD_TARGETS" $exe"
+        echo "$exe: $_BUILD_OBJECTS" >> $_BUILD_MK
+    fi
+    builder_log "${_BUILD_PREFIX}Executable: $exename$HOST_EXE"
+
+    if [ -z "$_BUILD_CXX" ]; then
+        _BUILD_CXX=${CXX:-g++}
+    fi
+
+    # Important: -lgcc must appear after objects and static libraries,
+    #            but before shared libraries for Android. It doesn't hurt
+    #            for other platforms.
+    builder_command ${_BUILD_CXX} \
+        -s \
+        $_BUILD_OBJECTS \
+        $_BUILD_STATIC_LIBRARIES \
+        $_BUILD_SHARED_LIBRARIES \
+        $_BUILD_LDFLAGS \
+        -o $exe
+    fail_panic "Could not create ${_BUILD_PREFIX}executable $libname"
+}
+
 
 builder_end ()
 {
@@ -350,8 +441,8 @@ builder_begin_android ()
     builder_set_prefix "$ABI "
     builder_set_binprefix "$BINPREFIX"
 
-    build_cflags "--sysroot=$SYSROOT"
-    build_cxxflags "--sysroot=$SYSROOT"
+    builder_cflags "--sysroot=$SYSROOT"
+    builder_cxxflags "--sysroot=$SYSROOT"
     _BUILD_LDFLAGS_BEGIN_SO="--sysroot=$SYSROOT -nostdlib $CRTBEGIN_SO_O"
     _BUILD_LDFLAGS_BEGIN_EXE="--sysroot=$SYSROOT -nostdlib $CRTBEGIN_EXE_O"
 
@@ -367,4 +458,13 @@ builder_begin_android ()
             builder_ldflags "-Wl,--fix-cortex-a8"
             ;;
     esac
+}
+
+# $1: Build directory
+# $2: Optional Makefile name
+builder_begin_host ()
+{
+    prepare_host_build
+    builder_begin "$1" "$2"
+    builder_set_prefix "$HOST_TAG "
 }

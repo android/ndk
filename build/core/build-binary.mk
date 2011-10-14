@@ -46,8 +46,8 @@ $(cleantarget): PRIVATE_CLEAN_FILES := $(LOCAL_BUILT_MODULE) \
                                        $($(my)OBJS)
 
 $(cleantarget)::
-	@echo "Clean: $(PRIVATE_MODULE) $(PRIVATE_TEXT)"
-	$(hide) rm -rf $(PRIVATE_CLEAN_FILES)
+	@$(HOST_ECHO) "Clean: $(PRIVATE_MODULE) $(PRIVATE_TEXT)"
+	$(hide) $(call host-rmdir,$(PRIVATE_CLEAN_FILES))
 
 ifeq ($(NDK_APP_DEBUGGABLE),true)
 $(NDK_APP_GDBSETUP): PRIVATE_SRC_DIRS += $(LOCAL_C_INCLUDES) $(LOCAL_PATH)
@@ -296,9 +296,9 @@ $(LOCAL_BUILT_MODULE): PRIVATE_SYSROOT := $(SYSROOT)
 #
 ifeq ($(call module-get-class,$(LOCAL_MODULE)),STATIC_LIBRARY)
 $(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
-	@ mkdir -p $(dir $@)
-	@ echo "StaticLibrary  : $(PRIVATE_NAME)"
-	$(hide) rm -rf $@
+	@ $(call host-mkdir,$(dir $@))
+	@ $(HOST_ECHO) "StaticLibrary  : $(PRIVATE_NAME)"
+	$(hide) $(call host-rm,$@)
 	$(hide) $(cmd-build-static-library)
 
 ALL_STATIC_LIBRARIES += $(LOCAL_BUILT_MODULE)
@@ -309,8 +309,8 @@ endif
 #
 ifeq ($(call module-get-class,$(LOCAL_MODULE)),SHARED_LIBRARY)
 $(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
-	@ mkdir -p $(dir $@)
-	@ echo "SharedLibrary  : $(PRIVATE_NAME)"
+	@ $(call host-mkdir,$(dir $@))
+	@ $(HOST_ECHO) "SharedLibrary  : $(PRIVATE_NAME)"
 	$(hide) $(cmd-build-shared-library)
 
 ALL_SHARED_LIBRARIES += $(LOCAL_BUILT_MODULE)
@@ -321,8 +321,8 @@ endif
 #
 ifeq ($(call module-get-class,$(LOCAL_MODULE)),EXECUTABLE)
 $(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
-	@ mkdir -p $(dir $@)
-	@ echo "Executable     : $(PRIVATE_NAME)"
+	@ $(call host-mkdir,$(dir $@))
+	@ $(HOST_ECHO) "Executable     : $(PRIVATE_NAME)"
 	$(hide) $(cmd-build-executable)
 
 ALL_EXECUTABLES += $(LOCAL_BUILT_MODULE)
@@ -333,9 +333,9 @@ endif
 #
 ifeq ($(call module-is-prebuilt,$(LOCAL_MODULE)),$(true))
 $(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
-	@ mkdir -p $(dir $@)
-	@ echo "Prebuilt       : $(PRIVATE_NAME) <= $(call pretty-dir,$(dir $<))"
-	$(hide) cp -f $< $@
+	@ $(call host-mkdir,$(dir $@))
+	@ $(HOST_ECHO) "Prebuilt       : $(PRIVATE_NAME) <= $(call pretty-dir,$(dir $<))"
+	$(hide) $(call host-cp,$<,$@)
 endif
 
 #
@@ -349,8 +349,8 @@ $(LOCAL_INSTALLED): PRIVATE_DST     := $(LOCAL_INSTALLED)
 $(LOCAL_INSTALLED): PRIVATE_STRIP   := $(TARGET_STRIP)
 
 $(LOCAL_INSTALLED): $(LOCAL_BUILT_MODULE) clean-installed-binaries
-	@ echo "Install        : $(PRIVATE_NAME) => $(call pretty-dir,$(PRIVATE_DST))"
-	$(hide) mkdir -p $(PRIVATE_DST_DIR)
-	$(hide) install -p $(PRIVATE_SRC) $(PRIVATE_DST)
+	@$(HOST_ECHO) "Install        : $(PRIVATE_NAME) => $(call pretty-dir,$(PRIVATE_DST))"
+	$(hide) $(call host-mkdir,$(PRIVATE_DST_DIR))
+	$(hide) $(call host-install,$(PRIVATE_SRC),$(PRIVATE_DST))
 	$(hide) $(call cmd-strip, $(PRIVATE_DST))
 endif
