@@ -230,7 +230,47 @@ RELEASE_PREFIX=$PREFIX-$RELEASE
 # ensure that the generated files are ug+rx
 umask 0022
 
+# Unpack a prebuilt into the destination directory ($DSTDIR)
+# $1: prebuilt name, relative to $PREBUILT_DIR
+# $2: optional, destination directory
+unpack_prebuilt ()
+{
+    local PREBUILT=$1
+    local DDIR="${2:-$DSTDIR}"
+    echo "Unpacking $PREBUILT"
+    if [ -f "$PREBUILT_DIR/$PREBUILT" ] ; then
+        unpack_archive "$PREBUILT_DIR/$PREBUILT" "$DDIR"
+        fail_panic "Could not unpack prebuilt $PREBUILT. Aborting."
+    else
+        echo "WARNING: Could not find $PREBUILT in $PREBUILT_DIR"
+    fi
+}
+
+# Copy a prebuilt directory from the previous
+# $1: Source directory relative to
+copy_prebuilt ()
+{
+    local SUBDIR="$1"
+    if [ -d "$1" ] ; then
+        echo "Copying: $SUBDIR"
+        copy_directory "$SUBDIR" "$DSTDIR/$2"
+    else
+        echo "Ignored: $SUBDIR"
+    fi
+}
+
+
 rm -rf $TMPDIR && mkdir -p $TMPDIR
+
+# Unpack the previous NDK package if any
+if [ -n "$PREBUILT_NDK" ] ; then
+    echo "Unpacking prebuilt toolchains from $PREBUILT_NDK"
+    UNZIP_DIR=$TMPDIR/prev-ndk
+    rm -rf $UNZIP_DIR && mkdir -p $UNZIP_DIR
+    fail_panic "Could not create temporary directory: $UNZIP_DIR"
+    unpack_archive "$PREBUILT_NDK" "$UNZIP_DIR"
+    fail_panic "Could not unzip NDK package $PREBUILT_NDK"
+fi
 
 # first create the reference ndk directory from the git reference
 echo "Creating reference from source files"
@@ -275,6 +315,21 @@ if [ -d $DEVELOPMENT_ROOT/sources ] ; then
     fail_panic "Could not copy sources. Aborting."
 fi
 
+# Unpack prebuilt C++ runtimes headers and libraries
+if [ -z "$PREBUILT_NDK" ]; then
+    # Unpack gdbserver
+    for TC in $TOOLCHAINS; do
+        unpack_prebuilt $TC-gdbserver.tar.bz2 "$REFERENCE"
+    done
+    # Unpack C++ runtimes
+    unpack_prebuilt gnu-libstdc++-headers.tar.bz2 "$REFERENCE"
+    for ABI in $ABIS; do
+        unpack_prebuilt gabixx-libs-$ABI.tar.bz2 "$REFERENCE"
+        unpack_prebuilt stlport-libs-$ABI.tar.bz2 "$REFERENCE"
+        unpack_prebuilt gnu-libstdc++-libs-$ABI.tar.bz2 "$REFERENCE"
+    done
+fi
+
 # create a release file named 'RELEASE.TXT' containing the release
 # name. This is used by the build script to detect whether you're
 # invoking the NDK from a release package or from the development
@@ -284,58 +339,6 @@ echo "$RELEASE" > $REFERENCE/RELEASE.TXT
 
 # Remove un-needed files
 rm -f $REFERENCE/CleanSpec.mk
-
-# Unpack a prebuilt into the destination directory ($DSTDIR)
-# $1: prebuilt name, relative to $PREBUILT_DIR
-unpack_prebuilt ()
-{
-    local PREBUILT=$1
-    echo "Unpacking $PREBUILT"
-    if [ -f "$PREBUILT_DIR/$PREBUILT" ] ; then
-        unpack_archive "$PREBUILT_DIR/$PREBUILT" "$DSTDIR"
-        fail_panic "Could not unpack prebuilt $PREBUILT. Aborting."
-    else
-        echo "WARNING: Could not find $PREBUILT in $PREBUILT_DIR"
-    fi
-}
-
-# Special handling for libsupcxx, that's because the files are
-# stored under toolchains/<name>/prebuilt/linux-x86/arm-linux-androideabi/
-# and we need to unpack them under toolchains/<name>/prebuilt/<system>/arm-linux-androideabi/
-# if we are not on linux-x86
-# $1: prebuilt name, relative to $PREBUILT_DIR
-unpack_libsupcxx ()
-{
-    if [ $SYSTEM = linux-x86 ] ; then
-        unpack_prebuilt $1
-        return
-    fi
-    local PREBUILT=$1
-    echo "Unpacking $PREBUILT"
-    if [ -f "$PREBUILT_DIR/$PREBUILT" ] ; then
-        TMPUNPACKDIR=$NDK_TMPDIR/unpack
-        unpack_archive "$PREBUILT_DIR/$PREBUILT" "$TMPUNPACKDIR"
-        fail_panic "Could not unpack prebuilt $PREBUILT. Aborting."
-        (cd $TMPUNPACKDIR/toolchains/*/prebuilt && mv linux-x86 $SYSTEM)
-        fail_panic "Could not rename temp directory to $SYSTEM"
-        copy_directory $TMPUNPACKDIR "$DSTDIR"
-        rm -rf $TMPUNPACKDIR
-    else
-        echo "WARNING: Could not find $PREBUILT in $PREBUILT_DIR"
-    fi
-}
-
-# $1: Source directory relative to
-copy_prebuilt ()
-{
-    local SUBDIR="$1"
-    if [ -d "$1" ] ; then
-        echo "Copying: $SUBDIR"
-        copy_directory "$SUBDIR" "$DSTDIR/$2"
-    else
-        echo "Ignored: $SUBDIR"
-    fi
-}
 
 # now, for each system, create a package
 #
@@ -347,13 +350,7 @@ for SYSTEM in $SYSTEMS; do
     copy_file_list "$REFERENCE" "$DSTDIR" "*"
     fail_panic "Could not copy reference. Aborting."
 
-    if [ -n "$PREBUILT_NDK" ] ; then
-        echo "Unpacking prebuilt toolchains from $PREBUILT_NDK"
-        UNZIP_DIR=$TMPDIR/prev-ndk
-        rm -rf $UNZIP_DIR && mkdir -p $UNZIP_DIR
-        fail_panic "Could not create temporary directory: $UNZIP_DIR"
-        unpack_archive "$PREBUILT_NDK" "$UNZIP_DIR"
-        fail_panic "Could not unzip NDK package $PREBUILT_NDK"
+    if [ "$PREBUILT_NDK" ]; then
         cd $UNZIP_DIR/android-ndk-* && cp -rP toolchains/* $DSTDIR/toolchains/
         fail_panic "Could not copy toolchain files from $PREBUILT_NDK"
 
@@ -385,16 +382,6 @@ for SYSTEM in $SYSTEMS; do
             unpack_prebuilt $TC-$SYSTEM.tar.bz2
             echo "Removing sysroot for $TC"
             rm -rf $DSTDIR/toolchains/$TC/prebuilt/$SYSTEM/sysroot
-            unpack_prebuilt $TC-gdbserver.tar.bz2
-        done
-
-        # Unpack prebuilt STL headers and libraries
-        unpack_prebuilt gnu-libstdc++-headers.tar.bz2
-        for ABI in $ABIS; do
-            #unpack_libsupcxx gnu-libsupc++-$ABI.tar.bz2
-            unpack_prebuilt gabixx-libs-$ABI.tar.bz2
-            unpack_prebuilt stlport-libs-$ABI.tar.bz2
-            unpack_prebuilt gnu-libstdc++-libs-$ABI.tar.bz2
         done
 
         # Unpack prebuilt ndk-stack
