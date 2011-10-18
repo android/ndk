@@ -47,6 +47,7 @@ TESTABLES="samples build device awk"
 FULL_TESTS=no
 RUN_TESTS=
 NDK_PACKAGE=
+WINE=
 
 while [ -n "$1" ]; do
     opt="$1"
@@ -102,6 +103,9 @@ while [ -n "$1" ]; do
         --only-awk)
             TESTABLES=awk
             ;;
+        --wine)
+            WINE=yes
+            ;;
         -*) # unknown options
             echo "ERROR: Unknown option '$opt', use --help for list of valid ones."
             exit 1
@@ -138,6 +142,7 @@ if [ "$OPTION_HELP" = "yes" ] ; then
     echo "    --only-device     Only rebuild & run device tests"
     echo "    --only-awk        Only run awk tests."
     echo "    --full            Run all device tests, even very long ones."
+    echo "    --wine            Build all tests with wine on Linux"
     echo ""
     echo "NOTE: You cannot use --ndk and --package at the same time."
     echo ""
@@ -386,7 +391,11 @@ fi
 
 run_ndk_build ()
 {
-    run $NDK/ndk-build -j$JOBS "$@"
+    if [ "$WINE" ]; then
+        run wine cmd /c Z:$NDK/ndk-build.cmd -j$JOBS "$@"
+    else
+        run $NDK/ndk-build -j$JOBS "$@"
+    fi
 }
 
 build_project ()
