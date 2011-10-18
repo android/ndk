@@ -303,6 +303,9 @@ else
     fail_panic "Could not copy platform files. Aborting."
 fi
 
+# Remove the source for host tools to make the final package smaller
+rm -rf $REFERENCE/sources/host-tools
+
 # Remove leftovers, just in case...
 rm -rf $REFERENCE/samples/*/{obj,libs,build.xml,local.properties,Android.mk} &&
 rm -rf $REFERENCE/tests/build/*/{obj,libs} &&
