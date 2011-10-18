@@ -5,15 +5,21 @@ android-ndk-r7
 
 IMPORTANT CHANGES:
 
-- New official NDK APIs for Android 4.0 (a.k.a. API level 14):
+- New official NDK APIs for Android 4.0 (a.k.a. API level 14),
+  which adds the following native features to the platform:
 
-  - Khronos OpenMAX headers and libraries, to provide your own
-    audio and video codecs in application code. For more details, see:
+     - Native multimedia API based on the Khronos Group OpenMAX AL&#0153;
+       1.0.1 Standard.  New headers &lt;OMXAL/OpenMAXAL.h&gt; and
+       &lt;OMXAL/OpenMAXAL_Android.h&gt; are provided to allow
+       applications targeting this API level to perform multimedia output
+       directly from native code using a new Android-specific buffer
+       queue interface.  For more details, see docs/openmaxal/index.html
+       and http://www.khronos.org/openmax/.
 
-        http://www.khronos.org/openmax/
-
-  - Updated Khronos OpenSLES headers and libraries, to support a new
-    Android-specific buffer queue interface.
+     - Updated the native audio API based on the Khronos Group OpenSL ES
+       1.0.1&#0153; Standard.  API Level 14 can now decode compressed
+       audio (e.g. MP3, AAC, Vorbis) to PCM.  For more details, see
+       docs/opensles/index.html and http://www.khronos.org/opensles/.
 
 - CCache support. To speed up large rebuilds, simply define the NDK_CCACHE
   environment variable to 'ccache' (or the path to your ccache binary), as in:

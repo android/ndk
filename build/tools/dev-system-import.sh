@@ -623,11 +623,22 @@ if platform_check 9; then
 
     set_symbol_excludes '^_' '^MPH_' # remove MPH_to_xxx definitions
     copy_system_shared_library libOpenSLES
-    copy_system_headers $ANDROID_ROOT/system/media/opensles/include \
+    copy_system_headers $ANDROID_ROOT/system/media/wilhelm/include \
         SLES/OpenSLES.h \
         SLES/OpenSLES_Android.h \
         SLES/OpenSLES_AndroidConfiguration.h \
+        SLES/OpenSLES_AndroidMetadata.h \
         SLES/OpenSLES_Platform.h
+fi
+
+# API level 14
+if platform_check 14; then
+    set_symbol_excludes '^_' '^MPH_' # remove MPH_to_xxx definitions
+    copy_system_shared_library libOpenMAXAL
+    copy_system_headers $ANDROID_ROOT/system/media/wilhelm/include \
+        OMXAL/OpenMAXAL.h \
+        OMXAL/OpenMAXAL_Android.h \
+        OMXAL/OpenMAXAL_Platform.h
 fi
 
 clear_symbol_excludes

@@ -11,8 +11,13 @@
 <h1>OpenSL ES for Android</h1>
 
 This article describes the Android native audio APIs based on the
-Khronos Group OpenSL ES&#0153; 1.0.1 standard, as of Android API level 9 (Android
-version 2.3).
+Khronos Group OpenSL ES&#8482; 1.0.1 standard.
+<p>
+Unless otherwise noted,
+all features are available at Android API level 9 (Android platform
+version 2.3) and higher.
+Some features are only available at Android API level 14 (Android
+platform version 4.0) and higher; these are noted.
 <p>
 OpenSL ES provides a C language interface that is also callable from C++, and
 exposes features similar to the audio portions of these Android APIs
@@ -33,7 +38,7 @@ expect that you should be able to accomplish most of your audio
 needs using only this API, without up-calls to Java.
 
 <p>
-Note: though based on OpenSL ES, Android native audio at API level 9
+Note: though based on OpenSL ES, Android native audio
 is <i>not</i> a conforming implementation of any OpenSL ES 1.0.1
 profile (game, music, or phone). This is because Android does not
 implement all of the features required by any one of the profiles.
@@ -56,7 +61,7 @@ The OpenSL ES 1.0.1 specification contains example code in the
 appendices (see section "References" below for the link to this
 specification).  However, the examples in Appendix B: Sample Code
 and Appendix C: Use Case Sample Code use features
-not supported by Android API level 9. Some examples also contain
+not supported by Android. Some examples also contain
 typographical errors, or use APIs that are likely to change.
 Proceed with caution in referring to these;
 though the code may be helpful in understanding the full OpenSL ES
@@ -71,10 +76,15 @@ At a minimum, add the following line to your code:
 #include &lt;SLES/OpenSLES.h&gt;
 </pre>
 
-If you use Android extensions, also include these headers:
+If you use Android extensions, also include this header:
 <pre>
 #include &lt;SLES/OpenSLES_Android.h&gt;
+</pre>
+which automatically includes these headers as well (you don't need to
+include these, they are shown as an aid in learning the API):
+<pre>
 #include &lt;SLES/OpenSLES_AndroidConfiguration.h&gt;
+#include &lt;SLES/OpenSLES_AndroidMetadata.h&gt;
 </pre>
 
 <h3>Makefile</h3>
@@ -106,7 +116,7 @@ By placing your audio files into the <code>assets/</code> folder,
 they will be directly accessible by the Android native asset manager
 APIs.  See the header files <code>android/asset_manager.h</code>
 and <code>android/asset_manager_jni.h</code> for more information
-on these APIs, which are new for API level 9.  The example code
+on these APIs.  The example code
 located in NDK folder
 <code>platforms/android-9/samples/native-audio/</code> uses these
 native asset manager APIs in conjunction with the Android file
@@ -142,7 +152,7 @@ technique for the "Hello" and "Android" clips. The PCM data was
 converted to hex strings using a <code>bin2c</code> tool (not supplied).
 </dd>
 
-<dt>Synthesis</dt>
+<dt>Real-time synthesis</dt>
 <dd>
 Your application can synthesize PCM data on the fly and then play it
 using an audio player with buffer queue data locator.  This is a
@@ -186,7 +196,7 @@ ddms logcat</a> to see the log.
 
 <h2>Supported features from OpenSL ES 1.0.1</h2>
 
-This section summarizes available features in this API level. In some
+This section summarizes available features. In some
 cases, there are limitations which are described in the next
 sub-section.
 
@@ -267,8 +277,8 @@ to <code>SL_CONTAINERTYPE_UNSPECIFIED</code>.
 <p>
 Supported formats include WAV PCM, WAV alaw, WAV ulaw, MP3, Ogg
 Vorbis, AAC LC, HE-AACv1 (aacPlus), HE-AACv2 (enhanced aacPlus),
-and AMR [provided these are supported by the overall platform,
-and AAC formats must be located within an MP4 container].
+AMR, and FLAC [provided these are supported by the overall platform,
+and AAC formats must be located within an MP4 or ADTS container].
 MIDI is not supported.
 WMA is not part of the open source release, and compatibility
 with Android OpenSL ES has not been verified.
@@ -302,9 +312,17 @@ of the symbolic constants defined for this purpose (such as
 
 <h4>Playback rate</h4>
 
-A single playback rate range from 500 per mille to 2000 per mille
-inclusive is supported, with property
+The supported playback rate range(s) and capabilities may vary depending
+on the platform version and implementation, and so should be determined
+at runtime by querying with <code>PlaybackRate::GetRateRange</code>
+or <code>PlaybackRate::GetCapabilitiesOfRate</code>.
+<p>
+That said, some guidance on typical rate ranges may be useful:
+In Android 2.3 a single playback rate range from 500 per mille to 2000 per mille
+inclusive is typically supported, with property
 <code>SL_RATEPROP_NOPITCHCORAUDIO</code>.
+In Android 4.0 the same rate range is typically supported for a data source
+in PCM format, and a unity rate range for other formats.
 
 <h4>Record</h4>
 
@@ -328,7 +346,7 @@ schemes such as <code>https:</code>, <code>ftp:</code>, and
 
 <h3>Data structures</h3>
 
-Android API level 9 supports these OpenSL ES 1.0.1 data structures:
+Android supports these OpenSL ES 1.0.1 data structures:
 <ul>
 <li>SLDataFormat_MIME
 <li>SLDataFormat_PCM
@@ -358,17 +376,25 @@ restrict the usable number of objects.
 <li><code>SL_ENGINEOPTION_LOSSOFCONTROL</code>
 </ul>
 
+OpenMAX AL and OpenSL ES may be used together in the same application.
+In this case, there is internally a single shared engine object,
+and the 32 object limit is shared between OpenMAX AL and OpenSL ES.
+The application should first create both engines, then use both engines,
+and finally destroy both engines.  The implementation maintains a
+reference count on the shared engine, so that it is correctly destroyed
+at the second destroy.
+
 <h2>Planning for future versions of OpenSL ES</h2>
 
-The Android native audio APIs at level 9 are based on Khronos
+The Android native audio APIs are based on Khronos
 Group OpenSL ES 1.0.1 (see section "References" below).
-As of the time of this writing, the OpenSL ES working group
-is preparing a revised version of the standard. The revised version
-will likely include new features, clarifications, correction of
+As of the time of this writing, Khronos has recently released
+a revised version 1.1 of the standard. The revised version
+includes new features, clarifications, correction of
 typographical errors, and some incompatibilities. Most of the expected
 incompatibilities are relatively minor, or are in areas of OpenSL ES
-not supported by Android API level 9. However, even a small change
-can be significant for an application developer, so it important
+not supported by Android. However, even a small change
+can be significant for an application developer, so it is important
 to prepare for this.
 <p>
 The Android team is committed to preserving future API binary
@@ -432,8 +458,8 @@ We recommend that your application code use Android simple buffer
 queues instead, because we do not plan to change that API.
 In the example code supplied with the NDK, we have used
 Android simple buffer queues for playback for this reason.
-(We also use Android simple buffer queue for recording, but
-that is because standard OpenSL ES 1.0.1 does not support record to
+(We also use Android simple buffer queue for recording and decode to PCM, but
+that is because standard OpenSL ES 1.0.1 does not support record or decode to
 a buffer queue data sink.)
 <li>Addition of <code>const</code> to input parameters passed by reference,
 and to <code>SLchar *</code> struct fields used as input values.
@@ -448,7 +474,7 @@ either avoid calling this method, or isolate your use of it.
 <li>Additional fields in struct types. For output parameters, these
 new fields can be ignored, but for input parameters the new fields
 will need to be initialized. Fortunately, these are expected to all
-be in areas not supported by API level 9.
+be in areas not supported by Android.
 <li>Interface
 <a href="http://en.wikipedia.org/wiki/Globally_unique_identifier">
 GUIDs</a> will change. Refer to interfaces by symbolic name rather than GUID
@@ -477,12 +503,10 @@ still be available (though deprecated), it should not require any
 immediate changes to your code.
 </ul>
 
-Any actual source code incompatibilities will be explained in detail
-when the time comes.
-
 <h2>Android extensions</h2>
 
-The API for Android extensions is defined in <code>SLES/OpenSLES_Android.h</code>.
+The API for Android extensions is defined in <code>SLES/OpenSLES_Android.h</code>
+and the header files that it includes.
 Consult that file for details on these extensions. Unless otherwise
 noted, all interfaces are "explicit".
 <p>
@@ -602,10 +626,143 @@ above).
 <code>Engine::QuerySupportedExtension</code>,
 <code>Engine::IsExtensionSupported</code> report these extensions:
 <ul>
-<li><code>ANDROID_SDK_LEVEL_9</code>
-(platforms that support a higher API level will report an extension of
-<code>ANDROID_SDK_LEVEL_#</code> where # is that API level)
+<li><code>ANDROID_SDK_LEVEL_#</code>
+where # is the platform API level, 9 or higher
 </ul>
+
+<h3>Decode audio to PCM</h3>
+
+Note: this feature is available at API level 14 and higher.
+<p>
+A standard audio player plays back to an audio device, and the data sink
+is specified as an output mix.
+However, as an Android extension, an audio player instead
+acts as a decoder if the data source is specified as a URI or Android
+file descriptor data locator with MIME data format, and the data sink is
+an Android simple buffer queue data locator with PCM data format.
+<p>
+This feature is primarily intended for games to pre-load their
+audio assets when changing to a new game level, similar to
+<code>android.media.SoundPool</code>.
+<p>
+The application should initially enqueue a set of empty buffers to the Android simple
+buffer queue, which will be filled with PCM data.  The Android simple
+buffer queue callback is invoked after each buffer is filled. The
+callback handler should process the PCM data, re-enqueue the
+now-empty buffer, and then return.  The application is responsible for
+keeping track of decoded buffers; the callback parameter list does not include
+sufficient information to indicate which buffer was filled or which buffer to enqueue next.
+<p>
+The end of stream is determined implicitly by the data source.
+At the end of stream a <code>SL_PLAYEVENT_HEADATEND</code> event is
+delivered. The Android simple buffer queue callback will no longer
+be called after all consumed data is decoded.
+<p>
+The sink's PCM data format typically matches that of the encoded data source
+with respect to sample rate, channel count, and bit depth. However, the platform
+implementation is permitted to decode to a different sample rate, channel count, or bit depth.
+There is a provision to detect the actual PCM format; see section "Determining
+the format of decoded PCM data via metadata" below.
+<p>
+Decode to PCM supports pause and initial seek.  Volume control, effects,
+looping, and playback rate are not supported.
+<p>
+Depending on the platform implementation, decoding may require resources
+that cannot be left idle.  Therefore it is not recommended to starve the
+decoder by failing to provide a sufficient number of empty PCM buffers,
+e.g. by returning from the Android simple buffer queue callback without
+enqueueing another empty buffer.  The result of decoder starvation is
+unspecified; the implementation may choose to either drop the decoded
+PCM data, pause the decoding process, or in severe cases terminate
+the decoder.
+
+<h3>Decode streaming ADTS AAC to PCM</h3>
+
+Note: this feature is available at API level 14 and higher.
+<p>
+An audio player acts as a streaming decoder if the data source is an
+Android buffer queue data locator with MIME data format, and the data
+sink is an Android simple buffer queue data locator with PCM data format.
+The MIME data format should be configured as:
+<dl>
+<dt>container</dt>
+<dd><code>SL_CONTAINERTYPE_RAW</code>
+<dt>MIME type string
+<dd><code>"audio/vnd.android.aac-adts"</code> (macro <code>SL_ANDROID_MIME_AACADTS</code>)
+</dl>
+<p>
+This feature is primarily intended for streaming media applications that
+deal with AAC audio, but need to apply custom processing of the audio
+prior to playback.  Most applications that need to decode audio to PCM
+should use the method of the previous section "Decode audio to PCM",
+as it is simpler and handles more audio formats.  The technique described
+here is a more specialized approach, to be used only if both of these
+conditions apply:
+<ul>
+<li>the compressed audio source is a stream of AAC frames contained by ADTS headers
+<li>the application manages this stream, that is the data is <i>not</i> located within
+a network resource identified by URI or within a local file identified by file descriptor.
+</ul>
+The application should initially enqueue a set of filled buffers to the Android buffer queue.
+Each buffer contains one or more complete ADTS AAC frames.
+The Android buffer queue callback is invoked after each buffer is emptied.
+The callback handler should re-fill and re-enqueue the buffer, and then return.
+The application need not keep track of encoded buffers; the callback parameter
+list does include sufficient information to indicate which buffer to enqueue next.
+The end of stream is explicitly marked by enqueuing an EOS item.
+After EOS, no more enqueues are permitted.
+<p>
+It is not recommended to starve the decoder by failing to provide full
+ADTS AAC buffers, e.g. by returning from the Android buffer queue callback
+without enqueueing another full buffer.  The result of starvation is
+decoder starvation is unspecified.
+<p>
+In all respects except for the data source, the streaming decode method is similar
+to that of the previous section:
+<ul>
+<li>initially enqueue a set of empty buffers to the Android simple buffer queue
+<li>the Android simple buffer queue callback is invoked after each buffer is filled with PCM data;
+the callback handler should process the PCM data and then re-enqueue another empty buffer
+<li>the <code>SL_PLAYEVENT_HEADATEND</code> event is delivered at end of stream
+<li>the actual PCM format should be detected using metadata rather than by making an assumption
+<li>the same limitations apply with respect to volume control, effects, etc.
+<li>starvation for lack of empty PCM buffers is not recommended
+</ul>
+<p>
+Despite the similarity in names, an Android buffer queue is <i>not</i>
+the same as an Android simple buffer queue.  The streaming decoder
+uses both kinds of buffer queues: an Android buffer queue for the ADTS
+AAC data source, and an Android simple buffer queue for the PCM data
+sink.  The Android simple buffer queue API is described in this document
+in section "Android simple buffer queue data locator and interface".
+The Android buffer queue API is described in the Android native media
+API documentation, located in <a href="../openmaxal/index.html">docs/openmaxal/index.html</a>.
+
+<h3>Determining the format of decoded PCM data via metadata</h3>
+
+The metadata extraction interface <code>SLMetadataExtractionItf</code>
+is a standard OpenSL ES 1.0.1 interface, not an Android extension.
+However, the particular metadata keys that
+indicate the actual format of decoded PCM data are specific to Android,
+and are defined in header <code>SLES/OpenSLES_AndroidMetadata.h</code>.
+<p>
+The metadata key indices are available immediately after
+<code>Object::Realize</code>. Yet the associated values are not
+available after the first encoded data has been decoded.  A good
+practice is to query for the key indices in the main thread after Realize,
+and to read the PCM format metadata values in the Android simple
+buffer queue callback handler the first time it is called.
+<p>
+The OpenSL ES 1.0.1 metadata extraction interface
+<code>SLMetadataExtractionItf</code> is admittedly cumbersome, as it
+requires a multi-step process to first determine key indices and then
+to get the key values.  Consult the example code for snippets showing
+how to work with this interface.
+<p>
+Metadata key names are stable.  But the key indices are not documented
+and are subject to change.  An application should not assume that indices
+are persistent across different execution runs, and should not assume that
+indices are shared for different object instances within the same run.
 
 <h2>Programming notes</h2>
 
@@ -670,7 +827,9 @@ either <code>SL_PLAYSTATE_PAUSED</code> or <code>SL_PLAYSTATE_PLAYING</code>.
 Note that some information may still be unknown until relatively
 late in this sequence. In particular, initially
 <code>Player::GetDuration</code> will return <code>SL_TIME_UNKNOWN</code>
-and <code>MuteSolo::GetChannelCount</code> will return zero.
+and <code>MuteSolo::GetChannelCount</code> will either return successfully
+with channel count zero
+or the error result <code>SL_RESULT_PRECONDITIONS_VIOLATED</code>.
 These APIs will return the proper values once they are known.
 <p>
 Other properties that are initially unknown include the sample rate
@@ -806,7 +965,8 @@ permission. Applications that use audio effects need
 <code>android.permission.MODIFY_AUDIO_SETTINGS</code>. Applications that play
 network URI resources need <code>android.permission.NETWORK</code>.
 <p>
-Media content parsers and software codecs run within the context
+Depending on the platform version and implementation,
+media content parsers and software codecs may run within the context
 of the Android application that calls OpenSL ES (hardware codecs
 are abstracted, but are device-dependent). Malformed content
 designed to exploit parser and codec vulnerabilities is a known attack
@@ -866,6 +1026,7 @@ Miscellaneous:
 Stack Overflow</a>
 <li>web search for "interactive audio", "game audio", "sound design",
 "audio programming", "audio content", "audio formats", etc.
+<li><a href="http://en.wikipedia.org/wiki/Advanced_Audio_Coding">AAC</a>
 </ul>
 
 </body>
