@@ -2,23 +2,11 @@
  * when running on Eclair or older platform releases. It will
  * always succeed on later versions of the  platform!
  */
-#include <new>
-#include <exception>
-#include <cstdio>
 
-static int foo(void)
-{
-    try {
-	::printf("Hello ");
-	throw std::exception();
-    }
-    catch (std::exception e) {
-        ::printf(" World!\n");
-    }
-}
+extern int foo(void);
 
 int main(int argc, char** argv)
 {
-    foo();
+    (void) foo();
     return 0;
 }
