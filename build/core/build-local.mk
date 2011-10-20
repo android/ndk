@@ -54,7 +54,7 @@ include $(NDK_ROOT)/build/core/init.mk
 #
 # ====================================================================
 
-find-project-dir = $(strip $(call find-project-dir-inner,$1,$2))
+find-project-dir = $(strip $(call find-project-dir-inner,$(abspath $1),$2))
 
 find-project-dir-inner = \
     $(eval __found_project_path := )\
