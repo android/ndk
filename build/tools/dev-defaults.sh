@@ -21,7 +21,7 @@ GABIXX_SUBDIR=sources/cxx-stl/gabi++
 # root directory.
 GNUSTL_SUBDIR=sources/cxx-stl/gnu-libstdc++
 
-# The date to use when downloading toolchain sources from android.git.kernel.org
+# The date to use when downloading toolchain sources from AOSP servers
 # Leave it empty for tip of tree.
 TOOLCHAIN_GIT_DATE=2011-02-23
 

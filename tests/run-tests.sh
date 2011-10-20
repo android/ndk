@@ -433,7 +433,7 @@ if is_testable samples; then
         DEVNDK_DIR=`dirname $NDK`/development/ndk
         if [ ! -d "$DEVNDK_DIR" ] ; then
             dump "ERROR: Could not find development NDK directory: $DEVNDK_DIR"
-            dump "Please clone platform/development.git from android.git.kernel.org"
+            dump "Please clone platform/development.git from android.googlesource.com"
             exit 1
         fi
         SAMPLES_DIRS="$DEVNDK_DIR/samples"

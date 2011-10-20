@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 #  This shell script is used to download the sources of the Android NDK toolchain
-#  from the git server at android.git.kernel.org and package them in a nice tarball
+#  from the git server at android.googlesource.com and package them in a nice tarball
 #  that can later be used with the 'built-toolchain.sh' script.
 #
 
@@ -42,14 +42,11 @@ register_var_option "--git-date=<date>" GIT_DATE "Only sources that existed unti
 GITCMD=git
 register_var_option "--git=<executable>" GITCMD "Use this version of the git tool"
 
-OPTION_GIT_HTTP=no
-register_var_option "--git-http" OPTION_GIT_HTTP "Use http to download sources from git"
-
-OPTION_GIT_BASE=
+OPTION_GIT_BASE=https://android.googlesource.com/toolchain
 register_var_option "--git-base=<git-uri>" OPTION_GIT_BASE "Use specific git repository base"
 
 OPTION_GIT_REFERENCE=
-register_var_option "--git-reference=<path>" OPTION_GIT_REFERENCE "Use local git reference base"
+register_var_option "--git-reference=<path>" OPTION_GIT_REFERENCE "Use local git reference"
 
 OPTION_PACKAGE=no
 register_var_option "--package" OPTION_PACKAGE "Create source package in /tmp/ndk-$USER"
@@ -59,7 +56,7 @@ register_var_option "--no-patches" OPTION_NO_PATCHES "Do not patch sources"
 
 PROGRAM_PARAMETERS="<src-dir>"
 PROGRAM_DESCRIPTION=\
-"Download the NDK toolchain sources from android.git.kernel.org into <src-dir>.
+"Download the NDK toolchain sources from android.googlesource.com into <src-dir>.
 You will need to run this script before being able to rebuilt the NDK toolchain
 binaries from scratch with build/tools/build-gcc.sh."
 
@@ -67,7 +64,7 @@ if [ -n "$TOOLCHAIN_GIT_DATE" ] ; then
   PROGRAM_DESCRIPTION="$PROGRAM_DESCRIPTION\
 
 
-By default, this script will download sources from android.git.kernel.org that
+By default, this script will download sources from android.googlesource.com that
 correspond to the date of $TOOLCHAIN_GIT_DATE. If you want to use the tip of
 tree, use '--git-date=now' instead.
 
@@ -83,11 +80,6 @@ be used as git clone shared references.
 fi
 
 extract_parameters "$@"
-
-if [ -n "$OPTION_GIT_BASE" -a "$OPTION_GIT_HTTP" = "yes" ] ; then
-    echo "ERROR: You can't use --git-base and --git-http at the same time."
-    exit 1
-fi
 
 # Check that 'git' works
 $GITCMD --version > /dev/null 2>&1
@@ -118,15 +110,7 @@ rm -rf $TMPDIR && mkdir $TMPDIR
 fail_panic "Could not create temporary directory: $TMPDIR"
 
 # prefix used for all clone operations
-if [ -n "$OPTION_GIT_BASE" ] ; then
-    GITPREFIX="$OPTION_GIT_BASE"
-else
-    GITPROTO=git
-    if [ "$OPTION_GIT_HTTP" = "yes" ] ; then
-        GITPROTO=http
-    fi
-    GITPREFIX=${GITPROTO}://android.git.kernel.org/toolchain
-fi
+GITPREFIX="$OPTION_GIT_BASE"
 dump "Using git clone prefix: $GITPREFIX"
 
 GITREFERENCE=

@@ -19,8 +19,8 @@ two repositories with the following:
 
   mkdir workdir
   cd workdir
-  git clone git://android.git.kernel.org/platform/ndk.git ndk
-  git clone git://android.git.kernel.org/platform/development.git development
+  git clone https://android.googlesource.com/platform/ndk.git ndk
+  git clone https://android.googlesource.com/platform/development.git development
   export NDK=`pwd`/ndk
 
 
@@ -77,7 +77,7 @@ several ways to get them:
 
       The NDK comes with several scripts that can be used to rebuild the
       binaries from scratch, after downloading their sources from
-      android.git.kernel.org.
+      android.googlesource.com.
 
       There are several ways to do that, the most naive one, which will
       always work but will be *very* long (expect a few hours on a typical
@@ -88,7 +88,7 @@ several ways to get them:
       This will perform all the steps required to rebuild the binaries,
       which include:
 
-        - downloading the sources from android.git.kernel.org
+        - downloading the sources from android.googlesource.com
         - patching them with appropriate changes, if needed
         - rebuilding everything from scratch
         - copying the generated binaries to the proper location under $NDK

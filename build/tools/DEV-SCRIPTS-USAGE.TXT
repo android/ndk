@@ -252,7 +252,7 @@ Note, to create a local toolchain repo:
 
    mkdir -p /tmp/ndk-$USER/toolchain
    cd /tmp/ndk-$USER/toolchain
-   repo init git://android.git.kernel.org/toolchain/manifest.git
+   repo init https://android.googlesource.com/toolchain/manifest.git
    repo sync
 
 then use with:
