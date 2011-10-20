@@ -106,16 +106,24 @@ fi
 mkdir -p "$BUILD_DIR"
 fail_panic "Could not create build directory: $BUILD_DIR"
 
+# $1: ABI name
+# $2: Build directory
+# $3: "static" or "shared"
+# $4: Destination directory (optional, will default to $GNUSTL_SUBDIR/lib/$ABI)
 build_gnustl_for_abi ()
 {
     local ARCH BINPREFIX SYSROOT
     local ABI=$1
     local BUILDDIR="$2"
-    local DSTDIR="$3"
+    local LIBTYPE="$3"
+    local DSTDIR="$4"
     local SRC OBJ OBJECTS CFLAGS CXXFLAGS
 
     prepare_target_build $ABI $PLATFORM $NDK_DIR
     fail_panic "Could not setup target build."
+
+    INSTALLDIR=$BUILDDIR/install
+    BUILDDIR=$BUILDDIR/$LIBTYPE-$ABI
 
     # If the output directory is not specified, use default location
     if [ -z "$DSTDIR" ]; then
@@ -147,7 +155,7 @@ build_gnustl_for_abi ()
             ;;
     esac
 
-    export CXXFLAGS="$CXXFLAGS --sysroot=$SYSROOT -fexceptions -frtti -D__BIONIC__ -O2 -fvisibility=hidden -fvisibility-inlines-hidden"
+    export CXXFLAGS="$CXXFLAGS --sysroot=$SYSROOT -fexceptions -frtti -D__BIONIC__ -O2"
 
     export CC=${BINPREFIX}gcc
     export CXX=${BINPREFIX}g++
@@ -161,18 +169,32 @@ build_gnustl_for_abi ()
 
     export LDFLAGS="-nostdinc -L$SYSROOT/usr/lib -lc"
 
-    PROJECT="GNU libstdc++ $ABI"
+    LIBTYPE_FLAGS=
+    if [ $LIBTYPE = "static" ]; then
+        # Ensure we disable visibility for the static library to reduce the
+        # size of the code that will be linked against it.
+        LIBTYPE_FLAG="--enable-static --disable-shared --disable-visibility"
+        CXXFLAGS=$CXXFLAGS" -fvisibility=hidden -fvisibility-inlines-hidden"
+    else
+        LIBTYPE_FLAG="--disable-static --enable-shared"
+        #LDFLAGS=$LDFLAGS" -lsupc++"
+    fi
+
+    PROJECT="gnustl_$LIBTYPE $ABI"
     echo "$PROJECT: configuring"
-    mkdir -p $BUILD_DIR/$ABI &&
+    mkdir -p $BUILDDIR && rm -rf $BUILDDIR/* &&
     cd $BUILDDIR &&
     run $GNUSTL_SRCDIR/configure \
-        --prefix=$BUILDDIR/install \
+        --prefix=$INSTALLDIR \
         --host=$BUILD_HOST \
-        --enable-shared --enable-static \
+        $LIBTYPE_FLAGS \
         --disable-symvers \
         --disable-multilib \
-        --enable-threads --disable-nls \
-        --disable-sjlj-exceptions --disable-tls
+        --enable-threads \
+        --disable-nls \
+        --disable-sjlj-exceptions \
+        --disable-tls \
+        --disable-libstdcxx-pch
 
     fail_panic "Could not configure $PROJECT"
 
@@ -227,8 +249,9 @@ copy_gnustl_libs ()
 
 
 for ABI in $ABIS; do
-    build_gnustl_for_abi $ABI "$BUILD_DIR/$ABI"
-    copy_gnustl_libs $ABI "$BUILD_DIR/$ABI"
+    build_gnustl_for_abi $ABI "$BUILD_DIR" static
+    build_gnustl_for_abi $ABI "$BUILD_DIR" shared
+    copy_gnustl_libs $ABI "$BUILD_DIR"
 done
 
 # If needed, package files into tarballs

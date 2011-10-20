@@ -1,0 +1,4 @@
+This checks that one can link against gnustl_shared and still throw exceptions
+between several binaries. I.e. one exception is thrown in libfoo.so and caught
+into the main executable.
+
