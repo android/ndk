@@ -174,7 +174,7 @@ endif
 ifeq ($(HOST_OS),windows)
 host-rmdir = del /f/s/e/q $(subst /,\,$1) >NUL 2>NUL
 else
-host-rmdir = rm -f $1
+host-rmdir = rm -rf $1
 endif
 
 # -----------------------------------------------------------------------------
