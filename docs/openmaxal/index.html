@@ -208,7 +208,7 @@ The source data locator must be <code>XA_DATALOCATOR_ANDROIDBUFFERQUEUE</code>
 (see "Android extensions" below).
 <p>
 The source data format must be <code>XADataFormat_MIME</code>.
-Initialize <code>mimeType</code> to the UTF-8 string <code>"video/mp2ts"</code>,
+Initialize <code>mimeType</code> to <code>XA_ANDROID_MIME_MP2TS</code>,
 and <code>containerType</code> to <code>XA_CONTAINERTYPE_MPEG_TS</code>.
 <p>
 The contained transport stream must have a single program with one H.264
@@ -223,17 +223,39 @@ are not supported.
 
 <h4>StreamInformation</h4>
 
+Use the StreamInformation interface on a media player object to discover
+when the video metrics (height/width or aspect ratio) are available or
+changed, and to then get the sizes.
+<p>
+
 Supported:
 <ul>
-<li>Video size available or changed notification
-<li>Get video size (height/width and aspect ratio)
+<li><code>RegisterStreamChangeCallback</code>
+<li><code>QueryMediaContainerInformation</code>
+<li><code>QueryStreamInformation</code>
+<li><code>QueryStreamType</code>
 </ul>
 
 Not supported:
 <ul>
+<li><code>QueryActiveStreams</code>
 <li><code>QueryStreamName</code>
 <li><code>SetActiveStream</code>
 </ul>
+
+<h4>VideoDecoderCapabilities</h4>
+
+This interface on the engine object reports video decoder capabilities
+without interpretation, exactly as claimed by the underlying OpenMAX IL
+implementation.
+<p>
+These fields in <code>XAVideoCodecDescriptor</code> are filled:
+<ul>
+<li><code>codecId</code>
+<li><code>profileSetting</code>
+<li><code>levelSetting</code>
+</ul>
+The other fields are not filled and should be ignored.
 
 <h3>Data structures</h3>
 
@@ -249,6 +271,7 @@ Android API level 14 supports these OpenMAX AL 1.0.1 data structures:
 <li>XAMediaContainerInformation
 <li>XANativeHandle
 <li>XA*StreamInformation
+<li>XAVideoCodecDescriptor
 </ul>
 
 <h4>XADataLocator_NativeDisplay</h4>
@@ -429,10 +452,18 @@ application in synchrony with the completion callback.
 <li>The completion callback receives additional parameters:
 buffer address, buffer maximum data size, buffer actual size consumed (or filled by a future
 recorder object), and a <code>void *</code> for application.
+<li>The callback returns a value, which must be <code>XA_RESULT_SUCCESS</code>.
 </ul>
+
+The data locator type code is <code>XA_DATALOCATOR_ANDROIDBUFFERQUEUE</code> and
+the associated structure is <code>XADataLocator_AndroidBufferQueue</code>.
+<p>
+The interface ID is <code>XA_IID_ANDROIDBUFFERQUEUESOURCE</code>.
 
 <h4>Usage</h4>
 
+A typical buffer queue configuration is 8 buffers of 1880 bytes each.
+<p>
 The application enqueues filled buffers of data in MPEG-2 transport
 stream format.  The buffer size must be a multiple of 188 bytes,
 the size of an MPEG-2 transport stream packet. The buffer data must
@@ -443,8 +474,11 @@ An application may supply zero or one of these item codes
 (command key/value pairs) at <code>Enqueue</code>:
 <dl>
 <dt>XA_ANDROID_ITEMKEY_EOS</dt>
-<dd>End of stream. The application does not intend to call <code>Enqueue</code> again.
-There is no associated value, so <code>itemSize</code> must be zero.</dd>
+<dd>End of stream. Informs the decode and rendering components that playback is complete.
+The application must not call <code>Enqueue</code> again.
+There is no associated value, so <code>itemSize</code> must be zero.
+There must be no data buffer alongside the EOS command.
+</dd>
 <dt>XA_ANDROID_ITEMKEY_DISCONTINUITY</dt>
 <dd>Discontinuity. This and following buffers have a new presentation time.
 The new presentation time may be optionally specified as a parameter,
@@ -453,9 +487,16 @@ The <code>itemSize</code> should be either zero or 8.
 The discontinuity command is intended for seeking to a new point in
 the stream.  The application should flush its internal data, then send
 the discontinuity command prior to, or alongside of, the first buffer
-corresponding to the new stream position.  Note that the discontinuity
+corresponding to the new stream position.
+The initial packets in the video elementary stream
+should describe an IDR (Instantaneous Decoding Refresh) frame.
+Note that the discontinuity
 command is not intended for stream configuration / format changes;
-these are not presently supported.
+for these use <code>XA_ANDROID_ITEMKEY_FORMAT_CHANGE</code>.
+</dd>
+<dt>XA_ANDROID_ITEMKEY_FORMAT_CHANGE</dt>
+<dd>Format change. This and following buffers have a new format,
+for example for MBR (Multiple Bit Rate) or resolution switching.
 </dd>
 </dl>
 <p>

@@ -332,7 +332,8 @@ The <code>SL_RECORDEVENT_HEADATLIMIT</code> and
 <h4>Seek</h4>
 
 <code>SetLoop</code> enables whole file looping. The <code>startPos</code>
-and <code>endPos</code> parameters are ignored.
+parameter should be zero and the <code>endPos</code> parameter should
+be <code>SL_TIME_UNKNOWN</code>.
 
 <h4>URI data locator</h4>
 
@@ -714,8 +715,8 @@ After EOS, no more enqueues are permitted.
 <p>
 It is not recommended to starve the decoder by failing to provide full
 ADTS AAC buffers, e.g. by returning from the Android buffer queue callback
-without enqueueing another full buffer.  The result of starvation is
-decoder starvation is unspecified.
+without enqueueing another full buffer.  The result of decoder starvation
+is unspecified.
 <p>
 In all respects except for the data source, the streaming decode method is similar
 to that of the previous section:
@@ -748,7 +749,7 @@ and are defined in header <code>SLES/OpenSLES_AndroidMetadata.h</code>.
 <p>
 The metadata key indices are available immediately after
 <code>Object::Realize</code>. Yet the associated values are not
-available after the first encoded data has been decoded.  A good
+available until after the first encoded data has been decoded.  A good
 practice is to query for the key indices in the main thread after Realize,
 and to read the PCM format metadata values in the Android simple
 buffer queue callback handler the first time it is called.
