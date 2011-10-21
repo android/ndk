@@ -42,7 +42,7 @@ _STLP_BEGIN_NAMESPACE
     long double ld;
   } ldouble_ulimit = {0x408633ce, 0x8fb9f87e, 0xbd23b659, 0x4e9bd8b1};
 #  if !defined (_STLP_NO_LONG_DOUBLE)
-  static const long double ldouble_limit = ldouble_ulimit.ld;
+#    define ldouble_limit ldouble_ulimit.ld
 #  endif
 #else
 #  if defined (M_LN2) && defined (FLT_MAX_EXP)
@@ -54,9 +54,9 @@ _STLP_BEGIN_NAMESPACE
 #  endif
 #  if !defined (_STLP_NO_LONG_DOUBLE)
 #    if defined (M_LN2l)
-  static const long double ldouble_limit = M_LN2l * LDBL_MAX_EXP;
+#      define ldouble_limit (M_LN2l * LDBL_MAX_EXP)
 #    else
-  static const long double ldouble_limit = ::log(LDBL_MAX);
+#      define ldouble_limit ::log(LDBL_MAX)
 #    endif
 #  endif
 #endif
