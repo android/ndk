@@ -36,9 +36,9 @@ static void _Init_monetary_formats(money_base::pattern& pos_format,
 }
 
 // This is being used throughout the library
-static const string _S_empty_string;
+static const char _S_empty_string[] = "";
 #ifndef _STLP_NO_WCHAR_T
-static const wstring _S_empty_wstring;
+static const wchar_t _S_empty_wstring[] = L"";
 #endif
 
 //
