@@ -28,7 +28,7 @@
 
 _STLP_BEGIN_NAMESPACE
 
-static const string _Nameless("*");
+static const char _Nameless[] = "*";
 
 static inline bool is_C_locale_name (const char* name)
 { return ((name[0] == 'C') && (name[1] == 0)); }
@@ -618,7 +618,9 @@ locale* _Stl_get_global_locale() {
 #  pragma init_seg(lib)
 #endif
 
+#ifndef __ANDROID__  /* Remove static constructor on Android - it is only needed for MSVC */
 static ios_base::Init _IosInit;
+#endif
 
 void _Locale_impl::make_classic_locale() {
   // This funcion will be called once: during build classic _Locale_impl
