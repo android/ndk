@@ -50,12 +50,14 @@ the stream via an Android buffer queue data source, which is based on
 the OpenSL ES buffer queue concept and Android-specific extensions.
 <p>
 The video sink is an <code>ANativeWindow *</code> abstract handle,
-derived from either an <code>android.view.Surface</code> ("surface")
-or <code>android.graphics.SurfaceTexture</code> ("surface texture").
-A Surface should be used when displaying an unaltered video within a
-fixed SurfaceView frame. SurfaceTexture allows streaming the decoded
+derived from an <code>android.view.Surface</code> ("surface").
+A Surface from <code>SurfaceHolder.getSurface()</code> should be used when displaying
+an unaltered video within a fixed SurfaceView frame. A Surface from
+<code>new Surface(SurfaceTexture)</code> allows streaming the decoded
 video frames to an OpenGL ES 2.0 texture, where the frames can be used
 as input to a shader algorithm in the Graphics Processing Unit (GPU).
+Be sure to <code>release()</code> the Surface as soon as possible after
+calling <code>setSurface</code> or ANativeWndow_fromSurface.
 <p>
 The audio sink is always an output mix, a device-independent mixer object
 similar to that of OpenSL ES.
@@ -287,13 +289,12 @@ typedef struct XADataLocator_NativeDisplay_ {
 
 Set the <code>hWindow</code> field to an
 <code>ANativeWindow *</code> and set <code>hDisplay</code> to <code>NULL</code>.
-You can get a <code>ANativeWindow *</code> handle from a Java <code>android.view.Surface</code> or
-<code>android.graphics.SurfaceTexture</code>, using these NDK functions:
+You can get a <code>ANativeWindow *</code> handle from a Java <code>android.view.Surface</code>,
+using this NDK function:
 <pre>
 #include &lt;android/native_window_jni.h&gt;
 
 ANativeWindow* ANativeWindow_fromSurface(JNIEnv* env, jobject surface);
-ANativeWindow* ANativeWindow_fromSurfaceTexture(JNIEnv* env, jobject surfaceTexture);
 </pre>
 Don't forget to free this handle in your shutdown code with <code>ANativeWindow_release</code>.
 
