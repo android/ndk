@@ -1,6 +1,16 @@
 <html><body><pre>Android NDK ChangeLog:
 
 -------------------------------------------------------------------------------
+android-ndk-r?
+
+OTHER CHANGES:
+
+- ndk-gdb now works properly when your application has private services
+  running in independent processes. More specifically it will debug the
+  main application process, instead of the first process listed by 'ps'
+  which usually turned out to be a service one.
+
+-------------------------------------------------------------------------------
 android-ndk-r7
 
 IMPORTANT CHANGES:

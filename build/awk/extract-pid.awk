@@ -14,37 +14,58 @@
 #
 
 # Extract the pid of a given package name. This assumes that the
-# input is the product of 'adb shell ps' and that the PACKAGE variable
-# has been initialized to the package's name. In other words, this should
-# be used as:
+# input is the product of 'adb shell ps' with all \r\n line endings
+# converted to \n, and that the PACKAGE variable has been initialized
+# to the package's name. In other words, this should be used as:
 #
 #   adb shell ps | awk -f <this-script> -v PACKAGE=<name>
 #
 # The printed value will be 0 if the package is not found.
 #
-# NOTE: For some reason, simply using $9 == PACKAGE does not work
-#       with this script, so use pattern matching instead.
-#
 
 BEGIN {
-    PID=0
     FS=" "
-    # Need to escape the dots in the package name
+
+    # A default package name, used _only_ for unit-testing
+    # com.google.android.apps.maps is interesting because
+    # in our unit test input files, 'ps' lists several sub-processes
+    # that implement services (e.g. com.google.android.apps.maps:<something>)
+    # and we explicitely don't want to match them.
     #
-    # The first argument is the regular expression '\.'
-    # corresponding to a single dot character. The second
-    # argument is the replacement string, which will be '\.'
-    # for every input dot. Finally, we need to escape each
-    # backslash in the Awk strings.
-    #
-    gsub("\\.","\\.",PACKAGE)
+    if (PACKAGE == "") {
+        PACKAGE="com.google.android.apps.maps"
+    }
+
+    PID=0
+
+    # The default column where we expect the PID to appear, this
+    # matches the default Android toolbox 'ps', but some devices seem
+    # to have a different version installed (e.g. Busybox) that place
+    # it somewhere else. We will probe the output to detect this, but
+    # this is a good fallback value.
+    PID_COLUMN=2
 }
 
-# We use the fact that the 9th column of the 'ps' output
-# contains the package name, while the 2nd one contains the pid
-#
-$9 ~ PACKAGE {
-    PID=$2
+{
+    # First, remove any trailing \r from the input line. This is important
+    # because the output of "adb shell <cmd>" seems to use \r\n line ending.
+    gsub("\r","",$NF)
+
+    if (NR == 1) {
+        # The first line of the 'ps' output should list the columns, so we're going
+        # to parse it to try to update PID_COLUMN
+        for (n = 1; n <= NF; n++) {
+            if ($n == "PID") {
+                PID_COLUMN=n;
+            }
+        }
+    } else {
+        # Not the first line, compare the package name, which shall always
+        # be the last field.
+    if ($NF == PACKAGE) {
+        PID=$PID_COLUMN
+        }
+    }
 }
 
 END {
