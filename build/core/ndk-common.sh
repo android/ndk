@@ -138,13 +138,13 @@ run ()
 {
     if [ "$VERBOSE" = "yes" ] ; then
         echo "## COMMAND: $@"
-        $@ 2>&1
+        "$@" 2>&1
     else
         if [ -n "$TMPLOG" ] ; then
             echo "## COMMAND: $@" >> $TMPLOG
-            $@ >>$TMPLOG 2>&1
+            "$@" >>$TMPLOG 2>&1
         else
-            $@ > /dev/null 2>&1
+            "$@" > /dev/null 2>&1
         fi
     fi
 }
@@ -723,7 +723,7 @@ copy_file_list ()
     log "Copying file: $@"
     log "  from $SRCDIR"
     log "  to $DSTDIR"
-    mkdir -p "$DSTDIR" && (cd "$SRCDIR" && tar cf - $@) | (tar xf - -C "$DSTDIR")
+    mkdir -p "$DSTDIR" && (cd "$SRCDIR" && tar cf - "$@") | (tar xf - -C "$DSTDIR")
     fail_panic "Cannot copy files to directory: $DSTDIR"
 }
 
