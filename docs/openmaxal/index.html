@@ -17,6 +17,17 @@ platform version 4.0) and higher.
 OpenMAX AL is a companion API to OpenSL ES, but for multimedia (video
 and audio) rather than audio only.
 <p>
+Android 4.0 provides a direct, efficient path for low-level streaming multimedia. The new path is
+ideal for applications that need to maintain complete control over media data before passing it to
+the platform for presentation. For example, media applications can now retrieve data from any
+source, apply proprietary encryption/decryption, and then send the data to the platform for display.
+<p>
+Applications can now send processed data to the platform as a multiplexed stream of audio/video
+content in MPEG-2 transport stream format. The platform de-muxes, decodes, and renders the content.
+The audio track is rendered to the active audio device, while the video track is rendered to either
+a Surface or a SurfaceTexture. When rendering to a SurfaceTexture, the application can apply
+subsequent graphics effects to each frame using OpenGL.
+<p>
 OpenMAX AL provides a C language interface that is also callable from C++, and
 exposes features similar to these Android APIs
 callable from Java programming language code:
@@ -32,7 +43,7 @@ Interface (JNI).  NDK is not intended for writing pure C/C++
 applications.
 
 <p>
-Note: though based on OpenMAX AL, Android native multimedia
+Note: though based on OpenMAX AL, the Android native multimedia API
 is <i>not</i> a conforming implementation of either OpenMAX AL 1.0.1
 profile (media player or media player / recorder). This is because Android does not
 implement all of the features required by either of the profiles.
@@ -57,7 +68,7 @@ an unaltered video within a fixed SurfaceView frame. A Surface from
 video frames to an OpenGL ES 2.0 texture, where the frames can be used
 as input to a shader algorithm in the Graphics Processing Unit (GPU).
 Be sure to <code>release()</code> the Surface as soon as possible after
-calling <code>setSurface</code> or ANativeWndow_fromSurface.
+calling <code>setSurface</code> or ANativeWindow_fromSurface.
 <p>
 The audio sink is always an output mix, a device-independent mixer object
 similar to that of OpenSL ES.
@@ -258,6 +269,10 @@ These fields in <code>XAVideoCodecDescriptor</code> are filled:
 <li><code>levelSetting</code>
 </ul>
 The other fields are not filled and should be ignored.
+<p>
+Applications should rely on the capabilities documented at
+<a href="http://developer.android.com/guide/appendix/media-formats.html">Android Supported Media Formats</a>,
+not the information reported by this interface.
 
 <h3>Data structures</h3>
 
@@ -289,7 +304,7 @@ typedef struct XADataLocator_NativeDisplay_ {
 
 Set the <code>hWindow</code> field to an
 <code>ANativeWindow *</code> and set <code>hDisplay</code> to <code>NULL</code>.
-You can get a <code>ANativeWindow *</code> handle from a Java <code>android.view.Surface</code>,
+You can get a <code>ANativeWindow *</code> handle from an <code>android.view.Surface</code>,
 using this NDK function:
 <pre>
 #include &lt;android/native_window_jni.h&gt;
@@ -570,9 +585,48 @@ acquire interfaces for each feature it needs, using
 <p>
 Finally, the object is available for use via its interfaces, though
 note that some objects require further setup.
+Some use cases needs a bit more preparation in
+order to detect connection errors. See the next section
+"Media player prefetch" for details.
 <p>
 After your application is done with the object, you should explicitly
 destroy it; see section "Destroy" below.
+
+<h3>Media player prefetch</h3>
+
+For a media player, <code>Object::Realize</code> allocates resources
+but does not connect to the data source (i.e. "prepare") or begin
+pre-fetching data. These occur once the player state is set to
+either <code>XA_PLAYSTATE_PAUSED</code> or <code>XA_PLAYSTATE_PLAYING</code>.
+<p>
+The prefetch status interface is useful for detecting errors.
+Register a callback and enable at least the
+<code>XA_PREFETCHEVENT_FILLLEVELCHANGE</code> and
+<code>XA_PREFETCHEVENT_STATUSCHANGE</code> events. If both of these
+events are delivered simultaneously, and
+<code>PrefetchStatus::GetFillLevel</code> reports a zero level, and
+<code>PrefetchStatus::GetPrefetchStatus</code> reports
+<code>XA_PREFETCHSTATUS_UNDERFLOW</code>, then this indicates a
+non-recoverable error in the data source or in rendering to the video sink.
+<p>
+The next version of OpenMAX AL is expected to add more explicit
+support for handling errors in the data source. However, for future
+binary compatibility, we intend to continue to support the current
+method for reporting a non-recoverable error.
+<p>
+In summary, a recommended code sequence is:
+<ul>
+<li>Engine::CreateMediaPlayer
+<li>Object:Realize
+<li>Object::GetInterface for XA_IID_PREFETCHSTATUS
+<li>PrefetchStatus::SetCallbackEventsMask
+<li>PrefetchStatus::RegisterCallback
+<li>Object::GetInterface for XA_IID_PLAY
+<li>Play::SetPlayState to XA_PLAYSTATE_PAUSED or XA_PLAYSTATE_PLAYING
+<li>preparation and prefetching occur here; during this time your
+callback will be called with periodic status updates and
+error notifications
+</ul>
 
 <h3>Destroy</h3>
 
@@ -641,7 +695,7 @@ expect to benefit from any future system performance improvements.
 
 As far as who can do what, security in Android is done at the
 process level. Java programming language code can't do anything more than native code, nor
-can native code do anything more than Java code. The only differences
+can native code do anything more than Java programming language code. The only differences
 between them are what APIs are available that provide functionality
 that the platform promises to support in the future and across
 different devices.
@@ -665,7 +719,7 @@ Instead, specify the interface in the array passed to Create.
 
 <h2>References and resources</h2>
 
-Google Android:
+Android:
 <ul>
 <li><a href="http://developer.android.com/resources/index.html">
 Android developer resources</a>

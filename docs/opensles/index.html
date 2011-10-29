@@ -35,10 +35,10 @@ of shared libraries to be called from Java programming language code via Java Na
 Interface (JNI).  NDK is not intended for writing pure C/C++
 applications.  That said, OpenSL ES is a full-featured API, and we
 expect that you should be able to accomplish most of your audio
-needs using only this API, without up-calls to Java.
+needs using only this API, without up-calls to code running in the Dalvik VM.
 
 <p>
-Note: though based on OpenSL ES, Android native audio
+Note: though based on OpenSL ES, the Android native audio API
 is <i>not</i> a conforming implementation of any OpenSL ES 1.0.1
 profile (game, music, or phone). This is because Android does not
 implement all of the features required by any one of the profiles.
@@ -954,7 +954,7 @@ expect to benefit from any future system performance improvements.
 
 As far as who can do what, security in Android is done at the
 process level. Java programming language code can't do anything more than native code, nor
-can native code do anything more than Java code. The only differences
+can native code do anything more than Java programming language code. The only differences
 between them are what APIs are available that provide functionality
 that the platform promises to support in the future and across
 different devices.
@@ -992,7 +992,7 @@ shown in the example code for environmental reverb.
 
 <h2>References and resources</h2>
 
-Google Android:
+Android:
 <ul>
 <li><a href="http://developer.android.com/resources/index.html">
 Android developer resources</a>
