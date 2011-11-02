@@ -528,14 +528,14 @@ check_md5sum ()
 #
 find_program ()
 {
-    local PROG
+    local PROG RET
     PROG=`which $2 2>/dev/null`
-    if [ -n "$PROG" ] ; then
-        if pattern_match '^no ' "$PROG"; then
-            PROG=
-        fi
+    RET=$?
+    if [ $RET != 0 ]; then
+        PROG=
     fi
-    eval $1="$PROG"
+    eval $1=\"$PROG\"
+    return $RET
 }
 
 prepare_download ()

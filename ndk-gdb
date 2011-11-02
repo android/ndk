@@ -28,10 +28,39 @@
 
 force_32bit_binaries
 
-find_program ADB_CMD adb
-ADB_FLAGS=
+# Find if a given shell program is available.
+# We need to take care of the fact that the 'which <foo>' command
+# may return either an empty string (Linux) or something like
+# "no <foo> in ..." (Darwin). Also, we need to redirect stderr
+# to /dev/null for Cygwin
+#
+# $1: program name
+# Out: program path, or empty string
+# Return: 0 on success, != 0 on error
+#
+find_program ()
+{
+    local PROG RET
+    PROG=$(which "$1" 2>/dev/null)
+    RET=$?
+    if [ $RET != 0 ]; then
+        PROG=
+    fi
+    echo "$PROG"
+    return $RET
+}
 
-AWK_CMD=awk
+quote_spaces ()
+{
+    echo "$@" | sed -e 's! !\ !g'
+}
+
+# If ADB_CMD is not defined, try to find a program named 'adb'
+# in our path.
+ADB_CMD=${ADB_CMD:-$(find_program adb)}
+ADB_FLAGS=${ADB_FLAGS:-}
+
+AWK_CMD=${AWK_CMD:-$(find_program awk)}
 
 DEBUG_PORT=5039
 
@@ -266,7 +295,7 @@ fi
 
 # Check ADB tool version
 if [ -n "$OPTION_ADB" ] ; then
-    ADB_CMD="$OPTION_ADB"
+    ADB_CMD=$OPTION_ADB
     log "Using specific adb command: $ADB_CMD"
 else
     if [ -z "$ADB_CMD" ] ; then
@@ -278,15 +307,15 @@ else
     log "Using default adb command: $ADB_CMD"
 fi
 
-ADB_VERSION=`$ADB_CMD version`
+ADB_CMD=$(quote_spaces $ADB_CMD)
+ADB_VERSION=$("$ADB_CMD" version 2>/dev/null)
 if [ $? != 0 ] ; then
     echo "ERROR: Could not run ADB with: $ADB_CMD"
     exit 1
 fi
 log "ADB version found: $ADB_VERSION"
 
-ADB_CMD="${ADB_CMD}${ADB_FLAGS}"
-log "Using final ADB command: '$ADB_CMD'"
+log "Using ADB flags: $ADB_FLAGS"
 
 
 # Used internally by adb_var_shell and adb_var_shell2.
@@ -304,9 +333,9 @@ _adb_var_shell ()
     # Run the command, while storing the standard output to CMD_OUT
     # and appending the exit code as the last line.
     if [ "$REDIRECT_STDERR" != 0 ]; then
-        $ADB_CMD shell "$@" ";" echo \$? | sed -e 's![[:cntrl:]]!!g' > $CMD_OUT 2>&1
+        "$ADB_CMD" $ADB_FLAGS shell "$@" ";" echo \$? | sed -e 's![[:cntrl:]]!!g' > $CMD_OUT 2>&1
     else
-        $ADB_CMD shell "$@" ";" echo \$? | sed -e 's![[:cntrl:]]!!g' > $CMD_OUT
+        "$ADB_CMD" $ADB_FLAGS shell "$@" ";" echo \$? | sed -e 's![[:cntrl:]]!!g' > $CMD_OUT
     fi
     # Get last line in log, which contains the exit code from the command
     RET=`sed -e '$!d' $CMD_OUT`
@@ -345,7 +374,7 @@ adb_var_shell2 ()
 # Out: PID number, or 0 if not running
 get_pid_of ()
 {
-    $ADB_CMD shell ps | $AWK_CMD -f $AWK_SCRIPTS/extract-pid.awk -v PACKAGE="$1"
+    "$ADB_CMD" shell ps | $AWK_CMD -f $AWK_SCRIPTS/extract-pid.awk -v PACKAGE="$1"
 }
 
 # Check the awk tool
@@ -418,7 +447,7 @@ APP_ABIS=`get_build_var APP_ABI`
 log "ABIs targetted by application: $APP_ABIS"
 
 # Check the ADB command, and that we can connect to the device/emulator
-ADB_TEST=`$ADB_CMD shell ls`
+ADB_TEST=`"$ADB_CMD" shell ls`
 if [ $? != 0 ] ; then
     echo "ERROR: Could not connect to device or emulator!"
     echo "       Please check that an emulator is running or a device is connected"
@@ -567,7 +596,7 @@ fi
 
 if [ -n "$OPTION_LAUNCH" ] ; then
     log "Launching activity: $PACKAGE_NAME/$OPTION_LAUNCH"
-    run $ADB_CMD shell am start -n $PACKAGE_NAME/$OPTION_LAUNCH
+    run "$ADB_CMD" shell am start -n $PACKAGE_NAME/$OPTION_LAUNCH
     if [ $? != 0 ] ; then
         echo "ERROR: Could not launch specified activity: $OPTION_LAUNCH"
         echo "       Use --launch-list to dump a list of valid values."
@@ -575,7 +604,7 @@ if [ -n "$OPTION_LAUNCH" ] ; then
     fi
     # Sleep a bit, it sometimes take one second to start properly
     # Note that we use the 'sleep' command on the device here.
-    run $ADB_CMD shell sleep $DELAY
+    run "$ADB_CMD" shell sleep $DELAY
 fi
 
 # Find the PID of the application being run
@@ -605,12 +634,12 @@ if [ "$GDBSERVER_PID" != "0" ]; then
         exit 1
     fi
     log "Killing existing debugging session"
-    run $ADB_CMD shell kill -9 $GDBSERVER_PID
+    run "$ADB_CMD" shell kill -9 $GDBSERVER_PID
 fi
 
 # Launch gdbserver now
 DEBUG_SOCKET=debug-socket
-run $ADB_CMD shell run-as $PACKAGE_NAME lib/gdbserver +$DEBUG_SOCKET --attach $PID &
+run "$ADB_CMD" shell run-as $PACKAGE_NAME lib/gdbserver +$DEBUG_SOCKET --attach $PID &
 if [ $? != 0 ] ; then
     echo "ERROR: Could not launch gdbserver on the device?"
     exit 1
@@ -619,7 +648,7 @@ log "Launched gdbserver succesfully."
 
 # Setup network redirection
 log "Setup network redirection"
-run $ADB_CMD forward tcp:$DEBUG_PORT localfilesystem:$DATA_DIR/$DEBUG_SOCKET
+run "$ADB_CMD" forward tcp:$DEBUG_PORT localfilesystem:$DATA_DIR/$DEBUG_SOCKET
 if [ $? != 0 ] ; then
     echo "ERROR: Could not setup network redirection to gdbserver?"
     echo "       Maybe using --port=<port> to use a different TCP port might help?"
@@ -628,10 +657,10 @@ fi
 
 # Get the app_server binary from the device
 APP_PROCESS=$APP_OUT/app_process
-run $ADB_CMD pull /system/bin/app_process `native_path $APP_PROCESS`
+run "$ADB_CMD" pull /system/bin/app_process `native_path $APP_PROCESS`
 log "Pulled app_process from device/emulator."
 
-run $ADB_CMD pull /system/lib/libc.so `native_path $APP_OUT/libc.so`
+run "$ADB_CMD" pull /system/lib/libc.so `native_path $APP_OUT/libc.so`
 log "Pulled libc.so from device/emulator."
 
 # Now launch the appropriate gdb client with the right init commands
