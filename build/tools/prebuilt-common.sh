@@ -984,7 +984,8 @@ check_toolchain_install ()
 {
     TOOLCHAIN_PATH=`get_toolchain_install "$1" $2`
     if [ ! -d "$TOOLCHAIN_PATH" ] ; then
-        echo "ERROR: Toolchain '$2' not installed in '$NDK_DIR'!"
+        echo "ERROR: Cannot find directory '$TOOLCHAIN_PATH'!"
+        echo "       Toolchain '$2' not installed in '$NDK_DIR'!"
         echo "       Ensure that the toolchain has been installed there before."
         exit 1
     fi
@@ -1007,7 +1008,9 @@ check_toolchain_src_dir ()
     fi
 
     if [ ! -f "$SRC_DIR/build/configure" -o ! -d "$SRC_DIR/gcc" ]; then
-        echo "ERROR: This is not the top of a toolchain tree: $SRC_DIR"
+        echo "ERROR: Either the file $SRC_DIR/build/configure or"
+        echo "       the directory $SRC_DIR/gcc does not exist."
+        echo "This is not the top of a toolchain tree: $SRC_DIR"
         echo "You must give the path to a copy of the toolchain source directories"
         echo "created by 'download-toolchain-sources.sh."
         exit 1
