@@ -10,6 +10,9 @@ OTHER CHANGES:
   main application process, instead of the first process listed by 'ps'
   which usually turned out to be a service one.
 
+- Fix for a rare bug where NDK r7 would fail to honor the LOCAL_ARM_MODE value
+  and always compile certain source files (but not all) to 32-bit instructions.
+
 -------------------------------------------------------------------------------
 android-ndk-r7
 

@@ -131,6 +131,8 @@ endif
 # to build source file $(LOCAL_PATH)/foo.c as ARM
 #
 
+$(call clear-all-src-tags)
+
 # As a special extension, the NDK also supports the .neon extension suffix
 # to indicate that a single file can be compiled with ARM NEON support
 # We must support both foo.c.neon and foo.c.arm.neon here
