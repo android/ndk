@@ -197,11 +197,11 @@ do
         cd $TOP
         $PROGDIR/rebuild-all-prebuilt.sh \
             --arch=$ARCH \
-            --toolchain-src-dir=$NDK_SRC_DIR \
             --package-dir=$PACKAGE_DIR \
             $MPFR_VERSION $GDB_VERSION $BINUTILS_VERSION \
             $TARGET_PLATFORM_FLAGS \
-            $VERBOSE >> $logfile 2>&1
+            $VERBOSE \
+            $NDK_SRC_DIR >> $logfile 2>&1
         fail_panic "rebuild-all-prebuilt.sh failed. Logfile in $logfile"
     done # with TARGET_PLATFORM
 done # with ARCH
