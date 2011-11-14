@@ -5,7 +5,7 @@
 BUILD_DIR ?= /tmp/ndk-$(USER)/build-awk
 
 
-CC      := gcc
+CC      := $(HOST_CC)
 CFLAGS  := -O2 -I$(BUILD_DIR) -I.
 LDFLAGS := -Wl,-s
 BISON   := bison
