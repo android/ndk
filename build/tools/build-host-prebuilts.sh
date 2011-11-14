@@ -73,7 +73,9 @@ if [ ! -d "$SRC_DIR" ]; then
 fi
 
 if [ ! -f "$SRC_DIR/build/configure" -o ! -d "$SRC_DIR/gcc/gcc-$DEFAULT_GCC_VERSION" ]; then
-    echo "ERROR: This is not the top of a toolchain tree: $SRC_DIR"
+    echo "ERROR: The file $SRC_DIR/build/configure or"
+    echo "       the directory $SRC_DIR/gcc/gcc-$DEFAULT_GCC_VERSION does not exist"
+    echo "This is not the top of a toolchain tree: $SRC_DIR"
     echo "You must give the path to a copy of the toolchain source directories"
     echo "created by 'download-toolchain-sources.sh."
     exit 1
