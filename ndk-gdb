@@ -304,9 +304,9 @@ _adb_var_shell ()
     # Run the command, while storing the standard output to CMD_OUT
     # and appending the exit code as the last line.
     if [ "$REDIRECT_STDERR" != 0 ]; then
-        $ADB_CMD shell $@ ";" echo \$? | sed -e 's![[:cntrl:]]!!g' > $CMD_OUT 2>&1
+        $ADB_CMD shell "$@" ";" echo \$? | sed -e 's![[:cntrl:]]!!g' > $CMD_OUT 2>&1
     else
-        $ADB_CMD shell $@ ";" echo \$? | sed -e 's![[:cntrl:]]!!g' > $CMD_OUT
+        $ADB_CMD shell "$@" ";" echo \$? | sed -e 's![[:cntrl:]]!!g' > $CMD_OUT
     fi
     # Get last line in log, which contains the exit code from the command
     RET=`sed -e '$!d' $CMD_OUT`
@@ -330,14 +330,14 @@ _adb_var_shell ()
 # or 1 (failure) otherwise.
 adb_var_shell ()
 {
-    _adb_var_shell 0 $@
+    _adb_var_shell 0 "$@"
 }
 
 # A variant of adb_var_shell that stores both stdout and stderr in the output
 # $1: Variable name
 adb_var_shell2 ()
 {
-    _adb_var_shell 1 $@
+    _adb_var_shell 1 "$@"
 }
 
 # Return the PID of a given package or program, or 0 if it doesn't run

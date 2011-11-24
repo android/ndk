@@ -41,28 +41,28 @@ max_length ()
 # Usage:  str=`dashes_to_underscores <values>`
 dashes_to_underscores ()
 {
-    echo $@ | tr '-' '_'
+    echo "$@" | tr '-' '_'
 }
 
 # Translate underscores to dashes
 # Usage: str=`underscores_to_dashes <values>`
 underscores_to_dashes ()
 {
-    echo $@ | tr '_' '-'
+    echo "$@" | tr '_' '-'
 }
 
 # Translate commas to spaces
 # Usage: str=`commas_to_spaces <list>`
 commas_to_spaces ()
 {
-    echo $@ | tr ',' ' '
+    echo "$@" | tr ',' ' '
 }
 
 # Translate spaces to commas
 # Usage: list=`spaces_to_commas <string>`
 spaces_to_commas ()
 {
-    echo $@ | tr ' ' ','
+    echo "$@" | tr ' ' ','
 }
 
 # Remove trailing path of a path
@@ -111,7 +111,7 @@ reverse_path ()
 sort_uniq ()
 {
     local RET
-    RET=$(echo $@ | tr ' ' '\n' | sort -u)
+    RET=$(echo "$@" | tr ' ' '\n' | sort -u)
     echo $RET
 }
 
@@ -908,7 +908,7 @@ get_toolchain_install ()
 {
     local NDK="$1"
     shift
-    echo "$NDK/$(get_toolchain_install_subdir $@)"
+    echo "$NDK/$(get_toolchain_install_subdir "$@")"
 }
 
 # $1: toolchain name

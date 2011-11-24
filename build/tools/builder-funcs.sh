@@ -26,7 +26,7 @@ builder_command ()
         if [ "$VERBOSE2" = "yes" ]; then
             echo "$@"
         fi
-        $@
+        "$@"
     else
         echo "${_BUILD_TAB}${_BUILD_HIDE}$@" >> $_BUILD_MK
     fi
@@ -148,27 +148,27 @@ builder_set_dstdir ()
 
 builder_ldflags ()
 {
-    _builder_varadd _BUILD_LDFLAGS $@
+    _builder_varadd _BUILD_LDFLAGS "$@"
 }
 
 builder_ldflags_exe ()
 {
-    _builder_varadd _BUILD_LDFLAGS_EXE $@
+    _builder_varadd _BUILD_LDFLAGS_EXE "$@"
 }
 
 builder_cflags ()
 {
-    _builder_varadd _BUILD_CFLAGS $@
+    _builder_varadd _BUILD_CFLAGS "$@"
 }
 
 builder_cxxflags ()
 {
-    _builder_varadd _BUILD_CXXFLAGS $@
+    _builder_varadd _BUILD_CXXFLAGS "$@"
 }
 
 builder_c_includes ()
 {
-    _builder_varadd _BUILD_C_INCLUDES $@
+    _builder_varadd _BUILD_C_INCLUDES "$@"
 }
 
 builder_reset_cflags ()
@@ -216,7 +216,7 @@ builder_sources ()
     if [ -z "$_BUILD_CXX" ]; then
         _BUILD_CXX=${CXX:-g++}
     fi
-    for src in $@; do
+    for src in "$@"; do
         srcfull=$_BUILD_SRCDIR/$src
         if [ ! -f "$srcfull" ]; then
             echo "ERROR: Missing source file: $srcfull"
