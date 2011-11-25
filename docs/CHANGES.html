@@ -8,9 +8,15 @@ IMPORTANT BUG FIXES:
 - Fixed ndk-build on 32-bit Linux. A packaging error put a 64-bit version
   of the 'awk' executable under prebuilt/linux-x86/bin in NDK r7.
 
-- Fix for native Windows build (ndk-build.cmd): the auto-generated dependency
-  files were ignored. Thus updating a header didn't trigger recompilation of
-  sources that included it.
+- Fixes for native Windows build (ndk-build.cmd), other build modes were not
+  affected:
+
+    * The auto-generated dependency files were ignored. Thus updating a header
+      didn't trigger recompilation of sources that included it.
+
+    * Special characters in files or paths, other than spaces and quotes,
+      should now be correctly handled.
+
 
 OTHER CHANGES:
 

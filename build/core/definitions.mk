@@ -159,7 +159,9 @@ endif
 #            to remove some files.
 # -----------------------------------------------------------------------------
 ifeq ($(HOST_OS),windows)
-host-rm = $(foreach _filepattern,$1,$(if $(strip $(wildcard $(_filepattern))),del /f/q/s $(subst /,\,$(_filepattern)) >NUL))
+host-rm = \
+    $(eval __host_rm_files := $(foreach __host_rm_file,$(subst /,\,$1),$(wildcard $(__host_rm_file))))\
+    $(if $(__host_rm_files),del /f/q $(__host_rm_files) >NUL 2>NUL)
 else
 host-rm = rm -f $1
 endif
@@ -172,7 +174,9 @@ endif
 #            to remove some files _and_ directories.
 # -----------------------------------------------------------------------------
 ifeq ($(HOST_OS),windows)
-host-rmdir = del /f/s/e/q $(subst /,\,$1) >NUL 2>NUL
+host-rm = \
+    $(eval __host_rmdir_files := $(foreach __host_rmdir_file,$(subst /,\,$1),$(wildcard $(__host_rmdir_file))))\
+    $(if $(__host_rmdir_files),del /f/s/q $(__host_rmdir_files) >NUL 2>NUL)
 else
 host-rmdir = rm -rf $1
 endif
@@ -185,7 +189,7 @@ endif
 #            to create a path if it doesn't exist.
 # -----------------------------------------------------------------------------
 ifeq ($(HOST_OS),windows)
-host-mkdir = if not exist $(subst /,\,$1) md $(subst /,\,$1)
+host-mkdir = if not exist $(subst /,\,"$1") md $(subst /,\,"$1")
 else
 host-mkdir = mkdir -p $1
 endif
@@ -199,7 +203,7 @@ endif
 #            to copy a single file
 # -----------------------------------------------------------------------------
 ifeq ($(HOST_OS),windows)
-host-cp = copy /b/y $(subst /,\,$1 $2) > NUL
+host-cp = copy /b/y $(subst /,\,"$1" "$2") > NUL
 else
 host-cp = cp -f $1 $2
 endif
@@ -214,7 +218,7 @@ endif
 #            (if possible).
 # -----------------------------------------------------------------------------
 ifeq ($(HOST_OS),windows)
-host-install = copy /b/y $(subst /,\,$1 $2) > NUL
+host-install = copy /b/y $(subst /,\,"$1" "$2") > NUL
 else
 host-install = install -p $1 $2
 endif
