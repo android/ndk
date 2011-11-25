@@ -11,6 +11,13 @@ IMPORTANT CHANGES:
 
   The variable is recognized by ndk-gdb as well.
 
+- You can now build modules with hundreds or even thousand of sources files
+  by defining LOCAL_SHORT_COMMANDS to 'true' in your Android.mk.
+
+  This forces the NDK build system to put most linker or archiver options
+  into 'list files', to work-around command-line length limitations
+  (especially on Windows). See docs/ANDROID-MK.html for details.
+
 -------------------------------------------------------------------------------
 android-ndk-r7b
 

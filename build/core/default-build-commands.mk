@@ -8,6 +8,31 @@
 # flags.
 TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
 
+
+# Return the list of object, static libraries and shared libraries as they
+# must appear on the final static linker command (order is important).
+#
+# This can be over-ridden by a specific toolchain. Note that by default
+# we always put libgcc _after_ all static libraries and _before_ shared
+# libraries. This ensures that any libgcc function used by the final
+# executable will be copied into it. Otherwise, it could contain
+# symbol references to the same symbols as exported by shared libraries
+# and this causes binary compatibility problems when they come from
+# system libraries (e.g. libc.so and others).
+#
+# IMPORTANT: The result must use the host path convention.
+#
+# $1: object files
+# $2: static libraries
+# $3: whole static libraries
+# $4: shared libraries
+#
+TARGET-get-linker-objects-and-libraries = \
+    $(call host-path, $1) \
+    $(call link-whole-archives,$3) \
+    $(call host-path, $2 $(PRIVATE_LIBGCC) $4) \
+
+
 # These flags are used to enfore the NX (no execute) security feature in the
 # generated machine code. This adds a special section to the generated shared
 # libraries that instruct the Linux kernel to disable code execution from
@@ -30,12 +55,7 @@ $(PRIVATE_CXX) \
     -Wl,-shared,-Bsymbolic \
     $(call host-path,\
         $(TARGET_CRTBEGIN_SO_O) \
-        $(PRIVATE_OBJECTS)) \
-    $(call link-whole-archives,$(PRIVATE_WHOLE_STATIC_LIBRARIES))\
-    $(call host-path,\
-        $(PRIVATE_STATIC_LIBRARIES) \
-        $(PRIVATE_LIBGCC) \
-        $(PRIVATE_SHARED_LIBRARIES)) \
+    $(PRIVATE_LINKER_OBJECTS_AND_LIBRARIES) \
     $(PRIVATE_LDFLAGS) \
     $(PRIVATE_LDLIBS) \
     $(call host-path,\
@@ -51,12 +71,7 @@ $(PRIVATE_CXX) \
     -Wl,-z,nocopyreloc \
     $(call host-path,\
         $(TARGET_CRTBEGIN_DYNAMIC_O) \
-        $(PRIVATE_OBJECTS)) \
-    $(call link-whole-archives,$(PRIVATE_WHOLE_STATIC_LIBRARIES))\
-    $(call host-path,\
-        $(PRIVATE_STATIC_LIBRARIES) \
-        $(PRIVATE_LIBGCC) \
-        $(PRIVATE_SHARED_LIBRARIES)) \
+    $(PRIVATE_LINKER_OBJECTS_AND_LIBRARIES) \
     $(PRIVATE_LDFLAGS) \
     $(PRIVATE_LDLIBS) \
     $(call host-path,\
@@ -65,7 +80,7 @@ $(PRIVATE_CXX) \
 endef
 
 define cmd-build-static-library
-$(PRIVATE_AR) $(call host-path,$@) $(call host-path,$(PRIVATE_OBJECTS))
+$(PRIVATE_AR) $(call host-path,$@) $(PRIVATE_AR_OBJECTS)
 endef
 
 # The strip command is only used for shared libraries and executables.

@@ -78,12 +78,7 @@ $(PRIVATE_CXX) \
     -Wl,-soname,$(notdir $@) \
     -shared \
     --sysroot=$(call host-path,$(PRIVATE_SYSROOT)) \
-    $(call host-path, $(PRIVATE_OBJECTS)) \
-    $(call link-whole-archives,$(PRIVATE_WHOLE_STATIC_LIBRARIES)) \
-    $(call host-path,\
-        $(PRIVATE_STATIC_LIBRARIES) \
-        $(PRIVATE_LIBGCC) \
-        $(PRIVATE_SHARED_LIBRARIES)) \
+    $(PRIVATE_LINKER_OBJECTS_AND_LIBRARIES) \
     $(PRIVATE_LDFLAGS) \
     $(PRIVATE_LDLIBS) \
     -o $(call host-path,$@)
@@ -94,12 +89,7 @@ $(PRIVATE_CXX) \
     -Wl,--gc-sections \
     -Wl,-z,nocopyreloc \
     --sysroot=$(call host-path,$(PRIVATE_SYSROOT)) \
-    $(call host-path, $(PRIVATE_OBJECTS)) \
-    $(call link-whole-archives,$(PRIVATE_WHOLE_STATIC_LIBRARIES)) \
-    $(call host-path,\
-        $(PRIVATE_STATIC_LIBRARIES) \
-        $(PRIVATE_LIBGCC) \
-        $(PRIVATE_SHARED_LIBRARIES)) \
+    $(PRIVATE_LINKER_OBJECTS_AND_LIBRARIES) \
     $(PRIVATE_LDFLAGS) \
     $(PRIVATE_LDLIBS) \
     -o $(call host-path,$@)

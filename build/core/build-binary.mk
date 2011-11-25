@@ -277,10 +277,61 @@ ifneq ($(filter -l%,$(LOCAL_LDLIBS)),)
     LOCAL_LDLIBS := -L$(call host-path,$(SYSROOT)/usr/lib) $(LOCAL_LDLIBS)
 endif
 
+# The list of object/static/shared libraries passed to the linker when
+# building shared libraries and executables. order is important.
+#
+linker_objects_and_libraries := $(strip $(call TARGET-get-linker-objects-and-libraries,\
+    $(LOCAL_OBJECTS), \
+    $(static_libraries), \
+    $(whole_static_libraries), \
+    $(shared_libraries)))
+
+# The list of object files sent to 'ar' when building static libraries
+#
+ar_objects := $(call host-path,$(LOCAL_OBJECTS))
+
+# When LOCAL_SHORT_COMMANDS is defined to 'true' we are going to write the
+# list of all object files and/or static/shared libraries that appear on the
+# command line to a file, then use the @<listfile> syntax to invoke it.
+#
+# This allows us to link or archive a huge number of stuff even on Windows
+# with its puny 8192 max character limit on its command-line.
+#
+LOCAL_SHORT_COMMANDS := $(strip $(LOCAL_SHORT_COMMANDS))
+ifndef LOCAL_SHORT_COMMANDS
+    LOCAL_SHORT_COMMANDS := $(strip $(NDK_APP_SHORT_COMMANDS))
+endif
+ifeq ($(LOCAL_SHORT_COMMANDS)),true)
+    # For static and whole static libraries
+    ifneq (,$(filter STATIC_LIBRARY WHOLE_STATIC_LIBRARY,$(call module-get-class,$(LOCAL_MODULE))))
+        $(call ndk_log,Building static library module '$(LOCAL_MODULE)' with linker list file)
+        ar_options   := $(ar_objects)
+        ar_list_file := $(LOCAL_OBJS_DIR)/archiver.list
+        ar_options   := @$(call host-path,$(ar_list_file)))
+        $(call generate-list-file,$(ar_options),$(ar_list_file))
+
+        $(LOCAL_BUILT_MODULE): $(ar_list_file)
+    endif
+
+    # For shared libraries and executables
+    ifneq (,$(filter SHARED_LIBRARY EXECUTABLE,$(call module-get-class,$(LOCAL_MODULE))))
+        $(call ndk_log,Building ELF binary module '$(LOCAL_MODULE)' with linker list file)
+        linker_options   := $(linker_objects_and_libraries)
+        linker_list_file := $(LOCAL_OBJS_DIR)/linker.list
+        linker_objects_and_libraries := @$(call host-path,$(linker_list_file))
+
+        $(call generate-list-file,$(linker_options),$(linker_list_file))
+
+        $(LOCAL_BUILT_MODULE): $(linker_list_file)
+    endif
+
+endif
+
 $(LOCAL_BUILT_MODULE): PRIVATE_STATIC_LIBRARIES := $(static_libraries)
 $(LOCAL_BUILT_MODULE): PRIVATE_WHOLE_STATIC_LIBRARIES := $(whole_static_libraries)
 $(LOCAL_BUILT_MODULE): PRIVATE_SHARED_LIBRARIES := $(shared_libraries)
 $(LOCAL_BUILT_MODULE): PRIVATE_OBJECTS          := $(LOCAL_OBJECTS)
+$(LOCAL_BUILT_MODULE): PRIVATE_LINKER_OBJECTS_AND_LIBRARIES := $(linker_objects_and_libraries)
 $(LOCAL_BUILT_MODULE): PRIVATE_LIBGCC := $(TARGET_LIBGCC)
 
 $(LOCAL_BUILT_MODULE): PRIVATE_LD := $(TARGET_LD)
@@ -291,6 +342,7 @@ $(LOCAL_BUILT_MODULE): PRIVATE_NAME := $(notdir $(LOCAL_BUILT_MODULE))
 $(LOCAL_BUILT_MODULE): PRIVATE_CXX := $(TARGET_CXX)
 $(LOCAL_BUILT_MODULE): PRIVATE_CC := $(TARGET_CC)
 $(LOCAL_BUILT_MODULE): PRIVATE_AR := $(TARGET_AR) $(TARGET_ARFLAGS)
+$(LOCAL_BUILT_MODULE): PRIVATE_AR_OBJECTS := $(ar_objects)
 $(LOCAL_BUILT_MODULE): PRIVATE_SYSROOT := $(SYSROOT)
 
 #
