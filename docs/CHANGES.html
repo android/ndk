@@ -11,6 +11,10 @@ IMPORTANT BUG FIXES:
 - Fixes for native Windows build (ndk-build.cmd), other build modes were not
   affected:
 
+    * Removed an infinite loop / stack overflow bug that happened when trying
+      to call ndk-build.cmd from a directory that was _not_ the top of your
+      project path (e.g. any sub-directory of it).
+
     * The auto-generated dependency files were ignored. Thus updating a header
       didn't trigger recompilation of sources that included it.
 

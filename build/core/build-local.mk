@@ -54,6 +54,27 @@ include $(NDK_ROOT)/build/core/init.mk
 #
 # ====================================================================
 
+ifeq ($(HOST_OS),windows)
+# On Windows, defining host-dir-parent is a bit more tricky because the
+# GNU Make $(dir ...) function doesn't return an empty string when it
+# reaches the top of the directory tree, and we want to enforce this to
+# avoid infinite loops.
+#
+#   $(dir C:)     -> C:       (empty expected)
+#   $(dir C:/)    -> C:/      (empty expected)
+#   $(dir C:\)    -> C:\      (empty expected)
+#   $(dir C:/foo) -> C:/      (correct)
+#   $(dir C:\foo) -> C:\      (correct)
+#
+host-dir-parent = $(strip \
+    $(eval __host_dir_node := $(patsubst %/,%,$(subst \,/,$1)))\
+    $(eval __host_dir_parent := $(dir $(__host_dir_node)))\
+    $(filter-out $1,$(__host_dir_parent))\
+    )
+else
+host-dir-parent = $(patsubst %/,%,$(dir $1))
+endif
+
 find-project-dir = $(strip $(call find-project-dir-inner,$(abspath $1),$2))
 
 find-project-dir-inner = \
@@ -70,7 +91,7 @@ find-project-dir-inner-2 = \
         $(call ndk_log,    Found it !)\
         $(eval __found_project_path := $(__find_project_path))\
         ,\
-        $(eval __find_project_parent := $(patsubst %/,%,$(dir $(__find_project_path))))\
+        $(eval __find_project_parent := $(call host-dir-parent,$(__find_project_path)))\
         $(if $(__find_project_parent),\
             $(eval __find_project_path := $(__find_project_parent))\
             $(call find-project-dir-inner-2)\
@@ -78,6 +99,16 @@ find-project-dir-inner-2 = \
     )
 
 NDK_PROJECT_PATH := $(strip $(NDK_PROJECT_PATH))
+
+# To keep paths as short as possible during the build, we first look if the
+# current directory is the top of our project path. If this is the case, we
+# will define NDK_PROJECT_PATH to simply '.'
+#
+# Otherwise, we will use find-project-dir which will first get the absolute
+# path of the current directory the climb back the hierarchy until we find
+# something. The result will always be a much longer definition for
+# NDK_PROJECT_PATH
+#
 ifndef NDK_PROJECT_PATH
     ifneq (,$(strip $(wildcard AndroidManifest.xml)))
         NDK_PROJECT_PATH := .
@@ -91,10 +122,7 @@ ifndef NDK_PROJECT_PATH
     NDK_PROJECT_PATH := $(call find-project-dir,.,jni/Android.mk)
 endif
 ifndef NDK_PROJECT_PATH
-    NDK_PROJECT_PATH := $(call find-project-dir,$(strip $(shell pwd)),AndroidManifest.xml)
-endif
-ifndef NDK_PROJECT_PATH
-    NDK_PROJECT_PATH := $(call find-project-dir,$(strip $(shell pwd)),jni/Android.mk)
+    NDK_PROJECT_PATH := $(call find-project-dir,.,AndroidManifest.xml)
 endif
 ifndef NDK_PROJECT_PATH
     $(call __ndk_info,Could not find application project directory !)
