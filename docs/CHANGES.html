@@ -8,6 +8,10 @@ IMPORTANT BUG FIXES:
 - Fixed ndk-build on 32-bit Linux. A packaging error put a 64-bit version
   of the 'awk' executable under prebuilt/linux-x86/bin in NDK r7.
 
+- Fix for native Windows build (ndk-build.cmd): the auto-generated dependency
+  files were ignored. Thus updating a header didn't trigger recompilation of
+  sources that included it.
+
 OTHER CHANGES:
 
 - ndk-gdb now works properly when your application has private services

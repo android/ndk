@@ -110,5 +110,5 @@ clean-intermediates: clean-host-intermediates
 	$(hide) $(call host-rm,$(EXECUTABLES) $(STATIC_LIBRARIES) $(SHARED_LIBRARIES))
 
 # include dependency information
-ALL_DEPENDENCY_DIRS := $(sort $(ALL_DEPENDENCY_DIRS))
+ALL_DEPENDENCY_DIRS := $(patsubst %/,%,$(sort $(ALL_DEPENDENCY_DIRS)))
 -include $(wildcard $(ALL_DEPENDENCY_DIRS:%=%/*.d))
