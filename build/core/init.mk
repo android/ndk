@@ -17,6 +17,22 @@
 # several build scripts.
 #
 
+# Disable GNU Make implicit rules
+
+# this turns off the suffix rules built into make
+.SUFFIXES:
+
+# this turns off the RCS / SCCS implicit rules of GNU Make
+% : RCS/%,v
+% : RCS/%
+% : %,v
+% : s.%
+% : SCCS/s.%
+
+# If a rule fails, delete $@.
+.DELETE_ON_ERROR:
+
+
 # Define NDK_LOG in your environment to display log traces when
 # using the build scripts. See also the definition of ndk_log below.
 #
