@@ -141,7 +141,7 @@ run mkdir -p "$BUILD_OUT"
 # Copy the sysroot to a temporary build directory
 BUILD_SYSROOT="$BUILD_OUT/sysroot"
 run mkdir -p "$BUILD_SYSROOT"
-run cp -rH "$SYSROOT/*" "$BUILD_SYSROOT"
+run cp -rH "$SYSROOT"/* "$BUILD_SYSROOT"
 
 # Remove libthread_db to ensure we use exactly the one we want.
 rm -f $BUILD_SYSROOT/usr/lib/libthread_db*
