@@ -75,7 +75,7 @@ while [ -n "$1" ]; do
         --full)
             FULL_TESTS=yes;
             ;;
-        --test=*)
+        --test=*)  # Deprecated, but keep it just in case.
             RUN_TESTS="$RUN_TESTS $optarg"
             ;;
         --package=*)
@@ -110,27 +110,25 @@ while [ -n "$1" ]; do
             echo "ERROR: Unknown option '$opt', use --help for list of valid ones."
             exit 1
         ;;
-        *)  # Simply record parameter
-            if [ -z "$PARAMETERS" ] ; then
-                PARAMETERS="$opt"
-            else
-                PARAMETERS="$PARAMETERS $opt"
-            fi
+        *)  # Simply record new test name
+            RUN_TESTS=$RUN_TESTS" $opt"
             ;;
     esac
     shift
 done
 
 if [ "$OPTION_HELP" = "yes" ] ; then
-    echo "Usage: $PROGNAME [options]"
+    echo "Usage: $PROGNAME [options] [testname1 [testname2...]]"
     echo ""
-    echo "Run all NDK automated tests at once."
+    echo "Run NDK automated tests. Without any parameter, this will try to"
+    echo "run all standard tests, except those are tagged broken. You can"
+    echo "also select/enforce specific tests by listing their name on the"
+    echo "command-line."
     echo ""
     echo "Valid options:"
     echo ""
     echo "    --help|-h|-?      Print this help"
-    echo "    --verbose         Enable verbose mode"
-    echo "    --test=<name>     Run selected test (all if not used)"
+    echo "    --verbose         Enable verbose mode (can be used several times)"
     echo "    --ndk=<path>      Path to NDK to test [$ROOTDIR]"
     echo "    --package=<path>  Path to NDK package to test"
     echo "    -j<N> --jobs=<N>  Launch parallel builds [$JOBS]"
@@ -146,15 +144,14 @@ if [ "$OPTION_HELP" = "yes" ] ; then
     echo ""
     echo "NOTE: You cannot use --ndk and --package at the same time."
     echo ""
-    echo "You can use --test=<name> several times to run several tests"
-    echo "during the same invokation."
     exit 0
 fi
 
 # Run a command in ADB.
 #
 # This is needed because "adb shell" does not return the proper status
-# of the launched command, so we need to
+# of the launched command, so we need to add it to the output, and grab
+# it after that.
 #
 adb_cmd ()
 {
@@ -228,16 +225,16 @@ is_testable () {
 # $1: test path
 if [ -n "$RUN_TESTS" ] ; then
     is_buildable () {
-        test -f $1/jni/Android.mk &&
+        [ -f $1/build.sh -o -f $1/jni/Android.mk ] &&
         var_list_contains RUN_TESTS "`basename $1`"
     }
 elif [ "$FULL_TESTS" = "yes" ] ; then
     is_buildable () {
-        test -f $1/jni/Android.mk
+        [ -f $1/build.sh -o -f $1/jni/Android.mk ]
     }
 else # !FULL_TESTS
     is_buildable () {
-        test -f $1/jni/Android.mk || return 1
+        [ -f $1/build.sh -o -f $1/jni/Android.mk ] || return 1
         ! var_list_contains LONG_TESTS "`basename $1`" || return 1
     }
 fi # !FULL_TESTS
@@ -402,7 +399,7 @@ build_project ()
 {
     local NAME=`basename $1`
     local DIR="$BUILD_DIR/$NAME"
-    if [ -f "$1/BROKEN_BUILD" ] ; then
+    if [ -f "$1/BROKEN_BUILD" -a -z "$RUN_TESTS" ] ; then
         echo "Skipping $1: (build)"
         return 0
     fi
@@ -499,8 +496,9 @@ fi
 if is_testable device; then
     build_device_test ()
     {
-        # Do not build test if BROKEN_BUILD is defined
-        if [ -f "$1/BROKEN_BUILD" ] ; then
+        # Do not build test if BROKEN_BUILD is defined, except if we
+        # Have listed the test explicitely.
+        if [ -f "$1/BROKEN_BUILD" -a -z "$RUN_TESTS" ] ; then
             echo "Skipping broken device test build: `basename $1`"
             return 0
         fi
@@ -518,8 +516,10 @@ if is_testable device; then
         local PROGRAM
         # Do not run the test if BROKEN_RUN is defined
         if [ -f "$1/BROKEN_RUN" -o -f "$1/BROKEN_BUILD" ] ; then
-            dump "Skipping NDK device test run: `basename $1`"
-            return 0
+	    if [ -z "$RUN_TESTS" ]; then
+		dump "Skipping NDK device test run: `basename $1`"
+		return 0
+	    fi
         fi
         if [ ! -d "$SRCDIR" ]; then
             dump "Skipping NDK device test run (no $ABI binaries): `basename $1`"
