@@ -275,7 +275,7 @@ fi
 # first create the reference ndk directory from the git reference
 echo "Creating reference from source files"
 REFERENCE=$TMPDIR/reference && rm -rf $REFERENCE/* &&
-copy_file_list "$NDK_ROOT_DIR" "$REFERENCE" "$GIT_FILES" &&
+copy_file_list "$NDK_ROOT_DIR" "$REFERENCE" $GIT_FILES &&
 rm -f $REFERENCE/Android.mk
 fail_panic "Could not create reference. Aborting."
 
@@ -350,7 +350,7 @@ for SYSTEM in $SYSTEMS; do
     BIN_RELEASE=$RELEASE_PREFIX-$SYSTEM
     DSTDIR=$TMPDIR/$RELEASE_PREFIX
     rm -rf $DSTDIR &&
-    copy_file_list "$REFERENCE" "$DSTDIR" "*"
+    copy_directory "$REFERENCE" "$DSTDIR"
     fail_panic "Could not copy reference. Aborting."
 
     if [ "$PREBUILT_NDK" ]; then
