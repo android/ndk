@@ -1,1 +1,2 @@
-APP_STL := stlport_static
+APP_STL := none
+STLPORT_FORCE_REBUILD := true
