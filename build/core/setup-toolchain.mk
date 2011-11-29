@@ -102,9 +102,11 @@ clean-installed-binaries::
 
 # Ensure that for debuggable applications, gdbserver will be copied to
 # the proper location
-ifeq ($(NDK_APP_DEBUGGABLE),true)
 
 NDK_APP_GDBSERVER := $(NDK_APP_DST_DIR)/gdbserver
+NDK_APP_GDBSETUP := $(NDK_APP_DST_DIR)/gdb.setup
+
+ifeq ($(NDK_APP_DEBUGGABLE),true)
 
 installed_modules: $(NDK_APP_GDBSERVER)
 
@@ -118,7 +120,6 @@ $(NDK_APP_GDBSERVER): clean-installed-binaries
 	$(hide) $(call host-mkdir,$(PRIVATE_DST_DIR))
 	$(hide) $(call host-install,$(PRIVATE_SRC),$(PRIVATE_DST))
 
-NDK_APP_GDBSETUP := $(NDK_APP_DST_DIR)/gdb.setup
 installed_modules: $(NDK_APP_GDBSETUP)
 
 $(NDK_APP_GDBSETUP): PRIVATE_DST := $(NDK_APP_GDBSETUP)
