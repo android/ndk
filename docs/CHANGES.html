@@ -5,6 +5,9 @@ android-ndk-r7b
 
 IMPORTANT BUG FIXES:
 
+- Reverted to binutils 2.19 to try to fix debugging issues that
+  appeared in NDK r7 (which switched to binutils 2.20.1).
+
 - Fixed ndk-build on 32-bit Linux. A packaging error put a 64-bit version
   of the 'awk' executable under prebuilt/linux-x86/bin in NDK r7.
 
