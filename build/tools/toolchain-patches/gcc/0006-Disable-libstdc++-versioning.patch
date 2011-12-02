@@ -18,7 +18,7 @@ diff -burN gcc-a/gcc-4.4.3/libstdc++-v3/src/Makefile.in gcc-b/gcc-4.4.3/libstdc+
  
  # Cross compiler support.
 -toolexeclib_LTLIBRARIES = libstdc++.la
-+toolexeclib_LTLIBRARIES = libstdc++.la libgnustl_shared.la
++toolexeclib_LTLIBRARIES = libgnustl_shared.la
  @ENABLE_SYMVERS_DARWIN_TRUE@@ENABLE_SYMVERS_TRUE@version_arg = -Wl,-exported_symbols_list,libstdc++-symbols.explist
  @ENABLE_SYMVERS_FALSE@version_arg = 
  @ENABLE_SYMVERS_GNU_NAMESPACE_TRUE@@ENABLE_SYMVERS_TRUE@version_arg = -Wl,--version-script=libstdc++-symbols.ver

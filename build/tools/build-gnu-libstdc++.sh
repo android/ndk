@@ -239,9 +239,7 @@ copy_gnustl_libs ()
 
     # Copy the ABI-specific libraries
     # Note: the shared library name is libgnustl_shared.so due our custom toolchain patch
-    # We need to copy libstdc++.so which is identical to libgnustl_shared.so except for the DT_LIBRARY entry
-    # within the ELF file, since it will be needed by the standalone toolchain installation later.
-    copy_file_list "$SDIR/lib" "$DDIR/libs/$ABI" libsupc++.a libstdc++.so libgnustl_shared.so
+    copy_file_list "$SDIR/lib" "$DDIR/libs/$ABI" libsupc++.a libgnustl_shared.so
     # Note: we need to rename libgnustl_shared.a to libgnustl_static.a
     cp "$SDIR/lib/libgnustl_shared.a" "$DDIR/libs/$ABI/libgnustl_static.a"
 }
@@ -264,7 +262,7 @@ if [ -n "$PACKAGE_DIR" ] ; then
     # Then, one package per ABI for libraries
     for ABI in $ABIS; do
         FILES=""
-        for LIB in include/bits libsupc++.a libgnustl_static.a libstdc++.so libgnustl_shared.so; do
+        for LIB in include/bits libsupc++.a libgnustl_static.a libgnustl_shared.so; do
             FILES="$FILES $GNUSTL_SUBDIR/libs/$ABI/$LIB"
         done
         PACKAGE="$PACKAGE_DIR/gnu-libstdc++-libs-$ABI.tar.bz2"

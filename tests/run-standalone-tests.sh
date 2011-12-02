@@ -34,10 +34,10 @@ PROGRAM_PARAMETERS=""
 PROGRAM_DESCRIPTION="Run the standalone toolchain tests."
 
 ARCH=arm
-register_var_option "--arch=*" ARCH "Specify architecture"
+register_var_option "--arch=<name>" ARCH "Specify architecture"
 
 PLATFORM=android-9
-register_var_option "--platform=*" PLATFORM "Specify target platform"
+register_var_option "--platform=<platform>" PLATFORM "Specify target platform"
 
 process_options $@
 
@@ -62,7 +62,7 @@ install_toolchain ()
         exit 1
     fi
     # XXX: TODO: Extract dynamically
-    TOOLCHAINPREFIX=$TOOLCHAINDIR/bin/$(get_default_toolchain_prefix_for $ARCH)
+    TOOLCHAINPREFIX=$TOOLCHAINDIR/bin/$(get_default_toolchain_prefix_for_arch $ARCH)
 }
 
 # Compile and link a C++ source file

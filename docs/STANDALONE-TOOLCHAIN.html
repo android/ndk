@@ -193,11 +193,44 @@ NOTE: You will need to explicitly link with libsupc++ if you use these
     arm-linux-androideabi-g++ .... -lsupc++
 
 
-The toolchain also comes with a working GNU libstdc++ implementation, which
-provides a working C++ Standard Template Library implementation. You will
-need to explicitly link against -lstdc++ to use it.
+5.4/ C++ STL support:
+- - - - - - - - - - -
 
-Proper toolchain configuration to avoid these explicit link flags is
-planned for the future.
+The standalone toolchain also comes with a copy of the GNU libstdc++
+library, which provides an implementation of the C++ Standard Template
+Library. To use it, you however need to link with the proper library:
+
+  * Use -lstdc++ to link against the _static_ library version. This ensures
+    that all required C++ STL code is included into your final binary. This
+    is ideal if you are only generating a single shared library or executable.
+
+    This is the recommended way to do it.
+
+  * Use -lgnustl_shared to link against the _shared_ library version. This
+    is required if you have several related shared libraries or executables
+    that need to run in the same address space at runtime (some global variables
+    need to be defined uniquely, which is not possible if you link the static
+    libstdc++ against each one of your executables).
+
+    If you use this option, you need to ensure that libgnustl_shared.so is
+    also copied to your device for your code to load properly. The file is
+    at:
+
+      $TOOLCHAIN/arm-linux-androideabi/lib/  for ARM toolchains.
+      $TOOLCHAIN/i686-android-linux/lib/     for x86 ones.
+
+
+    IMPORTANT: The GNU libstdc++ is licensed under the GPLv3 with a
+               linking exception. See the following URL for details:
+
+          http://gcc.gnu.org/onlinedocs/libstdc++/manual/bk01pt01ch01s02.html
+
+    If you cannot comply with its requirements, i.e. you cannot redistribute
+    the shared library, do not use it in your project.
+
+The reason the shared version of GNU libstdc++ is not called libstdc++.so is
+because this would conflict at runtime with the system's own minimal C++
+runtime, which is /system/lib/libstdc++.so. This enforces a new name for the
+GNU ELF library. This is not a problem for the static library.
 
 </pre></body></html>

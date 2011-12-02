@@ -30,6 +30,12 @@ IMPORTANT BUG FIXES:
     * Special characters in files or paths, other than spaces and quotes,
       should now be correctly handled.
 
+- Fixed the standalone toolchain to generate proper binaries when using
+  -lstdc++ (i.e. linking against the GNU libstdc++ C++ runtime). In a nutshell,
+  you should use -lgnustl_shared if you want to link against the shared library
+  version, but -lstdc++ for the static version.
+
+  See docs/STANDALONE-TOOLCHAIN.html for more details about this.
 
 OTHER CHANGES:
 
