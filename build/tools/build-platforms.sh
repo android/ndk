@@ -44,7 +44,7 @@
 extract_platforms_from ()
 {
     if [ -d "$1" ] ; then
-        (cd "$1/platforms" && ls -d android-*) | sed -e "s!android-!!" | tr '\n' ' '
+        (cd "$1/platforms" && ls -d android-*) | sed -e "s!android-!!" | sort -g | tr '\n' ' '
     else
         echo ""
     fi
