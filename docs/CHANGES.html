@@ -37,6 +37,10 @@ IMPORTANT BUG FIXES:
 
   See docs/STANDALONE-TOOLCHAIN.html for more details about this.
 
+- Fix for using gnustl_shared on Cygwin: the linker complained that it
+  couldn't find libsupc++.a while the file was indeed at the right
+  location.
+
 OTHER CHANGES:
 
 - ndk-gdb now works properly when your application has private services
