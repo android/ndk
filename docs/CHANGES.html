@@ -5,6 +5,12 @@ android-ndk-r7b
 
 IMPORTANT BUG FIXES:
 
+- &lt;sys/atomics.h&gt; was updated to avoid correctness issues
+  on some multi-core ARM-based devices. Simply rebuilding your
+  unmodified sources with this version of the NDK should completely
+  eliminate this problem. For more details, please read
+  docs/ANDROID-ATOMICS.html
+
 - Reverted to binutils 2.19 to try to fix debugging issues that
   appeared in NDK r7 (which switched to binutils 2.20.1).
 

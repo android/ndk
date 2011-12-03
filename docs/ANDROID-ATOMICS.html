@@ -1,0 +1,70 @@
+<html><body><pre>ANDROID ATOMICS OPERATIONS
+
+The problem:
+============
+
+If your application native code was generated with a NDK release older than r7b
+and uses any of the following functions defined in the &lt;sys/atomics.h&gt;
+header:
+
+  __atomic_cmpxchg
+  __atomic_inc
+  __atomic_dec
+  __atomic_swap
+
+Then the corresponding machine code is not guaranteed to work properly on
+some multi-core Android ARM-based devices (x86 ones are not affected).
+
+The solution:
+=============
+
+The &lt;sys/atomics.h&gt; header has been updated in NDK r7b. Simply recompiling
+your _unmodified_ sources with this version of the NDK should be enough to
+completely eliminate the problem.
+
+If you can't use NDK r7b or later for some reason, read the section below.
+
+More details:
+=============
+
+The main issue is that the implementation of these functions, as provided
+by the C library, did not provide any associated memory barriers. This is
+by design, because the platform code that uses them does insert explicit
+barriers around these operations.
+
+The functions were only exposed through the NDK by mistake, they were not
+supposed to be used from applications. Any application code that use them
+without inserting its own barriers may experiment incorrect behaviour,
+which can result in bugs that are very hard to reproduce and diagnose.
+
+Not all multi-core devices are affected though. Certain OEMs enforce a
+policy where all threads of a single process are forced to run on the same
+core. In this case, the bug cannot occur, unless you're directly accessing
+shared memory between two processes.
+
+The problem is only likely to be seen on devices running Android 3.0 to
+Android 4.1. The C library implementation in 4.1 has been updated to provide
+full memory barriers as well. This ensures existing native code keeps
+working correctly on this platform and future ones, even if they were not
+recompiled.
+
+We still strongly recommend recompiling your native code to ensure you'll
+never have to debug this issue (life is short). In the case where this would
+not be possible (e.g. you're using an older version of the NDK for some
+reason, or a custom build system / toolchain), we recommend stopping from
+using these functions entirely. Very fortunately, GCC provides handy
+intrinsics functions that work with very reasonable performance and always
+provide a full barrier.
+
+  __sync_fetch_and_add         instead of __atomic_inc
+  __sync_fetch_and_sub         instead of __atomic_sub
+  __sync_val_compare_and_swap  instead of __atomic_cmpxchg
+
+See the content of platforms/android-3/arch-arm/usr/include/sys/atomics.h
+to see how these can be used.
+
+See the following URL for more GCC-related information:
+
+  http://gcc.gnu.org/onlinedocs/gcc-4.1.2/gcc/Atomic-Builtins.html
+
+</pre></body></html>
