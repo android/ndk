@@ -61,7 +61,16 @@ log "Using sources from: $GNUMAKE_SRCDIR"
 
 prepare_host_build
 
-BUILD_DIR=$NDK_TMPDIR
+TMP_SRCDIR=$NDK_TMPDIR/src
+
+# We need to copy the sources to a temporary directory because
+# the build system will modify some documentation files in the
+# source directory. Sigh...
+log "Copying sources to temporary directory: $TMP_SRCDIR"
+mkdir -p "$TMP_SRCDIR" && copy_directory "$GNUMAKE_SRCDIR" "$TMP_SRCDIR"
+fail_panic "Could not copy GNU Make sources to: $TMP_SRCDIR"
+
+BUILD_DIR=$NDK_TMPDIR/build
 
 CONFIGURE_FLAGS="--disable-nls --disable-rpath"
 if [ "$MINGW" = "yes" ]; then
@@ -74,7 +83,7 @@ mkdir -p $BUILD_DIR && rm -rf $BUILD_DIR/*
 cd $BUILD_DIR &&
 CFLAGS=$HOST_CFLAGS" -O2 -s" &&
 export CC CFLAGS &&
-run $GNUMAKE_SRCDIR/configure $CONFIGURE_FLAGS
+run $TMP_SRCDIR/configure $CONFIGURE_FLAGS
 fail_panic "Failed to configure the sed-$GNUMAKE_VERSION build!"
 
 log "Building make"
@@ -94,6 +103,6 @@ if [ "$PACKAGE_DIR" ]; then
 fi
 
 log "Cleaning up"
-rm -rf $BUILD_DIR
+rm -rf $BUILD_DIR $TMP_SRCDIR
 
 log "Done."
