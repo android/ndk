@@ -77,6 +77,26 @@ Currently, only the following flags are defined, for the ARM CPU Family:
       mandates that such CPUs also implement VFPv3-D32, which provides
       32 hardware FP registers (shared with the NEON unit).
 
+And the following flags for the x86 CPU Family:
+
+    ANDROID_CPU_X86_FEATURE_SSSE3
+      Indicates that the device's CPU supports the SSSE3 instruction
+      extension set. Note that this is unlike SSE3 which is required
+      by the x86 NDK ABI.
+
+    ANDROID_CPU_X86_FEATURE_POPCNT
+      Indicates that the device's CPU supports the POPCNT instruction.
+
+    ANDROID_CPU_X86_FEATURE_MOVBE
+      Indicates that the device's CPU supports the MOVBE instruction.
+      This one is specific to some Intel IA-32 CPUs, like the Atom.
+
+
+The following function is also defined to return the max number of
+CPU cores on the target device:
+
+    int  android_getCpuCount(void);
+
 
 Important Note:
 ---------------

@@ -74,6 +74,27 @@ static const int  android_cpufeatures_debug = 0;
         } \
     } while (0)
 
+#ifdef __i386__
+static __inline__ void x86_cpuid(int func, int values[4])
+{
+    int a, b, c, d;
+    /* We need to preserve ebx since we're compiling PIC code */
+    /* this means we can't use "=b" for the second output register */
+    __asm__ __volatile__ ( \
+      "push %%ebx\n"
+      "cpuid\n" \
+      "mov %1, %%ebx\n"
+      "pop %%ebx\n"
+      : "=a" (a), "=r" (b), "=c" (c), "=d" (d) \
+      : "a" (func) \
+    );
+    values[0] = a;
+    values[1] = b;
+    values[2] = c;
+    values[3] = d;
+}
+#endif
+
 /* Read the content of /proc/cpuinfo into a user-provided buffer.
  * Return the length of the data, or -1 on error. Does *not*
  * zero-terminate the content. Will not read more
@@ -357,6 +378,29 @@ android_cpuInit(void)
 
 #ifdef __i386__
     g_cpuFamily = ANDROID_CPU_FAMILY_X86;
+
+    int regs[4];
+
+/* According to http://en.wikipedia.org/wiki/CPUID */
+#define VENDOR_INTEL_b  0x756e6547
+#define VENDOR_INTEL_c  0x6c65746e
+#define VENDOR_INTEL_d  0x49656e69
+
+    x86_cpuid(0, regs);
+    int vendorIsIntel = (regs[1] == VENDOR_INTEL_b &&
+                         regs[2] == VENDOR_INTEL_c &&
+                         regs[3] == VENDOR_INTEL_d);
+
+    x86_cpuid(1, regs);
+    if ((regs[2] & (1 << 9)) != 0) {
+        g_cpuFeatures |= ANDROID_CPU_X86_FEATURE_SSSE3;
+    }
+    if ((regs[2] & (1 << 23)) != 0) {
+        g_cpuFeatures |= ANDROID_CPU_X86_FEATURE_POPCNT;
+    }
+    if (vendorIsIntel && (regs[2] & (1 << 22)) != 0) {
+        g_cpuFeatures |= ANDROID_CPU_X86_FEATURE_MOVBE;
+    }
 #endif
 }
 

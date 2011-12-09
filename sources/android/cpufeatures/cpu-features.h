@@ -52,6 +52,12 @@ enum {
     ANDROID_CPU_ARM_FEATURE_LDREX_STREX = (1 << 3),
 };
 
+enum {
+    ANDROID_CPU_X86_FEATURE_SSSE3  = (1 << 0),
+    ANDROID_CPU_X86_FEATURE_POPCNT = (1 << 1),
+    ANDROID_CPU_X86_FEATURE_MOVBE  = (1 << 2),
+};
+
 extern uint64_t    android_getCpuFeatures(void);
 
 /* Return the number of CPU cores detected on this device. */
