@@ -115,7 +115,7 @@ set_parameters $PARAMETERS
 
 prepare_target_build
 
-parse_toolchain_name
+parse_toolchain_name $TOOLCHAIN
 
 fix_sysroot "$OPTION_SYSROOT"
 

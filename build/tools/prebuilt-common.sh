@@ -735,13 +735,11 @@ prepare_target_build ()
     setup_ccache
 }
 
-# $1: Optional toolchain name (uses $TOOLCHAIN otherwise)
+# $1: Toolchain name
 #
 parse_toolchain_name ()
 {
-    if [ -n "$1" ]; then
-        TOOLCHAIN=$1
-    fi
+    TOOLCHAIN=$1
     if [ -z "$TOOLCHAIN" ] ; then
         echo "ERROR: Missing toolchain name!"
         exit 1

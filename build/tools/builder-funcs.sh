@@ -454,7 +454,7 @@ builder_begin_android ()
             builder_cflags "-mthumb"
             ;;
         armeabi-v7a)
-            builder_cflags "-march=armv7-a -mfloat-abi=softfp"
+            builder_cflags "-march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3"
             builder_ldflags "-Wl,--fix-cortex-a8"
             ;;
     esac

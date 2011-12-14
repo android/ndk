@@ -66,6 +66,10 @@ OTHER CHANGES:
 
   Also removed 5 un-necessary static initializers from the library.
 
+- The GNU libstdc++ libraries for armeabi-v7a were mistakenly compiled for
+  armeabi instead. This had no impact on correctness, but using the right
+  ABI should provide for slightly better performance.
+
 -------------------------------------------------------------------------------
 android-ndk-r7
 

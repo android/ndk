@@ -124,7 +124,7 @@ fi
 
 prepare_target_build
 
-parse_toolchain_name
+parse_toolchain_name $TOOLCHAIN
 check_toolchain_install $NDK_DIR $TOOLCHAIN
 
 # Check build directory
