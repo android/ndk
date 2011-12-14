@@ -242,11 +242,11 @@ basic_string<_CharT,_Traits,_Alloc>&
 basic_string<_CharT,_Traits,_Alloc>::_M_assign(const _CharT* __f, const _CharT* __l) {
   ptrdiff_t __n = __l - __f;
   if (__STATIC_CAST(size_type, __n) <= size()) {
-    _Traits::copy(this->_M_Start(), __f, __n);
+    _Traits::move(this->_M_Start(), __f, __n);
     erase(begin() + __n, end());
   }
   else {
-    _Traits::copy(this->_M_Start(), __f, size());
+    _Traits::move(this->_M_Start(), __f, size());
     _M_append(__f + size(), __l);
   }
   return *this;

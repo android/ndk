@@ -139,7 +139,7 @@ static inline bool _Stl_is_inf(double x)        { return isinf(x); }
 static inline bool _Stl_is_neg_inf(double x)    { return isinf(x) && x < 0; }
 #  elif (defined (__unix) || defined (__unix__)) && \
          !defined (__APPLE__) && !defined (__DJGPP) && !defined(__osf__) && \
-         !defined (_CRAY) && !defined(__ANDROID__)
+         !defined (_CRAY) && !defined (__ANDROID__)
 static inline bool _Stl_is_nan_or_inf(double x) { return IsNANorINF(x); }
 static inline bool _Stl_is_inf(double x)        { return IsNANorINF(x) && IsINF(x); }
 static inline bool _Stl_is_neg_inf(double x)    { return (IsINF(x)) && (x < 0.0); }
@@ -275,7 +275,8 @@ static inline char* _Stl_fcvtR(long double x, int n, int* pt, int* sign)
 { return _ldfcvt(*(long_double*)&x, n, pt, sign); }
 #    endif
 #    define _STLP_CVT_NEED_SYNCHRONIZATION
-#  elif defined (__unix) && !defined (__APPLE__) && !defined (_CRAY)
+#  elif defined (__unix) && !defined (__APPLE__) && !defined (_CRAY) && \
+        !defined (__ANDROID__)
 static inline char* _Stl_ecvtR(double x, int n, int* pt, int* sign, char* buf)
 { return ecvt_r(x, n, pt, sign, buf); }
 static inline char* _Stl_fcvtR(double x, int n, int* pt, int* sign, char* buf)

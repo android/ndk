@@ -54,6 +54,18 @@ OTHER CHANGES:
 - Fix for a rare bug where NDK r7 would fail to honor the LOCAL_ARM_MODE value
   and always compile certain source files (but not all) to 32-bit instructions.
 
+- Refresh the stlport sources to match the Android platform version. This
+  fixes a few minor bugs:
+
+   - Fix instantiation of an incomplete type.
+   - Fix minor == versus = typo
+   - Use memmove instead of memcpy in string::assign
+   - Better handling of IsNANorINF, IsINF, IsNegNAN, etc..
+
+  For complete details, see the commit log.
+
+  Also removed 5 un-necessary static initializers from the library.
+
 -------------------------------------------------------------------------------
 android-ndk-r7
 

@@ -39,6 +39,8 @@
 #  include <stl/_string_fwd.h>
 #endif
 
+#include <stl/_string.h>
+
 #include <stl/_facets_fwd.h>
 
 _STLP_BEGIN_NAMESPACE
