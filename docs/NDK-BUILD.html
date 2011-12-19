@@ -41,9 +41,9 @@ command that runs the NDK build scripts. Notable uses include:
   ndk-build NDK_DEBUG=1      --&gt; force a debuggable build (see below)
   ndk-build NDK_DEBUG=0      --&gt; force a release build (see below)
 
-  ndk-build NDK_APP_APPLICATION_MK=&lt;file&gt;
+  ndk-build NDK_APPLICATION_MK=&lt;file&gt;
     --&gt; rebuild, using a specific Application.mk pointed to by
-        the NDK_APP_APPLICATION_MK command-line variable.
+        the NDK_APPLICATION_MK command-line variable.
 
   ndk-build -C &lt;project&gt;     --&gt; build the native code for the project
                                  path located at &lt;project&gt;. Useful if you
