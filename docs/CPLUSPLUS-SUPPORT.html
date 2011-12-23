@@ -86,7 +86,7 @@ If you insist on using it, read the "RTTI Support" and
 
 
 I.3. STLport runtime:
-- - - - - - - - - - - 
+- - - - - - - - - - -
 
 This is a port of STLport (http://www.stlport.org) that can be used on
 Android. It will provide you with a complete set of C++ standard library
@@ -192,7 +192,7 @@ This is likely to result in code that doesn't work correctly, for example:
   - exceptions raised in libfoo.so cannot be caught in libbar.so (and may
     simply crash the program).
 
-  - the buffering of cout not working properly
+  - the buffering of std::cout not working properly
 
 This problem also happens if you want to link an executable and a shared
 library to the same static library.
@@ -253,8 +253,7 @@ IV. Future Plans:
 -----------------
 
   - Add exceptions support to GAbi++
-  - Make STLport use GAbi++ to gain RTTI support (and potentially exceptions too)
-  - Shared GNU libstdc++ support
+  - Add exceptions support to STLport (once it is in GAbi++)
   - uSTL support?
 
 </pre></body></html>

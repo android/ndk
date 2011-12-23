@@ -405,7 +405,16 @@ build_project ()
     fi
     rm -rf "$DIR" && cp -r "$1" "$DIR"
     (cd "$DIR" && run_ndk_build $NDK_BUILD_FLAGS)
-    if [ $? != 0 ] ; then
+    RET=$?
+    if [ -f "$1/BUILD_SHOULD_FAIL" ]; then
+        if [ $RET = 0 ]; then
+            echo "!!! FAILURE: BUILD SHOULD HAVE FAILED [$1]"
+            exit 1
+        fi
+        log "!!! SUCCESS: BUILD FAILED AS EXPECTED [$(basename $1)]"
+        RET=0
+    fi
+    if [ $RET != 0 ] ; then
         echo "!!! BUILD FAILURE [$1]!!! See $NDK_LOGFILE for details or use --verbose option!"
         exit 1
     fi

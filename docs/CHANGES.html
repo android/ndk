@@ -46,6 +46,18 @@ IMPORTANT BUG FIXES:
 
 OTHER CHANGES:
 
+- When your application uses the GNU libstdc++ runtime, the compiler will
+  no longer forcibly enable exceptions and RTTI. This will result in smaller
+  code.
+
+  If you need these features, you need to do either one of these:
+
+     1/ Enable exceptions and/or RTTI explicitely in your modules or
+        Application.mk (recommended)
+
+     2/ Define APP_GNUSTL_FORCE_CPP_FEATURES to 'exceptions', 'rtti' or both
+        in your Application.mk. See docs/APPLICATION-MK.html for more details.
+
 - ndk-gdb now works properly when your application has private services
   running in independent processes. More specifically it will debug the
   main application process, instead of the first process listed by 'ps'
