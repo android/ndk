@@ -358,14 +358,25 @@ ADD_TOOLCHAIN := $(BUILD_SYSTEM)/add-toolchain.mk
 # the list of all toolchains in this NDK
 NDK_ALL_TOOLCHAINS :=
 NDK_ALL_ABIS       :=
+NDK_ALL_ARCHS      :=
 
 TOOLCHAIN_CONFIGS := $(wildcard $(NDK_ROOT)/toolchains/*/config.mk)
 $(foreach _config_mk,$(TOOLCHAIN_CONFIGS),\
   $(eval include $(BUILD_SYSTEM)/add-toolchain.mk)\
 )
 
-NDK_ALL_TOOLCHAINS   := $(call remove-duplicates,$(NDK_ALL_TOOLCHAINS))
-NDK_ALL_ABIS         := $(call remove-duplicates,$(NDK_ALL_ABIS))
+NDK_ALL_TOOLCHAINS   := $(sort $(NDK_ALL_TOOLCHAINS))
+NDK_ALL_ABIS         := $(sort $(NDK_ALL_ABIS))
+NDK_ALL_ARCHS        := $(sort $(NDK_ALL_ARCHS))
+
+# Check that each ABI has a single architecture definition
+$(foreach _abi,$(strip $(NDK_ALL_ABIS)),\
+  $(info ABI='$(_abi)')\
+  $(if $(filter-out 1,$(words $(NDK_ABI.$(_abi).arch))),\
+    $(call __ndk_info,INTERNAL ERROR: The $(_abi) ABI should have exactly one architecture definitions. Found: '$(NDK_ABI.$(_abi).arch)')\
+    $(call __ndk_error,Aborting...)\
+  )\
+)
 
 # Allow the user to define NDK_TOOLCHAIN to a custom toolchain name.
 # This is normally used when the NDK release comes with several toolchains
@@ -382,6 +393,10 @@ ifdef NDK_TOOLCHAIN
     $(call ndk_log, Using specific toolchain $(NDK_TOOLCHAIN))
 endif
 
+$(call ndk_log, This NDK supports the following target architectures and ABIS:)
+$(foreach arch,$(NDK_ALL_ARCHS),\
+    $(call ndk_log, $(space)$(space)$(arch): $(NDK_ARCH.$(arch).abis))\
+)
 $(call ndk_log, This NDK supports the following toolchains and target ABIs:)
 $(foreach tc,$(NDK_ALL_TOOLCHAINS),\
     $(call ndk_log, $(space)$(space)$(tc):  $(NDK_TOOLCHAIN.$(tc).abis))\

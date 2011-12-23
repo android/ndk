@@ -16,4 +16,5 @@
 # config file for the arm-eabi-4.4.0 toolchain for the Android NDK
 # the real meat is in the setup.mk file adjacent to this one
 #
+TOOLCHAIN_ARCH := arm
 TOOLCHAIN_ABIS := armeabi armeabi-v7a

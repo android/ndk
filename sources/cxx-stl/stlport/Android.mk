@@ -6,7 +6,7 @@ LOCAL_PATH := $(call my-dir)
 
 STLPORT_FORCE_REBUILD := $(strip $(STLPORT_FORCE_REBUILD))
 ifndef STLPORT_FORCE_REBUILD
-  ifeq (,$(strip $(wildcard $(LOCAL_PATH)/libs/armeabi/libstlport_static.a)))
+  ifeq (,$(strip $(wildcard $(LOCAL_PATH)/libs/$(TARGET_ARCH_ABI)/libstlport_static.a)))
     $(call __ndk_info,WARNING: Rebuilding STLport libraries from sources!)
     $(call __ndk_info,You might want to use $$NDK/build/tools/build-stlport.sh)
     $(call __ndk_info,in order to build prebuilt versions to speed up your builds!)
