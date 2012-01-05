@@ -156,11 +156,15 @@ HOST_OS_BASE := $(HOST_OS)
 ifeq ($(HOST_OS),windows)
     ifneq (,$(strip $(wildcard /bin/uname.exe)))
         $(call ndk_log,Found /bin/uname.exe on Windows host, checking for Cygwin)
+		# NOTE: The 2>NUL here is for the case where we're running inside the
+		#       native Windows shell. On cygwin, this will create an empty NUL file
+		#       that we're going to remove later (see below).
         UNAME := $(shell /bin/uname.exe -s 2>NUL)
         $(call ndk_log,uname -s returned: $(UNAME))
         ifneq (,$(filter CYGWIN%,$(UNAME)))
             $(call ndk_log,Cygwin detected!)
             HOST_OS := cygwin
+			DUMMY := $(shell rm -f NUL) # Cleaning up
         else
             $(call ndk_log,Cygwin *not* detected!)
         endif
