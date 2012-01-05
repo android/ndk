@@ -152,6 +152,13 @@ _app            := local
 _application_mk := $(NDK_APPLICATION_MK)
 NDK_APPS        := $(_app)
 
+# For cygwin, put generated dependency conversion script here
+# Do not define this variable for other host platforms
+#
+ifeq ($(HOST_OS),cygwin)
+NDK_DEPENDENCIES_CONVERTER := $(NDK_APP_OUT)/convert-dependencies.sh
+endif
+
 include $(BUILD_SYSTEM)/add-application.mk
 
 # If a goal is DUMP_xxx then we dump a variable xxx instead

@@ -92,6 +92,13 @@ OTHER CHANGES:
 - cygwin: ndk-build no longer creates an empty "NUL" file in the current
   directory when invoked.
 
+- cygwin: better automatic dependency detection. It previously didn't work
+  properly in the following case:
+
+    - when the cygwin drive prefix was not /cygdrive
+    - when using drive-less mounts, e.g. when Cygwin would translate /home
+      instead \\server\subdir instead of C:\Some\Dir.
+
 -------------------------------------------------------------------------------
 android-ndk-r7
 
