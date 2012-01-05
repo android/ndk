@@ -156,15 +156,15 @@ HOST_OS_BASE := $(HOST_OS)
 ifeq ($(HOST_OS),windows)
     ifneq (,$(strip $(wildcard /bin/uname.exe)))
         $(call ndk_log,Found /bin/uname.exe on Windows host, checking for Cygwin)
-		# NOTE: The 2>NUL here is for the case where we're running inside the
-		#       native Windows shell. On cygwin, this will create an empty NUL file
-		#       that we're going to remove later (see below).
+        # NOTE: The 2>NUL here is for the case where we're running inside the
+        #       native Windows shell. On cygwin, this will create an empty NUL file
+        #       that we're going to remove later (see below).
         UNAME := $(shell /bin/uname.exe -s 2>NUL)
         $(call ndk_log,uname -s returned: $(UNAME))
         ifneq (,$(filter CYGWIN%,$(UNAME)))
-            $(call ndk_log,Cygwin detected!)
+            $(call ndk_log,Cygwin detected: $(shell uname -a))
             HOST_OS := cygwin
-			DUMMY := $(shell rm -f NUL) # Cleaning up
+            DUMMY := $(shell rm -f NUL) # Cleaning up
         else
             $(call ndk_log,Cygwin *not* detected!)
         endif
@@ -242,9 +242,13 @@ $(call ndk_log,HOST_TAG set to $(HOST_TAG))
 HOST_PREBUILT := $(strip $(wildcard $(NDK_ROOT)/prebuilt/$(HOST_TAG)/bin))
 ifdef HOST_PREBUILT
     $(call ndk_log,Host tools prebuilt directory: $(HOST_PREBUILT))
-    HOST_AWK := $(wildcard $(HOST_PREBUILT)/awk$(HOST_EXEEXT))
-    HOST_SED  := $(wildcard $(HOST_PREBUILT)/sed$(HOST_EXEEXT))
-    HOST_MAKE := $(wildcard $(HOST_PREBUILT)/make$(HOST_EXEEXT))
+    # The windows prebuilt binaries are for ndk-build.cmd
+    # On cygwin, we must use the Cygwin version of these tools instead.
+    ifneq ($(HOST_OS),cygwin)
+        HOST_AWK := $(wildcard $(HOST_PREBUILT)/awk$(HOST_EXEEXT))
+        HOST_SED  := $(wildcard $(HOST_PREBUILT)/sed$(HOST_EXEEXT))
+        HOST_MAKE := $(wildcard $(HOST_PREBUILT)/make$(HOST_EXEEXT))
+    endif
 else
     $(call ndk_log,Host tols prebuilt directory not found, using system tools)
 endif
