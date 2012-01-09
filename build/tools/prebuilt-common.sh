@@ -603,7 +603,7 @@ prepare_common_build ()
     # and the --mingw or --try-64 options are not used.
     #
     if [ "$HOST_OS" = "linux" -a -z "$CC" -a "$MINGW" != "yes" -a "$TRY64" != "yes" ]; then
-        LEGACY_TOOLCHAIN_DIR="$ANDROID_NDK_ROOT/../prebuilt/linux-x86/toolchain/i686-linux-glibc2.7-4.4.3"
+        LEGACY_TOOLCHAIN_DIR="$ANDROID_NDK_ROOT/../prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.4.3"
         if [ -d "$LEGACY_TOOLCHAIN_DIR" ] ; then
             log "Forcing generation of Linux binaries with legacy toolchain"
             CC="$LEGACY_TOOLCHAIN_DIR/bin/i686-linux-gcc"
