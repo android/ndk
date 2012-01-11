@@ -1,7 +1,123 @@
 <html><body><pre>Bionic ChangeLog:
 -----------------
 
-Differences between current and Android 2.1:
+-------------------------------------------------------------------------------
+Differences between 4.0.1 and Android 3.1:
+
+- &lt;pwd.h&gt;: Added getpwuid_r() and getpwnam_r()
+
+- &lt;setjmp.h&gt;: Provided missing symbols for sigsetjmp() and siglongjmp()
+
+-------------------------------------------------------------------------------
+Differences between 3.1 and Android 3.0:
+
+- &lt;sys/stat.h&gt;: Added utimenstat(), UTIME_NOW and UTIME_OMIT
+
+-------------------------------------------------------------------------------
+Differences between 3.0 and Android 2.3:
+
+- &lt;time.h&gt;: Add timegm(), timelocal(), time2posix() and posix2time()
+
+- &lt;sched.h&gt;: Add sched_getcpu(), sched_getaffinity(), sched_setaffinity(),
+  cpu_set_t and related macros (e.g. CPU_SETSIZE, CPU_ZERO, CPU_SET, ...)
+
+- &lt;unistd.h&gt;: Add ftruncate64(), pread64(), pwrite64().
+
+- &lt;signal.h&gt;: Changed the definition of SIGRTMAX to 64. However, note that
+  sigset_t is only 32-bit and cannot deal with real-time signals.
+
+- &lt;pthread.h&gt;: Add pthread_atfork()
+
+- &lt;stdlib.h&gt;: Add mkdtemp()
+
+- &lt;math.h&gt;: Add nan(), nanf() and tgammaf() definitions.
+
+-------------------------------------------------------------------------------
+Differences between Android 2.3 and Android 2.2:
+
+- &lt;pthread.h&gt;: Add reader/writer locks implementation. Add sanity
+  checking to pthread_mutex_destroy() (e.g. a locked mutex will return
+  EBUSY).
+
+- &lt;semaphore.h&gt;: Use private futexes for semaphore implementation,
+  unless your set 'pshared' to non-0 when calling sem_init().
+
+  Also fixed a bug in sem_post() to make it wake up all waiting
+  threads, instead of one. As a consequence, the maximum semaphore
+  value is now reduced to 0x3fffffff.
+
+- &lt;math.h&gt;: Added sincos(), sincosf() and sincosl() (GLibc compatibility).
+
+- &lt;sys/sysinfo.h&gt;: Added missing sysinfo() system call implementation
+  (the function was already declared in the header though).
+
+- sysconf() didn't work for some arguments due to a small bug in the
+  /proc line parser.
+
+- &lt;termio.h&gt;: added missing header (just includes &lt;termios.h&gt;)
+
+- &lt;unistd.h&gt;: add missing declaration for truncate(). The implementation
+  was already here since Android 1.5.
+
+  modify implementation of alarm() to return 0 in case of error (i.e.
+  if a value larger than 0x7fffffff seconds is passed to it). This
+  makes the implementation compliant with the GLibc behaviour.
+
+- &lt;wchar.h&gt;: small fixes to really support wchar_t in Bionic (not there yet).
+
+     the size of wchar_t is still 32-bit (decided by the compiler)
+
+     WCHAR_MIN: changed from 0 to INT_MIN
+     WCHAR_MAX: changed from 255 to INT_MAX
+
+     wcpcpy(), wcpncpy(), wcscat(), wcschr(), wcscmp(),
+     wcscpy(), wcscspn(), wcsdup(), wcslcat(), wcslcpy(),
+     wcslen(), wcsncat(), wcsncmp(), wcsncpy(), wcsnlen(),
+     wcspbrk(), wcsrchr(), wcsrchr(), wcsspn(), wcsstr(),
+     wcstok(), wcswidth(), wmemchr(), wmemcmp(), wmemcpy(),
+     wmemmove(), wmemset(): Added proper implementations.
+
+     wcscasecmp(), wcsncasecmp(): Added implementation limited
+     to ASCII codes for lower/upper.
+
+     wcscoll(): added dummy implementation that calls wcscmp()
+     wcsxfrm(): added dummy implementation that calls wcsncpy()
+
+  NOTE: Technically, this breaks the ABI, but we never claimed to support
+        wchar_t anyway. The wchar_t support is still *NOT* official at this
+        point. We need better multi-byte support code, and wprintf/wscanf
+        stuff too.
+
+- &lt;inttypes.h&gt;: add missing declarations for strntoimax abd strntoumax.
+
+- &lt;stdlib.h&gt;: add missing declarations for drand48() and erand48().
+
+- clearerr(): fix broken implementation.
+
+- Feature test macros like _POSIX_C_SOURCE / _XOPEN_SOURCE / _C99_SOURCE
+  are now handled correctly by our C library headers (see &lt;sys/cdefs.h&gt;)
+
+- &lt;sys/select.h&gt;: add missing declaration for pselect()
+
+- &lt;sys/vfs.h&gt;: fixed implementation of fstatfs() (also fixes fpathconf()
+  which uses it).
+
+- Added an implementation of pthread_atfork()
+
+- &lt;dlfcn.h&gt;: fixed dlopen() implementation to support dlopen(NULL, ...).
+  This allows one to look at the dynamic symbols exported by an executable.
+
+- &lt;private/bionic_tls.h&gt;: use kernel helper functions for static versions
+  of the C library. This is necessary because we don't know where the corresponding
+  machine code is going to run, and the optimization for __get_tls() might
+  not match the features of the target device where we run a static executable
+  linked to the C library. This fixes one of the bug that explains why gdbserver
+  didn't work well with threads.
+
+-------------------------------------------------------------------------------
+Differences between Android 2.2. and Android 2.1:
+
+- Support FP register save/load in setjmp()/longjmp() on ARMv7 builds.
 
 - Add support for SH-4 CPU architecture !
 
