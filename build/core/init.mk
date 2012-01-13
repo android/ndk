@@ -379,7 +379,6 @@ NDK_ALL_ARCHS        := $(sort $(NDK_ALL_ARCHS))
 
 # Check that each ABI has a single architecture definition
 $(foreach _abi,$(strip $(NDK_ALL_ABIS)),\
-  $(info ABI='$(_abi)')\
   $(if $(filter-out 1,$(words $(NDK_ABI.$(_abi).arch))),\
     $(call __ndk_info,INTERNAL ERROR: The $(_abi) ABI should have exactly one architecture definitions. Found: '$(NDK_ABI.$(_abi).arch)')\
     $(call __ndk_error,Aborting...)\
