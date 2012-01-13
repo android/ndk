@@ -9,6 +9,6 @@
 class Foo { int x; };
 
 int main(void) {
-    printf("%p\n", typeid(Foo)); // will fail without -frtti
+    printf("%p\n", &typeid(Foo)); // will fail without -frtti
     return 0;
 }
