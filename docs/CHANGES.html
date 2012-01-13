@@ -6,7 +6,35 @@ android-ndk-r7b
 IMPORTANT CHANGES:
 
 - Updated C and math library headers for API levels 11 and 12.
-  For details of the changes, see $NDK/docs/system/libc/CHANGES.html
+  For details of the changes, see $NDK/docs/system/libc/CHANGES.html.
+  The short version is:
+
+    for API level 11 (Android 3.0):
+
+    - &lt;time.h&gt;: Add timegm(), timelocal(), time2posix() and posix2time()
+
+    - &lt;sched.h&gt;: Add sched_getcpu(), sched_getaffinity(), sched_setaffinity(),
+    cpu_set_t and related macros (e.g. CPU_SETSIZE, CPU_ZERO, CPU_SET, ...)
+
+    - &lt;unistd.h&gt;: Add ftruncate64(), pread64(), pwrite64().
+
+    - &lt;signal.h&gt;: Changed the definition of SIGRTMAX to 64. However, note that
+    sigset_t is only 32-bit and cannot deal with real-time signals.
+
+    - &lt;pthread.h&gt;: Add pthread_atfork()
+
+    - &lt;stdlib.h&gt;: Add mkdtemp()
+
+    - &lt;math.h&gt;: Add nan(), nanf() and tgammaf() definitions.
+
+    for API level 11 (Android 3.1):
+
+    - &lt;sys/stat.h&gt;: Added utimenstat(), UTIME_NOW and UTIME_OMIT
+
+    for API level 14 (Android 4.0.1):
+
+    - &lt;pwd.h&gt;: Added getpwuid_r() and getpwnam_r()
+    - x86: &lt;setjmp.h&gt;: Provided missing symbols for sigsetjmp() and siglongjmp()
 
 IMPORTANT BUG FIXES:
 
