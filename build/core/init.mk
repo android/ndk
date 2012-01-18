@@ -166,7 +166,12 @@ ifeq ($(HOST_OS),windows)
             HOST_OS := cygwin
             DUMMY := $(shell rm -f NUL) # Cleaning up
         else
-            $(call ndk_log,Cygwin *not* detected!)
+            ifneq (,$(filter MINGW32%,$(UNAME)))
+                $(call ndk_log,MSys detected: $(shell uname -a))
+                HOST_OS := cygwin
+            else
+                $(call ndk_log,Cygwin *not* detected!)
+            endif
         endif
     endif
 endif

@@ -73,7 +73,7 @@
 #  s! C:! /cygdrive/c!ig;
 #  s!^D:!/cygdrive/d!ig;
 #  s! D:! /cygdrive/d!ig;
-#  
+#
 # Note that we properly escape regex meta characters like . or $
 # to avoid confusing sed. Also deal with the cases where the path
 # is the first in the line, or prefixed with a space in the deps file.
@@ -89,6 +89,12 @@ BEGIN {
 $2 == "on" {
     # record a new (host-path,cygwin-path) pair
     count ++
+
+    # Convert backwards slashes into forward ones in the host path.
+    # This is to support MSys' mount command, which outputs Windows-style
+    # separators, unlike Cygwin's version of the same tool.
+    gsub("\\\\","/",$1)
+
     host[count] = $1
     cygwin[count] = $3
 }
@@ -139,11 +145,11 @@ END {
         #       If the file exists, it is processed with our sed script,
         #       the output is written to $1, and we remove the original $1.org
         #
-		print "#!/bin/sh"
-		print "# AUTO-GENERATED FILE, DO NOT EDIT!"
-		print "if [ -f $1.org ]; then"
-		print "  sed -e '" RESULT "' $1.org > $1 && rm -f $1.org"
-		print "fi"
+        print "#!/bin/sh"
+        print "# AUTO-GENERATED FILE, DO NOT EDIT!"
+        print "if [ -f $1.org ]; then"
+        print "  sed -e '" RESULT "' $1.org > $1 && rm -f $1.org"
+        print "fi"
     }
 }
 
@@ -154,24 +160,24 @@ END {
 function sed_quote_path (str)
 {
     # Windows path names cannot contain any of: <>:"|?*
-	# see msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx
-	#
-	# Anything else is valid. The regex meta characters are: ^.[]$()|*+?{}\
-	#
-	# This means we need to escape these when they appear in path names: ^.[]$()+{}\
-	#
-	gsub("\\^","\\^",str)
-	gsub("\\.","\\.",str)
-	gsub("\\[","\\[",str)
-	gsub("\\]","\\]",str)
-	gsub("\\$","\\$",str)
-	gsub("\\(","\\(",str)
-	gsub("\\)","\\)",str)
-	gsub("\\+","\\+",str)
-	gsub("\\{","\\{",str)
-	gsub("\\}","\\}",str)
+    # see msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx
+    #
+    # Anything else is valid. The regex meta characters are: ^.[]$()|*+?{}\
+    #
+    # This means we need to escape these when they appear in path names: ^.[]$()+{}\
+    #
+    gsub("\\^","\\^",str)
+    gsub("\\.","\\.",str)
+    gsub("\\[","\\[",str)
+    gsub("\\]","\\]",str)
+    gsub("\\$","\\$",str)
+    gsub("\\(","\\(",str)
+    gsub("\\)","\\)",str)
+    gsub("\\+","\\+",str)
+    gsub("\\{","\\{",str)
+    gsub("\\}","\\}",str)
 
-	return str
+    return str
 }
 
 function add_drive_rule (hostpath,cygpath)
