@@ -9,7 +9,7 @@
 API_LEVELS="3 4 5 8 9 14"
 
 # Default ABIs for the target prebuilt binaries.
-PREBUILT_ABIS="armeabi armeabi-v7a x86"
+PREBUILT_ABIS="armeabi armeabi-v7a x86 mips mips-r2"
 
 # Location of the STLport sources, relative to the NDK root directory
 STLPORT_SUBDIR=sources/cxx-stl/stlport
@@ -35,7 +35,7 @@ DEFAULT_GMP_VERSION=4.2.4
 DEFAULT_PLATFORM=android-9
 
 # The list of default CPU architectures we support
-DEFAULT_ARCHS="arm x86"
+DEFAULT_ARCHS="arm x86 mips"
 
 # Default toolchain names and prefix
 #
@@ -46,6 +46,9 @@ DEFAULT_ARCH_TOOLCHAIN_PREFIX_arm=arm-linux-androideabi
 
 DEFAULT_ARCH_TOOLCHAIN_x86=x86-$DEFAULT_GCC_VERSION
 DEFAULT_ARCH_TOOLCHAIN_PREFIX_x86=i686-android-linux
+
+DEFAULT_ARCH_TOOLCHAIN_mips=mips-linux-android-$DEFAULT_GCC_VERSION
+DEFAULT_ARCH_TOOLCHAIN_PREFIX_mips=mips-linux-android
 
 # The list of default host NDK systems we support
 DEFAULT_SYSTEMS="linux-x86 windows darwin-x86"
@@ -63,8 +66,11 @@ get_default_abi_for_arch ()
         x86)
             RET="x86"
             ;;
+        mips)
+            RET="mips mips-r2"
+            ;;
         *)
-            2> echo "ERROR: Unsupported architecture name: $1, use one of: arm x86"
+            2> echo "ERROR: Unsupported architecture name: $1, use one of: arm x86 mips"
             exit 1
             ;;
     esac
