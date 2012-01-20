@@ -41,7 +41,7 @@ register_var_option "--git-date=<date>" GIT_DATE "Only sources that existed unti
 
 GITCMD=git
 register_var_option "--git=<executable>" GITCMD "Use this version of the git tool"
-
+# MIPS compiler sources can be downloaded from https://github.com/mipsgcc
 OPTION_GIT_BASE=https://android.googlesource.com/toolchain
 register_var_option "--git-base=<git-uri>" OPTION_GIT_BASE "Use specific git repository base"
 
@@ -53,6 +53,9 @@ register_var_option "--package" OPTION_PACKAGE "Create source package in /tmp/nd
 
 OPTION_NO_PATCHES=no
 register_var_option "--no-patches" OPTION_NO_PATCHES "Do not patch sources"
+
+OPTION_CLONE_MPC=no
+register_var_option "--clone-mpc" OPTION_CLONE_MPC "Clone mpc source"
 
 PROGRAM_PARAMETERS="<src-dir>"
 PROGRAM_DESCRIPTION=\
@@ -171,6 +174,9 @@ toolchain_clone gdb
 toolchain_clone gmp
 toolchain_clone gold  # not sure about this one !
 toolchain_clone mpfr
+if [ "$OPTION_CLONE_MPC" != "no" ]; then
+    toolchain_clone mpc
+fi
 
 # Patch the toolchain sources
 if [ "$OPTION_NO_PATCHES" != "yes" ]; then
