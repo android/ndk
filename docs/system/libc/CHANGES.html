@@ -2,37 +2,6 @@
 -----------------
 
 -------------------------------------------------------------------------------
-Differences between 4.0.1 and Android 3.1:
-
-- &lt;pwd.h&gt;: Added getpwuid_r() and getpwnam_r()
-
-- x86:&lt;setjmp.h&gt;: Provided missing symbols for sigsetjmp() and siglongjmp()
-
--------------------------------------------------------------------------------
-Differences between 3.1 and Android 3.0:
-
-- &lt;sys/stat.h&gt;: Added utimenstat(), UTIME_NOW and UTIME_OMIT
-
--------------------------------------------------------------------------------
-Differences between 3.0 and Android 2.3:
-
-- &lt;time.h&gt;: Add timegm(), timelocal(), time2posix() and posix2time()
-
-- &lt;sched.h&gt;: Add sched_getcpu(), sched_getaffinity(), sched_setaffinity(),
-  cpu_set_t and related macros (e.g. CPU_SETSIZE, CPU_ZERO, CPU_SET, ...)
-
-- &lt;unistd.h&gt;: Add ftruncate64(), pread64(), pwrite64().
-
-- &lt;signal.h&gt;: Changed the definition of SIGRTMAX to 64. However, note that
-  sigset_t is only 32-bit and cannot deal with real-time signals.
-
-- &lt;pthread.h&gt;: Add pthread_atfork()
-
-- &lt;stdlib.h&gt;: Add mkdtemp()
-
-- &lt;math.h&gt;: Add nan(), nanf() and tgammaf() definitions.
-
--------------------------------------------------------------------------------
 Differences between Android 2.3 and Android 2.2:
 
 - &lt;pthread.h&gt;: Add reader/writer locks implementation. Add sanity
