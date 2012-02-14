@@ -1,6 +1,17 @@
 <html><body><pre>Android NDK ChangeLog:
 
 -------------------------------------------------------------------------------
+android-ndk-r??
+
+IMPORTANT CHANGES:
+
+- Added support for custom output directories through the NDK_OUT
+  environment variable. When defined, it will be used to store all
+  intermediate generated files, instead of $PROJECT_PATH/obj.
+
+  The variable is recognized by ndk-gdb as well.
+
+-------------------------------------------------------------------------------
 android-ndk-r7b
 
 IMPORTANT BUG FIXES:

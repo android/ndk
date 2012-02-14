@@ -509,6 +509,16 @@ if [ "$COMPAT_ABI" = none ] ; then
 fi
 log "Compatible device ABI: $COMPAT_ABI"
 
+# Get information from the build system
+GDBSETUP_INIT=`get_build_var_for_abi NDK_APP_GDBSETUP $COMPAT_ABI`
+log "Using gdb setup init: $GDBSETUP_INIT"
+
+TOOLCHAIN_PREFIX=`get_build_var_for_abi TOOLCHAIN_PREFIX $COMPAT_ABI`
+log "Using toolchain prefix: $TOOLCHAIN_PREFIX"
+
+APP_OUT=`get_build_var_for_abi TARGET_OUT $COMPAT_ABI`
+log "Using app out directory: $APP_OUT"
+
 # Check that the application is debuggable, or nothing will work
 DEBUGGABLE=`run_awk_manifest_script extract-debuggable.awk`
 log "Found debuggable flag: $DEBUGGABLE"
@@ -552,16 +562,6 @@ if [ $? != 0 ]; then
     exit 1
 fi
 log "Found device gdbserver: $DEVICE_GDBSERVER"
-
-# Get information from the build system
-GDBSETUP_INIT=`get_build_var_for_abi NDK_APP_GDBSETUP $COMPAT_ABI`
-log "Using gdb setup init: $GDBSETUP_INIT"
-
-TOOLCHAIN_PREFIX=`get_build_var_for_abi TOOLCHAIN_PREFIX $COMPAT_ABI`
-log "Using toolchain prefix: $TOOLCHAIN_PREFIX"
-
-APP_OUT=`get_build_var_for_abi TARGET_OUT $COMPAT_ABI`
-log "Using app out directory: $APP_OUT"
 
 # Find the <dataDir> of the package on the device
 adb_var_shell2 DATA_DIR run-as $PACKAGE_NAME /system/bin/sh -c pwd

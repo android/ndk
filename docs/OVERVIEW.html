@@ -296,34 +296,20 @@ purposes, there is no need to copy unstripped binaries to a device).
   does and which options it can take.
 
 
-  2: Using the $NDK/apps/&lt;name&gt;/Application.mk:
-  ---------------------------------------------
+III.6/ Specifying custom output directories:
+- - - - - - - - - - - - - - - - - - - - - - -
 
-  This build method was the only one before Android NDK r4 and is only
-  supported for compatibility reason. We strongly recommend you to migrate
-  to using the 'ndk-build' command as soon as possible, since we may remove
-  legacy support in a later NDK release.
+By default, ndk-build places all intermediate generated files under
+$PROJECT/obj. You can however select a different location by defining
+the NDK_OUT environment variable to point to a different directory.
 
-  It requires the following:
+When defined, this variable has two effects:
 
-    1. Creating a sub-directory named $NDK/apps/&lt;name&gt;/ under
-       your NDK installation directory (not your project path).
+  1/ It ensures that all files that normally go under $PROJECT/obj are
+     stored in $NDK_OUT instead
 
-       Where &lt;name&gt; is an arbitrary name to describe your application
-       to the NDK build system (no spaces allowed).
-
-    2. Write $NDK/apps/&lt;name&gt;/Application.mk, which then requires
-       a definition for APP_PROJECT_PATH that points to your
-       application project directory.
-
-    3. Go to the NDK installation path on the command line then
-       invoke the top-level GNUMakefile, as in:
-
-         cd $NDK
-         make APP=&lt;name&gt;
-
-  The result will be equivalent to the first method, except for the fact
-  that intermediate generated files will be placed under $NDK/out/apps/&lt;name&gt;/
+  2/ It tells ndk-gdb to look into $NDK_OUT, instead of $PROJECT/obj for
+     any symbolized (i.e. unstripped) versions of the generated binaries.
 
 
 IV. Rebuild your application package:
