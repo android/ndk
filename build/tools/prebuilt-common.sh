@@ -556,11 +556,81 @@ handle_mingw ()
         if [ "$TRY64" = "yes" ]; then
             ABI_CONFIGURE_HOST=amd64-mingw32msvc
         else
+            # NOTE: The canadian-cross build of Binutils 2.19 will fail if you
+            #        use i586-pc-mingw32msvc here. Binutils 2.21 will work ok
+            #        with both names.
             ABI_CONFIGURE_HOST=i586-mingw32msvc
         fi
         HOST_OS=windows
         HOST_TAG=windows
         HOST_EXE=.exe
+    fi
+}
+
+# If --mingw option is used, check that there is a working
+# mingw32 toolchain installed.
+#
+# If there is, check that it's working
+#
+# $1: install directory for wrapper toolchain
+#
+prepare_mingw_toolchain ()
+{
+    if [ "$MINGW" != "yes" ]; then
+        return
+    fi
+
+    # IMPORTANT NOTE: binutils 2.21 requires a cross toolchain named
+    # i585-pc-mingw32msvc-gcc, or it will fail its configure step late
+    # in the toolchain build. Note that binutils 2.19 can build properly
+    # with i585-mingw32mvsc-gcc, which is the name used by the 'mingw32'
+    # toolchain install on Debian/Ubuntu.
+    #
+    # To solve this dilemma, we create a wrapper toolchain named
+    # i586-pc-mingw32msvc-gcc that really calls i586-mingw32msvc-gcc,
+    # this works with all versions of binutils.
+    #
+    # We apply the same logic to the 64-bit Windows cross-toolchain
+    #
+    if [ "$HOST_ARCH" = "x86_64" -a "$TRY64" = "yes" ]; then
+        BINPREFIX1=x86_64-pc-mingw32msvc-
+        BINPREFIX2=amd64-mingw32msvc-
+        DEBIAN_NAME=mingw64
+    else
+        BINPREFIX1=i586-pc-mingw32msvc-
+        BINPREFIX2=i586-mingw32msvc-
+        DEBIAN_NAME=mingw32
+    fi
+
+    # First, check that there is ${BINPREFIX1}gcc is installed and
+    # in our PATH. This is very unlikely, but use it if it's there.
+    find_program MINGW_GCC ${BINPREFIX1}gcc
+    if [ -n "$MINGW_GCC" ]; then
+        dump "Found mingw toolchain: $MINGW_GCC"
+    else
+        # We didn't find it, that's ok, try to find ${BINPREFIX2}gcc
+        # then, if it is there, create a wrapper toolchain for it
+        find_program MINGW_GCC ${BINPREFIX2}gcc
+        if [ -z "$MINGW_GCC" ]; then
+            echo "ERROR: Could not find ${BINPREFIX1}gcc or ${BINPREFIX2}gcc in your PATH"
+            echo "Please install the corresponding cross-toolchain and re-run this script"
+            echo "TIP: On Debian or Ubuntu, try: sudo apt-get install $DEBIAN_NAME"
+            exit 1
+        fi
+        # Create a wrapper toolchain, and prepend its dir to our PATH
+        MINGW_WRAP_DIR="$1"/$DEBIAN_NAME-wrapper
+        rm -rf "$MINGW_WRAP_DIR"
+
+        DST_PREFIX=${MINGW_GCC%gcc}
+        if [ "$NDK_CCACHE" ]; then
+            DST_PREFIX="$NDK_CCACHE $DST_PREFIX"
+        fi
+
+        $NDK_BUILDTOOLS_PATH/gen-toolchain-wrapper.sh --src-prefix=$BINPREFIX1 --dst-prefix="$DST_PREFIX" "$MINGW_WRAP_DIR"
+        fail_panic "Could not create mingw wrapper toolchain in $MINGW_WRAP_DIR"
+
+        export PATH=$MINGW_WRAP_DIR:$PATH
+        dump "Using mingw wrapper: $MINGW_WRAP_DIR/${BINPREFIX1}gcc"
     fi
 }
 
@@ -577,7 +647,11 @@ handle_host ()
 setup_ccache ()
 {
     # Support for ccache compilation
-    if [ "$NDK_CCACHE" ]; then
+    # We can't use this here when building Windows binaries on Linux with
+    # binutils 2.21, because defining CC/CXX in the environment makes the
+    # configure script fail later
+    #
+    if [ "$NDK_CCACHE" -a "$MINGW" != "yes" ]; then
         NDK_CCACHE_CC=$CC
         NDK_CCACHE_CXX=$CXX
         # Unfortunately, we can just do CC="$NDK_CCACHE $CC" because some
@@ -595,6 +669,22 @@ setup_ccache ()
 
 prepare_common_build ()
 {
+    if [ "$MINGW" = "yes" ]; then
+        if [ "$TRY64" = "yes" ]; then
+            log "Generating 64-bit Windows binaries"
+            HOST_BITS=64
+        else
+            log "Generating 32-bit Windows binaries"
+            HOST_BITS=32
+        fi
+        # Do *not* set CC and CXX when building the Windows binaries
+        # Otherwise, the GCC configure/build script will mess that Canadian cross
+        # build in weird ways. Instead we rely on the toolchain detected or generated
+        # previously in prepare_mingw_toolchain.
+        unset CC CXX STRIP
+        return
+    fi
+
     # On Linux, detect our legacy-compatible toolchain when in the Android
     # source tree, and use it to force the generation of glibc-2.7 compatible
     # binaries.

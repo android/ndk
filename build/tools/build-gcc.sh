@@ -66,6 +66,8 @@ register_try64_option
 
 extract_parameters "$@"
 
+prepare_mingw_toolchain /tmp/ndk-$USER/build
+
 fix_option BUILD_OUT "$OPTION_BUILD_OUT" "build directory"
 setup_default_log_file $BUILD_OUT/config.log
 
