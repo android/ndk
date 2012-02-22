@@ -480,7 +480,7 @@ if is_testable build; then
         echo "Building NDK build test: `basename $1`"
         if [ -f $1/build.sh ]; then
             export NDK
-            run $1/build.sh "$NDK_BUILD_FLAGS"
+            run $1/build.sh $NDK_BUILD_FLAGS
             if [ $? != 0 ]; then
                 echo "!!! BUILD FAILURE [$1]!!! See $NDK_LOGFILE for details or use --verbose option!"
                 exit 1
