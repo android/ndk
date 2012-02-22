@@ -54,6 +54,9 @@ register_var_option "--gmp-version=<version>" GMP_VERSION "Specify gmp version"
 MPFR_VERSION=$DEFAULT_MPFR_VERSION
 register_var_option "--mpfr-version=<version>" MPFR_VERSION "Specify mpfr version"
 
+MPC_VERSION=$DEFAULT_MPC_VERSION
+register_var_option "--mpc-version=<version>" MPC_VERSION "Specify mpc version"
+
 PACKAGE_DIR=
 register_var_option "--package-dir=<path>" PACKAGE_DIR "Create archive tarball in specific directory"
 
@@ -195,6 +198,14 @@ export ABI=$HOST_GMP_ABI
 # -Wno-error is needed because our gdb-6.6 sources use -Werror by default
 # and fail to build with recent GCC versions.
 export CFLAGS="-Wno-error"
+
+# This extra flag is used to slightly speed up the build
+EXTRA_CONFIG_FLAGS="--disable-bootstrap"
+
+# This is to disable GCC 4.6 specific features that don't compile well
+# the flags are ignored for older GCC versions.
+EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --disable-libquadmath --disable-plugin"
+
 #export LDFLAGS="$HOST_LDFLAGS"
 mkdir -p $BUILD_OUT && cd $BUILD_OUT && run \
 $BUILD_SRCDIR/configure --target=$ABI_CONFIGURE_TARGET \
@@ -206,9 +217,11 @@ $BUILD_SRCDIR/configure --target=$ABI_CONFIGURE_TARGET \
                         --with-sysroot=$TOOLCHAIN_SYSROOT \
                         --with-binutils-version=$BINUTILS_VERSION \
                         --with-mpfr-version=$MPFR_VERSION \
+                        --with-mpc-version=$MPC_VERSION \
                         --with-gmp-version=$GMP_VERSION \
                         --with-gcc-version=$GCC_VERSION \
                         --with-gdb-version=$GDB_VERSION \
+                        $EXTRA_CONFIG_FLAGS \
                         $ABI_CONFIGURE_EXTRA_FLAGS
 if [ $? != 0 ] ; then
     dump "Error while trying to configure toolchain build. See $TMPLOG"
