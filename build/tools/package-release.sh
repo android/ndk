@@ -113,6 +113,13 @@ if [ $? = 0 ] ; then
 else
     TRY_X86=no
 fi
+# Do we need to support mips?
+echo "$ARCHS" | tr ' ' '\n' | grep -q mips
+if [ $? = 0 ] ; then
+    TRY_mips=yes
+else
+    TRY_mips=no
+fi
 
 # Compute ABIS from ARCHS
 ABIS=
@@ -136,6 +143,9 @@ if [ "$OPTION_TOOLCHAINS" != "$TOOLCHAINS" ]; then
 else
     if [ "$TRY_X86" = "yes" ]; then
         TOOLCHAINS="$TOOLCHAINS $DEFAULT_ARCH_TOOLCHAIN_x86"
+    fi
+    if [ "$TRY_mips" = "yes" ]; then
+        TOOLCHAINS="$TOOLCHAINS $DEFAULT_ARCH_TOOLCHAIN_mips"
     fi
     TOOLCHAINS=$(commas_to_spaces $TOOLCHAINS)
 fi

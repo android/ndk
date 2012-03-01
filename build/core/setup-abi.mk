@@ -36,6 +36,13 @@ $(foreach _plat,3 4 5 8,\
 )
 endif
 
+# The minimal platform for mips is android-8
+ifeq ($(TARGET_ARCH),mips)
+$(foreach _plat,3 4 5,\
+    $(eval TARGET_PLATFORM := $$(subst android-$(_plat),android-8,$$(TARGET_PLATFORM)))\
+)
+endif
+
 # Separate the debug and release objects. This prevents rebuilding
 # everything when you switch between these two modes. For projects
 # with lots of C++ sources, this can be a considerable time saver.

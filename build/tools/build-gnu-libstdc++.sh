@@ -153,6 +153,9 @@ build_gnustl_for_abi ()
         x86)
             BUILD_HOST=i686-android-linux
             ;;
+        mips)
+            BUILD_HOST=mips-linux-android
+            ;;
     esac
 
     export CXXFLAGS="$CXXFLAGS --sysroot=$SYSROOT -fexceptions -frtti -D__BIONIC__ -O2"
