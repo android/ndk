@@ -1,0 +1,9 @@
+Code-Review+1: Bruce Beare <bruce.j.beare@intel.com>
+Code-Review+1: Mark D Horn <mark.d.horn@intel.com>
+Code-Review+2: Andrew Hsieh <andrewhsieh@google.com>
+Verified+1: Andrew Hsieh <andrewhsieh@google.com>
+Submitted-by: Andrew Hsieh <andrewhsieh@google.com>
+Submitted-at: Fri, 02 Mar 2012 10:42:38 -0800
+Reviewed-on: https://android-review.googlesource.com/33030
+Project: platform/ndk
+Branch: refs/heads/master
