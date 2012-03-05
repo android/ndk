@@ -90,8 +90,8 @@ template <class _Tp>
 struct _StorageType<_Tp*> {
   // Even if we detect a pointer type we use dispatch function to consider if it can be stored as a void*.
   // For instance function pointer might not necessarily be convertible to void*.
-  enum { use_void_ptr = (sizeof(_UseVoidPtrStorageType(__true_type(),
-                                                       __STATIC_CAST(_Tp*, 0))) == sizeof(char*)) };
+  enum { use_void_ptr = (sizeof(_STLP_PRIV _UseVoidPtrStorageType(__true_type(),
+                                                                  __STATIC_CAST(_Tp*, 0))) == sizeof(char*))  };
   enum { use_const_volatile_void_ptr = use_void_ptr };
   typedef typename __select<use_void_ptr,
                             void*,
@@ -101,8 +101,8 @@ struct _StorageType<_Tp*> {
 
 template <class _Tp>
 struct _StorageType<_Tp const*> {
-  enum { use_void_ptr = (sizeof(_UseConstVoidPtrStorageType(__true_type(),
-                                                            __STATIC_CAST(const _Tp*, 0))) == sizeof(char*)) };
+  enum { use_void_ptr = (sizeof(_STLP_PRIV _UseConstVoidPtrStorageType(__true_type(),
+                                                                       __STATIC_CAST(const _Tp*, 0))) == sizeof(char*)) };
   enum { use_const_volatile_void_ptr = use_void_ptr };
   typedef typename __select<use_void_ptr,
                             const void*,
@@ -114,8 +114,8 @@ struct _StorageType<_Tp const*> {
 
 template <class _Tp>
 struct _StorageType<_Tp volatile*> {
-  enum { use_void_ptr = (sizeof(_UseVolatileVoidPtrStorageType(__true_type(),
-                                                               __STATIC_CAST(_Tp volatile*, 0))) == sizeof(char*)) };
+  enum { use_void_ptr = (sizeof(_STLP_PRIV _UseVolatileVoidPtrStorageType(__true_type(),
+                                                                          __STATIC_CAST(_Tp volatile*, 0))) == sizeof(char*)) };
   enum { use_const_volatile_void_ptr = use_void_ptr };
   typedef typename __select<use_void_ptr,
                             volatile void*,
@@ -127,8 +127,8 @@ struct _StorageType<_Tp volatile*> {
 
 template <class _Tp>
 struct _StorageType<_Tp const volatile*> {
-  enum { use_void_ptr = (sizeof(_UseConstVolatileVoidPtrStorageType(__true_type(),
-                                                                    __STATIC_CAST(_Tp const volatile*, 0))) == sizeof(char*)) };
+  enum { use_void_ptr = (sizeof(_STLP_PRIV _UseConstVolatileVoidPtrStorageType(__true_type(),
+                                                                               __STATIC_CAST(_Tp const volatile*, 0))) == sizeof(char*)) };
   enum { use_const_volatile_void_ptr = use_void_ptr };
   typedef typename __select<use_void_ptr,
                             const volatile void*,
@@ -147,10 +147,10 @@ struct _StorageType {
 #else
   static _Tp __null_rep;
 #endif
-  enum { use_void_ptr = (sizeof(_UseVoidPtrStorageType(_PODType(), __null_rep())) == sizeof(char*)) };
-  enum { use_const_void_ptr = (sizeof(_UseConstVoidPtrStorageType(_PODType(), __null_rep())) == sizeof(char*)) };
-  enum { use_volatile_void_ptr = (sizeof(_UseVolatileVoidPtrStorageType(_PODType(), __null_rep())) == sizeof(char*)) };
-  enum { use_const_volatile_void_ptr = (sizeof(_UseConstVolatileVoidPtrStorageType(_PODType(), __null_rep())) == sizeof(char*)) };
+  enum { use_void_ptr = (sizeof(_STLP_PRIV _UseVoidPtrStorageType(_PODType(), __null_rep())) == sizeof(char*)) };
+  enum { use_const_void_ptr = (sizeof(_STLP_PRIV _UseConstVoidPtrStorageType(_PODType(), __null_rep())) == sizeof(char*)) };
+  enum { use_volatile_void_ptr = (sizeof(_STLP_PRIV _UseVolatileVoidPtrStorageType(_PODType(), __null_rep())) == sizeof(char*)) };
+  enum { use_const_volatile_void_ptr = (sizeof(_STLP_PRIV _UseConstVolatileVoidPtrStorageType(_PODType(), __null_rep())) == sizeof(char*)) };
 
   typedef typename __select<!use_const_volatile_void_ptr,
                             _Tp,
