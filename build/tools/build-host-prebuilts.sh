@@ -239,15 +239,17 @@ for SYSTEM in $SYSTEMS; do
 
     # Then the toolchains
     for ARCH in $ARCHS; do
-        TOOLCHAIN_NAME=$(get_default_toolchain_name_for_arch $ARCH)
-        if [ -z "$TOOLCHAIN_NAME" ]; then
+        TOOLCHAIN_NAMES=$(get_toolchain_name_list_for_arch $ARCH)
+        if [ -z "$TOOLCHAIN_NAMES" ]; then
             echo "ERROR: Invalid architecture name: $ARCH"
             exit 1
         fi
 
-        echo "Building $SYSTEM toolchain for $ARCH architecture: $TOOLCHAIN_NAME"
-        run $BUILDTOOLS/build-gcc.sh "$SRC_DIR" "$NDK_DIR" $TOOLCHAIN_NAME $TOOLCHAIN_FLAGS
-        fail_panic "Could not build $TOOLCHAIN_NAME-$SYSTEM!"
+        for TOOLCHAIN_NAME in $TOOLCHAIN_NAMES; do
+            echo "Building $SYSTEM toolchain for $ARCH architecture: $TOOLCHAIN_NAME"
+            run $BUILDTOOLS/build-gcc.sh "$SRC_DIR" "$NDK_DIR" $TOOLCHAIN_NAME $TOOLCHAIN_FLAGS
+            fail_panic "Could not build $TOOLCHAIN_NAME-$SYSTEM!"
+        done
     done
 
     # We're done for this system

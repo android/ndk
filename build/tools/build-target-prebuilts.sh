@@ -73,10 +73,12 @@ FLAGS=$FLAGS" -j$NUM_JOBS"
 
 # First, gdbserver
 for ARCH in $ARCHS; do
-    dump "Building $ARCH gdbserver binaries..."
-    GDB_TOOLCHAIN=$(get_default_toolchain_name_for_arch $ARCH)
-    run $BUILDTOOLS/build-gdbserver.sh "$SRC_DIR" "$NDK_DIR" "$GDB_TOOLCHAIN" $FLAGS
-    fail_panic "Could not build $ARCH gdb-server!"
+    GDB_TOOLCHAINS=$(get_toolchain_name_list_for_arch $ARCH)
+    for GDB_TOOLCHAIN in $GDB_TOOLCHAINS; do
+        dump "Building $GDB_TOOLCHAIN gdbserver binaries..."
+        run $BUILDTOOLS/build-gdbserver.sh "$SRC_DIR" "$NDK_DIR" "$GDB_TOOLCHAIN" $FLAGS
+        fail_panic "Could not build $GDB_TOOLCHAIN gdb-server!"
+    done
 done
 
 FLAGS=$FLAGS" --ndk-dir=\"$NDK_DIR\""
