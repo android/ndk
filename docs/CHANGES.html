@@ -18,6 +18,11 @@ IMPORTANT CHANGES:
   into 'list files', to work-around command-line length limitations
   (especially on Windows). See docs/ANDROID-MK.html for details.
 
+- Fixed android_getCpuCount() implementation in cpufeatures helper library.
+  The previous implementation only listed the cores that were active the
+  first time the function was called; this could be too low on certain
+  devices which disable/enable cores dynamically.
+
 -------------------------------------------------------------------------------
 android-ndk-r7b
 
