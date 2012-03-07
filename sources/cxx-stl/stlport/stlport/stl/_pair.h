@@ -43,7 +43,7 @@
 
 _STLP_BEGIN_NAMESPACE
 
-#if defined (ANDROID)
+#if defined (__ANDROID__)
 /* Android has stl_pair.h, prevent using it by defining the header guard. */
 #  define __SGI_STL_INTERNAL_PAIR_H
 #endif

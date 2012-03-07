@@ -531,7 +531,7 @@ _STLP_DEF_MATH_INLINE2(hypot, _hypot)
 #endif
 
 #if defined (_STLP_IMPORT_VENDOR_CSTD) && !defined (_STLP_NO_CSTD_FUNCTION_IMPORTS)
-#if defined (ANDROID)
+#if defined (__ANDROID__)
 namespace __captured {
 template<typename _Tp> inline int __capture_isfinite(_Tp __f) { return isfinite(__f); }
 template<typename _Tp> inline int __capture_isinf(_Tp __f) { return isinf(__f); }
@@ -573,7 +573,7 @@ using ::frexp;
 #if !(defined(__HP_aCC) && defined(_STLP_DEBUG))
 using ::hypot;
 #endif
-#if defined (ANDROID)
+#if defined (__ANDROID__)
 using __captured::isfinite;
 using __captured::isinf;
 using __captured::isnan;
@@ -583,7 +583,7 @@ using ::log;
 using ::log10;
 using ::modf;
 using ::pow;
-#if defined (ANDROID)
+#if defined (__ANDROID__)
 using __captured::signbit;
 #endif
 using ::sin;

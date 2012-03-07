@@ -27,7 +27,7 @@
 
 #if defined (_STLP_USE_OWN_MBSTATE_T)
 #  if !defined (_STLP_CPP_MBSTATE_T) || !defined (__cplusplus) || !defined (_STLP_USE_NEW_C_HEADERS)
-#    if !defined (ANDROID) /* mbstate_t conflicts with Android's definition */
+#    if !defined (__ANDROID__) /* mbstate_t conflicts with Android's definition */
 typedef int mbstate_t;
 #    endif
 #  endif

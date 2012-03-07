@@ -50,7 +50,7 @@ union _ll {
   } i32;
 };
 
-#  if defined (__linux__) && !defined (ANDROID)
+#  if defined (__linux__) && !defined (__ANDROID__)
 #    include <ieee754.h>
 #  else
 union ieee854_long_double {
@@ -105,7 +105,7 @@ typedef unsigned __int64 uint64;
 #  define ULL(x) x##Ui64
 #elif defined (__unix) || defined (__MINGW32__) || \
       (defined (__DMC__) && (__LONGLONG)) || defined (__WATCOMC__) || \
-      defined (ANDROID)
+      defined (__ANDROID__)
 typedef uint32_t uint32;
 typedef uint64_t uint64;
 #  define ULL(x) x##ULL
@@ -136,7 +136,7 @@ static void _Stl_mult64(const uint64 u, const uint64 v,
   high = u1 * v1 + w2 + (x >> 32);
 }
 
-#if !defined (__linux__) || defined (ANDROID)
+#if !defined (__linux__) || defined (__ANDROID__)
 
 #  define bit11 ULL(0x7ff)
 #  define exponent_mask (bit11 << 52)
@@ -324,7 +324,7 @@ static void _Stl_tenscale(uint64& p, int exp, int& bexp) {
 // Third argument is base-10 exponent.
 
 /* IEEE representation */
-#if !defined (__linux__) || defined (ANDROID)
+#if !defined (__linux__) || defined (__ANDROID__)
 
 union _Double_rep {
   uint64 ival;
@@ -641,7 +641,7 @@ D _Stl_atodT(char *buffer, ptrdiff_t ndigit, int dexp)
 }
 #endif // __linux__
 
-#if !defined (__linux__) || defined (ANDROID)
+#if !defined (__linux__) || defined (__ANDROID__)
 static double _Stl_string_to_double(const char *s) {
   typedef numeric_limits<double> limits;
   const int max_digits = limits::digits10 + 2;
@@ -845,7 +845,7 @@ D _Stl_string_to_doubleT(const char *s)
 void _STLP_CALL
 __string_to_float(const __iostring& v, float& val)
 {
-#if !defined (__linux__) || defined (ANDROID)
+#if !defined (__linux__) || defined (__ANDROID__)
   val = (float)_Stl_string_to_double(v.c_str());
 #else
   val = (float)_Stl_string_to_doubleT<double,ieee754_double,12,IEEE754_DOUBLE_BIAS>(v.c_str());
@@ -855,7 +855,7 @@ __string_to_float(const __iostring& v, float& val)
 void _STLP_CALL
 __string_to_float(const __iostring& v, double& val)
 {
-#if !defined (__linux__) || defined (ANDROID)
+#if !defined (__linux__) || defined (__ANDROID__)
   val = _Stl_string_to_double(v.c_str());
 #else
   val = _Stl_string_to_doubleT<double,ieee754_double,12,IEEE754_DOUBLE_BIAS>(v.c_str());
