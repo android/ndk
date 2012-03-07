@@ -190,27 +190,9 @@ to_uppercase ()
     echo $1 | tr "[:lower:]" "[:upper:]"
 }
 
-## Normalize OS and CPU
+## First, we need to detect the HOST CPU, because proper HOST_ARCH detection
+## requires platform-specific tricks.
 ##
-HOST_ARCH=`uname -m`
-case "$HOST_ARCH" in
-    i?86) HOST_ARCH=x86
-    ;;
-    amd64) HOST_ARCH=x86_64
-    ;;
-    powerpc) HOST_ARCH=ppc
-    ;;
-esac
-
-log2 "HOST_ARCH=$HOST_ARCH"
-
-# at this point, the supported values for CPU are:
-#   x86
-#   x86_64
-#   ppc
-#
-# other values may be possible but haven't been tested
-#
 HOST_EXE=""
 HOST_OS=`uname -s`
 case "$HOST_OS" in
@@ -236,6 +218,49 @@ esac
 log2 "HOST_OS=$HOST_OS"
 log2 "HOST_EXE=$HOST_EXE"
 
+## Now find the host architecture. This must correspond to the bitness of
+## the binaries we're going to run with this NDK. Certain platforms allow
+## you to use a 64-bit kernel with a 32-bit userland, and unfortunately
+## commands like 'uname -m' only report the kernel bitness.
+##
+HOST_ARCH=`uname -m`
+case "$HOST_ARCH" in
+    i?86) HOST_ARCH=x86
+    ;;
+    amd64) HOST_ARCH=x86_64
+    ;;
+    powerpc) HOST_ARCH=ppc
+    ;;
+esac
+
+case "$HOST_OS-$HOST_ARCH" in
+  linux-x86_64|darwin-x86_64)
+    ## On Linux or Darwin, a 64-bit kernel doesn't mean that the user-land
+    ## is always 32-bit, so use "file" to determine the bitness of the shell
+    ## that invoked us. The -L option is used to de-reference symlinks.
+    ##
+    ## Note that on Darwin, a single executable can contain both x86 and
+    ## x86_64 machine code, so just look for x86_64 (darwin) or x86-64 (Linux)
+    ## in the output.
+    ##
+    file -L "$SHELL" | grep -q "x86[_-]64"
+    if [ $? != 0 ]; then
+      # $SHELL is not a 64-bit executable, so assume our userland is too.
+      log2 "Detected 32-bit userland on 64-bit kernel system!"
+      HOST_ARCH=x86
+    fi
+    ;;
+esac
+
+log2 "HOST_ARCH=$HOST_ARCH"
+
+# at this point, the supported values for HOST_ARCH are:
+#   x86
+#   x86_64
+#   ppc
+#
+# other values may be possible but haven't been tested
+#
 # at this point, the value of HOST_OS should be one of the following:
 #   linux
 #   darwin
@@ -252,18 +277,21 @@ log2 "HOST_EXE=$HOST_EXE"
 #   linux-x86
 #   linux-x86_64
 #   darwin-x86
+#   darwin-x86_64
 #   darwin-ppc
 #   windows
+#   windows-x86_64
 #
 # other values are possible but were not tested.
 #
 compute_host_tag ()
 {
-    case "$HOST_OS" in
-        windows|cygwin)
+    HOST_TAG=${HOST_OS}-${HOST_ARCH}
+    # Special case for windows-x86 => windows
+    case $HOST_TAG in
+        windows-x86|cygwin-x86)
             HOST_TAG="windows"
             ;;
-        *)  HOST_TAG="${HOST_OS}-${HOST_ARCH}"
     esac
     log2 "HOST_TAG=$HOST_TAG"
 }
@@ -322,11 +350,10 @@ force_32bit_binaries ()
 #
 disable_cygwin ()
 {
-    if [ $OS = cygwin ] ; then
+    if [ $HOST_OS = cygwin ] ; then
         log2 "Disabling cygwin binaries generation"
         CFLAGS="$CFLAGS -mno-cygwin"
         LDFLAGS="$LDFLAGS -mno-cygwin"
-        OS=windows
         HOST_OS=windows
         compute_host_tag
     fi
