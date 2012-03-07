@@ -23,6 +23,11 @@ IMPORTANT CHANGES:
   first time the function was called; this could be too low on certain
   devices which disable/enable cores dynamically.
 
+- Fixed GNU STL and STLport armeabi-v7a binaries to not crash on non-NEON
+  devices. The files provided with NDK r7b where not configured properly,
+  resulting in crashes on Tegra2 based devices and others when trying to use
+  certain floating-point functions (e.g. cosf, sinf, expf).
+
 -------------------------------------------------------------------------------
 android-ndk-r7b
 

@@ -170,7 +170,7 @@ build_gnustl_for_abi ()
     export LDFLAGS="-nostdinc -L$SYSROOT/usr/lib -lc"
 
     if [ "$ABI" = "armeabi-v7a" ]; then
-        CXXFLAGS=$CXXFLAGS" -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3"
+        CXXFLAGS=$CXXFLAGS" -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16"
         LDFLAGS=$LDFLAGS" -Wl,--fix-cortex-a8"
     fi
 
