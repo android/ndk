@@ -28,7 +28,7 @@
 
 /* ChangeLog for this library:
  *
- * NDK r7b+: Fix CPU count computation. The old method only reported the
+ * NDK r7c: Fix CPU count computation. The old method only reported the
  *           number of _active_ CPUs when the library was initialized,
  *           which could be less than the real total.
  *

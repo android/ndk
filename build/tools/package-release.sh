@@ -59,7 +59,7 @@ NO_GIT=no
 register_var_option "--no-git" NO_GIT "Don't use git to list input files, take all of them."
 
 # set of toolchain prebuilts we need to package
-TOOLCHAINS=$(get_default_toolchain_name_list_for_arch arm)
+TOOLCHAINS=$(get_toolchain_name_list_for_arch arm)
 OPTION_TOOLCHAINS=$TOOLCHAINS
 register_var_option "--toolchains=<list>" OPTION_TOOLCHAINS "Specify list of toolchains."
 
@@ -135,7 +135,7 @@ if [ "$OPTION_TOOLCHAINS" != "$TOOLCHAINS" ]; then
     TOOLCHAINS=$(commas_to_spaces $OPTION_TOOLCHAINS)
 else
     if [ "$TRY_X86" = "yes" ]; then
-        TOOLCHAINS=$TOOLCHAINS" "$(get_default_toolchain_name_list_for_arch x86)
+        TOOLCHAINS=$TOOLCHAINS" "$(get_toolchain_name_list_for_arch x86)
     fi
     TOOLCHAINS=$(commas_to_spaces $TOOLCHAINS)
 fi

@@ -1,32 +1,42 @@
 <html><body><pre>Android NDK ChangeLog:
 
 -------------------------------------------------------------------------------
-android-ndk-r??
+android-ndk-r7c
+
+This release of the NDK includes an important fix for Tegra2-based devices,
+and a few additional fixes and improvements:
+
+IMPORTANT BUG FIXES:
+
+- Fixed GNU STL armeabi-v7a binaries to not crash on non-NEON devices.
+  The files provided with NDK r7b where not configured properly, resulting
+  in crashes on Tegra2-based devices and others when trying to use certain
+  floating-point functions (e.g., cosf, sinf, expf).
+
 
 IMPORTANT CHANGES:
 
 - Added support for custom output directories through the NDK_OUT
-  environment variable. When defined, it will be used to store all
+  environment variable. When defined, this variable is used to store all
   intermediate generated files, instead of $PROJECT_PATH/obj.
 
-  The variable is recognized by ndk-gdb as well.
+  The variable is also recognized by ndk-gdb.
 
-- You can now build modules with hundreds or even thousand of sources files
-  by defining LOCAL_SHORT_COMMANDS to 'true' in your Android.mk.
+- Added support for building modules with hundreds or even thousand of source
+  files by defining LOCAL_SHORT_COMMANDS to true in your Android.mk.
 
-  This forces the NDK build system to put most linker or archiver options
-  into 'list files', to work-around command-line length limitations
-  (especially on Windows). See docs/ANDROID-MK.html for details.
+  This change forces the NDK build system to put most linker or archiver
+  options into list files, to work-around command-line length limitations
+  (particularly on Windows). See docs/ANDROID-MK.html for details.
 
-- Fixed android_getCpuCount() implementation in cpufeatures helper library.
-  The previous implementation only listed the cores that were active the
-  first time the function was called; this could be too low on certain
-  devices which disable/enable cores dynamically.
 
-- Fixed GNU STL and STLport armeabi-v7a binaries to not crash on non-NEON
-  devices. The files provided with NDK r7b where not configured properly,
-  resulting in crashes on Tegra2 based devices and others when trying to use
-  certain floating-point functions (e.g. cosf, sinf, expf).
+OTHER BUG FIXES:
+
+- Fixed android_getCpuCount() implementation in the cpufeatures helper
+  library. The previous implementation only listed the cores that were
+  active the first time the function was called. This behavior could
+  provide results that were too low on devices that disable and enable
+  cores dynamically.
 
 -------------------------------------------------------------------------------
 android-ndk-r7b
