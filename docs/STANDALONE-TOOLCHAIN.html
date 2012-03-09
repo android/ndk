@@ -16,11 +16,12 @@ This document explains how to do that:
 ----------------------------
 
 Before anything else, you need to decide whether your standalone toolchain
-is going to target ARM-based devices, or x86-based one. Each architecture
-corresponds to a different toolchain name:
+is going to target ARM-based devices, x86-based, or MIPS-based one.
+Each architecture corresponds to a different toolchain name:
 
   * arm-linux-androideabi-4.4.3   => targetting ARM-based Android devices
   * x86-4.4.3                     => targetting x86-based Android devices
+  * mips-linux-android-4.4.3      => targetting MIPS-based Android devices
 
 2/ Selecting your sysroot:
 --------------------------
@@ -37,12 +38,13 @@ Usually, this will be something like:
    SYSROOT=$NDK/platforms/android-&lt;level&gt;/arch-&lt;arch&gt;/
 
 Where &lt;level&gt; is the API level number, and &lt;arch&gt; is the architecture
-("arm" and "x86" are the supported values). For example, if you're targeting
-Android 2.2 (a.k.a. Froyo), you would use:
+("arm", "x86", and "mips" are the supported values). For example, if you're
+targeting Android 2.2 (a.k.a. Froyo), you would use:
 
    SYSROOT=$NDK/platforms/android-8/arch-arm
 
 IMPORTANT: Note that only android-9 is supported for the x86 architecture.
+Note that android-8 and later are supported for the MIPS architecture.
 
 2/ Invoking the compiler (the hard way):
 ----------------------------------------
@@ -80,7 +82,8 @@ This will create a directory named /tmp/my-android-toolchain containing a
 copy of the android-5/arch-arm sysroot, and of the toolchain binaries.
 
 Note that by default, the ARM-based toolchain will be selected by the script.
-Use the '--arch=x86' option to specify the x86-based one, or alternatively
+Use the '--arch=x86' option to specify the x86-based one,
+use the '--arch=mips' option to specify the MIPS-based one, or alternatively
 '--toolchain=&lt;name&gt;'.
 
 You can later use it directly with something like:
@@ -140,7 +143,8 @@ If none of the above makes sense to you, it's probably better not to use
 the standalone toolchain, and stick to the NDK build system instead, which
 will handle all the details for you.
 
-You don't have to use any specific compiler flag when targetting the x86 ABI.
+You don't have to use any specific compiler flag when targetting the x86 ABI
+or the MIPS ABI.
 
 5/ Warnings and Limitations:
 --------------------------
@@ -218,6 +222,7 @@ Library. To use it, you however need to link with the proper library:
 
       $TOOLCHAIN/arm-linux-androideabi/lib/  for ARM toolchains.
       $TOOLCHAIN/i686-android-linux/lib/     for x86 ones.
+      $TOOLCHAIN/mips-linux-android/lib/     for MIPS toolchains.
 
 
     IMPORTANT: The GNU libstdc++ is licensed under the GPLv3 with a
