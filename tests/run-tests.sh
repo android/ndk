@@ -534,7 +534,7 @@ if is_testable device; then
             dump "Skipping NDK device test run (no $ABI binaries): `basename $1`"
             return 0
         fi
-        # First, copy all files to /data/local, except for gdbserver
+        # First, copy all files to the device, except for gdbserver
         # or gdb.setup.
         adb_cmd_mkdir $DSTDIR
         for SRCFILE in `ls $SRCDIR`; do
@@ -605,7 +605,7 @@ if is_testable device; then
         for DIR in `ls -d $ROOTDIR/tests/device/*`; do
             log "Running device test: $DIR"
             if is_buildable $DIR; then
-                run_device_test $DIR /data/local
+                run_device_test $DIR /data/local/tmp
             fi
         done
     fi

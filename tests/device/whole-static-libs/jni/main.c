@@ -10,7 +10,7 @@ int main(void)
 {
     void*  lib;
 
-    lib = dlopen("/data/local/ndk-tests/libbar.so", RTLD_NOW);
+    lib = dlopen("/data/local/tmp/ndk-tests/libbar.so", RTLD_NOW);
     if (lib == NULL) {
         fprintf(stderr, "Could not dlopen(\"libbar.so\"): %s\n", dlerror());
         return 1;
