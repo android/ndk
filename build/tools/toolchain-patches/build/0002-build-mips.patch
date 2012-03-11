@@ -1,0 +1,52 @@
+commit a16693d78bb1a3ec66d9205156b13d3724c1a140
+Author: Chao-Ying Fu <fu@mips.com>
+Date:   Sat Mar 10 15:51:01 2012 -0800
+
+    Add MIPS support to scripts
+
+diff --git a/configure b/configure
+index 6b044d7..ad3d157 100755
+--- a/configure
++++ b/configure
+@@ -1376,6 +1376,7 @@ test -n "$target_alias" &&
+ # 2. arm-eabi (for Android kernel)
+ # 3. arm-newlib-eabi (for gcc testing)
+ # 4.i[3456]86-*-linux-gnu, x86-*-linux-gnu (for x86 targets)
++# 5. mips*-*-linux* (for mips targets)
+ 
+ GDB_TARGET=$target
+ case $target in
+@@ -1389,6 +1390,10 @@ case $target in
+   i[3456]86-*-linux-gnu | x86_64-*-linux-gnu)
+     BUILD_ANDROID_GCC=yes
+     ;;
++  mips*-*-linux*)
++    BUILD_ANDROID_GCC=yes
++    GDB_TARGET=mips-linux-gnu
++    ;;
+   *)
+     { { echo "$as_me:$LINENO: error: Unsupported target $target." >&5
+ echo "$as_me: error: Unsupported target $target." >&2;}
+diff --git a/configure.ac b/configure.ac
+index dfec128..18c5a0c 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -23,6 +23,7 @@ AC_CANONICAL_SYSTEM
+ # 2. arm-eabi (for Android kernel)
+ # 3. arm-newlib-eabi (for gcc testing)
+ # 4.i[3456]86-*-linux-gnu, x86-*-linux-gnu (for x86 targets)
++# 5. mips*-*-linux* (for mips targets)
+ 
+ GDB_TARGET=$target
+ case $target in
+@@ -36,6 +37,10 @@ case $target in
+   i[[3456]]86-*-linux-gnu | x86_64-*-linux-gnu)
+     BUILD_ANDROID_GCC=yes
+     ;;
++  mips*-*-linux*)
++    BUILD_ANDROID_GCC=yes
++    GDB_TARGET=mips-linux-gnu
++    ;;
+   *)
+     AC_MSG_ERROR(Unsupported target $target.);
+ esac
