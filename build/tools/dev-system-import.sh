@@ -193,6 +193,10 @@ case $ARCH in
         TOOLCHAIN=$DEFAULT_ARCH_TOOLCHAIN_NAME_x86
         PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_x86
         ;;
+    mips)
+        TOOLCHAIN=$DEFAULT_ARCH_TOOLCHAIN_NAME_mips
+        PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_mips
+        ;;
     *)
         echo "ERROR: Unsupported architecture: $ARCH"
         exit 1

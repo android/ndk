@@ -63,7 +63,7 @@ DSTDIR=/tmp/ndk-$USER/platforms
 register_var_option "--dst-dir=<path>" DSTDIR "Destination directory"
 
 # Default architecture, note we can have several ones here
-ARCHS="arm,x86"
+ARCHS="arm,x86,mips"
 register_var_option "--arch=<name>" ARCHS "List of target architectures"
 
 PROGRAM_PARAMETERS=""

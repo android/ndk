@@ -168,6 +168,42 @@ Each supported ABI is identified by a unique name.
       Intel386 Processor Architecture Supplement
 
 
+ I.4. 'mips'
+ -----------
+
+  This is the name of an ABI for MIPS-based CPUs that support *at* *least*
+  the MIPS32r1 instruction set. The ABI includes the following features:
+
+   - MIPS32 revision 1 ISA
+   - Little-Endian
+   - O32
+   - Hard-Float
+   - no DSP application specific extensions
+
+  Please refer to following documentation for more details:
+
+   - ELF for the MIPS Architecture                    (a.k.a. MIPSELF)
+   - FAQ for MIPS Toolchains                          (a.k.a. MIPSFAQ)
+   - Toolchain Specifics                              (a.k.a. MIPSTOOL)
+   - SDE Library                                      (a.k.a. MIPSSDE)
+   - Instruction Set Quick Reference                  (a.k.a. MIPSISA)
+   - Architecture for Programmers                     (a.k.a. MIPSARCH)
+
+   - ELF System V Application Binary Interface
+     (DRAFT - 24 April 2001)
+   - Generic C++ ABI  (http://sourcery.mentor.com/public/cxx-abi/abi.html)
+
+  The MIPS specific documentation is available at:
+  http://www.mips.com/products/product-materials/processor/mips-architecture/
+  https://sourcery.mentor.com/sgpp/lite/mips/portal/target_arch?@action=faq&target_arch=MIPS
+  https://sourcery.mentor.com/sgpp/lite/mips/portal/release1501
+
+  Note: This ABI assumes a CPU:FPU clock ratio of 2:1 for maximum
+  compatability.
+
+  Note: that MIPS16 support is not provided, nor is micromips.
+
+
 II. Generating code for a specific ABI:
 =======================================
 
