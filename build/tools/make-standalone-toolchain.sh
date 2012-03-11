@@ -70,6 +70,9 @@ if [ -z "$ARCH" ]; then
         x86-*)
             ARCH=x86
             ;;
+        mips-*)
+            ARCH=mips
+            ;;
         *)
             ARCH=arm
             ;;
@@ -89,6 +92,10 @@ if [ -z "$PLATFORM" ]; then
         arm) PLATFORM=android-3
             ;;
         x86)
+            PLATFORM=android-9
+            ;;
+        mips)
+            # Set it to android-9
             PLATFORM=android-9
             ;;
     esac
@@ -186,6 +193,11 @@ case "$ARCH" in
         copy_directory "$GNUSTL_LIBS/x86/include/bits" "$ABI_STL_INCLUDE_TARGET/bits"
         copy_file_list "$GNUSTL_LIBS/x86" "$ABI_STL/lib" "libgnustl_shared.so"
         cp "$GNUSTL_LIBS/x86/libgnustl_static.a" "$ABI_STL/lib/libstdc++.a"
+        ;;
+    mips)
+        copy_directory "$GNUSTL_LIBS/mips/include/bits" "$ABI_STL_INCLUDE_TARGET/bits"
+        copy_file_list "$GNUSTL_LIBS/mips" "$ABI_STL/lib" "libgnustl_shared.so"
+        cp "$GNUSTL_LIBS/mips/libgnustl_static.a" "$ABI_STL/lib/libstdc++.a"
         ;;
     *)
         dump "ERROR: Unsupported NDK architecture!"
