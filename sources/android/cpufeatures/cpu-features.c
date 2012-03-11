@@ -524,6 +524,10 @@ android_cpuInit(void)
         g_cpuFeatures |= ANDROID_CPU_X86_FEATURE_MOVBE;
     }
 #endif
+
+#ifdef _MIPS_ARCH
+    g_cpuFamily = ANDROID_CPU_FAMILY_MIPS;
+#endif /* _MIPS_ARCH */
 }
 
 
