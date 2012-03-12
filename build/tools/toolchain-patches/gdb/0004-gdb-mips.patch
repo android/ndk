@@ -1,0 +1,34 @@
+commit 5c0ed10f2820d3f319a0965f76caed0b792565ea
+Author: Chao-Ying Fu <fu@mips.com>
+Date:   Sat Mar 10 17:07:14 2012 -0800
+
+    Fix MIPS builds on Darwin
+
+diff --git a/gdb-6.6/bfd/sysdep.h b/gdb-6.6/bfd/sysdep.h
+index f6313d3..d3a1b0d 100644
+--- a/gdb-6.6/bfd/sysdep.h
++++ b/gdb-6.6/bfd/sysdep.h
+@@ -131,8 +131,10 @@ extern PTR realloc ();
+ #endif
+ 
+ #if !HAVE_DECL_STPCPY
++#if !__APPLE__
+ extern char *stpcpy (char *__dest, const char *__src);
+ #endif
++#endif
+ 
+ #if !HAVE_DECL_STRSTR
+ extern char *strstr ();
+diff --git a/gdb-6.6/sim/common/sim-signal.c b/gdb-6.6/sim/common/sim-signal.c
+index 481299c..b568ca8 100644
+--- a/gdb-6.6/sim/common/sim-signal.c
++++ b/gdb-6.6/sim/common/sim-signal.c
+@@ -27,7 +27,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
+    to not think the process has died (so it can be debugged at the point of
+    failure).  */
+ 
+-#ifdef _MSC_VER
++#ifdef _WIN32
+ #ifndef SIGTRAP
+ #define SIGTRAP 5
+ #endif
