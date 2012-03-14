@@ -1,0 +1,10 @@
+Change-Id: I0c7d919edf0eb9dc5a72fb2ef6cbc75db28b4f07
+Code-Review+2: David Turner <digit@android.com>
+Verified+1: David Turner <digit@android.com>
+Code-Review+2: Andrew Hsieh <andrewhsieh@google.com>
+Verified+1: Andrew Hsieh <andrewhsieh@google.com>
+Submitted-by: David Turner <digit@android.com>
+Submitted-at: Wed, 14 Mar 2012 05:58:57 -0700
+Reviewed-on: https://android-review.googlesource.com/34120
+Project: platform/ndk
+Branch: refs/heads/master
