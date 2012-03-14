@@ -153,6 +153,9 @@ build_gnustl_for_abi ()
         x86)
             BUILD_HOST=i686-android-linux
             ;;
+        mips)
+            BUILD_HOST=mips-linux-android
+            ;;
     esac
 
     export CXXFLAGS="$CXXFLAGS --sysroot=$SYSROOT -fexceptions -frtti -D__BIONIC__ -O2"
@@ -172,6 +175,10 @@ build_gnustl_for_abi ()
     if [ "$ABI" = "armeabi-v7a" ]; then
         CXXFLAGS=$CXXFLAGS" -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16"
         LDFLAGS=$LDFLAGS" -Wl,--fix-cortex-a8"
+    fi
+
+    if [ "$ABI" = "mips" ]; then
+        LDFLAGS=$LDFLAGS" -Wl,-T,$NDK/toolchains/mips-linux-android-4.4.3/mipself.xsc"
     fi
 
     LIBTYPE_FLAGS=

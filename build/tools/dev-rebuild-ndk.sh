@@ -41,7 +41,7 @@ OPTION_QUICK_BUILD="no"
 register_var_option "--quick" OPTION_QUICK_BUILD "Only build the Linux basics"
 
 # List of toolchains to package
-OPTION_TOOLCHAINS="$DEFAULT_ARCH_TOOLCHAIN_NAME_arm,$DEFAULT_ARCH_TOOLCHAIN_NAME_x86"
+OPTION_TOOLCHAINS="$DEFAULT_ARCH_TOOLCHAIN_NAME_arm,$DEFAULT_ARCH_TOOLCHAIN_NAME_x86,$DEFAULT_ARCH_TOOLCHAIN_NAME_mips"
 register_var_option "--toolchains=<toolchain[,toolchain]>" OPTION_TOOLCHAINS "Toolchain(s) to package"
 
 # # Name of the Mac OS Build host
@@ -126,7 +126,7 @@ fi
 
 
 ALL_ARCH=""
-for ARCH in arm x86
+for ARCH in arm x86 mips
 do
     # Collect all Arch types for packaging
     ALL_ARCH="${ALL_ARCH} $ARCH"
@@ -141,6 +141,9 @@ do
         unset BINUTILS_VERSION
         ;;
     x86 )
+        PRODUCT=generic_$ARCH
+        ;;
+    mips )
         PRODUCT=generic_$ARCH
         ;;
     esac
