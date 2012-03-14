@@ -178,10 +178,10 @@ build_gnustl_for_abi ()
     if [ $LIBTYPE = "static" ]; then
         # Ensure we disable visibility for the static library to reduce the
         # size of the code that will be linked against it.
-        LIBTYPE_FLAG="--enable-static --disable-shared --disable-visibility"
+        LIBTYPE_FLAGS="--enable-static --disable-shared --disable-visibility"
         CXXFLAGS=$CXXFLAGS" -fvisibility=hidden -fvisibility-inlines-hidden"
     else
-        LIBTYPE_FLAG="--disable-static --enable-shared"
+        LIBTYPE_FLAGS="--disable-static --enable-shared"
         #LDFLAGS=$LDFLAGS" -lsupc++"
     fi
 
