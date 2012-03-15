@@ -12,7 +12,7 @@ PARAM_ABIS=$(echo "$@" | tr ' ' '\n' | grep -e "^APP_ABI=")
 PARAM_ABIS=${PARAM_ABIS##APP_ABI=}
 if [ -z "$PARAM_ABIS" ]; then
     echo "NO ABIS in param '$@'"
-    ABIS="armeabi armeabi-v7a x86"
+    ABIS="armeabi armeabi-v7a x86 mips"
 else
     echo "FOUND ABIS in param '$@': $PARAM_ABIS"
     ABIS="$PARAM_ABIS"
