@@ -367,7 +367,7 @@ NDK_BUILD_FLAGS="-B"
 case $ABI in
     armeabi|armeabi-v7a)
         ;;
-    x86)
+    x86|mips)
         NDK_BUILD_FLAGS="$NDK_BUILD_FLAGS APP_ABI=$ABI"
         ;;
     *)
