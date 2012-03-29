@@ -41,7 +41,8 @@ rm -rf $DIR/prebuilt
 # Remove prebuilt binaries
 rm -rf $DIR/$STLPORT_SUBDIR/libs
 rm -rf $DIR/$GNUSTL_SUBDIR/include
-rm -rf $DIR/$GNUSTL_SUBDIR/libs/*
+rm -rf $DIR/$GNUSTL_SUBDIR/libs
+rm -rf $DIR/$GABIXX_SUBDIR/libs
 
 rm -f $DIR/ndk-stack*
 
@@ -63,7 +64,7 @@ clean_file ()
 
 cleanup_project ()
 {
-    clean_dir $1/obj
+    clean_dir  $1/obj
     clean_dir  $1/libs
     clean_dir  $1/bin
     clean_dir  $1/gen
