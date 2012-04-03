@@ -861,8 +861,24 @@ parse_toolchain_name ()
         # You can't really build these separately at the moment.
         ABI_CFLAGS_FOR_TARGET="-fPIC"
         ;;
+    mips-*)
+        ARCH="mips"
+        ABI=$ARCH
+        ABI_INSTALL_NAME="mips"
+        ABI_CONFIGURE_TARGET="mips-linux-android"
+        # Set default to mips32
+        ABI_CONFIGURE_EXTRA_FLAGS="--with-arch=mips32"
+        # Enable C++ exceptions, RTTI and GNU libstdc++ at the same time
+        # You can't really build these separately at the moment.
+        # Add -fpic, because MIPS NDK will need to link .a into .so.
+        ABI_CFLAGS_FOR_TARGET="-fexceptions -fpic"
+        ABI_CXXFLAGS_FOR_TARGET="-frtti -fpic"
+        # Add --disable-fixed-point to disable fixed-point support
+        # Add --disable-threads for eh_frame handling in a single thread
+        ABI_CONFIGURE_EXTRA_FLAGS="$ABI_CONFIGURE_EXTRA_FLAGS --disable-fixed-point --disable-threads"
+        ;;
     * )
-        echo "Invalid toolchain specified. Expected (arm-linux-androideabi-*|x86-*)"
+        echo "Invalid toolchain specified. Expected (arm-linux-androideabi-*|x86-*|mips-*)"
         echo ""
         print_help
         exit 1
@@ -879,10 +895,17 @@ parse_toolchain_name ()
     arm-*)
         GDBSERVER_HOST=arm-eabi-linux
         GDBSERVER_CFLAGS="-fno-short-enums"
+        GDBSERVER_LDFLAGS=
         ;;
     x86-*)
         GDBSERVER_HOST=i686-android-linux-gnu
         GDBSERVER_CFLAGS=
+        GDBSERVER_LDFLAGS=
+        ;;
+    mips-*)
+        GDBSERVER_HOST=mips-linux-gnu
+        GDBSERVER_CFLAGS=
+        GDBSERVER_LDFLAGS="-Wl,-T,$NDK/toolchains/mips-linux-android-4.4.3/mipself.x"
         ;;
     esac
 
@@ -935,8 +958,11 @@ convert_abi_to_arch ()
         x86)
             RET=x86
             ;;
+        mips)
+            RET=mips
+            ;;
         *)
-            2> echo "ERROR: Unsupported ABI name: $1, use one of: armeabi, armeabi-v7a or x86"
+            2> echo "ERROR: Unsupported ABI name: $1, use one of: armeabi, armeabi-v7a or x86 or mips"
             exit 1
             ;;
     esac

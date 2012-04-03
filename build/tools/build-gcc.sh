@@ -133,6 +133,13 @@ if [ ! -d $SRC_DIR/gdb/gdb-$GDB_VERSION ] ; then
 fi
 
 fix_option BINUTILS_VERSION "$OPTION_BINUTILS_VERSION" "binutils version"
+
+# Force MIPS to use binutils 2.21
+if [ "$ARCH" = "mips" ]; then
+    echo "However, MIPS needs to use BINUTILS 2.21"
+    BINUTILS_VERSION=2.21
+fi
+
 if [ ! -d $SRC_DIR/binutils/binutils-$BINUTILS_VERSION ] ; then
     echo "ERROR: Missing binutils sources: $SRC_DIR/binutils/binutils-$BINUTILS_VERSION"
     echo "       Use --binutils-version=<version> to specify alternative."

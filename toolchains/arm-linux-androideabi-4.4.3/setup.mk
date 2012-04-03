@@ -119,6 +119,7 @@ $(call set-src-files-text,$(__thumb_sources),thumb)
 #
 define cmd-build-shared-library
 $(PRIVATE_CXX) \
+    $(PRIVATE_LDSCRIPT_XSC) \
     -Wl,-soname,$(notdir $@) \
     -shared \
     --sysroot=$(call host-path,$(PRIVATE_SYSROOT)) \
@@ -130,6 +131,7 @@ endef
 
 define cmd-build-executable
 $(PRIVATE_CXX) \
+    $(PRIVATE_LDSCRIPT_X) \
     -Wl,--gc-sections \
     -Wl,-z,nocopyreloc \
     --sysroot=$(call host-path,$(PRIVATE_SYSROOT)) \
