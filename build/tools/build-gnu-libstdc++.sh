@@ -154,7 +154,7 @@ build_gnustl_for_abi ()
             BUILD_HOST=i686-android-linux
             ;;
         mips)
-            BUILD_HOST=mips-linux-android
+            BUILD_HOST=mipsel-linux-android
             ;;
     esac
 
@@ -179,7 +179,7 @@ build_gnustl_for_abi ()
     fi
 
     if [ "$ABI" = "mips" ]; then
-        LDFLAGS=$LDFLAGS" -Wl,-T,$NDK/toolchains/mips-linux-android-4.4.3/mipself.xsc"
+        LDFLAGS=$LDFLAGS" -Wl,-T,$NDK/toolchains/mipsel-linux-android-4.4.3/mipself.xsc"
     fi
 
     LIBTYPE_FLAGS=
