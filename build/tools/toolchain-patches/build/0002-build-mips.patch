@@ -22,7 +22,7 @@ index 6b044d7..ad3d157 100755
      ;;
 +  mips*-*-linux*)
 +    BUILD_ANDROID_GCC=yes
-+    GDB_TARGET=mips-linux-gnu
++    GDB_TARGET=mipsel-linux-gnu
 +    ;;
    *)
      { { echo "$as_me:$LINENO: error: Unsupported target $target." >&5
@@ -45,7 +45,7 @@ index dfec128..18c5a0c 100644
      ;;
 +  mips*-*-linux*)
 +    BUILD_ANDROID_GCC=yes
-+    GDB_TARGET=mips-linux-gnu
++    GDB_TARGET=mipsel-linux-gnu
 +    ;;
    *)
      AC_MSG_ERROR(Unsupported target $target.);

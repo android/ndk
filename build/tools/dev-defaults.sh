@@ -55,8 +55,8 @@ DEFAULT_ARCH_TOOLCHAIN_PREFIX_arm=arm-linux-androideabi
 DEFAULT_ARCH_TOOLCHAIN_NAME_x86=x86
 DEFAULT_ARCH_TOOLCHAIN_PREFIX_x86=i686-android-linux
 
-DEFAULT_ARCH_TOOLCHAIN_NAME_mips=mips-linux-android
-DEFAULT_ARCH_TOOLCHAIN_PREFIX_mips=mips-linux-android
+DEFAULT_ARCH_TOOLCHAIN_NAME_mips=mipsel-linux-android
+DEFAULT_ARCH_TOOLCHAIN_PREFIX_mips=mipsel-linux-android
 
 # The list of default host NDK systems we support
 DEFAULT_SYSTEMS="linux-x86 windows darwin-x86"
