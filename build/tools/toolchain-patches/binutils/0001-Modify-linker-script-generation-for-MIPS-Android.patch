@@ -1,0 +1,211 @@
+From f58e4d63fccf86db7cf36e956ab3a7ce6492b4cf Mon Sep 17 00:00:00 2001
+From: Chao-ying Fu <fu@mips.com>
+Date: Thu, 5 Apr 2012 16:30:13 -0700
+Subject: [PATCH] Modify linker script generation for MIPS Android.
+
+---
+ binutils-2.21/ld/emulparams/elf32bmip.sh |    8 +----
+ binutils-2.21/ld/genscripts.sh           |    5 ++-
+ binutils-2.21/ld/scripttempl/elf.sc      |   55 +++++++++++++++++------------
+ 3 files changed, 37 insertions(+), 31 deletions(-)
+
+diff --git a/binutils-2.21/ld/emulparams/elf32bmip.sh b/binutils-2.21/ld/emulparams/elf32bmip.sh
+index 44a0b8a..8dae1bb 100644
+--- a/binutils-2.21/ld/emulparams/elf32bmip.sh
++++ b/binutils-2.21/ld/emulparams/elf32bmip.sh
+@@ -6,7 +6,7 @@ SCRIPT_NAME=elf
+ OUTPUT_FORMAT="elf32-bigmips"
+ BIG_OUTPUT_FORMAT="elf32-bigmips"
+ LITTLE_OUTPUT_FORMAT="elf32-littlemips"
+-TEXT_START_ADDR=0x0400000
++TEXT_START_ADDR=0x80000
+ test -n "${EMBEDDED}" || DATA_ADDR=0x10000000
+ MAXPAGESIZE="CONSTANT (MAXPAGESIZE)"
+ COMMONPAGESIZE="CONSTANT (COMMONPAGESIZE)"
+@@ -64,12 +64,6 @@ OTHER_BSS_SYMBOLS='_fbss = .;'
+ OTHER_SECTIONS='
+   .gptab.sdata : { *(.gptab.data) *(.gptab.sdata) }
+   .gptab.sbss : { *(.gptab.bss) *(.gptab.sbss) }
+-  .mdebug.abi32 : { KEEP(*(.mdebug.abi32)) }
+-  .mdebug.abiN32 : { KEEP(*(.mdebug.abiN32)) }
+-  .mdebug.abi64 : { KEEP(*(.mdebug.abi64)) }
+-  .mdebug.abiO64 : { KEEP(*(.mdebug.abiO64)) }
+-  .mdebug.eabi32 : { KEEP(*(.mdebug.eabi32)) }
+-  .mdebug.eabi64 : { KEEP(*(.mdebug.eabi64)) }
+   .gcc_compiled_long32 : { KEEP(*(.gcc_compiled_long32)) }
+   .gcc_compiled_long64 : { KEEP(*(.gcc_compiled_long64)) }
+ '
+diff --git a/binutils-2.21/ld/genscripts.sh b/binutils-2.21/ld/genscripts.sh
+index c86631b..d54d85d 100755
+--- a/binutils-2.21/ld/genscripts.sh
++++ b/binutils-2.21/ld/genscripts.sh
+@@ -239,7 +239,8 @@ if [ "x${use_sysroot}" != "xyes" ] ; then
+   fi
+ fi
+ 
+-LIB_SEARCH_DIRS=`echo ${LIB_PATH} | sed -e 's/:/ /g' -e 's/\([^ ][^ ]*\)/SEARCH_DIR(\\"\1\\");/g'`
++# For Android, comment out LIB_SEARCH_DIRS.
++#LIB_SEARCH_DIRS=`echo ${LIB_PATH} | sed -e 's/:/ /g' -e 's/\([^ ][^ ]*\)/SEARCH_DIR(\\"\1\\");/g'`
+ 
+ # We need it for testsuite.
+ set $EMULATION_LIBPATH
+@@ -305,6 +306,7 @@ LD_FLAG=
+ DATA_ALIGNMENT=${DATA_ALIGNMENT_}
+ RELOCATING=" "
+ ( echo "/* Default linker script, for normal executables */"
++  echo "/* Modified for Android.  */"
+   . ${CUSTOMIZER_SCRIPT}
+   . ${srcdir}/scripttempl/${SCRIPT_NAME}.sc
+ ) | sed -e '/^ *$/d;s/[ 	]*$//' > ldscripts/${EMULATION_NAME}.x
+@@ -358,6 +360,7 @@ if test -n "$GENERATE_SHLIB_SCRIPT"; then
+     DATA_ALIGNMENT=${DATA_ALIGNMENT_sc-${DATA_ALIGNMENT}}
+     COMBRELOC=ldscripts/${EMULATION_NAME}.xsc.tmp
+     ( echo "/* Script for --shared -z combreloc: shared library, combine & sort relocs */"
++      echo "/* Modified for Android.  */"
+       . ${CUSTOMIZER_SCRIPT}
+       . ${srcdir}/scripttempl/${SCRIPT_NAME}.sc
+     ) | sed -e '/^ *$/d;s/[ 	]*$//' > ldscripts/${EMULATION_NAME}.xsc
+diff --git a/binutils-2.21/ld/scripttempl/elf.sc b/binutils-2.21/ld/scripttempl/elf.sc
+index f020a66..142315c 100644
+--- a/binutils-2.21/ld/scripttempl/elf.sc
++++ b/binutils-2.21/ld/scripttempl/elf.sc
+@@ -149,7 +149,7 @@ RELA_IPLT=".rela.iplt    ${RELOCATING-0} :
+ DYNAMIC=".dynamic      ${RELOCATING-0} : { *(.dynamic) }"
+ RODATA=".${RODATA_NAME}       ${RELOCATING-0} : { *(.${RODATA_NAME}${RELOCATING+ .${RODATA_NAME}.* .gnu.linkonce.r.*}) }"
+ DATARELRO=".data.rel.ro : { *(.data.rel.ro.local* .gnu.linkonce.d.rel.ro.local.*) *(.data.rel.ro* .gnu.linkonce.d.rel.ro.*) }"
+-DISCARDED="/DISCARD/ : { *(.note.GNU-stack) *(.gnu_debuglink) *(.gnu.lto_*) }"
++DISCARDED="/DISCARD/ : { *(.note.GNU-stack) *(.gnu_debuglink) *(.gnu.lto_*) *(.mdebug.*) }"
+ if test -z "${NO_SMALL_DATA}"; then
+   SBSS=".${SBSS_NAME}         ${RELOCATING-0} :
+   {
+@@ -224,17 +224,15 @@ test "${LARGE_SECTIONS}" = "yes" && LARGE_SECTIONS="
+   }"
+ INIT_ARRAY=".init_array   ${RELOCATING-0} :
+   {
+-    ${RELOCATING+${CREATE_SHLIB-PROVIDE_HIDDEN (${USER_LABEL_PREFIX}__init_array_start = .);}}
++    KEEP (*crtbegin*.o(.init_array))
+     KEEP (*(SORT(.init_array.*)))
+     KEEP (*(.init_array))
+-    ${RELOCATING+${CREATE_SHLIB-PROVIDE_HIDDEN (${USER_LABEL_PREFIX}__init_array_end = .);}}
+   }"
+ FINI_ARRAY=".fini_array   ${RELOCATING-0} :
+   {
+-    ${RELOCATING+${CREATE_SHLIB-PROVIDE_HIDDEN (${USER_LABEL_PREFIX}__fini_array_start = .);}}
++    KEEP (*crtbegin*.o(.fini_array))
+     KEEP (*(SORT(.fini_array.*)))
+     KEEP (*(.fini_array))
+-    ${RELOCATING+${CREATE_SHLIB-PROVIDE_HIDDEN (${USER_LABEL_PREFIX}__fini_array_end = .);}}
+   }"
+ CTOR=".ctors        ${CONSTRUCTING-0} : 
+   {
+@@ -250,14 +248,14 @@ CTOR=".ctors        ${CONSTRUCTING-0} :
+        is in.  */
+ 
+     KEEP (*crtbegin.o(.ctors))
+-    KEEP (*crtbegin?.o(.ctors))
++    KEEP (*crtbegin*.o(.ctors))
+ 
+     /* We don't want to include the .ctor section from
+        the crtend.o file until after the sorted ctors.
+        The .ctor section from the crtend file contains the
+        end of ctors marker and it must be last */
+ 
+-    KEEP (*(EXCLUDE_FILE (*crtend.o *crtend?.o $OTHER_EXCLUDE_FILES) .ctors))
++    KEEP (*(EXCLUDE_FILE (*crtend.o *crtend*.o $OTHER_EXCLUDE_FILES) .ctors))
+     KEEP (*(SORT(.ctors.*)))
+     KEEP (*(.ctors))
+     ${CONSTRUCTING+${CTOR_END}}
+@@ -266,8 +264,8 @@ DTOR=".dtors        ${CONSTRUCTING-0} :
+   {
+     ${CONSTRUCTING+${DTOR_START}}
+     KEEP (*crtbegin.o(.dtors))
+-    KEEP (*crtbegin?.o(.dtors))
+-    KEEP (*(EXCLUDE_FILE (*crtend.o *crtend?.o $OTHER_EXCLUDE_FILES) .dtors))
++    KEEP (*crtbegin*.o(.dtors))
++    KEEP (*(EXCLUDE_FILE (*crtend.o *crtend*.o $OTHER_EXCLUDE_FILES) .dtors))
+     KEEP (*(SORT(.dtors.*)))
+     KEEP (*(.dtors))
+     ${CONSTRUCTING+${DTOR_END}}
+@@ -278,8 +276,11 @@ STACK="  .stack        ${RELOCATING-0}${RELOCATING+${STACK_ADDR}} :
+     *(.stack)
+   }"
+ 
+-TEXT_START_ADDR="SEGMENT_START(\"text-segment\", ${TEXT_START_ADDR})"
+-SHLIB_TEXT_START_ADDR="SEGMENT_START(\"text-segment\", ${SHLIB_TEXT_START_ADDR:-0})"
++# For Android, remove SEGMENT_START.
++#TEXT_START_ADDR="SEGMENT_START(\"text-segment\", ${TEXT_START_ADDR})"
++#SHLIB_TEXT_START_ADDR="SEGMENT_START(\"text-segment\", ${SHLIB_TEXT_START_ADDR:-0})"
++TEXT_START_ADDR="${TEXT_START_ADDR}"
++SHLIB_TEXT_START_ADDR="0"
+ 
+ # if this is for an embedded system, don't add SIZEOF_HEADERS.
+ if [ -z "$EMBEDDED" ]; then
+@@ -459,11 +460,10 @@ cat <<EOF
+   .eh_frame     ${RELOCATING-0} : ONLY_IF_RO { KEEP (*(.eh_frame)) }
+   .gcc_except_table ${RELOCATING-0} : ONLY_IF_RO { *(.gcc_except_table .gcc_except_table.*) }
+ 
+-  /* Adjust the address for the data segment.  We want to adjust up to
+-     the same address within the page on the next page up.  */
+-  ${CREATE_SHLIB-${CREATE_PIE-${RELOCATING+. = ${DATA_ADDR-${DATA_SEGMENT_ALIGN}};}}}
+-  ${CREATE_SHLIB+${RELOCATING+. = ${SHLIB_DATA_ADDR-${DATA_SEGMENT_ALIGN}};}}
+-  ${CREATE_PIE+${RELOCATING+. = ${SHLIB_DATA_ADDR-${DATA_SEGMENT_ALIGN}};}}
++  /* Adjust the address for the data segment.  We want to align at exactly
++     a page boundary to make life easier for apriori. */
++  . = ALIGN(4096);
++  . = DATA_SEGMENT_ALIGN(4096,4096);
+ 
+   /* Exception handling  */
+   .eh_frame     ${RELOCATING-0} : ONLY_IF_RW { KEEP (*(.eh_frame)) }
+@@ -473,14 +473,23 @@ cat <<EOF
+   .tdata	${RELOCATING-0} : { *(.tdata${RELOCATING+ .tdata.* .gnu.linkonce.td.*}) }
+   .tbss		${RELOCATING-0} : { *(.tbss${RELOCATING+ .tbss.* .gnu.linkonce.tb.*})${RELOCATING+ *(.tcommon)} }
+ 
++  /* Ensure the __preinit_array_start label is properly aligned.  We
++     could instead move the label definition inside the section, but
++     the linker would then create the section even if it turns out to
++     be empty, which isn't pretty.  */
++  . = ALIGN(32 / 8);
++  ${RELOCATING+${CREATE_SHLIB-PROVIDE_HIDDEN (${USER_LABEL_PREFIX}__preinit_array_start = .);}}
+   .preinit_array   ${RELOCATING-0} :
+   {
+-    ${RELOCATING+${CREATE_SHLIB-PROVIDE_HIDDEN (${USER_LABEL_PREFIX}__preinit_array_start = .);}}
+     KEEP (*(.preinit_array))
+-    ${RELOCATING+${CREATE_SHLIB-PROVIDE_HIDDEN (${USER_LABEL_PREFIX}__preinit_array_end = .);}}
+   }
++  ${RELOCATING+${CREATE_SHLIB-PROVIDE_HIDDEN (${USER_LABEL_PREFIX}__preinit_array_end = .);}}
++  ${RELOCATING+${CREATE_SHLIB-PROVIDE_HIDDEN (${USER_LABEL_PREFIX}__init_array_start = .);}}
+   ${RELOCATING+${INIT_ARRAY}}
++  ${RELOCATING+${CREATE_SHLIB-PROVIDE_HIDDEN (${USER_LABEL_PREFIX}__init_array_end = .);}}
++  ${RELOCATING+${CREATE_SHLIB-PROVIDE_HIDDEN (${USER_LABEL_PREFIX}__fini_array_start = .);}}
+   ${RELOCATING+${FINI_ARRAY}}
++  ${RELOCATING+${CREATE_SHLIB-PROVIDE_HIDDEN (${USER_LABEL_PREFIX}__fini_array_end = .);}}
+   ${SMALL_DATA_CTOR-${RELOCATING+${CTOR}}}
+   ${SMALL_DATA_DTOR-${RELOCATING+${DTOR}}}
+   .jcr          ${RELOCATING-0} : { KEEP (*(.jcr)) }
+@@ -526,10 +535,8 @@ cat <<EOF
+    *(COMMON)
+    /* Align here to ensure that the .bss section occupies space up to
+       _end.  Align after .bss to ensure correct alignment even if the
+-      .bss section disappears because there are no input sections.
+-      FIXME: Why do we need it? When there is no .bss section, we don't
+-      pad the .data section.  */
+-   ${RELOCATING+. = ALIGN(. != 0 ? ${ALIGNMENT} : 1);}
++      .bss section disappears because there are no input sections.  */
++   ${RELOCATING+. = ALIGN(${ALIGNMENT});}
+   }
+   ${OTHER_BSS_SECTIONS}
+   ${RELOCATING+${OTHER_BSS_END_SYMBOLS}}
+@@ -537,7 +544,9 @@ cat <<EOF
+   ${LARGE_SECTIONS}
+   ${RELOCATING+. = ALIGN(${ALIGNMENT});}
+   ${RELOCATING+${OTHER_END_SYMBOLS}}
+-  ${RELOCATING+${END_SYMBOLS-${USER_LABEL_PREFIX}_end = .; PROVIDE (${USER_LABEL_PREFIX}end = .);}}
++  ${RELOCATING+${END_SYMBOLS-${USER_LABEL_PREFIX}_end = .;
++  _bss_end__ = . ; __bss_end__ = . ; __end__ = . ;
++  PROVIDE (${USER_LABEL_PREFIX}end = .);}}
+   ${RELOCATING+${DATA_SEGMENT_END}}
+ EOF
+ 
+-- 
+1.7.7.3
+
