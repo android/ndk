@@ -172,6 +172,26 @@ toolchain_clone gmp
 toolchain_clone gold  # not sure about this one !
 toolchain_clone mpfr
 
+# Check out binutils 2.21 from master
+if [ ! -d "$TMPDIR/binutils/binutils-2.21" ] ; then
+    dump "Get binutils 2.21 from https://android.googlesource.com/toolchain/binutils.git"
+    rm -rf new
+    mkdir new
+    cd new
+    run git clone https://android.googlesource.com/toolchain/binutils.git binutils
+    cd binutils
+    # Find out the version at 2012/3/29
+    MYDATE=2012-03-29
+    MYREVISION=`git rev-list -n 1 --until="$MYDATE" HEAD`
+    dump "Using sources for date '$MYDATE': revision $MYREVISION"
+    run git checkout $MYREVISION
+    fail_panic "Could not checkout $MYREVISION ?"
+    cd ..
+    mv binutils/binutils-2.21 $TMPDIR/binutils
+    cd ..
+    rm -rf new
+fi
+
 # Patch the toolchain sources
 if [ "$OPTION_NO_PATCHES" != "yes" ]; then
     PATCHES_DIR="$PROGDIR/toolchain-patches"
@@ -195,26 +215,6 @@ rm -rf $TMPDIR/gcc/gcc-4.3.1
 rm -rf $TMPDIR/gcc/gcc-4.4.0
 rm -rf $TMPDIR/gcc/gdb-6.8
 rm -rf $TMPDIR/binutils/binutils-2.17
-
-# Check out binutils 2.21 from master
-if [ ! -d "$TMPDIR/binutils/binutils-2.21" ] ; then
-    dump "Get binutils 2.21 from https://android.googlesource.com/toolchain/binutils.git"
-    rm -rf new
-    mkdir new
-    cd new
-    run git clone https://android.googlesource.com/toolchain/binutils.git binutils
-    cd binutils
-    # Find out the version at 2012/3/29
-    MYDATE=2012-03-29
-    MYREVISION=`git rev-list -n 1 --until="$MYDATE" HEAD`
-    dump "Using sources for date '$MYDATE': revision $MYREVISION"
-    run git checkout $MYREVISION
-    fail_panic "Could not checkout $MYREVISION ?"
-    cd ..
-    mv binutils/binutils-2.21 $TMPDIR/binutils
-    cd ..
-    rm -rf new
-fi
 
 # remove all info files from the toolchain sources
 # they create countless little problems during the build
