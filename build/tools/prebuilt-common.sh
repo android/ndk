@@ -926,7 +926,7 @@ get_prebuilt_host_tag ()
                 RET=linux-x86
             fi
             ;;
-        darwin_x86_64)
+        darwin-x86_64)
             if [ "$TRY64" = "no" ]; then
                 RET=darwin-x86
             fi
