@@ -15,7 +15,7 @@ index e758dc4..4cd0ece 100644
 +	case ${target} in
 +	*android*)
 +		# Default to little-endian for MIPS Android
-+		tm_defines="${tm_defines} TARGET_ENDIAN_DEFAULT=0"
++		# tm_defines="${tm_defines} TARGET_ENDIAN_DEFAULT=0"
 +		tmake_file="$tmake_file mips/t-linux-android"
 +        esac
  	test x$with_llsc != x || with_llsc=yes

@@ -70,7 +70,7 @@ if [ -z "$ARCH" ]; then
         x86-*)
             ARCH=x86
             ;;
-        mips-*)
+        mips*)
             ARCH=mips
             ;;
         *)

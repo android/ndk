@@ -458,7 +458,7 @@ builder_begin_android ()
             builder_ldflags "-Wl,--fix-cortex-a8"
             ;;
         mips)
-            builder_ldflags "-Wl,-T,$NDK/toolchains/mips-linux-android-4.4.3/mipself.xsc"
+            builder_ldflags "-Wl,-T,$NDK/toolchains/mipsel-linux-android-4.4.3/mipself.xsc"
             ;;
     esac
 }

@@ -861,11 +861,11 @@ parse_toolchain_name ()
         # You can't really build these separately at the moment.
         ABI_CFLAGS_FOR_TARGET="-fPIC"
         ;;
-    mips-*)
+    mips*)
         ARCH="mips"
         ABI=$ARCH
         ABI_INSTALL_NAME="mips"
-        ABI_CONFIGURE_TARGET="mips-linux-android"
+        ABI_CONFIGURE_TARGET="mipsel-linux-android"
         # Set default to mips32
         ABI_CONFIGURE_EXTRA_FLAGS="--with-arch=mips32"
         # Enable C++ exceptions, RTTI and GNU libstdc++ at the same time
@@ -878,7 +878,7 @@ parse_toolchain_name ()
         ABI_CONFIGURE_EXTRA_FLAGS="$ABI_CONFIGURE_EXTRA_FLAGS --disable-fixed-point --disable-threads"
         ;;
     * )
-        echo "Invalid toolchain specified. Expected (arm-linux-androideabi-*|x86-*|mips-*)"
+        echo "Invalid toolchain specified. Expected (arm-linux-androideabi-*|x86-*|mips*)"
         echo ""
         print_help
         exit 1
@@ -902,10 +902,10 @@ parse_toolchain_name ()
         GDBSERVER_CFLAGS=
         GDBSERVER_LDFLAGS=
         ;;
-    mips-*)
-        GDBSERVER_HOST=mips-linux-gnu
+    mips*)
+        GDBSERVER_HOST=mipsel-linux-gnu
         GDBSERVER_CFLAGS=
-        GDBSERVER_LDFLAGS="-Wl,-T,$NDK/toolchains/mips-linux-android-4.4.3/mipself.x"
+        GDBSERVER_LDFLAGS="-Wl,-T,$NDK/toolchains/mipsel-linux-android-4.4.3/mipself.x"
         ;;
     esac
 
