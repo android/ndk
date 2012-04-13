@@ -45,8 +45,8 @@ TARGET_PLATFORM := $(call get,$(_map),APP_PLATFORM)
 # The ABI(s) to use
 NDK_APP_ABI := $(strip $(NDK_APP_ABI))
 ifndef NDK_APP_ABI
-    # the default ABI for now is armeabi
-    NDK_APP_ABI := armeabi
+    # the default ABI for now are armeabi and mips
+    NDK_APP_ABI := armeabi mips
 endif
 
 # If APP_ABI is 'all', then set it to all supported ABIs

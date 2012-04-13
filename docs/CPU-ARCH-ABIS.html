@@ -206,7 +206,8 @@ Each supported ABI is identified by a unique name.
 II. Generating code for a specific ABI:
 =======================================
 
-By default, the NDK will generate machine code for the 'armeabi' ABI.
+By default, the NDK will generate machine code for the 'armeabi' ABI and
+the 'mips ABI.
 You can however add the following line to your Application.mk to generate
 ARMv7-a compatible machine code instead:
 
@@ -259,12 +260,13 @@ native code in application packages.
     precisely by the steps described below; you will need to extract/install
     them manually in your application.
 
-    In the case of a "fat" binary, up to three distinct libraries can be placed
+    In the case of a "fat" binary, up to four distinct libraries can be placed
     in the  .apk, for example at:
 
         lib/armeabi/libfoo.so
         lib/armeabi-v7a/libfoo.so
         lib/x86/libfoo.so
+        lib/mips/libfoo.so
 
 
   III.2. Android Platform ABI support:
@@ -290,6 +292,7 @@ native code in application packages.
 
     A typical x86-based device only defines a primary abi named 'x86'.
 
+    A typical MIPS-based device only defines a primary abi named 'mips'.
 
   III.3. Automatic extraction of native code at install time:
   -----------------------------------------------------------
