@@ -1,14 +1,19 @@
-commit a16693d78bb1a3ec66d9205156b13d3724c1a140
-Author: Chao-Ying Fu <fu@mips.com>
-Date:   Sat Mar 10 15:51:01 2012 -0800
+From e1bb4ce7e12fdc2b2e3d55ccc4518a78e250a9b3 Mon Sep 17 00:00:00 2001
+From: Char-Ying Fu <fu@mips.com>
+Date: Fri, 20 Apr 2012 17:27:04 +0200
+Subject: ndk: Add MIPS support to configure scripts
 
-    Add MIPS support to scripts
+Change-Id: Ie19e190510d006832504125c6a7c1dd22e013abd
+---
+ configure    |    5 +++++
+ configure.ac |    5 +++++
+ 2 files changed, 10 insertions(+), 0 deletions(-)
 
 diff --git a/configure b/configure
-index 6b044d7..ad3d157 100755
+index 236fb93..6300b2b 100755
 --- a/configure
 +++ b/configure
-@@ -1376,6 +1376,7 @@ test -n "$target_alias" &&
+@@ -1995,6 +1995,7 @@ test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
  # 2. arm-eabi (for Android kernel)
  # 3. arm-newlib-eabi (for gcc testing)
  # 4.i[3456]86-*-linux-gnu, x86-*-linux-gnu (for x86 targets)
@@ -16,7 +21,7 @@ index 6b044d7..ad3d157 100755
  
  GDB_TARGET=$target
  case $target in
-@@ -1389,6 +1390,10 @@ case $target in
+@@ -2008,6 +2009,10 @@ case $target in
    i[3456]86-*-linux-gnu | x86_64-*-linux-gnu)
      BUILD_ANDROID_GCC=yes
      ;;
@@ -25,13 +30,13 @@ index 6b044d7..ad3d157 100755
 +    GDB_TARGET=mipsel-linux-gnu
 +    ;;
    *)
-     { { echo "$as_me:$LINENO: error: Unsupported target $target." >&5
- echo "$as_me: error: Unsupported target $target." >&2;}
+     as_fn_error "Unsupported target $target." "$LINENO" 5;
+ esac
 diff --git a/configure.ac b/configure.ac
-index dfec128..18c5a0c 100644
+index ee13f88..c467528 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -23,6 +23,7 @@ AC_CANONICAL_SYSTEM
+@@ -26,6 +26,7 @@ AC_PROG_INSTALL
  # 2. arm-eabi (for Android kernel)
  # 3. arm-newlib-eabi (for gcc testing)
  # 4.i[3456]86-*-linux-gnu, x86-*-linux-gnu (for x86 targets)
@@ -39,7 +44,7 @@ index dfec128..18c5a0c 100644
  
  GDB_TARGET=$target
  case $target in
-@@ -36,6 +37,10 @@ case $target in
+@@ -39,6 +40,10 @@ case $target in
    i[[3456]]86-*-linux-gnu | x86_64-*-linux-gnu)
      BUILD_ANDROID_GCC=yes
      ;;
@@ -50,3 +55,6 @@ index dfec128..18c5a0c 100644
    *)
      AC_MSG_ERROR(Unsupported target $target.);
  esac
+-- 
+1.7.6.rc0
+

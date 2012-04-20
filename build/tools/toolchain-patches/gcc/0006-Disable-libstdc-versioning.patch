@@ -1,7 +1,22 @@
-diff -burN gcc-a/gcc-4.4.3/libstdc++-v3/src/Makefile.am gcc-b/gcc-4.4.3/libstdc++-v3/src/Makefile.am
---- gcc-a/gcc-4.4.3/libstdc++-v3/src/Makefile.am	2011-10-10 17:32:21.983349054 +0200
-+++ gcc-b/gcc-4.4.3/libstdc++-v3/src/Makefile.am	2011-10-10 17:10:06.474674579 +0200
-@@ -206,7 +206,7 @@
+From 0fedcd10aaab208a64aa61ee5c8c56f3668b2c47 Mon Sep 17 00:00:00 2001
+From: David 'Digit' Turner <digit@google.com>
+Date: Fri, 20 Apr 2012 17:35:57 +0200
+Subject: Disable libstdc++ versioning
+
+This patch ensures that libstdc++ is built as libgnustl_shared.so
+without any version number.
+
+Change-Id: I7dfe8fe379378c58328257448431c8207ee0e6d1
+---
+ gcc-4.4.3/libstdc++-v3/src/Makefile.am |    2 +-
+ gcc-4.4.3/libstdc++-v3/src/Makefile.in |    7 +++++--
+ 2 files changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/gcc-4.4.3/libstdc++-v3/src/Makefile.am b/gcc-4.4.3/libstdc++-v3/src/Makefile.am
+index 187e38e..8fc9ef1 100644
+--- a/gcc-4.4.3/libstdc++-v3/src/Makefile.am
++++ b/gcc-4.4.3/libstdc++-v3/src/Makefile.am
+@@ -206,7 +206,7 @@ libstdc___la_DEPENDENCIES = \
  	$(top_builddir)/libsupc++/libsupc++convenience.la
  
  libstdc___la_LDFLAGS = \
@@ -10,10 +25,11 @@ diff -burN gcc-a/gcc-4.4.3/libstdc++-v3/src/Makefile.am gcc-b/gcc-4.4.3/libstdc+
  
  # Use special rules for the deprecated source files so that they find
  # deprecated include files.
-diff -burN gcc-a/gcc-4.4.3/libstdc++-v3/src/Makefile.in gcc-b/gcc-4.4.3/libstdc++-v3/src/Makefile.in
---- gcc-a/gcc-4.4.3/libstdc++-v3/src/Makefile.in	2011-10-10 17:32:21.983349054 +0200
-+++ gcc-b/gcc-4.4.3/libstdc++-v3/src/Makefile.in	2011-10-10 17:10:06.514673034 +0200
-@@ -350,7 +350,7 @@
+diff --git a/gcc-4.4.3/libstdc++-v3/src/Makefile.in b/gcc-4.4.3/libstdc++-v3/src/Makefile.in
+index 74bbdd4..f08bf34 100644
+--- a/gcc-4.4.3/libstdc++-v3/src/Makefile.in
++++ b/gcc-4.4.3/libstdc++-v3/src/Makefile.in
+@@ -350,7 +350,7 @@ WARN_CXXFLAGS = \
  AM_CPPFLAGS = $(GLIBCXX_INCLUDES)
  
  # Cross compiler support.
@@ -22,7 +38,7 @@ diff -burN gcc-a/gcc-4.4.3/libstdc++-v3/src/Makefile.in gcc-b/gcc-4.4.3/libstdc+
  @ENABLE_SYMVERS_DARWIN_TRUE@@ENABLE_SYMVERS_TRUE@version_arg = -Wl,-exported_symbols_list,libstdc++-symbols.explist
  @ENABLE_SYMVERS_FALSE@version_arg = 
  @ENABLE_SYMVERS_GNU_NAMESPACE_TRUE@@ENABLE_SYMVERS_TRUE@version_arg = -Wl,--version-script=libstdc++-symbols.ver
-@@ -454,7 +454,7 @@
+@@ -454,7 +454,7 @@ libstdc___la_DEPENDENCIES = \
  	$(top_builddir)/libsupc++/libsupc++convenience.la
  
  libstdc___la_LDFLAGS = \
@@ -31,7 +47,7 @@ diff -burN gcc-a/gcc-4.4.3/libstdc++-v3/src/Makefile.in gcc-b/gcc-4.4.3/libstdc+
  
  
  # Use special rules for the deprecated source files so that they find
-@@ -576,6 +576,9 @@
+@@ -576,6 +576,9 @@ clean-toolexeclibLTLIBRARIES:
  libstdc++.la: $(libstdc___la_OBJECTS) $(libstdc___la_DEPENDENCIES) 
  	$(CXXLINK) -rpath $(toolexeclibdir) $(libstdc___la_LDFLAGS) $(libstdc___la_OBJECTS) $(libstdc___la_LIBADD) $(LIBS)
  
@@ -41,3 +57,6 @@ diff -burN gcc-a/gcc-4.4.3/libstdc++-v3/src/Makefile.in gcc-b/gcc-4.4.3/libstdc+
  mostlyclean-compile:
  	-rm -f *.$(OBJEXT)
  
+-- 
+1.7.6.rc0
+

@@ -1,7 +1,7 @@
-From e07d9cc9269f72a90853b31d59729aefb5ca74f3 Mon Sep 17 00:00:00 2001
+From ed098c9068adbfddfe031298ded520fb0a1d117a Mon Sep 17 00:00:00 2001
 From: Mark D Horn <mark.d.horn@intel.com>
 Date: Wed, 13 Jul 2011 16:07:35 -0700
-Subject: [PATCH] Use the correct CRT files with -shared link option
+Subject: Use the correct CRT files with -shared link option
 
 Change-Id: I5f9b28cc3bcf7d3a0ead9777d26b563ff6e82760
 Signed-off-by: Mark D Horn <mark.d.horn@intel.com>
@@ -10,7 +10,7 @@ Signed-off-by: Mark D Horn <mark.d.horn@intel.com>
  1 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/gcc-4.4.3/gcc/config/linux-android.h b/gcc-4.4.3/gcc/config/linux-android.h
-index c1f8f7a..3118c42 100644
+index 1c8ee50..380c0ca 100644
 --- a/gcc-4.4.3/gcc/config/linux-android.h
 +++ b/gcc-4.4.3/gcc/config/linux-android.h
 @@ -54,7 +54,7 @@
@@ -24,5 +24,5 @@ index c1f8f7a..3118c42 100644
 -  "%{!shared: crtend_android%O%s}"
 +  "%{!shared: crtend_android%O%s;: crtend_so%O%s}"
 -- 
-1.7.1
+1.7.6.rc0
 
