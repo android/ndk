@@ -1,16 +1,18 @@
-From 0fedcd10aaab208a64aa61ee5c8c56f3668b2c47 Mon Sep 17 00:00:00 2001
+From f82d0f1b47ea7ae0d20c00b4f29cfd694ab66a07 Mon Sep 17 00:00:00 2001
 From: David 'Digit' Turner <digit@google.com>
-Date: Fri, 20 Apr 2012 17:35:57 +0200
+Date: Tue, 21 Feb 2012 15:07:59 +0100
 Subject: Disable libstdc++ versioning
 
-This patch ensures that libstdc++ is built as libgnustl_shared.so
-without any version number.
+This patch ensure that the generated library is called libgnustl_shared.so
+instead of libstdc++.so.3 (or some similar number-versioned name).
 
-Change-Id: I7dfe8fe379378c58328257448431c8207ee0e6d1
+Change-Id: I63fb5be818115c6d0c7e96b937ba39f225b475cf
 ---
  gcc-4.4.3/libstdc++-v3/src/Makefile.am |    2 +-
  gcc-4.4.3/libstdc++-v3/src/Makefile.in |    7 +++++--
- 2 files changed, 6 insertions(+), 3 deletions(-)
+ gcc-4.6/libstdc++-v3/src/Makefile.am   |    2 +-
+ gcc-4.6/libstdc++-v3/src/Makefile.in   |    7 +++++--
+ 4 files changed, 12 insertions(+), 6 deletions(-)
 
 diff --git a/gcc-4.4.3/libstdc++-v3/src/Makefile.am b/gcc-4.4.3/libstdc++-v3/src/Makefile.am
 index 187e38e..8fc9ef1 100644
@@ -53,6 +55,51 @@ index 74bbdd4..f08bf34 100644
  
 +libgnustl_shared.la: $(libstdc___la_OBJECTS) $(libstdc___la_DEPENDENCIES) 
 +	$(CXXLINK) -rpath $(toolexeclibdir) $(libstdc___la_LDFLAGS) $(libstdc___la_OBJECTS) $(libstdc___la_LIBADD) $(LIBS)
++
+ mostlyclean-compile:
+ 	-rm -f *.$(OBJEXT)
+ 
+diff --git a/gcc-4.6/libstdc++-v3/src/Makefile.am b/gcc-4.6/libstdc++-v3/src/Makefile.am
+index 43488ce..66007ff 100644
+--- a/gcc-4.6/libstdc++-v3/src/Makefile.am
++++ b/gcc-4.6/libstdc++-v3/src/Makefile.am
+@@ -251,7 +251,7 @@ libstdc___la_DEPENDENCIES = \
+ 	$(top_builddir)/libsupc++/libsupc++convenience.la
+ 
+ libstdc___la_LDFLAGS = \
+-	-version-info $(libtool_VERSION) ${version_arg} -lm
++	-avoid-version ${version_arg} -lm 
+ 
+ libstdc___la_LINK = $(CXXLINK) $(libstdc___la_LDFLAGS)
+ 
+diff --git a/gcc-4.6/libstdc++-v3/src/Makefile.in b/gcc-4.6/libstdc++-v3/src/Makefile.in
+index 146ec3f..99f0f56 100644
+--- a/gcc-4.6/libstdc++-v3/src/Makefile.in
++++ b/gcc-4.6/libstdc++-v3/src/Makefile.in
+@@ -340,7 +340,7 @@ WARN_CXXFLAGS = \
+ AM_CPPFLAGS = $(GLIBCXX_INCLUDES)
+ 
+ # Cross compiler support.
+-toolexeclib_LTLIBRARIES = libstdc++.la
++toolexeclib_LTLIBRARIES = libgnustl_shared.la
+ @ENABLE_SYMVERS_TRUE@CLEANFILES = libstdc++-symbols.ver $(version_dep)
+ @ENABLE_SYMVERS_DARWIN_TRUE@@ENABLE_SYMVERS_TRUE@version_arg = -Wl,-exported_symbols_list,libstdc++-symbols.explist
+ @ENABLE_SYMVERS_FALSE@version_arg = 
+@@ -466,7 +466,7 @@ libstdc___la_DEPENDENCIES = \
+ 	$(top_builddir)/libsupc++/libsupc++convenience.la
+ 
+ libstdc___la_LDFLAGS = \
+-	-version-info $(libtool_VERSION) ${version_arg} -lm
++	-avoid-version ${version_arg} -lm 
+ 
+ libstdc___la_LINK = $(CXXLINK) $(libstdc___la_LDFLAGS)
+ 
+@@ -596,6 +596,9 @@ clean-toolexeclibLTLIBRARIES:
+ libstdc++.la: $(libstdc___la_OBJECTS) $(libstdc___la_DEPENDENCIES) 
+ 	$(libstdc___la_LINK) -rpath $(toolexeclibdir) $(libstdc___la_OBJECTS) $(libstdc___la_LIBADD) $(LIBS)
+ 
++libgnustl_shared.la: $(libstdc___la_OBJECTS) $(libstdc___la_DEPENDENCIES) 
++	$(libstdc___la_LINK) -rpath $(toolexeclibdir) $(libstdc___la_OBJECTS) $(libstdc___la_LIBADD) $(LIBS)
 +
  mostlyclean-compile:
  	-rm -f *.$(OBJEXT)
