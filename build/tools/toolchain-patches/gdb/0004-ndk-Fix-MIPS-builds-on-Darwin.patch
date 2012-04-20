@@ -1,11 +1,16 @@
-commit 5c0ed10f2820d3f319a0965f76caed0b792565ea
-Author: Chao-Ying Fu <fu@mips.com>
-Date:   Sat Mar 10 17:07:14 2012 -0800
+From 6b165782ea8637aecbcd283f076d4fb2c08b3afb Mon Sep 17 00:00:00 2001
+From: Chao-Ying Fu <fu@mips.com>
+Date: Fri, 20 Apr 2012 15:54:22 +0200
+Subject: ndk: Fix MIPS builds on Darwin
 
-    Fix MIPS builds on Darwin
+Change-Id: I11466da22a4101a5317d2254d7c5b8f16b755b8a
+---
+ gdb-6.6/bfd/sysdep.h            |    2 ++
+ gdb-6.6/sim/common/sim-signal.c |    2 +-
+ 2 files changed, 3 insertions(+), 1 deletions(-)
 
 diff --git a/gdb-6.6/bfd/sysdep.h b/gdb-6.6/bfd/sysdep.h
-index f6313d3..d3a1b0d 100644
+index f6313d3905ce5a910dc2f8fb7ba945c450a52b3a..d3a1b0d 100644
 --- a/gdb-6.6/bfd/sysdep.h
 +++ b/gdb-6.6/bfd/sysdep.h
 @@ -131,8 +131,10 @@ extern PTR realloc ();
@@ -20,7 +25,7 @@ index f6313d3..d3a1b0d 100644
  #if !HAVE_DECL_STRSTR
  extern char *strstr ();
 diff --git a/gdb-6.6/sim/common/sim-signal.c b/gdb-6.6/sim/common/sim-signal.c
-index 481299c..b568ca8 100644
+index 481299ceeb2bda561d53296cce6804eb188c501..b568ca8 100644
 --- a/gdb-6.6/sim/common/sim-signal.c
 +++ b/gdb-6.6/sim/common/sim-signal.c
 @@ -27,7 +27,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
@@ -32,3 +37,6 @@ index 481299c..b568ca8 100644
  #ifndef SIGTRAP
  #define SIGTRAP 5
  #endif
+-- 
+1.7.6.rc0
+

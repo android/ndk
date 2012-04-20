@@ -1,11 +1,21 @@
-commit df3ee55c3aaeb307a58c39a6dfc9531433700c18
-Author: Chao-Ying Fu <fu@mips.com>
-Date:   Sat Mar 10 16:59:10 2012 -0800
+From 9592b5a494396db86a578799c669e103bc726595 Mon Sep 17 00:00:00 2001
+From: Chao-Ying Fu <fu@mips.com>
+Date: Fri, 20 Apr 2012 17:37:44 +0200
+Subject: gcc mips
 
-    Add MIPS Android support and default to Little Endian
+Add MIPS Android support and default to Little Endian
+
+Change-Id: Ifac584908c0d5e7b6b6a0e5aea50e464f59f74bc
+---
+ gcc-4.4.3/gcc/config.gcc                  |    6 ++++
+ gcc-4.4.3/gcc/config/mips/linux.h         |   40 ++++++++++++++++++++++++----
+ gcc-4.4.3/gcc/config/mips/t-linux-android |    3 ++
+ gcc-4.4.3/gcc/unwind-dw2-fde-glibc.c      |    6 +++-
+ 4 files changed, 47 insertions(+), 8 deletions(-)
+ create mode 100644 gcc-4.4.3/gcc/config/mips/t-linux-android
 
 diff --git a/gcc-4.4.3/gcc/config.gcc b/gcc-4.4.3/gcc/config.gcc
-index e758dc4..4cd0ece 100644
+index e758dc4..755b90d 100644
 --- a/gcc-4.4.3/gcc/config.gcc
 +++ b/gcc-4.4.3/gcc/config.gcc
 @@ -1628,6 +1628,12 @@ mips*-*-linux*)				# Linux MIPS, either endian.
@@ -123,3 +133,6 @@ index 11f53dd..bad6082 100644
  
  #include <link.h>
  
+-- 
+1.7.6.rc0
+
