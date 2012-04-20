@@ -179,7 +179,7 @@ build_gnustl_for_abi ()
     fi
 
     if [ "$ABI" = "mips" ]; then
-        LDFLAGS=$LDFLAGS" -Wl,-T,$NDK/toolchains/mipsel-linux-android-4.4.3/mipself.xsc"
+        LDFLAGS=$LDFLAGS" -Wl,-T,$NDK_DIR/toolchains/mipsel-linux-android-4.4.3/mipself.xsc"
     fi
 
     LIBTYPE_FLAGS=
