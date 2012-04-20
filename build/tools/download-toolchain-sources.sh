@@ -169,8 +169,8 @@ toolchain_clone build
 toolchain_clone gcc
 toolchain_clone gdb
 toolchain_clone gmp
-toolchain_clone gold  # not sure about this one !
 toolchain_clone mpfr
+toolchain_clone mpc
 
 # Patch the toolchain sources
 if [ "$OPTION_NO_PATCHES" != "yes" ]; then
