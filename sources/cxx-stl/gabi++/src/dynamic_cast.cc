@@ -320,7 +320,7 @@ namespace __cxxabiv1
         // If it is known that v points to a public base class subobject
         // of a T object, simply adjust the pointer by the offset.
         if (t_object != ambiguous_object && src2dst_offset >= 0)
-          return const_cast<void*>(adjust_pointer(v, src2dst_offset));
+          return const_cast<void*>(adjust_pointer(v, -src2dst_offset));
 
         // If there is only one T type subobject, we only need to look at
         // there.  Otherwise, look for the subobject referred by v in the
