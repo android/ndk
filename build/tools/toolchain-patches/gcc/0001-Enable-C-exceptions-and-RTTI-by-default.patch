@@ -1,20 +1,34 @@
-From ee39e01fd0c62ad2c5a357854f4f34abe4dd4560 Mon Sep 17 00:00:00 2001
-From: David 'Digit' Turner <digit@android.com>
-Date: Wed, 24 Nov 2010 14:26:38 +0100
+From 4fe805f627c018d77091ea0aad92553c54d47567 Mon Sep 17 00:00:00 2001
+From: David 'Digit' Turner <digit@google.com>
+Date: Fri, 17 Feb 2012 19:35:45 +0100
 Subject: Enable C++ exceptions and RTTI by default.
 
 With this change, -fexceptions and -frtti become default options
 when compiling C++ sources.
-
-Change-Id: Ie136fc1dd57d15dfa062730118c2f8496d25cc62
 ---
  gcc-4.4.3/gcc/config/linux-android.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ gcc-4.6/gcc/config/linux-android.h   |    4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/gcc-4.4.3/gcc/config/linux-android.h b/gcc-4.4.3/gcc/config/linux-android.h
 index 5ca3858..d938c22 100644
 --- a/gcc-4.4.3/gcc/config/linux-android.h
 +++ b/gcc-4.4.3/gcc/config/linux-android.h
+@@ -46,8 +46,8 @@
+   "%{!fno-pic:%{!fno-PIC:%{!fpic:%{!fPIC: -fPIC}}}}"
+ 
+ #define ANDROID_CC1PLUS_SPEC						\
+-  "%{!fexceptions:%{!fno-exceptions: -fno-exceptions}} "		\
+-  "%{!frtti:%{!fno-rtti: -fno-rtti}}"
++  "%{!fexceptions:%{!fno-exceptions: -fexceptions}} "		\
++  "%{!frtti:%{!fno-rtti: -frtti}}"
+ 
+ #define ANDROID_LIB_SPEC \
+   "%{!static: -ldl}"
+diff --git a/gcc-4.6/gcc/config/linux-android.h b/gcc-4.6/gcc/config/linux-android.h
+index 94c5274..7256082 100644
+--- a/gcc-4.6/gcc/config/linux-android.h
++++ b/gcc-4.6/gcc/config/linux-android.h
 @@ -46,8 +46,8 @@
    "%{!fno-pic:%{!fno-PIC:%{!fpic:%{!fPIC: -fPIC}}}}"
  
