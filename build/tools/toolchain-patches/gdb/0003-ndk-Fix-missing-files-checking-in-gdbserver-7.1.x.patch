@@ -1,3 +1,13 @@
+From cfdbf4fd19eee2be6cc1bc53bd13d331338b313a Mon Sep 17 00:00:00 2001
+From: David 'Digit' Turner <digit@android.com>
+Date: Fri, 20 Apr 2012 15:52:33 +0200
+Subject: ndk: Fix missing files checking in gdbserver 7.1.x
+
+Change-Id: Idcb61f937b63f3af0f1bedf8d7d499d29f98a9dd
+---
+ gdb-7.1.x/gdb/gdbserver/linux-x86-low.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+
 diff --git a/gdb-7.1.x/gdb/gdbserver/linux-x86-low.c b/gdb-7.1.x/gdb/gdbserver/linux-x86-low.c
 index 0062432..6793f23 100644
 --- a/gdb-7.1.x/gdb/gdbserver/linux-x86-low.c
@@ -17,3 +27,6 @@ index 0062432..6793f23 100644
  #include <sys/ptrace.h>
  
  #ifndef PTRACE_GET_THREAD_AREA
+-- 
+1.7.6.rc0
+

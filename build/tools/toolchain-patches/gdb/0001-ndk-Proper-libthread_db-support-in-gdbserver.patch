@@ -1,9 +1,9 @@
-From bc7aac86cdf8938f43bc5b9c6f1ac33c1882cf7b Mon Sep 17 00:00:00 2001
+From 13f33eb9ee5367715e648871d18e0d9b14ace815 Mon Sep 17 00:00:00 2001
 From: David 'Digit' Turner <digit@android.com>
-Date: Thu, 25 Nov 2010 18:37:38 +0100
-Subject: [PATCH] Proper libthread_db support in gdbserver.
+Date: Fri, 20 Apr 2012 15:51:23 +0200
+Subject: ndk: Proper libthread_db support in gdbserver
 
-Change-Id: I5ebbb18efe663e7bf24d6147f33cc92f38dea148
+Change-Id: If1c5f967e0f57d205215f28945e682bb5c291170
 ---
  gdb-6.6/gdb/gdbserver/acinclude.m4   |    2 +-
  gdb-6.6/gdb/gdbserver/configure      |    2 +-
@@ -13,7 +13,7 @@ Change-Id: I5ebbb18efe663e7bf24d6147f33cc92f38dea148
  5 files changed, 10 insertions(+), 10 deletions(-)
 
 diff --git a/gdb-6.6/gdb/gdbserver/acinclude.m4 b/gdb-6.6/gdb/gdbserver/acinclude.m4
-index aaad2e2..04f023c 100644
+index aaad2e2549d349be0b2b61008b6c248c1cc2aab5..04f023c 100644
 --- a/gdb-6.6/gdb/gdbserver/acinclude.m4
 +++ b/gdb-6.6/gdb/gdbserver/acinclude.m4
 @@ -4,7 +4,7 @@ sinclude(../../bfd/bfd.m4)
@@ -105,5 +105,5 @@ index 638c228..a13117b 100644
  
  if test "$srv_xmlfiles" != ""; then
 -- 
-1.7.3.1
+1.7.6.rc0
 

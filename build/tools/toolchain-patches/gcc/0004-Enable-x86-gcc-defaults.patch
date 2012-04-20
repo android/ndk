@@ -1,7 +1,7 @@
-From fc0c72d824b194f5c5e2c16ae5e706eed3a359fc Mon Sep 17 00:00:00 2001
+From a8b43ba3fb0007f0e62365a33953bab0e989366a Mon Sep 17 00:00:00 2001
 From: Mark D Horn <mark.d.horn@intel.com>
-Date: Tue, 28 Jun 2011 15:35:46 -0700
-Subject: [PATCH 4/4] Enable x86 gcc defaults
+Date: Fri, 20 Apr 2012 17:32:57 +0200
+Subject: Enable x86 gcc defaults
 
 Enabling the same built-in defaults for the x86
 toolchain as is currently done for ARM.
@@ -126,7 +126,7 @@ index f3a98c2..bc2a5d5 100644
  /* A C statement (sans semicolon) to output to the stdio stream
     FILE the assembler definition of uninitialized global DECL named
 diff --git a/gcc-4.4.3/gcc/config/linux-android.h b/gcc-4.4.3/gcc/config/linux-android.h
-index 5ca3858..c1f8f7a 100644
+index d938c22..1c8ee50 100644
 --- a/gcc-4.4.3/gcc/config/linux-android.h
 +++ b/gcc-4.4.3/gcc/config/linux-android.h
 @@ -41,9 +41,9 @@
@@ -140,7 +140,7 @@ index 5ca3858..c1f8f7a 100644
 +  "%{!fno-pic:%{!fno-PIC:%{!fpic:%{!fPIC: " ANDROID_PIC_DEFAULT "}}}}"
  
  #define ANDROID_CC1PLUS_SPEC						\
-   "%{!fexceptions:%{!fno-exceptions: -fno-exceptions}} "		\
+   "%{!fexceptions:%{!fno-exceptions: -fexceptions}} "		\
 -- 
-1.7.1
+1.7.6.rc0
 
