@@ -46,7 +46,12 @@ GDB_VERSION=$DEFAULT_GDB_VERSION
 register_var_option "--gdb-version=<version>"  GDB_VERSION "Specify gdb version"
 
 BINUTILS_VERSION=$DEFAULT_BINUTILS_VERSION
-register_var_option "--binutils-version=<version>" BINUTILS_VERSION "Specify binutils version"
+EXPLICIT_BINUTILS_VERSION=
+register_option "--binutils-version=<version>" do_binutils_version "Specify binutils version" "$BINUTILS_VERSION"
+do_binutils_version () {
+    BINUTILS_VERSION=$1
+    EXPLICIT_BINUTILS_VERSION=true
+}
 
 GMP_VERSION=$DEFAULT_GMP_VERSION
 register_var_option "--gmp-version=<version>" GMP_VERSION "Specify gmp version"
@@ -132,12 +137,9 @@ if [ ! -d $SRC_DIR/gdb/gdb-$GDB_VERSION ] ; then
     exit 1
 fi
 
-fix_option BINUTILS_VERSION "$OPTION_BINUTILS_VERSION" "binutils version"
-
-# Force MIPS to use binutils 2.21
-if [ "$ARCH" = "mips" ]; then
-    echo "However, MIPS needs to use BINUTILS 2.21"
-    BINUTILS_VERSION=2.21
+if [ -z "$EXPLICIT_BINUTILS_VERSION" ]; then
+    BINUTILS_VERSION=$(get_default_binutils_version_for_gcc $TOOLCHAIN)
+    dump "Auto-config: --binutils-version=$BINUTILS_VERSION"
 fi
 
 if [ ! -d $SRC_DIR/binutils/binutils-$BINUTILS_VERSION ] ; then
