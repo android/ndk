@@ -1,0 +1,36 @@
+From e8a15a244fc6b115856ec76c4fc859e1bce90910 Mon Sep 17 00:00:00 2001
+From: David 'Digit' Turner <digit@android.com>
+Date: Fri, 20 Apr 2012 15:52:00 +0200
+Subject: ndk: Fix signal handling in gdbserver-6.6
+
+Change-Id: If68d89886cd3471631f2b80b36b5fd24a5e5ce69
+---
+ gdb-6.6/gdb/gdbserver/linux-low.c |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
+
+diff --git a/gdb-6.6/gdb/gdbserver/linux-low.c b/gdb-6.6/gdb/gdbserver/linux-low.c
+index 9e2cf63ba13c9f2bcf1ef33e2ba90a6275286a35..f52a379 100644
+--- a/gdb-6.6/gdb/gdbserver/linux-low.c
++++ b/gdb-6.6/gdb/gdbserver/linux-low.c
+@@ -778,6 +778,18 @@ kill_lwp (unsigned long lwpid, int signo)
+       errno = 0;
+       tkill_failed = 1;
+     }
++#elif defined(__ANDROID__)
++  extern int tkill(int, int);
++  if (!tkill_failed)
++    {
++      int ret = tkill(lwpid, signo);
++      if (errno != ENOSYS)
++        return ret;
++      errno = 0;
++      tkill_failed = 1;
++    }
++#else
++#  error SIGNAL HANDLING WILL NOT WORK!!
+ #endif
+ 
+   return kill (lwpid, signo);
+-- 
+1.7.6.rc0
+
