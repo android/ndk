@@ -33,7 +33,7 @@ DEFAULT_GCC_VERSION_LIST="4.4.3"
 #
 DEFAULT_GCC_VERSION=$(echo "$DEFAULT_GCC_VERSION_LIST" | tr ' ' '\n' | head -n 1)
 
-DEFAULT_BINUTILS_VERSION=2.19
+DEFAULT_BINUTILS_VERSION=2.21
 DEFAULT_GDB_VERSION=6.6
 DEFAULT_MPFR_VERSION=2.4.1
 DEFAULT_GMP_VERSION=4.2.4
@@ -146,4 +146,25 @@ get_toolchain_name_list_for_arch ()
     done
     RET=${RET## }
     echo "$RET"
+}
+
+# Return the binutils version to be used by default when
+# building a given version of GCC. This is needed to ensure
+# we use binutils-2.19 when building gcc-4.4.3 for ARM and x86,
+# and binutils-2.21 in other cases (mips, or gcc-4.6).
+#
+# Note that technically, we could use 2.21 for all versions of
+# GCC, however, in NDK r7, we did build GCC 4.4.3 with binutils-2.20.1
+# and this resulted in weird C++ debugging bugs. For NDK r7b and higher,
+# binutils was reverted to 2.19, to ensure at least
+# feature/bug compatibility.
+#
+# $1: toolchain with version numer (e.g. 'arm-linux-androideabi-4.6')
+#
+get_default_binutils_version_for_gcc ()
+{
+    case $1 in
+        arm-*-4.4.3|x86-4.4.3|x86-*-4.4.3) echo "2.19";;
+        *) echo "$DEFAULT_BINUTILS_VERSION";;
+    esac
 }
