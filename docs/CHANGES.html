@@ -1,6 +1,41 @@
 <html><body><pre>Android NDK ChangeLog:
 
 -------------------------------------------------------------------------------
+android-ndk-r8
+
+IMPORTANT BUG FIXES:
+
+- Fixed a typo in GAbi++ implementaiton where result of dynamic_cast&lt;D&gt;(b)
+  of base class object 'b' to derived class D is adjusted wrong
+  (in the opposite direction from base class). See
+  http://code.google.com/p/android/issues/detail?id=28721
+
+- Fixed an issue in make-standalone-toolchain.sh which fails to copy
+  libsupc++.*.
+
+
+IMPORTANT CHANGES:
+
+- Added support for the mips ABI.
+
+  This release of the Android NDK contains support for 'mips' ABI.
+  To generate machine runs on MIPS-based Android devices, please add 'mips' to
+  APP_ABI definition in your Application.mk, or 'all' to generate binaries for
+  all currently supported ABI.  See docs/CPU-MIPS.html for details.
+
+- You can build a standalone mips toolchain using the
+  --toolchain=mipsel-linux-android-4.4.3 option when calling
+  make-standalone-toolchain.sh. See docs/STANDALONE-TOOLCHAIN.html for more details.
+
+
+OTHER BUG FIXE:
+
+- Fixed ndk-build.cmd to ensure that ndk-build.cmd works correctly even if
+  the user has redefined the SHELL environment variable (which can happen under
+  the hood when installing a variety of development tools on Windows)
+
+
+-------------------------------------------------------------------------------
 android-ndk-r7c
 
 This release of the NDK includes an important fix for Tegra2-based devices,
