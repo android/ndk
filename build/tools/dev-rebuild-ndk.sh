@@ -62,7 +62,11 @@ HOST_OS=`uname -s | tr '[:upper:]' '[:lower:]'`
 case "$HOST_OS" in
 linux )
     # Build for Local Linux and Cross-compile for Windows (MINGW)
-    BUILD_TARGET_PLATFORMS="linux-x86 windows"
+    if [ "$OPTION_QUICK_BUILD" = "yes" ]; then
+       BUILD_TARGET_PLATFORMS="linux-x86"
+    else
+       BUILD_TARGET_PLATFORMS="linux-x86 windows"
+    fi
     ;;
 darwin )
     # Build for Local Mac OS X
@@ -174,11 +178,11 @@ do
         case "$TARGET_PLATFORM" in
         linux-x86 )
             TARGET_PLATFORM_OS="Linux"
-            TARGET_PLATFORM_FLAGS=""
+            TARGET_PLATFORM_FLAGS="--systems=$TARGET_PLATFORM"
             ;;
         windows )
             TARGET_PLATFORM_OS="Windows"
-            TARGET_PLATFORM_FLAGS="--mingw"
+            TARGET_PLATFORM_FLAGS="--systems=$TARGET_PLATFORM"
             # Skip this Target Platform in Quick Build Mode
             if [ "$OPTION_QUICK_BUILD" = "yes" ]; then break ; fi
             ;;
@@ -219,7 +223,6 @@ $PROGDIR/package-release.sh \
     --systems="$ALL_SYSTEMS" \
     --out-dir=$PACKAGE_DIR \
     --arch="$ALL_ARCH" \
-    --toolchains="${OPTION_TOOLCHAINS}" \
     --prefix=android-ndk-${OPTION_NDK_RELEASE} \
     --no-git \
     $VERBOSE > $logfile 2>&1
