@@ -969,6 +969,52 @@ convert_abi_to_arch ()
     echo "$RET"
 }
 
+# Take architecture name as input, and output the list of corresponding ABIs
+# Inverse for convert_abi_to_arch
+# $1: ARCH name
+# Out: ABI names list (comma-separated)
+convert_arch_to_abi ()
+{
+    local RET
+    case $1 in
+        arm)
+            RET=armeabi,armeabi-v7a
+            ;;
+        x86)
+            RET=x86
+            ;;
+        mips)
+            RET=mips
+            ;;
+        *)
+            >&2 echo "ERROR: Unsupported ARCH name: $1, use one of: arm, x86, mips"
+            exit 1
+            ;;
+    esac
+    echo "$RET"
+}
+
+# Take a list of architecture names as input, and output the list of corresponding ABIs
+# $1: ARCH names list (separated by spaces or commas)
+# Out: ABI names list (comma-separated)
+convert_archs_to_abis ()
+{
+    local RET
+    for ARCH in $(commas_to_spaces $@); do
+       ABI=$(convert_arch_to_abi $ARCH)
+       if [ -n "$ABI" ]; then
+          if [ -n "$RET" ]; then
+             RET=$RET",$ABI"
+          else
+             RET=$ABI
+          fi
+       else   # Error message is printed by convert_arch_to_abi
+          exit 1
+       fi
+    done
+    echo "$RET"
+}
+
 # Return the default binary path prefix for a given architecture
 # For example: arm -> toolchains/arm-linux-androideabi-4.4.3/prebuilt/<system>/bin/arm-linux-androideabi-
 # $1: Architecture name

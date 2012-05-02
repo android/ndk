@@ -82,16 +82,18 @@ for ARCH in $ARCHS; do
 done
 
 FLAGS=$FLAGS" --ndk-dir=\"$NDK_DIR\""
+ABIS=$(convert_archs_to_abis $ARCHS)
 
-dump "Building gabi++ binaries..."
+FLAGS=$FLAGS" --abis=$ABIS"
+dump "Building $ABIS gabi++ binaries..."
 run $BUILDTOOLS/build-gabi++.sh $FLAGS
 fail_panic "Could not build gabi++!"
 
-dump "Building stlport binaries..."
+dump "Building $ABIS stlport binaries..."
 run $BUILDTOOLS/build-stlport.sh $FLAGS
 fail_panic "Could not build stlport!"
 
-dump "Building gnustl binaries..."
+dump "Building $ABIS gnustl binaries..."
 run $BUILDTOOLS/build-gnu-libstdc++.sh $FLAGS "$SRC_DIR"
 fail_panic "Could not build gnustl!"
 
