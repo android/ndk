@@ -95,7 +95,7 @@ GABIXX_CXXFLAGS="-fuse-cxa-atexit -fno-exceptions -frtti"
 GABIXX_LDFLAGS=
 
 # List of sources to compile
-GABIXX_SOURCES=$(cd $GABIXX_SUBDIR && ls src/*.cc)
+GABIXX_SOURCES=$(cd $GABIXX_SRCDIR && ls src/*.cc)
 
 # If the --no-makefile flag is not used, we're going to put all build
 # commands in a temporary Makefile that we will be able to invoke with
