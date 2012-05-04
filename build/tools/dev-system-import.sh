@@ -561,7 +561,7 @@ if platform_check 3; then
     copy_system_static_library libthread_db
     copy_system_headers $ANDROID_ROOT/bionic/libthread_db/include thread_db.h sys/procfs.h
 
-    copy_system_headers $ANDROID_ROOT/dalvik/libnativehelper/include/nativehelper jni.h
+    copy_system_headers $ANDROID_ROOT/libnativehelper/include/nativehelper jni.h
 fi
 
 # API level 4

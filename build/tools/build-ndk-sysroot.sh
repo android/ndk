@@ -268,7 +268,7 @@ common_header  $TOP/external/zlib zlib.h
 common_header  $TOP/external/zlib zconf.h
 
 # Jni header
-common_header  $TOP/dalvik/libnativehelper/include/nativehelper jni.h
+common_header  $TOP/libnativehelper/include/nativehelper jni.h
 
 # libthread_db headers, not sure if this is needed for the NDK
 common_headers $BIONIC_ROOT/libthread_db/include
