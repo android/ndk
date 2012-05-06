@@ -127,6 +127,14 @@ list_files_under ()
     fi
 }
 
+# Assign a value to a variable
+# $1: Variable name
+# $2: Value
+var_assign ()
+{
+    eval $1=\"$2\"
+}
+
 #====================================================
 #
 #  OPTION PROCESSING
