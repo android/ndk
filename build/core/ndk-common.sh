@@ -149,6 +149,28 @@ run ()
     fi
 }
 
+run2 ()
+{
+    if [ "$VERBOSE2" = "yes" ] ; then
+        echo "## COMMAND: $@"
+        "$@" 2>&1
+    elif [ "$VERBOSE" = "yes" ]; then
+        echo "## COMMAND: $@"
+        if [ -n "$TMPLOG" ]; then
+            echo "## COMMAND: $@" >> $TMPLOG
+            "$@" >>$TMPLOG 2>&1
+        else
+            "$@" > /dev/null 2>&1
+        fi
+    else
+        if [ -n "$TMPLOG" ]; then
+            "$@" >>$TMPLOG 2>&1
+        else
+            "$@" > /dev/null 2>&1
+        fi
+    fi
+}
+
 panic ()
 {
     dump "ERROR: $@"
