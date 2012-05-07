@@ -1,11 +1,9 @@
-From 9592b5a494396db86a578799c669e103bc726595 Mon Sep 17 00:00:00 2001
-From: Chao-Ying Fu <fu@mips.com>
-Date: Fri, 20 Apr 2012 17:37:44 +0200
-Subject: gcc mips
+From f6dc24bd84625469770a955609b467d3d7c4c829 Mon Sep 17 00:00:00 2001
+From: David 'Digit' Turner <digit@google.com>
+Date: Fri, 13 Apr 2012 16:14:11 +0200
+Subject: Add MIPS Android support and default to Little Endian
 
-Add MIPS Android support and default to Little Endian
-
-Change-Id: Ifac584908c0d5e7b6b6a0e5aea50e464f59f74bc
+Change-Id: I6e8e5ab1d773a8eef02287725246f57c861e0dd6
 ---
  gcc-4.4.3/gcc/config.gcc                  |    6 ++++
  gcc-4.4.3/gcc/config/mips/linux.h         |   40 ++++++++++++++++++++++++----

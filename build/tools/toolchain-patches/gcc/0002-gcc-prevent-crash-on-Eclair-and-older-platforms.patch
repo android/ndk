@@ -1,6 +1,6 @@
-From 124e9aace7bdf6f39054d6cef341108d0523b08b Mon Sep 17 00:00:00 2001
-From: David 'Digit' Turner <digit@android.com>
-Date: Tue, 24 May 2011 23:34:22 +0200
+From 1fc21976be58987f036caa1103b821d51449af05 Mon Sep 17 00:00:00 2001
+From: David 'Digit' Turner <digit@google.com>
+Date: Fri, 17 Feb 2012 19:38:08 +0100
 Subject: gcc: prevent crash on Eclair and older platforms.
 
 The point of this patch is to work-around a bug in the Eclair
@@ -20,16 +20,39 @@ By not generating weak symbol references, we avoid the problem
 completely. And we don't need them because the pthread symbols
 are all in the C library on Android, unlike legacy Linux systems
 which put them in libpthread.so (and provide weak stubs in libc.so).
-
-Change-Id: I289db08a9ea567f0574bb2058516bfeb01c68a2c
 ---
  gcc-4.4.3/gcc/gthr-posix.h |   13 +++++++++++++
- 1 files changed, 13 insertions(+), 0 deletions(-)
+ gcc-4.6/gcc/gthr-posix.h   |   13 +++++++++++++
+ 2 files changed, 26 insertions(+), 0 deletions(-)
 
 diff --git a/gcc-4.4.3/gcc/gthr-posix.h b/gcc-4.4.3/gcc/gthr-posix.h
 index 27652f9..a104d91 100644
 --- a/gcc-4.4.3/gcc/gthr-posix.h
 +++ b/gcc-4.4.3/gcc/gthr-posix.h
+@@ -38,6 +38,19 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+ #define _REENTRANT 1
+ #endif
+ 
++/* The following should normally be in a different header file,
++ * but I couldn't find the right location. The point of the macro
++ * definition below is to prevent libsupc++ and libstdc++ to reference
++ * weak symbols in their static C++ constructors. Such code crashes
++ * when a shared object linked statically to these libraries is
++ * loaded on Android 2.1 (Eclair) and older platform releases, due
++ * to a dynamic linker bug.
++ */
++#ifdef __ANDROID__
++#undef GTHREAD_USE_WEAK
++#define GTHREAD_USE_WEAK 0
++#endif
++
+ #include <pthread.h>
+ #include <unistd.h>
+ 
+diff --git a/gcc-4.6/gcc/gthr-posix.h b/gcc-4.6/gcc/gthr-posix.h
+index ecb06e2..8372c64 100644
+--- a/gcc-4.6/gcc/gthr-posix.h
++++ b/gcc-4.6/gcc/gthr-posix.h
 @@ -38,6 +38,19 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
  #define _REENTRANT 1
  #endif
