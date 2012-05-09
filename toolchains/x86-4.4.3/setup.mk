@@ -24,7 +24,7 @@
 #
 
 TOOLCHAIN_NAME   := x86-4.4.3
-TOOLCHAIN_PREFIX := $(TOOLCHAIN_PREBUILT_ROOT)/bin/i686-android-linux-
+TOOLCHAIN_PREFIX := $(TOOLCHAIN_PREBUILT_ROOT)/bin/i686-linux-android-
 
 TARGET_CFLAGS := \
     -ffunction-sections \

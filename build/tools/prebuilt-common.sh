@@ -856,7 +856,7 @@ parse_toolchain_name ()
         ARCH="x86"
         ABI=$ARCH
         ABI_INSTALL_NAME="x86"
-        ABI_CONFIGURE_TARGET="i686-android-linux"
+        ABI_CONFIGURE_TARGET="i686-linux-android"
         # Enable C++ exceptions, RTTI and GNU libstdc++ at the same time
         # You can't really build these separately at the moment.
         ABI_CFLAGS_FOR_TARGET="-fPIC"
@@ -898,7 +898,7 @@ parse_toolchain_name ()
         GDBSERVER_LDFLAGS=
         ;;
     x86-*)
-        GDBSERVER_HOST=i686-android-linux-gnu
+        GDBSERVER_HOST=i686-android-linux-gnu  # GDB<7.3 doesn't support i686-linux-android-gnu
         GDBSERVER_CFLAGS=
         GDBSERVER_LDFLAGS=
         ;;

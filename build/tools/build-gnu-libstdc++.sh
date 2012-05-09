@@ -151,7 +151,7 @@ build_gnustl_for_abi ()
             BUILD_HOST=arm-linux-androideabi
             ;;
         x86)
-            BUILD_HOST=i686-android-linux
+            BUILD_HOST=i686-linux-android
             ;;
         mips)
             BUILD_HOST=mipsel-linux-android
