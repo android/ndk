@@ -312,8 +312,9 @@ remove_libgcc_symbols ()
 # $1: library name
 # $2: functions list
 # $3: variables list
-# $4: destination file
-# $5: toolchain binprefix
+# $4: sysroot to use
+# $5: destination file
+# $6: toolchain binprefix
 gen_shell_lib ()
 {
     # Now generate a small C source file that contains similarly-named stubs
@@ -328,19 +329,21 @@ gen_shell_lib ()
 
     # Build it with our cross-compiler. It will complain about conflicting
     # types for built-in functions, so just shut it up.
-    $5-gcc -Wl,-shared,-Bsymbolic -nostdlib -o $TMPO $TMPC 1>/dev/null 2>&1
+    echo "## COMMAND: $6-gcc --sysroot=\"$4\" -Wl,-shared,-Bsymbolic -nostdlib -o $TMPO $TMPC" > $TMPL
+    $6-gcc --sysroot="$4" -Wl,-shared,-Bsymbolic -nostdlib -o $TMPO $TMPC 1>>$TMPL 2>&1
     if [ $? != 0 ] ; then
         dump "ERROR: Can't generate shell library for: $1"
-        dump "See the content of $TMPC for details."
+        dump "See the content of $TMPC and $TMPL for details."
+        cat $TMPL | tail -10
         exit 1
     fi
 
     # Copy to our destination now
-    local libdir=$(dirname "$4")
-    mkdir -p "$libdir" && cp -f $TMPO "$4"
+    local libdir=$(dirname "$5")
+    mkdir -p "$libdir" && cp -f $TMPO "$5"
     if [ $? != 0 ] ; then
         dump "ERROR: Can't copy shell library for: $1"
-        dump "target location is: $4"
+        dump "target location is: $5"
         exit 1
     fi
 }
@@ -352,7 +355,8 @@ gen_shell_libraries ()
 {
     local ARCH=$1
     local SYMDIR="$SRCDIR/$2"
-    local DSTDIR="$DSTDIR/$3"
+    local SYSROOT="$3"
+    local DSTDIR="$DSTDIR/$SYSROOT/usr/lib"
     local TOOLCHAIN_PREFIX funcs vars numfuncs numvars
 
     # Let's locate the toolchain we're going to use
@@ -385,7 +389,7 @@ gen_shell_libraries ()
         numvars=$(echo $vars | wc -w)
         log "Generating shell library for $LIB ($numfuncs functions + $numvars variables)"
 
-        gen_shell_lib $LIB "$funcs" "$vars" "$DSTDIR/$LIB" "$TOOLCHAIN_PREFIX"
+        gen_shell_lib $LIB "$funcs" "$vars" "$SYSROOT" "$DSTDIR/$LIB" "$TOOLCHAIN_PREFIX"
     done
 }
 
@@ -481,7 +485,7 @@ for PLATFORM in $PLATFORMS; do
 
         if [ -z "$OPTION_MINIMAL" ]; then
             # Generate shell libraries from symbol files
-            gen_shell_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $PLATFORM_DST/$SYSROOT/lib
+            gen_shell_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $PLATFORM_DST/arch-$ARCH
         fi
     done
     PREV_PLATFORM_DST=$PLATFORM_DST
