@@ -110,7 +110,7 @@ if [ "$VERBOSE2" = "yes" ]; then
     FLAGS=$FLAGS" --verbose"
 fi
 if [ "$TRY64" = "yes" ]; then
-    FLAGS=$FLAGS" --try64"
+    FLAGS=$FLAGS" --try-64"
 else
     force_32bit_binaries
 fi
