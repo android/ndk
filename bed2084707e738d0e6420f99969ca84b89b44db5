@@ -1,0 +1,8 @@
+Change-Id: Ibed2084707e738d0e6420f99969ca84b89b44db5
+Code-Review+2: David Turner <digit@android.com>
+Verified+1: David Turner <digit@android.com>
+Submitted-by: David Turner <digit@android.com>
+Submitted-at: Wed, 09 May 2012 00:40:55 -0700
+Reviewed-on: https://android-review.googlesource.com/36480
+Project: platform/ndk
+Branch: refs/heads/master
