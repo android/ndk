@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 
-# this file is used to prepare the NDK to build with the arm gcc-4.4.3
+# this file is used to prepare the NDK to build with the arm gcc-4.6
 # toolchain any number of source files
 #
 # its purpose is to define (or re-define) templates used to build
@@ -35,16 +35,6 @@ TARGET_LDFLAGS :=
 
 TARGET_C_INCLUDES := \
     $(SYSROOT)/usr/include
-
-# This is to avoid the dreaded warning compiler message:
-#   note: the mangling of 'va_list' has changed in GCC 4.4
-#
-# The fact that the mangling changed does not affect the NDK ABI
-# very fortunately (since none of the exposed APIs used va_list
-# in their exported C++ functions). Also, GCC 4.5 has already
-# removed the warning from the compiler.
-#
-TARGET_CFLAGS += -Wno-psabi
 
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
     TARGET_CFLAGS += -march=armv7-a \

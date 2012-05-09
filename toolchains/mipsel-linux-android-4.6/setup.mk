@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 
-# this file is used to prepare the NDK to build with the mipsel gcc-4.4.3
+# this file is used to prepare the NDK to build with the mipsel gcc-4.6
 # toolchain any number of source files
 #
 # its purpose is to define (or re-define) templates used to build
@@ -36,21 +36,9 @@ TARGET_CFLAGS := \
         -frename-registers \
 
 TARGET_LDFLAGS :=
-TARGET_LDSCRIPT_XSC :=
-TARGET_LDSCRIPT_X :=
 
 TARGET_C_INCLUDES := \
     $(SYSROOT)/usr/include
-
-# This is to avoid the dreaded warning compiler message:
-#   note: the mangling of 'va_list' has changed in GCC 4.4
-#
-# The fact that the mangling changed does not affect the NDK ABI
-# very fortunately (since none of the exposed APIs used va_list
-# in their exported C++ functions). Also, GCC 4.5 has already
-# removed the warning from the compiler.
-#
-TARGET_CFLAGS += -Wno-psabi
 
 TARGET_mips_release_CFLAGS :=  -O2 \
                                -fomit-frame-pointer \
@@ -84,7 +72,6 @@ $(call set-src-files-text,$(__release_sources),mips$(space)) \
 #
 define cmd-build-shared-library
 $(PRIVATE_CXX) \
-    $(PRIVATE_LDSCRIPT_XSC) \
     -Wl,-soname,$(notdir $@) \
     -shared \
     --sysroot=$(call host-path,$(PRIVATE_SYSROOT)) \
@@ -96,7 +83,6 @@ endef
 
 define cmd-build-executable
 $(PRIVATE_CXX) \
-    $(PRIVATE_LDSCRIPT_X) \
     -Wl,--gc-sections \
     -Wl,-z,nocopyreloc \
     --sysroot=$(call host-path,$(PRIVATE_SYSROOT)) \
