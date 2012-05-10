@@ -26,7 +26,7 @@ PROGDIR=`cd $PROGDIR && pwd`
 
 # the default branch to use
 BRANCH=master
-register_option "--branch=<name>" BRANCH "Specify release branch"
+register_var_option "--branch=<name>" BRANCH "Specify release branch"
 
 # the default release name (use today's date)
 if [ "$TOOLCHAIN_GIT_DATE" -a "$TOOLCHAIN_GIT_DATE" != "now" ] ; then
@@ -155,7 +155,7 @@ toolchain_checkout ()
     log "Checking out $BRANCH branch of $NAME.git: $@"
     local REVISION=origin/$BRANCH
     if [ -n "$GIT_DATE" ] ; then
-        REVISION=`git $GITOPTS rev-list -n 1 --until="$GIT_DATE" $BRANCH`
+        REVISION=`git $GITOPTS rev-list -n 1 --until="$GIT_DATE" $REVISION`
     fi
     (mkdir -p $TMPDIR/$NAME && cd $TMPDIR/$NAME && run git $GITOPTS checkout $REVISION "$@")
     fail_panic "Could not checkout $NAME / $@ ?"
@@ -178,15 +178,17 @@ toolchain_clone mpc
 toolchain_clone binutils
 toolchain_clone gcc
 toolchain_clone gdb
+toolchain_clone expat
 
 
 toolchain_checkout build .
 toolchain_checkout gmp  .
 toolchain_checkout mpfr .
 toolchain_checkout mpc  .
+toolchain_checkout expat .
 toolchain_checkout binutils binutils-2.19 binutils-2.21
 toolchain_checkout gcc gcc-4.4.3 gcc-4.6
-toolchain_checkout gdb gdb-6.6 gdb-7.1.x
+toolchain_checkout gdb gdb-6.6 gdb-7.1.x gdb-7.3.x
 
 # Patch the toolchain sources
 if [ "$OPTION_NO_PATCHES" != "yes" ]; then
