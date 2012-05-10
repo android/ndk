@@ -1,0 +1,11 @@
+Code-Review+2: David Turner <digit@android.com>
+Verified+1: David Turner <digit@android.com>
+Code-Review+1: Bruce Beare <bruce.j.beare@intel.com>
+Code-Review+1: H.J. Lu <hjl.tools@gmail.com>
+Code-Review+2: Andrew Hsieh <andrewhsieh@google.com>
+Verified+1: Andrew Hsieh <andrewhsieh@google.com>
+Submitted-by: Andrew Hsieh <andrewhsieh@google.com>
+Submitted-at: Thu, 10 May 2012 08:00:12 -0700
+Reviewed-on: https://android-review.googlesource.com/36502
+Project: platform/ndk
+Branch: refs/heads/master
