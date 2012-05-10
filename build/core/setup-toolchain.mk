@@ -34,7 +34,28 @@ ifndef NDK_TOOLCHAIN
     # Select the last toolchain from the sorted list.
     # For now, this is enough to select armeabi-4.4.0 by default for ARM
     TARGET_TOOLCHAIN := $(lastword $(TARGET_TOOLCHAIN_LIST))
-    $(call ndk_log,Using target toolchain '$(TARGET_TOOLCHAIN)' for '$(TARGET_ARCH_ABI)' ABI)
+
+    # If NDK_TOOLCHAIN_VERSION is defined, we replace the toolchain version
+    # suffix with it.
+    #
+    ifdef NDK_TOOLCHAIN_VERSION
+        # We assume the toolchain name uses dashes (-) as separators and doesn't
+        # contain any space. The following is a bit subtle, but essentially
+        # does the following:
+        #
+        #   1/ Use 'subst' to convert dashes into spaces, this generates a list
+        #   2/ Use 'chop' to remove the last element of the list
+        #   3/ Use 'subst' again to convert the spaces back into dashes
+        #
+        # So it TARGET_TOOLCHAIN is 'foo-bar-zoo-xxx', then
+        # TARGET_TOOLCHAIN_BASE will be 'foo-bar-zoo'
+        #
+        TARGET_TOOLCHAIN_BASE := $(subst $(space),-,$(call chop,$(subst -,$(space),$(TARGET_TOOLCHAIN))))
+        TARGET_TOOLCHAIN := $(TARGET_TOOLCHAIN_BASE)-$(NDK_TOOLCHAIN_VERSION)
+        $(call ndk_log,Using target toolchain '$(TARGET_TOOLCHAIN)' for '$(TARGET_ARCH_ABI)' ABI (through NDK_TOOLCHAIN_VERSION))
+    else
+        $(call ndk_log,Using target toolchain '$(TARGET_TOOLCHAIN)' for '$(TARGET_ARCH_ABI)' ABI)
+    endif
 else # NDK_TOOLCHAIN is not empty
     TARGET_TOOLCHAIN_LIST := $(strip $(filter $(NDK_TOOLCHAIN),$(NDK_ABI.$(TARGET_ARCH_ABI).toolchains)))
     ifndef TARGET_TOOLCHAIN_LIST
