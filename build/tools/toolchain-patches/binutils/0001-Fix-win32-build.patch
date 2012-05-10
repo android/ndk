@@ -1,0 +1,51 @@
+From 445aaaeae1153efcfc94b2b0944c4b0c0e2be0e8 Mon Sep 17 00:00:00 2001
+From: David 'Digit' Turner <digit@google.com>
+Date: Thu, 10 May 2012 17:14:12 +0200
+Subject: Fix win32 build.
+
+This fixes the binutils build with the x86_64-w64-mingw32 toolchain.
+The reason for this is that this toolchain's <sys/stat.h> redefines
+'stat' through a macro, as with:
+
+  #define  stat  _stat64
+
+Because bucomm.h didn't include <sys/stat.h>, the signature of
+the functions that use 'struct stat' didn't match the one in the
+implementation (which internally used 'struct _stat64'), resulting
+in a build error.
+
+Change-Id: I32de64af6c5f3e70344fa7c22b40d9a83695c7df
+---
+ binutils-2.19/binutils/bucomm.h |    2 ++
+ binutils-2.21/binutils/bucomm.h |    2 ++
+ 2 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/binutils-2.19/binutils/bucomm.h b/binutils-2.19/binutils/bucomm.h
+index 08c166b..dd1d2e8 100644
+--- a/binutils-2.19/binutils/bucomm.h
++++ b/binutils-2.19/binutils/bucomm.h
+@@ -22,6 +22,8 @@
+ #ifndef _BUCOMM_H
+ #define _BUCOMM_H
+ 
++#include <sys/stat.h>
++
+ /* Return the filename in a static buffer.  */
+ const char *bfd_get_archive_filename (bfd *);
+ 
+diff --git a/binutils-2.21/binutils/bucomm.h b/binutils-2.21/binutils/bucomm.h
+index fcbc32b..8124bd0 100644
+--- a/binutils-2.21/binutils/bucomm.h
++++ b/binutils-2.21/binutils/bucomm.h
+@@ -23,6 +23,8 @@
+ #ifndef _BUCOMM_H
+ #define _BUCOMM_H
+ 
++#include <sys/stat.h>
++
+ /* Return the filename in a static buffer.  */
+ const char *bfd_get_archive_filename (const bfd *);
+ 
+-- 
+1.7.6.rc0
+
