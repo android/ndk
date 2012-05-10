@@ -175,8 +175,17 @@ OLD_CC="$CC"
 OLD_CFLAGS="$CFLAGS"
 OLD_LDFLAGS="$LDFLAGS"
 
+# The content of file "gcc/BASE-VER" (in toolchain source tree) may not agree with $GCC_VERSION.
+# It's used to form directory $TOOLCHAIN_PATH/lib/gcc/$ABI_CONFIGURE_TARGET/$BASE_VER/include
+BASE_VER=$GCC_VERSION
+case "$GCC_VERSION" in
+   4.6)
+      BASE_VER=4.6.x-google
+      ;;
+esac
+
 INCLUDE_DIRS=\
-"-I$TOOLCHAIN_PATH/lib/gcc/$ABI_CONFIGURE_TARGET/$GCC_VERSION/include \
+"-I$TOOLCHAIN_PATH/lib/gcc/$ABI_CONFIGURE_TARGET/$BASE_VER/include \
 -I$BUILD_SYSROOT/usr/include"
 CRTBEGIN="$BUILD_SYSROOT/usr/lib/crtbegin_static.o"
 CRTEND="$BUILD_SYSROOT/usr/lib/crtend_android.o"
