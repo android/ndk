@@ -1,0 +1,39 @@
+From 504ba0176a97c9b849fd18c4591a2cfc8d5eb130 Mon Sep 17 00:00:00 2001
+From: David 'Digit' Turner <digit@google.com>
+Date: Wed, 9 May 2012 17:53:13 +0200
+Subject: gcc-4.6: Disable sincos optimization
+
+Ensure that sincos optimization is disabled for NDK toolchain
+builds. This ensures that NDK-generated code will always link
+on legacy Android platforms that don't implement sincos() in
+their /system/lib/libm.so.
+
+For the record, this optimization changes the following code:
+
+  double c, s;
+  c = cos(angle);
+  s = sin(angle);
+
+Into machine code that does:
+
+  double c, s;
+  sincos(angle, &s, &c);
+
+Change-Id: I332bf5788267dd56e93b8cdb0cefa04b970eca88
+---
+ gcc-4.6/gcc/config/linux.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/gcc-4.6/gcc/config/linux.h b/gcc-4.6/gcc/config/linux.h
+index a1711dc..8c9ec5f 100644
+--- a/gcc-4.6/gcc/config/linux.h
++++ b/gcc-4.6/gcc/config/linux.h
+@@ -99,4 +99,4 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+ #define TARGET_C99_FUNCTIONS (OPTION_GLIBC)
+ 
+ /* Whether we have sincos that follows the GNU extension.  */
+-#define TARGET_HAS_SINCOS (OPTION_GLIBC || OPTION_BIONIC)
++#define TARGET_HAS_SINCOS (OPTION_GLIBC)
+-- 
+1.7.6.rc0
+
