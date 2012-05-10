@@ -11,7 +11,7 @@ diff --git a/Makefile.in b/Makefile.in
 index 0b73ff6..c7b5847 100644
 --- a/Makefile.in
 +++ b/Makefile.in
-@@ -431,6 +431,35 @@ GCC_CONFIG_ARGS += $(GCC_CONFIG_LIBSTDCXX_V3) --disable-libssp \
+@@ -434,6 +434,35 @@ GCC_CONFIG_ARGS += $(GCC_CONFIG_LIBSTDCXX_V3) --disable-libssp \
  	--disable-tls --disable-libitm
  
  CFLAGS_FOR_TARGET += -DTARGET_POSIX_IO -fno-short-enums
