@@ -260,7 +260,11 @@ endif
 
 HOST_ECHO := $(strip $(HOST_ECHO))
 ifndef HOST_ECHO
-    HOST_ECHO := $(strip $(wildcard $(NDK_ROOT)/prebuilt/$(HOST_TAG)/bin/echo$(HOST_EXEEXT)))
+    # Special case, on Cygwin, always use the host echo, not our prebuilt one
+    # which adds \r\n at the end of lines.
+    ifneq ($(HOST_OS),cygwin)
+        HOST_ECHO := $(strip $(wildcard $(NDK_ROOT)/prebuilt/$(HOST_TAG)/bin/echo$(HOST_EXEEXT)))
+    endif
 endif
 ifndef HOST_ECHO
     HOST_ECHO := echo
