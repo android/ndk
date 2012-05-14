@@ -46,23 +46,11 @@ int main(void)
 
     int nn;
 
-    while (argc > 1 && argv[1][0] == L'-') {
-        const TCHAR* arg = argv[1];
-
-        switch (arg[1]) {
-            case L'n':
-                flagNoNewline = 1;
-                break;
-
-            case L'h':
-            case L'?':
-                _tprintf(L"Usage: echo.exe [-n] text1 text2...\r\n");
-                return 0;
-
-            default:
-                _ftprintf(stderr,L"Unknown option: %s\r\n", arg);
-                return 1;
-        }
+    /* IMPORTANT: echo should only accept -n as a first option, everything
+     * else must be treated as part of the input string.
+     */
+    if (argc > 1 && argv[1][0] == L'-' && argv[1][1] == L'n' && argv[1][2] == L'\0') {
+        flagNoNewline = 1;
         argc--;
         argv++;
     }
