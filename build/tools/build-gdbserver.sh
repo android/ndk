@@ -248,9 +248,8 @@ fi
 
 if [ "$PACKAGE_DIR" ]; then
     ARCHIVE=$TOOLCHAIN-gdbserver.tar.bz2
-    SUBDIR=$(dirname $(get_toolchain_install_subdir $TOOLCHAIN $HOST_TAG))
     dump "Packaging: $ARCHIVE"
-    pack_archive "$PACKAGE_DIR/$ARCHIVE" "$NDK_DIR" "$SUBDIR/$DSTFILE"
+    pack_archive "$PACKAGE_DIR/$ARCHIVE" "$ANDROID_NDK_ROOT" "prebuilt/android-$ARCH/gdbserver/$DSTFILE"
 fi
 
 log "Cleaning up."
