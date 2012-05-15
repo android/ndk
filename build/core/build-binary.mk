@@ -307,7 +307,7 @@ ifeq ($(LOCAL_SHORT_COMMANDS)),true)
         $(call ndk_log,Building static library module '$(LOCAL_MODULE)' with linker list file)
         ar_options   := $(ar_objects)
         ar_list_file := $(LOCAL_OBJS_DIR)/archiver.list
-        ar_options   := @$(call host-path,$(ar_list_file)))
+        ar_options   := @$(call host-path,$(ar_list_file))
         $(call generate-list-file,$(ar_options),$(ar_list_file))
 
         $(LOCAL_BUILT_MODULE): $(ar_list_file)
