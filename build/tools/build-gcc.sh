@@ -178,15 +178,6 @@ if [ $? != 0 ] ; then
     exit 1
 fi
 
-# For x86, we currently need to force the usage of Android-specific C runtime
-# object files to generate a few target binaries. Ideally, this should be directly
-# handled by the GCC configuration scripts, just like with ARM.
-#
-if [ "$ARCH" = "x86" ]; then
-    ABI_LDFLAGS_FOR_TARGET=" -nostartfiles $TOOLCHAIN_SYSROOT/usr/lib/crtbegin_dynamic.o $TOOLCHAIN_SYSROOT/usr/lib/crtend_android.o"
-    dump "Forcing -nostartfiles: $ABI_LDFLAGS_FOR_TARGET"
-fi
-
 # configure the toolchain
 #
 dump "Configure: $TOOLCHAIN toolchain build"
@@ -203,7 +194,6 @@ OLD_ABI="${ABI}"
 export CC CXX
 export CFLAGS_FOR_TARGET="$ABI_CFLAGS_FOR_TARGET"
 export CXXFLAGS_FOR_TARGET="$ABI_CXXFLAGS_FOR_TARGET"
-export LDFLAGS_FOR_TARGET="$ABI_LDFLAGS_FOR_TARGET"
 # Needed to build a 32-bit gmp on 64-bit systems
 export ABI=$HOST_GMP_ABI
 # -Wno-error is needed because our gdb-6.6 sources use -Werror by default
