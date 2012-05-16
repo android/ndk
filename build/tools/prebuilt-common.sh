@@ -860,6 +860,7 @@ parse_toolchain_name ()
         # Enable C++ exceptions, RTTI and GNU libstdc++ at the same time
         # You can't really build these separately at the moment.
         ABI_CFLAGS_FOR_TARGET="-fPIC"
+        ABI_CONFIGURE_EXTRA_FLAGS="$ABI_CONFIGURE_EXTRA_FLAGS --enable-gold=default"
         ;;
     mips*)
         ARCH="mips"
