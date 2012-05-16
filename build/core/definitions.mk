@@ -401,7 +401,7 @@ __list_file := $2
 .PHONY: $$(__list_file)
 
 $$(__list_file):
-	@ $$(host-mkdir) $$(dir $$@)
+	@$$(call host-mkdir,$$(dir $$@))
 	$$(hide) $$(HOST_ECHO) -n "" > $$@
 $(call list-file-maybe-gen-1000,0,$1)
 $(call list-file-maybe-gen-1000,1,$1)

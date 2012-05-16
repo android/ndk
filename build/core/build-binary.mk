@@ -301,13 +301,13 @@ LOCAL_SHORT_COMMANDS := $(strip $(LOCAL_SHORT_COMMANDS))
 ifndef LOCAL_SHORT_COMMANDS
     LOCAL_SHORT_COMMANDS := $(strip $(NDK_APP_SHORT_COMMANDS))
 endif
-ifeq ($(LOCAL_SHORT_COMMANDS)),true)
+ifeq ($(LOCAL_SHORT_COMMANDS),true)
     # For static and whole static libraries
     ifneq (,$(filter STATIC_LIBRARY WHOLE_STATIC_LIBRARY,$(call module-get-class,$(LOCAL_MODULE))))
         $(call ndk_log,Building static library module '$(LOCAL_MODULE)' with linker list file)
         ar_options   := $(ar_objects)
         ar_list_file := $(LOCAL_OBJS_DIR)/archiver.list
-        ar_options   := @$(call host-path,$(ar_list_file))
+        ar_objects   := @$(call host-path,$(ar_list_file))
         $(call generate-list-file,$(ar_options),$(ar_list_file))
 
         $(LOCAL_BUILT_MODULE): $(ar_list_file)
