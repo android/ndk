@@ -898,12 +898,12 @@ parse_toolchain_name ()
         GDBSERVER_LDFLAGS=
         ;;
     x86-*)
-        GDBSERVER_HOST=i686-android-linux-gnu  # GDB<7.3 doesn't support i686-linux-android-gnu
+        GDBSERVER_HOST=i686-linux-android
         GDBSERVER_CFLAGS=
         GDBSERVER_LDFLAGS=
         ;;
     mips*)
-        GDBSERVER_HOST=mipsel-linux-gnu
+        GDBSERVER_HOST=mipsel-linux-android
         GDBSERVER_CFLAGS=
         GDBSERVER_LDFLAGS=
         ;;
