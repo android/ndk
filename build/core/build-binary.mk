@@ -95,9 +95,16 @@ endif
 # If LOCAL_DISABLE_NO_EXECUTE is not true, we disable generated code from running from
 # the heap and stack by default.
 #
-ifndef ($(LOCAL_DISABLE_NO_EXECUTE),true)
+ifneq ($(LOCAL_DISABLE_NO_EXECUTE),true)
   LOCAL_CFLAGS += $($(my)NO_EXECUTE_CFLAGS)
   LOCAL_LDFLAGS += $($(my)NO_EXECUTE_LDFLAGS)
+endif
+
+# If LOCAL_DISABLE_RELRO is not true, we provide relro and GOT protections
+# by default.
+#
+ifneq ($(LOCAL_DISABLE_RELRO),true)
+  LOCAL_LDFLAGS += $($(my)RELRO_LDFLAGS)
 endif
 
 #

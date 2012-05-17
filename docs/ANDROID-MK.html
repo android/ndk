@@ -618,6 +618,25 @@ LOCAL_DISABLE_NO_EXECUTE
         http://en.wikipedia.org/wiki/NX_bit
         http://www.gentoo.org/proj/en/hardened/gnu-stack.xml
 
+LOCAL_DISABLE_RELRO
+    By default, NDK compiled code is built with read-only relocations
+    and GOT protection.  This instruct the runtime linker to mark
+    certain regions of memory as being read-only after relocation,
+    making certain security exploits (such as GOT overwrites) harder
+    to perform.
+
+    It is enabled by default, but you can disable it if you *really*
+    need to by setting this variable to 'true'.
+
+    NOTE: These protections are only effective on newer Android devices
+          ("Jelly Bean" and beyond). The code will still run on older
+          versions (albeit without memory protections).
+
+    For more information, see:
+
+        http://isisblogs.poly.edu/2011/06/01/relro-relocation-read-only/
+        http://www.akkadia.org/drepper/nonselsec.pdf (section 6)
+
 LOCAL_EXPORT_CFLAGS
     Define this variable to record a set of C/C++ compiler flags that will
     be added to the LOCAL_CFLAGS definition of any other module that uses
