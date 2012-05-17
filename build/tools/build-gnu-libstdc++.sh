@@ -178,10 +178,6 @@ build_gnustl_for_abi ()
         LDFLAGS=$LDFLAGS" -Wl,--fix-cortex-a8"
     fi
 
-    if [ "$ABI" = "mips" ]; then
-        LDFLAGS=$LDFLAGS" -Wl,-T,$NDK_DIR/toolchains/mipsel-linux-android-4.4.3/mipself.xsc"
-    fi
-
     LIBTYPE_FLAGS=
     if [ $LIBTYPE = "static" ]; then
         # Ensure we disable visibility for the static library to reduce the

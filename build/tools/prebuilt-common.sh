@@ -905,7 +905,7 @@ parse_toolchain_name ()
     mips*)
         GDBSERVER_HOST=mipsel-linux-gnu
         GDBSERVER_CFLAGS=
-        GDBSERVER_LDFLAGS="-Wl,-T,$ANDROID_NDK_ROOT/toolchains/mipsel-linux-android-4.4.3/mipself.x"
+        GDBSERVER_LDFLAGS=
         ;;
     esac
 

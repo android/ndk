@@ -36,8 +36,8 @@ TARGET_CFLAGS := \
         -frename-registers \
 
 TARGET_LDFLAGS :=
-TARGET_LDSCRIPT_XSC := -Wl,-T,$(call host-path,$(TOOLCHAIN_ROOT))/mipself.xsc
-TARGET_LDSCRIPT_X := -Wl,-T,$(call host-path,$(TOOLCHAIN_ROOT))/mipself.x
+TARGET_LDSCRIPT_XSC :=
+TARGET_LDSCRIPT_X :=
 
 TARGET_C_INCLUDES := \
     $(SYSROOT)/usr/include

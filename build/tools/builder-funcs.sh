@@ -457,9 +457,6 @@ builder_begin_android ()
             builder_cflags "-mthumb -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16"
             builder_ldflags "-Wl,--fix-cortex-a8"
             ;;
-        mips)
-            builder_ldflags "-Wl,-T,$NDK_DIR/toolchains/mipsel-linux-android-4.4.3/mipself.xsc"
-            ;;
     esac
 }
 
