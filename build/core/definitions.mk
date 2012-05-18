@@ -160,7 +160,7 @@ endif
 # -----------------------------------------------------------------------------
 ifeq ($(HOST_OS),windows)
 host-rm = \
-    $(eval __host_rm_files := $(foreach __host_rm_file,$(subst /,\,$1),$(wildcard $(__host_rm_file))))\
+    $(eval __host_rm_files := $(foreach __host_rm_file,$1,$(subst /,\,$(wildcard $(__host_rm_file)))))\
     $(if $(__host_rm_files),del /f/q $(__host_rm_files) >NUL 2>NUL)
 else
 host-rm = rm -f $1
@@ -174,8 +174,8 @@ endif
 #            to remove some files _and_ directories.
 # -----------------------------------------------------------------------------
 ifeq ($(HOST_OS),windows)
-host-rm = \
-    $(eval __host_rmdir_files := $(foreach __host_rmdir_file,$(subst /,\,$1),$(wildcard $(__host_rmdir_file))))\
+host-rmdir = \
+    $(eval __host_rmdir_files := $(foreach __host_rmdir_file,$1,$(subst /,\,$(wildcard $(__host_rmdir_file)))))\
     $(if $(__host_rmdir_files),del /f/s/q $(__host_rmdir_files) >NUL 2>NUL)
 else
 host-rmdir = rm -rf $1
