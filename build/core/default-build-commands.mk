@@ -33,12 +33,18 @@ TARGET-get-linker-objects-and-libraries = \
     $(call host-path, $2 $(PRIVATE_LIBGCC) $4) \
 
 
-# These flags are used to enfore the NX (no execute) security feature in the
+# These flags are used to enforce the NX (no execute) security feature in the
 # generated machine code. This adds a special section to the generated shared
 # libraries that instruct the Linux kernel to disable code execution from
 # the stack and the heap.
 TARGET_NO_EXECUTE_CFLAGS  := -Wa,--noexecstack
 TARGET_NO_EXECUTE_LDFLAGS := -Wl,-z,noexecstack
+
+# These flags are used to mark certain regions of the resulting
+# executable or shared library as being read-only after the dynamic
+# linker has run. This makes GOT overwrite security attacks harder to
+# exploit.
+TARGET_RELRO_LDFLAGS := -Wl,-z,relro -Wl,-z,now
 
 # NOTE: Ensure that TARGET_LIBGCC is placed after all private objects
 #       and static libraries, but before any other library in the link
