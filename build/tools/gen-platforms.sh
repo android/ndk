@@ -393,6 +393,49 @@ gen_shell_libraries ()
     done
 }
 
+# $1: architecture name
+# $2: source directory (for *.S files)
+# $3: destination directory
+#
+gen_crt_objects ()
+{
+    local ARCH=$1
+    local SRC_DIR="$SRCDIR/$2"
+    local DST_DIR="$DSTDIR/$3"
+    local SRC_FILE DST_FILE
+    local TOOLCHAIN_PREFIX
+
+    if [ ! -d "$SRC_DIR" ]; then
+        return
+    fi
+
+    # Let's locate the toolchain we're going to use
+    local TOOLCHAIN_PREFIX="$NDK_DIR/$(get_default_toolchain_binprefix_for_arch $ARCH)"
+    TOOLCHAIN_PREFIX=${TOOLCHAIN_PREFIX%-}
+    if [ ! -f "$TOOLCHAIN_PREFIX-as" ]; then
+        dump "ERROR: $ARCH toolchain not installed: $TOOLCHAIN_PREFIX-as"
+        dump "Important: Use the --minimal flag to use this script without generated object files."
+        dump "This is generally useful when you want to generate the host cross-toolchain programs."
+        exit 1
+    fi
+
+    for SRC_FILE in $(cd "$SRC_DIR" && ls crt*.S); do
+        DST_FILE=${SRC_FILE%%.S}.o
+        log "Generating $ARCH C runtime object: $DST_FILE"
+        # Note: we avoid invoking the $TOOLCHAIN_PREFIX-gcc because
+        # we want to be able to use this code in the future with only
+        # a valid binutils install. That's also why we use the host cpp
+        # instead of $TOOLCHAIN_PREFIX-cpp
+        (cd "$SRC_DIR" && cpp "$SRC_FILE" | $TOOLCHAIN_PREFIX-as -o "$DST_DIR/$DST_FILE" -) 1>>$TMPL 2>&1
+        if [ $? != 0 ]; then
+            dump "ERROR: Could not generate $DST_FILE from $SRC_DIR/$SRC_FILE"
+            dump "Please see the content of $TMPL for details!"
+            cat $TMPL | tail -10
+            exit 1
+        fi
+    done
+}
+
 # $1: platform number
 # $2: architecture
 # $3: target NDK directory
@@ -479,12 +522,17 @@ for PLATFORM in $PLATFORMS; do
         log "Copy $ARCH sysroot files from \$SRC/android-$PLATFORM over \$DST/android-$PLATFORM/arch-$ARCH"
         copy_src_directory $PLATFORM_SRC/include           $PLATFORM_DST/$SYSROOT/include "sysroot headers"
         copy_src_directory $PLATFORM_SRC/arch-$ARCH/include $PLATFORM_DST/$SYSROOT/include "sysroot headers"
-        copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib     $PLATFORM_DST/$SYSROOT/lib "sysroot libs"
         copy_src_directory $PLATFORM_SRC/$SYSROOT          $PLATFORM_DST/$SYSROOT "sysroot"
 
         generate_api_level "$PLATFORM" "$ARCH" "$DSTDIR"
 
         if [ -z "$OPTION_MINIMAL" ]; then
+            # Copy the prebuilt static libraries.
+            copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib $PLATFORM_DST/$SYSROOT/lib "sysroot libs"
+
+            # Generate  C runtime object files when available
+            gen_crt_objects $ARCH $PLATFORM_SRC/arch-$ARCH/src $PLATFORM_DST/$SYSROOT/lib
+
             # Generate shell libraries from symbol files
             gen_shell_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $PLATFORM_DST/arch-$ARCH
         fi
