@@ -401,7 +401,8 @@ generate_api_level ()
     local API=$1
     local ARCH=$2
     local HEADER="platforms/android-$API/arch-$ARCH/usr/include/android/api-level.h"
-    log dump "Generating: $HEADER"
+    log "Generating: $HEADER"
+    rm -f "$3/$HEADER"  # Remove symlink if any.
     cat > "$3/$HEADER" <<EOF
 /*
  * Copyright (C) 2008 The Android Open Source Project
