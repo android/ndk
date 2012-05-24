@@ -1,0 +1,64 @@
+diff --git a/gdb-7.3.x/gdb/usage-logging.c b/gdb-7.3.x/gdb/usage-logging.c
+index 76938ab..65981aa 100644
+--- a/gdb-7.3.x/gdb/usage-logging.c
++++ b/gdb-7.3.x/gdb/usage-logging.c
+@@ -19,6 +19,32 @@
+ 
+    This is written with the possibility that several ways of logging
+    may be chosen from.  For now we just use syslog.  */
++#if defined(_WIN32)
++/* Disabled for Windows which doesn't provide syslog.h upon which logging service
++   depends.  Note that usage-logging isn't upstreamed yet */
++
++int usage_log_enabled (void)
++{
++    return 0;
++}
++
++void usage_log_start (int argc, char **argv)
++{
++}
++
++void usage_log_end (int exit_code)
++{
++}
++
++void usage_log_printf (const char *msg, ...)
++{
++}
++
++void usage_log_flush (void)
++{
++}
++
++#else
+ 
+ #define _GNU_SOURCE /* for vasprintf */
+ #include <limits.h>
+@@ -617,3 +643,5 @@ usage_log_printf (const char *msg, ...)
+       va_end (args);
+     }
+ }
++
++#endif /* _WIN32 */
+\ No newline at end of file
+diff --git a/gdb-7.3.x/gdb/utils.c b/gdb-7.3.x/gdb/utils.c
+index e073d13..69a9b3c 100644
+--- a/gdb-7.3.x/gdb/utils.c
++++ b/gdb-7.3.x/gdb/utils.c
+@@ -698,6 +698,7 @@ report_command_stats (void *arg)
+       && start_stats->command != NULL
+       && *start_stats->command != '\0')
+     {
++#ifdef HAVE_SBRK
+       long cmd_time = get_run_time () - start_stats->start_cpu_time;
+       char *lim = (char *) sbrk (0);
+       long space_now = lim - lim_at_start;
+@@ -714,6 +715,7 @@ report_command_stats (void *arg)
+ 			(int) delta_wall_time.tv_usec,
+ 			space_now, space_diff >= 0 ? "+" : "", space_diff,
+ 			start_stats->command);
++#endif
+     }
+   /* END GOOGLE LOCAL */
+ }
