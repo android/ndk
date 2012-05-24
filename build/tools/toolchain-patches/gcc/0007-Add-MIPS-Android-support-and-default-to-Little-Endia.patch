@@ -74,6 +74,15 @@ index 0512ef7..9e3ec05 100644
  %{pthread:-lpthread} \
  %{shared:-lc} \
  %{!shared: \
+@@ -135,7 +135,7 @@ extern const char *host_detect_local_cpu (int argc, const char **argv);
+ #endif
+
+ #define LINUX_DRIVER_SELF_SPECS \
+-  NO_SHARED_SPECS							\
++  LINUX_OR_ANDROID_CC(NO_SHARED_SPECS, "")                              \
+   MARCH_MTUNE_NATIVE_SPECS,						\
+   /* -mplt has no effect without -mno-shared.  Simplify later		\
+      specs handling by removing a redundant option.  */			\
 @@ -147,3 +148,30 @@ extern const char *host_detect_local_cpu (int argc, const char **argv);
  #define DRIVER_SELF_SPECS \
    BASE_DRIVER_SELF_SPECS, \
