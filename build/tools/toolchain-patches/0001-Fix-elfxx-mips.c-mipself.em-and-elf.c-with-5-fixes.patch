@@ -1,0 +1,123 @@
+From 4e8aef974603dcb5b994d7fdf7c9f4f1a7493150 Mon Sep 17 00:00:00 2001
+From: Chao-ying Fu <fu@mips.com>
+Date: Fri, 25 May 2012 11:59:55 -0700
+Subject: [PATCH] Fix elfxx-mips.c, mipself.em and elf.c with 5 fixes: a.
+ http://sourceware.org/bugzilla/show_bug.cgi?id=12637
+ mips-linux-gnu: relocation truncated to fit: R_MIPS_TLS_LDM
+ b. http://sourceware.org/bugzilla/show_bug.cgi?id=12845 ld
+ segfaults when using --gc-sections c.
+ http://sourceware.org/ml/binutils/2011-05/msg00198.html
+ Refix MIPS GOT_PAGE counting d. Follow warning symbol link
+ in mips_elf_count_got_symbols. e. Follow warning symbol
+ link in mips_elf_allocate_lazy_stub.
+
+---
+ binutils-2.21/bfd/elf.c               |    2 ++
+ binutils-2.21/bfd/elfxx-mips.c        |   32 ++++++++++++++++++++++++--------
+ binutils-2.21/ld/emultempl/mipself.em |    5 +++++
+ 3 files changed, 31 insertions(+), 8 deletions(-)
+
+diff --git a/binutils-2.21/bfd/elf.c b/binutils-2.21/bfd/elf.c
+index 92993a0..3c11bec 100644
+--- a/binutils-2.21/bfd/elf.c
++++ b/binutils-2.21/bfd/elf.c
+@@ -6213,6 +6213,8 @@ _bfd_elf_init_private_section_data (bfd *ibfd,
+       || obfd->xvec->flavour != bfd_target_elf_flavour)
+     return TRUE;
+ 
++  BFD_ASSERT (elf_section_data (osec) != NULL);
++
+   /* For objcopy and relocatable link, don't copy the output ELF
+      section type from input if the output BFD section flags have been
+      set to something different.  For a final link allow some flags
+diff --git a/binutils-2.21/bfd/elfxx-mips.c b/binutils-2.21/bfd/elfxx-mips.c
+index 4718dd4..5178b20 100644
+--- a/binutils-2.21/bfd/elfxx-mips.c
++++ b/binutils-2.21/bfd/elfxx-mips.c
+@@ -1726,6 +1726,11 @@ mips_elf_check_symbols (struct mips_elf_link_hash_entry *h, void *data)
+ 
+   if (mips_elf_local_pic_function_p (h))
+     {
++      /* PR 12845: If H is in a section that has been garbage
++	 collected it will have its output section set to *ABS*.  */
++      if (bfd_is_abs_section (h->root.root.u.def.section->output_section))
++	return TRUE;
++
+       /* H is a function that might need $25 to be valid on entry.
+ 	 If we're creating a non-PIC relocatable object, mark H as
+ 	 being PIC.  If we're creating a non-relocatable object with
+@@ -3852,6 +3857,10 @@ mips_elf_count_got_symbols (struct mips_elf_link_hash_entry *h, void *data)
+   struct mips_elf_link_hash_table *htab;
+   struct mips_got_info *g;
+ 
++  /* Follow warning symbol link.  */
++  if (h->root.root.type == bfd_link_hash_warning)
++    h = (struct mips_elf_link_hash_entry *) h->root.root.u.i.link;
++
+   info = (struct bfd_link_info *) data;
+   htab = mips_elf_hash_table (info);
+   g = htab->got_info;
+@@ -4080,14 +4089,18 @@ mips_elf_merge_got_with (struct mips_elf_bfd2got_hash *bfd2got,
+   if (estimate >= from->page_gotno + to->page_gotno)
+     estimate = from->page_gotno + to->page_gotno;
+ 
+-  /* And conservatively estimate how many local, global and TLS entries
++  /* And conservatively estimate how many local and TLS entries
+      would be needed.  */
+-  estimate += (from->local_gotno
+-	       + from->global_gotno
+-	       + from->tls_gotno
+-	       + to->local_gotno
+-	       + to->global_gotno
+-	       + to->tls_gotno);
++  estimate += from->local_gotno + to->local_gotno;
++  estimate += from->tls_gotno + to->tls_gotno;
++
++  /* If we're merging with the primary got, we will always have
++     the full set of global entries.  Otherwise estimate those
++     conservatively as well.  */
++  if (to == arg->primary)
++    estimate += arg->global_count;
++  else
++    estimate += from->global_gotno + to->global_gotno;
+ 
+   /* Bail out if the combined GOT might be too big.  */
+   if (estimate > arg->max_count)
+@@ -7736,7 +7749,6 @@ _bfd_mips_elf_check_relocs (bfd *abfd, struct bfd_link_info *info,
+ 	      if (!mips_elf_record_got_page_entry (info, abfd, r_symndx,
+ 						   addend))
+ 		return FALSE;
+-	      break;
+ 	    }
+ 	  /* Fall through.  */
+ 
+@@ -8601,6 +8613,10 @@ mips_elf_allocate_lazy_stub (struct mips_elf_link_hash_entry *h, void **data)
+ {
+   struct mips_elf_link_hash_table *htab;
+ 
++  /* Follow warning symbol link.  */
++  if (h->root.root.type == bfd_link_hash_warning)
++    h = (struct mips_elf_link_hash_entry *) h->root.root.u.i.link;
++
+   htab = (struct mips_elf_link_hash_table *) data;
+   if (h->needs_lazy_stub)
+     {
+diff --git a/binutils-2.21/ld/emultempl/mipself.em b/binutils-2.21/ld/emultempl/mipself.em
+index 7a13d4d..ada0786 100644
+--- a/binutils-2.21/ld/emultempl/mipself.em
++++ b/binutils-2.21/ld/emultempl/mipself.em
+@@ -138,6 +138,11 @@ mips_add_stub_section (const char *stub_sec_name, asection *input_section,
+   lang_output_section_statement_type *os;
+   struct hook_stub_info info;
+ 
++  /* PR 12845: If the input section has been garbage collected it will
++     not have its output section set to *ABS*.  */
++  if (bfd_is_abs_section (output_section))
++    return NULL;
++
+   /* Create the stub file, if we haven't already.  */
+   if (stub_file == NULL)
+     {
+-- 
+1.7.7.3
+
