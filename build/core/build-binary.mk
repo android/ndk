@@ -92,19 +92,19 @@ ifneq ($(LOCAL_ALLOW_UNDEFINED_SYMBOLS),true)
   LOCAL_LDFLAGS += $($(my)NO_UNDEFINED_LDFLAGS)
 endif
 
-# If LOCAL_DISABLE_NO_EXECUTE is not true, we disable generated code from running from
-# the heap and stack by default.
+# Toolchain by default disallows generated code running from the heap and stack.
+# If LOCAL_DISABLE_NO_EXECUTE is true, we allow that
 #
-ifneq ($(LOCAL_DISABLE_NO_EXECUTE),true)
-  LOCAL_CFLAGS += $($(my)NO_EXECUTE_CFLAGS)
-  LOCAL_LDFLAGS += $($(my)NO_EXECUTE_LDFLAGS)
+ifeq ($(LOCAL_DISABLE_NO_EXECUTE),true)
+  LOCAL_CFLAGS += $($(my)DISABLE_NO_EXECUTE_CFLAGS)
+  LOCAL_LDFLAGS += $($(my)DISABLE_NO_EXECUTE_LDFLAGS)
 endif
 
-# If LOCAL_DISABLE_RELRO is not true, we provide relro and GOT protections
-# by default.
+# Toolchain by default provides relro and GOT protections.
+# If LOCAL_DISABLE_RELRO is true, we disable the protections.
 #
-ifneq ($(LOCAL_DISABLE_RELRO),true)
-  LOCAL_LDFLAGS += $($(my)RELRO_LDFLAGS)
+ifeq ($(LOCAL_DISABLE_RELRO),true)
+  LOCAL_LDFLAGS += $($(my)DISABLE_RELRO_LDFLAGS)
 endif
 
 #
