@@ -1,0 +1,16 @@
+This test is here to check that all constructors and destructors
+are placed in the .init_array and .fini_array sections. More precisely:
+
+  - The address of functions with __attribute__((constructor)) are placed in
+    the .init_array section.
+
+  - The address of functions with __attribute__((destructor)) are placed in
+    the .fini_array section
+
+  - The address of static C++ constructors are placed in the .init_array
+    section. There is no corresponding entry in the .fini_array for the
+    corresponding destructors. Instead, the constructor must call __cxa_atexit
+    to register the destructors manually.
+
+The main idea is to check that there is no .ctors or .dtors section in the
+generated shared library.
