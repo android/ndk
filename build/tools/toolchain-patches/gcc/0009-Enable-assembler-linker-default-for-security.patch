@@ -1,0 +1,182 @@
+diff --git a/gcc-4.4.3/gcc/config/arm/elf.h b/gcc-4.4.3/gcc/config/arm/elf.h
+index 7c3eddb..018319b 100644
+--- a/gcc-4.4.3/gcc/config/arm/elf.h
++++ b/gcc-4.4.3/gcc/config/arm/elf.h
+@@ -52,8 +52,7 @@
+ #undef SUBSUBTARGET_EXTRA_SPECS
+ #define SUBSUBTARGET_EXTRA_SPECS
+ 
+-#ifndef ASM_SPEC
+-#define ASM_SPEC "\
++#define LINUX_ASM_SPEC "\
+ %{mbig-endian:-EB} \
+ %{mlittle-endian:-EL} \
+ %{mcpu=*:-mcpu=%*} \
+@@ -64,6 +63,9 @@
+ %{msoft-float:-mfloat-abi=soft} %{mhard-float:-mfloat-abi=hard} \
+ %{mfloat-abi=*} %{mfpu=*} \
+ %(subtarget_extra_asm_spec)"
++
++#ifndef ASM_SPEC
++#define ASM_SPEC LINUX_ASM_SPEC
+ #endif
+ 
+ /* The ARM uses @ are a comment character so we need to redefine
+diff --git a/gcc-4.4.3/gcc/config/arm/linux-eabi.h b/gcc-4.4.3/gcc/config/arm/linux-eabi.h
+index 2ca8818..9bec0c9 100644
+--- a/gcc-4.4.3/gcc/config/arm/linux-eabi.h
++++ b/gcc-4.4.3/gcc/config/arm/linux-eabi.h
+@@ -79,6 +79,11 @@
+ #define CC1PLUS_SPEC \
+   LINUX_OR_ANDROID_CC ("", ANDROID_CC1PLUS_SPEC)
+ 
++#undef ASM_SPEC
++#define ASM_SPEC \
++  LINUX_OR_ANDROID_CC (LINUX_ASM_SPEC, \
++                       LINUX_ASM_SPEC  " " ANDROID_ASM_SPEC)
++
+ #undef  LIB_SPEC
+ #define LIB_SPEC                                           \
+   LINUX_OR_ANDROID_LD (LINUX_TARGET_LIB_SPEC,                  \
+diff --git a/gcc-4.4.3/gcc/config/i386/linux.h b/gcc-4.4.3/gcc/config/i386/linux.h
+index f3a98c2..0d8e806 100644
+--- a/gcc-4.4.3/gcc/config/i386/linux.h
++++ b/gcc-4.4.3/gcc/config/i386/linux.h
+@@ -129,7 +129,8 @@ along with GCC; see the file COPYING3.  If not see
+ #undef  ASM_SPEC
+ #define ASM_SPEC \
+   "%{v:-V} %{Qy:} %{!Qn:-Qy} %{n} %{T} %{Ym,*} %{Yd,*} %{Wa,*:%*} --32 \
+-  %{!mno-sse2avx:%{mavx:-msse2avx}} %{msse2avx:%{!mavx:-msse2avx}}"
++  %{!mno-sse2avx:%{mavx:-msse2avx}} %{msse2avx:%{!mavx:-msse2avx}} " \
++  LINUX_OR_ANDROID_CC ("", ANDROID_ASM_SPEC)
+ 
+ /* These may be provided by config/linux-grtev2.h.  */
+ #ifndef LINUX_GRTE_EXTRA_SPECS
+diff --git a/gcc-4.4.3/gcc/config/linux-android.h b/gcc-4.4.3/gcc/config/linux-android.h
+index 5ca3858..3fe018b 100644
+--- a/gcc-4.4.3/gcc/config/linux-android.h
++++ b/gcc-4.4.3/gcc/config/linux-android.h
+@@ -39,7 +39,7 @@
+   "%{" NOANDROID "|tno-android-ld:" LINUX_SPEC ";:" ANDROID_SPEC "}"
+ 
+ #define ANDROID_LINK_SPEC \
+-  "%{shared: -Bsymbolic}"
++  "%{shared: -Bsymbolic} -z noexecstack -z relro -z now"
+ 
+ #define ANDROID_CC1_SPEC(ANDROID_PIC_DEFAULT)				\
+   "%{!mglibc:%{!muclibc:%{!mbionic: -mbionic}}} "			\
+@@ -49,6 +49,9 @@
+   "%{!fexceptions:%{!fno-exceptions: -fexceptions}} "		\
+   "%{!frtti:%{!fno-rtti: -frtti}}"
+ 
++#define ANDROID_ASM_SPEC \
++  "--noexecstack"
++
+ #define ANDROID_LIB_SPEC \
+   "%{!static: -ldl}"
+ 
+diff --git a/gcc-4.4.3/gcc/config/mips/linux.h b/gcc-4.4.3/gcc/config/mips/linux.h
+index 0512ef7..7828191 100644
+--- a/gcc-4.4.3/gcc/config/mips/linux.h
++++ b/gcc-4.4.3/gcc/config/mips/linux.h
+@@ -81,7 +81,8 @@ along with GCC; see the file COPYING3.  If not see
+ 
+ #undef SUBTARGET_ASM_SPEC
+ #define SUBTARGET_ASM_SPEC \
+-  "%{!mno-abicalls:%{mplt:-call_nonpic;:-KPIC}}"
++  "%{!mno-abicalls:%{mplt:-call_nonpic;:-KPIC}} " \
++  LINUX_OR_ANDROID_CC ("", ANDROID_ASM_SPEC)
+ 
+ /* The MIPS assembler has different syntax for .set. We set it to
+    .dummy to trap any errors.  */
+diff --git a/gcc-4.6/gcc/config/arm/elf.h b/gcc-4.6/gcc/config/arm/elf.h
+index 8840088..44d840b 100644
+--- a/gcc-4.6/gcc/config/arm/elf.h
++++ b/gcc-4.6/gcc/config/arm/elf.h
+@@ -52,8 +52,7 @@
+ #undef SUBSUBTARGET_EXTRA_SPECS
+ #define SUBSUBTARGET_EXTRA_SPECS
+ 
+-#ifndef ASM_SPEC
+-#define ASM_SPEC "\
++#define LINUX_ASM_SPEC "\
+ %{mbig-endian:-EB} \
+ %{mlittle-endian:-EL} \
+ %{mcpu=*:-mcpu=%*} \
+@@ -64,6 +63,9 @@
+ %{msoft-float:-mfloat-abi=soft} %{mhard-float:-mfloat-abi=hard} \
+ %{mfloat-abi=*} %{mfpu=*} \
+ %(subtarget_extra_asm_spec)"
++
++#ifndef ASM_SPEC
++#define ASM_SPEC LINUX_ASM_SPEC
+ #endif
+ 
+ /* The ARM uses @ are a comment character so we need to redefine
+diff --git a/gcc-4.6/gcc/config/arm/linux-eabi.h b/gcc-4.6/gcc/config/arm/linux-eabi.h
+index 3a32188..2febcb2 100644
+--- a/gcc-4.6/gcc/config/arm/linux-eabi.h
++++ b/gcc-4.6/gcc/config/arm/linux-eabi.h
+@@ -79,6 +79,11 @@
+ #define CC1PLUS_SPEC \
+   LINUX_OR_ANDROID_CC ("", ANDROID_CC1PLUS_SPEC)
+ 
++#undef ASM_SPEC
++#define ASM_SPEC \
++  LINUX_OR_ANDROID_CC (LINUX_ASM_SPEC, \
++                       LINUX_ASM_SPEC  " " ANDROID_ASM_SPEC)
++
+ #undef  LIB_SPEC
+ #define LIB_SPEC							\
+   LINUX_OR_ANDROID_LD (GNU_USER_TARGET_LIB_SPEC,			\
+diff --git a/gcc-4.6/gcc/config/i386/linux.h b/gcc-4.6/gcc/config/i386/linux.h
+index 414dc65..061f5f0 100644
+--- a/gcc-4.6/gcc/config/i386/linux.h
++++ b/gcc-4.6/gcc/config/i386/linux.h
+@@ -112,7 +112,8 @@ along with GCC; see the file COPYING3.  If not see
+ 
+ #undef  ASM_SPEC
+ #define ASM_SPEC \
+-  "--32 %{!mno-sse2avx:%{mavx:-msse2avx}} %{msse2avx:%{!mavx:-msse2avx}}"
++  "--32 %{!mno-sse2avx:%{mavx:-msse2avx}} %{msse2avx:%{!mavx:-msse2avx}} " \
++  LINUX_OR_ANDROID_CC ("", ANDROID_ASM_SPEC)
+ 
+ /* These may be provided by config/linux-grtev2.h.  */
+ #ifndef LINUX_GRTE_EXTRA_SPECS
+diff --git a/gcc-4.6/gcc/config/linux-android.h b/gcc-4.6/gcc/config/linux-android.h
+index acbc662..8234658 100644
+--- a/gcc-4.6/gcc/config/linux-android.h
++++ b/gcc-4.6/gcc/config/linux-android.h
+@@ -39,7 +39,7 @@
+   "%{" NOANDROID "|tno-android-ld:" LINUX_SPEC ";:" ANDROID_SPEC "}"
+ 
+ #define ANDROID_LINK_SPEC \
+-  "%{shared: -Bsymbolic}"
++  "%{shared: -Bsymbolic} -z noexecstack -z relro -z now"
+ 
+ #define ANDROID_CC1_SPEC(ANDROID_PIC_DEFAULT)				\
+   "%{!mglibc:%{!muclibc:%{!mbionic: -mbionic}}} "			\
+@@ -49,6 +49,9 @@
+   "%{!fexceptions:%{!fno-exceptions: -fexceptions}} "		\
+   "%{!frtti:%{!fno-rtti: -frtti}}"
+ 
++#define ANDROID_ASM_SPEC \
++  "--noexecstack"
++
+ #define ANDROID_LIB_SPEC \
+   "%{!static: -ldl}"
+ 
+diff --git a/gcc-4.6/gcc/config/mips/linux.h b/gcc-4.6/gcc/config/mips/linux.h
+index a78f6bc..d8b1ebe 100644
+--- a/gcc-4.6/gcc/config/mips/linux.h
++++ b/gcc-4.6/gcc/config/mips/linux.h
+@@ -77,7 +77,8 @@ along with GCC; see the file COPYING3.  If not see
+ 
+ #undef SUBTARGET_ASM_SPEC
+ #define SUBTARGET_ASM_SPEC \
+-  "%{!mno-abicalls:%{mplt:-call_nonpic;:-KPIC}}"
++  "%{!mno-abicalls:%{mplt:-call_nonpic;:-KPIC}} " \
++  LINUX_OR_ANDROID_CC ("", ANDROID_ASM_SPEC)
+ 
+ /* The MIPS assembler has different syntax for .set. We set it to
+    .dummy to trap any errors.  */
