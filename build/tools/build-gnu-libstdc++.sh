@@ -203,7 +203,8 @@ build_gnustl_for_abi ()
         --disable-nls \
         --disable-sjlj-exceptions \
         --disable-tls \
-        --disable-libstdcxx-pch
+        --disable-libstdcxx-pch \
+        --with-gxx-include-dir=$INSTALLDIR/include/c++/$DEFAULT_GCC_VERSION
 
     fail_panic "Could not configure $PROJECT"
 
