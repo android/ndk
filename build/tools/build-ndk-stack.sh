@@ -56,6 +56,7 @@ if [ -z "$BUILD_DIR" ]; then
     BUILD_DIR=$NDK_TMPDIR/build-ndk-stack
     log "Auto-config: --build-dir=$BUILD_DIR"
 fi
+prepare_mingw_toolchain $BUILD_DIR
 
 OUT=$NDK_DIR/$(get_host_exec_name ndk-stack)
 

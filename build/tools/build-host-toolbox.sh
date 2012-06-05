@@ -98,6 +98,8 @@ if [ "$BUILD_WINDOWS_SOURCES" ]; then
     fail_panic "Could not create destination directory: $DSTDIR"
 
     MINGW=yes
+    prepare_mingw_toolchain $BUILD_DIR
+
     builder_begin_host "$BUILD_DIR" "$MAKEFILE"
     builder_set_srcdir "$TOOLBOX_SRCDIR"
     builder_set_dstdir "$DSTDIR"

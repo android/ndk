@@ -30,7 +30,7 @@ SOURCES := \
 EXE :=
 
 ifdef MINGW
-CC      := i586-mingw32msvc-gcc
+CC      := i586-pc-mingw32msvc-gcc
 EXE     := .exe
 endif
 
