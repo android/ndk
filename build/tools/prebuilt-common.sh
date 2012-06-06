@@ -559,7 +559,9 @@ handle_mingw ()
             # NOTE: The canadian-cross build of Binutils 2.19 will fail if you
             #        use i586-pc-mingw32msvc here. Binutils 2.21 will work ok
             #        with both names.
-            ABI_CONFIGURE_HOST=i586-mingw32msvc
+            #       Use i586-pc-mingw32msvc here because wrappers are generated
+            #        using this name
+            ABI_CONFIGURE_HOST=i586-pc-mingw32msvc
         fi
         HOST_OS=windows
         HOST_TAG=windows
@@ -592,27 +594,32 @@ prepare_mingw_toolchain ()
     #
     # We apply the same logic to the 64-bit Windows cross-toolchain
     #
+    # Fedora note: On Fedora it's 32-bit only and called i686-pc-mingw32-
+    # so we just add one more prefix to the list to check.
     if [ "$HOST_ARCH" = "x86_64" -a "$TRY64" = "yes" ]; then
-        BINPREFIX1=x86_64-pc-mingw32msvc-
-        BINPREFIX2=amd64-mingw32msvc-
+        BINPREFIX=x86_64-pc-mingw32msvc-
+        BINPREFIXLST="x86_64-pc-mingw32msvc- amd64-mingw32msvc-"
         DEBIAN_NAME=mingw64
     else
-        BINPREFIX1=i586-pc-mingw32msvc-
-        BINPREFIX2=i586-mingw32msvc-
+        # we are trying 32 bit anyway, so forcing it to avoid build issues
+        force_32bit_binaries
+        BINPREFIX=i586-pc-mingw32msvc-
+        BINPREFIXLST="i586-pc-mingw32msvc- i586-mingw32msvc- i686-pc-mingw32-"
         DEBIAN_NAME=mingw32
     fi
 
-    # First, check that there is ${BINPREFIX1}gcc is installed and
-    # in our PATH. This is very unlikely, but use it if it's there.
-    find_program MINGW_GCC ${BINPREFIX1}gcc
-    if [ -n "$MINGW_GCC" ]; then
+    # Scan $BINPREFIXLST list to find installed mingw toolchain. It will be
+    # wrapped later with $BINPREFIX.
+    for i in $BINPREFIXLST; do
+      find_program MINGW_GCC ${i}gcc
+      if [ -n "$MINGW_GCC" ]; then
         dump "Found mingw toolchain: $MINGW_GCC"
-    else
-        # We didn't find it, that's ok, try to find ${BINPREFIX2}gcc
-        # then, if it is there, create a wrapper toolchain for it
-        find_program MINGW_GCC ${BINPREFIX2}gcc
+        break
+      fi
+    done
         if [ -z "$MINGW_GCC" ]; then
-            echo "ERROR: Could not find ${BINPREFIX1}gcc or ${BINPREFIX2}gcc in your PATH"
+            echo "ERROR: Could not find in your PATH any of:"
+            for i in $BINPREFIXLST; do echo "   ${i}gcc"; done
             echo "Please install the corresponding cross-toolchain and re-run this script"
             echo "TIP: On Debian or Ubuntu, try: sudo apt-get install $DEBIAN_NAME"
             exit 1
@@ -625,13 +632,19 @@ prepare_mingw_toolchain ()
         if [ "$NDK_CCACHE" ]; then
             DST_PREFIX="$NDK_CCACHE $DST_PREFIX"
         fi
-
-        $NDK_BUILDTOOLS_PATH/gen-toolchain-wrapper.sh --src-prefix=$BINPREFIX1 --dst-prefix="$DST_PREFIX" "$MINGW_WRAP_DIR"
+        $NDK_BUILDTOOLS_PATH/gen-toolchain-wrapper.sh --src-prefix=$BINPREFIX --dst-prefix="$DST_PREFIX" "$MINGW_WRAP_DIR"
+        # generate wrappers for BUILD toolchain
+        # this is required for mingw build to avoid tools canadian cross configuration issues
+        LEGACY_TOOLCHAIN_DIR="$ANDROID_NDK_ROOT/../prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6"
+        $NDK_BUILDTOOLS_PATH/gen-toolchain-wrapper.sh --src-prefix=x86_64-linux-gnu- \
+                --dst-prefix="$LEGACY_TOOLCHAIN_DIR/bin/x86_64-linux-" "$MINGW_WRAP_DIR"
+        LEGACY_TOOLCHAIN_DIR="$ANDROID_NDK_ROOT/../prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6"
+        $NDK_BUILDTOOLS_PATH/gen-toolchain-wrapper.sh --src-prefix=i386-linux-gnu- \
+                --dst-prefix="$LEGACY_TOOLCHAIN_DIR/bin/i686-linux-" "$MINGW_WRAP_DIR"
         fail_panic "Could not create mingw wrapper toolchain in $MINGW_WRAP_DIR"
 
         export PATH=$MINGW_WRAP_DIR:$PATH
-        dump "Using mingw wrapper: $MINGW_WRAP_DIR/${BINPREFIX1}gcc"
-    fi
+        dump "Using mingw wrapper: $MINGW_WRAP_DIR/${BINPREFIX}gcc"
 }
 
 handle_host ()
