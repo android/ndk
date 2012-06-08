@@ -251,6 +251,11 @@ builder_sources ()
                 exit 1
                 ;;
         esac
+
+        # Ensure we have unwind tables in the generated machine code
+        # This is useful to get good stack traces
+        cflags=$cflags" -funwind-tables"
+
         obj=$_BUILD_DIR/$obj.o
         if [ "$_BUILD_MK" ]; then
             echo "$obj: $srcfull" >> $_BUILD_MK
