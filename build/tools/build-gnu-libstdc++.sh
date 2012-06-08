@@ -158,8 +158,8 @@ build_gnustl_for_abi ()
             ;;
     esac
 
-    export CFLAGS="-fPIC $CFLAGS --sysroot=$SYSROOT -fexceptions -D__BIONIC__ -O2"
-    export CXXFLAGS="-fPIC $CXXFLAGS --sysroot=$SYSROOT -fexceptions -frtti -D__BIONIC__ -O2"
+    export CFLAGS="-fPIC $CFLAGS --sysroot=$SYSROOT -fexceptions -funwind-tables -D__BIONIC__ -O2"
+    export CXXFLAGS="-fPIC $CXXFLAGS --sysroot=$SYSROOT -fexceptions -frtti -funwind-tables -D__BIONIC__ -O2"
 
     export CC=${BINPREFIX}gcc
     export CXX=${BINPREFIX}g++
