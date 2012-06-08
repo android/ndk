@@ -104,6 +104,72 @@ index 638c228..a13117b 100644
  ])
  
  if test "$srv_xmlfiles" != ""; then
+diff --git a/gdb-7.3.x/gdb/gdbserver/Makefile.in b/gdb-7.3.x/gdb/gdbserver/Makefile.in
+index 7d565af..e5e8ae4 100644
+--- a/gdb-7.3.x/gdb/gdbserver/Makefile.in
++++ b/gdb-7.3.x/gdb/gdbserver/Makefile.in
+@@ -233,13 +233,13 @@ clean-info:
+ 
+ gdbserver$(EXEEXT): $(OBS) ${ADD_DEPS} ${CDEPS}
+ 	rm -f gdbserver$(EXEEXT)
+-	${CC-LD} $(INTERNAL_CFLAGS) $(INTERNAL_LDFLAGS) -o gdbserver$(EXEEXT) $(OBS) \
+-	  $(GDBSERVER_LIBS) $(XM_CLIBS)
++	${CC-LD} $(INTERNAL_CFLAGS) $(OBS) $(GDBSERVER_LIBS) $(XM_CLIBS) \
++          $(INTERNAL_LDFLAGS) -o gdbserver$(EXEEXT)
+ 
+ gdbreplay$(EXEEXT): $(GDBREPLAY_OBS)
+ 	rm -f gdbreplay$(EXEEXT)
+-	${CC-LD} $(INTERNAL_CFLAGS) $(INTERNAL_LDFLAGS) -o gdbreplay$(EXEEXT) $(GDBREPLAY_OBS) \
+-	  $(XM_CLIBS)
++	${CC-LD} $(INTERNAL_CFLAGS) -o gdbreplay$(EXEEXT) $(GDBREPLAY_OBS) \
++          $(XM_CLIBS) $(INTERNAL_LDFLAGS)
+ 
+ IPA_OBJS=tracepoint-ipa.o utils-ipa.o regcache-ipa.o remote-utils-ipa.o ${IPA_DEPFILES}
+ 
+diff --git a/gdb-7.3.x/gdb/gdbserver/configure b/gdb-7.3.x/gdb/gdbserver/configure
+index 110e406..c50e9ac 100755
+--- a/gdb-7.3.x/gdb/gdbserver/configure
++++ b/gdb-7.3.x/gdb/gdbserver/configure
+@@ -4807,7 +4807,7 @@ rm -f core conftest.err conftest.$ac_objext \
+     { $as_echo "$as_me:${as_lineno-$LINENO}: result: $found" >&5
+ $as_echo "$found" >&6; }
+   else
+-    srv_libs="-lthread_db"
++    srv_libs="-lthread_db -lc"
+   fi
+ 
+   srv_thread_depfiles="thread-db.o proc-service.o"
+@@ -4848,7 +4848,7 @@ fi
+ # Check whether --with-libthread-db was given.
+ if test "${with_libthread_db+set}" = set; then :
+   withval=$with_libthread_db; srv_libthread_db_path="${withval}"
+-  srv_libs="$srv_libthread_db_path"
++  srv_libs="$srv_libthread_db_path -lc"
+ 
+ fi
+ 
+diff --git a/gdb-7.3.x/gdb/gdbserver/configure.ac b/gdb-7.3.x/gdb/gdbserver/configure.ac
+index 77e06c3..c70f3cf 100644
+--- a/gdb-7.3.x/gdb/gdbserver/configure.ac
++++ b/gdb-7.3.x/gdb/gdbserver/configure.ac
+@@ -315,7 +315,7 @@ if test "$srv_linux_thread_db" = "yes"; then
+     LDFLAGS="$old_LDFLAGS"
+     AC_MSG_RESULT($found)
+   else
+-    srv_libs="-lthread_db"
++    srv_libs="-lthread_db -lc"
+   fi
+ 
+   srv_thread_depfiles="thread-db.o proc-service.o"
+@@ -332,7 +332,7 @@ fi
+ AC_ARG_WITH(libthread-db,
+ AS_HELP_STRING([--with-libthread-db=PATH], [use given libthread_db directly]),
+ [srv_libthread_db_path="${withval}"
+-  srv_libs="$srv_libthread_db_path"
++  srv_libs="$srv_libthread_db_path -lc"
+ ])
+ 
+ if test "$srv_libs" != "" -a "$srv_libs" != "-ldl"; then
 -- 
 1.7.6.rc0
 

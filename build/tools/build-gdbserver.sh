@@ -199,6 +199,12 @@ case "$GDB_VERSION" in
         # static executable.
         CONFIGURE_FLAGS="--with-libthread-db=$BUILD_SYSROOT/usr/lib/libthread_db.a"
         ;;
+    7.3.x)
+        CONFIGURE_FLAGS="--with-libthread-db=$BUILD_SYSROOT/usr/lib/libthread_db.a"
+        # Disable libinproctrace.so which needs crtbegin_so.o and crtbend_so.o instead of
+        # CRTBEGIN/END above.  Clean it up and re-enable it in the future.
+        CONFIGURE_FLAGS=$CONFIGURE_FLAGS" --disable-inprocess-agent"
+        ;;
     *)
         CONFIGURE_FLAGS=""
 esac
