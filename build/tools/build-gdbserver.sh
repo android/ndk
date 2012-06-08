@@ -55,7 +55,7 @@ register_var_option "--sysroot=<path>" SYSROOT "Specify sysroot directory direct
 NOTHREADS=no
 register_var_option "--disable-threads" NOTHREADS "Disable threads support"
 
-GDB_VERSION=$DEFAULT_GDB_VERSION
+GDB_VERSION=$DEFAULT_GDBSERVER_VERSION
 register_var_option "--gdb-version=<name>" GDB_VERSION "Use specific gdb version."
 
 PACKAGE_DIR=
@@ -247,7 +247,7 @@ if [ $? != 0 ] ; then
 fi
 
 if [ "$PACKAGE_DIR" ]; then
-    ARCHIVE=$TOOLCHAIN-gdbserver.tar.bz2
+    ARCHIVE=$ARCH-gdbserver.tar.bz2
     dump "Packaging: $ARCHIVE"
     pack_archive "$PACKAGE_DIR/$ARCHIVE" "$ANDROID_NDK_ROOT" "prebuilt/android-$ARCH/gdbserver/$DSTFILE"
 fi
