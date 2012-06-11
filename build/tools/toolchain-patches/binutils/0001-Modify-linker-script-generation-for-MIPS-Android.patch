@@ -1,13 +1,14 @@
-From f58e4d63fccf86db7cf36e956ab3a7ce6492b4cf Mon Sep 17 00:00:00 2001
+From 674fa6037621df8bc2d900406ec151d6a437c071 Mon Sep 17 00:00:00 2001
 From: Chao-ying Fu <fu@mips.com>
-Date: Thu, 5 Apr 2012 16:30:13 -0700
+Date: Mon, 11 Jun 2012 11:14:39 -0700
 Subject: [PATCH] Modify linker script generation for MIPS Android.
 
 ---
- binutils-2.21/ld/emulparams/elf32bmip.sh |    8 +----
- binutils-2.21/ld/genscripts.sh           |    5 ++-
- binutils-2.21/ld/scripttempl/elf.sc      |   55 +++++++++++++++++------------
- 3 files changed, 37 insertions(+), 31 deletions(-)
+ binutils-2.21/ld/emulparams/elf32bmip.sh   |    8 +----
+ binutils-2.21/ld/emulparams/elf32ltsmip.sh |    1 +
+ binutils-2.21/ld/genscripts.sh             |    5 ++-
+ binutils-2.21/ld/scripttempl/elf.sc        |   54 +++++++++++++++++-----------
+ 4 files changed, 39 insertions(+), 29 deletions(-)
 
 diff --git a/binutils-2.21/ld/emulparams/elf32bmip.sh b/binutils-2.21/ld/emulparams/elf32bmip.sh
 index 44a0b8a..8dae1bb 100644
@@ -35,6 +36,14 @@ index 44a0b8a..8dae1bb 100644
    .gcc_compiled_long32 : { KEEP(*(.gcc_compiled_long32)) }
    .gcc_compiled_long64 : { KEEP(*(.gcc_compiled_long64)) }
  '
+diff --git a/binutils-2.21/ld/emulparams/elf32ltsmip.sh b/binutils-2.21/ld/emulparams/elf32ltsmip.sh
+index 4a660f0..edf73df 100644
+--- a/binutils-2.21/ld/emulparams/elf32ltsmip.sh
++++ b/binutils-2.21/ld/emulparams/elf32ltsmip.sh
+@@ -1,2 +1,3 @@
+ . ${srcdir}/emulparams/elf32btsmip.sh
+ OUTPUT_FORMAT="elf32-tradlittlemips"
++unset TEXT_DYNAMIC
 diff --git a/binutils-2.21/ld/genscripts.sh b/binutils-2.21/ld/genscripts.sh
 index c86631b..d54d85d 100755
 --- a/binutils-2.21/ld/genscripts.sh
@@ -66,10 +75,21 @@ index c86631b..d54d85d 100755
        . ${srcdir}/scripttempl/${SCRIPT_NAME}.sc
      ) | sed -e '/^ *$/d;s/[ 	]*$//' > ldscripts/${EMULATION_NAME}.xsc
 diff --git a/binutils-2.21/ld/scripttempl/elf.sc b/binutils-2.21/ld/scripttempl/elf.sc
-index f020a66..142315c 100644
+index f020a66..0fcc22d 100644
 --- a/binutils-2.21/ld/scripttempl/elf.sc
 +++ b/binutils-2.21/ld/scripttempl/elf.sc
-@@ -149,7 +149,7 @@ RELA_IPLT=".rela.iplt    ${RELOCATING-0} :
+@@ -111,7 +111,9 @@ DATA_SEGMENT_ALIGN="ALIGN(${SEGMENT_SIZE}) + (. & (${MAXPAGESIZE} - 1))"
+ DATA_SEGMENT_RELRO_END=""
+ DATA_SEGMENT_END=""
+ if test -n "${COMMONPAGESIZE}"; then
+-  DATA_SEGMENT_ALIGN="ALIGN (${SEGMENT_SIZE}) - ((${MAXPAGESIZE} - .) & (${MAXPAGESIZE} - 1)); . = DATA_SEGMENT_ALIGN (${MAXPAGESIZE}, ${COMMONPAGESIZE})"
++  #DATA_SEGMENT_ALIGN="ALIGN (${SEGMENT_SIZE}) - ((${MAXPAGESIZE} - .) & (${MAXPAGESIZE} - 1)); . = DATA_SEGMENT_ALIGN (${MAXPAGESIZE}, ${COMMONPAGESIZE})"
++  # For Android, we align at exactly a page boundary.
++  DATA_SEGMENT_ALIGN="ALIGN (${SEGMENT_SIZE}); . = DATA_SEGMENT_ALIGN (${MAXPAGESIZE}, ${COMMONPAGESIZE})"
+   DATA_SEGMENT_END=". = DATA_SEGMENT_END (.);"
+   DATA_SEGMENT_RELRO_END=". = DATA_SEGMENT_RELRO_END (${SEPARATE_GOTPLT-0}, .);"
+ fi
+@@ -149,7 +151,7 @@ RELA_IPLT=".rela.iplt    ${RELOCATING-0} :
  DYNAMIC=".dynamic      ${RELOCATING-0} : { *(.dynamic) }"
  RODATA=".${RODATA_NAME}       ${RELOCATING-0} : { *(.${RODATA_NAME}${RELOCATING+ .${RODATA_NAME}.* .gnu.linkonce.r.*}) }"
  DATARELRO=".data.rel.ro : { *(.data.rel.ro.local* .gnu.linkonce.d.rel.ro.local.*) *(.data.rel.ro* .gnu.linkonce.d.rel.ro.*) }"
@@ -78,7 +98,7 @@ index f020a66..142315c 100644
  if test -z "${NO_SMALL_DATA}"; then
    SBSS=".${SBSS_NAME}         ${RELOCATING-0} :
    {
-@@ -224,17 +224,15 @@ test "${LARGE_SECTIONS}" = "yes" && LARGE_SECTIONS="
+@@ -224,17 +226,15 @@ test "${LARGE_SECTIONS}" = "yes" && LARGE_SECTIONS="
    }"
  INIT_ARRAY=".init_array   ${RELOCATING-0} :
    {
@@ -98,7 +118,7 @@ index f020a66..142315c 100644
    }"
  CTOR=".ctors        ${CONSTRUCTING-0} : 
    {
-@@ -250,14 +248,14 @@ CTOR=".ctors        ${CONSTRUCTING-0} :
+@@ -250,14 +250,14 @@ CTOR=".ctors        ${CONSTRUCTING-0} :
         is in.  */
  
      KEEP (*crtbegin.o(.ctors))
@@ -115,7 +135,7 @@ index f020a66..142315c 100644
      KEEP (*(SORT(.ctors.*)))
      KEEP (*(.ctors))
      ${CONSTRUCTING+${CTOR_END}}
-@@ -266,8 +264,8 @@ DTOR=".dtors        ${CONSTRUCTING-0} :
+@@ -266,8 +266,8 @@ DTOR=".dtors        ${CONSTRUCTING-0} :
    {
      ${CONSTRUCTING+${DTOR_START}}
      KEEP (*crtbegin.o(.dtors))
@@ -126,7 +146,7 @@ index f020a66..142315c 100644
      KEEP (*(SORT(.dtors.*)))
      KEEP (*(.dtors))
      ${CONSTRUCTING+${DTOR_END}}
-@@ -278,8 +276,11 @@ STACK="  .stack        ${RELOCATING-0}${RELOCATING+${STACK_ADDR}} :
+@@ -278,8 +278,11 @@ STACK="  .stack        ${RELOCATING-0}${RELOCATING+${STACK_ADDR}} :
      *(.stack)
    }"
  
@@ -140,23 +160,18 @@ index f020a66..142315c 100644
  
  # if this is for an embedded system, don't add SIZEOF_HEADERS.
  if [ -z "$EMBEDDED" ]; then
-@@ -459,11 +460,10 @@ cat <<EOF
+@@ -459,8 +462,8 @@ cat <<EOF
    .eh_frame     ${RELOCATING-0} : ONLY_IF_RO { KEEP (*(.eh_frame)) }
    .gcc_except_table ${RELOCATING-0} : ONLY_IF_RO { *(.gcc_except_table .gcc_except_table.*) }
  
 -  /* Adjust the address for the data segment.  We want to adjust up to
 -     the same address within the page on the next page up.  */
--  ${CREATE_SHLIB-${CREATE_PIE-${RELOCATING+. = ${DATA_ADDR-${DATA_SEGMENT_ALIGN}};}}}
--  ${CREATE_SHLIB+${RELOCATING+. = ${SHLIB_DATA_ADDR-${DATA_SEGMENT_ALIGN}};}}
--  ${CREATE_PIE+${RELOCATING+. = ${SHLIB_DATA_ADDR-${DATA_SEGMENT_ALIGN}};}}
 +  /* Adjust the address for the data segment.  We want to align at exactly
 +     a page boundary to make life easier for apriori. */
-+  . = ALIGN(4096);
-+  . = DATA_SEGMENT_ALIGN(4096,4096);
- 
-   /* Exception handling  */
-   .eh_frame     ${RELOCATING-0} : ONLY_IF_RW { KEEP (*(.eh_frame)) }
-@@ -473,14 +473,23 @@ cat <<EOF
+   ${CREATE_SHLIB-${CREATE_PIE-${RELOCATING+. = ${DATA_ADDR-${DATA_SEGMENT_ALIGN}};}}}
+   ${CREATE_SHLIB+${RELOCATING+. = ${SHLIB_DATA_ADDR-${DATA_SEGMENT_ALIGN}};}}
+   ${CREATE_PIE+${RELOCATING+. = ${SHLIB_DATA_ADDR-${DATA_SEGMENT_ALIGN}};}}
+@@ -473,14 +476,23 @@ cat <<EOF
    .tdata	${RELOCATING-0} : { *(.tdata${RELOCATING+ .tdata.* .gnu.linkonce.td.*}) }
    .tbss		${RELOCATING-0} : { *(.tbss${RELOCATING+ .tbss.* .gnu.linkonce.tb.*})${RELOCATING+ *(.tcommon)} }
  
@@ -182,7 +197,7 @@ index f020a66..142315c 100644
    ${SMALL_DATA_CTOR-${RELOCATING+${CTOR}}}
    ${SMALL_DATA_DTOR-${RELOCATING+${DTOR}}}
    .jcr          ${RELOCATING-0} : { KEEP (*(.jcr)) }
-@@ -526,10 +535,8 @@ cat <<EOF
+@@ -526,10 +538,8 @@ cat <<EOF
     *(COMMON)
     /* Align here to ensure that the .bss section occupies space up to
        _end.  Align after .bss to ensure correct alignment even if the
@@ -195,7 +210,7 @@ index f020a66..142315c 100644
    }
    ${OTHER_BSS_SECTIONS}
    ${RELOCATING+${OTHER_BSS_END_SYMBOLS}}
-@@ -537,7 +544,9 @@ cat <<EOF
+@@ -537,7 +547,9 @@ cat <<EOF
    ${LARGE_SECTIONS}
    ${RELOCATING+. = ALIGN(${ALIGNMENT});}
    ${RELOCATING+${OTHER_END_SYMBOLS}}
