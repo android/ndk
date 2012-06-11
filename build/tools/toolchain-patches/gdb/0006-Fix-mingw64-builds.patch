@@ -1,0 +1,54 @@
+From a90f871b4a8df23bbd7236308f26e55910588862 Mon Sep 17 00:00:00 2001
+From: David 'Digit' Turner <digit@android.com>
+Date: Mon, 11 Jun 2012 13:38:29 +0200
+Subject: Fix mingw64 builds
+
+This patch fixes the GDB client builds when using the mingw64 toolchain
+on Linux to generate Windows binaries.
+
+Change-Id: Ie8bd21b50d9c99a90deed93a4d13df835ef7e0b9
+---
+ gdb-6.6/gdb/ser-mingw.c   |    1 +
+ gdb-7.1.x/gdb/ser-mingw.c |    1 +
+ gdb-7.3.x/gdb/ser-mingw.c |    1 +
+ 3 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/gdb-6.6/gdb/ser-mingw.c b/gdb-6.6/gdb/ser-mingw.c
+index c0e124175e6051234f3dd4a50fc5a0b44067362..0b6ef55 100644
+--- a/gdb-6.6/gdb/ser-mingw.c
++++ b/gdb-6.6/gdb/ser-mingw.c
+@@ -25,6 +25,7 @@
+ #include "ser-base.h"
+ #include "ser-tcp.h"
+ 
++#include <winsock2.h>
+ #include <windows.h>
+ #include <conio.h>
+ 
+diff --git a/gdb-7.1.x/gdb/ser-mingw.c b/gdb-7.1.x/gdb/ser-mingw.c
+index af68c2b..1128a6d 100644
+--- a/gdb-7.1.x/gdb/ser-mingw.c
++++ b/gdb-7.1.x/gdb/ser-mingw.c
+@@ -22,6 +22,7 @@
+ #include "ser-base.h"
+ #include "ser-tcp.h"
+ 
++#include <winsock2.h>
+ #include <windows.h>
+ #include <conio.h>
+ 
+diff --git a/gdb-7.3.x/gdb/ser-mingw.c b/gdb-7.3.x/gdb/ser-mingw.c
+index b362878..eee3198 100644
+--- a/gdb-7.3.x/gdb/ser-mingw.c
++++ b/gdb-7.3.x/gdb/ser-mingw.c
+@@ -23,6 +23,7 @@
+ #include "ser-base.h"
+ #include "ser-tcp.h"
+ 
++#include <winsock2.h>
+ #include <windows.h>
+ #include <conio.h>
+ 
+-- 
+1.7.6.rc0
+
