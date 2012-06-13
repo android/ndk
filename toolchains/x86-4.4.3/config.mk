@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 
-# config file for the x86-4.4.3 toolchain for the Android NDK
+# config file for the x86 gcc-4.4.3 toolchain for the Android NDK
 # the real meat is in the setup.mk file adjacent to this one
 #
 TOOLCHAIN_ARCH := x86

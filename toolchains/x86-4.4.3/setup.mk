@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 
-# this file is used to prepare the NDK to build with the x86-4.4.3
+# this file is used to prepare the NDK to build with the x86 gcc-4.4.3
 # toolchain any number of source files
 #
 # its purpose is to define (or re-define) templates used to build

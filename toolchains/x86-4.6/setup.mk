@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 
-# this file is used to prepare the NDK to build with the mipsel gcc-4.4.3
+# this file is used to prepare the NDK to build with the x86 gcc-4.6
 # toolchain any number of source files
 #
 # its purpose is to define (or re-define) templates used to build
@@ -23,57 +23,47 @@
 # revisions of the NDK.
 #
 
-TARGET_CFLAGS := \
-        -fpic \
-        -fno-strict-aliasing \
-        -finline-functions \
-        -ffunction-sections \
-        -funwind-tables \
-        -fmessage-length=0 \
-        -fno-inline-functions-called-once \
-        -fgcse-after-reload \
-        -frerun-cse-after-loop \
-        -frename-registers \
+TOOLCHAIN_NAME   := x86-4.6
+TOOLCHAIN_PREFIX := $(TOOLCHAIN_PREBUILT_ROOT)/bin/i686-linux-android-
 
-TARGET_LDFLAGS :=
-TARGET_LDSCRIPT_XSC :=
-TARGET_LDSCRIPT_X :=
+TARGET_CFLAGS := \
+    -ffunction-sections \
+    -funwind-tables
 
 TARGET_C_INCLUDES := \
     $(SYSROOT)/usr/include
 
-# This is to avoid the dreaded warning compiler message:
-#   note: the mangling of 'va_list' has changed in GCC 4.4
-#
-# The fact that the mangling changed does not affect the NDK ABI
-# very fortunately (since none of the exposed APIs used va_list
-# in their exported C++ functions). Also, GCC 4.5 has already
-# removed the warning from the compiler.
-#
-TARGET_CFLAGS += -Wno-psabi
+# Add and LDFLAGS for the target here
+# TARGET_LDFLAGS :=
 
-TARGET_mips_release_CFLAGS :=  -O2 \
-                               -fomit-frame-pointer \
-                               -funswitch-loops     \
-                               -finline-limit=300
+# Fix this after ssp.c is fixed for x86
+# TARGET_CFLAGS += -fstack-protector
 
-TARGET_mips_debug_CFLAGS := -O0 -g \
-                            -fno-omit-frame-pointer
+TARGET_x86_release_CFLAGS :=  -O2 \
+                              -fomit-frame-pointer \
+                              -fstrict-aliasing    \
+                              -funswitch-loops     \
+                              -finline-limit=300
 
+# When building for debug, compile everything as x86.
+TARGET_x86_debug_CFLAGS := $(TARGET_x86_release_CFLAGS) \
+                           -fno-omit-frame-pointer \
+                           -fno-strict-aliasing
 
 # This function will be called to determine the target CFLAGS used to build
 # a C or Assembler source file, based on its tags.
+#
 TARGET-process-src-files-tags = \
 $(eval __debug_sources := $(call get-src-files-with-tag,debug)) \
 $(eval __release_sources := $(call get-src-files-without-tag,debug)) \
-$(call set-src-files-target-cflags, \
-    $(__debug_sources),\
-    $(TARGET_mips_debug_CFLAGS)) \
-$(call set-src-files-target-cflags,\
-    $(__release_sources),\
-    $(TARGET_mips_release_CFLAGS)) \
-$(call set-src-files-text,$(__debug_sources),mips$(space)) \
-$(call set-src-files-text,$(__release_sources),mips$(space)) \
+$(call set-src-files-target-cflags, $(__debug_sources), $(TARGET_x86_debug_CFLAGS)) \
+$(call set-src-files-target-cflags, $(__release_sources),$(TARGET_x86_release_CFLAGS)) \
+$(call set-src-files-text,$(LOCAL_SRC_FILES),x86$(space)$(space)) \
+
+# The ABI-specific sub-directory that the SDK tools recognize for
+# this toolchain's generated binaries
+TARGET_ABI_SUBDIR := x86
+
 
 #
 # We need to add -lsupc++ to the final link command to make exceptions
@@ -82,6 +72,7 @@ $(call set-src-files-text,$(__release_sources),mips$(space)) \
 # Normally, the toolchain should be configured to do that automatically,
 # this will be debugged later.
 #
+
 define cmd-build-shared-library
 $(PRIVATE_CXX) \
     $(PRIVATE_LDSCRIPT_XSC) \
