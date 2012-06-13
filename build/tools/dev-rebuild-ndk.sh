@@ -33,7 +33,7 @@ PROGDIR=`cd $PROGDIR && pwd`
 
 
 # Name of this NDK release
-OPTION_NDK_RELEASE="r6x-eng"
+OPTION_NDK_RELEASE=`date +%Y%m%d`
 register_var_option "--release=<rel_name>" OPTION_NDK_RELEASE "Version of release"
 
 # Should we only Build for Linux platform?

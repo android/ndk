@@ -1,0 +1,14 @@
+diff --git a/binutils-2.21/bfd/elflink.c b/binutils-2.21/bfd/elflink.c
+index 51dae66..753bb9c 100644
+--- a/binutils-2.21/bfd/elflink.c
++++ b/binutils-2.21/bfd/elflink.c
+@@ -11575,6 +11575,9 @@ struct elf_gc_sweep_symbol_info
+ static bfd_boolean
+ elf_gc_sweep_symbol (struct elf_link_hash_entry *h, void *data)
+ {
++  if (h->root.type == bfd_link_hash_warning)
++    h = (struct elf_link_hash_entry *) h->root.u.i.link;
++
+   if (!h->mark
+       && (((h->root.type == bfd_link_hash_defined
+             || h->root.type == bfd_link_hash_defweak)

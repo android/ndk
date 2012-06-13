@@ -721,7 +721,7 @@ select_toolchain_for_host ()
                         dump ""
                         exit 1
                     fi
-                    local DARWINMINVER=$(darwin_arch_to_version_min $2)
+                    local DARWINMINVER=$(darwin_arch_to_min_version $2)
                     check_darwin_sdk $DARWIN_SYSROOT $DARWINARCH
                     try_host_prefix "$DARWIN_TOOLCHAIN" -m$(tag_to_bits $1) --sysroot "$DARWIN_SYSROOT"
                     if [ -z "$HOST_FULLPREFIX" ]; then
