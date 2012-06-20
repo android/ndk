@@ -165,14 +165,33 @@ set_toolchain_ndk $NDK_DIR $TOOLCHAIN
 dump "Using C compiler: $CC"
 dump "Using C++ compiler: $CXX"
 
+rm -rf $BUILD_OUT
+mkdir -p $BUILD_OUT
+
 # Location where the toolchain license files are
 TOOLCHAIN_LICENSES=$ANDROID_NDK_ROOT/build/tools/toolchain-licenses
 
-# Copy the sysroot to the installation prefix. This prevents the generated
-# binaries from containing hard-coding host paths
-TOOLCHAIN_SYSROOT=$TOOLCHAIN_PATH/sysroot
-dump "Sysroot  : Copying: $SYSROOT --> $TOOLCHAIN_SYSROOT"
-mkdir -p $TOOLCHAIN_SYSROOT && (cd $SYSROOT && tar ch *) | (cd $TOOLCHAIN_SYSROOT && tar x)
+# Without option "--sysroot" (and its variations), GCC will attempt to
+# search path specified by "--with-sysroot" at build time for headers/libs.
+# Path at --with-sysroot contains minimal headers and libs to boostrap
+# toolchain build, and it's not needed afterward (NOTE: NDK provides
+# sysroot at specified API level,and Android build explicit lists header/lib
+# dependencies.
+#
+# It's better to point --with-sysroot to local directory otherwise the
+# path may be found at compile-time and bad things can happen: eg.
+#  1) The path exists and contain incorrect headers/libs
+#  2) The path exists at remote server and blocks GCC for seconds
+#  3) The path exists but not accessible, which crashes GCC!
+#
+# For canadian build --with-sysroot has to be sub-directory of --prefix.
+# Put TOOLCHAIN_BUILD_PREFIX to BUILD_OUT which is in /tmp by default,
+# and TOOLCHAIN_BUILD_SYSROOT underneath.
+
+TOOLCHAIN_BUILD_PREFIX=$BUILD_OUT/prefix
+TOOLCHAIN_BUILD_SYSROOT=$TOOLCHAIN_BUILD_PREFIX/sysroot
+dump "Sysroot  : Copying: $SYSROOT --> $TOOLCHAIN_BUILD_SYSROOT"
+mkdir -p $TOOLCHAIN_BUILD_SYSROOT && (cd $SYSROOT && tar ch *) | (cd $TOOLCHAIN_BUILD_SYSROOT && tar x)
 if [ $? != 0 ] ; then
     echo "Error while copying sysroot files. See $TMPLOG"
     exit 1
@@ -189,7 +208,6 @@ BUILD_SRCDIR=$SRC_DIR/build
 if [ ! -d $BUILD_SRCDIR ] ; then
     BUILD_SRCDIR=$SRC_DIR
 fi
-rm -rf $BUILD_OUT
 OLD_ABI="${ABI}"
 export CC CXX
 export CFLAGS_FOR_TARGET="$ABI_CFLAGS_FOR_TARGET"
@@ -208,14 +226,14 @@ EXTRA_CONFIG_FLAGS="--disable-bootstrap"
 EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --disable-libquadmath --disable-plugin"
 
 #export LDFLAGS="$HOST_LDFLAGS"
-mkdir -p $BUILD_OUT && cd $BUILD_OUT && run \
+cd $BUILD_OUT && run \
 $BUILD_SRCDIR/configure --target=$ABI_CONFIGURE_TARGET \
                         --enable-initfini-array \
                         --host=$ABI_CONFIGURE_HOST \
                         --build=$ABI_CONFIGURE_BUILD \
                         --disable-nls \
-                        --prefix=$TOOLCHAIN_PATH \
-                        --with-sysroot=$TOOLCHAIN_SYSROOT \
+                        --prefix=$TOOLCHAIN_BUILD_PREFIX \
+                        --with-sysroot=$TOOLCHAIN_BUILD_SYSROOT \
                         --with-binutils-version=$BINUTILS_VERSION \
                         --with-mpfr-version=$MPFR_VERSION \
                         --with-mpc-version=$MPC_VERSION \
@@ -261,6 +279,10 @@ if [ $? != 0 ] ; then
     echo "Error while installing toolchain. See $TMPLOG"
     exit 1
 fi
+
+# copy to toolchain path
+run copy_directory "$TOOLCHAIN_BUILD_PREFIX" "$TOOLCHAIN_PATH"
+
 # don't forget to copy the GPL and LGPL license files
 run cp -f $TOOLCHAIN_LICENSES/COPYING $TOOLCHAIN_LICENSES/COPYING.LIB $TOOLCHAIN_PATH
 
