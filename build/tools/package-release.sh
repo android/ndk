@@ -194,8 +194,10 @@ if [ -n "$PREBUILT_DIR" ] ; then
                 exit 1
             fi
         done
-        if [ ! -f "$PREBUILT_DIR/$TC-gdbserver.tar.bz2" ] ; then
-            echo "ERROR: Missing prebuilt file $TC-gdbserver.tar.bz2 in: $PREBUILT_DIR"
+    done
+    for ARCH in $ARCHS; do
+        if [ ! -f "$PREBUILT_DIR/$ARCH-gdbserver.tar.bz2" ] ; then
+            echo "ERROR: Missing prebuilt file $ARCH-gdbserver.tar.bz2 in: $PREBUILT_DIR"
             exit 1
         fi
     done
@@ -331,8 +333,8 @@ fi
 # Unpack prebuilt C++ runtimes headers and libraries
 if [ -z "$PREBUILT_NDK" ]; then
     # Unpack gdbserver
-    for TC in $TOOLCHAINS; do
-        unpack_prebuilt $TC-gdbserver.tar.bz2 "$REFERENCE"
+    for ARCH in $ARCHS; do
+        unpack_prebuilt $ARCH-gdbserver.tar.bz2 "$REFERENCE"
     done
     # Unpack C++ runtimes
     unpack_prebuilt gnu-libstdc++-headers.tar.bz2 "$REFERENCE"

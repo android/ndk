@@ -247,7 +247,7 @@ if [ $? != 0 ] ; then
 fi
 
 if [ "$PACKAGE_DIR" ]; then
-    ARCHIVE=$TOOLCHAIN-gdbserver.tar.bz2
+    ARCHIVE=$ARCH-gdbserver.tar.bz2
     dump "Packaging: $ARCHIVE"
     pack_archive "$PACKAGE_DIR/$ARCHIVE" "$ANDROID_NDK_ROOT" "prebuilt/android-$ARCH/gdbserver/$DSTFILE"
 fi

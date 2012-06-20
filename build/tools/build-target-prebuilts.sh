@@ -73,7 +73,7 @@ FLAGS=$FLAGS" -j$NUM_JOBS"
 
 # First, gdbserver
 for ARCH in $ARCHS; do
-    GDB_TOOLCHAINS=$(get_toolchain_name_list_for_arch $ARCH)
+    GDB_TOOLCHAINS=$(get_default_toolchain_name_for_arch $ARCH)
     for GDB_TOOLCHAIN in $GDB_TOOLCHAINS; do
         dump "Building $GDB_TOOLCHAIN gdbserver binaries..."
         run $BUILDTOOLS/build-gdbserver.sh "$SRC_DIR" "$NDK_DIR" "$GDB_TOOLCHAIN" $FLAGS
