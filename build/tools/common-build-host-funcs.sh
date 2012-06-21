@@ -467,7 +467,7 @@ _bh_select_toolchain_for_host ()
             ;;
 
         darwin-*)
-            DARWIN_ARCH=$(tag_to_arch $1)
+            DARWIN_ARCH=$(bh_tag_to_arch $1)
             if [ -z "$DARWIN_MIN_VERSION" ]; then
                 DARWIN_MIN_VERSION=$(_bh_darwin_arch_to_min_version $DARWIN_ARCH)
             fi
