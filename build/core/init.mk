@@ -271,6 +271,15 @@ ifndef HOST_ECHO
 endif
 $(call ndk_log,Host 'echo' tool: $(HOST_ECHO))
 
+HOST_CMP := $(strip $(HOST_CMP))
+ifndef HOST_CMP
+    HOST_CMP := $(strip $(wildcard $(NDK_ROOT)/prebuilt/$(HOST_TAG)/bin/cmp$(HOST_EXEEXT)))
+endif
+ifndef HOST_CMP
+    HOST_CMP := cmp
+endif
+$(call ndk_log,Host 'cmp' tool: $(HOST_CMP))
+
 #
 # Verify that the 'awk' tool has the features we need.
 # Both Nawk and Gawk do.

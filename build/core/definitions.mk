@@ -223,7 +223,6 @@ else
 host-install = install -p $1 $2
 endif
 
-
 # -----------------------------------------------------------------------------
 # Function : host-c-includes
 # Arguments: 1: list of file paths (e.g. "foo bar")
@@ -239,6 +238,19 @@ else
 host-c-includes = $(1:%=-I%)
 endif
 
+# -----------------------------------------------------------------------------
+# Function : copy-if-differ
+# Arguments: 1: source file
+#            2: destination file
+# Usage    : $(call copy-if-differ,<src-file>,<dst-file>)
+# Rationale: This function copy source file to destination file if contents are
+#            different.
+# -----------------------------------------------------------------------------
+ifeq ($(HOST_OS),windows)
+copy-if-differ = $(HOST_CMP) -s $1 $2 > NUL || copy /b/y $(subst /,\,"$1" "$2") > NUL
+else
+copy-if-differ = $(HOST_CMP) -s $1 $2 > /dev/null 2>&1 || cp -f $1 $2
+endif
 
 # -----------------------------------------------------------------------------
 # Function : generate-list-file
@@ -398,9 +410,9 @@ endef
 define generate-list-file-ev
 __list_file := $2
 
-.PHONY: $$(__list_file)
+.PHONY: $$(__list_file).tmp
 
-$$(__list_file):
+$$(__list_file).tmp:
 	@$$(call host-mkdir,$$(dir $$@))
 	$$(hide) $$(HOST_ECHO) -n "" > $$@
 $(call list-file-maybe-gen-1000,0,$1)
@@ -409,6 +421,11 @@ $(call list-file-maybe-gen-1000,2,$1)
 $(call list-file-maybe-gen-1000,3,$1)
 $(call list-file-maybe-gen-1000,4,$1)
 $(call list-file-maybe-gen-1000,5,$1)
+
+$$(__list_file): $$(__list_file).tmp
+	$$(hide) $$(call copy-if-differ,$$@.tmp,$$@)
+	$$(hide) $$(call host-rm,$$@.tmp)
+
 endef
 
 generate-list-file = $(eval $(call generate-list-file-ev,$1,$2))
