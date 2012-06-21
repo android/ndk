@@ -87,11 +87,6 @@ BUILD_WINDOWS_SOURCES=yes
 
 if [ "$BUILD_WINDOWS_SOURCES" ]; then
 
-    # List of sources for the Windows-specific programs
-    WINDOWS_SOURCES=echo_win.c
-
-    # Build the windows sources
-
     SUBDIR=$(get_prebuilt_install_prefix windows)/bin
     DSTDIR=$NDK_DIR/$SUBDIR
     mkdir -p "$DSTDIR"
@@ -100,20 +95,30 @@ if [ "$BUILD_WINDOWS_SOURCES" ]; then
     MINGW=yes
     prepare_mingw_toolchain $BUILD_DIR
 
+    ORIGINAL_HOST_TAG=$HOST_TAG
+
+    # Build echo.exe
+    HOST_TAG=$ORIGINAL_HOST_TAG
     builder_begin_host "$BUILD_DIR" "$MAKEFILE"
     builder_set_srcdir "$TOOLBOX_SRCDIR"
     builder_set_dstdir "$DSTDIR"
-
-    builder_sources $WINDOWS_SOURCES
-
+    builder_sources echo_win.c
     builder_host_executable echo
+    builder_end
 
+    # Build cmp.exe
+    HOST_TAG=$ORIGINAL_HOST_TAG
+    builder_begin_host "$BUILD_DIR" "$MAKEFILE"
+    builder_set_srcdir "$TOOLBOX_SRCDIR"
+    builder_set_dstdir "$DSTDIR"
+    builder_sources cmp_win.c
+    builder_host_executable cmp
     builder_end
 
     if [ "$PACKAGE_DIR" ]; then
         ARCHIVE=toolbox-windows.tar.bz2
         log "Packaging : $ARCHIVE"
-        pack_archive "$PACKAGE_DIR/$ARCHIVE" "$NDK_DIR" "$SUBDIR/echo.exe"
+        pack_archive "$PACKAGE_DIR/$ARCHIVE" "$NDK_DIR" "$SUBDIR/echo.exe" "$SUBDIR/cmp.exe"
         fail_panic "Could not package toolbox binaires"
     fi
 fi
