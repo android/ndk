@@ -1,0 +1,127 @@
+diff -urN a/configure.in b/configure.in
+--- a/configure.in	2012-06-24 18:27:16.477514024 +0100
++++ b/configure.in	2012-06-24 18:40:43.391973689 +0100
+@@ -5,7 +5,7 @@
+ # Set VERSION so we only need to edit in one place (i.e., here)
+ m4_define(PYTHON_VERSION, 2.7)
+ 
+-AC_PREREQ(2.65)
++AC_PREREQ(2.61)
+ 
+ AC_REVISION($Revision$)
+ AC_INIT(python, PYTHON_VERSION, http://bugs.python.org/)
+@@ -230,6 +230,9 @@
+ 		fi
+ 		enable_framework=
+ 		;;
++	*-*-darwin*)
++		ac_sys_system=Darwin
++		;;
+ 	*)
+ 		PYTHONFRAMEWORKPREFIX="${enableval}"
+ 		PYTHONFRAMEWORKINSTALLDIR=$PYTHONFRAMEWORKPREFIX/$PYTHONFRAMEWORKDIR
+@@ -371,6 +374,11 @@
+ 	dnl - but an item in PYTHONPATH is "plat-win" !!! oops
+ 	MACHDEP=win
+ 	;;
++    *-*-darwin*)
++	ac_sys_system=Darwin
++	ac_sys_version=11
++    MACHDEP=darwin
++    ;;
+ 	esac
+ fi
+ if test -z "$MACHDEP"
+@@ -1211,7 +1219,7 @@
+ 	    # Calculate the right deployment target for this build.
+ 	    #
+ 	    cur_target=`sw_vers -productVersion | sed 's/\(10\.[[0-9]]*\).*/\1/'`
+-	    if test ${cur_target} '>' 10.2; then
++	    if test ${cur_target} > 10.2; then
+ 		    cur_target=10.3
+ 		    if test ${enable_universalsdk}; then
+ 			    if test "${UNIVERSAL_ARCHS}" = "all"; then
+@@ -1231,7 +1239,7 @@
+ 				    cur_target='10.5'
+ 			    fi
+ 		    else
+-			    if test `/usr/bin/arch` = "i386"; then
++			    if test "$($OSX_ARCH_PROG)" = "i386"; then
+ 				    # On Intel macs default to a deployment
+ 				    # target of 10.4, that's the first OSX
+ 				    # release with Intel support.
+@@ -1851,6 +1859,15 @@
+     ;;
+ esac
+ 
++if test "x$cross_compiling" = xyes; then
++    function arch
++    {
++        echo i386
++    }
++    OSX_ARCH_PROG=arch
++else
++    OSX_ARCH_PROG=/usr/bin/arch
++fi
+ 
+ ARCH_RUN_32BIT=""
+ AC_SUBST(LIBTOOL_CRUFT)
+@@ -1860,7 +1877,7 @@
+     if test "${enable_universalsdk}"; then
+ 	    :
+     else
+-        LIBTOOL_CRUFT="${LIBTOOL_CRUFT} -arch_only `/usr/bin/arch`"
++        LIBTOOL_CRUFT="${LIBTOOL_CRUFT} -arch_only $($OSX_ARCH_PROG)"
+     fi
+     LIBTOOL_CRUFT=$LIBTOOL_CRUFT' -install_name $(PYTHONFRAMEWORKINSTALLDIR)/Versions/$(VERSION)/$(PYTHONFRAMEWORK)'
+     LIBTOOL_CRUFT=$LIBTOOL_CRUFT' -compatibility_version $(VERSION) -current_version $(VERSION)';;
+@@ -1885,7 +1902,7 @@
+     ]])],[ac_osx_32bit=yes],[ac_osx_32bit=no],[ac_osx_32bit=yes])
+     
+     if test "${ac_osx_32bit}" = "yes"; then
+-    	case `/usr/bin/arch` in
++    	case $($OSX_ARCH_PROG) in
+     	i386) 
+     		MACOSX_DEFAULT_ARCH="i386" 
+     		;;
+@@ -1897,7 +1914,7 @@
+     		;;
+     	esac
+     else
+-    	case `/usr/bin/arch` in
++    	case $($OSX_ARCH_PROG) in
+     	i386) 
+     		MACOSX_DEFAULT_ARCH="x86_64" 
+     		;;
+@@ -1936,8 +1953,8 @@
+ fi
+ 
+ AC_MSG_CHECKING(for dyld)
+-case $ac_sys_system/$ac_sys_release in
+-  Darwin/*)
++case $host in
++  *darwin*)
+   	AC_DEFINE(WITH_DYLD, 1, 
+         [Define if you want to use the new-style (Openstep, Rhapsody, MacOS)
+          dynamic linker (dyld) instead of the old-style (NextStep) dynamic
+@@ -2061,7 +2078,7 @@
+ 		# Use -undefined dynamic_lookup whenever possible (10.3 and later).
+ 		# This allows an extension to be used in any Python
+ 
+-		if test ${MACOSX_DEPLOYMENT_TARGET} '>' 10.2
++		if test ${MACOSX_DEPLOYMENT_TARGET} > 10.2
+ 		then
+ 			if test "${enable_universalsdk}"; then
+ 				LDFLAGS="${UNIVERSAL_ARCH_FLAGS} -isysroot ${UNIVERSALSDK} ${LDFLAGS}"
+diff -urN a/Modules/parsermodule.c b/Modules/parsermodule.c
+--- a/Modules/parsermodule.c	2012-04-10 00:07:34.000000000 +0100
++++ b/Modules/parsermodule.c	2012-06-24 18:27:16.738515771 +0100
+@@ -39,7 +39,7 @@
+ #include "ast.h"
+ #include "pyarena.h"
+ 
+-extern grammar _PyParser_Grammar; /* From graminit.c */
++PyAPI_DATA(grammar) _PyParser_Grammar; /* From graminit.c */
+ 
+ #ifdef lint
+ #include <note.h>

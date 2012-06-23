@@ -55,6 +55,12 @@ register_var_option "--toolchain-src-dir=<path>" TOOLCHAIN_SRC_DIR "Select toolc
 GDB_VERSION="6.6 7.1.x 7.3.x"
 register_var_option "--gdb-version=<version>" GDB_VERSION "Select GDB version(s)."
 
+PYTHON_VERSION=
+register_var_option "--python-version=<version>" PYTHON_VERSION "Python version."
+
+PYTHON_BUILD_DIR=
+register_var_option "--python-build-dir=<path>" PYTHON_BUILD_DIR "Python build directory."
+
 NDK_DIR=$ANDROID_NDK_ROOT
 register_var_option "--ndk-dir=<path>" NDK_DIR "Select NDK install directory."
 
@@ -120,6 +126,11 @@ gdb_ndk_install_dir ()
     echo "prebuilt/$1/gdb-$(bh_tag_to_arch $2)-$3"
 }
 
+python_build_install_dir ()
+{
+    echo "$PYTHON_BUILD_DIR/install/$1/python-$PYTHON_VERSION"
+}
+
 # $1: host system tag
 # $2: target tag
 # $3: gdb version
@@ -135,6 +146,7 @@ build_host_gdb ()
     fi
 
     bh_set_target_tag $2
+    bh_setup_host_env
 
     ARGS=" --prefix=$INSTALLDIR"
     ARGS=$ARGS" --disable-shared"
@@ -144,12 +156,19 @@ build_host_gdb ()
     ARGS=$ARGS" --disable-werror"
     ARGS=$ARGS" --disable-nls"
     ARGS=$ARGS" --disable-docs"
+    if [ "$PYTHON_VERSION" ]; then
+        ARGS=$ARGS" --with-python=$(python_build_install_dir $BH_HOST_TAG)/bin/python-config.sh"
+        if [ $1 = windows-x86 -o $1 = windows-x86_64 ]; then
+            # This is necessary for the Python integration to build.
+            CFLAGS=$CFLAGS" -D__USE_MINGW_ANSI_STDIO=1"
+            CXXFLAGS=$CXXFLAGS" -D__USE_MINGW_ANSI_STDIO=1"
+        fi
+    fi
 
     TEXT="$(bh_host_text) gdb-$BH_TARGET_ARCH-$3:"
 
     mkdir -p "$BUILDDIR" && rm -rf "$BUILDDIR"/* &&
     cd "$BUILDDIR" &&
-    bh_setup_host_env &&
     dump "$TEXT Building"
     run2 "$SRCDIR"/configure $ARGS &&
     run2 make -j$NUM_JOBS &&
