@@ -16,8 +16,12 @@
 #
 # Rebuild the mingw64 cross-toolchain from scratch
 #
+# build-mingw64-toolchain.sh --target-arch=i686 --package-dir=i686-w64-mingw32-toolchain
+#
 
 PROGNAME=$(basename $0)
+PROGDIR=$(dirname $0)
+PROGDIR=$(cd $PROGDIR && pwd)
 
 HELP=
 VERBOSE=1
@@ -126,7 +130,7 @@ MPFR_VERSION=3.1.0
 MPC_VERSION=0.8.2
 BINUTILS_VERSION=2.22
 GCC_VERSION=4.6.3
-MINGW_W64_VERSION=v2.0.2
+MINGW_W64_VERSION=svn@5053
 
 JOBS=$(( $NUM_CORES * 2 ))
 
@@ -187,7 +191,7 @@ if [ "$HELP" ]; then
     echo "  -j<num>                      Same as --jobs=<num>."
     echo "  --binprefix=<prefix>         Specify bin prefix for host toolchain."
     echo "  --no-multilib                Disable multilib toolchain build."
-    echo "  --arch=<arch>                Select default target architecture [$TARGET_ARCH]."
+    echo "  --target-arch=<arch>         Select default target architecture [$TARGET_ARCH]."
     echo "  --force-all                  Redo everything from scratch."
     echo "  --force-build                Force a rebuild (keep sources)."
     echo "  --cleanup                    Remove all temp files after build."
@@ -349,7 +353,7 @@ if [ "$FORCE_BUILD" ]; then
 fi
 
 # Make temp install directory
-INSTALL_DIR=$TEMP_DIR/install-$HOST_TAG/x86_64-w64-mingw32
+INSTALL_DIR=$TEMP_DIR/install-$HOST_TAG/$TARGET_TAG
 BUILD_DIR=$TEMP_DIR/build-$HOST_TAG
 
 mkdir -p $INSTALL_DIR
@@ -368,7 +372,32 @@ download_package http://ftp.gnu.org/gnu/mpfr/mpfr-$MPFR_VERSION.tar.bz2
 download_package http://www.multiprecision.org/mpc/download/mpc-$MPC_VERSION.tar.gz
 download_package http://ftp.gnu.org/gnu/binutils/binutils-$BINUTILS_VERSION.tar.bz2
 download_package http://ftp.gnu.org/gnu/gcc/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.bz2
-download_package http://downloads.sourceforge.net/project/mingw-w64/mingw-w64/mingw-w64-release/mingw-w64-$MINGW_W64_VERSION.tar.gz
+if [ "$MINGW_W64_VERSION" != "${MINGW_W64_VERSION/svn/}" ];  then
+    MINGW_W64_REVISION=${MINGW_W64_VERSION/svn/}
+    # Used for the checkout folder name.
+    if [ "$MINGW_W64_REVISION" ] ; then
+        MINGW_W64_REVISION2=-r${MINGW_W64_REVISION/@/}
+    fi
+    MINGW_W64_VERSION=svn
+fi
+
+if [ ! -d $SRC_DIR/mingw-w64-$MINGW_W64_VERSION ]; then
+    if [ "$MINGW_W64_VERSION" = "svn" ];  then
+        echo "Checking out https://mingw-w64.svn.sourceforge.net/svnroot/mingw-w64/trunk$MINGW_W64_REVISION"
+        run svn co https://mingw-w64.svn.sourceforge.net/svnroot/mingw-w64/trunk$MINGW_W64_REVISION $SRC_DIR/mingw-w64-svn$MINGW_W64_REVISION2
+	MINGW_W64_SRC=$SRC_DIR/mingw-w64-svn$MINGW_W64_REVISION2
+    else
+        download_package http://downloads.sourceforge.net/project/mingw-w64/mingw-w64/mingw-w64-release/mingw-w64-$MINGW_W64_VERSION.tar.gz
+	MINGW_W64_SRC=$SRC_DIR/mingw-w64-$MINGW_W64_VERSION
+    fi
+fi
+
+PATCHES_DIR="$PROGDIR/toolchain-patches/mingw-w64"
+PATCHES=$(find $PATCHES_DIR -name "*.patch" | sort)
+echo "Patching mingw-w64-$MINGW_W64_VERSION"
+for PATCH in $PATCHES; do
+    (cd $MINGW_W64_SRC && run patch -p0 < $PATCH)
+done
 
 # Let's generate the licenses/ directory
 LICENSES_DIR=$INSTALL_DIR/licenses/
@@ -464,7 +493,7 @@ build_mingw_headers ()
             mkdir -p $BUILD_DIR/$PKGNAME &&
             cd $BUILD_DIR/$PKGNAME &&
             log "$PKGNAME: Configuring" &&
-            run $SRC_DIR/mingw-w64-$MINGW_W64_VERSION/mingw-w64-headers/configure --prefix=$INSTALL_DIR --host=$TARGET_TAG --build=$HOST_TAG
+            run $MINGW_W64_SRC/mingw-w64-headers/configure --prefix=$INSTALL_DIR --host=$TARGET_TAG --build=$HOST_TAG
             fail_panic "Can't configure mingw-64-headers"
 
             log "$PKGNAME: Installing" &&
@@ -521,7 +550,7 @@ build_mingw_crt ()
             cd $BUILD_DIR/$PKGNAME &&
             export PATH=$INSTALL_DIR/bin:$PATH
             log "$PKGNAME: Configuring" &&
-            run $SRC_DIR/mingw-w64-$MINGW_W64_VERSION/mingw-w64-crt/configure "$@"
+            run $MINGW_W64_SRC/mingw-w64-crt/configure "$@"
             fail_panic "Can't configure $PKGNAME !!"
 
             log "$PKGNAME: Building" &&
@@ -571,7 +600,7 @@ var_append GCC_CONFIGURE_OPTIONS "--with-sysroot=$INSTALL_DIR"
 
 build_mingw_headers mingw-w64-headers
 
-build_core_gcc gcc-$GCC_VERSION $GCC_CONFIGURE_OPTIONS
+build_core_gcc gcc-$GCC_VERSION $GCC_CONFIGURE_OPTIONS "--with-host-libstdcxx=-Wl,-lstdc++,-lm"
 
 CRT_CONFIGURE_OPTIONS="--host=$TARGET_TAG --with-sysroot=$INSTALL_DIR --prefix=$INSTALL_DIR"
 if [ "$TARGET_MULTILIBS" ]; then
