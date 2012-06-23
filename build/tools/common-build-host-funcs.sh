@@ -160,7 +160,24 @@ bh_set_target_tag ()
   BH_TARGET_CONFIG=$(bh_tag_to_config_triplet $1)
 }
 
-
+bh_sort_systems_build_first ()
+{
+  local IN_SYSTEMS="$1"
+  local OUT_SYSTEMS
+  # Pull out the host if there
+  for IN_SYSTEM in $IN_SYSTEMS; do
+    if [ "$IN_SYSTEM" = "$HOST_TAG" ]; then
+        OUT_SYSTEMS=$IN_SYSTEM
+    fi
+  done
+  # Append the rest
+  for IN_SYSTEM in $IN_SYSTEMS; do
+    if [ ! "$IN_SYSTEM" = "$HOST_TAG" ]; then
+        OUT_SYSTEMS=$OUT_SYSTEMS" $IN_SYSTEM"
+    fi
+  done
+  echo $OUT_SYSTEMS
+}
 
 
 # Use this function to enable/disable colored output
@@ -563,6 +580,8 @@ _bh_select_toolchain_for_host ()
                 *) panic "Sorry, this script only supports building windows binaries on Linux."
                 ;;
             esac
+#            HOST_CFLAGS=$HOST_CFLAGS" -D__USE_MINGW_ANSI_STDIO=1"
+#            HOST_CXXFLAGS=$HOST_CXXFLAGS" -D__USE_MINGW_ANSI_STDIO=1"
             ;;
 
         windows-x86_64)
@@ -600,6 +619,8 @@ _bh_select_toolchain_for_host ()
                 *) panic "Sorry, this script only supports building windows binaries on Linux."
                 ;;
             esac
+#            HOST_CFLAGS=$HOST_CFLAGS" -D__USE_MINGW_ANSI_STDIO=1"
+#            HOST_CXXFLAGS=$HOST_CXXFLAGS" -D__USE_MINGW_ANSI_STDIO=1"
             ;;
     esac
 

@@ -1,0 +1,15 @@
+diff -urN a/Modules/_cursesmodule.c b/Modules/_cursesmodule.c
+--- a/Modules/_cursesmodule.c	2012-04-10 00:07:33.000000000 +0100
++++ b/Modules/_cursesmodule.c	2012-06-24 20:58:36.644526289 +0100
+@@ -91,6 +91,11 @@
+   set_form_sub set_form_term set_form_userptr set_form_win
+   set_max_field set_new_page unpost_form
+ 
++#ifdef __MINGW32__
++#ifndef _ISPAD
++#define _ISPAD 0x10
++#endif
++#endif
+ 
+ */
+ 
