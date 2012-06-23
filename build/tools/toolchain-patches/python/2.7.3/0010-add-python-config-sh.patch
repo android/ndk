@@ -1,0 +1,110 @@
+diff -urN a/configure.in b/configure.in
+--- a/configure.in	2012-06-30 01:06:22.326507693 +0100
++++ b/configure.in	2012-06-30 01:06:22.717510412 +0100
+@@ -4807,6 +4807,6 @@
+ 
+ mv config.c Modules])
+ AC_CONFIG_FILES([setup_info])
+-AC_CONFIG_FILES([Makefile.pre Modules/Setup.config Misc/python.pc])
++AC_CONFIG_FILES([Makefile.pre Modules/Setup.config Misc/python.pc Misc/python-config.sh])
+ AC_CONFIG_FILES([Modules/ld_so_aix], [chmod +x Modules/ld_so_aix])
+ AC_OUTPUT
+diff -urN a/Makefile.pre.in b/Makefile.pre.in
+--- a/Makefile.pre.in	2012-06-30 01:06:22.339507783 +0100
++++ b/Makefile.pre.in	2012-06-30 01:06:22.718510418 +0100
+@@ -987,10 +987,12 @@
+ 	export EXE; EXE="$(BUILDEXE)"; \
+ 	cd $(srcdir)/Lib/$(PLATDIR); $(RUNSHARED) ./regen $(CC)
+ 
+-python-config: $(srcdir)/Misc/python-config.in
++python-config: $(srcdir)/Misc/python-config.in $(srcdir)/Misc/python-config.sh.in
+ 	# Substitution happens here, as the completely-expanded BINDIR
+ 	# is not available in configure
+ 	sed -e "s,@EXENAME@,$(BINDIR)/python$(VERSION)$(EXE)," < $(srcdir)/Misc/python-config.in >python-config
++	# Replace makefile compat. variable references with shell script compat. ones
++	sed -e "s,\$$(\([A-Za-z0-9_]*\)),\$$\{\1\},g" < Misc/python-config.sh >python-config.sh
+ 
+ # Install the include files
+ INCLDIRSTOMAKE=$(INCLUDEDIR) $(CONFINCLUDEDIR) $(INCLUDEPY) $(CONFINCLUDEPY)
+@@ -1049,6 +1051,8 @@
+ 	$(INSTALL_SCRIPT) $(srcdir)/Modules/makesetup $(DESTDIR)$(LIBPL)/makesetup
+ 	$(INSTALL_SCRIPT) $(srcdir)/install-sh $(DESTDIR)$(LIBPL)/install-sh
+ 	$(INSTALL_SCRIPT) python-config $(DESTDIR)$(BINDIR)/python$(VERSION)-config
++	$(INSTALL_SCRIPT) python-config.sh $(DESTDIR)$(BINDIR)/python-config.sh
++
+ 	rm python-config
+ 	@if [ -s Modules/python.exp -a \
+ 		"`echo $(MACHDEP) | sed 's/^\(...\).*/\1/'`" = "aix" ]; then \
+diff -urN a/Misc/python-config.sh.in b/Misc/python-config.sh.in
+--- a/Misc/python-config.sh.in	1970-01-01 01:00:00.000000000 +0100
++++ b/Misc/python-config.sh.in	2012-06-30 01:09:08.311648080 +0100
+@@ -0,0 +1,69 @@
++#!/bin/sh
++
++function exit_with_usage
++{
++    echo "Usage: $0 --prefix|--exec-prefix|--includes|--libs|--cflags|--ldflags|--help"
++    exit 1
++}
++
++prefix="@prefix@"
++exec_prefix="@exec_prefix@"
++includedir="@includedir@"
++VERSION="@VERSION@"
++#libdir="@libdir@"
++libdir=$prefix/lib/python$VERSION/config
++LIBM="@LIBM@"
++LIBC="@LIBC@"
++SYSLIBS="$LIBM $LIBC"
++LIBS="@LIBS@ $SYSLIBS -lpython$VERSION"
++ABIFLAGS="@ABIFLAGS@"
++BASECFLAGS="@BASECFLAGS@"
++CFLAGS="@CFLAGS@"
++LDLIBRARY="@LDLIBRARY@"
++LINKFORSHARED="@LINKFORSHARED@"
++OPT="@OPT@"
++
++for ARG in $*
++do
++    case $ARG in
++        --prefix)
++            echo $prefix
++            exit 0
++        ;;
++        --exec-prefix)
++            echo $exec_prefix
++            exit 0
++        ;;
++        --includes)
++            echo -I$includedir/python$VERSION
++            exit 0
++        ;;
++        --libs)
++            echo $LIBS
++            exit 0
++        ;;
++        --cflags)
++            echo -I$includedir/python$VERSION $BASECFLAGS $CFLAGS $OPT
++            exit 0
++        ;;
++        --ldflags)
++        # I'm not handling the case of not Py_ENABLE_SHARED here.
++        # As there's no AC_SUBST for Py_ENABLE_SHARED (though I should just
++        # add that to be honest with you!)
++        # From python-config there's:
++        # if not getvar('Py_ENABLE_SHARED'):
++        #     libs.insert(0, '-L' + getvar('LIBPL'))
++        #     libs.extend(getvar('LINKFORSHARED').split())
++            echo -L$libdir $LIBS $LINKFORSHARED
++            exit 0
++        ;;
++        *.py)
++        # configuring GDB uses:
++        # ${python_prog} ${srcdir}/python/python-config.py --includes
++        # so skip any .py files passed as arguments.
++        ;;
++        *)
++            exit_with_usage
++        ;;
++esac
++done
