@@ -16,8 +16,12 @@
 #
 # Rebuild the mingw64 cross-toolchain from scratch
 #
+# build-mingw64-toolchain.sh --target-arch=i686 --package-dir=i686-w64-mingw32-toolchain
+#
 
 PROGNAME=$(basename $0)
+PROGDIR=$(dirname $0)
+PROGDIR=$(cd $PROGDIR && pwd)
 
 HELP=
 VERBOSE=1
@@ -121,18 +125,20 @@ if [ "$OS" != "linux" ]; then
     echo "WARNING: WARNING: WARNING: THIS SCRIPT PROBABLY ONLY WORKS ON LINUX!!"
 fi
 
-GMP_VERSION=5.0.4
+GMP_VERSION=5.0.5
 MPFR_VERSION=3.1.0
-MPC_VERSION=0.8.2
+MPC_VERSION=0.9
+PPL_VERSION=0.12.1
+CLOOG_VERSION=0.15.11
 BINUTILS_VERSION=2.22
-GCC_VERSION=4.6.3
-MINGW_W64_VERSION=v2.0.2
+GCC_VERSION=4.7.0
+MINGW_W64_VERSION=svn
 
 JOBS=$(( $NUM_CORES * 2 ))
 
 
 HOST_BINPREFIX=
-TARGET_ARCH=x86_64
+TARGET_ARCH=i686
 TARGET_MULTILIBS=true  # not empty to enable multilib
 PACKAGE_DIR=
 FORCE_ALL=
@@ -161,6 +167,8 @@ for opt; do
         --gmp-version=*) GMP_VERSION=$optarg;;
         --mpfr-version=*) MPFR_VERSION=$optarg;;
         --mpc-version=*) MPC_VERSION=$optarg;;
+        --ppl-version-*) PPL_VERSION=$optarg;;
+        --cloog-version-*) CLOOG_VERSION=$optarg;;
         --mingw-version=*) MINGW_W64_VERSION=$optarg;;
         -*) panic "Unknown option '$opt', see --help for list of valid ones.";;
         *) panic "This script doesn't take any parameter, see --help for details.";;
@@ -182,12 +190,14 @@ if [ "$HELP" ]; then
     echo "  --gmp-version=<version>      Select libgmp version [$GMP_VERSION]."
     echo "  --mpfr-version=<version>     Select libmpfr version [$MPFR_VERSION]."
     echo "  --mpc-version=<version>      Select libmpc version [$MPC_VERSION]."
+    echo "  --ppl-version=<version>      Select libppl version [$PPL_VERSION]."
+    echo "  --cloog-version=<version>    Select libcloog-ppl version [$CLOOG_VERSION]."
     echo "  --mingw-version=<version>    Select mingw-w64 version [$MINGW_W64_VERSION]."
     echo "  --jobs=<num>                 Run <num> build tasks in parallel [$JOBS]."
     echo "  -j<num>                      Same as --jobs=<num>."
     echo "  --binprefix=<prefix>         Specify bin prefix for host toolchain."
     echo "  --no-multilib                Disable multilib toolchain build."
-    echo "  --arch=<arch>                Select default target architecture [$TARGET_ARCH]."
+    echo "  --target-arch=<arch>         Select default target architecture [$TARGET_ARCH]."
     echo "  --force-all                  Redo everything from scratch."
     echo "  --force-build                Force a rebuild (keep sources)."
     echo "  --cleanup                    Remove all temp files after build."
@@ -349,7 +359,7 @@ if [ "$FORCE_BUILD" ]; then
 fi
 
 # Make temp install directory
-INSTALL_DIR=$TEMP_DIR/install-$HOST_TAG/x86_64-w64-mingw32
+INSTALL_DIR=$TEMP_DIR/install-$HOST_TAG/$TARGET_TAG
 BUILD_DIR=$TEMP_DIR/build-$HOST_TAG
 
 mkdir -p $INSTALL_DIR
@@ -366,9 +376,24 @@ fail_panic "Could not copy script to installation directory."
 download_package http://ftp.gnu.org/gnu/gmp/gmp-$GMP_VERSION.tar.bz2
 download_package http://ftp.gnu.org/gnu/mpfr/mpfr-$MPFR_VERSION.tar.bz2
 download_package http://www.multiprecision.org/mpc/download/mpc-$MPC_VERSION.tar.gz
+download_package http://bugseng.com/products/ppl/download/ftp/releases/$PPL_VERSION/ppl-$PPL_VERSION.tar.bz2
+download_package ftp://gcc.gnu.org/pub/gcc/infrastructure/cloog-ppl-$CLOOG_VERSION.tar.gz
 download_package http://ftp.gnu.org/gnu/binutils/binutils-$BINUTILS_VERSION.tar.bz2
 download_package http://ftp.gnu.org/gnu/gcc/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.bz2
-download_package http://downloads.sourceforge.net/project/mingw-w64/mingw-w64/mingw-w64-release/mingw-w64-$MINGW_W64_VERSION.tar.gz
+if [ ! -d $SRC_DIR/mingw-w64-$MINGW_W64_VERSION ]; then
+    if [ "$MINGW_W64_VERSION" = "svn" ]; then
+        svn co https://mingw-w64.svn.sourceforge.net/svnroot/mingw-w64/trunk $SRC_DIR/mingw-w64-$MINGW_W64_VERSION
+    else
+        download_package http://downloads.sourceforge.net/project/mingw-w64/mingw-w64/mingw-w64-release/mingw-w64-$MINGW_W64_VERSION.tar.gz
+    fi
+fi
+
+PATCHES_DIR="$PROGDIR/toolchain-patches/mingw-w64"
+PATCHES=$(find $PATCHES_DIR -name "*.patch" | sort)
+
+for PATCH in $PATCHES; do
+    (cd $SRC_DIR/mingw-w64-$MINGW_W64_VERSION && patch -p0 < $PATCH)
+done
 
 # Let's generate the licenses/ directory
 LICENSES_DIR=$INSTALL_DIR/licenses/
@@ -444,6 +469,12 @@ var_append BASE_HOST_OPTIONS "--with-mpfr=$INSTALL_DIR"
 
 build_host_package mpc-$MPC_VERSION $BASE_HOST_OPTIONS
 var_append BASE_HOST_OPTIONS "--with-mpc=$INSTALL_DIR"
+
+build_host_package ppl-$PPL_VERSION $BASE_HOST_OPTIONS
+var_append BASE_HOST_OPTIONS "--with-ppl=$INSTALL_DIR"
+
+build_host_package cloog-ppl-$CLOOG_VERSION $BASE_HOST_OPTIONS "--with-host-libstdcxx=-Wl,-lstdc++,-lm"
+var_append BASE_HOST_OPTIONS "--with-cloog=$INSTALL_DIR"
 
 BINUTILS_CONFIGURE_OPTIONS=$BASE_HOST_OPTIONS
 var_append BINUTILS_CONFIGURE_OPTIONS "--target=$TARGET_TAG --disable-nls"
@@ -571,7 +602,7 @@ var_append GCC_CONFIGURE_OPTIONS "--with-sysroot=$INSTALL_DIR"
 
 build_mingw_headers mingw-w64-headers
 
-build_core_gcc gcc-$GCC_VERSION $GCC_CONFIGURE_OPTIONS
+build_core_gcc gcc-$GCC_VERSION $GCC_CONFIGURE_OPTIONS "--with-host-libstdcxx=-Wl,-lstdc++,-lm"
 
 CRT_CONFIGURE_OPTIONS="--host=$TARGET_TAG --with-sysroot=$INSTALL_DIR --prefix=$INSTALL_DIR"
 if [ "$TARGET_MULTILIBS" ]; then
