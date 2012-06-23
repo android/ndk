@@ -1,0 +1,12 @@
+diff -urN a/Makefile.pre.in b/Makefile.pre.in
+--- a/Makefile.pre.in	2012-06-25 22:56:29.837375577 +0100
++++ b/Makefile.pre.in	2012-06-25 22:57:01.293606243 +0100
+@@ -557,7 +557,7 @@
+ # FIXME: next may fail in cross-compilation environment
+ # Use a stamp file to prevent make -j invoking pgen twice
+ $(GRAMMAR_H) $(GRAMMAR_C): Parser/pgen.stamp
+-Parser/pgen.stamp: $(PGEN) $(GRAMMAR_INPUT)
++Parser/pgen.stamp: $(GRAMMAR_INPUT)
+ 		-@$(INSTALL) -d Include
+ 		$(PGEN) $(GRAMMAR_INPUT) $(GRAMMAR_H) $(GRAMMAR_C)
+ 		-touch Parser/pgen.stamp
