@@ -14,9 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Rebuild the host GCC toolchain binaries from sources.
-#
-# NOTE: this script does not rebuild gdb, see build-host-gdb.sh for this.
+# Rebuild the host GDB binaries from sources.
 #
 
 # include common function and variable definitions
@@ -28,7 +26,7 @@ PROGRAM_PARAMETERS=""
 PROGRAM_DESCRIPTION="\
 This program is used to rebuild one or more NDK gdb client programs from
 sources. To use it, you will need a working set of toolchain sources, like
-thos downloaded with download-toolchain-sources.sh., then pass the
+those downloaded with download-toolchain-sources.sh, then pass the
 corresponding directory with the --toolchain-src-dir=<path> option.
 
 By default, the script rebuilds GDB for you host system [$HOST_TAG],
@@ -49,9 +47,7 @@ for four different systems:
 
   $PROGNAME --toolchain-src-dir=/path/to/toolchain/src \
     --systems=linux-x86,linux-x86_64,windows,windows-x86_64 \
-    arm-linux-androideabi-4.4.3 \
-    arm-linux-androideabi-4.6
-"
+    --arch=arm"
 
 TOOLCHAIN_SRC_DIR=
 register_var_option "--toolchain-src-dir=<path>" TOOLCHAIN_SRC_DIR "Select toolchain source directory"
