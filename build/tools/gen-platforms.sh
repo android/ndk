@@ -40,7 +40,7 @@ PROGDIR=$(dirname "$0")
 . "$PROGDIR/prebuilt-common.sh"
 
 # Return the list of platform supported from $1/platforms
-# as a single space-separated list of levels. (e.g. "3 4 5 8 9")
+# as a single space-separated sorted list of levels. (e.g. "3 4 5 8 9")
 # $1: source directory
 extract_platforms_from ()
 {
@@ -393,20 +393,29 @@ gen_shell_libraries ()
     done
 }
 
-# $1: architecture name
-# $2: source directory (for *.S files)
-# $3: destination directory
+# $1: platform number
+# $2: architecture name
+# $3: common source directory (for crtbrand.c, etc)
+# $4: source source directory (for *.S files)
+# $5: destination directory
+# $6: prevous source directory
 #
 gen_crt_objects ()
 {
-    local ARCH=$1
-    local SRC_DIR="$SRCDIR/$2"
-    local DST_DIR="$DSTDIR/$3"
+    local API=$1
+    local ARCH=$2
+    local COMMON_SRC_DIR="$SRCDIR/$3"
+    local SRC_DIR="$SRCDIR/$4"
+    local DST_DIR="$DSTDIR/$5"
+    local PREV_SRC_DIR="$6"
     local SRC_FILE DST_FILE
     local TOOLCHAIN_PREFIX
 
     if [ ! -d "$SRC_DIR" ]; then
-        return
+        SRC_DIR=$PREV_SRC_DIR
+        if [ ! -d "$SRC_DIR" ]; then
+            return
+        fi
     fi
 
     # Let's locate the toolchain we're going to use
@@ -419,26 +428,45 @@ gen_crt_objects ()
         exit 1
     fi
 
+    log "Generating platform $API crtbrand assembly code: $DST_DIR/crtbrand.s"
+    (cd "$COMMON_SRC_DIR" && $TOOLCHAIN_PREFIX-gcc -DPLATFORM_SDK_VERSION=$API -fpic -S -o "$DST_DIR/crtbrand.s" crtbrand.c) 1>>$TMPL 2>&1
+    if [ $? != 0 ]; then
+        dump "ERROR: Could not generate $DST_DIR/crtbrand.s from $COMMON_SRC_DIR/crtbrand.c"
+        dump "Please see the content of $TMPL for details!"
+        cat $TMPL | tail -10
+        exit 1
+    fi
+    cp "$DST_DIR/crtbrand.s" /tmp/crtbrand.s.$API.$ARCH
+
     for SRC_FILE in $(cd "$SRC_DIR" && ls crt*.S); do
         DST_FILE=${SRC_FILE%%.S}.o
 
-        # Special case: crtend.S must be compiled as crtend_android.o
-        # This is for long historical reasons, i.e. to avoid name conflicts
-        # in the past with other crtend.o files. This is hard-coded in the
-        # Android toolchain configuration, so switch the name here.
-        if [ "$DST_FILE" = "crtend.o" ]; then
-            DST_FILE=crtend_android.o
-        fi
+        case "$DST_FILE" in
+            "crtend.o")
+                # Special case: crtend.S must be compiled as crtend_android.o
+                # This is for long historical reasons, i.e. to avoid name conflicts
+                # in the past with other crtend.o files. This is hard-coded in the
+                # Android toolchain configuration, so switch the name here.
+                DST_FILE=crtend_android.o
+                ;;
+            "crtbegin_dynamic.o"|"crtbegin_static.o")
+                # Add .note.ABI-tag section
+                SRC_FILE=$SRC_FILE" $DST_DIR/crtbrand.s"
+                ;;
+        esac
 
         log "Generating $ARCH C runtime object: $DST_FILE"
-        (cd "$SRC_DIR" && $TOOLCHAIN_PREFIX-gcc -fpic -c -o "$DST_DIR/$DST_FILE" "$SRC_FILE") 1>>$TMPL 2>&1
+	log $SRC_DIR
+	log $TOOLCHAIN_PREFIX-gcc -fpic -Wl,-r -nostdlib -o "$DST_DIR/$DST_FILE" "$SRC_FILE"
+        (cd "$SRC_DIR" && $TOOLCHAIN_PREFIX-gcc -fpic -Wl,-r -nostdlib -o "$DST_DIR/$DST_FILE" $SRC_FILE) 1>>$TMPL 2>&1
         if [ $? != 0 ]; then
-            dump "ERROR: Could not generate $DST_FILE from $SRC_DIR/$SRC_FILE"
+            dump "ERROR: Could not generate $DST_FILE from $SRC_DIR/$SRC_FILE $ADDITIONAL_SRC_FILE"
             dump "Please see the content of $TMPL for details!"
             cat $TMPL | tail -10
             exit 1
         fi
     done
+    rm -f "$DST_DIR/crtbrand.s"
 }
 
 # $1: platform number
@@ -505,6 +533,7 @@ rm -rf $DSTDIR/platforms && mkdir -p $DSTDIR/platforms
 PREV_PLATFORM_DST=
 for PLATFORM in $PLATFORMS; do
     NEW_PLATFORM=platforms/android-$PLATFORM
+    PLATFORM_COMMON_SRC=platforms/common/src
     PLATFORM_SRC=$NEW_PLATFORM
     PLATFORM_DST=$NEW_PLATFORM
     dump "Copying android-$PLATFORM platform files"
@@ -535,8 +564,12 @@ for PLATFORM in $PLATFORMS; do
             # Copy the prebuilt static libraries.
             copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib $PLATFORM_DST/$SYSROOT/lib "sysroot libs"
 
-            # Generate  C runtime object files when available
-            gen_crt_objects $ARCH $PLATFORM_SRC/arch-$ARCH/src $PLATFORM_DST/$SYSROOT/lib
+            # Generate C runtime object files when available
+            gen_crt_objects $PLATFORM $ARCH $PLATFORM_COMMON_SRC $PLATFORM_SRC/arch-$ARCH/src \
+	        $PLATFORM_DST/$SYSROOT/lib `var_value PREV_PLATFORM_SRC_$ARCH`
+            if [ -d "$SRCDIR/$PLATFORM_SRC/arch-$ARCH/src" ]; then
+                eval PREV_PLATFORM_SRC_$ARCH=$SRCDIR/$PLATFORM_SRC/arch-$ARCH/src
+            fi
 
             # Generate shell libraries from symbol files
             gen_shell_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $PLATFORM_DST/arch-$ARCH
