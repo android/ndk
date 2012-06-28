@@ -36,8 +36,6 @@ TARGET_CFLAGS := \
         -frename-registers \
 
 TARGET_LDFLAGS :=
-TARGET_LDSCRIPT_XSC :=
-TARGET_LDSCRIPT_X :=
 
 TARGET_C_INCLUDES := \
     $(SYSROOT)/usr/include
@@ -84,7 +82,6 @@ $(call set-src-files-text,$(__release_sources),mips$(space)) \
 #
 define cmd-build-shared-library
 $(PRIVATE_CXX) \
-    $(PRIVATE_LDSCRIPT_XSC) \
     -Wl,-soname,$(notdir $@) \
     -shared \
     --sysroot=$(call host-path,$(PRIVATE_SYSROOT)) \
@@ -96,7 +93,6 @@ endef
 
 define cmd-build-executable
 $(PRIVATE_CXX) \
-    $(PRIVATE_LDSCRIPT_X) \
     -Wl,--gc-sections \
     -Wl,-z,nocopyreloc \
     --sysroot=$(call host-path,$(PRIVATE_SYSROOT)) \
