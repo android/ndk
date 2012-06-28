@@ -123,7 +123,3 @@ TARGET_AR       = $(TOOLCHAIN_PREFIX)ar
 TARGET_ARFLAGS := crs
 
 TARGET_STRIP    = $(TOOLCHAIN_PREFIX)strip
-
-# Add linker scripts flags for executables and shared libraries
-TARGET_LDSCRIPT_X :=
-TARGET_LDSCRIPT_XSC :=
