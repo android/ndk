@@ -225,6 +225,16 @@ EXTRA_CONFIG_FLAGS="--disable-bootstrap"
 # the flags are ignored for older GCC versions.
 EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --disable-libquadmath --disable-plugin"
 
+# Enable Gold
+# mingw misses some header preventing fcntl() in gold to compile.  Disable it for now.
+if [ "$MINGW" != "yes" ] ; then
+    case "$TOOLCHAIN" in
+    x86-4.6|arm-linux-androideabi-4.6)
+        EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-gold --enable-ld=default"
+    ;;
+    esac
+fi
+
 #export LDFLAGS="$HOST_LDFLAGS"
 cd $BUILD_OUT && run \
 $BUILD_SRCDIR/configure --target=$ABI_CONFIGURE_TARGET \
