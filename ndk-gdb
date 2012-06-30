@@ -59,6 +59,7 @@ quote_spaces ()
 # in our path.
 ADB_CMD=${ADB_CMD:-$(find_program adb)}
 ADB_FLAGS=${ADB_FLAGS:-}
+DEVICE_SERIAL=
 
 AWK_CMD=${AWK_CMD:-$(find_program awk)}
 
@@ -172,13 +173,15 @@ while [ -n "$1" ]; do
         -s)
             check_parameter $1 $2
             check_adb_flags
-            ADB_FLAGS=" -s $2"
+            ADB_FLAGS=" -s"
+            DEVICE_SERIAL=$2
             shift
             ;;
         -s*)
             check_adb_flags
             optarg=`expr -- "$opt" : '-s\(.*\)'`
-            ADB_FLAGS=" -s $optarg"
+            ADB_FLAGS=" -s"
+            DEVICE_SERIAL=$optarg
             ;;
         -p)
             check_parameter $1 $2
@@ -315,14 +318,22 @@ if [ $? != 0 ] ; then
 fi
 log "ADB version found: $ADB_VERSION"
 
-log "Using ADB flags: $ADB_FLAGS"
+if [ "x$DEVICE_SERIAL" = "x" ]; then
+    log "Using ADB flags: $ADB_FLAGS"
+else
+    log "Using ADB flags: $ADB_FLAGS" \"$DEVICE_SERIAL\"
+fi
 
 # Run an ADB command with the right ADB flags
 # $1+: adb command parameter
 adb_cmd ()
 {
-    # NOTE: We escape $ADB_CMD in case the command's path contains spaces.
-    "$ADB_CMD" $ADB_FLAGS "$@"
+    if [ "x$DEVICE_SERIAL" = "x" ]; then
+        "$ADB_CMD" $ADB_FLAGS "$@"
+    else
+        # NOTE: We escape $ADB_CMD and $DEVICE_SERIAL in case they contains spaces.
+        "$ADB_CMD" $ADB_FLAGS "$DEVICE_SERIAL" "$@"
+    fi
 }
 
 # Used internally by adb_var_shell and adb_var_shell2.
