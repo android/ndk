@@ -165,7 +165,7 @@ run copy_directory_nolinks "$SRC_SYSROOT" "$TMPDIR/sysroot"
 
 dump "Copying libstdc++ headers and libraries..."
 
-GNUSTL_DIR=$NDK_DIR/$GNUSTL_SUBDIR
+GNUSTL_DIR=$NDK_DIR/$GNUSTL_SUBDIR/$GCC_VERSION
 GNUSTL_LIBS=$GNUSTL_DIR/libs
 
 ABI_STL="$TMPDIR/$ABI_CONFIGURE_TARGET"

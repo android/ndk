@@ -337,11 +337,15 @@ if [ -z "$PREBUILT_NDK" ]; then
         unpack_prebuilt $ARCH-gdbserver.tar.bz2 "$REFERENCE"
     done
     # Unpack C++ runtimes
-    unpack_prebuilt gnu-libstdc++-headers.tar.bz2 "$REFERENCE"
+    for VERSION in $DEFAULT_GCC_VERSION_LIST; do
+        unpack_prebuilt gnu-libstdc++-headers-$VERSION.tar.bz2 "$REFERENCE"
+    done
     for ABI in $ABIS; do
         unpack_prebuilt gabixx-libs-$ABI.tar.bz2 "$REFERENCE"
         unpack_prebuilt stlport-libs-$ABI.tar.bz2 "$REFERENCE"
-        unpack_prebuilt gnu-libstdc++-libs-$ABI.tar.bz2 "$REFERENCE"
+        for VERSION in $DEFAULT_GCC_VERSION_LIST; do
+            unpack_prebuilt gnu-libstdc++-libs-$VERSION-$ABI.tar.bz2 "$REFERENCE"
+        done
     done
 fi
 
@@ -387,9 +391,11 @@ for SYSTEM in $SYSTEMS; do
             echo "WARNING: Could not find STLport source tree!"
         fi
 
-        copy_prebuilt "$GNUSTL_SUBDIR/include" "$GNUSTL_SUBDIR"
-        for STL_ABI in $PREBUILT_ABIS; do
-            copy_prebuilt "$GNUSTL_SUBDIR/libs/$STL_ABI" "$GNUSTL_SUBDIR/libs"
+        for VERSION in $DEFAULT_GCC_VERSION_LIST; do
+            copy_prebuilt "$GNUSTL_SUBDIR/$VERSION/include" "$GNUSTL_SUBDIR/$VERSION/"
+            for STL_ABI in $PREBUILT_ABIS; do
+                copy_prebuilt "$GNUSTL_SUBDIR/$VERSION/libs/$STL_ABI" "$GNUSTL_SUBDIR/$VERSION/libs"
+            done
         done
     else
         # Unpack gdbserver

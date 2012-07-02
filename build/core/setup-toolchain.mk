@@ -92,6 +92,7 @@ TARGET_PREBUILT_SHARED_LIBRARIES :=
 # Define default values for TOOLCHAIN_NAME, this can be overriden in
 # the setup file.
 TOOLCHAIN_NAME   := $(TARGET_TOOLCHAIN)
+TOOLCHAIN_VERSION := $(call last,$(subst -,$(space),$(TARGET_TOOLCHAIN)))
 
 # Define the root path of the toolchain in the NDK tree.
 TOOLCHAIN_ROOT   := $(NDK_ROOT)/toolchains/$(TOOLCHAIN_NAME)

@@ -40,9 +40,10 @@ rm -rf $DIR/prebuilt
 
 # Remove prebuilt binaries
 rm -rf $DIR/$STLPORT_SUBDIR/libs
-rm -rf $DIR/$GNUSTL_SUBDIR/include
-rm -rf $DIR/$GNUSTL_SUBDIR/libs
 rm -rf $DIR/$GABIXX_SUBDIR/libs
+for VERSION in $DEFAULT_GCC_VERSION_LIST; do
+    rm -rf $DIR/$GNUSTL_SUBDIR/$VERSION
+done
 
 rm -f $DIR/ndk-stack*
 
