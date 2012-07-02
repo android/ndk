@@ -678,6 +678,9 @@ APP_PROCESS=$APP_OUT/app_process
 run adb_cmd pull /system/bin/app_process `native_path $APP_PROCESS`
 log "Pulled app_process from device/emulator."
 
+run adb_cmd pull /system/bin/linker `native_path $APP_OUT/linker`
+log "Pulled linker from device/emulator."
+
 run adb_cmd pull /system/lib/libc.so `native_path $APP_OUT/libc.so`
 log "Pulled libc.so from device/emulator."
 
