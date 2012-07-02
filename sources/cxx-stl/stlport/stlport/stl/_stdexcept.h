@@ -25,8 +25,6 @@
 
 #if !defined (_STLP_USE_NATIVE_STDEXCEPT) || defined (_STLP_USE_OWN_NAMESPACE)
 
-#  if defined(_STLP_USE_EXCEPTIONS) || 1
-
 _STLP_BEGIN_NAMESPACE
 
 class _STLP_CLASS_DECLSPEC logic_error : public __Named_exception {
@@ -103,7 +101,6 @@ public:
 
 _STLP_END_NAMESPACE
 
-#  endif
 #endif
 
 #endif /* _STLP_INTERNAL_STDEXCEPT */
