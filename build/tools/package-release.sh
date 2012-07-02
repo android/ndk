@@ -387,9 +387,11 @@ for SYSTEM in $SYSTEMS; do
             echo "WARNING: Could not find STLport source tree!"
         fi
 
-        copy_prebuilt "$GNUSTL_SUBDIR/include" "$GNUSTL_SUBDIR"
-        for STL_ABI in $PREBUILT_ABIS; do
-            copy_prebuilt "$GNUSTL_SUBDIR/libs/$STL_ABI" "$GNUSTL_SUBDIR/libs"
+        for VERSION in $DEFAULT_GCC_VERSION_LIST; do
+            copy_prebuilt "$GNUSTL_SUBDIR/$VERSION/include" "$GNUSTL_SUBDIR/$VERSION/"
+            for STL_ABI in $PREBUILT_ABIS; do
+                copy_prebuilt "$GNUSTL_SUBDIR/$VERSION/libs/$STL_ABI" "$GNUSTL_SUBDIR/$VERSION/libs"
+            done
         done
     else
         # Unpack gdbserver
