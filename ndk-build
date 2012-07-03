@@ -182,4 +182,4 @@ if [ "$OSTYPE" = "cygwin" ] ; then
     log "Cygwin-compatible GNU make detected"
 fi
 
-$GNUMAKE -f $PROGDIR/build/core/build-local.mk "$@"
+$GNUMAKE -f $PROGDIR/build/core/build-local.mk SHELL=/bin/bash "$@"
