@@ -361,7 +361,7 @@ for TEST_SUBDIR in $TEST_SUBDIRS; do
     fi
 
     rm -rf "$BUILD_DIR"/* &&
-    cp -rL "$SUBDIR"/* "$BUILD_DIR/"
+    cp -RL "$SUBDIR"/* "$BUILD_DIR/"
     fail_panic "Could not copy test files to $BUILD_DIR !?"
 
     dump -n "Running $TEST_SUBDIR test... "
