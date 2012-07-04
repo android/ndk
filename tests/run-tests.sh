@@ -542,8 +542,12 @@ if is_testable device; then
             if [ "$DSTFILE" = "gdbserver" -o "$DSTFILE" = "gdb.setup" ] ; then
                 continue
             fi
+            SRCFILE="$SRCDIR/$SRCFILE"
+            if [ $HOST_OS = cygwin ]; then
+                SRCFILE=`cygpath -m $SRCFILE`
+            fi
             DSTFILE="$DSTDIR/$DSTFILE"
-            run $ADB_CMD push "$SRCDIR/$SRCFILE" "$DSTFILE" &&
+            run $ADB_CMD push "$SRCFILE" "$DSTFILE" &&
             run $ADB_CMD shell chmod 0755 $DSTFILE
             if [ $? != 0 ] ; then
                 dump "ERROR: Could not install $SRCFILE to device!"
