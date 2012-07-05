@@ -39,7 +39,7 @@ By default, this will try with the current NDK directory, unless
 you use the --ndk-dir=<path> option.
 
 The output will be placed in appropriate sub-directories of
-<ndk>/$GNUSTL_SUBDIR, but you can override this with the --out-dir=<path>
+<ndk>/$GNUSTL_SUBDIR/<gcc-version>, but you can override this with the --out-dir=<path>
 option.
 "
 
@@ -73,18 +73,6 @@ extract_parameters "$@"
 SRCDIR=$(echo $PARAMETERS | sed 1q)
 check_toolchain_src_dir "$SRCDIR"
 
-GNUSTL_SRCDIR=$SRCDIR/gcc/gcc-$DEFAULT_GCC_VERSION/libstdc++-v3
-if [ ! -d "$GNUSTL_SRCDIR" ]; then
-    echo "ERROR: Not a valid toolchain source tree."
-    echo "Can't find: $GNUSTL_SRCDIR"
-    exit 1
-fi
-
-if [ ! -f "$GNUSTL_SRCDIR/configure" ]; then
-    echo "ERROR: Configure script missing: $GNUSTL_SRCDIR/configure"
-    exit 1
-fi
-
 ABIS=$(commas_to_spaces $ABIS)
 
 # Handle NDK_DIR
@@ -109,14 +97,16 @@ fail_panic "Could not create build directory: $BUILD_DIR"
 # $1: ABI name
 # $2: Build directory
 # $3: "static" or "shared"
-# $4: Destination directory (optional, will default to $GNUSTL_SUBDIR/lib/$ABI)
+# $4: GCC version
+# $5: Destination directory (optional, will default to $GNUSTL_SUBDIR/<gcc-version>/lib/$ABI)
 build_gnustl_for_abi ()
 {
-    local ARCH BINPREFIX SYSROOT
+    local ARCH BINPREFIX SYSROOT GNUSTL_SRCDIR
     local ABI=$1
     local BUILDDIR="$2"
     local LIBTYPE="$3"
-    local DSTDIR="$4"
+    local GCC_VERSION="$4"
+    local DSTDIR="$5"
     local SRC OBJ OBJECTS CFLAGS CXXFLAGS
 
     prepare_target_build $ABI $PLATFORM $NDK_DIR
@@ -127,14 +117,27 @@ build_gnustl_for_abi ()
 
     # If the output directory is not specified, use default location
     if [ -z "$DSTDIR" ]; then
-        DSTDIR=$NDK_DIR/$GNUSTL_SUBDIR/libs/$ABI
+        DSTDIR=$NDK_DIR/$GNUSTL_SUBDIR/$GCC_VERSION/libs/$ABI
     fi
     mkdir -p $DSTDIR
 
     ARCH=$(convert_abi_to_arch $ABI)
-    BINPREFIX=$NDK_DIR/$(get_default_toolchain_binprefix_for_arch $ARCH)
-    SYSROOT=$NDK_DIR/$(get_default_platform_sysroot_for_arch $ARCH)
+    BINPREFIX=$NDK_DIR/$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION)
 
+    GNUSTL_SRCDIR=$SRCDIR/gcc/gcc-$GCC_VERSION/libstdc++-v3
+    # Sanity check
+    if [ ! -d "$GNUSTL_SRCDIR" ]; then
+        echo "ERROR: Not a valid toolchain source tree."
+        echo "Can't find: $GNUSTL_SRCDIR"
+        exit 1
+    fi
+
+    if [ ! -f "$GNUSTL_SRCDIR/configure" ]; then
+        echo "ERROR: Configure script missing: $GNUSTL_SRCDIR/configure"
+        exit 1
+    fi
+
+    SYSROOT=$NDK_DIR/$(get_default_platform_sysroot_for_arch $ARCH)
     # Sanity check
     if [ ! -f "$SYSROOT/usr/lib/libc.a" ]; then
 	echo "ERROR: Empty sysroot! you probably need to run gen-platforms.sh before this script."
@@ -189,7 +192,7 @@ build_gnustl_for_abi ()
         #LDFLAGS=$LDFLAGS" -lsupc++"
     fi
 
-    PROJECT="gnustl_$LIBTYPE $ABI"
+    PROJECT="gnustl_$LIBTYPE gcc-$GCC_VERSION $ABI"
     echo "$PROJECT: configuring"
     mkdir -p $BUILDDIR && rm -rf $BUILDDIR/* &&
     cd $BUILDDIR &&
@@ -204,7 +207,7 @@ build_gnustl_for_abi ()
         --disable-sjlj-exceptions \
         --disable-tls \
         --disable-libstdcxx-pch \
-        --with-gxx-include-dir=$INSTALLDIR/include/c++/$DEFAULT_GCC_VERSION
+        --with-gxx-include-dir=$INSTALLDIR/include/c++/$GCC_VERSION
 
     fail_panic "Could not configure $PROJECT"
 
@@ -222,30 +225,32 @@ HAS_COMMON_HEADERS=
 
 # $1: ABI
 # $2: Build directory
+# $3: GCC_VERSION
 copy_gnustl_libs ()
 {
     local ABI="$1"
     local BUILDDIR="$2"
     local ARCH=$(convert_abi_to_arch $ABI)
-    local VERSION=$DEFAULT_GCC_VERSION
+    local GCC_VERSION="$3"
     local PREFIX=$(get_default_toolchain_prefix_for_arch $ARCH)
     PREFIX=${PREFIX%%-}
 
     local SDIR="$BUILDDIR/install"
-    local DDIR="$NDK_DIR/$GNUSTL_SUBDIR"
+    local DDIR="$NDK_DIR/$GNUSTL_SUBDIR/$GCC_VERSION"
 
-    # Copy the common headers only the first time this function is called.
-    if [ -z "$HAS_COMMON_HEADERS" ]; then
-        copy_directory "$SDIR/include/c++/$VERSION" "$DDIR/include"
+    local GCC_VERSION_NO_DOT=$(echo $GCC_VERSION|sed 's/\./_/g')
+    # Copy the common headers only once per gcc version
+    if [ -z `var_value HAS_COMMON_HEADERS_$GCC_VERSION_NO_DOT` ]; then
+        copy_directory "$SDIR/include/c++/$GCC_VERSION" "$DDIR/include"
         rm -rf "$DDIR/include/$PREFIX"
-        HAS_COMMON_HEADERS=true
+	eval HAS_COMMON_HEADERS_$GCC_VERSION_NO_DOT=true
     fi
 
     rm -rf "$DIR/libs/$ABI" && 
     mkdir -p "$DDIR/libs/$ABI/include"
 
     # Copy the ABI-specific headers
-    copy_directory "$SDIR/include/c++/$VERSION/$PREFIX/bits" "$DDIR/libs/$ABI/include/bits"
+    copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/bits" "$DDIR/libs/$ABI/include/bits"
 
     # Copy the ABI-specific libraries
     # Note: the shared library name is libgnustl_shared.so due our custom toolchain patch
@@ -256,29 +261,33 @@ copy_gnustl_libs ()
 
 
 
-for ABI in $ABIS; do
-    build_gnustl_for_abi $ABI "$BUILD_DIR" static
-    build_gnustl_for_abi $ABI "$BUILD_DIR" shared
-    copy_gnustl_libs $ABI "$BUILD_DIR"
+for VERSION in $DEFAULT_GCC_VERSION_LIST; do
+    for ABI in $ABIS; do
+        build_gnustl_for_abi $ABI "$BUILD_DIR" static $VERSION
+        build_gnustl_for_abi $ABI "$BUILD_DIR" shared $VERSION
+        copy_gnustl_libs $ABI "$BUILD_DIR" $VERSION
+    done
 done
 
 # If needed, package files into tarballs
 if [ -n "$PACKAGE_DIR" ] ; then
-    # First, the headers as a single package
-    PACKAGE="$PACKAGE_DIR/gnu-libstdc++-headers.tar.bz2"
-    dump "Packaging: $PACKAGE"
-    pack_archive "$PACKAGE" "$NDK_DIR" "$GNUSTL_SUBDIR/include"
-
-    # Then, one package per ABI for libraries
-    for ABI in $ABIS; do
-        FILES=""
-        for LIB in include/bits libsupc++.a libgnustl_static.a libgnustl_shared.so; do
-            FILES="$FILES $GNUSTL_SUBDIR/libs/$ABI/$LIB"
-        done
-        PACKAGE="$PACKAGE_DIR/gnu-libstdc++-libs-$ABI.tar.bz2"
+    for VERSION in $DEFAULT_GCC_VERSION_LIST; do
+        # First, the headers as a single package for a given gcc version
+        PACKAGE="$PACKAGE_DIR/gnu-libstdc++-headers-$VERSION.tar.bz2"
         dump "Packaging: $PACKAGE"
-        pack_archive "$PACKAGE" "$NDK_DIR" "$FILES"
-        fail_panic "Could not package $ABI STLport binaries!"
+        pack_archive "$PACKAGE" "$NDK_DIR" "$GNUSTL_SUBDIR/$VERSION/include"
+
+        # Then, one package per version/ABI for libraries
+        for ABI in $ABIS; do
+            FILES=""
+            for LIB in include/bits libsupc++.a libgnustl_static.a libgnustl_shared.so; do
+                FILES="$FILES $GNUSTL_SUBDIR/$VERSION/libs/$ABI/$LIB"
+            done
+            PACKAGE="$PACKAGE_DIR/gnu-libstdc++-libs-$VERSION-$ABI.tar.bz2"
+            dump "Packaging: $PACKAGE"
+            pack_archive "$PACKAGE" "$NDK_DIR" "$FILES"
+            fail_panic "Could not package $ABI STLport binaries!"
+        done
     done
 fi
 

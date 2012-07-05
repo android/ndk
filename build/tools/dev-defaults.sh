@@ -26,7 +26,7 @@ GNUSTL_SUBDIR=sources/cxx-stl/gnu-libstdc++
 TOOLCHAIN_GIT_DATE=2012-06-30
 
 # The space-separated list of all GCC versions we support in this NDK
-DEFAULT_GCC_VERSION_LIST="4.4.3 4.6"
+DEFAULT_GCC_VERSION_LIST="4.6 4.4.3"
 
 # The default GCC version for this NDK, i.e. the first item in
 # $DEFAULT_GCC_VERSION_LIST
@@ -110,10 +110,19 @@ get_default_abis_for_arch ()
     echo "$RET"
 }
 
-
-# Return the default name for a given architecture
+# Return toolchain name for given architecture and GCC version
 # $1: Architecture name (e.g. 'arm')
+# $2: GCC version (e.g. '4.6ʼ)
 # Out: default arch-specific toolchain name (e.g. 'arm-linux-androideabi-$GCC_VERSION')
+# Return empty for unknown arch
+get_toolchain_name_for_arch ()
+{
+    eval echo \"\${DEFAULT_ARCH_TOOLCHAIN_NAME_$1}-$2\"
+}
+
+# Return the default toolchain name for a given architecture
+# $1: Architecture name (e.g. 'arm')
+# Out: default arch-specific toolchain name (e.g. 'arm-linux-androideabi-$DEFAULT_GCC_VERSION')
 # Return empty for unknown arch
 get_default_toolchain_name_for_arch ()
 {

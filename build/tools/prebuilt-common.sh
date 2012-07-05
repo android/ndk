@@ -1036,19 +1036,29 @@ convert_archs_to_abis ()
     echo "$RET"
 }
 
-# Return the default binary path prefix for a given architecture
-# For example: arm -> toolchains/arm-linux-androideabi-4.4.3/prebuilt/<system>/bin/arm-linux-androideabi-
+# Return the default toolchain binary path prefix for given architecture and gcc version
+# For example: arm 4.6 -> toolchains/arm-linux-androideabi-4.6/prebuilt/<system>/bin/arm-linux-androideabi-
 # $1: Architecture name
-# $2: optional, system name, defaults to $HOST_TAG
-get_default_toolchain_binprefix_for_arch ()
+# $2: GCC version
+# $3: optional, system name, defaults to $HOST_TAG
+get_toolchain_binprefix_for_arch ()
 {
     local NAME PREFIX DIR BINPREFIX
-    local SYSTEM=${2:-$(get_prebuilt_host_tag)}
-    NAME=$(get_default_toolchain_name_for_arch $1)
+    local SYSTEM=${3:-$(get_prebuilt_host_tag)}
+    NAME=$(get_toolchain_name_for_arch $1 $2)
     PREFIX=$(get_default_toolchain_prefix_for_arch $1)
     DIR=$(get_toolchain_install . $NAME $SYSTEM)
     BINPREFIX=${DIR#./}/bin/$PREFIX-
     echo "$BINPREFIX"
+}
+
+# Return the default toochain binary path prefix for a given architecture
+# For example: arm -> toolchains/arm-linux-androideabi-4.6/prebuilt/<system>/bin/arm-linux-androideabi-
+# $1: Architecture name
+# $2: optional, system name, defaults to $HOST_TAG
+get_default_toolchain_binprefix_for_arch ()
+{
+    get_toolchain_binprefix_for_arch $1 $DEFAULT_GCC_VERSION $2
 }
 
 # Return default API level for a given arch
