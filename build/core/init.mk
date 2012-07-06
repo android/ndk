@@ -255,7 +255,7 @@ ifdef HOST_PREBUILT
         HOST_MAKE := $(wildcard $(HOST_PREBUILT)/make$(HOST_EXEEXT))
     endif
 else
-    $(call ndk_log,Host tols prebuilt directory not found, using system tools)
+    $(call ndk_log,Host tools prebuilt directory not found, using system tools)
 endif
 
 HOST_ECHO := $(strip $(HOST_ECHO))
@@ -270,6 +270,16 @@ ifndef HOST_ECHO
     HOST_ECHO := echo
 endif
 $(call ndk_log,Host 'echo' tool: $(HOST_ECHO))
+
+# Define HOST_ECHO_N to perform the equivalent of 'echo -n' on all platforms.
+ifeq ($(HOST_OS),windows)
+  # Our custom toolbox echo binary supports -n.
+  HOST_ECHO_N := $(HOST_ECHO) -n
+else
+  # On Posix, just use bare printf.
+  HOST_ECHO_N := printf %s
+endif
+$(call ndk_log,Host 'echo -n' tool: $(HOST_ECHO_N))
 
 HOST_CMP := $(strip $(HOST_CMP))
 ifndef HOST_CMP

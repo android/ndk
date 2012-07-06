@@ -290,21 +290,21 @@ index-word-list = $(wordlist $(call bump-0-to-1,$1),$2,$3)
 # $2: word list
 #
 define list-file-start-gen-10
-	$$(hide) $$(HOST_ECHO) -n "$(call index-word-list,$10,$19,$2) " >> $$@
+	$$(hide) $$(HOST_ECHO_N) "$(call index-word-list,$10,$19,$2) " >> $$@
 endef
 
 # Used to generate a slice of always 10 items starting from index $1
 # $1: start (tenth) index. CANNOT BE 0
 # $2: word list
 define list-file-always-gen-10
-	$$(hide) $$(HOST_ECHO) -n "$(wordlist $10,$19,$2) " >> $$@
+	$$(hide) $$(HOST_ECHO_N) "$(wordlist $10,$19,$2) " >> $$@
 endef
 
 # Same as list-file-always-gen-10, except that the word list might be
 # empty at position $10 (i.e. $(1)0)
 define list-file-maybe-gen-10
 ifneq ($(word $10,$2),)
-	$$(hide) $$(HOST_ECHO) -n "$(wordlist $10,$19,$2) " >> $$@
+	$$(hide) $$(HOST_ECHO_N) "$(wordlist $10,$19,$2) " >> $$@
 endif
 endef
 
@@ -414,7 +414,7 @@ __list_file := $2
 
 $$(__list_file).tmp:
 	@$$(call host-mkdir,$$(dir $$@))
-	$$(hide) $$(HOST_ECHO) -n "" > $$@
+	$$(hide) $$(HOST_ECHO_N) "" > $$@
 $(call list-file-maybe-gen-1000,0,$1)
 $(call list-file-maybe-gen-1000,1,$1)
 $(call list-file-maybe-gen-1000,2,$1)
