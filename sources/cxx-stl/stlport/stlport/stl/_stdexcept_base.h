@@ -25,6 +25,8 @@
 #    include <stl/_exception.h>
 #  endif
 
+#  if defined(_STLP_USE_EXCEPTIONS)
+
 #    ifndef _STLP_INTERNAL_CSTRING
 #      include <stl/_cstring.h>
 #    endif
@@ -89,6 +91,7 @@ private:
 
 _STLP_END_NAMESPACE
 
-#endif /* _STLP_STDEXCEPT_SEEN */
+#  endif /* _STLP_USE_EXCEPTIONS */
+#endif
 
 #endif /* _STLP_INTERNAL_STDEXCEPT_BASE */
