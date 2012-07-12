@@ -135,7 +135,7 @@ bh_set_build_tag ()
   BH_BUILD_OS=$(bh_tag_to_os $1)
   BH_BUILD_ARCH=$(bh_tag_to_arch $1)
   BH_BUILD_BITS=$(bh_tag_to_bits $1)
-  BH_BUILD_TAG=$1
+  BH_BUILD_TAG=$BH_BUILD_OS-$BH_BUILD_ARCH
   BH_BUILD_CONFIG=$(bh_tag_to_config_triplet $1)
 }
 
@@ -147,7 +147,7 @@ bh_set_host_tag ()
   BH_HOST_OS=$(bh_tag_to_os $1)
   BH_HOST_ARCH=$(bh_tag_to_arch $1)
   BH_HOST_BITS=$(bh_tag_to_bits $1)
-  BH_HOST_TAG=$1
+  BH_HOST_TAG=$BH_HOST_OS-$BH_HOST_ARCH
   BH_HOST_CONFIG=$(bh_tag_to_config_triplet $1)
 }
 
@@ -156,11 +156,53 @@ bh_set_target_tag ()
   BH_TARGET_OS=$(bh_tag_to_os $1)
   BH_TARGET_ARCH=$(bh_tag_to_arch $1)
   BH_TARGET_BITS=$(bh_tag_to_bits $1)
-  BH_TARGET_TAG=$1
+  BH_TARGET_TAG=$BH_TARGET_OS-$BH_TARGET_ARCH
   BH_TARGET_CONFIG=$(bh_tag_to_config_triplet $1)
 }
 
+bh_sort_systems_build_first ()
+{
+  local IN_SYSTEMS="$1"
+  local OUT_SYSTEMS
+  # Pull out the host if there
+  for IN_SYSTEM in $IN_SYSTEMS; do
+    if [ "$IN_SYSTEM" = "$BH_BUILD_TAG" ]; then
+        OUT_SYSTEMS=$IN_SYSTEM
+    fi
+  done
+  # Append the rest
+  for IN_SYSTEM in $IN_SYSTEMS; do
+    if [ ! "$IN_SYSTEM" = "$BH_BUILD_TAG" ]; then
+        OUT_SYSTEMS=$OUT_SYSTEMS" $IN_SYSTEM"
+    fi
+  done
+  echo $OUT_SYSTEMS
+}
 
+# $1 is the string to search for
+# $2... is the list to search in
+# Returns first, yes or no.
+bh_list_contains ()
+{
+  local SEARCH="$1"
+  shift
+  # For dash, this has to be split over 2 lines.
+  # Seems to be a bug with dash itself:
+  # https://bugs.launchpad.net/ubuntu/+source/dash/+bug/141481
+  local LIST
+  LIST=$@
+  local RESULT=first
+  # Pull out the host if there
+  for ELEMENT in $LIST; do
+    if [ "$ELEMENT" = "$SEARCH" ]; then
+      echo $RESULT
+      return 0
+    fi
+    RESULT=yes
+  done
+  echo no
+  return 1
+}
 
 
 # Use this function to enable/disable colored output
@@ -173,10 +215,10 @@ bh_set_color_mode ()
     ;;
   esac
   if [ "$DO_COLOR" ]; then
-    _BH_COLOR_GREEN="\e[32m"
-    _BH_COLOR_PURPLE="\e[35m"
-    _BH_COLOR_CYAN="\e[36m"
-    _BH_COLOR_END="\e[0m"
+    _BH_COLOR_GREEN="\033[32m"
+    _BH_COLOR_PURPLE="\033[35m"
+    _BH_COLOR_CYAN="\033[36m"
+    _BH_COLOR_END="\033[0m"
   else
     _BH_COLOR_GREEN=
     _BH_COLOR_PURPLE=
@@ -563,6 +605,8 @@ _bh_select_toolchain_for_host ()
                 *) panic "Sorry, this script only supports building windows binaries on Linux."
                 ;;
             esac
+#            HOST_CFLAGS=$HOST_CFLAGS" -D__USE_MINGW_ANSI_STDIO=1"
+#            HOST_CXXFLAGS=$HOST_CXXFLAGS" -D__USE_MINGW_ANSI_STDIO=1"
             ;;
 
         windows-x86_64)
@@ -600,6 +644,8 @@ _bh_select_toolchain_for_host ()
                 *) panic "Sorry, this script only supports building windows binaries on Linux."
                 ;;
             esac
+#            HOST_CFLAGS=$HOST_CFLAGS" -D__USE_MINGW_ANSI_STDIO=1"
+#            HOST_CXXFLAGS=$HOST_CXXFLAGS" -D__USE_MINGW_ANSI_STDIO=1"
             ;;
     esac
 
@@ -620,8 +666,9 @@ _bh_select_toolchain_for_host ()
 
     # Support for ccache, to speed up rebuilds.
     DST_PREFIX=$HOST_FULLPREFIX
+    local CCACHE=
     if [ "$NDK_CCACHE" ]; then
-        DST_PREFIX="$NDK_CCACHE $HOST_FULLPREFIX"
+        CCACHE="--ccache=$NDK_CCACHE"
     fi
 
     # We're going to generate a wrapper toolchain with the $HOST prefix
@@ -639,7 +686,8 @@ _bh_select_toolchain_for_host ()
         --dst-prefix="$DST_PREFIX" \
         --cflags="$HOST_CFLAGS" \
         --cxxflags="$HOST_CXXFLAGS" \
-        --ldflags="$HOST_LDFLAGS"
+        --ldflags="$HOST_LDFLAGS" \
+        $CCACHE
 }
 
 
