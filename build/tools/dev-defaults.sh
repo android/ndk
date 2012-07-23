@@ -23,7 +23,7 @@ GNUSTL_SUBDIR=sources/cxx-stl/gnu-libstdc++
 
 # The date to use when downloading toolchain sources from AOSP servers
 # Leave it empty for tip of tree.
-TOOLCHAIN_GIT_DATE=2012-06-30
+TOOLCHAIN_GIT_DATE=2012-07-23
 
 # The space-separated list of all GCC versions we support in this NDK
 DEFAULT_GCC_VERSION_LIST="4.6 4.4.3"
