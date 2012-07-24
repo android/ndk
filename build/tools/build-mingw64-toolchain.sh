@@ -20,8 +20,10 @@
 #
 # GOOGLE_PREBUILT=<some folder>
 # git clone https://android.googlesource.com/platform/prebuilt $GOOGLE_PREBUILT
-# PATH=$GOOGLE_PREBUILT/linux-x86/toolchain/i686-linux-glibc2.7-4.4.3/bin:$PATH
-# build-mingw64-toolchain.sh --target-arch=i686 --package-dir=i686-w64-mingw32-toolchain --binprefix=i686-linux
+# export PATH=$GOOGLE_PREBUILT/linux-x86/toolchain/i686-linux-glibc2.7-4.4.3/bin:$PATH
+# build-mingw64-toolchain.sh --target-arch=i686                       \
+#                            --package-dir=i686-w64-mingw32-toolchain \
+#                            --binprefix=i686-linux
 #
 
 PROGNAME=$(basename $0)
@@ -67,7 +69,7 @@ var_append ()
 run ()
 {
     if [ "$VERBOSE" -gt 0 ]; then
-        echo "COMMAND: >>>> $@" > $LOG_FILE
+        echo "COMMAND: >>>> $@" >> $LOG_FILE
     fi
     if [ "$VERBOSE" -gt 1 ]; then
         echo "COMMAND: >>>> $@"
@@ -75,14 +77,14 @@ run ()
     if [ "$VERBOSE" -gt 1 ]; then
         "$@"
     else
-        &>$LOG_FILE "$@"
+       "$@" > /dev/null 2>&1
     fi
 }
 
 log ()
 {
     if [ "$LOG_FILE" ]; then
-        echo "$@" > $LOG_FILE
+        echo "$@" >> $LOG_FILE
     fi
     if [ "$VERBOSE" -gt 0 ]; then
         echo "$@"
@@ -135,7 +137,10 @@ MPFR_VERSION=3.1.0
 MPC_VERSION=0.8.2
 BINUTILS_VERSION=2.22
 GCC_VERSION=4.6.3
-MINGW_W64_VERSION=svn@5053
+# Need at least revision 5166
+#  "stdio.h (asprintf, vasprintf): Disable definitions stubs"
+#  as otherwise gold can't be built.
+MINGW_W64_VERSION=svn@5166
 
 JOBS=$(( $NUM_CORES * 2 ))
 
@@ -157,7 +162,7 @@ for opt; do
         --verbose) VERBOSE=$(( $VERBOSE + 1 ));;
         --quiet) VERBOSE=$(( $VERBOSE - 1 ));;
         --binprefix=*) HOST_BINPREFIX=$optarg;;
-        -j*|--jobjs=*) JOBS=$optarg;;
+        -j*|--jobs=*) JOBS=$optarg;;
         --target-arch=*) TARGET_ARCH=$optarg;;
         --no-multilib) TARGET_MULTILIBS="";;
         --force-build) FORCE_BUILD=true;;
@@ -393,19 +398,21 @@ fi
 
 if [ ! -d $MINGW_W64_SRC ]; then
     if [ "$MINGW_W64_VERSION" = "svn" ];  then
-        echo "Checking out https://mingw-w64.svn.sourceforge.net/svnroot/mingw-w64/trunk$MINGW_W64_REVISION"
+        echo "Checking out https://mingw-w64.svn.sourceforge.net/svnroot/mingw-w64/trunk$MINGW_W64_REVISION $MINGW_W64_SRC"
         run svn co https://mingw-w64.svn.sourceforge.net/svnroot/mingw-w64/trunk$MINGW_W64_REVISION $MINGW_W64_SRC
     else
         download_package http://downloads.sourceforge.net/project/mingw-w64/mingw-w64/mingw-w64-release/mingw-w64-$MINGW_W64_VERSION.tar.gz
     fi
 fi
 
-PATCHES_DIR="$PROGDIR/toolchain-patches/mingw-w64"
-PATCHES=$(find $PATCHES_DIR -name "*.patch" | sort)
-echo "Patching mingw-w64-$MINGW_W64_VERSION"
-for PATCH in $PATCHES; do
-    (cd $MINGW_W64_SRC && run patch -p0 < $PATCH)
-done
+PATCHES_DIR="$PROGDIR/toolchain-patches-host/mingw-w64"
+if [ -d "$PATCHES_DIR" ] ; then
+    PATCHES=$(find "$PATCHES_DIR" -name "*.patch" | sort)
+    echo "Patching mingw-w64-$MINGW_W64_VERSION"
+    for PATCH in $PATCHES; do
+        (cd $MINGW_W64_SRC && run patch -p0 < $PATCH)
+    done
+fi
 
 # Let's generate the licenses/ directory
 LICENSES_DIR=$INSTALL_DIR/licenses/
