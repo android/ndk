@@ -776,6 +776,8 @@ select_toolchain_for_host ()
                 *) panic "Sorry, this script only supports building windows binaries on Linux."
                 ;;
             esac
+            HOST_CFLAGS=$HOST_CFLAGS" -D__USE_MINGW_ANSI_STDIO=1"
+            HOST_CXXFLAGS=$HOST_CXXFLAGS" -D__USE_MINGW_ANSI_STDIO=1"
             ;;
 
         windows-x86_64)
@@ -821,6 +823,8 @@ select_toolchain_for_host ()
                 *) panic "Sorry, this script only supports building windows binaries on Linux."
                 ;;
             esac
+            HOST_CFLAGS=$HOST_CFLAGS" -D__USE_MINGW_ANSI_STDIO=1"
+            HOST_CXXFLAGS=$HOST_CXXFLAGS" -D__USE_MINGW_ANSI_STDIO=1"
             ;;
     esac
 

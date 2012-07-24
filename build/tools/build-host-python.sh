@@ -151,22 +151,9 @@ mkdir -p $BUILD_DIR
 PROGDIR=`dirname $0`
 PROGDIR=$(cd $PROGDIR && pwd)
 
-# Sanity check for all Python versions
+# Sanity check for all Python versions.
 for VERSION in $(commas_to_spaces $PYTHON_VERSION); do
     PYTHON_SRCDIR=$SRC_DIR/Python-$VERSION
-    if [ ! -d $PYTHON_SRCDIR ] ; then
-        mkdir -p $ARCHIVE_DIR
-        mkdir -p $SRC_DIR
-        VERSION_FOLDER=$(echo ${VERSION} | sed 's/\([0-9\.]*\).*/\1/')
-        dump "Downloading http://www.python.org/ftp/python/${VERSION}/Python-${VERSION}.tar.bz2"
-        download_package http://www.python.org/ftp/python/${VERSION}/Python-${VERSION}.tar.bz2
-        PATCHES_DIR="$PROGDIR/toolchain-patches/python/${VERSION}"
-        PATCHES=$(find $PATCHES_DIR -name "*.patch" | sort)
-        dump "Patching Python-${VERSION} sources"
-        for PATCH in $PATCHES; do
-            (cd $SRC_DIR/Python-$VERSION && run patch -p1 < $PATCH)
-        done
-    fi
     if [ ! -d "$PYTHON_SRCDIR" ]; then
         panic "Missing source directory: $PYTHON_SRCDIR"
     fi
@@ -175,9 +162,15 @@ done
 # Return the build install directory of a given Python version
 # $1: host system tag
 # $2: python version
+# The suffix of this has to match python_ndk_install_dir
+#  as I package them from the build folder, substituting
+#  the end part of python_build_install_dir matching python_ndk_install_dir
+#  with nothing.
+# Needs to match with
+#  python_build_install_dir () in build-host-gdb.sh
 python_build_install_dir ()
 {
-    echo "$BH_BUILD_DIR/install/$1/python-$2"
+    echo "$BH_BUILD_DIR/install/prebuilt/$1"
 }
 
 # $1: host system tag
@@ -192,7 +185,7 @@ python_ndk_package_name ()
 # directory. Relative to $NDK_DIR.
 python_ndk_install_dir ()
 {
-    echo "prebuilt/$1/python-$2"
+    echo "prebuilt/$1"
 }
 
 arch_to_qemu_arch ()
@@ -345,14 +338,17 @@ need_install_host_python ()
 # $2: python version
 package_host_python ()
 {
+    local BLDDIR="$(python_build_install_dir $1 $2)"
     local SRCDIR="$(python_ndk_install_dir $1 $2)"
+    # This is similar to BLDDIR=${BLDDIR%%$SRCDIR}
+    BLDDIR=$(echo "$BLDDIR" | sed "s/$(echo "$SRCDIR" | sed -e 's/\\/\\\\/g' -e 's/\//\\\//g' -e 's/&/\\\&/g')//g")
     local PACKAGENAME=$(python_ndk_package_name $1 $2)-$1.tar.bz2
     local PACKAGE="$PACKAGE_DIR/$PACKAGENAME"
 
     need_install_host_python $1 $2
 
     dump "$(bh_host_text) $PACKAGENAME: Packaging"
-    run pack_archive "$PACKAGE" "$NDK_DIR" "$SRCDIR"
+    run pack_archive "$PACKAGE" "$BLDDIR" "$SRCDIR"
 }
 
 PYTHON_VERSION=$(commas_to_spaces $PYTHON_VERSION)

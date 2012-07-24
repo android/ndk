@@ -112,12 +112,16 @@ get_default_abis_for_arch ()
 
 # Return toolchain name for given architecture and GCC version
 # $1: Architecture name (e.g. 'arm')
-# $2: GCC version (e.g. '4.6ʼ)
+# $2: optional, GCC version (e.g. '4.6')
 # Out: default arch-specific toolchain name (e.g. 'arm-linux-androideabi-$GCC_VERSION')
 # Return empty for unknown arch
 get_toolchain_name_for_arch ()
 {
-    eval echo \"\${DEFAULT_ARCH_TOOLCHAIN_NAME_$1}-$2\"
+    if [ ! -z "$2" ] ; then
+        eval echo \"\${DEFAULT_ARCH_TOOLCHAIN_NAME_$1}-$2\"
+    else
+        eval echo \"\${DEFAULT_ARCH_TOOLCHAIN_NAME_$1}\"
+    fi
 }
 
 # Return the default toolchain name for a given architecture

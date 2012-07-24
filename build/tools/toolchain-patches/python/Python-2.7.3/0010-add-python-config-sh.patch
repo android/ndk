@@ -41,7 +41,7 @@ diff -urN a/Misc/python-config.sh.in b/Misc/python-config.sh.in
 @@ -0,0 +1,69 @@
 +#!/bin/sh
 +
-+function exit_with_usage
++exit_with_usage ()
 +{
 +    echo "Usage: $0 --prefix|--exec-prefix|--includes|--libs|--cflags|--ldflags|--help"
 +    exit 1
