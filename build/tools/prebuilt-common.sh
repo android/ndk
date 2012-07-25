@@ -602,17 +602,20 @@ prepare_mingw_toolchain ()
     #
     # We apply the same logic to the 64-bit Windows cross-toolchain
     #
-    # Fedora note: On Fedora it's 32-bit only and called i686-pc-mingw32-
-    # so we just add one more prefix to the list to check.
+    # Fedora note: On Fedora it's x86_64-w64-mingw32- or i686-w64-mingw32-
+    # On older Fedora it's 32-bit only and called i686-pc-mingw32-
+    # so we just add more prefixes to the list to check.
     if [ "$HOST_ARCH" = "x86_64" -a "$TRY64" = "yes" ]; then
         BINPREFIX=x86_64-pc-mingw32msvc-
-        BINPREFIXLST="x86_64-pc-mingw32msvc- amd64-mingw32msvc-"
+        BINPREFIXLST="x86_64-pc-mingw32msvc- amd64-mingw32msvc-
+          x86_64-w64-mingw32-"
         DEBIAN_NAME=mingw64
     else
         # we are trying 32 bit anyway, so forcing it to avoid build issues
         force_32bit_binaries
         BINPREFIX=i586-pc-mingw32msvc-
-        BINPREFIXLST="i586-pc-mingw32msvc- i586-mingw32msvc- i686-pc-mingw32-"
+        BINPREFIXLST="i586-pc-mingw32msvc- i586-mingw32msvc- i686-pc-mingw32-
+	  i686-w64-mingw32-"
         DEBIAN_NAME=mingw32
     fi
 
