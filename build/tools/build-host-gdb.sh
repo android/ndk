@@ -55,6 +55,9 @@ register_var_option "--toolchain-src-dir=<path>" TOOLCHAIN_SRC_DIR "Select toolc
 GDB_VERSION="6.6 7.1.x 7.3.x"
 register_var_option "--gdb-version=<version>" GDB_VERSION "Select GDB version(s)."
 
+BUILD_DIR=
+register_var_option "--build-dir=<path>" BUILD_DIR "Build GDB into directory"
+
 PYTHON_VERSION=
 register_var_option "--python-version=<version>" PYTHON_VERSION "Python version."
 
@@ -94,7 +97,11 @@ for VERSION in $(commas_to_spaces $GDB_VERSION); do
     fi
 done
 
-bh_setup_build_dir
+if [ -z "$BUILD_DIR" ] ; then
+    BUILD_DIR=/tmp/ndk-$USER/buildgdb
+fi
+
+bh_setup_build_dir $BUILD_DIR
 
 # Sanity check that we have the right compilers for all hosts
 for SYSTEM in $BH_HOST_SYSTEMS; do
@@ -107,7 +114,7 @@ done
 # $3: gdb version
 gdb_build_install_dir ()
 {
-    echo "$BH_BUILD_DIR/install/$1/gdb-$(bh_tag_to_arch $2)-$3"
+    echo "$BH_BUILD_DIR/install/$1/gdb-$(get_toolchain_name_for_arch $(bh_tag_to_arch $2))-$3"
 }
 
 # $1: host system tag
@@ -115,7 +122,7 @@ gdb_build_install_dir ()
 # $3: gdb version
 gdb_ndk_package_name ()
 {
-    echo "gdb-$(bh_tag_to_arch $2)-$3"
+    echo "gdb-$(get_toolchain_name_for_arch $(bh_tag_to_arch $2))-$3-$1"
 }
 
 
@@ -123,12 +130,12 @@ gdb_ndk_package_name ()
 # directory. Relative to $NDK_DIR.
 gdb_ndk_install_dir ()
 {
-    echo "prebuilt/$1/gdb-$(bh_tag_to_arch $2)-$3"
+    echo "gdb-$(get_toolchain_name_for_arch $(bh_tag_to_arch $2))-$3/prebuilt/$1"
 }
 
 python_build_install_dir ()
 {
-    echo "$PYTHON_BUILD_DIR/install/$1/python-$PYTHON_VERSION"
+    echo "$PYTHON_BUILD_DIR/install/prebuilt/$1"
 }
 
 # $1: host system tag
@@ -212,7 +219,7 @@ need_install_host_gdb ()
 package_host_gdb ()
 {
     local SRCDIR="$(gdb_ndk_install_dir $1 $2 $3)"
-    local PACKAGENAME=$(gdb_ndk_package_name $1 $2 $3)-$1.tar.bz2
+    local PACKAGENAME=$(gdb_ndk_package_name $1 $2 $3).tar.bz2
     local PACKAGE="$PACKAGE_DIR/$PACKAGENAME"
 
     need_install_host_gdb $1 $2 $3

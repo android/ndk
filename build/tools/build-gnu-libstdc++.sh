@@ -113,7 +113,7 @@ build_gnustl_for_abi ()
     fail_panic "Could not setup target build."
 
     INSTALLDIR=$BUILDDIR/install
-    BUILDDIR=$BUILDDIR/$LIBTYPE-$ABI
+    BUILDDIR=$BUILDDIR/$LIBTYPE-$ABI-$GCC_VERSION
 
     # If the output directory is not specified, use default location
     if [ -z "$DSTDIR" ]; then
