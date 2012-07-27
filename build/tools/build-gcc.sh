@@ -259,27 +259,34 @@ fi
 ABI="$OLD_ABI"
 # build the toolchain
 dump "Building : $TOOLCHAIN toolchain [this can take a long time]."
-cd $BUILD_OUT &&
-export CC CXX &&
-export ABI=$HOST_GMP_ABI &&
-run make -j$NUM_JOBS
-if [ $? != 0 ] ; then
-    # Unfortunately, there is a bug in the GCC build scripts that prevent
-    # parallel mingw builds to work properly on some multi-core machines
-    # (but not all, sounds like a race condition). Detect this and restart
-    # in single-process mode!
-    if [ "$MINGW" = "yes" ] ; then
-        dump "Parallel mingw build failed - continuing in single process mode!"
-        run make -j1
-        if [ $? != 0 ] ; then
-            echo "Error while building mingw toolchain. See $TMPLOG"
+cd $BUILD_OUT
+export CC CXX
+export ABI=$HOST_GMP_ABI
+JOBS=$NUM_JOBS
+
+while [ -n "1" ]; do
+    run make -j$JOBS
+    if [ $? = 0 ] ; then
+        break
+    else
+        if [ "$MINGW" = "yes" ] ; then
+            # Unfortunately, there is a bug in the GCC build scripts that prevent
+            # parallel mingw builds to work properly on some multi-core machines
+            # (but not all, sounds like a race condition). Detect this and restart
+            # in less parallelism, until -j1 also fail
+            JOBS=$((JOBS/2))
+            if [ $JOBS -lt 1 ] ; then
+                echo "Error while building mingw toolchain. See $TMPLOG"
+                exit 1
+            fi
+            dump "Parallel mingw build failed - continuing in less parallelism -j$JOBS"
+        else
+            echo "Error while building toolchain. See $TMPLOG"
             exit 1
         fi
-    else
-        echo "Error while building toolchain. See $TMPLOG"
-        exit 1
     fi
-fi
+done
+
 ABI="$OLD_ABI"
 
 # install the toolchain to its final location
