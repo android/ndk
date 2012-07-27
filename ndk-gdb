@@ -462,6 +462,9 @@ if [ "$OPTION_LAUNCH_LIST" = "yes" ] ; then
 fi
 
 APP_ABIS=`get_build_var APP_ABI`
+ALL_ABIS=`get_build_var NDK_ALL_ABIS`
+# replace "all" with all available ABIs
+APP_ABIS=${APP_ABIS//all/$ALL_ABIS}
 log "ABIs targetted by application: $APP_ABIS"
 
 # Check the ADB command, and that we can connect to the device/emulator
