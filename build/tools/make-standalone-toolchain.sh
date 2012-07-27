@@ -150,6 +150,18 @@ if [ ! -d "$TOOLCHAIN_PATH/prebuilt/$SYSTEM" ] ; then
 fi
 
 TOOLCHAIN_PATH="$TOOLCHAIN_PATH/prebuilt/$SYSTEM"
+TOOLCHAIN_GCC=$TOOLCHAIN_PATH/bin/$ABI_CONFIGURE_TARGET-gcc
+
+if [ ! -f "$TOOLCHAIN_GCC" ] ; then
+    echo "Toolchain $TOOLCHAIN_GCC is missing!"
+    exit 1
+fi
+
+# Get GCC_BASE_VERSION.  Note that GCC_BASE_VERSION may be slightly different from GCC_VERSION.
+# eg. In gcc4.6 GCC_BASE_VERSION is "4.6.x-google"
+LIBGCC_PATH=`$TOOLCHAIN_GCC -print-libgcc-file-name`
+LIBGCC_BASE_PATH=${LIBGCC_PATH%/libgcc.a}  # base path of libgcc.a
+GCC_BASE_VERSION=${LIBGCC_BASE_PATH##*/}   # stuff after the last /
 
 # Create temporary directory
 TMPDIR=$NDK_TMPDIR/standalone/$TOOLCHAIN_NAME
@@ -169,7 +181,7 @@ GNUSTL_DIR=$NDK_DIR/$GNUSTL_SUBDIR/$GCC_VERSION
 GNUSTL_LIBS=$GNUSTL_DIR/libs
 
 ABI_STL="$TMPDIR/$ABI_CONFIGURE_TARGET"
-ABI_STL_INCLUDE="$ABI_STL/include/c++/$GCC_VERSION"
+ABI_STL_INCLUDE="$ABI_STL/include/c++/$GCC_BASE_VERSION"
 
 copy_directory "$GNUSTL_DIR/include" "$ABI_STL_INCLUDE"
 ABI_STL_INCLUDE_TARGET="$ABI_STL_INCLUDE/$ABI_CONFIGURE_TARGET"
