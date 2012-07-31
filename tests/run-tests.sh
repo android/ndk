@@ -584,7 +584,7 @@ if is_testable device; then
         dump "WARNING: No 'adb' in your path!"
         SKIP_TESTS=yes
     else
-        ADB_DEVICES=`$ADB_CMD devices`
+        ADB_DEVICES=`$ADB_CMD devices | sed '/^$/d'`
         log2 "ADB devices: $ADB_DEVICES"
         ADB_DEVCOUNT=`echo "$ADB_DEVICES" | wc -l`
         ADB_DEVCOUNT=`expr $ADB_DEVCOUNT - 1`
