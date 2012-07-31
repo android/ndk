@@ -614,8 +614,8 @@ prepare_mingw_toolchain ()
         # we are trying 32 bit anyway, so forcing it to avoid build issues
         force_32bit_binaries
         BINPREFIX=i586-pc-mingw32msvc-
-        BINPREFIXLST="i586-pc-mingw32msvc- i586-mingw32msvc- i686-pc-mingw32-
-	  i686-w64-mingw32-"
+        BINPREFIXLST="i586-pc-mingw32msvc- i686-pc-mingw32- i686-w64-mingw32-
+          i586-mingw32msvc-"
         DEBIAN_NAME=mingw32
     fi
 
