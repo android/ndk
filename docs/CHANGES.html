@@ -6,68 +6,67 @@ android-ndk-r8b
 IMPORTANT BUG FIXES:
 
 - Fixed LOCAL_SHORT_COMMANDS issues on darwin-x86 and windows cygwin environment
-  and for static libraries.  List file generation is sped up, and it is no longer
-  regenerated and causes whole project to be rebuilt every time.
+  and for static libraries.  List files are generated faster, only when needed,
+  avoiding rebuilding the whole project every time.
 
-- Fixed several issues in ndk-gdb
+- Fixed several issues in ndk-gdb:
 
-    * to pass flags "-e", "-d", "-s" to adb more consistently
+    * Passing flags "-e", "-d", "-s" to adb more consistently.
 
-    * to accept device serial name containing space
+    * Accepting device serial name containing space.
 
-    * to also pull /system/bin/link, so gdb on host can set a breakpoint in
-      __dl_rtld_db_dlactivity and be aware of linker activity (eg. rescan solib symbols
-      when dlopen() is called)
+    * Pulling /system/bin/linker, so gdb on host can set a breakpoint in
+      __dl_rtld_db_dlactivity and be aware of linker activity (eg. rescan
+      solib symbols when dlopen() is called).
 
-- Fixed "ndk-build clean" in windows which failed to remove ./libs/*/lib*.so
+- Fixed "ndk-build clean" in windows which failed to remove ./libs/*/lib*.so.
 
-- Fixed ndk-build.cmd to return non-zero ERRORLEVEL when make fails
+- Fixed ndk-build.cmd to return non-zero ERRORLEVEL when make fails.
 
-- Fixed libc.so to no longer incorrectly export __exidx_start and __exidx_end symbols
+- Fixed libc.so to no longer incorrectly export __exidx_start and __exidx_end
+  symbols.
 
 - Fixed SEGV when unwinding stack pasts __libc_init for ARM and MIPS.
-
-  Fixed __start (in crtbegin_dynamic/static.o) to "call __libc_init" instead of
-  "jump __libc_init", otherwise stack unwinding past __libc_init may get wrong return
-  address and crash the program or do wield things.  With "call", return address is pushed
-  on stack and unwinding stops correctly at _start.  Note that __libc_init never returns, so
-  this fix wonʼt affect normal program execution.  But just in case it "does" return,
-  jump to address 0 and halt.
 
 
 IMPORTANT CHANGES:
 
 - GCC 4.6 toolchain
 
-  Add GCC 4.6 toolchain (binutils 2.21 with gold + GDB 7.3.x) to co-exists with
+  Add GCC 4.6 toolchain (binutils 2.21 with gold + GDB 7.3.x) to co-exist with
   the original GCC 4.4.3 toolchain (binutils 2.19 + GDB 6.6).  Note:
 
-    * GCC 4.6 is the defualt.  You may set NDK_TOOLCHAIN_VERSION=4.4.3 in Application.mk
-      to select the origianl one.
+    * GCC 4.6 is the default.  You may set NDK_TOOLCHAIN_VERSION=4.4.3 in
+      your environment to select the original one. See docs/NDK-BUILD.html.
 
-    * Gold linker support is only avaialble for ARM and x86 architectures on linux-86
-      and  darwin-x86 hosts.  It's not turned on by default.  Add
-      "LOCAL_LDLIBS += -fuse-ld=gold" in Android.mk to enbale it.
+    * Gold linker support is only available for ARM and x86 architectures on
+      linux-86 and darwin-x86 hosts.  It's not turned on by default.  Add
+      "LOCAL_LDLIBS += -fuse-ld=gold" in Android.mk to enable it.
 
-    * You will need the new GDB to debug program compiled with -fPIE (including
-      binaries in JellyBean image)
+    * You will need GDB 7.3.x or higher to debug programs compiled with -fPIE
+      (including system binaries in Android 4.1 and higher).
 
-    * The binutils 2.21 ld also contain back-port of fixes from 2.22
+    * The binutils 2.21 'ld' also contains back-ports of fixes from 2.22:
 
-      * Fixed "ld --gc-sections" which incorrectly retain zombie references to external
-        libraries.  See http://sourceware.org/bugzilla/show_bug.cgi?id=13177 for detail.
+      * Fixed "ld --gc-sections" which incorrectly retain zombie references
+        to external libraries.
 
-      * Fuxed ARM "strip" to preserve the original p_align and p_flags in GNU_RELRO section
-        if they are valid.  Otherwise program built with -fPIE can't be debugged.
+        http://sourceware.org/bugzilla/show_bug.cgi?id=13177
+
+      * Fixed ARM "strip" to preserve the original p_align and p_flags in
+        GNU_RELRO section if they are valid.  Otherwise program built with
+        -fPIE can't be debugged.
+
         http://sourceware.org/cgi-bin/cvsweb.cgi/src/bfd/elf.c.diff?cvsroot=src&r1=1.552&r2=1.553
 
-    * Sincos optimization is not enabled for compatibility with old platforms which don't have
-      it.
+    * Sincos optimization is not enabled for compatibility with old platforms
+      which don't provide sincos() in their libm.so.
 
 - NX and relro/bind_now protections are enabled by default
 
-  Add "--noexecstack" for assembler and "-z noexecstack" for linker to enable NX
-  protection against buffer overflow attacks by enabling NX bit on stack and heap.
+  Add "--noexecstack" for assembler and "-z noexecstack" for linker to enable
+  NX protection against buffer overflow attacks by enabling NX bit on stack and
+  heap.
 
   Add "-z relro -z now" for linker to harden internal data sections after linking
   against security vulnerabilities due to memory corruption.  See
@@ -84,7 +83,7 @@ IMPORTANT CHANGES:
      DISABLE_RELRO=true: to disable "-z relro -z now"
   see $NDK/docs/ANDROID-MK.html for details
 
-- Brand executables with .note.ABI-tag section
+- Brand executables with .note.ABI-tag section.
 
   Brand Android executable with .note.ABI-tag (in crtbegin_static/dynamic.o) for debugging
   tools to act accordingly.  The structure member and values are defined as follow.
@@ -105,7 +104,7 @@ IMPORTANT CHANGES:
 
 OTHER BUG FIXES:
 
-- Backport several patches to fix MIPS issues.
+- Backport several patches to fix MIPS issues:
 
     * http://sourceware.org/bugzilla/show_bug.cgi?id=12637
       mips-linux-gnu: relocation truncated to fit: R_MIPS_TLS_LDM
@@ -129,12 +128,12 @@ OTHER BUG FIXES:
       which turns off PIC.  Fixed it not to add -mno-shared as default.
 
 - Fixed wrong package names in samples hello-jni and two-libs so tests project
-  underneath can compile
+  underneath can compile.
 
 
 OTHER CHANGES:
 
-- New binaries locations
+- New binaries locations:
 
     * gdbserver is moved from toolchain/&lt;arch-os-ver&gt;/prebuilt/gdbserver to
       prebuilt/android-&lt;arch&gt;/gdbserver/gdbserver
@@ -147,21 +146,21 @@ OTHER CHANGES:
 
     * libbfd.a and libintl.a are moved from lib/ to lib32/
 
-- Header if_dl.h is removed from all platforms and architectures. AF_LINK and sockaddr_dl
-    it describes are specpfic to BSD (ie. don't exist in Linux)
+- Header if_dl.h is removed from all platforms and architectures. AF_LINK and
+  sockaddr_dl it declares are BSD-specific (i.e. don't exist on Linux).
 
-- Various scripts to rebuild/test NDK toolchain
+- Various scripts to rebuild/test NDK toolchain:
 
-    * Add build-mingw64-toolchain.sh to generate a new Linux-hosted toolchain that generates
-      Win32 and Win64 executables.
+    * Add build-mingw64-toolchain.sh to generate a new Linux-hosted toolchain
+      that generates Win32 and Win64 executables.
 
-    * Speed up download-toolchain-sources.sh by "clone" but only "checkout" the directories
-      that we need to build the NDK toolchain binaries.
+    * Speed up download-toolchain-sources.sh by "clone" but only "checkout"
+      the directories that we need to build the NDK toolchain binaries.
 
-    * New build-host-gcc.sh and build-host-gdb.sh
+    * New build-host-gcc.sh and build-host-gdb.sh scripts.
 
-    * Add tests/check-release.sh to check the content of a given NDK installation directory,
-      or an existing NDK package.
+    * Add tests/check-release.sh to check the content of a given NDK
+      installation directory, or an existing NDK package.
 
     * Rewrite standalone tests: tests/standalone/run.sh
 
