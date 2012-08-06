@@ -25,15 +25,18 @@ Change-Id: I332bf5788267dd56e93b8cdb0cefa04b970eca88
  1 files changed, 1 insertions(+), 1 deletions(-)
 
 diff --git a/gcc-4.6/gcc/config/linux.h b/gcc-4.6/gcc/config/linux.h
-index a1711dc..8c9ec5f 100644
+index 4e21112..025157f 100644
 --- a/gcc-4.6/gcc/config/linux.h
 +++ b/gcc-4.6/gcc/config/linux.h
-@@ -99,4 +99,4 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+@@ -99,7 +99,7 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
  #define TARGET_C99_FUNCTIONS (OPTION_GLIBC)
  
  /* Whether we have sincos that follows the GNU extension.  */
 -#define TARGET_HAS_SINCOS (OPTION_GLIBC || OPTION_BIONIC)
 +#define TARGET_HAS_SINCOS (OPTION_GLIBC)
+ 
+ /* Whether we have Bionic libc runtime */
+ #undef TARGET_HAS_BIONIC
 -- 
 1.7.6.rc0
 
