@@ -64,7 +64,7 @@ int main(void)
     }
 
     if (!flagNoNewline)
-        _tprintf(L"\r\n");
+        _tprintf(L"\n");
 
     return 0;
 }
