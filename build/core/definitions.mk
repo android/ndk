@@ -189,7 +189,7 @@ endif
 #            to create a path if it doesn't exist.
 # -----------------------------------------------------------------------------
 ifeq ($(HOST_OS),windows)
-host-mkdir = if not exist $(subst /,\,"$1") md $(subst /,\,"$1")
+host-mkdir = md $(subst /,\,"$1") >NUL 2>NUL || rem
 else
 host-mkdir = mkdir -p $1
 endif
@@ -251,6 +251,45 @@ copy-if-differ = $(HOST_CMP) -s $1 $2 > NUL || copy /b/y $(subst /,\,"$1" "$2") 
 else
 copy-if-differ = $(HOST_CMP) -s $1 $2 > /dev/null 2>&1 || cp -f $1 $2
 endif
+
+# -----------------------------------------------------------------------------
+# Function : generate-dir
+# Arguments: 1: directory path
+# Returns  : Generate a rule, but not dependency, to create a directory with
+#            host-mkdir.
+# Usage    : $(call generate-dir,<path>)
+# -----------------------------------------------------------------------------
+define ev-generate-dir
+__ndk_dir := $1
+ifeq (,$$(__ndk_dir_flag__$1))
+__ndk_dir_flag__$1 := true
+$1:
+	@$$(call host-mkdir,$$@)
+endif
+endef
+
+generate-dir = $(eval $(call ev-generate-dir,$1))
+
+# -----------------------------------------------------------------------------
+# Function : generate-file-dir
+# Arguments: 1: file path
+# Returns  : Generate a dependency and a rule to ensure that the parent
+#            directory of the input file path will be created before it.
+#            This is used to enforce a call to host-mkdir.
+# Usage    : $(call generate-file-dir,<file>)
+# Rationale: Many object files will be stored in the same output directory.
+#            Introducing a dependency on the latter avoids calling mkdir -p
+#            for every one of them.
+#
+# -----------------------------------------------------------------------------
+
+define ev-generate-file-dir
+__ndk_file_dir := $(call parent-dir,$1)
+$$(call generate-dir,$$(__ndk_file_dir))
+$1: $$(__ndk_file_dir)
+endef
+
+generate-file-dir = $(eval $(call ev-generate-file-dir,$1))
 
 # -----------------------------------------------------------------------------
 # Function : generate-list-file
@@ -412,8 +451,9 @@ __list_file := $2
 
 .PHONY: $$(__list_file).tmp
 
+$$(call generate-file-dir,$$(__list_file).tmp)
+
 $$(__list_file).tmp:
-	@$$(call host-mkdir,$$(dir $$@))
 	$$(hide) $$(HOST_ECHO_N) "" > $$@
 $(call list-file-maybe-gen-1000,0,$1)
 $(call list-file-maybe-gen-1000,1,$1)
@@ -1354,8 +1394,9 @@ $$(_OBJ): PRIVATE_CFLAGS := @$$(call host-path,$$(_OPTIONS_LISTFILE))
 $$(_OBJ): $$(_OPTIONS_LISTFILE)
 endif
 
+$$(call generate-file-dir,$$(_OBJ))
+
 $$(_OBJ): $$(_SRC) $$(LOCAL_MAKEFILE) $$(NDK_APP_APPLICATION_MK) $$(NDK_DEPENDENCIES_CONVERTER)
-	@$$(call host-mkdir,$$(dir $$(PRIVATE_OBJ)))
 	@$$(HOST_ECHO) "$$(PRIVATE_TEXT)  : $$(PRIVATE_MODULE) <= $$(notdir $$(PRIVATE_SRC))"
 	$$(hide) $$(PRIVATE_CC) -MMD -MP -MF $$(call convert-deps,$$(PRIVATE_DEPS)) $$(PRIVATE_CFLAGS) $$(call host-path,$$(PRIVATE_SRC)) -o $$(call host-path,$$(PRIVATE_OBJ)) \
 	$$(call cmd-convert-deps,$$(PRIVATE_DEPS))
@@ -1521,21 +1562,6 @@ endef
 # Rationale : Setup everything required to build a single C++ source file
 # -----------------------------------------------------------------------------
 compile-cpp-source = $(eval $(call ev-compile-cpp-source,$1,$2))
-
-# -----------------------------------------------------------------------------
-# Command   : cmd-install-file
-# Arguments : 1: source file
-#             2: destination file
-# Returns   : None
-# Usage     : $(call cmd-install-file,<srcfile>,<dstfile>)
-# Rationale : To be used as a Make build command to copy/install a file to
-#             a given location.
-# -----------------------------------------------------------------------------
-define cmd-install-file
-@$$(call host-mkdir,$$(dir $2))
-$$(hide) cp -fp $$(subst /,\,$1 $2)
-endef
-
 
 #
 #  Module imports
