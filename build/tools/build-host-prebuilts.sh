@@ -233,6 +233,7 @@ for SYSTEM in $SYSTEMS; do
     fail_panic "sed build failure!"
 
     if [ "$SYSTEM" = "windows" ]; then
+        echo "Building $SYSTEM toolbox"
         run $BUILDTOOLS/build-host-toolbox.sh $FLAGS
         fail_panic "Windows toolbox build failure!"
     fi
