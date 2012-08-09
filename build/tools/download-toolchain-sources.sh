@@ -164,6 +164,12 @@ toolchain_checkout ()
 
 cd $TMPDIR
 
+if [ $VERBOSE = "yes" ]; then
+    CURL="curl"
+else
+    CURL="curl -s"
+fi
+
 CLONE_DIR=$TMPDIR/git
 mkdir -p $CLONE_DIR
 
@@ -193,7 +199,7 @@ toolchain_checkout gdb gdb-6.6 gdb-7.1.x gdb-7.3.x
 PYVERSION=2.7.3
 PYVERSION_FOLDER=$(echo ${PYVERSION} | sed 's/\([0-9\.]*\).*/\1/')
 dump "Downloading http://www.python.org/ftp/python/${PYVERSION_FOLDER}/Python-${PYVERSION}.tar.bz2"
-(mkdir -p $TMPDIR/python && cd $TMPDIR/python && curl -S -O http://www.python.org/ftp/python/${PYVERSION_FOLDER}/Python-${PYVERSION}.tar.bz2 && tar -xjf Python-${PYVERSION}.tar.bz2)
+(mkdir -p $TMPDIR/python && cd $TMPDIR/python && $CURL -S -O http://www.python.org/ftp/python/${PYVERSION_FOLDER}/Python-${PYVERSION}.tar.bz2 && tar -xjf Python-${PYVERSION}.tar.bz2)
 
 # Patch the toolchain sources
 if [ "$OPTION_NO_PATCHES" != "yes" ]; then
