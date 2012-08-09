@@ -462,9 +462,13 @@ if [ "$OPTION_LAUNCH_LIST" = "yes" ] ; then
 fi
 
 APP_ABIS=`get_build_var APP_ABI`
-ALL_ABIS=`get_build_var NDK_ALL_ABIS`
-# replace "all" with all available ABIs
-APP_ABIS=${APP_ABIS//all/$ALL_ABIS}
+if [ "$APP_ABIS" != "${APP_ABIS%%all*}" ] ; then
+# replace first "all" with all available ABIs
+  ALL_ABIS=`get_build_var NDK_ALL_ABIS`
+  APP_ABIS_FRONT="${APP_ABIS%%all*}"
+  APP_ABIS_BACK="${APP_ABIS#*all}"
+  APP_ABIS="${APP_ABIS_FRONT}${ALL_ABIS}${APP_ABIS_BACK}"
+fi
 log "ABIs targetted by application: $APP_ABIS"
 
 # Check the ADB command, and that we can connect to the device/emulator
@@ -496,35 +500,26 @@ fi
 # And check that they are supported by the application
 #
 COMPAT_ABI=none
-adb_var_shell CPU_ABI getprop ro.product.cpu.abi
-for ABI in $APP_ABIS; do
-    if [ "$ABI" = "$CPU_ABI" ] ; then
-        COMPAT_ABI=$CPU_ABI
+adb_var_shell CPU_ABI1 getprop ro.product.cpu.abi
+adb_var_shell CPU_ABI2 getprop ro.product.cpu.abi2
+
+# Both CPU_ABI1 and CPU_ABI2 may contain multiple comma-delimited abis.
+# Concatanate CPU_ABI1 and CPU_ABI2 and replace all ',' with space.
+# Add trailing space to ease whole-word matching of APP_ABI.
+CPU_ABIS="$CPU_ABI1,$CPU_ABI2,"
+CPU_ABIS=$(echo $CPU_ABIS | tr ',' ' ')
+log "Device CPU ABIs: $CPU_ABIS"
+
+for APP_ABI in $APP_ABIS; do
+    if [ "$CPU_ABIS" != "${CPU_ABIS%$APP_ABI *}" ] ; then
+        COMPAT_ABI=$APP_ABI
         break
     fi
 done
 
-adb_var_shell CPU_ABI2 getprop ro.product.cpu.abi2
-if [ $? != 0 -o -z "$CPU_ABI2" ] ; then
-    CPU_ABI2=
-    log "Device CPU ABI: $CPU_ABI"
-else
-    log "Device CPU ABIs: $CPU_ABI $CPU_ABI2"
-    if [ "$COMPAT_ABI" = "none" ] ; then
-        for ABI in $APP_ABIS; do
-            if [ "$ABI" = "$CPU_ABI2" ] ; then
-                COMPAT_ABI=$CPU_ABI2
-                break
-            fi
-        done
-    fi
-fi
 if [ "$COMPAT_ABI" = none ] ; then
     echo "ERROR: The device does not support the application's targetted CPU ABIs!"
-    if [ "$CPU_ABI2" = "$CPU_ABI" ] ; then
-        CPU_ABI2=
-    fi
-    echo "       Device supports:  $CPU_ABI $CPU_ABI2"
+    echo "       Device supports:  $CPU_ABIS"
     echo "       Package supports: $APP_ABIS"
     exit 1
 fi
