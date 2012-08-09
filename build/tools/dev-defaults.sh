@@ -58,6 +58,12 @@ DEFAULT_ARCH_TOOLCHAIN_PREFIX_x86=i686-linux-android
 DEFAULT_ARCH_TOOLCHAIN_NAME_mips=mipsel-linux-android
 DEFAULT_ARCH_TOOLCHAIN_PREFIX_mips=mipsel-linux-android
 
+# The space-separated list of all LLVM versions we support in NDK
+DEFAULT_LLVM_VERSION_LIST="3.1"
+
+# The default URL to download the LLVM tar archive
+DEFAULT_LLVM_URL="http://llvm.org/releases"
+
 # The list of default host NDK systems we support
 DEFAULT_SYSTEMS="linux-x86 windows darwin-x86"
 
