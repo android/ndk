@@ -2,4 +2,3 @@
 # build the Android platform. This is not the normal usage of the NDK.
 
 include ndk/sources/android/cpufeatures/Android.mk
-include ndk/sources/android/libportable/Android.mk
