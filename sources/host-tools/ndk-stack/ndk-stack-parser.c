@@ -126,7 +126,6 @@ static const char* get_next_token(const char* str, char* token, size_t size);
 NdkCrashParser*
 CreateNdkCrashParser(FILE* out_handle, const char* sym_root)
 {
-  int ok;
   NdkCrashParser* parser;
 
   parser = (NdkCrashParser*)calloc(sizeof(*parser), 1);
@@ -232,14 +231,13 @@ ParseLine(NdkCrashParser* parser, const char* line)
 static int
 MatchRegex(const char* line, const regex_t* regex, regmatch_t* match)
 {
-  char rerr[4096];
-  regex_t rex;
   int err = regexec(regex, line, 1, match, 0x00400/*REG_TRACE*/);
 #if 0
-    if (err) {
-        regerror(err, regex, rerr, sizeof(rerr));
-        fprintf(stderr, "regexec(%s, %s) has failed: %s\n", line, regex, rerr);
-    }
+  char rerr[4096];
+  if (err) {
+    regerror(err, regex, rerr, sizeof(rerr));
+    fprintf(stderr, "regexec(%s, %s) has failed: %s\n", line, regex, rerr);
+  }
 #endif
 
   return err == 0;
