@@ -14,7 +14,9 @@
  * Contains implementation of misc. DWARF utility routines.
  */
 
-#include "stdio.h"
+#include <stdio.h>
+#define __STDC_FORMAT_MACROS 1
+#include <inttypes.h>
 #include "dwarf_utils.h"
 
 /* "Stringifies" the parameter. */
@@ -246,42 +248,42 @@ dump_value(const Dwarf_Value* attr_value) {
   switch (attr_value->type) {
     case DWARF_VALUE_U8:
       printf("BYTE)   = %u (x%02X)\n", (Elf_Word)attr_value->u8,
-                                      (Elf_Word)attr_value->u8);
+                                       (Elf_Word)attr_value->u8);
       break;
 
     case DWARF_VALUE_S8:
       printf("SBYTE)  = %d (x%02X)\n", (Elf_Sword)attr_value->s8,
-                                      (Elf_Sword)attr_value->s8);
+                                       (Elf_Sword)attr_value->s8);
       break;
 
     case DWARF_VALUE_U16:
       printf("WORD)   = %u (x%04X)\n", (Elf_Word)attr_value->u16,
-                                      (Elf_Word)attr_value->u16);
+                                       (Elf_Word)attr_value->u16);
       break;
 
     case DWARF_VALUE_S16:
       printf("SWORD)  = %d (x%04X)\n", (Elf_Sword)attr_value->s16,
-                                      (Elf_Sword)attr_value->s16);
+                                       (Elf_Sword)attr_value->s16);
       break;
 
     case DWARF_VALUE_U32:
       printf("DWORD)  = %u (x%08X)\n", attr_value->u32,
-                                      attr_value->u32);
+                                       attr_value->u32);
       break;
 
     case DWARF_VALUE_S32:
       printf("SDWORD) = %d (x%08X)\n", attr_value->s32,
-                                      attr_value->s32);
+                                       attr_value->s32);
       break;
 
     case DWARF_VALUE_U64:
-      printf("XWORD)  = %" FMT_I64 "u (x%" FMT_I64 "X)\n", attr_value->u64,
-                                          attr_value->u64);
+      printf("XWORD)  = %" PRIu64 " (x%" PRIX64 ")\n", attr_value->u64,
+                                                       attr_value->u64);
       break;
 
     case DWARF_VALUE_S64:
-      printf("SXWORD) = %" FMT_I64 "d (x%" FMT_I64 "X)\n", attr_value->s64,
-                                          attr_value->s64);
+      printf("SXWORD) = %" PRId64 " (x%" PRIX64 ")\n", attr_value->s64,
+                                                       attr_value->s64);
       break;
 
     case DWARF_VALUE_STR:
@@ -293,7 +295,7 @@ dump_value(const Dwarf_Value* attr_value) {
       break;
 
     case DWARF_VALUE_PTR64:
-      printf("PTR64)  = x%08" FMT_I64 "X\n", attr_value->ptr64);
+      printf("PTR64)  = x%08" PRIX64 "\n", attr_value->ptr64);
       break;
 
     case DWARF_VALUE_BLOCK:

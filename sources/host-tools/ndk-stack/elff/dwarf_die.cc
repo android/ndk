@@ -14,7 +14,9 @@
  * Contains implementations of classes defined for a variety of DWARF objects.
  */
 
-#include "stdio.h"
+#include <stdio.h>
+#define __STDC_FORMAT_MACROS 1
+#include <inttypes.h>
 #include "dwarf_die.h"
 #include "dwarf_cu.h"
 #include "dwarf_utils.h"
@@ -212,8 +214,8 @@ void DIEObject::dump(bool only_this) const {
           Elf_Xword low, high;
           while (elf_file()->get_range<Elf_Xword>(off, &low, &high) &&
                  (low != 0 || high != 0)) {
-            printf("                                %08" FMT_I64 "X - %08" FMT_I64 "X\n",
-                   (unsigned long long)low, (unsigned long long)high);
+            printf("                                %08" PRIX64 " - %08" PRIX64 "\n",
+                   low, high);
             off += 16;
           }
         } else {
