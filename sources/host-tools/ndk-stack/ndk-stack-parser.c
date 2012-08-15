@@ -262,7 +262,7 @@ get_next_token(const char* str, char* token, size_t size)
   const char* start = next_token(str);
   const char* end = next_separator(start);
   if (start != end) {
-    const size_t to_copy = min((end - start), (size - 1));
+    const size_t to_copy = min((size_t)(end - start), (size - 1));
     memcpy(token, start, to_copy);
     token[to_copy] = '\0';
     return start;
