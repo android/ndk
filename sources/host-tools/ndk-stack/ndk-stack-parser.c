@@ -326,10 +326,7 @@ ParseFrame(NdkCrashParser* parser, const char* frame)
   }
 
   // Build path to the symbol file.
-  strncpy(sym_file, parser->sym_root, sizeof(sym_file));
-  strncat(sym_file, "/", sizeof(sym_file));
-  strncat(sym_file, module_name, sizeof(sym_file));
-  sym_file[sizeof(sym_file)-1] = '\0';
+  snprintf(sym_file, sizeof(sym_file), "%s/%s", parser->sym_root, module_name);
 
   // Init ELFF wrapper for the symbol file.
   elff_handle = elff_init(sym_file);
