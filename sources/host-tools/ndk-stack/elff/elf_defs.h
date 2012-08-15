@@ -132,12 +132,4 @@ is_little_endian_cpu(void) {
   return get_byte(&tmp, 0) == 0xFF;
 }
 
-/* Use in printf() statements to dump 64-bit values
- */
-#ifdef _WIN32
-#  define FMT_I64  "I64"
-#else
-#  define FMT_I64  "ll"
-#endif
-
 #endif  // ELFF_ELF_DEFS_H_
