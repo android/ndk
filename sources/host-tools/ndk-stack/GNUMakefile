@@ -25,7 +25,7 @@ EXECUTABLE := $(PROGNAME)
 all: $(EXECUTABLE)
 
 # The rest should be left alone
-EXTRA_CFLAGS := -Wall
+EXTRA_CFLAGS := -Wall -Werror
 EXTRA_LDFLAGS := -lstdc++
 
 ifneq (,$(strip $(DEBUG)))
