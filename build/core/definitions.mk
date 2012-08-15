@@ -829,7 +829,9 @@ module-get-cpp-extension = $(strip \
 # Return the list of C++ sources of a given module
 #
 module-get-c++-sources = \
-    $(filter %$(call module-get-cpp-extension,$1),$(__ndk_modules.$1.SRC_FILES))
+    $(eval __files := $(__ndk_modules.$1.SRC_FILES:%.neon=%)) \
+    $(eval __files := $(__files:%.arm=%)) \
+    $(filter %$(call module-get-cpp-extension,$1),$(__files))
 
 # Returns true if a module has C++ sources
 #
