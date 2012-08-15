@@ -44,12 +44,12 @@
 
 #include "utils.h"
 
-static char *regatoi(const regex_t *, char *, int);
+static const char *regatoi(const regex_t *, char *, int);
 
 static const struct rerr {
 	int code;
-	char *name;
-	char *explain;
+	const char *name;
+	const char *explain;
 } rerrs[] = {
 	{ REG_NOMATCH,	"REG_NOMATCH",	"regexec() failed to match" },
 	{ REG_BADPAT,	"REG_BADPAT",	"invalid regular expression" },
@@ -81,7 +81,7 @@ regerror(int errcode, const regex_t *preg, char *errbuf, size_t errbuf_size)
 	const struct rerr *r;
 	size_t len;
 	int target = errcode &~ REG_ITOA;
-	char *s;
+	const char *s;
 	char convbuf[50];
 
 	if (errcode == REG_ATOI)
@@ -114,7 +114,7 @@ regerror(int errcode, const regex_t *preg, char *errbuf, size_t errbuf_size)
 /*
  - regatoi - internal routine to implement REG_ATOI
  */
-static char *
+static const char *
 regatoi(const regex_t *preg, char *localbuf, int localbufsize)
 {
 	const struct rerr *r;
