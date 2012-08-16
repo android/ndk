@@ -359,15 +359,13 @@ fi
 ###  REBUILD ALL SAMPLES FIRST
 ###
 
-# Special case, if ABI is 'armeabi' or 'armeabi-v7a'
-# we want to build both armeabi and armeabi-v7a machine code
-# even if we will only run the armeabi test programs on the
-# device. This is done by not forcing the definition of APP_ABI
+# Special case, if ABI is 'armeabi' we want to let APP_ABI
+# in jni/Application.mk decide what to build
 NDK_BUILD_FLAGS="-B"
 case $ABI in
-    armeabi|armeabi-v7a)
+    armeabi)
         ;;
-    x86|mips)
+    armeabi-v7a|x86|mips)
         NDK_BUILD_FLAGS="$NDK_BUILD_FLAGS APP_ABI=$ABI"
         ;;
     *)
@@ -395,15 +393,41 @@ run_ndk_build ()
     fi
 }
 
+get_build_var ()
+{
+    if [ -z "$GNUMAKE" ] ; then
+        GNUMAKE=make
+    fi
+    $GNUMAKE --no-print-dir -f $NDK/build/core/build-local.mk -C $DIR DUMP_$1
+}
+
 build_project ()
 {
     local NAME=`basename $1`
+    local CHECK_ABI=$2
     local DIR="$BUILD_DIR/$NAME"
     if [ -f "$1/BROKEN_BUILD" -a -z "$RUN_TESTS" ] ; then
-        echo "Skipping $1: (build)"
+        echo "Skipping `basename $1`: (build)"
         return 0
     fi
     rm -rf "$DIR" && cp -r "$1" "$DIR"
+    if [ "$CHECK_ABI" = "yes" ] ; then
+        # check APP_ABI
+        local APP_ABIS=`get_build_var APP_ABI`
+        APP_ABIS=$APP_ABIS" "
+        if [ "$APP_ABIS" != "${APP_ABIS%%all*}" ] ; then
+        # replace the first "all" with all available ABIs
+          ALL_ABIS=`get_build_var NDK_ALL_ABIS`
+          APP_ABIS_FRONT="${APP_ABIS%%all*}"
+          APP_ABIS_BACK="${APP_ABIS#*all}"
+          APP_ABIS="${APP_ABIS_FRONT}${ALL_ABIS}${APP_ABIS_BACK}"
+        fi
+        if [ "$APP_ABIS" = "${APP_ABIS%$ABI *}" ] ; then
+            echo "Skipping `basename $1`: incompatible ABI, needs $APP_ABIS"
+            return 0
+        fi
+    fi
+    # build it
     (cd "$DIR" && run_ndk_build $NDK_BUILD_FLAGS)
     RET=$?
     if [ -f "$1/BUILD_SHOULD_FAIL" ]; then
@@ -458,7 +482,7 @@ if is_testable samples; then
     build_sample ()
     {
         echo "Building NDK sample: `basename $1`"
-        build_project $1
+        build_project $1 "no"
     }
 
     for DIR in $SAMPLES_DIRS; do
@@ -486,7 +510,7 @@ if is_testable build; then
                 exit 1
             fi
         else
-            build_project $1
+            build_project $1 "yes"
         fi
     }
 
@@ -512,7 +536,7 @@ if is_testable device; then
             return 0
         fi
         echo "Building NDK device test: `basename $1` in $1"
-        build_project $1
+        build_project $1 "yes"
     }
 
     run_device_test ()
