@@ -38,7 +38,7 @@ LONG_TESTS="prebuild-stlport test-stlport test-gnustl"
 # Parse options
 #
 VERBOSE=no
-ABI=armeabi
+ABI=default
 PLATFORM=""
 NDK_ROOT=
 JOBS=$BUILD_NUM_CPUS
@@ -359,13 +359,11 @@ fi
 ###  REBUILD ALL SAMPLES FIRST
 ###
 
-# Special case, if ABI is 'armeabi' we want to let APP_ABI
-# in jni/Application.mk decide what to build
 NDK_BUILD_FLAGS="-B"
 case $ABI in
-    armeabi)
+    default)  # Let the APP_ABI in jni/Application.mk decide what to build
         ;;
-    armeabi-v7a|x86|mips)
+    armeabi|armeabi-v7a|x86|mips)
         NDK_BUILD_FLAGS="$NDK_BUILD_FLAGS APP_ABI=$ABI"
         ;;
     *)
@@ -411,7 +409,7 @@ build_project ()
         return 0
     fi
     rm -rf "$DIR" && cp -r "$1" "$DIR"
-    if [ "$CHECK_ABI" = "yes" ] ; then
+    if [ "$ABI" != "default" -a "$CHECK_ABI" = "yes" ] ; then
         # check APP_ABI
         local APP_ABIS=`get_build_var APP_ABI`
         APP_ABIS=$APP_ABIS" "
@@ -526,6 +524,8 @@ fi
 ###  XXX: TODO: RUN THEM ON A DEVICE/EMULATOR WITH ADB
 ###
 
+CPU_ABI1=
+CPU_ABI2=
 if is_testable device; then
     build_device_test ()
     {
@@ -541,7 +541,7 @@ if is_testable device; then
 
     run_device_test ()
     {
-        local SRCDIR="$BUILD_DIR/`basename $1`/libs/$ABI"
+        local SRCDIR
         local DSTDIR="$2/ndk-tests"
         local SRCFILE
         local DSTFILE
@@ -554,9 +554,13 @@ if is_testable device; then
 		return 0
 	    fi
         fi
+        SRCDIR="$BUILD_DIR/`basename $1`/libs/$CPU_ABI1"
         if [ ! -d "$SRCDIR" ]; then
-            dump "Skipping NDK device test run (no $ABI binaries): `basename $1`"
-            return 0
+            SRCDIR="$BUILD_DIR/`basename $1`/libs/$CPU_ABI2"
+            if [ -z "$CPU_ABI2" -o ! -d "$SRCDIR" ]; then
+                dump "Skipping NDK device test run (no $CPU_ABI1 $CPU_ABI2 binaries): `basename $1`"
+                return 0
+            fi
         fi
         # First, copy all files to the device, except for gdbserver
         # or gdb.setup.
@@ -624,6 +628,14 @@ if is_testable device; then
         if [ $? = 0 ] ; then
             dump "WARNING: Device is offline, can't run device tests!"
             SKIP_TESTS=yes
+        fi
+        if [ "$ABI" != "default" ] ; then
+            CPU_ABI1=$ABI
+            CPU_ABI2=
+        else
+            # get device CPU_ABI and CPU_ABI2
+            CPU_ABI1=`$ADB_CMD shell getprop ro.product.cpu.abi | tr -dc '[:print:]'`
+            CPU_ABI2=`$ADB_CMD shell getprop ro.product.cpu.abi2 | tr -dc '[:print:]'`
         fi
     fi
 
