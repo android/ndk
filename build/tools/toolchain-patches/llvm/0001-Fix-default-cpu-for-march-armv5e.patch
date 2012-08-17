@@ -1,0 +1,41 @@
+From 5f1f68870f05c5afce14cc044ccedeea7c11e654 Mon Sep 17 00:00:00 2001
+From: Evgeniy Stepanov <eugeni.stepanov@gmail.com>
+Date: Thu, 16 Aug 2012 15:56:50 +0800
+Subject: [PATCH 1/2] Fix default cpu for -march=armv5e.
+
+---
+ llvm-3.1/tools/clang/lib/Driver/Tools.cpp          |    2 +-
+ .../tools/clang/test/Driver/clang-translation.c    |    7 +++++++
+ 2 files changed, 8 insertions(+), 1 deletions(-)
+
+diff --git a/llvm-3.1/tools/clang/lib/Driver/Tools.cpp b/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
+index 47b5294..4931f8c 100644
+--- a/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
++++ b/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
+@@ -448,7 +448,7 @@ static const char *getARMTargetCPU(const ArgList &Args,
+     .Case("armv3m", "arm7m")
+     .Cases("armv4", "armv4t", "arm7tdmi")
+     .Cases("armv5", "armv5t", "arm10tdmi")
+-    .Cases("armv5e", "armv5te", "arm1026ejs")
++    .Cases("armv5e", "armv5te", "arm1022e")
+     .Case("armv5tej", "arm926ej-s")
+     .Cases("armv6", "armv6k", "arm1136jf-s")
+     .Case("armv6j", "arm1136j-s")
+diff --git a/llvm-3.1/tools/clang/test/Driver/clang-translation.c b/llvm-3.1/tools/clang/test/Driver/clang-translation.c
+index 0e82de4..3ab6f5b 100644
+--- a/llvm-3.1/tools/clang/test/Driver/clang-translation.c
++++ b/llvm-3.1/tools/clang/test/Driver/clang-translation.c
+@@ -44,3 +44,10 @@
+ // ARMV7_HARDFLOAT: "-mfloat-abi" "hard"
+ // ARMV7_HARDFLOAT-NOT: "-msoft-float"
+ // ARMV7_HARDFLOAT: "-x" "c"
++
++// RUN: %clang -target arm-linux -### -S %s 2> %t.log \
++// RUN:   -march=armv5e
++// RUN: FileCheck -check-prefix=ARMV5E %s < %t.log
++// ARMV5E: clang
++// ARMV5E: "-cc1"
++// ARMV5E: "-target-cpu" "arm1022e"
+-- 
+1.7.7.3
+
