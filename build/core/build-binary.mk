@@ -80,7 +80,8 @@ ifdef bad_cpp_extensions
 endif
 LOCAL_CPP_EXTENSION := $(strip $(LOCAL_CPP_EXTENSION))
 ifeq ($(LOCAL_CPP_EXTENSION),)
-  LOCAL_CPP_EXTENSION := .cpp
+  # Match the default GCC C++ extensions.
+  LOCAL_CPP_EXTENSION := .cc .cp .cxx .cpp .CPP .c++ .C
 else
 endif
 
