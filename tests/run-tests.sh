@@ -524,8 +524,7 @@ fi
 ###  XXX: TODO: RUN THEM ON A DEVICE/EMULATOR WITH ADB
 ###
 
-CPU_ABI1=
-CPU_ABI2=
+CPU_ABIS=
 if is_testable device; then
     build_device_test ()
     {
@@ -554,13 +553,15 @@ if is_testable device; then
 		return 0
 	    fi
         fi
-        SRCDIR="$BUILD_DIR/`basename $1`/libs/$CPU_ABI1"
-        if [ ! -d "$SRCDIR" ]; then
-            SRCDIR="$BUILD_DIR/`basename $1`/libs/$CPU_ABI2"
-            if [ -z "$CPU_ABI2" -o ! -d "$SRCDIR" ]; then
-                dump "Skipping NDK device test run (no $CPU_ABI1 $CPU_ABI2 binaries): `basename $1`"
-                return 0
+        for CPU_ABI in $CPU_ABIS; do
+            SRCDIR="$BUILD_DIR/`basename $1`/libs/$CPU_ABI"
+            if [ -d "$SRCDIR" ]; then
+                break;
             fi
+        done
+        if [ ! -d "$SRCDIR" ]; then
+            dump "Skipping NDK device test run (no $CPU_ABIS binaries): `basename $1`"
+            return 0
         fi
         # First, copy all files to the device, except for gdbserver
         # or gdb.setup.
@@ -630,12 +631,13 @@ if is_testable device; then
             SKIP_TESTS=yes
         fi
         if [ "$ABI" != "default" ] ; then
-            CPU_ABI1=$ABI
-            CPU_ABI2=
+            CPU_ABIS=$ABI
         else
-            # get device CPU_ABI and CPU_ABI2
+            # get device CPU_ABI and CPU_ABI2, each may contain list of abi, comma-delimited.
             CPU_ABI1=`$ADB_CMD shell getprop ro.product.cpu.abi | tr -dc '[:print:]'`
             CPU_ABI2=`$ADB_CMD shell getprop ro.product.cpu.abi2 | tr -dc '[:print:]'`
+            CPU_ABIS="$CPU_ABI1,$CPU_ABI2"
+            CPU_ABIS=$(echo $CPU_ABIS | tr ',' ' ')
         fi
     fi
 
