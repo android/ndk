@@ -75,13 +75,13 @@ TARGET_ABI_SUBDIR := x86
 
 define cmd-build-shared-library
 $(PRIVATE_CXX) \
-    -Wl,-soname,$(notdir $@) \
+    -Wl,-soname,$(notdir $(LOCAL_BUILT_MODULE)) \
     -shared \
     --sysroot=$(call host-path,$(PRIVATE_SYSROOT)) \
     $(PRIVATE_LINKER_OBJECTS_AND_LIBRARIES) \
     $(PRIVATE_LDFLAGS) \
     $(PRIVATE_LDLIBS) \
-    -o $(call host-path,$@)
+    -o $(call host-path,$(LOCAL_BUILT_MODULE))
 endef
 
 define cmd-build-executable
@@ -92,5 +92,5 @@ $(PRIVATE_CXX) \
     $(PRIVATE_LINKER_OBJECTS_AND_LIBRARIES) \
     $(PRIVATE_LDFLAGS) \
     $(PRIVATE_LDLIBS) \
-    -o $(call host-path,$@)
+    -o $(call host-path,$(LOCAL_BUILT_MODULE))
 endef
