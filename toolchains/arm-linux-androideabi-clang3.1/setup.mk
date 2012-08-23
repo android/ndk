@@ -66,9 +66,10 @@ ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
     LLVM_TRIPLE := armv7-none-linux-androideabi
 
     TARGET_CFLAGS += -ccc-host-triple $(LLVM_TRIPLE) \
-		     -march=armv7-a \
+                     -march=armv7-a \
                      -mfloat-abi=softfp \
-                     -mfpu=vfp
+                     -mfpu=vfp3-d16 \
+                     -integrated-as
 
     TARGET_LDFLAGS += -ccc-host-triple $(LLVM_TRIPLE) \
                       -Wl,--fix-cortex-a8
@@ -76,7 +77,7 @@ else
     LLVM_TRIPLE := armv5te-none-linux-androideabi
 
     TARGET_CFLAGS += -ccc-host-triple $(LLVM_TRIPLE) \
-		     -march=armv5te \
+                     -march=armv5te \
                      -mtune=xscale \
                      -msoft-float
 
