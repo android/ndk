@@ -577,19 +577,12 @@ handle_mingw ()
     fi
 }
 
-# If --mingw option is used, check that there is a working
-# mingw32 toolchain installed.
+# Find mingw toolchain
 #
-# If there is, check that it's working
+# Set MINGW_GCC to the found mingw toolchain
 #
-# $1: install directory for wrapper toolchain
-#
-prepare_mingw_toolchain ()
+find_mingw_toolchain ()
 {
-    if [ "$MINGW" != "yes" ]; then
-        return
-    fi
-
     # IMPORTANT NOTE: binutils 2.21 requires a cross toolchain named
     # i585-pc-mingw32msvc-gcc, or it will fail its configure step late
     # in the toolchain build. Note that binutils 2.19 can build properly
@@ -622,40 +615,55 @@ prepare_mingw_toolchain ()
     # Scan $BINPREFIXLST list to find installed mingw toolchain. It will be
     # wrapped later with $BINPREFIX.
     for i in $BINPREFIXLST; do
-      find_program MINGW_GCC ${i}gcc
-      if [ -n "$MINGW_GCC" ]; then
-        dump "Found mingw toolchain: $MINGW_GCC"
-        break
-      fi
+        find_program MINGW_GCC ${i}gcc
+        if [ -n "$MINGW_GCC" ]; then
+            dump "Found mingw toolchain: $MINGW_GCC"
+            break
+        fi
     done
-        if [ -z "$MINGW_GCC" ]; then
-            echo "ERROR: Could not find in your PATH any of:"
-            for i in $BINPREFIXLST; do echo "   ${i}gcc"; done
-            echo "Please install the corresponding cross-toolchain and re-run this script"
-            echo "TIP: On Debian or Ubuntu, try: sudo apt-get install $DEBIAN_NAME"
-            exit 1
-        fi
-        # Create a wrapper toolchain, and prepend its dir to our PATH
-        MINGW_WRAP_DIR="$1"/$DEBIAN_NAME-wrapper
-        rm -rf "$MINGW_WRAP_DIR"
+}
 
-        DST_PREFIX=${MINGW_GCC%gcc}
-        if [ "$NDK_CCACHE" ]; then
-            DST_PREFIX="$NDK_CCACHE $DST_PREFIX"
-        fi
-        $NDK_BUILDTOOLS_PATH/gen-toolchain-wrapper.sh --src-prefix=$BINPREFIX --dst-prefix="$DST_PREFIX" "$MINGW_WRAP_DIR"
-        # generate wrappers for BUILD toolchain
-        # this is required for mingw build to avoid tools canadian cross configuration issues
-        LEGACY_TOOLCHAIN_DIR="$ANDROID_NDK_ROOT/../prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6"
-        $NDK_BUILDTOOLS_PATH/gen-toolchain-wrapper.sh --src-prefix=x86_64-linux-gnu- \
-                --dst-prefix="$LEGACY_TOOLCHAIN_DIR/bin/x86_64-linux-" "$MINGW_WRAP_DIR"
-        LEGACY_TOOLCHAIN_DIR="$ANDROID_NDK_ROOT/../prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6"
-        $NDK_BUILDTOOLS_PATH/gen-toolchain-wrapper.sh --src-prefix=i386-linux-gnu- \
-                --dst-prefix="$LEGACY_TOOLCHAIN_DIR/bin/i686-linux-" "$MINGW_WRAP_DIR"
-        fail_panic "Could not create mingw wrapper toolchain in $MINGW_WRAP_DIR"
+# If --mingw option is used, check that there is a working
+# mingw32 toolchain installed.
+#
+# If there is, check that it's working
+#
+# $1: install directory for wrapper toolchain
+#
+prepare_mingw_toolchain ()
+{
+    if [ "$MINGW" != "yes" ]; then
+        return
+    fi
+    find_mingw_toolchain
+    if [ -z "$MINGW_GCC" ]; then
+        echo "ERROR: Could not find in your PATH any of:"
+        for i in $BINPREFIXLST; do echo "   ${i}gcc"; done
+        echo "Please install the corresponding cross-toolchain and re-run this script"
+        echo "TIP: On Debian or Ubuntu, try: sudo apt-get install $DEBIAN_NAME"
+        exit 1
+    fi
+    # Create a wrapper toolchain, and prepend its dir to our PATH
+    MINGW_WRAP_DIR="$1"/$DEBIAN_NAME-wrapper
+    rm -rf "$MINGW_WRAP_DIR"
 
-        export PATH=$MINGW_WRAP_DIR:$PATH
-        dump "Using mingw wrapper: $MINGW_WRAP_DIR/${BINPREFIX}gcc"
+    DST_PREFIX=${MINGW_GCC%gcc}
+    if [ "$NDK_CCACHE" ]; then
+        DST_PREFIX="$NDK_CCACHE $DST_PREFIX"
+    fi
+    $NDK_BUILDTOOLS_PATH/gen-toolchain-wrapper.sh --src-prefix=$BINPREFIX --dst-prefix="$DST_PREFIX" "$MINGW_WRAP_DIR"
+    # generate wrappers for BUILD toolchain
+    # this is required for mingw build to avoid tools canadian cross configuration issues
+    LEGACY_TOOLCHAIN_DIR="$ANDROID_NDK_ROOT/../prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6"
+    $NDK_BUILDTOOLS_PATH/gen-toolchain-wrapper.sh --src-prefix=x86_64-linux-gnu- \
+            --dst-prefix="$LEGACY_TOOLCHAIN_DIR/bin/x86_64-linux-" "$MINGW_WRAP_DIR"
+    LEGACY_TOOLCHAIN_DIR="$ANDROID_NDK_ROOT/../prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6"
+    $NDK_BUILDTOOLS_PATH/gen-toolchain-wrapper.sh --src-prefix=i386-linux-gnu- \
+            --dst-prefix="$LEGACY_TOOLCHAIN_DIR/bin/i686-linux-" "$MINGW_WRAP_DIR"
+    fail_panic "Could not create mingw wrapper toolchain in $MINGW_WRAP_DIR"
+
+    export PATH=$MINGW_WRAP_DIR:$PATH
+    dump "Using mingw wrapper: $MINGW_WRAP_DIR/${BINPREFIX}gcc"
 }
 
 handle_host ()
