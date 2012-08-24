@@ -54,6 +54,12 @@ register_var_option "--package" OPTION_PACKAGE "Create source package in /tmp/nd
 OPTION_NO_PATCHES=no
 register_var_option "--no-patches" OPTION_NO_PATCHES "Do not patch sources"
 
+LLVM_VERSION_LIST=$DEFAULT_LLVM_VERSION_LIST
+register_var_option "--llvm-ver-list=<vers>" LLVM_VERSION_LIST "List of LLVM release versions"
+
+LLVM_URL=$DEFAULT_LLVM_URL
+register_var_option "--llvm-url=<url>" LLVM_URL "URL to download LLVM tar archive"
+
 PROGRAM_PARAMETERS="<src-dir>"
 PROGRAM_DESCRIPTION=\
 "Download the NDK toolchain sources from android.googlesource.com into <src-dir>.
@@ -100,6 +106,10 @@ if [ -n "$SRC_DIR" ] ; then
     SRC_DIR=`cd $SRC_DIR && pwd`
     log "Using target source directory: $SRC_DIR"
 fi
+
+# Normalize the parameters
+LLVM_VERSION_LIST=$(commas_to_spaces $LLVM_VERSION_LIST)
+LLVM_URL=${LLVM_URL%"/"}
 
 # Create temp directory where everything will be copied first
 #
@@ -162,6 +172,70 @@ toolchain_checkout ()
     (printf "%-32s " "toolchain/$NAME.git"; git $GITOPTS log -1 --format=oneline $REVISION) >> $SOURCES_LIST
 }
 
+# Download and extract LLVM/Clang source from $LLVM_URL
+# $1: LLVM/Clang release version
+#
+llvm_checkout () {
+    local VER=$1
+
+    # Determine the tar archive name and directory name by release version
+    if [ $VER = "2.6" ]; then
+        local LLVM_NAME=llvm-$VER
+        local LLVM_TAR=llvm-$VER.tar.gz
+        local CLANG_NAME=clang-$VER
+        local CLANG_TAR=clang-$VER.tar.gz
+    elif [ $VER = "2.7" -o $VER = "2.8" -o $VER = "2.9" ]; then
+        local LLVM_NAME=llvm-$VER
+        local LLVM_TAR=llvm-$VER.tgz
+        local CLANG_NAME=clang-$VER
+        local CLANG_TAR=clang-$VER.tgz
+    elif [ $VER = "3.0" ]; then
+        local LLVM_NAME=llvm-$VER.src
+        local LLVM_TAR=llvm-$VER.tar.gz
+        local CLANG_NAME=clang-$VER.src
+        local CLANG_TAR=clang-$VER.tar.gz
+    else
+        # Use the latest scheme by default (LLVM 3.1)
+        local LLVM_NAME=llvm-$VER.src
+        local LLVM_TAR=llvm-$VER.src.tar.gz
+        local CLANG_NAME=clang-$VER.src
+        local CLANG_TAR=clang-$VER.src.tar.gz
+    fi
+
+    local URL_PREFIX=$LLVM_URL/$VER
+    local OUT_DIR=llvm-$VER
+
+    # Create "llvm" subdirectory under $SRC_DIR
+    LLVM_DIR=$TMPDIR/llvm
+    mkdir -p $LLVM_DIR
+    fail_panic "Could not create $LLVM_DIR as directory"
+
+    # Cleanup existing tar archives or output directory
+    (cd $LLVM_DIR && rm -rf $LLVM_TAR $CLANG_TAR $OUT_DIR || true)
+
+    # Download the source code and extract them
+    dump "Downloading $URL_PREFIX/$LLVM_TAR"
+    (cd $LLVM_DIR && run curl -S -O $URL_PREFIX/$LLVM_TAR && tar xzf $LLVM_TAR)
+    fail_panic "Could not download and extract llvm source code"
+
+    dump "Downloading $URL_PREFIX/$CLANG_TAR"
+    (cd $LLVM_DIR && \
+        run curl -S -O $URL_PREFIX/$CLANG_TAR && tar xzf $CLANG_TAR)
+    fail_panic "Could not download and extract clang source code"
+
+    # Rename the extracted directory
+    if [ $LLVM_NAME != $OUT_DIR ]; then
+        (cd $LLVM_DIR && mv $LLVM_NAME $OUT_DIR)
+        fail_panic "Could not rename $LLVM_NAME to $OUT_DIR"
+    fi
+
+    (cd $LLVM_DIR && mv $CLANG_NAME $OUT_DIR/tools/clang)
+    fail_panic "Could not rename $CLANG_NAME to $OUT_DIR/tools/clang"
+
+    # Cleanup the tar archive
+    (cd $LLVM_DIR && rm $LLVM_TAR $CLANG_TAR || true)
+}
+
 cd $TMPDIR
 
 CLONE_DIR=$TMPDIR/git
@@ -189,6 +263,10 @@ toolchain_checkout expat .
 toolchain_checkout binutils binutils-2.19 binutils-2.21
 toolchain_checkout gcc gcc-4.4.3 gcc-4.6
 toolchain_checkout gdb gdb-6.6 gdb-7.1.x gdb-7.3.x
+
+for LLVM_VERSION in $LLVM_VERSION_LIST; do
+    llvm_checkout $LLVM_VERSION
+done
 
 PYVERSION=2.7.3
 PYVERSION_FOLDER=$(echo ${PYVERSION} | sed 's/\([0-9\.]*\).*/\1/')
