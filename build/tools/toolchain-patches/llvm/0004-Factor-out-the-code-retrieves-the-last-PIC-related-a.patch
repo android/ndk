@@ -1,0 +1,142 @@
+From fe06100ba8133e848649ed0566c3dc450a50b017 Mon Sep 17 00:00:00 2001
+From: Simon Atanasyan <satanasyan@mips.com>
+Date: Sat, 18 Aug 2012 23:14:53 +0800
+Subject: [PATCH] Factor out the code retrieves the last PIC related argument.
+
+Factor out the code retrieves the last PIC related argument
+from the Clang::ConstructJob() to the new
+ArgList::getLastArg() routine with eight argument. That
+simplifies reusing of this code.
+---
+ .../tools/clang/include/clang/Driver/ArgList.h     |    8 +++
+ llvm-3.1/tools/clang/lib/Driver/ArgList.cpp        |   62 ++++++++++++++++++++
+ llvm-3.1/tools/clang/lib/Driver/Tools.cpp          |   21 ++-----
+ 3 files changed, 75 insertions(+), 16 deletions(-)
+
+diff --git a/llvm-3.1/tools/clang/include/clang/Driver/ArgList.h b/llvm-3.1/tools/clang/include/clang/Driver/ArgList.h
+index 3affb00..b7e490c 100644
+--- a/llvm-3.1/tools/clang/include/clang/Driver/ArgList.h
++++ b/llvm-3.1/tools/clang/include/clang/Driver/ArgList.h
+@@ -187,6 +187,14 @@ namespace driver {
+                     OptSpecifier Id3) const;
+     Arg *getLastArg(OptSpecifier Id0, OptSpecifier Id1, OptSpecifier Id2,
+                     OptSpecifier Id3, OptSpecifier Id4) const;
++    Arg *getLastArg(OptSpecifier Id0, OptSpecifier Id1, OptSpecifier Id2,
++                    OptSpecifier Id3, OptSpecifier Id4, OptSpecifier Id5) const;
++    Arg *getLastArg(OptSpecifier Id0, OptSpecifier Id1, OptSpecifier Id2,
++                    OptSpecifier Id3, OptSpecifier Id4, OptSpecifier Id5,
++                    OptSpecifier Id6) const;
++    Arg *getLastArg(OptSpecifier Id0, OptSpecifier Id1, OptSpecifier Id2,
++                    OptSpecifier Id3, OptSpecifier Id4, OptSpecifier Id5,
++                    OptSpecifier Id6, OptSpecifier Id7) const;
+ 
+     /// getArgString - Return the input argument string at \arg Index.
+     virtual const char *getArgString(unsigned Index) const = 0;
+diff --git a/llvm-3.1/tools/clang/lib/Driver/ArgList.cpp b/llvm-3.1/tools/clang/lib/Driver/ArgList.cpp
+index 55a0ddf..7fd439e 100644
+--- a/llvm-3.1/tools/clang/lib/Driver/ArgList.cpp
++++ b/llvm-3.1/tools/clang/lib/Driver/ArgList.cpp
+@@ -140,6 +140,68 @@ Arg *ArgList::getLastArg(OptSpecifier Id0, OptSpecifier Id1,
+   return Res;
+ }
+ 
++Arg *ArgList::getLastArg(OptSpecifier Id0, OptSpecifier Id1,
++                         OptSpecifier Id2, OptSpecifier Id3,
++                         OptSpecifier Id4, OptSpecifier Id5) const {
++  Arg *Res = 0;
++  for (const_iterator it = begin(), ie = end(); it != ie; ++it) {
++    if ((*it)->getOption().matches(Id0) ||
++        (*it)->getOption().matches(Id1) ||
++        (*it)->getOption().matches(Id2) ||
++        (*it)->getOption().matches(Id3) ||
++        (*it)->getOption().matches(Id4) ||
++        (*it)->getOption().matches(Id5)) {
++      Res = *it;
++      Res->claim();
++    }
++  }
++
++  return Res;
++}
++
++Arg *ArgList::getLastArg(OptSpecifier Id0, OptSpecifier Id1,
++                         OptSpecifier Id2, OptSpecifier Id3,
++                         OptSpecifier Id4, OptSpecifier Id5,
++                         OptSpecifier Id6) const {
++  Arg *Res = 0;
++  for (const_iterator it = begin(), ie = end(); it != ie; ++it) {
++    if ((*it)->getOption().matches(Id0) ||
++        (*it)->getOption().matches(Id1) ||
++        (*it)->getOption().matches(Id2) ||
++        (*it)->getOption().matches(Id3) ||
++        (*it)->getOption().matches(Id4) ||
++        (*it)->getOption().matches(Id5) ||
++        (*it)->getOption().matches(Id6)) {
++      Res = *it;
++      Res->claim();
++    }
++  }
++
++  return Res;
++}
++
++Arg *ArgList::getLastArg(OptSpecifier Id0, OptSpecifier Id1,
++                         OptSpecifier Id2, OptSpecifier Id3,
++                         OptSpecifier Id4, OptSpecifier Id5,
++                         OptSpecifier Id6, OptSpecifier Id7) const {
++  Arg *Res = 0;
++  for (const_iterator it = begin(), ie = end(); it != ie; ++it) {
++    if ((*it)->getOption().matches(Id0) ||
++        (*it)->getOption().matches(Id1) ||
++        (*it)->getOption().matches(Id2) ||
++        (*it)->getOption().matches(Id3) ||
++        (*it)->getOption().matches(Id4) ||
++        (*it)->getOption().matches(Id5) ||
++        (*it)->getOption().matches(Id6) ||
++        (*it)->getOption().matches(Id7)) {
++      Res = *it;
++      Res->claim();
++    }
++  }
++
++  return Res;
++}
++
+ bool ArgList::hasFlag(OptSpecifier Pos, OptSpecifier Neg, bool Default) const {
+   if (Arg *A = getLastArg(Pos, Neg))
+     return A->getOption().matches(Pos);
+diff --git a/llvm-3.1/tools/clang/lib/Driver/Tools.cpp b/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
+index d457a53..c68c4af 100644
+--- a/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
++++ b/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
+@@ -1499,22 +1499,11 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
+ 
+   // This comes from the default translation the driver + cc1
+   // would do to enable flag_pic.
+-  //
+-  // FIXME: Centralize this code.
+-  Arg *LastPICArg = 0;
+-  for (ArgList::const_iterator I = Args.begin(), E = Args.end(); I != E; ++I) {
+-    if ((*I)->getOption().matches(options::OPT_fPIC) ||
+-        (*I)->getOption().matches(options::OPT_fno_PIC) ||
+-        (*I)->getOption().matches(options::OPT_fpic) ||
+-        (*I)->getOption().matches(options::OPT_fno_pic) ||
+-        (*I)->getOption().matches(options::OPT_fPIE) ||
+-        (*I)->getOption().matches(options::OPT_fno_PIE) ||
+-        (*I)->getOption().matches(options::OPT_fpie) ||
+-        (*I)->getOption().matches(options::OPT_fno_pie)) {
+-      LastPICArg = *I;
+-      (*I)->claim();
+-    }
+-  }
++
++  Arg *LastPICArg = Args.getLastArg(options::OPT_fPIC, options::OPT_fno_PIC,
++                                    options::OPT_fpic, options::OPT_fno_pic,
++                                    options::OPT_fPIE, options::OPT_fno_PIE,
++                                    options::OPT_fpie, options::OPT_fno_pie);
+   bool PICDisabled = false;
+   bool PICEnabled = false;
+   bool PICForPIE = false;
+-- 
+1.7.7.3
+

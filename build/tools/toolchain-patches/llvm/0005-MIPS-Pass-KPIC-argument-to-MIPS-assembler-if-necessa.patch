@@ -1,0 +1,54 @@
+From d4872a014f47cd3109d2eaf1b2ffb5889640fff1 Mon Sep 17 00:00:00 2001
+From: Simon Atanasyan <satanasyan@mips.com>
+Date: Sat, 18 Aug 2012 22:24:18 +0800
+Subject: [PATCH] MIPS: Pass -KPIC argument to MIPS assembler if necessary.
+
+---
+ llvm-3.1/tools/clang/lib/Driver/Tools.cpp  |   12 ++++++++++++
+ llvm-3.1/tools/clang/test/Driver/mips-as.c |    7 +++++++
+ 2 files changed, 19 insertions(+), 0 deletions(-)
+
+diff --git a/llvm-3.1/tools/clang/lib/Driver/Tools.cpp b/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
+index 8ef16b5..d457a53 100644
+--- a/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
++++ b/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
+@@ -5089,6 +5089,18 @@ void linuxtools::Assemble::ConstructJob(Compilation &C, const JobAction &JA,
+       CmdArgs.push_back("-EB");
+     else
+       CmdArgs.push_back("-EL");
++
++    Arg *LastPICArg = Args.getLastArg(options::OPT_fPIC, options::OPT_fno_PIC,
++                                      options::OPT_fpic, options::OPT_fno_pic,
++                                      options::OPT_fPIE, options::OPT_fno_PIE,
++                                      options::OPT_fpie, options::OPT_fno_pie);
++    if (LastPICArg &&
++        (LastPICArg->getOption().matches(options::OPT_fPIC) ||
++         LastPICArg->getOption().matches(options::OPT_fpic) ||
++         LastPICArg->getOption().matches(options::OPT_fPIE) ||
++         LastPICArg->getOption().matches(options::OPT_fpie))) {
++      CmdArgs.push_back("-KPIC");
++    }
+   }
+ 
+   Args.AddLastArg(CmdArgs, options::OPT_march_EQ);
+diff --git a/llvm-3.1/tools/clang/test/Driver/mips-as.c b/llvm-3.1/tools/clang/test/Driver/mips-as.c
+index 44b8d8d..f905536 100644
+--- a/llvm-3.1/tools/clang/test/Driver/mips-as.c
++++ b/llvm-3.1/tools/clang/test/Driver/mips-as.c
+@@ -4,6 +4,13 @@
+ // RUN:   -no-integrated-as -c %s 2>&1 \
+ // RUN:   | FileCheck -check-prefix=MIPS32-EB-AS %s
+ // CHECK-MIPS32-EB-AS: as{{(.exe)?}}" "-march" "mips32" "-mabi" "32" "-EB"
++// CHECK-MIPS32-EB-AS-NOT: "-KPIC"
++//
++// RUN: %clang -target mips-linux-gnu -### \
++// RUN:   -no-integrated-as -fPIC -c %s 2>&1 \
++// RUN:   | FileCheck -check-prefix=MIPS32-EB-PIC %s
++// CHECK-MIPS32-EB-PIC: as{{(.exe)?}}" "-march" "mips32" "-mabi" "32" "-EB"
++// CHECK-MIPS32-EB-PIC: "-KPIC"
+ //
+ // RUN: %clang -target mipsel-linux-gnu -### \
+ // RUN:   -no-integrated-as -c %s 2>&1 \
+-- 
+1.7.7.3
+
