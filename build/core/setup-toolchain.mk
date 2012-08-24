@@ -20,11 +20,20 @@
 $(call assert-defined,TARGET_PLATFORM TARGET_ARCH TARGET_ARCH_ABI)
 $(call assert-defined,NDK_APPS NDK_APP_STL)
 
+LLVM_VERSION_LIST := 2.6 2.7 2.8 2.9 3.0 3.1
+
 # Check that we have a toolchain that supports the current ABI.
 # NOTE: If NDK_TOOLCHAIN is defined, we're going to use it.
 #
 ifndef NDK_TOOLCHAIN
     TARGET_TOOLCHAIN_LIST := $(strip $(sort $(NDK_ABI.$(TARGET_ARCH_ABI).toolchains)))
+
+    # Filter out the Clang toolchain, so that we can keep GCC as the default
+    # toolchain.
+    $(foreach _ver,$(LLVM_VERSION_LIST), \
+        $(eval TARGET_TOOLCHAIN_LIST := \
+            $(filter-out %-clang$(_ver),$(TARGET_TOOLCHAIN_LIST))))
+
     ifndef TARGET_TOOLCHAIN_LIST
         $(call __ndk_info,There is no toolchain that supports the $(TARGET_ARCH_ABI) ABI.)
         $(call __ndk_info,Please modify the APP_ABI definition in $(NDK_APP_APPLICATION_MK) to use)
