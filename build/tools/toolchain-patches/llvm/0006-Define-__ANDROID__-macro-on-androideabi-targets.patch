@@ -1,0 +1,38 @@
+From 3206403316fa505fbacea92c99ae13c5b664bc3e Mon Sep 17 00:00:00 2001
+From: Evgeniy Stepanov <eugeni.stepanov@gmail.com>
+Date: Thu, 26 Apr 2012 12:08:09 +0000
+Subject: [PATCH] Define __ANDROID__ macro on -androideabi targets.
+
+git-svn-id: https://llvm.org/svn/llvm-project/cfe/trunk@155632 91177308-0d34-0410-b5e6-96231b3b80d8
+---
+ lib/Basic/Targets.cpp    |    2 ++
+ test/Preprocessor/init.c |    3 +++
+ 2 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/llvm-3.1/tools/clang/lib/Basic/Targets.cpp b/llvm-3.1/tools/clang/lib/Basic/Targets.cpp
+index 291eaeb..b4e1781 100644
+--- a/llvm-3.1/tools/clang/lib/Basic/Targets.cpp
++++ b/llvm-3.1/tools/clang/lib/Basic/Targets.cpp
+@@ -316,6 +316,8 @@ protected:
+     DefineStd(Builder, "linux", Opts);
+     Builder.defineMacro("__gnu_linux__");
+     Builder.defineMacro("__ELF__");
++    if (Triple.getEnvironment() == llvm::Triple::ANDROIDEABI)
++      Builder.defineMacro("__ANDROID__", "1");
+     if (Opts.POSIXThreads)
+       Builder.defineMacro("_REENTRANT");
+     if (Opts.CPlusPlus)
+diff --git a/llvm-3.1/tools/clang/test/Preprocessor/init.c b/llvm-3.1/tools/clang/test/Preprocessor/init.c
+index e0f45f1..0505fff 100644
+--- a/llvm-3.1/tools/clang/test/Preprocessor/init.c
++++ b/llvm-3.1/tools/clang/test/Preprocessor/init.c
+@@ -1762,3 +1762,6 @@
+ // NORTTI: __GXX_ABI_VERSION
+ // NORTTI-NOT:#define __GXX_RTTI
+ // NORTTI: __STDC__
++//
++// RUN: %clang_cc1 -triple arm-linux-androideabi -E -dM < /dev/null | FileCheck -check-prefix ANDROID %s
++// ANDROID: __ANDROID__ 1
+-- 
+1.7.7.3
+
