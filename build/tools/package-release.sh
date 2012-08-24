@@ -79,6 +79,9 @@ register_var_option "--out-dir=<path>" OPTION_OUT_DIR "Specify output package di
 DEVELOPMENT_ROOT=`dirname $ANDROID_NDK_ROOT`/development/ndk
 register_var_option "--development-root=<path>" DEVELOPMENT_ROOT "Specify platforms/samples directory"
 
+LLVM_VERSION_LIST=$DEFAULT_LLVM_VERSION_LIST
+register_var_option "--llvm=<versions>" LLVM_VERSION_LIST "List of LLVM release versions"
+
 PROGRAM_PARAMETERS=
 PROGRAM_DESCRIPTION=\
 "Package a new set of release packages for the Android NDK.
@@ -131,6 +134,9 @@ for ARCH in $ARCHS; do
         ABIS=$ABIS" $DEFAULT_ABIS"
     fi
 done
+
+# Convert comma-separated list to space-separated list
+LLVM_VERSION_LIST=$(commas_to_spaces $LLVM_VERSION_LIST)
 
 # If --arch is used to list x86 as a target architecture, Add x86-4.4.3 to
 # the list of default toolchains to package. That is, unless you also
@@ -403,6 +409,11 @@ for SYSTEM in $SYSTEMS; do
             unpack_prebuilt $TC-$SYSTEM.tar.bz2
             echo "Removing sysroot for $TC"
             rm -rf $DSTDIR/toolchains/$TC/prebuilt/$SYSTEM/sysroot
+        done
+
+        # Unpack llvm and clang
+        for LLVM_VERSION in $LLVM_VERSION_LIST; do
+            unpack_prebuilt llvm-$LLVM_VERSION-$SYSTEM.tar.bz2
         done
 
         # Unpack prebuilt ndk-stack and other host tools

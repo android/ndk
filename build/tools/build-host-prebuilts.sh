@@ -50,6 +50,9 @@ register_var_option "--darwin-ssh=<hostname>" DARWIN_SSH "Generate darwin packag
 NO_GEN_PLATFORMS=
 register_var_option "--no-gen-platforms" NO_GEN_PLATFORMS "Don't generate platforms/ directory, use existing one"
 
+LLVM_VERSION_LIST=$DEFAULT_LLVM_VERSION_LIST
+register_var_option "--llvm-ver-list=<vers>" LLVM_VERSION_LIST "List of LLVM release versions"
+
 register_try64_option
 
 PROGRAM_PARAMETERS="<toolchain-src-dir>"
@@ -97,6 +100,7 @@ fi
 
 SYSTEMS=$(commas_to_spaces $SYSTEMS)
 ARCHS=$(commas_to_spaces $ARCHS)
+LLVM_VERSION_LIST=$(commas_to_spaces $LLVM_VERSION_LIST)
 
 if [ "$DARWIN_SSH" -a -z "$CUSTOM_SYSTEMS" ]; then
     SYSTEMS=" darwin-x86"
@@ -251,6 +255,13 @@ for SYSTEM in $SYSTEMS; do
             run $BUILDTOOLS/build-gcc.sh "$SRC_DIR" "$NDK_DIR" $TOOLCHAIN_NAME $TOOLCHAIN_FLAGS
             fail_panic "Could not build $TOOLCHAIN_NAME-$SYSTEM!"
         done
+    done
+
+    # Build llvm and clang
+    for LLVM_VERSION in $LLVM_VERSION_LIST; do
+        echo "Building $SYSTEM clang/llvm-$LLVM_VERSION"
+        run $BUILDTOOLS/build-llvm.sh "$SRC_DIR" "$NDK_DIR" "llvm-$LLVM_VERSION" $TOOLCHAIN_FLAGS
+        fail_panic "Could not build llvm for $SYSTEM"
     done
 
     # We're done for this system
