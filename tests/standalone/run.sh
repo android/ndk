@@ -364,7 +364,7 @@ for TEST_SUBDIR in $TEST_SUBDIRS; do
     cp -RL "$SUBDIR"/* "$BUILD_DIR/"
     fail_panic "Could not copy test files to $BUILD_DIR !?"
 
-    dump -n "Running $TEST_SUBDIR test... "
+    dump_n "Running $TEST_SUBDIR test... "
 
     case $TEST_TYPE in
         script)

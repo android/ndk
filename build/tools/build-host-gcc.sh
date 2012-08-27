@@ -518,7 +518,7 @@ check_compiler ()
     cat > $TMPC <<EOF
 int main(void) { return 0; }
 EOF
-    log -n "Checking compiler code generation ($CC)... "
+    log_n "Checking compiler code generation ($CC)... "
     $CC -o $TMPE $TMPC "$@" >$TMPL 2>&1
     RET=$?
     rm -f $TMPC $TMPE $TMPL
@@ -621,7 +621,7 @@ check_compiler_bitness ()
 /* this program will fail to compile if the compiler doesn't generate BITS-bits code */
 int tab[1-2*(sizeof(void*)*8 != BITS)];
 EOF
-    dump -n "$(host_text) Checking that the compiler generates $BITS-bits code ($@)... "
+    dump_n "$(host_text) Checking that the compiler generates $BITS-bits code ($@)... "
     $CC -c -DBITS=$BITS -o /dev/null $TMPC $HOST_CFLAGS "$@" > $TMPL 2>&1
     RET=$?
     rm -f $TMPC $TMPL

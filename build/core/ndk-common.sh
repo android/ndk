@@ -112,6 +112,14 @@ dump ()
     echo "$@"
 }
 
+dump_n ()
+{
+    if [ -n "$TMPLOG" ] ; then
+        printf %s "$@" >> $TMPLOG
+    fi
+    printf %s "$@"
+}
+
 log ()
 {
     if [ "$VERBOSE" = "yes" ] ; then
@@ -119,6 +127,17 @@ log ()
     else
         if [ -n "$TMPLOG" ] ; then
             echo "$@" >> $TMPLOG
+        fi
+    fi
+}
+
+log_n ()
+{
+    if [ "$VERBOSE" = "yes" ] ; then
+        printf %s "$@"
+    else
+        if [ -n "$TMPLOG" ] ; then
+            printf %s "$@" >> $TMPLOG
         fi
     fi
 }

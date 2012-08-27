@@ -767,7 +767,7 @@ prepare_common_build ()
     /* this test should fail if the compiler generates 64-bit machine code */
     int test_array[1-2*(sizeof(void*) != 4)];
 EOF
-    log -n "Checking whether the compiler generates 32-bit binaries..."
+    log_n "Checking whether the compiler generates 32-bit binaries..."
     HOST_BITS=32
     log2 $CC $HOST_CFLAGS -c -o $TMPO $TMPC
     $NDK_CCACHE $CC $HOST_CFLAGS -c -o $TMPO $TMPC >$TMPL 2>&1
