@@ -160,10 +160,10 @@ echo
 echo "Build the ndk/platforms directory"
 logfile="$TOP/build-platforms.log"
 rotate_log $logfile
-$PROGDIR/build-platforms.sh \
+$PROGDIR/gen-platforms.sh \
     $VERBOSE \
     --arch=$(spaces_to_commas $ARCHS)  \
-    --no-symlinks --no-samples > $logfile 2>&1
+    --fast-copy > $logfile 2>&1
 fail_panic "build-platforms.sh failed. Logfile in $logfile"
 
 logfile="$TOP/rebuild-all.log"
