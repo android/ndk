@@ -46,7 +46,7 @@ TARGET_CXX := $(LLVM_TOOLCHAIN_PREFIX)clang
 # CFLAGS, C_INCLUDES, and LDFLAGS
 #
 
-LLVM_TRIPLE := mipsel-none-linux-androideabi
+LLVM_TRIPLE := mipsel-none-linux-android
 
 TARGET_CFLAGS := \
         -B$(TOOLCHAIN_PREBUILT_ROOT) \

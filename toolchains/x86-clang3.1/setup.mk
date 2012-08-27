@@ -42,7 +42,7 @@ TOOLCHAIN_PREFIX := $(TOOLCHAIN_PREBUILT_ROOT)/bin/i686-linux-android-
 TARGET_CC := $(LLVM_TOOLCHAIN_PREFIX)clang
 TARGET_CXX := $(LLVM_TOOLCHAIN_PREFIX)clang
 
-LLVM_TRIPLE := i686-none-linux-androideabi
+LLVM_TRIPLE := i686-none-linux-android
 
 TARGET_CFLAGS := \
     -B$(TOOLCHAIN_PREBUILT_ROOT) \

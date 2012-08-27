@@ -1,0 +1,130 @@
+From bea1fdac6464a5c04e47f8b4fbb087ed50a9235b Mon Sep 17 00:00:00 2001
+From: Logan Chien <loganchien@google.com>
+Date: Mon, 27 Aug 2012 12:54:37 +0800
+Subject: [PATCH] Rename ANDROIDEABI to ANDROID.
+
+The code releted to ANDROIDEABI is not specific to
+ARM EABI.  We need them in Intel and MIPS backend
+as well.
+---
+ llvm-3.1/include/llvm/ADT/Triple.h             |    2 +-
+ llvm-3.1/lib/Support/Triple.cpp                |    5 +++--
+ llvm-3.1/tools/clang/lib/Basic/Targets.cpp     |    2 +-
+ llvm-3.1/tools/clang/lib/Driver/ToolChains.cpp |    2 +-
+ llvm-3.1/tools/clang/lib/Driver/Tools.cpp      |   10 +++++-----
+ 5 files changed, 11 insertions(+), 10 deletions(-)
+
+diff --git a/llvm-3.1/include/llvm/ADT/Triple.h b/llvm-3.1/include/llvm/ADT/Triple.h
+index f5f99d0..5e03034 100644
+--- a/llvm-3.1/include/llvm/ADT/Triple.h
++++ b/llvm-3.1/include/llvm/ADT/Triple.h
+@@ -108,7 +108,7 @@ public:
+     GNUEABIHF,
+     EABI,
+     MachO,
+-    ANDROIDEABI
++    ANDROID
+   };
+ 
+ private:
+diff --git a/llvm-3.1/lib/Support/Triple.cpp b/llvm-3.1/lib/Support/Triple.cpp
+index 44a1b38..cabacfa 100644
+--- a/llvm-3.1/lib/Support/Triple.cpp
++++ b/llvm-3.1/lib/Support/Triple.cpp
+@@ -132,7 +132,7 @@ const char *Triple::getEnvironmentTypeName(EnvironmentType Kind) {
+   case GNUEABI: return "gnueabi";
+   case EABI: return "eabi";
+   case MachO: return "macho";
+-  case ANDROIDEABI: return "androideabi";
++  case ANDROID: return "android";
+   }
+ 
+   llvm_unreachable("Invalid EnvironmentType!");
+@@ -298,7 +298,8 @@ static Triple::EnvironmentType parseEnvironment(StringRef EnvironmentName) {
+     .StartsWith("gnueabi", Triple::GNUEABI)
+     .StartsWith("gnu", Triple::GNU)
+     .StartsWith("macho", Triple::MachO)
+-    .StartsWith("androideabi", Triple::ANDROIDEABI)
++    .StartsWith("android", Triple::ANDROID)
++    .StartsWith("androideabi", Triple::ANDROID)
+     .Default(Triple::UnknownEnvironment);
+ }
+ 
+diff --git a/llvm-3.1/tools/clang/lib/Basic/Targets.cpp b/llvm-3.1/tools/clang/lib/Basic/Targets.cpp
+index fec13b0..05b434f 100644
+--- a/llvm-3.1/tools/clang/lib/Basic/Targets.cpp
++++ b/llvm-3.1/tools/clang/lib/Basic/Targets.cpp
+@@ -316,7 +316,7 @@ protected:
+     DefineStd(Builder, "linux", Opts);
+     Builder.defineMacro("__gnu_linux__");
+     Builder.defineMacro("__ELF__");
+-    if (Triple.getEnvironment() == llvm::Triple::ANDROIDEABI)
++    if (Triple.getEnvironment() == llvm::Triple::ANDROID)
+       Builder.defineMacro("__ANDROID__", "1");
+     if (Opts.POSIXThreads)
+       Builder.defineMacro("_REENTRANT");
+diff --git a/llvm-3.1/tools/clang/lib/Driver/ToolChains.cpp b/llvm-3.1/tools/clang/lib/Driver/ToolChains.cpp
+index 9b9c33e..a2217f5 100644
+--- a/llvm-3.1/tools/clang/lib/Driver/ToolChains.cpp
++++ b/llvm-3.1/tools/clang/lib/Driver/ToolChains.cpp
+@@ -2020,7 +2020,7 @@ Linux::Linux(const Driver &D, const llvm::Triple &Triple, const ArgList &Args)
+                       Arch == llvm::Triple::mips64 ||
+                       Arch == llvm::Triple::mips64el;
+ 
+-  const bool IsAndroid = Triple.getEnvironment() == llvm::Triple::ANDROIDEABI;
++  const bool IsAndroid = Triple.getEnvironment() == llvm::Triple::ANDROID;
+ 
+   // Do not use 'gnu' hash style for Mips targets because .gnu.hash
+   // and the MIPS ABI require .dynsym to be sorted in different ways.
+diff --git a/llvm-3.1/tools/clang/lib/Driver/Tools.cpp b/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
+index c68c4af..859023f 100644
+--- a/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
++++ b/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
+@@ -627,7 +627,7 @@ static StringRef getARMFloatABI(const Driver &D,
+         // EABI is always AAPCS, and if it was not marked 'hard', it's softfp
+         FloatABI = "softfp";
+         break;
+-      case llvm::Triple::ANDROIDEABI: {
++      case llvm::Triple::ANDROID: {
+         StringRef ArchName =
+           getLLVMArchSuffixForARM(getARMTargetCPU(Args, Triple));
+         if (ArchName.startswith("v7"))
+@@ -664,7 +664,7 @@ void Clang::AddARMTargetArgs(const ArgList &Args,
+   } else {
+     // Select the default based on the platform.
+     switch(Triple.getEnvironment()) {
+-    case llvm::Triple::ANDROIDEABI:
++    case llvm::Triple::ANDROID:
+     case llvm::Triple::GNUEABI:
+       ABIName = "aapcs-linux";
+       break;
+@@ -1272,7 +1272,7 @@ static void addAsanRTLinux(const ToolChain &TC, const ArgList &Args,
+   if (!Args.hasFlag(options::OPT_faddress_sanitizer,
+                     options::OPT_fno_address_sanitizer, false))
+     return;
+-  if(TC.getTriple().getEnvironment() == llvm::Triple::ANDROIDEABI) {
++  if(TC.getTriple().getEnvironment() == llvm::Triple::ANDROID) {
+     if (!Args.hasArg(options::OPT_shared)) {
+       // For an executable, we add a .preinit_array stub.
+       CmdArgs.push_back("-u");
+@@ -5126,7 +5126,7 @@ void linuxtools::Assemble::ConstructJob(Compilation &C, const JobAction &JA,
+ 
+ static void AddLibgcc(llvm::Triple Triple, const Driver &D,
+                       ArgStringList &CmdArgs, const ArgList &Args) {
+-  bool isAndroid = Triple.getEnvironment() == llvm::Triple::ANDROIDEABI;
++  bool isAndroid = Triple.getEnvironment() == llvm::Triple::ANDROID;
+   bool StaticLibgcc = isAndroid || Args.hasArg(options::OPT_static) ||
+     Args.hasArg(options::OPT_static_libgcc);
+   if (!D.CCCIsCXX)
+@@ -5158,7 +5158,7 @@ void linuxtools::Link::ConstructJob(Compilation &C, const JobAction &JA,
+     static_cast<const toolchains::Linux&>(getToolChain());
+   const Driver &D = ToolChain.getDriver();
+   const bool isAndroid = ToolChain.getTriple().getEnvironment() ==
+-    llvm::Triple::ANDROIDEABI;
++    llvm::Triple::ANDROID;
+ 
+   ArgStringList CmdArgs;
+ 
+-- 
+1.7.7.3
+
