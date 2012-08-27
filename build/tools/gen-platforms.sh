@@ -67,6 +67,7 @@ OPTION_FAST_COPY=
 OPTION_MINIMAL=
 OPTION_ARCH=
 OPTION_ABI=
+OPTION_DEBUG_LIBS=
 PACKAGE_DIR=
 
 VERBOSE=no
@@ -114,6 +115,9 @@ for opt do
   --package-dir=*)
     PACKAGE_DIR=$optarg
     ;;
+  --debug-libs)
+    OPTION_DEBUG_LIBS=true
+    ;;
   *)
     echo "unknown option '$opt', use --help"
     exit 1
@@ -137,6 +141,7 @@ if [ $OPTION_HELP = "yes" ] ; then
     echo "  --fast-copy           Don't create symlinks, copy files instead"
     echo "  --samples             Also generate samples directories."
     echo "  --package-dir=<path>  Package platforms archive in specific path."
+    echo "  --debug-libs          Also generate C source file for generated libraries."
     echo ""
     echo "Use the --minimal flag if you want to generate minimal sysroot directories"
     echo "that will be used to generate prebuilt toolchains. Otherwise, the script"
@@ -299,52 +304,95 @@ symlink_src_directory ()
     symlink_src_directory_inner "$1" "$2" "$(reverse_path $1)"
 }
 
-# $1: Architecture name
-# $2+: List of symbols
-# out: Input list, without any libgcc symbol
-remove_libgcc_symbols ()
+# Remove unwanted symbols
+# $1: symbol file (one symbol per line)
+# $2+: Input symbol list
+# Out: Input symbol file, without any unwanted symbol listed by $1
+remove_unwanted_symbols_from ()
 {
-    local ARCH=$1
-    shift
-    echo "$@" | tr ' ' '\n' | grep -v -F -f $PROGDIR/toolchain-symbols/$ARCH/libgcc.a.functions.txt
+  local SYMBOL_FILE="$1"
+  shift
+  if [ -f "$SYMBOL_FILE" ]; then
+    echo "$@" | tr ' ' '\n' | grep -v -F -x -f $SYMBOL_FILE | tr '\n' ' '
+  else
+    echo "$@"
+  fi
+}
+
+# Remove unwanted symbols from a library's functions list.
+# $1: Architecture name
+# $2: Library name (e.g. libc.so)
+# $3+: Input symbol list
+# Out: Input symbol list without any unwanted symbols.
+remove_unwanted_function_symbols ()
+{
+  local ARCH LIBRARY SYMBOL_FILE
+  ARCH=$1
+  LIBRARY=$2
+  shift; shift
+  SYMBOL_FILE=$PROGDIR/unwanted-symbols/$ARCH/$LIBRARY.functions.txt
+  remove_unwanted_symbols_from $SYMBOL_FILE "$@"
+}
+
+# Same as remove_unwanted_functions_symbols, but for variable names.
+#
+remove_unwanted_variable_symbols ()
+{
+  local ARCH LIBRARY SYMBOL_FILE
+  ARCH=$1
+  LIBRARY=$2
+  shift; shift
+  SYMBOL_FILE=$PROGDIR/unwanted-symbols/$ARCH/$LIBRARY.variables.txt
+  remove_unwanted_symbols_from $SYMBOL_FILE "$@"
 }
 
 # $1: library name
 # $2: functions list
 # $3: variables list
-# $4: sysroot to use
-# $5: destination file
-# $6: toolchain binprefix
+# $4: destination file
+# $5: toolchain binprefix
 gen_shared_lib ()
 {
+    local LIBRARY=$1
+    local FUNCS="$2"
+    local VARS="$3"
+    local DSTFILE="$4"
+    local BINPREFIX="$5"
     # Now generate a small C source file that contains similarly-named stubs
     echo "/* Auto-generated file, do not edit */" > $TMPC
     local func var
-    for func in $2; do
+    for func in $FUNCS; do
         echo "void $func(void) {}" >> $TMPC
     done
-    for var in $3; do
+    for var in $VARS; do
         echo "int $var = 0;" >> $TMPC
     done
 
     # Build it with our cross-compiler. It will complain about conflicting
     # types for built-in functions, so just shut it up.
-    echo "## COMMAND: $6-gcc --sysroot=\"$4\" -Wl,-shared,-Bsymbolic -nostdlib -o $TMPO $TMPC" > $TMPL
-    $6-gcc --sysroot="$4" -Wl,-shared,-Bsymbolic -nostdlib -o $TMPO $TMPC 1>>$TMPL 2>&1
+    COMMAND="$BINPREFIX-gcc -Wl,-shared,-Bsymbolic -nostdlib -o $TMPO $TMPC"
+    echo "## COMMAND: $COMMAND" > $TMPL
+    $COMMAND 1>>$TMPL 2>&1
     if [ $? != 0 ] ; then
-        dump "ERROR: Can't generate shared library for: $1"
+        dump "ERROR: Can't generate shared library for: $LIBNAME"
         dump "See the content of $TMPC and $TMPL for details."
         cat $TMPL | tail -10
         exit 1
     fi
 
     # Copy to our destination now
-    local libdir=$(dirname "$5")
-    mkdir -p "$libdir" && cp -f $TMPO "$5"
+    local libdir=$(dirname "$DSTFILE")
+    mkdir -p "$libdir" && cp -f $TMPO "$DSTFILE"
     if [ $? != 0 ] ; then
-        dump "ERROR: Can't copy shared library for: $1"
-        dump "target location is: $5"
+        dump "ERROR: Can't copy shared library for: $LIBNAME"
+        dump "target location is: $DSTFILE"
         exit 1
+    fi
+
+    if [ "$OPTION_DEBUG_LIBS" ]; then
+      cp $TMPC $DSTFILE.c
+      echo "$FUNCS" > $DSTFILE.functions.txt
+      echo "$VARS" > $DSTFILE.variables.txt
     fi
 }
 
@@ -379,17 +427,16 @@ gen_shared_libraries ()
     LIBS=$( (cd $SYMDIR && 2>/dev/null ls *.functions.txt) | sort -u | sed -e 's!\.functions\.txt$!!g')
 
     for LIB in $LIBS; do
-        funcs=$(cat "$SYMDIR/$LIB.functions.txt")
-        vars=
-        if [ -f "$SYMDIR/$LIB.variables.txt" ]; then
-            vars=$(cat "$SYMDIR/$LIB.variables.txt")
-        fi
-        funcs=$(remove_libgcc_symbols $ARCH $funcs)
+        funcs=$(cat "$SYMDIR/$LIB.functions.txt" 2>/dev/null)
+        vars=$(cat "$SYMDIR/$LIB.variables.txt" 2>/dev/null)
+        funcs=$(remove_unwanted_function_symbols $ARCH libgcc.a $funcs)
+        funcs=$(remove_unwanted_function_symbols $ARCH $LIB $funcs)
+        vars=$(remove_unwanted_variable_symbols $ARCH $LIB $vars)
         numfuncs=$(echo $funcs | wc -w)
         numvars=$(echo $vars | wc -w)
         log "Generating shared library for $LIB ($numfuncs functions + $numvars variables)"
 
-        gen_shared_lib $LIB "$funcs" "$vars" "$SYSROOT" "$DSTDIR/$LIB" "$TOOLCHAIN_PREFIX"
+        gen_shared_lib $LIB "$funcs" "$vars" "$DSTDIR/$LIB" "$TOOLCHAIN_PREFIX"
     done
 }
 
