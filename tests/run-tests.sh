@@ -396,7 +396,7 @@ get_build_var ()
     if [ -z "$GNUMAKE" ] ; then
         GNUMAKE=make
     fi
-    $GNUMAKE --no-print-dir -f $NDK/build/core/build-local.mk -C $DIR DUMP_$1
+    $GNUMAKE --no-print-dir -f $NDK/build/core/build-local.mk -C $DIR DUMP_$1 | tail -1
 }
 
 build_project ()
