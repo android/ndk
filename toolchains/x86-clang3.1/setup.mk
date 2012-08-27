@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 
-# this file is used to prepare the NDK to build with the x86 gcc-4.6
+# this file is used to prepare the NDK to build with the x86 llvm-3.1
 # toolchain any number of source files
 #
 # its purpose is to define (or re-define) templates used to build
@@ -49,7 +49,8 @@ TARGET_CFLAGS := \
     -ccc-host-triple $(LLVM_TRIPLE) \
     -ffunction-sections \
     -funwind-tables \
-    -fno-builtin
+    -fno-builtin \
+    -fstack-protector
 
 TARGET_C_INCLUDES := \
     $(SYSROOT)/usr/include
@@ -58,9 +59,6 @@ TARGET_C_INCLUDES := \
 TARGET_LDFLAGS := \
     -B$(TOOLCHAIN_PREBUILT_ROOT) \
     -ccc-host-triple $(LLVM_TRIPLE)
-
-# Fix this after ssp.c is fixed for x86
-# TARGET_CFLAGS += -fstack-protector
 
 TARGET_x86_release_CFLAGS :=  -O2 \
                               -fomit-frame-pointer \
