@@ -299,14 +299,39 @@ symlink_src_directory ()
     symlink_src_directory_inner "$1" "$2" "$(reverse_path $1)"
 }
 
+# Remove unwanted symbols from a library's functions list.
 # $1: Architecture name
-# $2+: List of symbols
-# out: Input list, without any libgcc symbol
-remove_libgcc_symbols ()
+# $2: Library name (e.g. libc.so)
+# $3+: Input symbol list
+# Out: Input symbol list without any unwanted symbols.
+remove_unwanted_function_symbols ()
 {
-    local ARCH=$1
-    shift
-    echo "$@" | tr ' ' '\n' | grep -v -F -f $PROGDIR/toolchain-symbols/$ARCH/libgcc.a.functions.txt
+  local ARCH LIBRARY SYMBOL_FILE
+  ARCH=$1
+  LIBRARY=$2
+  shift; shift
+  SYMBOL_FILE=$PROGDIR/unwanted-symbols/$ARCH/$LIBRARY.functions.txt
+  if [ -f "$SYMBOL_FILE" ]; then
+    echo "$@" | tr ' ' '\n' | grep -v -F -f $SYMBOL_FILE
+  else
+    echo "$@"
+  fi
+}
+
+# Same as remove_unwanted_functions_symbols, but for variable names.
+#
+remove_unwanted_variable_symbols ()
+{
+  local ARCH LIBRARY SYMBOL_FILE
+  ARCH=$1
+  LIBRARY=$2
+  shift; shift
+  SYMBOL_FILE=$PROGDIR/unwanted-symbols/$ARCH/$LIBRARY.variables.txt
+  if [ -f "$SYMBOL_FILE" ]; then
+    echo "$@" | tr ' ' '\n' | grep -v -F -f $SYMBOL_FILE
+  else
+    echo "$@"
+  fi
 }
 
 # $1: library name
@@ -384,7 +409,9 @@ gen_shared_libraries ()
         if [ -f "$SYMDIR/$LIB.variables.txt" ]; then
             vars=$(cat "$SYMDIR/$LIB.variables.txt")
         fi
-        funcs=$(remove_libgcc_symbols $ARCH $funcs)
+        funcs=$(remove_unwanted_function_symbols $ARCH libgcc.a $funcs)
+        funcs=$(remove_unwanted_function_symbols $ARCH $LIB $funcs)
+        vars=$(remove_unwanted_variable_symbols $ARCH $LIB $vars)
         numfuncs=$(echo $funcs | wc -w)
         numvars=$(echo $vars | wc -w)
         log "Generating shared library for $LIB ($numfuncs functions + $numvars variables)"
