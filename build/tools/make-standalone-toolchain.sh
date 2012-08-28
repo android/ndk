@@ -30,6 +30,9 @@ force_32bit_binaries
 TOOLCHAIN_NAME=
 register_var_option "--toolchain=<name>" TOOLCHAIN_NAME "Specify toolchain name"
 
+LLVM_VERSION=
+register_var_option "--llvm-ver=<vers>" LLVM_VERSION "List of LLVM release versions"
+
 ARCH=
 register_option "--arch=<name>" do_arch "Specify target architecture" "arm"
 do_arch () { ARCH=$1; }
@@ -136,7 +139,7 @@ if [ ! -d "$SRC_SYSROOT" ] ; then
     exit 1
 fi
 
-# Check that we have any prebuilts here
+# Check that we have any prebuilts GCC toolchain here
 if [ ! -d "$TOOLCHAIN_PATH/prebuilt" ] ; then
     echo "Toolchain is missing prebuilt files: $TOOLCHAIN_NAME"
     echo "You must point to a valid NDK release package!"
@@ -157,6 +160,23 @@ if [ ! -f "$TOOLCHAIN_GCC" ] ; then
     exit 1
 fi
 
+if [ -n "$LLVM_VERSION" ]; then
+    LLVM_TOOLCHAIN_PATH="$NDK_DIR/toolchains/llvm-$LLVM_VERSION"
+    # Check that we have any prebuilts LLVM toolchain here
+    if [ ! -d "$LLVM_TOOLCHAIN_PATH/prebuilt" ] ; then
+        echo "LLVM Toolchain is missing prebuilt files"
+        echo "You must point to a valid NDK release package!"
+        exit 1
+    fi
+
+    if [ ! -d "$LLVM_TOOLCHAIN_PATH/prebuilt/$SYSTEM" ] ; then
+        echo "Host system '$SYSTEM' is not supported by the source NDK!"
+        echo "Try --system=<name> with one of: " `(cd $LLVM_TOOLCHAIN_PATH/prebuilt && ls)`
+        exit 1
+    fi
+    LLVM_TOOLCHAIN_PATH="$LLVM_TOOLCHAIN_PATH/prebuilt/$SYSTEM"
+fi
+
 # Get GCC_BASE_VERSION.  Note that GCC_BASE_VERSION may be slightly different from GCC_VERSION.
 # eg. In gcc4.6 GCC_BASE_VERSION is "4.6.x-google"
 LIBGCC_PATH=`$TOOLCHAIN_GCC -print-libgcc-file-name`
@@ -167,8 +187,13 @@ GCC_BASE_VERSION=${LIBGCC_BASE_PATH##*/}   # stuff after the last /
 TMPDIR=$NDK_TMPDIR/standalone/$TOOLCHAIN_NAME
 
 dump "Copying prebuilt binaries..."
-# Now copy the toolchain prebuilt binaries
+# Now copy the GCC toolchain prebuilt binaries
 run copy_directory "$TOOLCHAIN_PATH" "$TMPDIR"
+
+if [ -n "$LLVM_VERSION" ]; then
+  # Copy the clang/llvm toolchain prebuilt binaries
+  run copy_directory "$LLVM_TOOLCHAIN_PATH" "$TMPDIR"
+fi
 
 dump "Copying sysroot headers and libraries..."
 # Copy the sysroot under $TMPDIR/sysroot. The toolchain was built to
