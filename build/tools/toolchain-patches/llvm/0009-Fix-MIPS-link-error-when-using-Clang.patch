@@ -1,0 +1,42 @@
+From 7d512d6a92ec8c10479e04c452f5d119a739fe89 Mon Sep 17 00:00:00 2001
+From: Logan Chien <loganchien@google.com>
+Date: Tue, 28 Aug 2012 13:28:47 +0800
+Subject: [PATCH] Fix MIPS link error when using Clang.
+
+---
+ llvm-3.1/tools/clang/lib/Driver/Tools.cpp |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/llvm-3.1/tools/clang/lib/Driver/Tools.cpp b/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
+index 859023f..cdbd1ff 100644
+--- a/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
++++ b/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
+@@ -5127,12 +5127,12 @@ void linuxtools::Assemble::ConstructJob(Compilation &C, const JobAction &JA,
+ static void AddLibgcc(llvm::Triple Triple, const Driver &D,
+                       ArgStringList &CmdArgs, const ArgList &Args) {
+   bool isAndroid = Triple.getEnvironment() == llvm::Triple::ANDROID;
+-  bool StaticLibgcc = isAndroid || Args.hasArg(options::OPT_static) ||
+-    Args.hasArg(options::OPT_static_libgcc);
++  bool StaticLibgcc = Args.hasArg(options::OPT_static) ||
++                      Args.hasArg(options::OPT_static_libgcc);
+   if (!D.CCCIsCXX)
+     CmdArgs.push_back("-lgcc");
+ 
+-  if (StaticLibgcc) {
++  if (StaticLibgcc || isAndroid) {
+     if (D.CCCIsCXX)
+       CmdArgs.push_back("-lgcc");
+   } else {
+@@ -5147,6 +5147,9 @@ static void AddLibgcc(llvm::Triple Triple, const Driver &D,
+     CmdArgs.push_back("-lgcc_eh");
+   else if (!Args.hasArg(options::OPT_shared) && D.CCCIsCXX)
+     CmdArgs.push_back("-lgcc");
++
++  if (!StaticLibgcc && isAndroid)
++    CmdArgs.push_back("-ldl");
+ }
+ 
+ void linuxtools::Link::ConstructJob(Compilation &C, const JobAction &JA,
+-- 
+1.7.7.3
+
