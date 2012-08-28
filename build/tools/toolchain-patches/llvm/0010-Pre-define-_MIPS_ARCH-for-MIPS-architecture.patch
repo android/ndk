@@ -1,0 +1,26 @@
+From 9ee2e075066228d974b968d2609dcd7a373e09a5 Mon Sep 17 00:00:00 2001
+From: Logan Chien <loganchien@google.com>
+Date: Tue, 28 Aug 2012 14:22:00 +0800
+Subject: [PATCH] Pre-define _MIPS_ARCH for MIPS architecture.
+
+---
+ llvm-3.1/tools/clang/lib/Basic/Targets.cpp |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/llvm-3.1/tools/clang/lib/Basic/Targets.cpp b/llvm-3.1/tools/clang/lib/Basic/Targets.cpp
+index 05b434f..9a9c19e 100644
+--- a/llvm-3.1/tools/clang/lib/Basic/Targets.cpp
++++ b/llvm-3.1/tools/clang/lib/Basic/Targets.cpp
+@@ -3485,6 +3485,9 @@ public:
+     Builder.defineMacro("_MIPS_SZPTR", Twine(getPointerWidth(0)));
+     Builder.defineMacro("_MIPS_SZINT", Twine(getIntWidth()));
+     Builder.defineMacro("_MIPS_SZLONG", Twine(getLongWidth()));
++
++    Builder.defineMacro("_MIPS_ARCH", std::string("\"") + CPU + "\"");
++    Builder.defineMacro(std::string("_MIPS_ARCH_") + StringRef(CPU).upper());
+   }
+ 
+   virtual void getTargetDefines(const LangOptions &Opts,
+-- 
+1.7.7.3
+
