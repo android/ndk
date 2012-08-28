@@ -248,6 +248,7 @@ $BUILD_SRCDIR/configure --target=$ABI_CONFIGURE_TARGET \
                         --with-gmp-version=$GMP_VERSION \
                         --with-gcc-version=$GCC_VERSION \
                         --with-gdb-version=$GDB_VERSION \
+                        --with-gxx-include-dir=$TOOLCHAIN_BUILD_PREFIX/include/c++/$GCC_VERSION \
                         $EXTRA_CONFIG_FLAGS \
                         $ABI_CONFIGURE_EXTRA_FLAGS
 if [ $? != 0 ] ; then
