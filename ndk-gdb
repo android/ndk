@@ -102,7 +102,7 @@ get_build_var ()
     if [ -z "$GNUMAKE" ] ; then
         GNUMAKE=make
     fi
-    $GNUMAKE --no-print-dir -f $ANDROID_NDK_ROOT/build/core/build-local.mk -C $PROJECT DUMP_$1
+    $GNUMAKE --no-print-dir -f $ANDROID_NDK_ROOT/build/core/build-local.mk -C $PROJECT DUMP_$1 | tail -1
 }
 
 get_build_var_for_abi ()
@@ -110,7 +110,7 @@ get_build_var_for_abi ()
     if [ -z "$GNUMAKE" ] ; then
         GNUMAKE=make
     fi
-    $GNUMAKE --no-print-dir -f $ANDROID_NDK_ROOT/build/core/build-local.mk -C $PROJECT DUMP_$1 APP_ABI=$2
+    $GNUMAKE --no-print-dir -f $ANDROID_NDK_ROOT/build/core/build-local.mk -C $PROJECT DUMP_$1 APP_ABI=$2 | tail -1
 }
 
 # Used to run an awk script on the manifest
