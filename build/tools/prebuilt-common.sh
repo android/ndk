@@ -657,8 +657,12 @@ prepare_mingw_toolchain ()
     LEGACY_TOOLCHAIN_DIR="$ANDROID_NDK_ROOT/../prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6"
     $NDK_BUILDTOOLS_PATH/gen-toolchain-wrapper.sh --src-prefix=x86_64-linux-gnu- \
             --dst-prefix="$LEGACY_TOOLCHAIN_DIR/bin/x86_64-linux-" "$MINGW_WRAP_DIR"
+    $NDK_BUILDTOOLS_PATH/gen-toolchain-wrapper.sh --src-prefix=x86_64-pc-linux-gnu- \
+            --dst-prefix="$LEGACY_TOOLCHAIN_DIR/bin/x86_64-linux-" "$MINGW_WRAP_DIR"
     LEGACY_TOOLCHAIN_DIR="$ANDROID_NDK_ROOT/../prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6"
     $NDK_BUILDTOOLS_PATH/gen-toolchain-wrapper.sh --src-prefix=i386-linux-gnu- \
+            --dst-prefix="$LEGACY_TOOLCHAIN_DIR/bin/i686-linux-" "$MINGW_WRAP_DIR"
+    $NDK_BUILDTOOLS_PATH/gen-toolchain-wrapper.sh --src-prefix=i386-pc-linux-gnu- \
             --dst-prefix="$LEGACY_TOOLCHAIN_DIR/bin/i686-linux-" "$MINGW_WRAP_DIR"
     fail_panic "Could not create mingw wrapper toolchain in $MINGW_WRAP_DIR"
 
