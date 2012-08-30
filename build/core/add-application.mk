@@ -80,10 +80,15 @@ ifndef APP_PLATFORM
     endif
 endif
 
-# SPECIAL CASE: android-6 and android-7 are the same thing than android-5
-#               with regards to the NDK. Adjust accordingly!
+# SPECIAL CASES:
+# 1) android-6 and android-7 are the same thing as android-5
+# 2) android-10 .. 13 is the same thing as android-9
 ifneq (,$(filter android-6 android-7,$(APP_PLATFORM)))
     APP_PLATFORM := android-5
+    $(call ndk_log,  Adjusting APP_PLATFORM to $(APP_PLATFORM))
+endif
+ifneq (,$(filter android-10 android-11 android-12 android-13,$(APP_PLATFORM)))
+    APP_PLATFORM := android-9
     $(call ndk_log,  Adjusting APP_PLATFORM to $(APP_PLATFORM))
 endif
 
