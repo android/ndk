@@ -36,16 +36,6 @@ TARGET_LDFLAGS :=
 TARGET_C_INCLUDES := \
     $(SYSROOT)/usr/include
 
-# This is to avoid the dreaded warning compiler message:
-#   note: the mangling of 'va_list' has changed in GCC 4.4
-#
-# The fact that the mangling changed does not affect the NDK ABI
-# very fortunately (since none of the exposed APIs used va_list
-# in their exported C++ functions). Also, GCC 4.5 has already
-# removed the warning from the compiler.
-#
-TARGET_CFLAGS += -Wno-psabi
-
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
     TARGET_CFLAGS += -march=armv7-a \
                      -mfloat-abi=softfp \
