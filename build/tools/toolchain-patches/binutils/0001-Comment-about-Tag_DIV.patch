@@ -1,0 +1,12 @@
+diff --git a/binutils-2.19/gas/config/tc-arm.c b/binutils-2.19/gas/config/tc-arm.c
+index 7768f47..062c807 100644
+--- a/binutils-2.19/gas/config/tc-arm.c
++++ b/binutils-2.19/gas/config/tc-arm.c
+@@ -20855,6 +20855,7 @@ aeabi_set_public_attributes (void)
+   if (ARM_CPU_HAS_FEATURE (thumb_arch_used, fpu_neon_ext_v1)
+       || ARM_CPU_HAS_FEATURE (arm_arch_used, fpu_neon_ext_v1))
+     bfd_elf_add_proc_attr_int (stdoutput, 12, 1);
++  /* Don't set Tag_DIV_use on purpose. */
+ }
+ 
+ /* Add the default contents for the .ARM.attributes section.  */
