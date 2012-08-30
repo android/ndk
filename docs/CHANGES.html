@@ -47,7 +47,7 @@ IMPORTANT CHANGES:
 
     * Gold linker support is only avaialble for ARM and x86 architectures on linux-86
       and  darwin-x86 hosts.  It's not turned on by default.  Add
-      "LOCAL_LDLIBS += -fuse-ld=gold" in Android.mk to enbale it.
+      "LOCAL_LDLIBS += -fuse-ld=gold" in Android.mk to enable it.
 
     * You will need the new GDB to debug program compiled with -fPIE (including
       binaries in JellyBean image)
@@ -81,7 +81,7 @@ IMPORTANT CHANGES:
      Passing "-z norelro -z lazy" to linker to disable second protection.
   2. In NDK jni/Android.mk, set the following
      LOCAL_DISABLE_NO_EXECUTE=true: to disable "--noexecstack" and "-z noexecstack"
-     DISABLE_RELRO=true: to disable "-z relro -z now"
+     LOCAL_DISABLE_RELRO=true: to disable "-z relro -z now"
   see $NDK/docs/ANDROID-MK.html for details
 
 - Brand executables with .note.ABI-tag section
