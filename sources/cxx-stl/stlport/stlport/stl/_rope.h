@@ -905,7 +905,9 @@ public:
   }
   reference operator*() {
     if (0 == this->_M_buf_ptr)
-#if !defined (__DMC__)
+#if defined(__clang__)
+      this->_S_setcache(*this);
+#elif !defined (__DMC__)
       _S_setcache(*this);
 #else
     { _Rope_iterator_base<_CharT, _Alloc>* __x = this; _S_setcache(*__x); }
