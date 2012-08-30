@@ -1,0 +1,552 @@
+From 07af31d3d65a13531ed1c30616b75b7a83eb4d9b Mon Sep 17 00:00:00 2001
+From: Logan Chien <loganchien@google.com>
+Date: Thu, 30 Aug 2012 17:13:39 +0800
+Subject: [PATCH 2/2] Backport .init_array/.fini_array work.
+
+Android requires ".init_array" and ".fini_array" for
+X86/MIPS as well, regardless the gcc version.  This
+patch is basing on following patches:
+
+commit d6b43a317e71246380db55a50b799b062b53cdce
+Author: Rafael Espindola <rafael.espindola@gmail.com>
+Date:   Tue Jun 19 00:48:28 2012 +0000
+
+  Move the support for using .init_array from ARM to the generic
+  TargetLoweringObjectFileELF. Use this to support it on X86. Unlike ARM,
+  on X86 it is not easy to find out if .init_array should be used or not, so
+  the decision is made via TargetOptions and defaults to off.
+
+  Add a command line option to llc that enables it.
+
+commit 8af669f2f1d92436fe6dc43144bb084a620e7516
+Author: Rafael Espindola <rafael.espindola@gmail.com>
+Date:   Tue Jun 19 01:26:10 2012 +0000
+
+  Add a -fuse-init-array option to cc1 and map to the UseInitArray target
+  option. On the driver, check if we are using libraries from gcc 4.7 or newer
+  and if so pass -fuse-init-array to the frontend.
+  The crtbegin*.o files in gcc 4.7 no longer call the constructors listed in
+  .ctors, so we have to use .init_array.
+---
+ .../llvm/CodeGen/TargetLoweringObjectFileImpl.h    |    3 +
+ llvm-3.1/include/llvm/Target/TargetOptions.h       |    6 ++-
+ .../lib/CodeGen/TargetLoweringObjectFileImpl.cpp   |   48 ++++++++++++++++---
+ llvm-3.1/lib/Target/ARM/ARMTargetObjectFile.cpp    |   43 +-----------------
+ llvm-3.1/lib/Target/ARM/ARMTargetObjectFile.h      |    4 --
+ llvm-3.1/lib/Target/Mips/MipsTargetObjectFile.cpp  |    1 +
+ llvm-3.1/lib/Target/X86/X86ISelLowering.cpp        |    2 +
+ llvm-3.1/lib/Target/X86/X86TargetObjectFile.cpp    |    9 ++++
+ llvm-3.1/lib/Target/X86/X86TargetObjectFile.h      |    6 +++
+ llvm-3.1/test/CodeGen/X86/constructor.ll           |   27 +++++++++++
+ .../tools/clang/include/clang/Driver/CC1Options.td |    2 +
+ .../tools/clang/include/clang/Driver/ToolChain.h   |    4 ++
+ .../clang/include/clang/Frontend/CodeGenOptions.h  |    5 ++
+ llvm-3.1/tools/clang/lib/CodeGen/BackendUtil.cpp   |    3 +
+ llvm-3.1/tools/clang/lib/Driver/ToolChain.cpp      |    3 +
+ llvm-3.1/tools/clang/lib/Driver/ToolChains.cpp     |    9 +++-
+ llvm-3.1/tools/clang/lib/Driver/ToolChains.h       |    3 +-
+ llvm-3.1/tools/clang/lib/Driver/Tools.cpp          |    2 +
+ .../clang/lib/Frontend/CompilerInvocation.cpp      |    1 +
+ llvm-3.1/tools/clang/test/Driver/constructors.c    |   14 ++++++
+ llvm-3.1/tools/llc/llc.cpp                         |    5 ++
+ 21 files changed, 144 insertions(+), 56 deletions(-)
+ create mode 100644 llvm-3.1/test/CodeGen/X86/constructor.ll
+ create mode 100644 llvm-3.1/tools/clang/test/Driver/constructors.c
+
+diff --git a/llvm-3.1/include/llvm/CodeGen/TargetLoweringObjectFileImpl.h b/llvm-3.1/include/llvm/CodeGen/TargetLoweringObjectFileImpl.h
+index 5a42136..9849e92 100644
+--- a/llvm-3.1/include/llvm/CodeGen/TargetLoweringObjectFileImpl.h
++++ b/llvm-3.1/include/llvm/CodeGen/TargetLoweringObjectFileImpl.h
+@@ -33,6 +33,8 @@ namespace llvm {
+ 
+ 
+ class TargetLoweringObjectFileELF : public TargetLoweringObjectFile {
++  bool UseInitArray;
++
+ public:
+   virtual ~TargetLoweringObjectFileELF() {}
+ 
+@@ -66,6 +68,7 @@ public:
+   getCFIPersonalitySymbol(const GlobalValue *GV, Mangler *Mang,
+                           MachineModuleInfo *MMI) const;
+ 
++  void InitializeELF(bool UseInitArray_);
+   virtual const MCSection *
+   getStaticCtorSection(unsigned Priority = 65535) const;
+   virtual const MCSection *
+diff --git a/llvm-3.1/include/llvm/Target/TargetOptions.h b/llvm-3.1/include/llvm/Target/TargetOptions.h
+index 12a2757..bc60673 100644
+--- a/llvm-3.1/include/llvm/Target/TargetOptions.h
++++ b/llvm-3.1/include/llvm/Target/TargetOptions.h
+@@ -43,7 +43,7 @@ namespace llvm {
+           StackAlignmentOverride(0), RealignStack(true),
+           DisableJumpTables(false), EnableFastISel(false),
+           PositionIndependentExecutable(false), EnableSegmentedStacks(false),
+-          TrapFuncName(""), FloatABIType(FloatABI::Default)
++          UseInitArray(false), TrapFuncName(""), FloatABIType(FloatABI::Default)
+     {}
+ 
+     /// PrintMachineCode - This flag is enabled when the -print-machineinstrs
+@@ -172,6 +172,10 @@ namespace llvm {
+ 
+     unsigned EnableSegmentedStacks : 1;
+ 
++    /// UseInitArray - Use .init_array instead of .ctors for static
++    /// constructors.
++    unsigned UseInitArray : 1;
++
+     /// getTrapFunctionName - If this returns a non-empty string, this means
+     /// isel should lower Intrinsic::trap to a call to the specified function
+     /// name instead of an ISD::TRAP node.
+diff --git a/llvm-3.1/lib/CodeGen/TargetLoweringObjectFileImpl.cpp b/llvm-3.1/lib/CodeGen/TargetLoweringObjectFileImpl.cpp
+index 9925185..3660cf7 100644
+--- a/llvm-3.1/lib/CodeGen/TargetLoweringObjectFileImpl.cpp
++++ b/llvm-3.1/lib/CodeGen/TargetLoweringObjectFileImpl.cpp
+@@ -349,10 +349,17 @@ TargetLoweringObjectFileELF::getStaticCtorSection(unsigned Priority) const {
+   if (Priority == 65535)
+     return StaticCtorSection;
+ 
+-  std::string Name = std::string(".ctors.") + utostr(65535 - Priority);
+-  return getContext().getELFSection(Name, ELF::SHT_PROGBITS,
+-                                    ELF::SHF_ALLOC |ELF::SHF_WRITE,
+-                                    SectionKind::getDataRel());
++  if (UseInitArray) {
++    std::string Name = std::string(".init_array.") + utostr(Priority);
++    return getContext().getELFSection(Name, ELF::SHT_INIT_ARRAY,
++                                      ELF::SHF_ALLOC | ELF::SHF_WRITE,
++                                      SectionKind::getDataRel());
++  } else {
++    std::string Name = std::string(".ctors.") + utostr(65535 - Priority);
++    return getContext().getELFSection(Name, ELF::SHT_PROGBITS,
++                                      ELF::SHF_ALLOC |ELF::SHF_WRITE,
++                                      SectionKind::getDataRel());
++  }
+ }
+ 
+ const MCSection *
+@@ -362,10 +369,35 @@ TargetLoweringObjectFileELF::getStaticDtorSection(unsigned Priority) const {
+   if (Priority == 65535)
+     return StaticDtorSection;
+ 
+-  std::string Name = std::string(".dtors.") + utostr(65535 - Priority);
+-  return getContext().getELFSection(Name, ELF::SHT_PROGBITS,
+-                                    ELF::SHF_ALLOC |ELF::SHF_WRITE,
+-                                    SectionKind::getDataRel());
++  if (UseInitArray) {
++    std::string Name = std::string(".fini_array.") + utostr(Priority);
++    return getContext().getELFSection(Name, ELF::SHT_FINI_ARRAY,
++                                      ELF::SHF_ALLOC | ELF::SHF_WRITE,
++                                      SectionKind::getDataRel());
++  } else {
++    std::string Name = std::string(".dtors.") + utostr(65535 - Priority);
++    return getContext().getELFSection(Name, ELF::SHT_PROGBITS,
++                                      ELF::SHF_ALLOC |ELF::SHF_WRITE,
++                                      SectionKind::getDataRel());
++  }
++}
++
++void
++TargetLoweringObjectFileELF::InitializeELF(bool UseInitArray_) {
++  UseInitArray = UseInitArray_;
++  if (!UseInitArray)
++    return;
++
++  StaticCtorSection =
++    getContext().getELFSection(".init_array", ELF::SHT_INIT_ARRAY,
++                               ELF::SHF_WRITE |
++                               ELF::SHF_ALLOC,
++                               SectionKind::getDataRel());
++  StaticDtorSection =
++    getContext().getELFSection(".fini_array", ELF::SHT_FINI_ARRAY,
++                               ELF::SHF_WRITE |
++                               ELF::SHF_ALLOC,
++                               SectionKind::getDataRel());
+ }
+ 
+ //===----------------------------------------------------------------------===//
+diff --git a/llvm-3.1/lib/Target/ARM/ARMTargetObjectFile.cpp b/llvm-3.1/lib/Target/ARM/ARMTargetObjectFile.cpp
+index a5ea1c2..3d85ca7 100644
+--- a/llvm-3.1/lib/Target/ARM/ARMTargetObjectFile.cpp
++++ b/llvm-3.1/lib/Target/ARM/ARMTargetObjectFile.cpp
+@@ -24,20 +24,11 @@ using namespace dwarf;
+ 
+ void ARMElfTargetObjectFile::Initialize(MCContext &Ctx,
+                                         const TargetMachine &TM) {
++  bool isAAPCS_ABI = TM.getSubtarget<ARMSubtarget>().isAAPCS_ABI();
+   TargetLoweringObjectFileELF::Initialize(Ctx, TM);
+-  isAAPCS_ABI = TM.getSubtarget<ARMSubtarget>().isAAPCS_ABI();
++  InitializeELF(isAAPCS_ABI);
+ 
+   if (isAAPCS_ABI) {
+-    StaticCtorSection =
+-      getContext().getELFSection(".init_array", ELF::SHT_INIT_ARRAY,
+-                                 ELF::SHF_WRITE |
+-                                 ELF::SHF_ALLOC,
+-                                 SectionKind::getDataRel());
+-    StaticDtorSection =
+-      getContext().getELFSection(".fini_array", ELF::SHT_FINI_ARRAY,
+-                                 ELF::SHF_WRITE |
+-                                 ELF::SHF_ALLOC,
+-                                 SectionKind::getDataRel());
+     LSDASection = NULL;
+   }
+ 
+@@ -47,33 +38,3 @@ void ARMElfTargetObjectFile::Initialize(MCContext &Ctx,
+                                0,
+                                SectionKind::getMetadata());
+ }
+-
+-const MCSection *
+-ARMElfTargetObjectFile::getStaticCtorSection(unsigned Priority) const {
+-  if (!isAAPCS_ABI)
+-    return TargetLoweringObjectFileELF::getStaticCtorSection(Priority);
+-
+-  if (Priority == 65535)
+-    return StaticCtorSection;
+-
+-  // Emit ctors in priority order.
+-  std::string Name = std::string(".init_array.") + utostr(Priority);
+-  return getContext().getELFSection(Name, ELF::SHT_INIT_ARRAY,
+-                                    ELF::SHF_ALLOC | ELF::SHF_WRITE,
+-                                    SectionKind::getDataRel());
+-}
+-
+-const MCSection *
+-ARMElfTargetObjectFile::getStaticDtorSection(unsigned Priority) const {
+-  if (!isAAPCS_ABI)
+-    return TargetLoweringObjectFileELF::getStaticDtorSection(Priority);
+-
+-  if (Priority == 65535)
+-    return StaticDtorSection;
+-
+-  // Emit dtors in priority order.
+-  std::string Name = std::string(".fini_array.") + utostr(Priority);
+-  return getContext().getELFSection(Name, ELF::SHT_FINI_ARRAY,
+-                                    ELF::SHF_ALLOC | ELF::SHF_WRITE,
+-                                    SectionKind::getDataRel());
+-}
+diff --git a/llvm-3.1/lib/Target/ARM/ARMTargetObjectFile.h b/llvm-3.1/lib/Target/ARM/ARMTargetObjectFile.h
+index ff21060..c6a7261 100644
+--- a/llvm-3.1/lib/Target/ARM/ARMTargetObjectFile.h
++++ b/llvm-3.1/lib/Target/ARM/ARMTargetObjectFile.h
+@@ -20,7 +20,6 @@ class TargetMachine;
+ class ARMElfTargetObjectFile : public TargetLoweringObjectFileELF {
+ protected:
+   const MCSection *AttributesSection;
+-  bool isAAPCS_ABI;
+ public:
+   ARMElfTargetObjectFile() :
+     TargetLoweringObjectFileELF(),
+@@ -32,9 +31,6 @@ public:
+   virtual const MCSection *getAttributesSection() const {
+     return AttributesSection;
+   }
+-
+-  const MCSection * getStaticCtorSection(unsigned Priority) const;
+-  const MCSection * getStaticDtorSection(unsigned Priority) const;
+ };
+ 
+ } // end namespace llvm
+diff --git a/llvm-3.1/lib/Target/Mips/MipsTargetObjectFile.cpp b/llvm-3.1/lib/Target/Mips/MipsTargetObjectFile.cpp
+index 04dc60a..4ee79e1 100644
+--- a/llvm-3.1/lib/Target/Mips/MipsTargetObjectFile.cpp
++++ b/llvm-3.1/lib/Target/Mips/MipsTargetObjectFile.cpp
+@@ -26,6 +26,7 @@ SSThreshold("mips-ssection-threshold", cl::Hidden,
+ 
+ void MipsTargetObjectFile::Initialize(MCContext &Ctx, const TargetMachine &TM){
+   TargetLoweringObjectFileELF::Initialize(Ctx, TM);
++  InitializeELF(TM.Options.UseInitArray);
+ 
+   SmallDataSection =
+     getContext().getELFSection(".sdata", ELF::SHT_PROGBITS,
+diff --git a/llvm-3.1/lib/Target/X86/X86ISelLowering.cpp b/llvm-3.1/lib/Target/X86/X86ISelLowering.cpp
+index 04299f3..eaebc59 100644
+--- a/llvm-3.1/lib/Target/X86/X86ISelLowering.cpp
++++ b/llvm-3.1/lib/Target/X86/X86ISelLowering.cpp
+@@ -144,6 +144,8 @@ static TargetLoweringObjectFile *createTLOF(X86TargetMachine &TM) {
+     return new TargetLoweringObjectFileMachO();
+   }
+ 
++  if (Subtarget->isTargetLinux())
++    return new X86LinuxTargetObjectFile();
+   if (Subtarget->isTargetELF())
+     return new TargetLoweringObjectFileELF();
+   if (Subtarget->isTargetCOFF() && !Subtarget->isTargetEnvMacho())
+diff --git a/llvm-3.1/lib/Target/X86/X86TargetObjectFile.cpp b/llvm-3.1/lib/Target/X86/X86TargetObjectFile.cpp
+index 718f35e..b8d673f 100644
+--- a/llvm-3.1/lib/Target/X86/X86TargetObjectFile.cpp
++++ b/llvm-3.1/lib/Target/X86/X86TargetObjectFile.cpp
+@@ -9,12 +9,15 @@
+ 
+ #include "X86TargetObjectFile.h"
+ #include "X86TargetMachine.h"
++#include "llvm/ADT/StringExtras.h"
+ #include "llvm/CodeGen/MachineModuleInfoImpls.h"
+ #include "llvm/MC/MCContext.h"
+ #include "llvm/MC/MCExpr.h"
++#include "llvm/MC/MCSectionELF.h"
+ #include "llvm/MC/MCSectionMachO.h"
+ #include "llvm/Target/Mangler.h"
+ #include "llvm/Support/Dwarf.h"
++#include "llvm/Support/ELF.h"
+ using namespace llvm;
+ using namespace dwarf;
+ 
+@@ -42,3 +45,9 @@ getCFIPersonalitySymbol(const GlobalValue *GV, Mangler *Mang,
+                         MachineModuleInfo *MMI) const {
+   return Mang->getSymbol(GV);
+ }
++
++void
++X86LinuxTargetObjectFile::Initialize(MCContext &Ctx, const TargetMachine &TM) {
++  TargetLoweringObjectFileELF::Initialize(Ctx, TM);
++  InitializeELF(TM.Options.UseInitArray);
++}
+diff --git a/llvm-3.1/lib/Target/X86/X86TargetObjectFile.h b/llvm-3.1/lib/Target/X86/X86TargetObjectFile.h
+index a02a368..7698b59 100644
+--- a/llvm-3.1/lib/Target/X86/X86TargetObjectFile.h
++++ b/llvm-3.1/lib/Target/X86/X86TargetObjectFile.h
+@@ -32,6 +32,12 @@ namespace llvm {
+                             MachineModuleInfo *MMI) const;
+   };
+ 
++  /// X86LinuxTargetObjectFile - This implementation is used for linux x86
++  /// and x86-64.
++  class X86LinuxTargetObjectFile : public TargetLoweringObjectFileELF {
++    virtual void Initialize(MCContext &Ctx, const TargetMachine &TM);
++  };
++
+ } // end namespace llvm
+ 
+ #endif
+diff --git a/llvm-3.1/test/CodeGen/X86/constructor.ll b/llvm-3.1/test/CodeGen/X86/constructor.ll
+new file mode 100644
+index 0000000..f6dec16
+--- /dev/null
++++ b/llvm-3.1/test/CodeGen/X86/constructor.ll
+@@ -0,0 +1,27 @@
++; RUN: llc < %s | FileCheck --check-prefix=CTOR %s
++; RUN: llc -use-init-array < %s | FileCheck --check-prefix=INIT-ARRAY %s
++@llvm.global_ctors = appending global [2 x { i32, void ()* }] [{ i32, void ()* } { i32 65535, void ()* @f }, { i32, void ()* } { i32 15, void ()* @g }]
++
++define void @f() {
++entry:
++  ret void
++}
++
++define void @g() {
++entry:
++  ret void
++}
++
++; CTOR:		.section	.ctors.65520,"aw",@progbits
++; CTOR-NEXT:	.align	8
++; CTOR-NEXT:	.quad	g
++; CTOR-NEXT:	.section	.ctors,"aw",@progbits
++; CTOR-NEXT:	.align	8
++; CTOR-NEXT:	.quad	f
++
++; INIT-ARRAY:		.section	.init_array.15,"aw",@init_array
++; INIT-ARRAY-NEXT:	.align	8
++; INIT-ARRAY-NEXT:	.quad	g
++; INIT-ARRAY-NEXT:	.section	.init_array,"aw",@init_array
++; INIT-ARRAY-NEXT:	.align	8
++; INIT-ARRAY-NEXT:	.quad	f
+diff --git a/llvm-3.1/tools/clang/include/clang/Driver/CC1Options.td b/llvm-3.1/tools/clang/include/clang/Driver/CC1Options.td
+index 83c988a..fde33d0 100644
+--- a/llvm-3.1/tools/clang/include/clang/Driver/CC1Options.td
++++ b/llvm-3.1/tools/clang/include/clang/Driver/CC1Options.td
+@@ -241,6 +241,8 @@ def mrelocation_model : Separate<"-mrelocation-model">,
+   HelpText<"The relocation model to use">;
+ def munwind_tables : Flag<"-munwind-tables">,
+   HelpText<"Generate unwinding tables for all functions">;
++def fuse_init_array : Flag<"-fuse-init-array">,
++  HelpText<"Use .init_array instead of .ctors">;
+ def mconstructor_aliases : Flag<"-mconstructor-aliases">,
+   HelpText<"Emit complete constructors and destructors as aliases when possible">;
+ def mms_bitfields : Flag<"-mms-bitfields">,
+diff --git a/llvm-3.1/tools/clang/include/clang/Driver/ToolChain.h b/llvm-3.1/tools/clang/include/clang/Driver/ToolChain.h
+index c35cf67..02d28f2 100644
+--- a/llvm-3.1/tools/clang/include/clang/Driver/ToolChain.h
++++ b/llvm-3.1/tools/clang/include/clang/Driver/ToolChain.h
+@@ -227,6 +227,10 @@ public:
+   virtual void AddClangSystemIncludeArgs(const ArgList &DriverArgs,
+                                          ArgStringList &CC1Args) const;
+ 
++  // AddClangTargetOptions - Add options that need to be passed to cc1 for
++  // this target.
++  virtual void AddClangTargetOptions(ArgStringList &CC1Args) const;
++
+   // GetRuntimeLibType - Determine the runtime library type to use with the
+   // given compilation arguments.
+   virtual RuntimeLibType GetRuntimeLibType(const ArgList &Args) const;
+diff --git a/llvm-3.1/tools/clang/include/clang/Frontend/CodeGenOptions.h b/llvm-3.1/tools/clang/include/clang/Frontend/CodeGenOptions.h
+index e844f88..f6eb786 100644
+--- a/llvm-3.1/tools/clang/include/clang/Frontend/CodeGenOptions.h
++++ b/llvm-3.1/tools/clang/include/clang/Frontend/CodeGenOptions.h
+@@ -111,6 +111,10 @@ public:
+ 
+   unsigned StackRealignment  : 1; /// Control whether to permit stack
+                                   /// realignment.
++
++  unsigned UseInitArray      : 1; ///< Control whether to use .init_array or
++                                  ///< .ctors.
++
+   unsigned StackAlignment;        /// Overrides default stack alignment,
+                                   /// if not 0.
+ 
+@@ -215,6 +219,7 @@ public:
+     UseRegisterSizedBitfieldAccess = 0;
+     VerifyModule = 1;
+     StackRealignment = 0;
++    UseInitArray = 0;
+     StackAlignment = 0;
+ 
+     Inlining = NoInlining;
+diff --git a/llvm-3.1/tools/clang/lib/CodeGen/BackendUtil.cpp b/llvm-3.1/tools/clang/lib/CodeGen/BackendUtil.cpp
+index 2f44711..ed261c2 100644
+--- a/llvm-3.1/tools/clang/lib/CodeGen/BackendUtil.cpp
++++ b/llvm-3.1/tools/clang/lib/CodeGen/BackendUtil.cpp
+@@ -324,6 +324,9 @@ bool EmitAssemblyHelper::AddEmitPasses(BackendAction Action,
+     Options.NoFramePointerElimNonLeaf = true;
+   }
+ 
++  if (CodeGenOpts.UseInitArray)
++    Options.UseInitArray = true;
++
+   // Set float ABI type.
+   if (CodeGenOpts.FloatABI == "soft" || CodeGenOpts.FloatABI == "softfp")
+     Options.FloatABIType = llvm::FloatABI::Soft;
+diff --git a/llvm-3.1/tools/clang/lib/Driver/ToolChain.cpp b/llvm-3.1/tools/clang/lib/Driver/ToolChain.cpp
+index db4d2a8..bb7a8de 100644
+--- a/llvm-3.1/tools/clang/lib/Driver/ToolChain.cpp
++++ b/llvm-3.1/tools/clang/lib/Driver/ToolChain.cpp
+@@ -189,6 +189,9 @@ void ToolChain::AddClangSystemIncludeArgs(const ArgList &DriverArgs,
+   // Each toolchain should provide the appropriate include flags.
+ }
+ 
++void ToolChain::AddClangTargetOptions(ArgStringList &CC1Args) const {
++}
++
+ ToolChain::RuntimeLibType ToolChain::GetRuntimeLibType(
+   const ArgList &Args) const
+ {
+diff --git a/llvm-3.1/tools/clang/lib/Driver/ToolChains.cpp b/llvm-3.1/tools/clang/lib/Driver/ToolChains.cpp
+index a2217f5..fc7a818 100644
+--- a/llvm-3.1/tools/clang/lib/Driver/ToolChains.cpp
++++ b/llvm-3.1/tools/clang/lib/Driver/ToolChains.cpp
+@@ -2143,6 +2143,13 @@ Tool &Linux::SelectTool(const Compilation &C, const JobAction &JA,
+   return *T;
+ }
+ 
++void Linux::AddClangTargetOptions(ArgStringList &CC1Args) const {
++  const Generic_GCC::GCCVersion &V = GCCInstallation.getVersion();
++  if (V >= Generic_GCC::GCCVersion::Parse("4.7.0") ||
++      getTriple().getEnvironment() == llvm::Triple::ANDROID)
++    CC1Args.push_back("-fuse-init-array");
++}
++
+ void Linux::AddClangSystemIncludeArgs(const ArgList &DriverArgs,
+                                       ArgStringList &CC1Args) const {
+   const Driver &D = getDriver();
+@@ -2285,7 +2292,7 @@ void Linux::AddClangCXXStdlibIncludeArgs(const ArgList &DriverArgs,
+   // equivalent to '/usr/include/c++/X.Y' in almost all cases.
+   StringRef LibDir = GCCInstallation.getParentLibPath();
+   StringRef InstallDir = GCCInstallation.getInstallPath();
+-  StringRef Version = GCCInstallation.getVersion();
++  StringRef Version = GCCInstallation.getVersion().Text;
+   if (!addLibStdCXXIncludePaths(LibDir + "/../include/c++/" + Version,
+                                 (GCCInstallation.getTriple().str() +
+                                  GCCInstallation.getMultiarchSuffix()),
+diff --git a/llvm-3.1/tools/clang/lib/Driver/ToolChains.h b/llvm-3.1/tools/clang/lib/Driver/ToolChains.h
+index eaa6be1..9aa1c0a 100644
+--- a/llvm-3.1/tools/clang/lib/Driver/ToolChains.h
++++ b/llvm-3.1/tools/clang/lib/Driver/ToolChains.h
+@@ -99,7 +99,7 @@ protected:
+     StringRef getParentLibPath() const { return GCCParentLibPath; }
+ 
+     /// \brief Get the detected GCC version string.
+-    StringRef getVersion() const { return Version.Text; }
++    const GCCVersion &getVersion() const { return Version; }
+ 
+   private:
+     static void CollectLibDirsAndTriples(
+@@ -536,6 +536,7 @@ public:
+ 
+   virtual void AddClangSystemIncludeArgs(const ArgList &DriverArgs,
+                                          ArgStringList &CC1Args) const;
++  virtual void AddClangTargetOptions(ArgStringList &CC1Args) const;
+   virtual void AddClangCXXStdlibIncludeArgs(const ArgList &DriverArgs,
+                                             ArgStringList &CC1Args) const;
+ 
+diff --git a/llvm-3.1/tools/clang/lib/Driver/Tools.cpp b/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
+index cdbd1ff..80e3fcd 100644
+--- a/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
++++ b/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
+@@ -1711,6 +1711,8 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
+                    AsynchronousUnwindTables))
+     CmdArgs.push_back("-munwind-tables");
+ 
++  getToolChain().AddClangTargetOptions(CmdArgs);
++
+   if (Arg *A = Args.getLastArg(options::OPT_flimited_precision_EQ)) {
+     CmdArgs.push_back("-mlimit-float-precision");
+     CmdArgs.push_back(A->getValue(Args));
+diff --git a/llvm-3.1/tools/clang/lib/Frontend/CompilerInvocation.cpp b/llvm-3.1/tools/clang/lib/Frontend/CompilerInvocation.cpp
+index 4c5b063..bf45e5e 100644
+--- a/llvm-3.1/tools/clang/lib/Frontend/CompilerInvocation.cpp
++++ b/llvm-3.1/tools/clang/lib/Frontend/CompilerInvocation.cpp
+@@ -1159,6 +1159,7 @@ static bool ParseCodeGenArgs(CodeGenOptions &Opts, ArgList &Args, InputKind IK,
+   Opts.CoverageFile = Args.getLastArgValue(OPT_coverage_file);
+   Opts.DebugCompilationDir = Args.getLastArgValue(OPT_fdebug_compilation_dir);
+   Opts.LinkBitcodeFile = Args.getLastArgValue(OPT_mlink_bitcode_file);
++  Opts.UseInitArray = Args.hasArg(OPT_fuse_init_array);
+   Opts.StackRealignment = Args.hasArg(OPT_mstackrealign);
+   if (Arg *A = Args.getLastArg(OPT_mstack_alignment)) {
+     StringRef Val = A->getValue(Args);
+diff --git a/llvm-3.1/tools/clang/test/Driver/constructors.c b/llvm-3.1/tools/clang/test/Driver/constructors.c
+new file mode 100644
+index 0000000..ca2cac2
+--- /dev/null
++++ b/llvm-3.1/tools/clang/test/Driver/constructors.c
+@@ -0,0 +1,14 @@
++// RUN: %clang -no-canonical-prefixes %s -### -fsyntax-only 2>&1       \
++// RUN:     -target i386-unknown-linux \
++// RUN:     --sysroot=%S/Inputs/fake_install_tree \
++// RUN:   | FileCheck --check-prefix=CHECK-GCC-4-7 %s
++
++// CHECK-GCC-4-7: -fuse-init-array
++
++// RUN: %clang -no-canonical-prefixes %s -### -fsyntax-only 2>&1       \
++// RUN:     -target i386-unknown-linux \
++// RUN:     --sysroot=%S/Inputs/basic_linux_tree \
++// RUN:   | FileCheck --check-prefix=CHECK-GCC-4-6 %s
++
++
++// CHECK-GCC-4-6-NOT:  -fuse-init-array
+diff --git a/llvm-3.1/tools/llc/llc.cpp b/llvm-3.1/tools/llc/llc.cpp
+index ceff8a6..9660e95 100644
+--- a/llvm-3.1/tools/llc/llc.cpp
++++ b/llvm-3.1/tools/llc/llc.cpp
+@@ -249,6 +249,10 @@ SegmentedStacks("segmented-stacks",
+   cl::desc("Use segmented stacks if possible."),
+   cl::init(false));
+ 
++static cl::opt<bool>
++UseInitArray("use-init-array",
++  cl::desc("Use .init_array instead of .ctors."),
++  cl::init(false));
+ 
+ // GetFileNameRoot - Helper function to get the basename of a filename.
+ static inline std::string
+@@ -448,6 +452,7 @@ int main(int argc, char **argv) {
+   Options.TrapFuncName = TrapFuncName;
+   Options.PositionIndependentExecutable = EnablePIE;
+   Options.EnableSegmentedStacks = SegmentedStacks;
++  Options.UseInitArray = UseInitArray;
+ 
+   std::auto_ptr<TargetMachine>
+     target(TheTarget->createTargetMachine(TheTriple.getTriple(),
+-- 
+1.7.7.3
+
