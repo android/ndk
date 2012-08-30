@@ -31,8 +31,6 @@
 
 #include <typeinfo>
 
-namespace abi = __cxxabiv1;
-
 namespace __cxxabiv1
 {
   extern "C" void __cxa_pure_virtual();
@@ -178,6 +176,8 @@ namespace __cxxabiv1
     ~__pointer_to_member_type_info();
   };
 }
+
+namespace abi = __cxxabiv1;
 
 #endif /* defined(__GABIXX_CXXABI_H__) */
 
