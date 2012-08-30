@@ -1,0 +1,68 @@
+From 792a19e85fb7c37a8d1027a7c5dcc3a5d1073480 Mon Sep 17 00:00:00 2001
+From: Logan Chien <loganchien@google.com>
+Date: Thu, 30 Aug 2012 17:13:28 +0800
+Subject: [PATCH 1/2] Add the missing files for GCCInstallationDetector test
+ cases.
+
+---
+ 0 files changed, 0 insertions(+), 0 deletions(-)
+ create mode 100755 llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/arm-linux-androideabi/bin/as
+ create mode 100755 llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/arm-linux-androideabi/bin/ld
+ create mode 100755 llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/i686-linux-android/bin/ar
+ create mode 100755 llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/i686-linux-android/bin/ld
+ create mode 100644 llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/lib/gcc/arm-linux-androideabi/4.4.3/crtbegin.o
+ create mode 100644 llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/lib/gcc/i686-linux-android/4.6/crtbegin.o
+ create mode 100644 llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/lib/gcc/mipsel-linux-android/4.4.3/crtbegin.o
+ create mode 100755 llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/mipsel-linux-android/bin/as
+ create mode 100755 llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/mipsel-linux-android/bin/ld
+ create mode 100644 llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/usr/lib/crtbegin_dynamic.o
+ create mode 100644 llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/usr/lib/crtbegin_so.o
+ create mode 100644 llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/usr/lib/crtbegin_static.o
+ create mode 100644 llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/usr/lib/crtend_android.o
+ create mode 100644 llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/usr/lib/crtend_so.o
+
+diff --git a/llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/arm-linux-androideabi/bin/as b/llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/arm-linux-androideabi/bin/as
+new file mode 100755
+index 0000000..e69de29
+diff --git a/llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/arm-linux-androideabi/bin/ld b/llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/arm-linux-androideabi/bin/ld
+new file mode 100755
+index 0000000..e69de29
+diff --git a/llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/i686-linux-android/bin/ar b/llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/i686-linux-android/bin/ar
+new file mode 100755
+index 0000000..e69de29
+diff --git a/llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/i686-linux-android/bin/ld b/llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/i686-linux-android/bin/ld
+new file mode 100755
+index 0000000..e69de29
+diff --git a/llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/lib/gcc/arm-linux-androideabi/4.4.3/crtbegin.o b/llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/lib/gcc/arm-linux-androideabi/4.4.3/crtbegin.o
+new file mode 100644
+index 0000000..e69de29
+diff --git a/llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/lib/gcc/i686-linux-android/4.6/crtbegin.o b/llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/lib/gcc/i686-linux-android/4.6/crtbegin.o
+new file mode 100644
+index 0000000..e69de29
+diff --git a/llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/lib/gcc/mipsel-linux-android/4.4.3/crtbegin.o b/llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/lib/gcc/mipsel-linux-android/4.4.3/crtbegin.o
+new file mode 100644
+index 0000000..e69de29
+diff --git a/llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/mipsel-linux-android/bin/as b/llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/mipsel-linux-android/bin/as
+new file mode 100755
+index 0000000..e69de29
+diff --git a/llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/mipsel-linux-android/bin/ld b/llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/mipsel-linux-android/bin/ld
+new file mode 100755
+index 0000000..e69de29
+diff --git a/llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/usr/lib/crtbegin_dynamic.o b/llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/usr/lib/crtbegin_dynamic.o
+new file mode 100644
+index 0000000..e69de29
+diff --git a/llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/usr/lib/crtbegin_so.o b/llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/usr/lib/crtbegin_so.o
+new file mode 100644
+index 0000000..e69de29
+diff --git a/llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/usr/lib/crtbegin_static.o b/llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/usr/lib/crtbegin_static.o
+new file mode 100644
+index 0000000..e69de29
+diff --git a/llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/usr/lib/crtend_android.o b/llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/usr/lib/crtend_android.o
+new file mode 100644
+index 0000000..e69de29
+diff --git a/llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/usr/lib/crtend_so.o b/llvm-3.1/tools/clang/test/Driver/Inputs/basic_android_tree/usr/lib/crtend_so.o
+new file mode 100644
+index 0000000..e69de29
+-- 
+1.7.7.3
+
