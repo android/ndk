@@ -414,6 +414,7 @@ for SYSTEM in $SYSTEMS; do
         # Unpack llvm and clang
         for LLVM_VERSION in $LLVM_VERSION_LIST; do
             unpack_prebuilt llvm-$LLVM_VERSION-$SYSTEM.tar.bz2
+            unpack_prebuilt llvm-ndk-$LLVM_VERSION-$SYSTEM.tar.bz2
         done
 
         # Unpack prebuilt ndk-stack and other host tools

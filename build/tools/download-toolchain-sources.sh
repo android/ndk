@@ -234,6 +234,9 @@ llvm_checkout () {
 
     # Cleanup the tar archive
     (cd $LLVM_DIR && rm $LLVM_TAR $CLANG_TAR || true)
+
+    # Copy llvm source for llvm-ndk-$VER
+    [ $VER = $DEFAULT_LLVM_VERSION ] && cd $LLVM_DIR && copy_directory "$OUT_DIR" "llvm-ndk-$VER"
 }
 
 cd $TMPDIR

@@ -262,6 +262,10 @@ for SYSTEM in $SYSTEMS; do
         echo "Building $SYSTEM clang/llvm-$LLVM_VERSION"
         run $BUILDTOOLS/build-llvm.sh "$SRC_DIR" "$NDK_DIR" "llvm-$LLVM_VERSION" $TOOLCHAIN_FLAGS
         fail_panic "Could not build llvm for $SYSTEM"
+
+        echo "Building $SYSTEM llvm-ndk-$LLVM_VERSION"
+        run $BUILDTOOLS/build-llvm.sh "$SRC_DIR" "$NDK_DIR" "llvm-ndk-$LLVM_VERSION" $TOOLCHAIN_FLAGS
+        fail_panic "Could not build llvm-ndk for $SYSTEM"
     done
 
     # We're done for this system

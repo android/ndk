@@ -153,8 +153,17 @@ rm -rf $TOOLCHAIN_BUILD_PREFIX/lib/*.a
 rm -rf $TOOLCHAIN_BUILD_PREFIX/lib/*.so
 rm -rf $TOOLCHAIN_BUILD_PREFIX/share
 
-# copy to toolchain path
-run copy_directory "$TOOLCHAIN_BUILD_PREFIX" "$TOOLCHAIN_PATH"
+# we are building the llvm-ndk toolchain, only llvm-ndk-* is needed
+if [ -f $TOOLCHAIN_BUILD_PREFIX/bin/llvm-ndk-cc ]; then
+    mkdir -p "$TOOLCHAIN_PATH/bin"
+    cp -f "$TOOLCHAIN_BUILD_PREFIX/bin/llvm-ndk-cc" "$TOOLCHAIN_PATH/bin"
+    (cd $TOOLCHAIN_PATH/bin && ln -s llvm-ndk-cc llvm-ndk-cxx)
+    cp -f "$TOOLCHAIN_BUILD_PREFIX/bin/llvm-ndk-link" "$TOOLCHAIN_PATH/bin"
+    cp -r "$TOOLCHAIN_BUILD_PREFIX/lib" "$TOOLCHAIN_PATH"
+else
+    # copy to toolchain path
+    run copy_directory "$TOOLCHAIN_BUILD_PREFIX" "$TOOLCHAIN_PATH"
+fi
 
 if [ "$PACKAGE_DIR" ]; then
     ARCHIVE="$TOOLCHAIN-$HOST_TAG.tar.bz2"
