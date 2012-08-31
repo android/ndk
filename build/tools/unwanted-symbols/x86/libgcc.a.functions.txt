@@ -346,6 +346,7 @@ __clzdi2
 __clzsi2
 __cmpdi2
 __copysigntf3
+__cpu_indicator_init
 __ctzdi2
 __ctzsi2
 __deregister_frame
@@ -399,6 +400,10 @@ __floatunsitf
 __frame_state_for
 __gcc_bcmp
 __gcc_personality_v0
+__generic_findstack
+__generic_morestack
+__generic_morestack_set_initial_sp
+__generic_releasestack
 __getf2
 __gnat_default_lock
 __gnat_default_unlock
@@ -414,6 +419,14 @@ __letf2
 __lshrdi3
 __lttf2
 __moddi3
+__morestack
+__morestack_allocate_stack_space
+__morestack_block_signals
+__morestack_fail
+__morestack_load_mmap
+__morestack_non_split
+__morestack_release_segments
+__morestack_unblock_signals
 __muldc3
 __muldi3
 __mulsc3
@@ -441,6 +454,8 @@ __register_frame_info_bases
 __register_frame_info_table
 __register_frame_info_table_bases
 __register_frame_table
+__splitstack_find
+__stack_split_initialize
 __subtf3
 __subvdi3
 __subvsi3
@@ -471,5 +486,6 @@ _Unwind_Resume
 _Unwind_Resume_or_Rethrow
 _Unwind_SetGR
 _Unwind_SetIP
+__wrap_pthread_create
 __x86.get_pc_thunk.bx
 __x86.get_pc_thunk.cx
