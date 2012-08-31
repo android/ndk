@@ -147,9 +147,13 @@ $(NDK_APP_GDBSERVER): PRIVATE_DST     := $(NDK_APP_GDBSERVER)
 
 $(call generate-file-dir,$(NDK_APP_GDBSERVER))
 
+# We don't need to install gdbserver while using Portable-NDK
+# We use target-specific gdbserver directly on debugging time
+ifneq ($(TARGET_ARCH_ABI),llvm)
 $(NDK_APP_GDBSERVER): clean-installed-binaries
 	@ $(HOST_ECHO) "Gdbserver      : [$(PRIVATE_NAME)] $(call pretty-dir,$(PRIVATE_DST))"
 	$(hide) $(call host-install,$(PRIVATE_SRC),$(PRIVATE_DST))
+endif
 
 installed_modules: $(NDK_APP_GDBSETUP)
 

@@ -1318,6 +1318,15 @@ get-object-name = $(strip \
         $(__obj)\
     ))
 
+get-bitcode-name = $(strip \
+    $(subst ../,__/,\
+        $(eval __obj := $1)\
+        $(foreach __ext,.c .s .S $(LOCAL_CPP_EXTENSION),\
+            $(eval __obj := $(__obj:%$(__ext)=%.bc))\
+        )\
+        $(__obj)\
+    ))
+
 # -----------------------------------------------------------------------------
 # Macro    : hide
 # Returns  : nothing
@@ -1370,7 +1379,7 @@ convert-deps = $1.org
 cmd-convert-deps = && $(NDK_DEPENDENCIES_CONVERTER) $1
 else
 convert-deps = $1
-cmd-convert-deps = 
+cmd-convert-deps =
 endif
 
 # This assumes that many variables have been pre-defined:

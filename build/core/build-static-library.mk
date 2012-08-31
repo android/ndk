@@ -26,9 +26,12 @@ $(call check-LOCAL_MODULE,$(LOCAL_MAKEFILE))
 # we are building target objects
 my := TARGET_
 
+ifeq ($(TARGET_ARCH_ABI),llvm)
+$(call handle-module-filename,lib,.bc)
+else
 $(call handle-module-filename,lib,.a)
+endif
 $(call handle-module-built)
 
 LOCAL_MODULE_CLASS := STATIC_LIBRARY
 include $(BUILD_SYSTEM)/build-module.mk
-
