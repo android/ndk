@@ -68,8 +68,7 @@ ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
     TARGET_CFLAGS += -ccc-host-triple $(LLVM_TRIPLE) \
                      -march=armv7-a \
                      -mfloat-abi=softfp \
-                     -mfpu=vfp3-d16 \
-                     -integrated-as
+                     -mfpu=vfpv3-d16
 
     TARGET_LDFLAGS += -ccc-host-triple $(LLVM_TRIPLE) \
                       -Wl,--fix-cortex-a8
