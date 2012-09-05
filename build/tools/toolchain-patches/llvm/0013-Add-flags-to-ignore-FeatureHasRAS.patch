@@ -1,0 +1,76 @@
+From 589a5b6b6f41b1a96e3054ad2d02055aa86b15db Mon Sep 17 00:00:00 2001
+From: Logan Chien <loganchien@google.com>
+Date: Wed, 5 Sep 2012 23:32:50 +0800
+Subject: [PATCH 1/2] Add flags to ignore FeatureHasRAS.
+
+---
+ llvm-3.1/lib/Target/ARM/ARMSubtarget.cpp           |   15 +++++++++++++++
+ .../tools/clang/include/clang/Driver/Options.td    |    2 ++
+ llvm-3.1/tools/clang/lib/Driver/Tools.cpp          |    5 +++++
+ 3 files changed, 22 insertions(+), 0 deletions(-)
+
+diff --git a/llvm-3.1/lib/Target/ARM/ARMSubtarget.cpp b/llvm-3.1/lib/Target/ARM/ARMSubtarget.cpp
+index e247b76..5b54456 100644
+--- a/llvm-3.1/lib/Target/ARM/ARMSubtarget.cpp
++++ b/llvm-3.1/lib/Target/ARM/ARMSubtarget.cpp
+@@ -34,6 +34,17 @@ static cl::opt<bool>
+ StrictAlign("arm-strict-align", cl::Hidden,
+             cl::desc("Disallow all unaligned memory accesses"));
+ 
++// Ignore FeatureHasRAS for All Processors
++//
++// NOTE: The code generator will generate "b.w" instruction for the
++// processors with FeatureHasRAS, when the callee function has
++// "noreturn" attribute.  However, this instruction is not well-
++// supported in several toolchains.  Thus, here's the flag to override
++// the processor-specific attribute.
++static cl::opt<bool>
++IgnoreHasRAS("arm-ignore-has-ras", cl::Hidden, cl::init(false),
++             cl::desc("Ignore FeatureHasRAS for all processors"));
++
+ ARMSubtarget::ARMSubtarget(const std::string &TT, const std::string &CPU,
+                            const std::string &FS)
+   : ARMGenSubtargetInfo(TT, CPU, FS)
+@@ -125,6 +136,10 @@ ARMSubtarget::ARMSubtarget(const std::string &TT, const std::string &CPU,
+   // configuration.
+   if (!StrictAlign && hasV6Ops() && isTargetDarwin())
+     AllowsUnalignedMem = true;
++
++  // Ignore HasRAS subtarget feature
++  if (IgnoreHasRAS)
++    HasRAS = false;
+ }
+ 
+ /// GVIsIndirectSymbol - true if the GV will be accessed via an indirect symbol.
+diff --git a/llvm-3.1/tools/clang/include/clang/Driver/Options.td b/llvm-3.1/tools/clang/include/clang/Driver/Options.td
+index b796771..6d138b0 100644
+--- a/llvm-3.1/tools/clang/include/clang/Driver/Options.td
++++ b/llvm-3.1/tools/clang/include/clang/Driver/Options.td
+@@ -650,6 +650,8 @@ def mno_fma4 : Flag<"-mno-fma4">, Group<m_x86_Features_Group>;
+ def mno_thumb : Flag<"-mno-thumb">, Group<m_Group>;
+ def marm : Flag<"-marm">, Alias<mno_thumb>;
+ 
++def mignore_has_ras : Flag<"-mignore-has-ras">;
++
+ def mno_warn_nonportable_cfstrings : Flag<"-mno-warn-nonportable-cfstrings">, Group<m_Group>;
+ def mno_omit_leaf_frame_pointer : Flag<"-mno-omit-leaf-frame-pointer">, Group<f_Group>;
+ def momit_leaf_frame_pointer : Flag<"-momit-leaf-frame-pointer">, Group<f_Group>;
+diff --git a/llvm-3.1/tools/clang/lib/Driver/Tools.cpp b/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
+index 80e3fcd..2958393 100644
+--- a/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
++++ b/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
+@@ -755,6 +755,11 @@ void Clang::AddARMTargetArgs(const ArgList &Args,
+     if (A->getOption().matches(options::OPT_mno_global_merge))
+       CmdArgs.push_back("-mno-global-merge");
+   }
++
++  if (Args.hasArg(options::OPT_mignore_has_ras)) {
++    CmdArgs.push_back("-backend-option");
++    CmdArgs.push_back("-arm-ignore-has-ras");
++  }
+ }
+ 
+ // Get default architecture.
+-- 
+1.7.7.3
+
