@@ -410,7 +410,7 @@ gen_shared_libraries ()
     # Let's locate the toolchain we're going to use
     local TOOLCHAIN_PREFIX="$NDK_DIR/$(get_default_toolchain_binprefix_for_arch $1)"
     TOOLCHAIN_PREFIX=${TOOLCHAIN_PREFIX%-}
-    if [ ! -f "$TOOLCHAIN_PREFIX-readelf" ]; then
+    if [ ! -f "$TOOLCHAIN_PREFIX-gcc" ]; then
         dump "ERROR: $ARCH toolchain not installed: $TOOLCHAIN_PREFIX-gcc"
         dump "Important: Use the --minimal flag to use this script without generated system shared libraries."
         dump "This is generally useful when you want to generate the host cross-toolchain programs."
@@ -480,8 +480,9 @@ gen_crt_objects ()
         exit 1
     fi
 
-    for SRC_FILE in $(cd "$SRC_DIR" && ls crt*.S); do
-        DST_FILE=${SRC_FILE%%.S}.o
+    for SRC_FILE in $(cd "$SRC_DIR" && ls crt*.[cS]); do
+        DST_FILE=${SRC_FILE%%.c}
+        DST_FILE=${DST_FILE%%.S}.o
 
         case "$DST_FILE" in
             "crtend.o")
@@ -498,7 +499,7 @@ gen_crt_objects ()
         esac
 
         log "Generating $ARCH C runtime object: $DST_FILE"
-        (cd "$SRC_DIR" && $TOOLCHAIN_PREFIX-gcc -fpic -Wl,-r -nostdlib -o "$DST_DIR/$DST_FILE" $SRC_FILE) 1>>$TMPL 2>&1
+        (cd "$SRC_DIR" && $TOOLCHAIN_PREFIX-gcc -O2 -fpic -Wl,-r -nostdlib -o "$DST_DIR/$DST_FILE" $SRC_FILE) 1>>$TMPL 2>&1
         if [ $? != 0 ]; then
             dump "ERROR: Could not generate $DST_FILE from $SRC_DIR/$SRC_FILE"
             dump "Please see the content of $TMPL for details!"
