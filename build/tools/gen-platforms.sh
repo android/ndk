@@ -560,15 +560,11 @@ EOF
 # Copy platform sysroot and samples into your destination
 #
 
-# $SRC/android-$PLATFORM/include --> $DST/platforms/android-$PLATFORM/arch-$ARCH/usr/include
-# $SRC/android-$PLATFORM/arch-$ARCH/include --> $DST/platforms/android-$PLATFORM/arch-$ARCH/usr/include
-# for compatibility:
-# $SRC/android-$PLATFORM/arch-$ARCH/usr/include --> $DST/platforms/android-$PLATFORM/arch-$ARCH/usr/include
-
-
-
-# $SRC/android-$PLATFORM/arch-$ARCH/usr --> $DST/platforms/android-$PLATFORM/arch-$ARCH/usr
-# $SRC/android-$PLATFORM/samples       --> $DST/samples
+# if $SRC/android-$PLATFORM/arch-$ARCH exists
+#   $SRC/android-$PLATFORM/include --> $DST/android-$PLATFORM/arch-$ARCH/usr/include
+#   $SRC/android-$PLATFORM/arch-$ARCH/include --> $DST/android-$PLATFORM/arch-$ARCH/usr/include
+#   $SRC/android-$PLATFORM/arch-$ARCH/lib --> $DST/android-$PLATFORM/arch-$ARCH/usr/lib
+#   $SRC/android-$PLATFORM/arch-$ARCH/usr --> $DST/android-$PLATFORM/arch-$ARCH/usr  [for compatibility]
 #
 rm -rf $DSTDIR/platforms && mkdir -p $DSTDIR/platforms
 PREV_PLATFORM_DST=
@@ -621,6 +617,25 @@ for PLATFORM in $PLATFORMS; do
     PREV_PLATFORM_DST=$PLATFORM_DST
 done
 
+#
+# Remove $DST/android-$PLATFORM/arch-$ARCH if $SRC/android-$PLATFORM/arch-$ARCH doesn't exist
+#
+for PLATFORM in $PLATFORMS; do
+    NEW_PLATFORM=platforms/android-$PLATFORM
+    PLATFORM_SRC=$NEW_PLATFORM
+    PLATFORM_DST=$NEW_PLATFORM
+    for ARCH in $ARCHS; do
+        if [ ! -d $SRCDIR/$PLATFORM_SRC/arch-$ARCH ]; then
+            # Remove this arch's headers/libs if there is no arch-specific stuff to begin with
+            log "Remove $DSTDIR/$PLATFORM_SRC/arch-$ARCH because $SRCDIR/$PLATFORM_SRC/arch-$ARCH doesn't exist"
+            rm -rf $DSTDIR/$PLATFORM_SRC/arch-$ARCH
+	fi
+    done
+done
+
+#
+# $SRC/android-$PLATFORM/samples --> $DST/samples
+#
 if [ "$OPTION_SAMPLES" ] ; then
     # Copy platform samples and generic samples into your destination
     #
