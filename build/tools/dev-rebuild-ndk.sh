@@ -163,6 +163,7 @@ rotate_log $logfile
 $PROGDIR/gen-platforms.sh \
     $VERBOSE \
     --arch=$(spaces_to_commas $ARCHS)  \
+    --minimal \
     --fast-copy > $logfile 2>&1
 fail_panic "build-platforms.sh failed. Logfile in $logfile"
 
