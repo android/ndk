@@ -1,0 +1,158 @@
+From 85e8cda14b07245936eea50e07a09697d2fd3d6d Mon Sep 17 00:00:00 2001
+From: Logan Chien <loganchien@google.com>
+Date: Wed, 5 Sep 2012 23:37:51 +0800
+Subject: [PATCH 2/2] Fix ARM EHABI exception support.
+
+---
+ llvm-3.1/lib/CodeGen/AsmPrinter/ARMException.cpp   |   36 ++++++++++++++------
+ llvm-3.1/lib/CodeGen/AsmPrinter/DwarfException.cpp |   15 +++++---
+ llvm-3.1/lib/CodeGen/AsmPrinter/DwarfException.h   |    6 +++
+ .../tools/clang/include/clang/Driver/Options.td    |    1 +
+ llvm-3.1/tools/clang/lib/Driver/Tools.cpp          |    8 ++++
+ 5 files changed, 50 insertions(+), 16 deletions(-)
+
+diff --git a/llvm-3.1/lib/CodeGen/AsmPrinter/ARMException.cpp b/llvm-3.1/lib/CodeGen/AsmPrinter/ARMException.cpp
+index b60fda8..9e2f59e 100644
+--- a/llvm-3.1/lib/CodeGen/AsmPrinter/ARMException.cpp
++++ b/llvm-3.1/lib/CodeGen/AsmPrinter/ARMException.cpp
+@@ -71,24 +71,38 @@ void ARMException::EndFunction() {
+     Asm->OutStreamer.EmitLabel(Asm->GetTempSymbol("eh_func_end",
+                                                   Asm->getFunctionNumber()));
+ 
+-    // Emit references to personality.
+-    if (const Function * Personality =
+-        MMI->getPersonalities()[MMI->getPersonalityIndex()]) {
+-      MCSymbol *PerSym = Asm->Mang->getSymbol(Personality);
+-      Asm->OutStreamer.EmitSymbolAttribute(PerSym, MCSA_Global);
+-      Asm->OutStreamer.EmitPersonality(PerSym);
+-    }
+-
+     if (EnableARMEHABIDescriptors) {
+       // Map all labels and get rid of any dead landing pads.
+       MMI->TidyLandingPads();
+ 
+-      Asm->OutStreamer.EmitHandlerData();
++      const std::vector<LandingPadInfo> &PadInfos = MMI->getLandingPads();
++
++      if (!PadInfos.empty()) {
++        // Emit references to personality.
++        if (const Function * Personality =
++            MMI->getPersonalities()[MMI->getPersonalityIndex()]) {
++          MCSymbol *PerSym = Asm->Mang->getSymbol(Personality);
++          Asm->OutStreamer.EmitSymbolAttribute(PerSym, MCSA_Global);
++          Asm->OutStreamer.EmitPersonality(PerSym);
++        }
++
++        // Emit .handlerdata directive.
++        Asm->OutStreamer.EmitHandlerData();
+ 
+-      // Emit actual exception table
+-      EmitExceptionTable();
++        // Emit actual exception table
++        EmitExceptionTable();
++      }
+     }
+   }
+ 
+   Asm->OutStreamer.EmitFnEnd();
+ }
++
++void ARMException::EmitTypeInfoReference(const GlobalVariable *GV,
++                                         unsigned TTypeEncoding) {
++  if (GV) {
++    Asm->OutStreamer.EmitRawText("\t.word\t" + GV->getName() + "(TARGET2)\n");
++  } else {
++    Asm->OutStreamer.EmitRawText(Twine("\t.word\t0\n"));
++  }
++}
+diff --git a/llvm-3.1/lib/CodeGen/AsmPrinter/DwarfException.cpp b/llvm-3.1/lib/CodeGen/AsmPrinter/DwarfException.cpp
+index 70cc2e5..7d58102 100644
+--- a/llvm-3.1/lib/CodeGen/AsmPrinter/DwarfException.cpp
++++ b/llvm-3.1/lib/CodeGen/AsmPrinter/DwarfException.cpp
+@@ -684,11 +684,7 @@ void DwarfException::EmitExceptionTable() {
+     const GlobalVariable *GV = *I;
+     if (VerboseAsm)
+       Asm->OutStreamer.AddComment("TypeInfo " + Twine(Entry--));
+-    if (GV)
+-      Asm->EmitReference(GV, TTypeEncoding);
+-    else
+-      Asm->OutStreamer.EmitIntValue(0,Asm->GetSizeOfEncodedValue(TTypeEncoding),
+-                                    0);
++    EmitTypeInfoReference(GV, TTypeEncoding);
+   }
+ 
+   // Emit the Exception Specifications.
+@@ -712,6 +708,15 @@ void DwarfException::EmitExceptionTable() {
+   Asm->EmitAlignment(2);
+ }
+ 
++void DwarfException::EmitTypeInfoReference(const GlobalVariable *GV,
++                                           unsigned TTypeEncoding) {
++  if (GV)
++    Asm->EmitReference(GV, TTypeEncoding);
++  else
++    Asm->OutStreamer.EmitIntValue(0,Asm->GetSizeOfEncodedValue(TTypeEncoding),
++                                  0);
++}
++
+ /// EndModule - Emit all exception information that should come after the
+ /// content.
+ void DwarfException::EndModule() {
+diff --git a/llvm-3.1/lib/CodeGen/AsmPrinter/DwarfException.h b/llvm-3.1/lib/CodeGen/AsmPrinter/DwarfException.h
+index b5f86ab..f361d36 100644
+--- a/llvm-3.1/lib/CodeGen/AsmPrinter/DwarfException.h
++++ b/llvm-3.1/lib/CodeGen/AsmPrinter/DwarfException.h
+@@ -138,6 +138,9 @@ public:
+ 
+   /// EndFunction - Gather and emit post-function exception information.
+   virtual void EndFunction();
++
++  virtual void EmitTypeInfoReference(const GlobalVariable *GV,
++                                     unsigned TTypeEncoding);
+ };
+ 
+ class DwarfCFIException : public DwarfException {
+@@ -203,6 +206,9 @@ public:
+ 
+   /// EndFunction - Gather and emit post-function exception information.
+   virtual void EndFunction();
++
++  virtual void EmitTypeInfoReference(const GlobalVariable *GV,
++                                     unsigned TTypeEncoding);
+ };
+ 
+ class Win64Exception : public DwarfException {
+diff --git a/llvm-3.1/tools/clang/include/clang/Driver/Options.td b/llvm-3.1/tools/clang/include/clang/Driver/Options.td
+index 6d138b0..3a31ea1 100644
+--- a/llvm-3.1/tools/clang/include/clang/Driver/Options.td
++++ b/llvm-3.1/tools/clang/include/clang/Driver/Options.td
+@@ -651,6 +651,7 @@ def mno_thumb : Flag<"-mno-thumb">, Group<m_Group>;
+ def marm : Flag<"-marm">, Alias<mno_thumb>;
+ 
+ def mignore_has_ras : Flag<"-mignore-has-ras">;
++def mehabi : Flag<"-mehabi">;
+ 
+ def mno_warn_nonportable_cfstrings : Flag<"-mno-warn-nonportable-cfstrings">, Group<m_Group>;
+ def mno_omit_leaf_frame_pointer : Flag<"-mno-omit-leaf-frame-pointer">, Group<f_Group>;
+diff --git a/llvm-3.1/tools/clang/lib/Driver/Tools.cpp b/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
+index 2958393..b69e838 100644
+--- a/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
++++ b/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
+@@ -756,6 +756,14 @@ void Clang::AddARMTargetArgs(const ArgList &Args,
+       CmdArgs.push_back("-mno-global-merge");
+   }
+ 
++  if (Args.hasArg(options::OPT_mehabi)) {
++    CmdArgs.push_back("-backend-option");
++    CmdArgs.push_back("-arm-enable-ehabi");
++
++    CmdArgs.push_back("-backend-option");
++    CmdArgs.push_back("-arm-enable-ehabi-descriptors");
++  }
++
+   if (Args.hasArg(options::OPT_mignore_has_ras)) {
+     CmdArgs.push_back("-backend-option");
+     CmdArgs.push_back("-arm-ignore-has-ras");
+-- 
+1.7.7.3
+
