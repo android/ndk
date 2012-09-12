@@ -1,0 +1,276 @@
+From 151501a13549a038efe4d67954175ead62fe16eb Mon Sep 17 00:00:00 2001
+From: Logan Chien <loganchien@google.com>
+Date: Wed, 12 Sep 2012 13:58:22 +0800
+Subject: [PATCH] Use proper postfix for pre-defined LDBL_*.
+
+---
+ .../tools/clang/lib/Frontend/InitPreprocessor.cpp  |   49 +++++++++--------
+ llvm-3.1/tools/clang/test/Preprocessor/init.c      |   56 ++++++++++----------
+ 2 files changed, 53 insertions(+), 52 deletions(-)
+
+diff --git a/llvm-3.1/tools/clang/lib/Frontend/InitPreprocessor.cpp b/llvm-3.1/tools/clang/lib/Frontend/InitPreprocessor.cpp
+index 93d49b0..9d059c5 100644
+--- a/llvm-3.1/tools/clang/lib/Frontend/InitPreprocessor.cpp
++++ b/llvm-3.1/tools/clang/lib/Frontend/InitPreprocessor.cpp
+@@ -102,51 +102,52 @@ static T PickFP(const llvm::fltSemantics *Sem, T IEEESingleVal,
+ }
+ 
+ static void DefineFloatMacros(MacroBuilder &Builder, StringRef Prefix,
+-                              const llvm::fltSemantics *Sem) {
++                              const llvm::fltSemantics *Sem,
++                              StringRef FmtPostfix) {
+   const char *DenormMin, *Epsilon, *Max, *Min;
+-  DenormMin = PickFP(Sem, "1.40129846e-45F", "4.9406564584124654e-324",
+-                     "3.64519953188247460253e-4951L",
+-                     "4.94065645841246544176568792868221e-324L",
+-                     "6.47517511943802511092443895822764655e-4966L");
++  DenormMin = PickFP(Sem, "1.40129846e-45", "4.9406564584124654e-324",
++                     "3.64519953188247460253e-4951",
++                     "4.94065645841246544176568792868221e-324",
++                     "6.47517511943802511092443895822764655e-4966");
+   int Digits = PickFP(Sem, 6, 15, 18, 31, 33);
+-  Epsilon = PickFP(Sem, "1.19209290e-7F", "2.2204460492503131e-16",
+-                   "1.08420217248550443401e-19L",
+-                   "4.94065645841246544176568792868221e-324L",
+-                   "1.92592994438723585305597794258492732e-34L");
++  Epsilon = PickFP(Sem, "1.19209290e-7", "2.2204460492503131e-16",
++                   "1.08420217248550443401e-19",
++                   "4.94065645841246544176568792868221e-324",
++                   "1.92592994438723585305597794258492732e-34");
+   int MantissaDigits = PickFP(Sem, 24, 53, 64, 106, 113);
+   int Min10Exp = PickFP(Sem, -37, -307, -4931, -291, -4931);
+   int Max10Exp = PickFP(Sem, 38, 308, 4932, 308, 4932);
+   int MinExp = PickFP(Sem, -125, -1021, -16381, -968, -16381);
+   int MaxExp = PickFP(Sem, 128, 1024, 16384, 1024, 16384);
+-  Min = PickFP(Sem, "1.17549435e-38F", "2.2250738585072014e-308",
+-               "3.36210314311209350626e-4932L",
+-               "2.00416836000897277799610805135016e-292L",
+-               "3.36210314311209350626267781732175260e-4932L");
+-  Max = PickFP(Sem, "3.40282347e+38F", "1.7976931348623157e+308",
+-               "1.18973149535723176502e+4932L",
+-               "1.79769313486231580793728971405301e+308L",
+-               "1.18973149535723176508575932662800702e+4932L");
++  Min = PickFP(Sem, "1.17549435e-38", "2.2250738585072014e-308",
++               "3.36210314311209350626e-4932",
++               "2.00416836000897277799610805135016e-292",
++               "3.36210314311209350626267781732175260e-4932");
++  Max = PickFP(Sem, "3.40282347e+38", "1.7976931348623157e+308",
++               "1.18973149535723176502e+4932",
++               "1.79769313486231580793728971405301e+308",
++               "1.18973149535723176508575932662800702e+4932");
+ 
+   SmallString<32> DefPrefix;
+   DefPrefix = "__";
+   DefPrefix += Prefix;
+   DefPrefix += "_";
+ 
+-  Builder.defineMacro(DefPrefix + "DENORM_MIN__", DenormMin);
++  Builder.defineMacro(DefPrefix + "DENORM_MIN__", Twine(DenormMin, FmtPostfix));
+   Builder.defineMacro(DefPrefix + "HAS_DENORM__");
+   Builder.defineMacro(DefPrefix + "DIG__", Twine(Digits));
+-  Builder.defineMacro(DefPrefix + "EPSILON__", Twine(Epsilon));
++  Builder.defineMacro(DefPrefix + "EPSILON__", Twine(Epsilon, FmtPostfix));
+   Builder.defineMacro(DefPrefix + "HAS_INFINITY__");
+   Builder.defineMacro(DefPrefix + "HAS_QUIET_NAN__");
+   Builder.defineMacro(DefPrefix + "MANT_DIG__", Twine(MantissaDigits));
+ 
+   Builder.defineMacro(DefPrefix + "MAX_10_EXP__", Twine(Max10Exp));
+   Builder.defineMacro(DefPrefix + "MAX_EXP__", Twine(MaxExp));
+-  Builder.defineMacro(DefPrefix + "MAX__", Twine(Max));
++  Builder.defineMacro(DefPrefix + "MAX__", Twine(Max, FmtPostfix));
+ 
+   Builder.defineMacro(DefPrefix + "MIN_10_EXP__","("+Twine(Min10Exp)+")");
+   Builder.defineMacro(DefPrefix + "MIN_EXP__", "("+Twine(MinExp)+")");
+-  Builder.defineMacro(DefPrefix + "MIN__", Twine(Min));
++  Builder.defineMacro(DefPrefix + "MIN__", Twine(Min, FmtPostfix));
+ }
+ 
+ 
+@@ -490,9 +491,9 @@ static void InitializePredefinedMacros(const TargetInfo &TI,
+   DefineType("__CHAR16_TYPE__", TI.getChar16Type(), Builder);
+   DefineType("__CHAR32_TYPE__", TI.getChar32Type(), Builder);
+ 
+-  DefineFloatMacros(Builder, "FLT", &TI.getFloatFormat());
+-  DefineFloatMacros(Builder, "DBL", &TI.getDoubleFormat());
+-  DefineFloatMacros(Builder, "LDBL", &TI.getLongDoubleFormat());
++  DefineFloatMacros(Builder, "FLT", &TI.getFloatFormat(), "F");
++  DefineFloatMacros(Builder, "DBL", &TI.getDoubleFormat(), "");
++  DefineFloatMacros(Builder, "LDBL", &TI.getLongDoubleFormat(), "L");
+ 
+   // Define a __POINTER_WIDTH__ macro for stdint.h.
+   Builder.defineMacro("__POINTER_WIDTH__",
+diff --git a/llvm-3.1/tools/clang/test/Preprocessor/init.c b/llvm-3.1/tools/clang/test/Preprocessor/init.c
+index 0505fff..b8ef33d 100644
+--- a/llvm-3.1/tools/clang/test/Preprocessor/init.c
++++ b/llvm-3.1/tools/clang/test/Preprocessor/init.c
+@@ -171,19 +171,19 @@
+ // ARM:#define __INTPTR_TYPE__ long int
+ // ARM:#define __INTPTR_WIDTH__ 32
+ // ARM:#define __INT_MAX__ 2147483647
+-// ARM:#define __LDBL_DENORM_MIN__ 4.9406564584124654e-324
++// ARM:#define __LDBL_DENORM_MIN__ 4.9406564584124654e-324L
+ // ARM:#define __LDBL_DIG__ 15
+-// ARM:#define __LDBL_EPSILON__ 2.2204460492503131e-16
++// ARM:#define __LDBL_EPSILON__ 2.2204460492503131e-16L
+ // ARM:#define __LDBL_HAS_DENORM__ 1
+ // ARM:#define __LDBL_HAS_INFINITY__ 1
+ // ARM:#define __LDBL_HAS_QUIET_NAN__ 1
+ // ARM:#define __LDBL_MANT_DIG__ 53
+ // ARM:#define __LDBL_MAX_10_EXP__ 308
+ // ARM:#define __LDBL_MAX_EXP__ 1024
+-// ARM:#define __LDBL_MAX__ 1.7976931348623157e+308
++// ARM:#define __LDBL_MAX__ 1.7976931348623157e+308L
+ // ARM:#define __LDBL_MIN_10_EXP__ (-307)
+ // ARM:#define __LDBL_MIN_EXP__ (-1021)
+-// ARM:#define __LDBL_MIN__ 2.2250738585072014e-308
++// ARM:#define __LDBL_MIN__ 2.2250738585072014e-308L
+ // ARM:#define __LITTLE_ENDIAN__ 1
+ // ARM:#define __LONG_LONG_MAX__ 9223372036854775807LL
+ // ARM:#define __LONG_MAX__ 2147483647L
+@@ -463,19 +463,19 @@
+ // MIPS32BE:#define __INTPTR_TYPE__ long int
+ // MIPS32BE:#define __INTPTR_WIDTH__ 32
+ // MIPS32BE:#define __INT_MAX__ 2147483647
+-// MIPS32BE:#define __LDBL_DENORM_MIN__ 4.9406564584124654e-324
++// MIPS32BE:#define __LDBL_DENORM_MIN__ 4.9406564584124654e-324L
+ // MIPS32BE:#define __LDBL_DIG__ 15
+-// MIPS32BE:#define __LDBL_EPSILON__ 2.2204460492503131e-16
++// MIPS32BE:#define __LDBL_EPSILON__ 2.2204460492503131e-16L
+ // MIPS32BE:#define __LDBL_HAS_DENORM__ 1
+ // MIPS32BE:#define __LDBL_HAS_INFINITY__ 1
+ // MIPS32BE:#define __LDBL_HAS_QUIET_NAN__ 1
+ // MIPS32BE:#define __LDBL_MANT_DIG__ 53
+ // MIPS32BE:#define __LDBL_MAX_10_EXP__ 308
+ // MIPS32BE:#define __LDBL_MAX_EXP__ 1024
+-// MIPS32BE:#define __LDBL_MAX__ 1.7976931348623157e+308
++// MIPS32BE:#define __LDBL_MAX__ 1.7976931348623157e+308L
+ // MIPS32BE:#define __LDBL_MIN_10_EXP__ (-307)
+ // MIPS32BE:#define __LDBL_MIN_EXP__ (-1021)
+-// MIPS32BE:#define __LDBL_MIN__ 2.2250738585072014e-308
++// MIPS32BE:#define __LDBL_MIN__ 2.2250738585072014e-308L
+ // MIPS32BE:#define __LONG_LONG_MAX__ 9223372036854775807LL
+ // MIPS32BE:#define __LONG_MAX__ 2147483647L
+ // MIPS32BE:#define __MIPSEB 1
+@@ -575,19 +575,19 @@
+ // MIPS32EL:#define __INTPTR_TYPE__ long int
+ // MIPS32EL:#define __INTPTR_WIDTH__ 32
+ // MIPS32EL:#define __INT_MAX__ 2147483647
+-// MIPS32EL:#define __LDBL_DENORM_MIN__ 4.9406564584124654e-324
++// MIPS32EL:#define __LDBL_DENORM_MIN__ 4.9406564584124654e-324L
+ // MIPS32EL:#define __LDBL_DIG__ 15
+-// MIPS32EL:#define __LDBL_EPSILON__ 2.2204460492503131e-16
++// MIPS32EL:#define __LDBL_EPSILON__ 2.2204460492503131e-16L
+ // MIPS32EL:#define __LDBL_HAS_DENORM__ 1
+ // MIPS32EL:#define __LDBL_HAS_INFINITY__ 1
+ // MIPS32EL:#define __LDBL_HAS_QUIET_NAN__ 1
+ // MIPS32EL:#define __LDBL_MANT_DIG__ 53
+ // MIPS32EL:#define __LDBL_MAX_10_EXP__ 308
+ // MIPS32EL:#define __LDBL_MAX_EXP__ 1024
+-// MIPS32EL:#define __LDBL_MAX__ 1.7976931348623157e+308
++// MIPS32EL:#define __LDBL_MAX__ 1.7976931348623157e+308L
+ // MIPS32EL:#define __LDBL_MIN_10_EXP__ (-307)
+ // MIPS32EL:#define __LDBL_MIN_EXP__ (-1021)
+-// MIPS32EL:#define __LDBL_MIN__ 2.2250738585072014e-308
++// MIPS32EL:#define __LDBL_MIN__ 2.2250738585072014e-308L
+ // MIPS32EL:#define __LONG_LONG_MAX__ 9223372036854775807LL
+ // MIPS32EL:#define __LONG_MAX__ 2147483647L
+ // MIPS32EL:#define __MIPSEL 1
+@@ -911,19 +911,19 @@
+ // MSP430:#define __INTPTR_TYPE__ short
+ // MSP430:#define __INTPTR_WIDTH__ 16
+ // MSP430:#define __INT_MAX__ 32767
+-// MSP430:#define __LDBL_DENORM_MIN__ 4.9406564584124654e-324
++// MSP430:#define __LDBL_DENORM_MIN__ 4.9406564584124654e-324L
+ // MSP430:#define __LDBL_DIG__ 15
+-// MSP430:#define __LDBL_EPSILON__ 2.2204460492503131e-16
++// MSP430:#define __LDBL_EPSILON__ 2.2204460492503131e-16L
+ // MSP430:#define __LDBL_HAS_DENORM__ 1
+ // MSP430:#define __LDBL_HAS_INFINITY__ 1
+ // MSP430:#define __LDBL_HAS_QUIET_NAN__ 1
+ // MSP430:#define __LDBL_MANT_DIG__ 53
+ // MSP430:#define __LDBL_MAX_10_EXP__ 308
+ // MSP430:#define __LDBL_MAX_EXP__ 1024
+-// MSP430:#define __LDBL_MAX__ 1.7976931348623157e+308
++// MSP430:#define __LDBL_MAX__ 1.7976931348623157e+308L
+ // MSP430:#define __LDBL_MIN_10_EXP__ (-307)
+ // MSP430:#define __LDBL_MIN_EXP__ (-1021)
+-// MSP430:#define __LDBL_MIN__ 2.2250738585072014e-308
++// MSP430:#define __LDBL_MIN__ 2.2250738585072014e-308L
+ // MSP430:#define __LONG_LONG_MAX__ 9223372036854775807LL
+ // MSP430:#define __LONG_MAX__ 2147483647L
+ // MSP430:#define __MSP430__ 1
+@@ -1407,19 +1407,19 @@
+ // SPARC:#define __INTPTR_TYPE__ long int
+ // SPARC:#define __INTPTR_WIDTH__ 32
+ // SPARC:#define __INT_MAX__ 2147483647
+-// SPARC:#define __LDBL_DENORM_MIN__ 4.9406564584124654e-324
++// SPARC:#define __LDBL_DENORM_MIN__ 4.9406564584124654e-324L
+ // SPARC:#define __LDBL_DIG__ 15
+-// SPARC:#define __LDBL_EPSILON__ 2.2204460492503131e-16
++// SPARC:#define __LDBL_EPSILON__ 2.2204460492503131e-16L
+ // SPARC:#define __LDBL_HAS_DENORM__ 1
+ // SPARC:#define __LDBL_HAS_INFINITY__ 1
+ // SPARC:#define __LDBL_HAS_QUIET_NAN__ 1
+ // SPARC:#define __LDBL_MANT_DIG__ 53
+ // SPARC:#define __LDBL_MAX_10_EXP__ 308
+ // SPARC:#define __LDBL_MAX_EXP__ 1024
+-// SPARC:#define __LDBL_MAX__ 1.7976931348623157e+308
++// SPARC:#define __LDBL_MAX__ 1.7976931348623157e+308L
+ // SPARC:#define __LDBL_MIN_10_EXP__ (-307)
+ // SPARC:#define __LDBL_MIN_EXP__ (-1021)
+-// SPARC:#define __LDBL_MIN__ 2.2250738585072014e-308
++// SPARC:#define __LDBL_MIN__ 2.2250738585072014e-308L
+ // SPARC:#define __LONG_LONG_MAX__ 9223372036854775807LL
+ // SPARC:#define __LONG_MAX__ 2147483647L
+ // SPARC:#define __NO_INLINE__ 1
+@@ -1462,19 +1462,19 @@
+ // TCE:#define __CHAR16_TYPE__ unsigned short
+ // TCE:#define __CHAR32_TYPE__ unsigned int
+ // TCE:#define __CHAR_BIT__ 8
+-// TCE:#define __DBL_DENORM_MIN__ 1.40129846e-45F
++// TCE:#define __DBL_DENORM_MIN__ 1.40129846e-45
+ // TCE:#define __DBL_DIG__ 6
+-// TCE:#define __DBL_EPSILON__ 1.19209290e-7F
++// TCE:#define __DBL_EPSILON__ 1.19209290e-7
+ // TCE:#define __DBL_HAS_DENORM__ 1
+ // TCE:#define __DBL_HAS_INFINITY__ 1
+ // TCE:#define __DBL_HAS_QUIET_NAN__ 1
+ // TCE:#define __DBL_MANT_DIG__ 24
+ // TCE:#define __DBL_MAX_10_EXP__ 38
+ // TCE:#define __DBL_MAX_EXP__ 128
+-// TCE:#define __DBL_MAX__ 3.40282347e+38F
++// TCE:#define __DBL_MAX__ 3.40282347e+38
+ // TCE:#define __DBL_MIN_10_EXP__ (-37)
+ // TCE:#define __DBL_MIN_EXP__ (-125)
+-// TCE:#define __DBL_MIN__ 1.17549435e-38F
++// TCE:#define __DBL_MIN__ 1.17549435e-38
+ // TCE:#define __DECIMAL_DIG__ -1
+ // TCE:#define __FLT_DENORM_MIN__ 1.40129846e-45F
+ // TCE:#define __FLT_DIG__ 6
+@@ -1500,19 +1500,19 @@
+ // TCE:#define __INTPTR_TYPE__ int
+ // TCE:#define __INTPTR_WIDTH__ 32
+ // TCE:#define __INT_MAX__ 2147483647
+-// TCE:#define __LDBL_DENORM_MIN__ 1.40129846e-45F
++// TCE:#define __LDBL_DENORM_MIN__ 1.40129846e-45L
+ // TCE:#define __LDBL_DIG__ 6
+-// TCE:#define __LDBL_EPSILON__ 1.19209290e-7F
++// TCE:#define __LDBL_EPSILON__ 1.19209290e-7L
+ // TCE:#define __LDBL_HAS_DENORM__ 1
+ // TCE:#define __LDBL_HAS_INFINITY__ 1
+ // TCE:#define __LDBL_HAS_QUIET_NAN__ 1
+ // TCE:#define __LDBL_MANT_DIG__ 24
+ // TCE:#define __LDBL_MAX_10_EXP__ 38
+ // TCE:#define __LDBL_MAX_EXP__ 128
+-// TCE:#define __LDBL_MAX__ 3.40282347e+38F
++// TCE:#define __LDBL_MAX__ 3.40282347e+38L
+ // TCE:#define __LDBL_MIN_10_EXP__ (-37)
+ // TCE:#define __LDBL_MIN_EXP__ (-125)
+-// TCE:#define __LDBL_MIN__ 1.17549435e-38F
++// TCE:#define __LDBL_MIN__ 1.17549435e-38L
+ // TCE:#define __LONG_LONG_MAX__ 2147483647LL
+ // TCE:#define __LONG_MAX__ 2147483647L
+ // TCE:#define __NO_INLINE__ 1
+-- 
+1.7.7.3
+
