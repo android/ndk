@@ -41,7 +41,8 @@ ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
                      -mfloat-abi=softfp \
                      -mfpu=vfp
 
-    TARGET_LDFLAGS += -Wl,--fix-cortex-a8
+    TARGET_LDFLAGS += -march=armv7-a \
+                     -Wl,--fix-cortex-a8
 else
     TARGET_CFLAGS += -march=armv5te \
                             -mtune=xscale \
