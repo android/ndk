@@ -1,7 +1,7 @@
 # Check that the libc.so for all platforms, and all architectures
 # Does not export 'atexit' and '__dso_handle' symbols.
 #
-LIBRARIES=$(cd $NDK && find platforms -name "libc.so")
+LIBRARIES=$(cd $NDK && find platforms -name "libc.so" | sed -e 's!^!'$NDK'/!')
 FAILURE=
 COUNT=0
 for LIB in $LIBRARIES; do
