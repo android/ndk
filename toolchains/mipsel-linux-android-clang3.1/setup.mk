@@ -50,7 +50,7 @@ LLVM_TRIPLE := mipsel-none-linux-android
 
 TARGET_CFLAGS := \
         -B$(TOOLCHAIN_PREBUILT_ROOT) \
-        -ccc-host-triple $(LLVM_TRIPLE) \
+        -target $(LLVM_TRIPLE) \
         -fpic \
         -fno-strict-aliasing \
         -finline-functions \
@@ -60,7 +60,7 @@ TARGET_CFLAGS := \
 
 TARGET_LDFLAGS := \
         -B$(TOOLCHAIN_PREBUILT_ROOT) \
-        -ccc-host-triple $(LLVM_TRIPLE)
+        -target $(LLVM_TRIPLE)
 
 TARGET_C_INCLUDES := \
     $(SYSROOT)/usr/include
