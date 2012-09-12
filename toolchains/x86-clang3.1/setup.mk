@@ -46,7 +46,7 @@ LLVM_TRIPLE := i686-none-linux-android
 
 TARGET_CFLAGS := \
     -B$(TOOLCHAIN_PREBUILT_ROOT) \
-    -ccc-host-triple $(LLVM_TRIPLE) \
+    -target $(LLVM_TRIPLE) \
     -ffunction-sections \
     -funwind-tables \
     -fno-builtin \
@@ -58,7 +58,7 @@ TARGET_C_INCLUDES := \
 # Add and LDFLAGS for the target here
 TARGET_LDFLAGS := \
     -B$(TOOLCHAIN_PREBUILT_ROOT) \
-    -ccc-host-triple $(LLVM_TRIPLE)
+    -target $(LLVM_TRIPLE)
 
 TARGET_x86_release_CFLAGS :=  -O2 \
                               -fomit-frame-pointer \
