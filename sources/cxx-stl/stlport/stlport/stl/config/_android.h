@@ -70,7 +70,27 @@
 #define _STLP_NO_UNCAUGHT_EXCEPT_SUPPORT 1
 #define _STLP_NO_UNEXPECTED_EXCEPT_SUPPORT 1
 
+#ifndef _ANDROID_NDK_BLAZE_
 // Android does have include_next but it doesn't work well in our build system.
 #undef _STLP_HAS_INCLUDE_NEXT
+#endif
+
+/* Following platforms has no long double:
+ *   - Alpha
+ *   - PowerPC
+ *   - SPARC, 32-bits (64-bits platform has long double)
+ *   - MIPS, 32-bits
+ *   - ARM
+ *   - SH4
+ */
+#  if defined(__alpha__) || \
+      defined(__ppc__) || defined(PPC) || defined(__powerpc__) || \
+      ((defined(__sparc) || defined(__sparcv9) || defined(__sparcv8plus)) && !defined ( __WORD64 ) && !defined(__arch64__)) /* ? */ || \
+      (defined(_MIPS_SIM) && (_MIPS_SIM == _ABIO32)) || \
+      defined(__arm__) || \
+      defined(__sh__)
+ /* #  if defined(__NO_LONG_DOUBLE_MATH) */
+#    define _STLP_NO_LONG_DOUBLE
+#  endif
 
 #endif /* __stl_config__android_h */
