@@ -153,6 +153,17 @@ rm -rf $TOOLCHAIN_BUILD_PREFIX/lib/*.a
 rm -rf $TOOLCHAIN_BUILD_PREFIX/lib/*.so
 rm -rf $TOOLCHAIN_BUILD_PREFIX/share
 
+UNUSED_LLVM_EXECUTABLES="
+bugpoint c-index-test clang-tblgen lli llvm-ar llvm-as llvm-bcanalyzer
+llvm-config llvm-cov llvm-diff llvm-dwarfdump llvm-extract llvm-ld llvm-mc
+llvm-nm llvm-objdump llvm-prof llvm-ranlib llvm-readobj llvm-rtdyld llvm-size
+llvm-stress llvm-stub llvm-tblgen macho-dump"
+
+for i in $UNUSED_LLVM_EXECUTABLES; do
+    rm -f $TOOLCHAIN_BUILD_PREFIX/bin/$i
+    rm -f $TOOLCHAIN_BUILD_PREFIX/bin/$i.exe
+done
+
 # copy to toolchain path
 run copy_directory "$TOOLCHAIN_BUILD_PREFIX" "$TOOLCHAIN_PATH"
 
