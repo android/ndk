@@ -50,7 +50,8 @@ TARGET_CFLAGS := \
     -ffunction-sections \
     -funwind-tables \
     -fno-builtin \
-    -fstack-protector
+    -fstack-protector \
+    -fPIC
 
 TARGET_C_INCLUDES := \
     $(SYSROOT)/usr/include
