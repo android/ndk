@@ -185,7 +185,12 @@ build_gnustl_for_abi ()
     if [ $LIBTYPE = "static" ]; then
         # Ensure we disable visibility for the static library to reduce the
         # size of the code that will be linked against it.
-        LIBTYPE_FLAGS="--enable-static --disable-shared --disable-visibility"
+        LIBTYPE_FLAGS="--enable-static --disable-shared"
+        if [ $GCC_VERSION = "4.4.3" || $GCC_VERSION = "4.6" ]; then
+            LIBTYPE_FLAGS=$LIBTYPE_FLAGS" --disable-visibility"
+        else
+            LIBTYPE_FLAGS=$LIBTYPE_FLAGS" --disable-libstdcxx-visibility"
+        fi
         CXXFLAGS=$CXXFLAGS" -fvisibility=hidden -fvisibility-inlines-hidden"
     else
         LIBTYPE_FLAGS="--disable-static --enable-shared"
@@ -193,6 +198,10 @@ build_gnustl_for_abi ()
     fi
 
     PROJECT="gnustl_$LIBTYPE gcc-$GCC_VERSION $ABI"
+    OTHER_FLAGS=
+    if [ $GCC_VERSION = "4.4.3" ]; then
+        OTHER_FLAGS="--enable-threads"
+    fi
     echo "$PROJECT: configuring"
     mkdir -p $BUILDDIR && rm -rf $BUILDDIR/* &&
     cd $BUILDDIR &&
@@ -202,7 +211,7 @@ build_gnustl_for_abi ()
         $LIBTYPE_FLAGS \
         --disable-symvers \
         --disable-multilib \
-        --enable-threads \
+        $OTHER_FLAGS \
         --disable-nls \
         --disable-sjlj-exceptions \
         --disable-tls \
