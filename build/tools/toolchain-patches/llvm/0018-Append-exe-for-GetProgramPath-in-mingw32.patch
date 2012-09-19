@@ -1,0 +1,51 @@
+--- a/llvm-3.1/tools/clang/lib/Driver/Driver.cpp	2012-09-12 14:26:52.000000000 -0700
++++ b/llvm-3.1/tools/clang/lib/Driver/Driver.cpp	2012-09-18 01:07:22.957409591 -0700
+@@ -1534,8 +1534,16 @@
+ 
+ std::string Driver::GetProgramPath(const char *Name, const ToolChain &TC,
+                                    bool WantFile) const {
++  std::string N(Name);
++#ifdef __MINGW32__
++  // We expect callers never pass Name ends with uppercase ".EXE"
++  std::string Suffix(".exe");
++  if (N.length() < Suffix.length() ||
++      (N.compare(N.length() - Suffix.length(), Suffix.length(), Suffix)) != 0)
++    N += ".exe";
++#endif
+   // FIXME: Needs a better variable than DefaultTargetTriple
+-  std::string TargetSpecificExecutable(DefaultTargetTriple + "-" + Name);
++  std::string TargetSpecificExecutable(DefaultTargetTriple + "-" + N);
+   // Respect a limited subset of the '-Bprefix' functionality in GCC by
+   // attempting to use this prefix when lokup up program paths.
+   for (Driver::prefix_list::const_iterator it = PrefixDirs.begin(),
+@@ -1544,7 +1552,7 @@
+     P.appendComponent(TargetSpecificExecutable);
+     if (isPathExecutable(P, WantFile)) return P.str();
+     P.eraseComponent();
+-    P.appendComponent(Name);
++    P.appendComponent(N);
+     if (isPathExecutable(P, WantFile)) return P.str();
+   }
+ 
+@@ -1555,7 +1563,7 @@
+     P.appendComponent(TargetSpecificExecutable);
+     if (isPathExecutable(P, WantFile)) return P.str();
+     P.eraseComponent();
+-    P.appendComponent(Name);
++    P.appendComponent(N);
+     if (isPathExecutable(P, WantFile)) return P.str();
+   }
+ 
+@@ -1565,10 +1573,11 @@
+   if (!P.empty())
+     return P.str();
+ 
+-  P = llvm::sys::Path(llvm::sys::Program::FindProgramByName(Name));
++  P = llvm::sys::Path(llvm::sys::Program::FindProgramByName(N));
+   if (!P.empty())
+     return P.str();
+ 
++  // Return the original Name, not N
+   return Name;
+ }
+ 
