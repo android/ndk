@@ -42,6 +42,8 @@ The output will be placed in appropriate sub-directories of
 <ndk>/$GNUSTL_SUBDIR/<gcc-version>, but you can override this with the --out-dir=<path>
 option.
 "
+GCC_VERSION_LIST=$DEFAULT_GCC_VERSION_LIST
+register_var_option "--gcc-ver=<vers>" GCC_VERSION_LIST "List of GCC versions"
 
 PACKAGE_DIR=
 register_var_option "--package-dir=<path>" PACKAGE_DIR "Put prebuilt tarballs into <path>."
@@ -59,14 +61,10 @@ register_var_option "--out-dir=<path>" OUT_DIR "Specify output directory directl
 ABIS=$(spaces_to_commas $PREBUILT_ABIS)
 register_var_option "--abis=<list>" ABIS "Specify list of target ABIs."
 
-JOBS="$BUILD_NUM_CPUS"
-register_var_option "-j<number>" JOBS "Use <number> build jobs in parallel"
-
 NO_MAKEFILE=
 register_var_option "--no-makefile" NO_MAKEFILE "Do not use makefile to speed-up build"
 
-NUM_JOBS=$BUILD_NUM_CPUS
-register_var_option "-j<number>" NUM_JOBS "Run <number> build jobs in parallel"
+register_jobs_option
 
 extract_parameters "$@"
 
@@ -261,7 +259,7 @@ copy_gnustl_libs ()
 
 
 
-for VERSION in $DEFAULT_GCC_VERSION_LIST; do
+for VERSION in $GCC_VERSION_LIST; do
     for ABI in $ABIS; do
         build_gnustl_for_abi $ABI "$BUILD_DIR" static $VERSION
         build_gnustl_for_abi $ABI "$BUILD_DIR" shared $VERSION
@@ -271,7 +269,7 @@ done
 
 # If needed, package files into tarballs
 if [ -n "$PACKAGE_DIR" ] ; then
-    for VERSION in $DEFAULT_GCC_VERSION_LIST; do
+    for VERSION in $GCC_VERSION_LIST; do
         # First, the headers as a single package for a given gcc version
         PACKAGE="$PACKAGE_DIR/gnu-libstdc++-headers-$VERSION.tar.bz2"
         dump "Packaging: $PACKAGE"
