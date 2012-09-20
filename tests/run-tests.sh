@@ -426,7 +426,7 @@ build_project ()
         fi
     fi
     # build it
-    (cd "$DIR" && run_ndk_build $NDK_BUILD_FLAGS)
+    (run cd "$DIR" && run_ndk_build $NDK_BUILD_FLAGS)
     RET=$?
     if [ -f "$1/BUILD_SHOULD_FAIL" ]; then
         if [ $RET = 0 ]; then
