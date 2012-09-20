@@ -205,7 +205,7 @@ double functions but cast the arguments and return values to the given type. */
 
 /** rough characterization of compiler and native C library
 For the compiler, it can either support long double or not. If it doesn't, the
-macro _STLP_NO_LONG_DOUBLE is not defined and we don't define any long double
+macro _STLP_NO_LONG_DOUBLE is defined and we don't define any long double
 overloads.
 For the native C library the question is whether it has variants with an 'f'
 suffix (for float as opposed to double) or an 'l' suffix (for long double). If
