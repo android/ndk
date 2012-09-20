@@ -1,0 +1,139 @@
+From eeba593364290ec3ea51e191211e1150ac551b24 Mon Sep 17 00:00:00 2001
+From: Logan Chien <loganchien@google.com>
+Date: Thu, 20 Sep 2012 10:55:34 +0800
+Subject: [PATCH] Fix MIPS exception personality relocation.
+
+Some MIPS executable loaders prohibit the relocation
+in the read-only section.  Thus, we have to use
+DW_EH_PE_indirect instead.
+---
+ .../lib/CodeGen/AsmPrinter/DwarfCFIException.cpp   |    3 +-
+ .../lib/CodeGen/TargetLoweringObjectFileImpl.cpp   |   13 +++----
+ llvm-3.1/lib/MC/MCObjectFileInfo.cpp               |   16 ++++++++-
+ llvm-3.1/test/CodeGen/Mips/ehframe-indirect.ll     |   33 ++++++++++++++++++++
+ 4 files changed, 55 insertions(+), 10 deletions(-)
+ create mode 100644 llvm-3.1/test/CodeGen/Mips/ehframe-indirect.ll
+
+diff --git a/llvm-3.1/lib/CodeGen/AsmPrinter/DwarfCFIException.cpp b/llvm-3.1/lib/CodeGen/AsmPrinter/DwarfCFIException.cpp
+index d975f1f..a9d4774 100644
+--- a/llvm-3.1/lib/CodeGen/AsmPrinter/DwarfCFIException.cpp
++++ b/llvm-3.1/lib/CodeGen/AsmPrinter/DwarfCFIException.cpp
+@@ -59,7 +59,8 @@ void DwarfCFIException::EndModule() {
+ 
+   unsigned PerEncoding = TLOF.getPersonalityEncoding();
+ 
+-  if ((PerEncoding & 0x70) != dwarf::DW_EH_PE_pcrel)
++  if ((PerEncoding & 0x70) != dwarf::DW_EH_PE_pcrel &&
++      (PerEncoding & 0x80) != dwarf::DW_EH_PE_indirect)
+     return;
+ 
+   // Emit references to all used personality functions
+diff --git a/llvm-3.1/lib/CodeGen/TargetLoweringObjectFileImpl.cpp b/llvm-3.1/lib/CodeGen/TargetLoweringObjectFileImpl.cpp
+index 3660cf7..840d233 100644
+--- a/llvm-3.1/lib/CodeGen/TargetLoweringObjectFileImpl.cpp
++++ b/llvm-3.1/lib/CodeGen/TargetLoweringObjectFileImpl.cpp
+@@ -49,15 +49,14 @@ TargetLoweringObjectFileELF::getCFIPersonalitySymbol(const GlobalValue *GV,
+                                                      Mangler *Mang,
+                                                 MachineModuleInfo *MMI) const {
+   unsigned Encoding = getPersonalityEncoding();
+-  switch (Encoding & 0x70) {
+-  default:
+-    report_fatal_error("We do not support this DWARF encoding yet!");
+-  case dwarf::DW_EH_PE_absptr:
+-    return  Mang->getSymbol(GV);
+-  case dwarf::DW_EH_PE_pcrel: {
++  if ((Encoding & 0x70) == dwarf::DW_EH_PE_pcrel ||
++      (Encoding & 0x80) == dwarf::DW_EH_PE_indirect) {
+     return getContext().GetOrCreateSymbol(StringRef("DW.ref.") +
+                                           Mang->getSymbol(GV)->getName());
+-  }
++  } else if ((Encoding & 0x70) == dwarf::DW_EH_PE_absptr) {
++    return  Mang->getSymbol(GV);
++  } else {
++    report_fatal_error("We do not support this DWARF encoding yet!");
+   }
+ }
+ 
+diff --git a/llvm-3.1/lib/MC/MCObjectFileInfo.cpp b/llvm-3.1/lib/MC/MCObjectFileInfo.cpp
+index b22ae33..8b2ed03 100644
+--- a/llvm-3.1/lib/MC/MCObjectFileInfo.cpp
++++ b/llvm-3.1/lib/MC/MCObjectFileInfo.cpp
+@@ -219,7 +219,8 @@ void MCObjectFileInfo::InitMachOMCObjectFileInfo(Triple T) {
+ }
+ 
+ void MCObjectFileInfo::InitELFMCObjectFileInfo(Triple T) {
+-  if (T.getArch() == Triple::x86) {
++  switch (T.getArch()) {
++  case Triple::x86:
+     PersonalityEncoding = (RelocM == Reloc::PIC_)
+      ? dwarf::DW_EH_PE_indirect | dwarf::DW_EH_PE_pcrel | dwarf::DW_EH_PE_sdata4
+      : dwarf::DW_EH_PE_absptr;
+@@ -232,7 +233,9 @@ void MCObjectFileInfo::InitELFMCObjectFileInfo(Triple T) {
+     TTypeEncoding = (RelocM == Reloc::PIC_)
+      ? dwarf::DW_EH_PE_indirect | dwarf::DW_EH_PE_pcrel | dwarf::DW_EH_PE_sdata4
+      : dwarf::DW_EH_PE_absptr;
+-  } else if (T.getArch() == Triple::x86_64) {
++    break;
++
++  case Triple::x86_64:
+     FDECFIEncoding = dwarf::DW_EH_PE_pcrel | dwarf::DW_EH_PE_sdata4;
+ 
+     if (RelocM == Reloc::PIC_) {
+@@ -256,6 +259,15 @@ void MCObjectFileInfo::InitELFMCObjectFileInfo(Triple T) {
+       TTypeEncoding = (CMModel == CodeModel::Small)
+         ? dwarf::DW_EH_PE_udata4 : dwarf::DW_EH_PE_absptr;
+     }
++    break;
++
++  case Triple::mips:
++  case Triple::mipsel:
++    PersonalityEncoding = dwarf::DW_EH_PE_indirect;
++    break;
++
++  default:
++    break;
+   }
+ 
+   // Solaris requires different flags for .eh_frame to seemingly every other
+diff --git a/llvm-3.1/test/CodeGen/Mips/ehframe-indirect.ll b/llvm-3.1/test/CodeGen/Mips/ehframe-indirect.ll
+new file mode 100644
+index 0000000..db422a7
+--- /dev/null
++++ b/llvm-3.1/test/CodeGen/Mips/ehframe-indirect.ll
+@@ -0,0 +1,33 @@
++; RUN: llc -march=mipsel < %s | FileCheck %s
++
++define i32 @main() {
++; CHECK: .cfi_startproc
++; CHECK: .cfi_personality 128, DW.ref.__gxx_personality_v0
++
++entry:
++  invoke void @foo() to label %cont unwind label %lpad
++; CHECK: foo
++; CHECK: jalr
++
++lpad:
++  %0 = landingpad { i8*, i32 } personality i8*
++    bitcast (i32 (...)* @__gxx_personality_v0 to i8*) catch i8* null
++  ret i32 0
++
++cont:
++  ret i32 0
++}
++; CHECK: .cfi_endproc
++
++declare i32 @__gxx_personality_v0(...)
++
++declare void @foo()
++
++; CHECK: .hidden DW.ref.__gxx_personality_v0
++; CHECK: .weak DW.ref.__gxx_personality_v0
++; CHECK: .section .data.DW.ref.__gxx_personality_v0,"aGw",@progbits,DW.ref.__gxx_personality_v0,comdat
++; CHECK: .align 2
++; CHECK: .type DW.ref.__gxx_personality_v0,@object
++; CHECK: .size DW.ref.__gxx_personality_v0, 4
++; CHECK: DW.ref.__gxx_personality_v0:
++; CHECK: .4byte __gxx_personality_v0
+-- 
+1.7.7.3
+
