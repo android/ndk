@@ -40,6 +40,14 @@
 PROGDIR=`dirname $0`
 PROGDIR=`cd $PROGDIR && pwd`
 
+# Check if absolute NDK path contain space
+#
+case $PROGDIR in
+    *\ *) echo "ERROR: NDK path cannot contain space"
+          exit 1
+        ;;
+esac
+
 # If NDK_LOG is set to 1 or true in the environment, or the command-line
 # then enable log messages below
 if [ -z "$NDK_LOG" ]; then
