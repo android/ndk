@@ -24,7 +24,18 @@
 # need to launch ndk-gdb from your application project directory
 # after doing ndk-build && ant install && <start-application-on-device>
 #
-. `dirname $0`/build/core/ndk-common.sh
+PROGDIR=`dirname $0`
+PROGDIR=`cd $PROGDIR && pwd`
+
+# Check if absolute NDK path contain space
+#
+case $PROGDIR in
+    *\ *) echo "ERROR: NDK path cannot contain space"
+          exit 1
+        ;;
+esac
+
+. $PROGDIR/build/core/ndk-common.sh
 
 force_32bit_binaries
 
