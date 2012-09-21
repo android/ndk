@@ -134,10 +134,13 @@ If you want to use Neon instructions, you will need one more compiler flag:
 
 Note that this forces the use of VFPv3-D32, as per the ARM specification.
 
-Also, is is *required* to use the following linker flags that routes around
-a CPU bug in some Cortex-A8 implementations:
+Also, make sure the following two flags are provided to linker:
 
-  LDFLAGS='-Wl,--fix-cortex-a8'
+  LDFLAGS='-march=armv7-a -Wl,--fix-cortex-a8'
+
+Note: The first flag instructs linker to pick libgcc.a, libgcov.a and
+      crt*.o tailored for armv7.  The 2nd flag is *required* to routes
+      around a CPU bug in some Cortex-A8 implementations:
 
 If none of the above makes sense to you, it's probably better not to use
 the standalone toolchain, and stick to the NDK build system instead, which
