@@ -29,6 +29,8 @@
 
 PROGNAME=$(basename "$0")
 PROGDIR=$(dirname "$0")
+NDK_ROOT=$(cd "$PROGDIR/../.." && pwd)
+. $NDK_ROOT/build/core/ndk-common.sh
 
 panic () {
     echo "ERROR: $@" >&2; exit 1
@@ -163,11 +165,11 @@ fi
 
 if [ $VERBOSE -ge 2 ]; then
     run_script () {
-        . "$@"
+        $SHELL "$@"
     }
 else
     run_script () {
-        . "$@" >> $LOGFILE 2>&1
+        $SHELL "$@" >> $LOGFILE 2>&1
     }
 fi
 
@@ -243,11 +245,11 @@ if [ -z "$PREFIX" ]; then
 fi
 
 # Remove -gcc or -g++ from prefix if any
-PREFIX=${PREFIX%%-gcc}
-PREFIX=${PREFIX%%-g++}
+PREFIX=${PREFIX%-gcc}
+PREFIX=${PREFIX%-g++}
 
 # Add a trailing dash to the prefix, if there isn't any
-PREFIX=${PREFIX%%-}-
+PREFIX=${PREFIX%-}-
 
 GCC=${PREFIX}gcc
 if [ ! -f "$GCC" ]; then
@@ -315,13 +317,15 @@ elif [ -n "$SYSROOT" ]; then
     COMMON_FLAGS=$COMMON_FLAGS" --sysroot=$SYSROOT"
 else
     # Auto-detect sysroot
-    NDK_ROOT=$(cd "$PROGDIR/../.." && pwd)
     SYSROOT=$NDK_ROOT/platforms/android-9/arch-$ARCH
     if [ ! -d "$SYSROOT" ]; then
         panic "Can't find sysroot file, use --sysroot to point to valid one: $SYSROOT"
     fi
     if [ ! -f "$SYSROOT/usr/lib/libc.so" ]; then
         panic "Incomplete sysroot, use --sysroot to point to valid one: $SYSROOT"
+    fi
+    if [ $HOST_OS = cygwin ]; then
+        SYSROOT=`cygpath -m $SYSROOT`
     fi
     dump "Auto-config: --sysroot=$SYSROOT"
     COMMON_FLAGS=$COMMON_FLAGS" --sysroot=$SYSROOT"
