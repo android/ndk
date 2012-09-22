@@ -438,6 +438,10 @@ for SYSTEM in $SYSTEMS; do
             ;;
     esac
     echo "Creating $ARCHIVE"
+    # make all file universally readable, and all executable (including directory)
+    # universally executable, punt intended
+    find $DSTDIR -exec chmod a+r {} \;
+    find $DSTDIR -executable -exec chmod a+x {} \;
     pack_archive "$OUT_DIR/$ARCHIVE" "$TMPDIR" "$RELEASE_PREFIX"
     fail_panic "Could not create archive: $OUT_DIR/$ARCHIVE"
 #    chmod a+r $TMPDIR/$ARCHIVE
