@@ -1067,6 +1067,14 @@ get_toolchain_binprefix_for_arch ()
     echo "$BINPREFIX"
 }
 
+# Return llvm-ndk toochain binary path prefix
+# $1: optional, system name, defaults to $HOST_TAG
+get_llvm_ndk_toolchain_binprefix ()
+{
+    local SYSTEM=${1:-$(get_prebuilt_host_tag)}
+    echo "toolchains/llvm-ndk/prebuilt/$SYSTEM/bin/llvm-ndk-"
+}
+
 # Return the default toochain binary path prefix for a given architecture
 # For example: arm -> toolchains/arm-linux-androideabi-4.6/prebuilt/<system>/bin/arm-linux-androideabi-
 # $1: Architecture name

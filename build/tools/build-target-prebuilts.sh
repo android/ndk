@@ -89,9 +89,17 @@ dump "Building $ABIS gabi++ binaries..."
 run $BUILDTOOLS/build-gabi++.sh $FLAGS
 fail_panic "Could not build gabi++!"
 
+dump "Building gabi++ bitcode..."
+run $BUILDTOOLS/build-gabi++-bitcode.sh $FLAGS
+fail_panic "Could not build gabi++ bitcode!"
+
 dump "Building $ABIS stlport binaries..."
 run $BUILDTOOLS/build-stlport.sh $FLAGS
 fail_panic "Could not build stlport!"
+
+dump "Building stlport bitcode..."
+run $BUILDTOOLS/build-stlport-bitcode.sh $FLAGS
+fail_panic "Could not build stlport bitcode!"
 
 dump "Building $ABIS gnustl binaries..."
 run $BUILDTOOLS/build-gnu-libstdc++.sh $FLAGS "$SRC_DIR"

@@ -264,6 +264,11 @@ for SYSTEM in $SYSTEMS; do
         fail_panic "Could not build llvm for $SYSTEM"
     done
 
+    # Build llvm-ndk
+    echo "Building $SYSTEM llvm-ndk"
+    run $BUILDTOOLS/build-llvm.sh "$SRC_DIR" "$NDK_DIR" "llvm-ndk" $TOOLCHAIN_FLAGS
+    fail_panic "Could not build llvm-ndk for $SYSTEM"
+
     # We're done for this system
 done
 

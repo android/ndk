@@ -77,6 +77,11 @@ else # NDK_TOOLCHAIN is not empty
     TARGET_TOOLCHAIN := $(NDK_TOOLCHAIN)
 endif # NDK_TOOLCHAIN is not empty
 
+# Force NDK using llvm-ndk toolchain to generate bitcode
+ifeq ($(NDK_APP_USE_BITCODE), true)
+    TARGET_TOOLCHAIN := llvm-ndk
+endif
+
 TARGET_ABI := $(TARGET_PLATFORM)-$(TARGET_ARCH_ABI)
 
 # setup sysroot-related variables. The SYSROOT point to a directory
@@ -147,9 +152,13 @@ $(NDK_APP_GDBSERVER): PRIVATE_DST     := $(NDK_APP_GDBSERVER)
 
 $(call generate-file-dir,$(NDK_APP_GDBSERVER))
 
+# We don't need to install gdbserver while APP_USE_BITCODE = true
+# We use target-specific gdbserver directly on debugging time.
+ifneq ($(NDK_APP_USE_BITCODE),true)
 $(NDK_APP_GDBSERVER): clean-installed-binaries
 	@ $(HOST_ECHO) "Gdbserver      : [$(PRIVATE_NAME)] $(call pretty-dir,$(PRIVATE_DST))"
 	$(hide) $(call host-install,$(PRIVATE_SRC),$(PRIVATE_DST))
+endif
 
 installed_modules: $(NDK_APP_GDBSETUP)
 

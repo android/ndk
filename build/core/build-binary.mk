@@ -222,10 +222,17 @@ endif
 # listed in LOCAL_SRC_FILES, in the *same* order.
 #
 LOCAL_OBJECTS := $(LOCAL_SRC_FILES)
+ifeq ($(NDK_APP_USE_BITCODE),true)
+$(foreach _ext,$(all_source_extensions),\
+    $(eval LOCAL_OBJECTS := $$(LOCAL_OBJECTS:%$(_ext)=%.bc))\
+)
+LOCAL_OBJECTS := $(filter %.bc,$(LOCAL_OBJECTS))
+else
 $(foreach _ext,$(all_source_extensions),\
     $(eval LOCAL_OBJECTS := $$(LOCAL_OBJECTS:%$(_ext)=%.o))\
 )
 LOCAL_OBJECTS := $(filter %.o,$(LOCAL_OBJECTS))
+endif
 LOCAL_OBJECTS := $(subst ../,__/,$(LOCAL_OBJECTS))
 LOCAL_OBJECTS := $(foreach _obj,$(LOCAL_OBJECTS),$(LOCAL_OBJS_DIR)/$(_obj))
 
@@ -250,12 +257,21 @@ endif
 # Build the sources to object files
 #
 
+ifeq ($(NDK_APP_USE_BITCODE),true)
+$(foreach src,$(filter %.c,$(LOCAL_SRC_FILES)), $(call compile-c-source,$(src),$(call get-bitcode-name,$(src))))
+$(foreach src,$(filter %.S %.s,$(LOCAL_SRC_FILES)), $(error "Assembly $(src) in bitcode library is not supported."))
+
+$(foreach src,$(filter $(all_cpp_patterns),$(LOCAL_SRC_FILES)),\
+    $(call compile-cpp-source,$(src),$(call get-bitcode-name,$(src)))\
+)
+else
 $(foreach src,$(filter %.c,$(LOCAL_SRC_FILES)), $(call compile-c-source,$(src),$(call get-object-name,$(src))))
 $(foreach src,$(filter %.S %.s,$(LOCAL_SRC_FILES)), $(call compile-s-source,$(src),$(call get-object-name,$(src))))
 
 $(foreach src,$(filter $(all_cpp_patterns),$(LOCAL_SRC_FILES)),\
     $(call compile-cpp-source,$(src),$(call get-object-name,$(src)))\
 )
+endif
 
 #
 # The compile-xxx-source calls updated LOCAL_OBJECTS and LOCAL_DEPENDENCY_DIRS
@@ -418,9 +434,19 @@ $(LOCAL_INSTALLED): PRIVATE_STRIP     := $(TARGET_STRIP)
 $(LOCAL_INSTALLED): PRIVATE_STRIP_CMD := $(call cmd-strip, $(PRIVATE_DST))
 
 $(LOCAL_INSTALLED): $(LOCAL_BUILT_MODULE) clean-installed-binaries
+ifeq ($(NDK_APP_USE_BITCODE),true)
+ifeq ($(call module-is-prebuilt,$(LOCAL_MODULE)),$(true))
+	@$(HOST_ECHO) "Install        : $(PRIVATE_NAME) is skipped since APP_USE_BITCODE is enabled."
+else
 	@$(HOST_ECHO) "Install        : $(PRIVATE_NAME) => $(call pretty-dir,$(PRIVATE_DST))"
 	$(hide) $(call host-install,$(PRIVATE_SRC),$(PRIVATE_DST))
 	$(hide) $(PRIVATE_STRIP_CMD)
+endif
+else
+	@$(HOST_ECHO) "Install        : $(PRIVATE_NAME) => $(call pretty-dir,$(PRIVATE_DST))"
+	$(hide) $(call host-install,$(PRIVATE_SRC),$(PRIVATE_DST))
+	$(hide) $(PRIVATE_STRIP_CMD)
+endif
 
 $(call generate-dir,$(NDK_APP_DST_DIR))
 $(LOCAL_INSTALLED): $(NDK_APP_DST_DIR)

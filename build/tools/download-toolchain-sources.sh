@@ -234,6 +234,9 @@ llvm_checkout () {
 
     # Cleanup the tar archive
     (cd $LLVM_DIR && rm $LLVM_TAR $CLANG_TAR || true)
+
+    # Copy llvm source for llvm-ndk toolchain
+    cd $LLVM_DIR && copy_directory "$OUT_DIR" "llvm-ndk"
 }
 
 cd $TMPDIR
@@ -275,15 +278,18 @@ dump "Downloading http://www.python.org/ftp/python/${PYVERSION_FOLDER}/Python-${
 
 # Patch the toolchain sources
 if [ "$OPTION_NO_PATCHES" != "yes" ]; then
-    PATCHES_DIR="$PROGDIR/toolchain-patches"
-    if [ -d "$PATCHES_DIR" ] ; then
-        dump "Patching toolchain sources"
-        run $PROGDIR/patch-sources.sh $FLAGS $TMPDIR $PATCHES_DIR
-        if [ $? != 0 ] ; then
-            dump "ERROR: Could not patch sources."
-            exit 1
+    PATCHES_DIRS="$PROGDIR/toolchain-patches \
+                  $ANDROID_NDK_ROOT/../development/ndk/sources/android/pndk"
+    for PATCHES_DIR in $PATCHES_DIRS; do
+        if [ -d "$PATCHES_DIR" ] ; then
+            dump "Patching toolchain sources"
+            run $PROGDIR/patch-sources.sh $FLAGS $TMPDIR $PATCHES_DIR
+            if [ $? != 0 ] ; then
+                dump "ERROR: Could not patch sources."
+                exit 1
+            fi
         fi
-    fi
+    done
 fi
 
 # remove all info files from the toolchain sources

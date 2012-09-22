@@ -53,7 +53,7 @@ endif
 # Otherwise, check that we don't have an invalid value here.
 #
 ifeq ($(NDK_APP_ABI),all)
-    NDK_APP_ABI := $(NDK_ALL_ABIS)
+    NDK_APP_ABI := $(filter-out pndk, $(NDK_ALL_ABIS))
 else
     # check the target ABIs for this application
     _bad_abis = $(strip $(filter-out $(NDK_ALL_ABIS),$(NDK_APP_ABI)))
@@ -73,6 +73,7 @@ ifeq ($(NDK_APP.$(_app).cleaned_binaries),)
     NDK_APP.$(_app).cleaned_binaries := true
     clean-installed-binaries::
 	$(hide) $(call host-rm,$(NDK_ALL_ABIS:%=$(NDK_APP_PROJECT_PATH)/libs/%/lib*.so))
+	$(hide) $(call host-rm,$(NDK_ALL_ABIS:%=$(NDK_APP_PROJECT_PATH)/libs/%/lib*.bc))
 	$(hide) $(call host-rm,$(NDK_ALL_ABIS:%=$(NDK_APP_PROJECT_PATH)/libs/%/gdbserver))
 	$(hide) $(call host-rm,$(NDK_ALL_ABIS:%=$(NDK_APP_PROJECT_PATH)/libs/%/gdb.setup))
 endif

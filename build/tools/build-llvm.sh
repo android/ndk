@@ -159,9 +159,20 @@ llvm-config llvm-cov llvm-diff llvm-dwarfdump llvm-extract llvm-ld llvm-mc
 llvm-nm llvm-objdump llvm-prof llvm-ranlib llvm-readobj llvm-rtdyld llvm-size
 llvm-stress llvm-stub llvm-tblgen macho-dump"
 
+if [ $HOST_TAG = "windows" ] ; then
+    SUFFIX=".exe"
+else
+    SUFFIX=""
+fi
+
+# We are building the llvm-ndk toolchain
+if [ -f $TOOLCHAIN_BUILD_PREFIX/bin/llvm-ndk-cc$SUFFIX ]; then
+UNUSED_LLVM_EXECUTABLES="$UNUSED_LLVM_EXECUTABLES clang clang++ llc llvm-link opt"
+mv $TOOLCHAIN_BUILD_PREFIX/bin/llvm-ar$SUFFIX $TOOLCHAIN_BUILD_PREFIX/bin/llvm-ndk-ar$SUFFIX
+fi
+
 for i in $UNUSED_LLVM_EXECUTABLES; do
-    rm -f $TOOLCHAIN_BUILD_PREFIX/bin/$i
-    rm -f $TOOLCHAIN_BUILD_PREFIX/bin/$i.exe
+    rm -f $TOOLCHAIN_BUILD_PREFIX/bin/$i$SUFFIX
 done
 
 # copy to toolchain path

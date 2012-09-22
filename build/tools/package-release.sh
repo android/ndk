@@ -353,6 +353,9 @@ if [ -z "$PREBUILT_NDK" ]; then
             unpack_prebuilt gnu-libstdc++-libs-$VERSION-$ABI.tar.bz2 "$REFERENCE"
         done
     done
+    # Unpack bitcode libraries
+    unpack_prebuilt gabixx-libs-bitcode.tar.bz2 "$REFERENCE"
+    unpack_prebuilt stlport-libs-bitcode.tar.bz2 "$REFERENCE"
 fi
 
 # create a release file named 'RELEASE.TXT' containing the release
@@ -415,6 +418,9 @@ for SYSTEM in $SYSTEMS; do
         for LLVM_VERSION in $LLVM_VERSION_LIST; do
             unpack_prebuilt llvm-$LLVM_VERSION-$SYSTEM.tar.bz2
         done
+
+        # Unpack llvm-ndk toolchain
+        unpack_prebuilt llvm-ndk-$SYSTEM.tar.bz2
 
         # Unpack prebuilt ndk-stack and other host tools
         unpack_prebuilt ndk-stack-$SYSTEM.tar.bz2

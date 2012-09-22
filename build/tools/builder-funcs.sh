@@ -131,6 +131,14 @@ builder_set_binprefix ()
     _BUILD_AR=${1}ar
 }
 
+builder_set_binprefix_llvm ()
+{
+    _BUILD_BINPREFIX=$1
+    _BUILD_CC=${1}cc
+    _BUILD_CXX=${1}cxx
+    _BUILD_AR=${1}ar
+}
+
 builder_set_builddir ()
 {
     _BUILD_DIR=$1
@@ -463,6 +471,20 @@ builder_begin_android ()
             builder_ldflags "-Wl,--fix-cortex-a8"
             ;;
     esac
+}
+
+# Same as builder_begin_android, but to target Android to llvm
+# $1: Build directory
+# $2: Optional Makefile name
+builder_begin_android_llvm ()
+{
+    if [ -z "$NDK_DIR" ]; then
+        panic "NDK_DIR is not defined!"
+    fi
+    BINPREFIX=$NDK_DIR/$(get_llvm_ndk_toolchain_binprefix)
+
+    builder_begin "$1" "$2"
+    builder_set_binprefix_llvm "$BINPREFIX"
 }
 
 # $1: Build directory

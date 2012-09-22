@@ -13,26 +13,8 @@
 # limitations under the License.
 #
 
-# this file is included from Android.mk files to build a target-specific
-# shared library
+# config file for the llvm-ndk toolchain for the Android NDK
+# the real meat is in the setup.mk file adjacent to this one
 #
-
-LOCAL_BUILD_SCRIPT := BUILD_SHARED_LIBRARY
-LOCAL_MAKEFILE     := $(local-makefile)
-
-$(call check-defined-LOCAL_MODULE,$(LOCAL_BUILD_SCRIPT))
-$(call check-LOCAL_MODULE,$(LOCAL_MAKEFILE))
-$(call check-LOCAL_MODULE_FILENAME)
-
-# we are building target objects
-my := TARGET_
-
-ifeq ($(NDK_APP_USE_BITCODE),true)
-$(call handle-module-filename,lib,.bc)
-else
-$(call handle-module-filename,lib,.so)
-endif
-$(call handle-module-built)
-
-LOCAL_MODULE_CLASS := SHARED_LIBRARY
-include $(BUILD_SYSTEM)/build-module.mk
+TOOLCHAIN_ARCH := pndk
+TOOLCHAIN_ABIS := pndk

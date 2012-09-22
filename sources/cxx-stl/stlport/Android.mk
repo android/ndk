@@ -1,18 +1,28 @@
 LOCAL_PATH := $(call my-dir)
 
 # Normally, we distribute the NDK with prebuilt binaries of STLport
-# in $LOCAL_PATH/<abi>/. However,
+# in $LOCAL_PATH/<abi>/.
 #
 
 STLPORT_FORCE_REBUILD := $(strip $(STLPORT_FORCE_REBUILD))
+
 ifndef STLPORT_FORCE_REBUILD
-  ifeq (,$(strip $(wildcard $(LOCAL_PATH)/libs/$(TARGET_ARCH_ABI)/libstlport_static.a)))
-    $(call __ndk_info,WARNING: Rebuilding STLport libraries from sources!)
-    $(call __ndk_info,You might want to use $$NDK/build/tools/build-stlport.sh)
-    $(call __ndk_info,in order to build prebuilt versions to speed up your builds!)
-    STLPORT_FORCE_REBUILD := true
+  ifneq ($(NDK_APP_USE_BITCODE),true)
+    ifeq (,$(strip $(wildcard $(LOCAL_PATH)/libs/$(TARGET_ARCH_ABI)/libstlport_static.a)))
+      $(call __ndk_info,WARNING: Rebuilding STLport libraries from sources!)
+      $(call __ndk_info,You might want to use $$NDK/build/tools/build-stlport.sh)
+      $(call __ndk_info,in order to build prebuilt versions to speed up your builds!)
+      STLPORT_FORCE_REBUILD := true
+    endif
+  else
+    ifeq (,$(strip $(wildcard $(LOCAL_PATH)/../../android/pndk/llvm/lib/libstlport_static.a)))
+      $(call __ndk_info,WARNING: Rebuilding STLport bitcode libraries from sources!)
+      $(call __ndk_info,You might want to use $$NDK/build/tools/build-stlport-bitcode.sh)
+      $(call __ndk_info,in order to build prebuilt versions to speed up your builds!)
+      STLPORT_FORCE_REBUILD := true
+    endif
   endif
-endif
+endif # STLPORT_FORCE_REBUILD
 
 libstlport_path := $(LOCAL_PATH)
 
@@ -50,7 +60,7 @@ libstlport_src_files := \
         src/c_locale.c \
         src/cxa.c \
 
-libstlport_cflags := -D_GNU_SOURCE
+libstlport_cflags := -D_GNU_SOURCE -funwind-tables
 libstlport_cppflags := -fuse-cxa-atexit
 libstlport_c_includes := $(libstlport_path)/stlport
 
@@ -65,6 +75,8 @@ libstlport_c_includes := $(libstlport_path)/stlport
 include $(dir $(LOCAL_PATH))/gabi++/sources.mk
 
 libstlport_c_includes += $(libgabi++_c_includes)
+
+ifneq ($(NDK_APP_USE_BITCODE),true)
 
 ifneq ($(STLPORT_FORCE_REBUILD),true)
 
@@ -113,3 +125,56 @@ LOCAL_CPP_FEATURES := rtti
 include $(BUILD_SHARED_LIBRARY)
 
 endif # STLPORT_FORCE_REBUILD == true
+
+else  # NDK_APP_USE_BITCODE == true
+
+# We only support static bitcode library, force stlport_static and
+# stlport_shared to static library.
+
+ifneq ($(STLPORT_FORCE_REBUILD),true)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := stlport_static
+LOCAL_SRC_FILES := ../../android/pndk/llvm/lib/libstlport_static.a
+LOCAL_EXPORT_C_INCLUDES := $(libstlport_c_includes)
+LOCAL_CPP_FEATURES := rtti
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := stlport_shared
+LOCAL_SRC_FILES := ../../android/pndk/llvm/lib/libstlport_shared.a
+LOCAL_EXPORT_C_INCLUDES := $(libstlport_c_includes)
+LOCAL_CPP_FEATURES := rtti
+include $(PREBUILT_STATIC_LIBRARY)
+
+else  # STLPORT_FORCE_REBUILD == true
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := stlport_static
+LOCAL_CPP_EXTENSION := .cpp .cc
+LOCAL_SRC_FILES := $(libstlport_src_files)
+LOCAL_SRC_FILES += $(libgabi++_src_files:%=../gabi++/%)
+LOCAL_CFLAGS := $(libstlport_cflags)
+LOCAL_CFLAGS += -D_STLP_NO_LONG_DOUBLE
+LOCAL_CPPFLAGS := $(libstlport_cppflags)
+LOCAL_C_INCLUDES := $(libstlport_c_includes)
+LOCAL_EXPORT_C_INCLUDES := $(libstlport_c_includes)
+LOCAL_CPP_FEATURES := rtti
+include $(BUILD_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := stlport_shared
+LOCAL_CPP_EXTENSION := .cpp .cc
+LOCAL_SRC_FILES := $(libstlport_src_files)
+LOCAL_SRC_FILES += $(libgabi++_src_files:%=../gabi++/%)
+LOCAL_CFLAGS := $(libstlport_cflags)
+LOCAL_CFLAGS += -D_STLP_NO_LONG_DOUBLE
+LOCAL_CPPFLAGS := $(libstlport_cppflags)
+LOCAL_C_INCLUDES := $(libstlport_c_includes)
+LOCAL_EXPORT_C_INCLUDES := $(libstlport_c_includes)
+LOCAL_CPP_FEATURES := rtti
+include $(BUILD_STATIC_LIBRARY)
+
+endif # STLPORT_FORCE_REBUILD == true
+
+endif # NDK_APP_USE_BITCODE == true

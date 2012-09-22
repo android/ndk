@@ -1287,7 +1287,8 @@ NDK_APP_VARS_REQUIRED :=
 # the list of variables that *may* be defined in Application.mk files
 NDK_APP_VARS_OPTIONAL := APP_OPTIM APP_CPPFLAGS APP_CFLAGS APP_CXXFLAGS \
                          APP_PLATFORM APP_BUILD_SCRIPT APP_ABI APP_MODULES \
-                         APP_PROJECT_PATH APP_STL APP_SHORT_COMMANDS
+                         APP_PROJECT_PATH APP_STL APP_SHORT_COMMANDS \
+                         APP_USE_BITCODE
 
 # the list of all variables that may appear in an Application.mk file
 # or defined by the build scripts.
@@ -1314,6 +1315,15 @@ get-object-name = $(strip \
         $(eval __obj := $1)\
         $(foreach __ext,.c .s .S $(LOCAL_CPP_EXTENSION),\
             $(eval __obj := $(__obj:%$(__ext)=%.o))\
+        )\
+        $(__obj)\
+    ))
+
+get-bitcode-name = $(strip \
+    $(subst ../,__/,\
+        $(eval __obj := $1)\
+        $(foreach __ext,.c .s .S $(LOCAL_CPP_EXTENSION),\
+            $(eval __obj := $(__obj:%$(__ext)=%.bc))\
         )\
         $(__obj)\
     ))
