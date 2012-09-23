@@ -6,7 +6,7 @@ set NDK_MAKE=%NDK_ROOT%/prebuilt/windows/bin/make.exe
 rem Check if %NDK_ROOT% contains space
 goto :L
 :FOO
-  if "%~2"=="" goto:EOF
+  if "%2"=="" goto:EOF
   echo ERROR: NDK path cannot contain space!
   exit /b 1
 
