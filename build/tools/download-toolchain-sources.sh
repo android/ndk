@@ -55,7 +55,7 @@ OPTION_NO_PATCHES=no
 register_var_option "--no-patches" OPTION_NO_PATCHES "Do not patch sources"
 
 LLVM_VERSION_LIST=$DEFAULT_LLVM_VERSION_LIST
-register_var_option "--llvm-ver-list=<vers>" LLVM_VERSION_LIST "List of LLVM release versions"
+register_var_option "--llvm-version-list=<vers>" LLVM_VERSION_LIST "List of LLVM release versions"
 
 LLVM_URL=$DEFAULT_LLVM_URL
 register_var_option "--llvm-url=<url>" LLVM_URL "URL to download LLVM tar archive"

@@ -51,7 +51,7 @@ NO_GEN_PLATFORMS=
 register_var_option "--no-gen-platforms" NO_GEN_PLATFORMS "Don't generate platforms/ directory, use existing one"
 
 LLVM_VERSION_LIST=$DEFAULT_LLVM_VERSION_LIST
-register_var_option "--llvm-ver-list=<vers>" LLVM_VERSION_LIST "List of LLVM release versions"
+register_var_option "--llvm-version-list=<vers>" LLVM_VERSION_LIST "List of LLVM release versions"
 
 register_try64_option
 

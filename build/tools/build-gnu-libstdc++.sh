@@ -43,7 +43,7 @@ The output will be placed in appropriate sub-directories of
 option.
 "
 GCC_VERSION_LIST=$DEFAULT_GCC_VERSION_LIST
-register_var_option "--gcc-ver=<vers>" GCC_VERSION_LIST "List of GCC versions"
+register_var_option "--gcc-version-list=<vers>" GCC_VERSION_LIST "List of GCC versions"
 
 PACKAGE_DIR=
 register_var_option "--package-dir=<path>" PACKAGE_DIR "Put prebuilt tarballs into <path>."
@@ -257,8 +257,7 @@ copy_gnustl_libs ()
     cp "$SDIR/lib/libgnustl_shared.a" "$DDIR/libs/$ABI/libgnustl_static.a"
 }
 
-
-
+GCC_VERSION_LIST=$(commas_to_spaces $GCC_VERSION_LIST)
 for VERSION in $GCC_VERSION_LIST; do
     for ABI in $ABIS; do
         build_gnustl_for_abi $ABI "$BUILD_DIR" static $VERSION
