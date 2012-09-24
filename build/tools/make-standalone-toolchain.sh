@@ -31,7 +31,7 @@ TOOLCHAIN_NAME=
 register_var_option "--toolchain=<name>" TOOLCHAIN_NAME "Specify toolchain name"
 
 LLVM_VERSION=
-register_var_option "--llvm-ver=<vers>" LLVM_VERSION "List of LLVM release versions"
+register_var_option "--llvm-version=<ver>" LLVM_VERSION "Specify LLVM version"
 
 ARCH=
 register_option "--arch=<name>" do_arch "Specify target architecture" "arm"
