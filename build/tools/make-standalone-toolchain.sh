@@ -193,6 +193,38 @@ run copy_directory "$TOOLCHAIN_PATH" "$TMPDIR"
 if [ -n "$LLVM_VERSION" ]; then
   # Copy the clang/llvm toolchain prebuilt binaries
   run copy_directory "$LLVM_TOOLCHAIN_PATH" "$TMPDIR"
+
+  # Move clang and clang++ to clang-LLVM_VERSION/++, then create scripts
+  # linking them with predefined -target flag.  This is to make clang/++
+  # easier drop-in replacement for gcc/++ in NDK standalone mode.
+  # Note that the file name of "clang" isn't important, and the trailing
+  # "++" tells clang to compile in C++ mode
+  LLVM_TARGET=
+  case "$ARCH" in
+      arm) # NOte: -target may change by clang based on the
+           #        presence of subsequent -march=armv7-a and/or -mthumb
+          LLVM_TARGET=armv5te-none-linux-androideabi
+          ;;
+      x86)
+          LLVM_TARGET=i686-none-linux-android
+          ;;
+      mips)
+          LLVM_TARGET=mipsel-none-linux-android
+          ;;
+      *)
+        dump "ERROR: Unsupported NDK architecture!"
+  esac
+
+  mv "$TMPDIR/bin/clang" "$TMPDIR/bin/clang$LLVM_VERSION"
+  rm "$TMPDIR/bin/clang++"
+  ln -s "clang$LLVM_VERSION" "$TMPDIR/bin/clang$LLVM_VERSION++"
+  cat > "$TMPDIR/bin/clang" <<EOF
+\`dirname \$0\`/clang$LLVM_VERSION -target $LLVM_TARGET "\$@"
+EOF
+  cat > "$TMPDIR/bin/clang++" <<EOF
+\`dirname \$0\`/clang$LLVM_VERSION++ -target $LLVM_TARGET "\$@"
+EOF
+  chmod 0755 "$TMPDIR/bin/clang" "$TMPDIR/bin/clang++"
 fi
 
 dump "Copying sysroot headers and libraries..."
