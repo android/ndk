@@ -1,3 +1,4 @@
+#!/bin/sh
 #
 # Copyright (C) 2012 The Android Open Source Project
 #
@@ -244,60 +245,95 @@ if [ -z "$PREFIX" ]; then
     panic "Please define PREFIX in your environment, or use --prefix=<prefix> option."
 fi
 
-# Remove -gcc or -g++ from prefix if any
-PREFIX=${PREFIX%-gcc}
-PREFIX=${PREFIX%-g++}
+CC=
+CXX=
+CC_TARGET=
+if [ "$PREFIX" = "${PREFIX%clang}" ]; then
+    # Test GCC
+    # Remove -gcc or -g++ from prefix if any
+    PREFIX=${PREFIX%-gcc}
+    PREFIX=${PREFIX%-g++}
 
-# Add a trailing dash to the prefix, if there isn't any
-PREFIX=${PREFIX%-}-
+    # Add a trailing dash to the prefix, if there isn't any
+    PREFIX=${PREFIX%-}-
 
-GCC=${PREFIX}gcc
-if [ ! -f "$GCC" ]; then
-    panic "Missing compiler, please fix your prefix definition: $GCC"
-fi
+    GCC=${PREFIX}gcc
+    if [ ! -f "$GCC" ]; then
+        panic "Missing compiler, please fix your prefix definition: $GCC"
+    fi
 
-GCC=$(which $GCC 2>/dev/null)
-if [ -z "$GCC" -o ! -f "$GCC" ]; then
-    panic "Bad compiler path: ${PREFIX}gcc"
+    GCC=$(which $GCC 2>/dev/null)
+    if [ -z "$GCC" -o ! -f "$GCC" ]; then
+        panic "Bad compiler path: ${PREFIX}gcc"
+    fi
+
+    GCCDIR=$(dirname "$GCC")
+    GCCBASE=$(basename "$GCC")
+
+    GCCDIR=$(cd "$GCCDIR" && pwd)
+    GCC=$GCCDIR/$GCCBASE
+
+    PREFIX=${GCC%%gcc}
+
+    CC=${PREFIX}gcc
+    CXX=${PREFIX}g++
+    CC_TARGET=$($GCC -v 2>&1 | tr ' ' '\n' | grep -e --target=)
+    CC_TARGET=${CC_TARGET##--target=}
+else
+    # Test Clang
+    # Remove clang or clang++ from prefix if any
+    PREFIX=${PREFIX%clang}
+    PREFIX=${PREFIX%clang++}
+
+    CLANG=${PREFIX}clang
+    if [ ! -f "$CLANG" ]; then
+        panic "Missing compiler, please fix your prefix definition: $CLANG"
+    fi
+
+    CLANGDIR=$(dirname "$CLANG")
+    CLANGBASE=$(basename "$CLANG")
+
+    CLANGDIR=$(cd "$CLANGDIR" && pwd)
+    CLANG=$CLANGDIR/$CLANGBASE
+
+    PREFIX=${CLANG%%clang}
+
+    # Find *-ld in the same directory eventaully usable as ${PREFIX}-ld
+    GNU_LD=$(cd $CLANGDIR && ls *-ld)
+    GNU_LD=$CLANGDIR/$GNU_LD
+    if [ ! -f "$GNU_LD" ]; then
+        panic "Missing linker in the same directory as clang/clang++: $CLANGDIR"
+    fi
+
+    PREFIX=${GNU_LD%ld}
+
+    CC=$CLANG
+    CXX=${CLANG%clang}clang++
+    CC_TARGET=$($CLANG -v 2>&1 | grep Target:)
+    CC_TARGET=${CC_TARGET##Target: }
 fi
 
 if [ -z "$ABI" ]; then
     # Auto-detect target CPU architecture
-    GCC_TARGET=$($GCC -v 2>&1 | tr ' ' '\n' | grep -e --target=)
-    GCC_TARGET=${GCC_TARGET##--target=}
-
-    dump "Auto-detected GCC target configuration: $GCC_TARGET"
-    case $GCC_TARGET in
-        arm-linux-androideabi)
+    dump "Auto-detected target configuration: $CC_TARGET"
+    case $CC_TARGET in
+        arm*-linux-androideabi)
             ABI=armeabi
             ARCH=arm
             ;;
-        i686-linux-android)
+        i686*-linux-android)
             ABI=x86
             ARCH=x86
             ;;
-        i686-android-linux)  # This one is deprecated, remove later.
-            ABI=x86
-            ARCH=x86
-            ;;
-        mipsel-linux-android)
+        mipsel*-linux-android)
             ABI=mips
             ARCH=mips
             ;;
         *)
-            panic "Unknown GCC target architecture '$GCC_TARGET', please use --abi=<name> to manually specify ABI."
+            panic "Unknown target architecture '$CC_TARGET', please use --abi=<name> to manually specify ABI."
     esac
     dump "Auto-config: --abi=$ABI"
 fi
-
-GCCDIR=$(dirname "$GCC")
-GCCBASE=$(basename "$GCC")
-
-GCCDIR=$(cd "$GCCDIR" && pwd)
-GCC=$GCCDIR/$GCCBASE
-
-PREFIX=${GCC%%gcc}
-#echo "PREFIX=$PREFIX"
 
 COMMON_FLAGS=
 
@@ -373,7 +409,7 @@ for TEST_SUBDIR in $TEST_SUBDIRS; do
     case $TEST_TYPE in
         script)
             (
-                export PREFIX CFLAGS CXXFLAGS LDFLAGS VERBOSE ABI
+                export PREFIX CC CXX CFLAGS CXXFLAGS LDFLAGS VERBOSE ABI
                 run cd "$BUILD_DIR" && run_script $SCRIPT
             )
             RET=$?
@@ -381,14 +417,14 @@ for TEST_SUBDIR in $TEST_SUBDIRS; do
 
         c_executable)
             (
-                run cd "$BUILD_DIR" && run ${PREFIX}gcc $LDFLAGS $CFLAGS -o /dev/null $SOURCES
+                run cd "$BUILD_DIR" && run $CC $LDFLAGS $CFLAGS -o /dev/null $SOURCES
             )
             RET=$?
             ;;
 
         cxx_executable)
             (
-                run cd "$BUILD_DIR" && run ${PREFIX}g++ $LDFLAGS $CXXFLAGS -o /dev/null $SOURCES
+                run cd "$BUILD_DIR" && run $CXX $LDFLAGS $CXXFLAGS -o /dev/null $SOURCES
             )
             RET=$?
             ;;

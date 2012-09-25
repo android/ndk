@@ -6,7 +6,7 @@ LIBFILE=libfoo.so
 # Compile shared library
 #
 
-${PREFIX}g++ $LDFLAGS $CXXFLAGS -shared -o $LIBFILE foo.cpp
+$CXX $LDFLAGS $CXXFLAGS -shared -o $LIBFILE foo.cpp
 if [ $? != 0 ]; then
     echo "ERROR: Can't build shared library!"
     exit 1
