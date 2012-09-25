@@ -153,21 +153,23 @@ fi
 # of the launched command, so we need to add it to the output, and grab
 # it after that.
 #
-adb_cmd ()
+adb_shell_cmd ()
 {
-    local RET ADB_CMD_LOG
+    local RET ADB_SHELL_CMD_LOG
+    local DEVICE=$1
+    shift
     # mktemp under Mac OS X requires the -t option
-    ADB_CMD_LOG=$(mktemp -t XXXXXXXX)
+    ADB_SHELL_CMD_LOG=$(mktemp -t XXXXXXXX)
     if [ $VERBOSE = "yes" ] ; then
-        echo "$ADB_CMD shell $@"
-        $ADB_CMD shell $@ ";" echo \$? | tee $ADB_CMD_LOG
+        echo "$ADB_CMD -s \"$DEVICE\" shell $@"
+        $ADB_CMD -s "$DEVICE" shell $@ ";" echo \$? | tee $ADB_SHELL_CMD_LOG
     else
-        $ADB_CMD shell $@ ";" echo \$? > $ADB_CMD_LOG
+        $ADB_CMD -s "$DEVICE" shell $@ ";" echo \$? > $ADB_SHELL_CMD_LOG
     fi
     # Get last line in log, should be OK or KO
     # +Get rid of \r at the end of lines
-    RET=`sed -e 's![[:cntrl:]]!!g' $ADB_CMD_LOG | tail -n1`
-    rm -f $ADB_CMD_LOG
+    RET=`sed -e 's![[:cntrl:]]!!g' $ADB_SHELL_CMD_LOG | tail -n1`
+    rm -f $ADB_SHELL_CMD_LOG
     return $RET
 }
 
@@ -178,26 +180,25 @@ adb_cmd ()
 # for the existence of the parent directory and recursively
 # call itself until it files a parent which exists; then
 # create the requested directory.
-adb_cmd_mkdir ()
+adb_shell_mkdir ()
 {
     local FULLDIR BASEDIR
-    FULLDIR=$1
-    BASEDIR=`dirname $FULLDIR`
+    local DEVICE=$1
+    local FULLDIR=$2
+    local BASEDIR=`dirname $FULLDIR`
 
-    #run $ADB_CMD shell "ls $BASEDIR 1>/dev/null 2>&1"
-    adb_cmd "ls $BASEDIR 1>/dev/null 2>&1"
+    adb_shell_cmd "$DEVICE" "ls $BASEDIR 1>/dev/null 2>&1"
     if [ $? != 0 ] ; then
         if [ $BASEDIR = "/" ] ; then
             dump "ERROR: Could not find the root (/) directory on the device!"
             exit 1
         else
-            adb_cmd_mkdir $BASEDIR
-            adb_cmd_mkdir $FULLDIR
+            adb_shell_mkdir "$DEVICE" $BASEDIR
+            adb_shell_mkdir "$DEVICE" $FULLDIR
         fi
     else
-        #run $ADB_CMD shell "mkdir $FULLDIR"
-        # If the directory doesn't exist, make it
-        adb_cmd "ls $FULLDIR 1>/dev/null 2>&1 || mkdir $FULLDIR"
+        #If the directory doesn't exist, make it
+        adb_shell_cmd "$DEVICE" "ls $FULLDIR 1>/dev/null 2>&1 || mkdir $FULLDIR"
         if [ $? != 0 ] ; then
             dump "ERROR: Could not mkdir '$FULLDIR' on the device!"
             exit 1
@@ -521,7 +522,6 @@ fi
 
 ###
 ###  BUILD PROJECTS UNDER tests/device/
-###  XXX: TODO: RUN THEM ON A DEVICE/EMULATOR WITH ADB
 ###
 
 CPU_ABIS=
@@ -538,34 +538,35 @@ if is_testable device; then
         build_project $1 "yes"
     }
 
+    # $1: DEVICE
+    # $2: DEVICE CPU ABI
+    # $3: test
+    # $4: tmp dir
     run_device_test ()
     {
+        local DEVICE=$1
+        local CPU_ABI=$2
+        local TEST=$3
         local SRCDIR
-        local DSTDIR="$2/ndk-tests"
+        local DSTDIR="$4/ndk-tests"
         local SRCFILE
         local DSTFILE
         local PROGRAMS=
         local PROGRAM
         # Do not run the test if BROKEN_RUN is defined
-        if [ -f "$1/BROKEN_RUN" -o -f "$1/BROKEN_BUILD" ] ; then
+        if [ -f "$TEST/BROKEN_RUN" -o -f "$TEST/BROKEN_BUILD" ] ; then
 	    if [ -z "$RUN_TESTS" ]; then
-		dump "Skipping NDK device test run: `basename $1`"
+		dump "Skipping NDK device test run: `basename $TEST`"
 		return 0
 	    fi
         fi
-        for CPU_ABI in $CPU_ABIS; do
-            SRCDIR="$BUILD_DIR/`basename $1`/libs/$CPU_ABI"
-            if [ -d "$SRCDIR" ]; then
-                break;
-            fi
-        done
+        SRCDIR="$BUILD_DIR/`basename $TEST`/libs/$CPU_ABI"
         if [ ! -d "$SRCDIR" ]; then
-            dump "Skipping NDK device test run (no $CPU_ABIS binaries): `basename $1`"
+            dump "Skipping NDK device test run (no $CPU_ABI binaries): `basename $TEST`"
             return 0
         fi
-        # First, copy all files to the device, except for gdbserver
-        # or gdb.setup.
-        adb_cmd_mkdir $DSTDIR
+        # First, copy all files to the device, except for gdbserver or gdb.setup.
+        adb_shell_mkdir "$DEVICE" $DSTDIR
         for SRCFILE in `ls $SRCDIR`; do
             DSTFILE=`basename $SRCFILE`
             if [ "$DSTFILE" = "gdbserver" -o "$DSTFILE" = "gdb.setup" ] ; then
@@ -576,10 +577,10 @@ if is_testable device; then
                 SRCFILE=`cygpath -m $SRCFILE`
             fi
             DSTFILE="$DSTDIR/$DSTFILE"
-            run $ADB_CMD push "$SRCFILE" "$DSTFILE" &&
-            run $ADB_CMD shell chmod 0755 $DSTFILE
+            run $ADB_CMD -s "$DEVICE" push "$SRCFILE" "$DSTFILE" &&
+            run $ADB_CMD -s "$DEVICE" shell chmod 0755 $DSTFILE
             if [ $? != 0 ] ; then
-                dump "ERROR: Could not install $SRCFILE to device!"
+                dump "ERROR: Could not install $SRCFILE to device $DEVICE!"
                 exit 1
             fi
             # If its name doesn't end with .so, add it to PROGRAMS
@@ -589,14 +590,14 @@ if is_testable device; then
             fi
         done
         for PROGRAM in $PROGRAMS; do
-            dump "Running device test: `basename $PROGRAM`"
-            adb_cmd LD_LIBRARY_PATH="$DSTDIR" $PROGRAM
+            dump "Running device test [$CPU_ABI]: `basename $PROGRAM`"
+            adb_shell_cmd "$DEVICE" LD_LIBRARY_PATH="$DSTDIR" $PROGRAM
             if [ $? != 0 ] ; then
                 dump "   ---> TEST FAILED!!"
             fi
         done
         # Cleanup
-        adb_cmd rm -r $DSTDIR
+        adb_shell_cmd "$DEVICE" rm -r $DSTDIR
     }
 
     for DIR in `ls -d $ROOTDIR/tests/device/*`; do
@@ -613,43 +614,54 @@ if is_testable device; then
         dump "WARNING: No 'adb' in your path!"
         SKIP_TESTS=yes
     else
-        ADB_DEVICES=`$ADB_CMD devices | sed '/^$/d'`
-        log2 "ADB devices: $ADB_DEVICES"
-        ADB_DEVCOUNT=`echo "$ADB_DEVICES" | wc -l`
-        ADB_DEVCOUNT=`expr $ADB_DEVCOUNT - 1`
-        log2 "ADB Device count: $ADB_DEVCOUNT"
+        # Get list of online devices, turn ' ' in device into '.'
+        ADB_DEVICES=`$ADB_CMD devices | grep -v offline | awk 'NR>1 {gsub(/[ \t]+device$/,""); print;}' | sed '/^$/d' | tr ' ' '.'` 
+        ADB_DEVICES=$(echo $ADB_DEVICES | tr '\n' ' ')
+        log2 "ADB online devices: $ADB_DEVICES"
+        ADB_DEVCOUNT=`echo "$ADB_DEVICES" | wc -w`
         if [ "$ADB_DEVCOUNT" = "0" ]; then
             dump "WARNING: No device connected to adb!"
             SKIP_TESTS=yes
-        elif [ "$ADB_DEVCOUNT" != 1 -a -z "$ANDROID_SERIAL" ] ; then
-            dump "WARNING: More than one device connected to adb. Please define ANDROID_SERIAL!"
-            SKIP_TESTS=yes
-        fi
-        echo "$ADB_DEVICES" | grep -q -e "offline"
-        if [ $? = 0 ] ; then
-            dump "WARNING: Device is offline, can't run device tests!"
-            SKIP_TESTS=yes
-        fi
-        if [ "$ABI" != "default" ] ; then
-            CPU_ABIS=$ABI
         else
-            # get device CPU_ABI and CPU_ABI2, each may contain list of abi, comma-delimited.
-            CPU_ABI1=`$ADB_CMD shell getprop ro.product.cpu.abi | tr -dc '[:print:]'`
-            CPU_ABI2=`$ADB_CMD shell getprop ro.product.cpu.abi2 | tr -dc '[:print:]'`
-            CPU_ABIS="$CPU_ABI1,$CPU_ABI2"
-            CPU_ABIS=$(echo $CPU_ABIS | tr ',' ' ')
+            ADB_DEVICES="$ADB_DEVICES "
+            if [ -n "$ANDROID_SERIAL" ] ; then
+                ADB_SERIAL=$(echo "$ANDROID_SERIAL" | tr ' ' '.')  # turn ' ' into '.'
+                if [ "$ADB_DEVICES" = "${ADB_DEVICES%$ADB_SERIAL *}" ] ; then
+                    dump "WARNING: Device $ANDROID_SERIAL cannot be found or offline!"
+                    SKIP_TESTS=yes
+                else
+                    ADB_DEVICES="$ANDROID_SERIAL"
+                fi
+            fi
         fi
     fi
-
     if [ "$SKIP_TESTS" = "yes" ] ; then
         dump "SKIPPING RUNNING TESTS ON DEVICE!"
     else
-        for DIR in `ls -d $ROOTDIR/tests/device/*`; do
-            log "Running device test: $DIR"
-            if is_buildable $DIR; then
-                run_device_test $DIR /data/local/tmp
-            fi
+        AT_LEAST_CPU_ABI_MATCH=
+        for DEVICE in $ADB_DEVICES; do
+            # undo earlier ' '-to-'.' translation
+            DEVICE=$(echo $DEVICE | tr '.' ' ')
+            # get device CPU_ABI and CPU_ABI2, each may contain list of abi, comma-delimited.
+            CPU_ABI1=`$ADB_CMD -s "$DEVICE" shell getprop ro.product.cpu.abi | tr -dc '[:print:]'`
+            CPU_ABI2=`$ADB_CMD -s "$DEVICE" shell getprop ro.product.cpu.abi2 | tr -dc '[:print:]'`
+            CPU_ABIS="$CPU_ABI1,$CPU_ABI2"
+            CPU_ABIS=$(echo $CPU_ABIS | tr ',' ' ')
+            for CPU_ABI in $CPU_ABIS; do
+                if [ "$ABI" = "default" -o "$ABI" = "$CPU_ABI" ] ; then
+                    AT_LEAST_CPU_ABI_MATCH="yes"
+                    for DIR in `ls -d $ROOTDIR/tests/device/*`; do
+                        log "Running device test on $DEVICE [$CPU_ABI]: $DIR"
+                        if is_buildable $DIR; then
+                            run_device_test "$DEVICE" "$CPU_ABI" "$DIR" /data/local/tmp
+                        fi
+                    done
+                fi
+            done
         done
+        if [ "$AT_LEAST_CPU_ABI_MATCH" != "yes" ] ; then
+            dump "WARNING: No device matches ABI $ABI! SKIPPING RUNNING TESTS ON DEVICE!"
+        fi
     fi
 fi
 
