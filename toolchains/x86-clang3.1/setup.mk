@@ -49,7 +49,6 @@ TARGET_CFLAGS := \
     -target $(LLVM_TRIPLE) \
     -ffunction-sections \
     -funwind-tables \
-    -fno-builtin \
     -fstack-protector \
     -fPIC
 
