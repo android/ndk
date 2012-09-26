@@ -1,0 +1,25 @@
+From 0e9925b430de7e14fbb17136790a44502571f8cf Mon Sep 17 00:00:00 2001
+From: Logan Chien <loganchien@google.com>
+Date: Wed, 26 Sep 2012 14:24:33 +0800
+Subject: [PATCH 3/3] Add struct keyword before _Unwind_Context.
+
+---
+ llvm-3.1/tools/clang/lib/Headers/unwind.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/llvm-3.1/tools/clang/lib/Headers/unwind.h b/llvm-3.1/tools/clang/lib/Headers/unwind.h
+index bd8b73a..55ebd54 100644
+--- a/llvm-3.1/tools/clang/lib/Headers/unwind.h
++++ b/llvm-3.1/tools/clang/lib/Headers/unwind.h
+@@ -100,7 +100,7 @@ typedef enum {
+   _UVRSR_FAILED = 2
+ } _Unwind_VRS_Result;
+ 
+-_Unwind_VRS_Result _Unwind_VRS_Get(_Unwind_Context *context,
++_Unwind_VRS_Result _Unwind_VRS_Get(struct _Unwind_Context *context,
+   _Unwind_VRS_RegClass regclass,
+   uint32_t regno,
+   _Unwind_VRS_DataRepresentation representation,
+-- 
+1.7.7.3
+
