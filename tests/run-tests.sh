@@ -28,7 +28,9 @@ PROGDIR=`cd $PROGDIR && pwd`
 # and that the samples will be under samples/ and platforms/android-N/samples/
 #
 ROOTDIR=`cd $PROGDIR/.. && pwd`
+NDK_BUILDTOOLS_PATH=$ROOTDIR/build/tools
 . $ROOTDIR/build/core/ndk-common.sh
+. $ROOTDIR/build/tools/prebuilt-common.sh
 
 # The list of tests that are too long to be part of a normal run of
 # run-tests.sh. Most of these do not run properly at the moment.
@@ -152,24 +154,33 @@ fi
 # This is needed because "adb shell" does not return the proper status
 # of the launched command, so we need to add it to the output, and grab
 # it after that.
-#
-adb_shell_cmd ()
+# $1: Device name
+# $2: Variable name that will contain the result
+# $3+: Command options
+adb_var_shell_cmd ()
 {
-    local RET ADB_SHELL_CMD_LOG
+    # We need a temporary file to store the output of our command
+    local ADB_SHELL_CMD_LOG RET OUT
     local DEVICE=$1
-    shift
-    # mktemp under Mac OS X requires the -t option
+    local VARNAME=$2
+    shift; shift;
     ADB_SHELL_CMD_LOG=$(mktemp -t XXXXXXXX)
+    # Run the command, while storing the standard output to ADB_SHELL_CMD_LOG
+    # and appending the exit code as the last line.
     if [ $VERBOSE = "yes" ] ; then
         echo "$ADB_CMD -s \"$DEVICE\" shell $@"
-        $ADB_CMD -s "$DEVICE" shell $@ ";" echo \$? | tee $ADB_SHELL_CMD_LOG
+        $ADB_CMD -s "$DEVICE" shell $@ ";" echo \$? | sed -e 's![[:cntrl:]]!!g' | tee $ADB_SHELL_CMD_LOG
     else
-        $ADB_CMD -s "$DEVICE" shell $@ ";" echo \$? > $ADB_SHELL_CMD_LOG
+        $ADB_CMD -s "$DEVICE" shell $@ ";" echo \$? | sed -e 's![[:cntrl:]]!!g' > $ADB_SHELL_CMD_LOG
     fi
-    # Get last line in log, should be OK or KO
-    # +Get rid of \r at the end of lines
-    RET=`sed -e 's![[:cntrl:]]!!g' $ADB_SHELL_CMD_LOG | tail -n1`
+    # Get last line in log, which contains the exit code from the command
+    RET=`sed -e '$!d' $ADB_SHELL_CMD_LOG`
+    # Get output, which corresponds to everything except the last line
+    OUT=`sed -e '$d' $ADB_SHELL_CMD_LOG`
     rm -f $ADB_SHELL_CMD_LOG
+    if [ "$VARNAME" != "" ]; then
+        eval $VARNAME=\"\$OUT\"
+    fi
     return $RET
 }
 
@@ -187,7 +198,7 @@ adb_shell_mkdir ()
     local FULLDIR=$2
     local BASEDIR=`dirname $FULLDIR`
 
-    adb_shell_cmd "$DEVICE" "ls $BASEDIR 1>/dev/null 2>&1"
+    adb_var_shell_cmd "$DEVICE" "" "ls $BASEDIR 1>/dev/null 2>&1"
     if [ $? != 0 ] ; then
         if [ $BASEDIR = "/" ] ; then
             dump "ERROR: Could not find the root (/) directory on the device!"
@@ -198,7 +209,7 @@ adb_shell_mkdir ()
         fi
     else
         #If the directory doesn't exist, make it
-        adb_shell_cmd "$DEVICE" "ls $FULLDIR 1>/dev/null 2>&1 || mkdir $FULLDIR"
+        adb_var_shell_cmd "$DEVICE" "" "ls $FULLDIR 1>/dev/null 2>&1 || mkdir $FULLDIR"
         if [ $? != 0 ] ; then
             dump "ERROR: Could not mkdir '$FULLDIR' on the device!"
             exit 1
@@ -591,13 +602,13 @@ if is_testable device; then
         done
         for PROGRAM in $PROGRAMS; do
             dump "Running device test [$CPU_ABI]: `basename $PROGRAM`"
-            adb_shell_cmd "$DEVICE" LD_LIBRARY_PATH="$DSTDIR" $PROGRAM
+            adb_var_shell_cmd "$DEVICE" "" LD_LIBRARY_PATH="$DSTDIR" $PROGRAM
             if [ $? != 0 ] ; then
                 dump "   ---> TEST FAILED!!"
             fi
         done
         # Cleanup
-        adb_shell_cmd "$DEVICE" rm -r $DSTDIR
+        adb_var_shell_cmd "$DEVICE" "" rm -r $DSTDIR
     }
 
     for DIR in `ls -d $ROOTDIR/tests/device/*`; do
@@ -643,10 +654,10 @@ if is_testable device; then
             # undo earlier ' '-to-'.' translation
             DEVICE=$(echo $DEVICE | tr '.' ' ')
             # get device CPU_ABI and CPU_ABI2, each may contain list of abi, comma-delimited.
-            CPU_ABI1=`$ADB_CMD -s "$DEVICE" shell getprop ro.product.cpu.abi | tr -dc '[:print:]'`
-            CPU_ABI2=`$ADB_CMD -s "$DEVICE" shell getprop ro.product.cpu.abi2 | tr -dc '[:print:]'`
+            adb_var_shell_cmd "$DEVICE" CPU_ABI1 getprop ro.product.cpu.abi
+            adb_var_shell_cmd "$DEVICE" CPU_ABI2 getprop ro.product.cpu.abi2
             CPU_ABIS="$CPU_ABI1,$CPU_ABI2"
-            CPU_ABIS=$(echo $CPU_ABIS | tr ',' ' ')
+            CPU_ABIS=$(commas_to_spaces $CPU_ABIS)
             for CPU_ABI in $CPU_ABIS; do
                 if [ "$ABI" = "default" -o "$ABI" = "$CPU_ABI" ] ; then
                     AT_LEAST_CPU_ABI_MATCH="yes"
