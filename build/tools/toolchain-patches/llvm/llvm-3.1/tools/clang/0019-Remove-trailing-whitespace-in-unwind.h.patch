@@ -1,16 +1,16 @@
-From c4aba9fe691069ac2bb2b6bb6525a595c240cab0 Mon Sep 17 00:00:00 2001
+From 71ac98ee6094e7f251df439b705f7adc6bce3869 Mon Sep 17 00:00:00 2001
 From: Logan Chien <loganchien@google.com>
 Date: Wed, 26 Sep 2012 14:23:44 +0800
-Subject: [PATCH 2/3] Remove trailing whitespace in unwind.h
+Subject: [PATCH 19/20] Remove trailing whitespace in unwind.h
 
 ---
- llvm-3.1/tools/clang/lib/Headers/unwind.h |   40 ++++++++++++++--------------
+ lib/Headers/unwind.h |   40 ++++++++++++++++++++--------------------
  1 files changed, 20 insertions(+), 20 deletions(-)
 
-diff --git a/llvm-3.1/tools/clang/lib/Headers/unwind.h b/llvm-3.1/tools/clang/lib/Headers/unwind.h
+diff --git a/lib/Headers/unwind.h b/lib/Headers/unwind.h
 index a065920..bd8b73a 100644
---- a/llvm-3.1/tools/clang/lib/Headers/unwind.h
-+++ b/llvm-3.1/tools/clang/lib/Headers/unwind.h
+--- a/lib/Headers/unwind.h
++++ b/lib/Headers/unwind.h
 @@ -79,26 +79,26 @@ typedef enum {
  
  #ifdef __arm__

@@ -1,22 +1,23 @@
-From fe06100ba8133e848649ed0566c3dc450a50b017 Mon Sep 17 00:00:00 2001
+From 92a5cb2fb913d3752a85026304a092203ca450a7 Mon Sep 17 00:00:00 2001
 From: Simon Atanasyan <satanasyan@mips.com>
 Date: Sat, 18 Aug 2012 23:14:53 +0800
-Subject: [PATCH] Factor out the code retrieves the last PIC related argument.
+Subject: [PATCH 04/20] Factor out the code retrieves the last PIC related
+ argument.
 
 Factor out the code retrieves the last PIC related argument
 from the Clang::ConstructJob() to the new
 ArgList::getLastArg() routine with eight argument. That
 simplifies reusing of this code.
 ---
- .../tools/clang/include/clang/Driver/ArgList.h     |    8 +++
- llvm-3.1/tools/clang/lib/Driver/ArgList.cpp        |   62 ++++++++++++++++++++
- llvm-3.1/tools/clang/lib/Driver/Tools.cpp          |   21 ++-----
+ include/clang/Driver/ArgList.h |    8 +++++
+ lib/Driver/ArgList.cpp         |   62 ++++++++++++++++++++++++++++++++++++++++
+ lib/Driver/Tools.cpp           |   21 +++----------
  3 files changed, 75 insertions(+), 16 deletions(-)
 
-diff --git a/llvm-3.1/tools/clang/include/clang/Driver/ArgList.h b/llvm-3.1/tools/clang/include/clang/Driver/ArgList.h
+diff --git a/include/clang/Driver/ArgList.h b/include/clang/Driver/ArgList.h
 index 3affb00..b7e490c 100644
---- a/llvm-3.1/tools/clang/include/clang/Driver/ArgList.h
-+++ b/llvm-3.1/tools/clang/include/clang/Driver/ArgList.h
+--- a/include/clang/Driver/ArgList.h
++++ b/include/clang/Driver/ArgList.h
 @@ -187,6 +187,14 @@ namespace driver {
                      OptSpecifier Id3) const;
      Arg *getLastArg(OptSpecifier Id0, OptSpecifier Id1, OptSpecifier Id2,
@@ -32,10 +33,10 @@ index 3affb00..b7e490c 100644
  
      /// getArgString - Return the input argument string at \arg Index.
      virtual const char *getArgString(unsigned Index) const = 0;
-diff --git a/llvm-3.1/tools/clang/lib/Driver/ArgList.cpp b/llvm-3.1/tools/clang/lib/Driver/ArgList.cpp
+diff --git a/lib/Driver/ArgList.cpp b/lib/Driver/ArgList.cpp
 index 55a0ddf..7fd439e 100644
---- a/llvm-3.1/tools/clang/lib/Driver/ArgList.cpp
-+++ b/llvm-3.1/tools/clang/lib/Driver/ArgList.cpp
+--- a/lib/Driver/ArgList.cpp
++++ b/lib/Driver/ArgList.cpp
 @@ -140,6 +140,68 @@ Arg *ArgList::getLastArg(OptSpecifier Id0, OptSpecifier Id1,
    return Res;
  }
@@ -105,10 +106,10 @@ index 55a0ddf..7fd439e 100644
  bool ArgList::hasFlag(OptSpecifier Pos, OptSpecifier Neg, bool Default) const {
    if (Arg *A = getLastArg(Pos, Neg))
      return A->getOption().matches(Pos);
-diff --git a/llvm-3.1/tools/clang/lib/Driver/Tools.cpp b/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
-index d457a53..c68c4af 100644
---- a/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
-+++ b/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
+diff --git a/lib/Driver/Tools.cpp b/lib/Driver/Tools.cpp
+index 8ef16b5..e6dcce5 100644
+--- a/lib/Driver/Tools.cpp
++++ b/lib/Driver/Tools.cpp
 @@ -1499,22 +1499,11 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
  
    // This comes from the default translation the driver + cc1

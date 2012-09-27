@@ -1,6 +1,18 @@
---- a/llvm-3.1/tools/clang/lib/Driver/Driver.cpp	2012-09-12 14:26:52.000000000 -0700
-+++ b/llvm-3.1/tools/clang/lib/Driver/Driver.cpp	2012-09-18 01:07:22.957409591 -0700
-@@ -1534,8 +1534,16 @@
+From c48db7bbca072e6c682344a51dfacf037299bfbf Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Thu, 27 Sep 2012 16:55:27 +0800
+Subject: [PATCH 16/20] Fix clang mingw32 build by appending exe to program
+ for GetProgramPath
+
+---
+ lib/Driver/Driver.cpp |   17 +++++++++++++----
+ 1 files changed, 13 insertions(+), 4 deletions(-)
+
+diff --git a/lib/Driver/Driver.cpp b/lib/Driver/Driver.cpp
+index 6c65b2d..17571ad 100644
+--- a/lib/Driver/Driver.cpp
++++ b/lib/Driver/Driver.cpp
+@@ -1534,8 +1534,16 @@ static bool isPathExecutable(llvm::sys::Path &P, bool WantFile) {
  
  std::string Driver::GetProgramPath(const char *Name, const ToolChain &TC,
                                     bool WantFile) const {
@@ -18,7 +30,7 @@
    // Respect a limited subset of the '-Bprefix' functionality in GCC by
    // attempting to use this prefix when lokup up program paths.
    for (Driver::prefix_list::const_iterator it = PrefixDirs.begin(),
-@@ -1544,7 +1552,7 @@
+@@ -1544,7 +1552,7 @@ std::string Driver::GetProgramPath(const char *Name, const ToolChain &TC,
      P.appendComponent(TargetSpecificExecutable);
      if (isPathExecutable(P, WantFile)) return P.str();
      P.eraseComponent();
@@ -27,7 +39,7 @@
      if (isPathExecutable(P, WantFile)) return P.str();
    }
  
-@@ -1555,7 +1563,7 @@
+@@ -1555,7 +1563,7 @@ std::string Driver::GetProgramPath(const char *Name, const ToolChain &TC,
      P.appendComponent(TargetSpecificExecutable);
      if (isPathExecutable(P, WantFile)) return P.str();
      P.eraseComponent();
@@ -36,7 +48,7 @@
      if (isPathExecutable(P, WantFile)) return P.str();
    }
  
-@@ -1565,10 +1573,11 @@
+@@ -1565,10 +1573,11 @@ std::string Driver::GetProgramPath(const char *Name, const ToolChain &TC,
    if (!P.empty())
      return P.str();
  
@@ -49,3 +61,6 @@
    return Name;
  }
  
+-- 
+1.7.7.3
+

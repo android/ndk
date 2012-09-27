@@ -1,0 +1,44 @@
+From 806356a42266082ade76b35612d3dfb810f0a08f Mon Sep 17 00:00:00 2001
+From: Logan Chien <loganchien@google.com>
+Date: Wed, 5 Sep 2012 23:37:51 +0800
+Subject: [PATCH 12/20] Fix ARM EHABI exception support.
+
+---
+ include/clang/Driver/Options.td |    1 +
+ lib/Driver/Tools.cpp            |    8 ++++++++
+ 2 files changed, 9 insertions(+), 0 deletions(-)
+
+diff --git a/include/clang/Driver/Options.td b/include/clang/Driver/Options.td
+index 6d138b0..3a31ea1 100644
+--- a/include/clang/Driver/Options.td
++++ b/include/clang/Driver/Options.td
+@@ -651,6 +651,7 @@ def mno_thumb : Flag<"-mno-thumb">, Group<m_Group>;
+ def marm : Flag<"-marm">, Alias<mno_thumb>;
+ 
+ def mignore_has_ras : Flag<"-mignore-has-ras">;
++def mehabi : Flag<"-mehabi">;
+ 
+ def mno_warn_nonportable_cfstrings : Flag<"-mno-warn-nonportable-cfstrings">, Group<m_Group>;
+ def mno_omit_leaf_frame_pointer : Flag<"-mno-omit-leaf-frame-pointer">, Group<f_Group>;
+diff --git a/lib/Driver/Tools.cpp b/lib/Driver/Tools.cpp
+index 2958393..b69e838 100644
+--- a/lib/Driver/Tools.cpp
++++ b/lib/Driver/Tools.cpp
+@@ -756,6 +756,14 @@ void Clang::AddARMTargetArgs(const ArgList &Args,
+       CmdArgs.push_back("-mno-global-merge");
+   }
+ 
++  if (Args.hasArg(options::OPT_mehabi)) {
++    CmdArgs.push_back("-backend-option");
++    CmdArgs.push_back("-arm-enable-ehabi");
++
++    CmdArgs.push_back("-backend-option");
++    CmdArgs.push_back("-arm-enable-ehabi-descriptors");
++  }
++
+   if (Args.hasArg(options::OPT_mignore_has_ras)) {
+     CmdArgs.push_back("-backend-option");
+     CmdArgs.push_back("-arm-ignore-has-ras");
+-- 
+1.7.7.3
+

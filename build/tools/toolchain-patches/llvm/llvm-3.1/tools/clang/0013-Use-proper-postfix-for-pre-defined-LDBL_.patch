@@ -1,17 +1,17 @@
-From 151501a13549a038efe4d67954175ead62fe16eb Mon Sep 17 00:00:00 2001
+From acb975a474240024c639c9489be86effcb610772 Mon Sep 17 00:00:00 2001
 From: Logan Chien <loganchien@google.com>
 Date: Wed, 12 Sep 2012 13:58:22 +0800
-Subject: [PATCH] Use proper postfix for pre-defined LDBL_*.
+Subject: [PATCH 13/20] Use proper postfix for pre-defined LDBL_*.
 
 ---
- .../tools/clang/lib/Frontend/InitPreprocessor.cpp  |   49 +++++++++--------
- llvm-3.1/tools/clang/test/Preprocessor/init.c      |   56 ++++++++++----------
+ lib/Frontend/InitPreprocessor.cpp |   49 ++++++++++++++++----------------
+ test/Preprocessor/init.c          |   56 ++++++++++++++++++------------------
  2 files changed, 53 insertions(+), 52 deletions(-)
 
-diff --git a/llvm-3.1/tools/clang/lib/Frontend/InitPreprocessor.cpp b/llvm-3.1/tools/clang/lib/Frontend/InitPreprocessor.cpp
+diff --git a/lib/Frontend/InitPreprocessor.cpp b/lib/Frontend/InitPreprocessor.cpp
 index 93d49b0..9d059c5 100644
---- a/llvm-3.1/tools/clang/lib/Frontend/InitPreprocessor.cpp
-+++ b/llvm-3.1/tools/clang/lib/Frontend/InitPreprocessor.cpp
+--- a/lib/Frontend/InitPreprocessor.cpp
++++ b/lib/Frontend/InitPreprocessor.cpp
 @@ -102,51 +102,52 @@ static T PickFP(const llvm::fltSemantics *Sem, T IEEESingleVal,
  }
  
@@ -99,10 +99,10 @@ index 93d49b0..9d059c5 100644
  
    // Define a __POINTER_WIDTH__ macro for stdint.h.
    Builder.defineMacro("__POINTER_WIDTH__",
-diff --git a/llvm-3.1/tools/clang/test/Preprocessor/init.c b/llvm-3.1/tools/clang/test/Preprocessor/init.c
+diff --git a/test/Preprocessor/init.c b/test/Preprocessor/init.c
 index 0505fff..b8ef33d 100644
---- a/llvm-3.1/tools/clang/test/Preprocessor/init.c
-+++ b/llvm-3.1/tools/clang/test/Preprocessor/init.c
+--- a/test/Preprocessor/init.c
++++ b/test/Preprocessor/init.c
 @@ -171,19 +171,19 @@
  // ARM:#define __INTPTR_TYPE__ long int
  // ARM:#define __INTPTR_WIDTH__ 32

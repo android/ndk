@@ -1,6 +1,29 @@
---- a/llvm-3.1/tools/clang/lib/Driver/Tools.cpp	2012-09-17 17:55:54.000000000 -0700
-+++ b/llvm-3.1/tools/clang/lib/Driver/Tools.cpp	2012-09-17 19:43:56.194269627 -0700
-@@ -654,6 +654,7 @@
+From 4c39774573a53fb2c65766fcf64dd42cd0121716 Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Thu, 27 Sep 2012 16:52:05 +0800
+Subject: [PATCH 15/20] Add predefined flags to clang -cc1
+
+Add the following predefined flags already exist in GCC NDK
+toolcahin, to make clang an easier drop-in replacement in
+makefile (standalone mode)
+
+  arm: -fpic -mehabi -mignore-has-ras
+  x86: -fPIC -mstackrealign -msse3 (*1)
+  mips: -fpic
+
+(*1) Other flags for x86 in GCC NDK
+  -fno-short-enums is already the default in clang
+  -mfpmath=sse is ignored !
+  -marth=i686 -mtune=atom : use -target instead
+---
+ lib/Driver/Tools.cpp |   83 +++++++++++++++++++++++++++++++++++++------------
+ 1 files changed, 62 insertions(+), 21 deletions(-)
+
+diff --git a/lib/Driver/Tools.cpp b/lib/Driver/Tools.cpp
+index b69e838..37b0345 100644
+--- a/lib/Driver/Tools.cpp
++++ b/lib/Driver/Tools.cpp
+@@ -654,6 +654,7 @@ void Clang::AddARMTargetArgs(const ArgList &Args,
                               bool KernelOrKext) const {
    const Driver &D = getToolChain().getDriver();
    llvm::Triple Triple = getToolChain().getTriple();
@@ -8,7 +31,7 @@
  
    // Select the ABI to use.
    //
-@@ -756,7 +757,7 @@
+@@ -756,7 +757,7 @@ void Clang::AddARMTargetArgs(const ArgList &Args,
        CmdArgs.push_back("-mno-global-merge");
    }
  
@@ -17,7 +40,7 @@
      CmdArgs.push_back("-backend-option");
      CmdArgs.push_back("-arm-enable-ehabi");
  
-@@ -764,7 +765,7 @@
+@@ -764,7 +765,7 @@ void Clang::AddARMTargetArgs(const ArgList &Args,
      CmdArgs.push_back("-arm-enable-ehabi-descriptors");
    }
  
@@ -26,7 +49,7 @@
      CmdArgs.push_back("-backend-option");
      CmdArgs.push_back("-arm-ignore-has-ras");
    }
-@@ -950,6 +951,8 @@
+@@ -950,6 +951,8 @@ void Clang::AddSparcTargetArgs(const ArgList &Args,
  
  void Clang::AddX86TargetArgs(const ArgList &Args,
                               ArgStringList &CmdArgs) const {
@@ -35,7 +58,7 @@
    if (!Args.hasFlag(options::OPT_mred_zone,
                      options::OPT_mno_red_zone,
                      true) ||
-@@ -1026,6 +1029,11 @@
+@@ -1026,6 +1029,11 @@ void Clang::AddX86TargetArgs(const ArgList &Args,
    // attributes here.
    llvm::StringMap<unsigned> PrevFeature;
    std::vector<const char*> Features;
@@ -47,7 +70,7 @@
    for (arg_iterator it = Args.filtered_begin(options::OPT_m_x86_Features_Group),
           ie = Args.filtered_end(); it != ie; ++it) {
      StringRef Name = (*it)->getOption().getName();
-@@ -1337,6 +1345,8 @@
+@@ -1337,6 +1345,8 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
    bool KernelOrKext = Args.hasArg(options::OPT_mkernel,
                                    options::OPT_fapple_kext);
    const Driver &D = getToolChain().getDriver();
@@ -56,7 +79,7 @@
    ArgStringList CmdArgs;
  
    assert(Inputs.size() == 1 && "Unable to handle multiple inputs.");
-@@ -1517,15 +1527,42 @@
+@@ -1517,15 +1527,42 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
                                      options::OPT_fpic, options::OPT_fno_pic,
                                      options::OPT_fPIE, options::OPT_fno_PIE,
                                      options::OPT_fpie, options::OPT_fno_pie);
@@ -104,7 +127,7 @@
      PICDisabled = !PICEnabled;
    }
    // Note that these flags are trump-cards. Regardless of the order w.r.t. the
-@@ -1556,14 +1593,15 @@
+@@ -1556,14 +1593,15 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
  
    // Infer the __PIC__ and __PIE__ values.
    if (ModelStr == "pic" && PICForPIE) {
@@ -125,7 +148,7 @@
                         getToolChain().getTriple().isOSDarwin()) ? "2" : "1");
    }
  
-@@ -2170,13 +2208,13 @@
+@@ -2170,13 +2208,13 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
  
    // Translate -mstackrealign
    if (Args.hasFlag(options::OPT_mstackrealign, options::OPT_mno_stackrealign,
@@ -141,7 +164,7 @@
    }
  
    if (Args.hasArg(options::OPT_mstack_alignment)) {
-@@ -5059,6 +5097,8 @@
+@@ -5059,6 +5097,8 @@ void linuxtools::Assemble::ConstructJob(Compilation &C, const JobAction &JA,
                                          const InputInfoList &Inputs,
                                          const ArgList &Args,
                                          const char *LinkingOutput) const {
@@ -150,7 +173,7 @@
    ArgStringList CmdArgs;
  
    // Add --32/--64 to make sure we get the format we want.
-@@ -5109,11 +5149,12 @@
+@@ -5109,11 +5149,12 @@ void linuxtools::Assemble::ConstructJob(Compilation &C, const JobAction &JA,
                                        options::OPT_fpic, options::OPT_fno_pic,
                                        options::OPT_fPIE, options::OPT_fno_PIE,
                                        options::OPT_fpie, options::OPT_fno_pie);
@@ -168,7 +191,7 @@
        CmdArgs.push_back("-KPIC");
      }
    }
-@@ -5141,8 +5182,8 @@
+@@ -5141,8 +5182,8 @@ void linuxtools::Assemble::ConstructJob(Compilation &C, const JobAction &JA,
  
  static void AddLibgcc(llvm::Triple Triple, const Driver &D,
                        ArgStringList &CmdArgs, const ArgList &Args) {
@@ -179,3 +202,6 @@
                        Args.hasArg(options::OPT_static_libgcc);
    if (!D.CCCIsCXX)
      CmdArgs.push_back("-lgcc");
+-- 
+1.7.7.3
+

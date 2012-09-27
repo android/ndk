@@ -1,16 +1,16 @@
-From 7d512d6a92ec8c10479e04c452f5d119a739fe89 Mon Sep 17 00:00:00 2001
+From cea6271c4ed7ee9eaadf0b684f72f9e105a4a1ee Mon Sep 17 00:00:00 2001
 From: Logan Chien <loganchien@google.com>
 Date: Tue, 28 Aug 2012 13:28:47 +0800
-Subject: [PATCH] Fix MIPS link error when using Clang.
+Subject: [PATCH 08/20] Fix MIPS link error when using Clang.
 
 ---
- llvm-3.1/tools/clang/lib/Driver/Tools.cpp |    9 ++++++---
+ lib/Driver/Tools.cpp |    9 ++++++---
  1 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/llvm-3.1/tools/clang/lib/Driver/Tools.cpp b/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
+diff --git a/lib/Driver/Tools.cpp b/lib/Driver/Tools.cpp
 index 859023f..cdbd1ff 100644
---- a/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
-+++ b/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
+--- a/lib/Driver/Tools.cpp
++++ b/lib/Driver/Tools.cpp
 @@ -5127,12 +5127,12 @@ void linuxtools::Assemble::ConstructJob(Compilation &C, const JobAction &JA,
  static void AddLibgcc(llvm::Triple Triple, const Driver &D,
                        ArgStringList &CmdArgs, const ArgList &Args) {
