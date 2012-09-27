@@ -1,0 +1,16 @@
+diff -Naur llvm-3.1.0/tools/clang/lib/Driver/ToolChains.cpp llvm-3.1/tools/clang/lib/Driver/ToolChains.cpp
+--- a/llvm-3.1/tools/clang/lib/Driver/ToolChains.cpp	2012-09-25 23:58:01.000000000 -0700
++++ b/llvm-3.1/tools/clang/lib/Driver/ToolChains.cpp	2012-09-27 00:25:29.679348165 -0700
+@@ -2063,6 +2063,12 @@
+   if (GCCInstallation.isValid()) {
+     const llvm::Triple &GCCTriple = GCCInstallation.getTriple();
+     const std::string &LibPath = GCCInstallation.getParentLibPath();
++    if (IsAndroid) {
++      // Add libstdc++ path
++      const std::string LibstdcppPath = getDriver().Dir + "/../" + GCCTriple.str() +
++                "/lib" + GCCInstallation.getMultiarchSuffix().str();
++      addPathIfExists(LibstdcppPath, Paths);
++    }
+     addPathIfExists((GCCInstallation.getInstallPath() +
+                      GCCInstallation.getMultiarchSuffix()),
+                     Paths);
