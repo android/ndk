@@ -1,20 +1,18 @@
-From 85e8cda14b07245936eea50e07a09697d2fd3d6d Mon Sep 17 00:00:00 2001
+From 92c8cccfd0a30015297e5dfbd176b3416fcc3ab8 Mon Sep 17 00:00:00 2001
 From: Logan Chien <loganchien@google.com>
 Date: Wed, 5 Sep 2012 23:37:51 +0800
-Subject: [PATCH 2/2] Fix ARM EHABI exception support.
+Subject: [PATCH 5/6] Fix ARM EHABI exception support.
 
 ---
- llvm-3.1/lib/CodeGen/AsmPrinter/ARMException.cpp   |   36 ++++++++++++++------
- llvm-3.1/lib/CodeGen/AsmPrinter/DwarfException.cpp |   15 +++++---
- llvm-3.1/lib/CodeGen/AsmPrinter/DwarfException.h   |    6 +++
- .../tools/clang/include/clang/Driver/Options.td    |    1 +
- llvm-3.1/tools/clang/lib/Driver/Tools.cpp          |    8 ++++
- 5 files changed, 50 insertions(+), 16 deletions(-)
+ lib/CodeGen/AsmPrinter/ARMException.cpp   |   36 ++++++++++++++++++++---------
+ lib/CodeGen/AsmPrinter/DwarfException.cpp |   15 ++++++++----
+ lib/CodeGen/AsmPrinter/DwarfException.h   |    6 +++++
+ 3 files changed, 41 insertions(+), 16 deletions(-)
 
-diff --git a/llvm-3.1/lib/CodeGen/AsmPrinter/ARMException.cpp b/llvm-3.1/lib/CodeGen/AsmPrinter/ARMException.cpp
+diff --git a/lib/CodeGen/AsmPrinter/ARMException.cpp b/lib/CodeGen/AsmPrinter/ARMException.cpp
 index b60fda8..9e2f59e 100644
---- a/llvm-3.1/lib/CodeGen/AsmPrinter/ARMException.cpp
-+++ b/llvm-3.1/lib/CodeGen/AsmPrinter/ARMException.cpp
+--- a/lib/CodeGen/AsmPrinter/ARMException.cpp
++++ b/lib/CodeGen/AsmPrinter/ARMException.cpp
 @@ -71,24 +71,38 @@ void ARMException::EndFunction() {
      Asm->OutStreamer.EmitLabel(Asm->GetTempSymbol("eh_func_end",
                                                    Asm->getFunctionNumber()));
@@ -65,10 +63,10 @@ index b60fda8..9e2f59e 100644
 +    Asm->OutStreamer.EmitRawText(Twine("\t.word\t0\n"));
 +  }
 +}
-diff --git a/llvm-3.1/lib/CodeGen/AsmPrinter/DwarfException.cpp b/llvm-3.1/lib/CodeGen/AsmPrinter/DwarfException.cpp
+diff --git a/lib/CodeGen/AsmPrinter/DwarfException.cpp b/lib/CodeGen/AsmPrinter/DwarfException.cpp
 index 70cc2e5..7d58102 100644
---- a/llvm-3.1/lib/CodeGen/AsmPrinter/DwarfException.cpp
-+++ b/llvm-3.1/lib/CodeGen/AsmPrinter/DwarfException.cpp
+--- a/lib/CodeGen/AsmPrinter/DwarfException.cpp
++++ b/lib/CodeGen/AsmPrinter/DwarfException.cpp
 @@ -684,11 +684,7 @@ void DwarfException::EmitExceptionTable() {
      const GlobalVariable *GV = *I;
      if (VerboseAsm)
@@ -98,10 +96,10 @@ index 70cc2e5..7d58102 100644
  /// EndModule - Emit all exception information that should come after the
  /// content.
  void DwarfException::EndModule() {
-diff --git a/llvm-3.1/lib/CodeGen/AsmPrinter/DwarfException.h b/llvm-3.1/lib/CodeGen/AsmPrinter/DwarfException.h
+diff --git a/lib/CodeGen/AsmPrinter/DwarfException.h b/lib/CodeGen/AsmPrinter/DwarfException.h
 index b5f86ab..f361d36 100644
---- a/llvm-3.1/lib/CodeGen/AsmPrinter/DwarfException.h
-+++ b/llvm-3.1/lib/CodeGen/AsmPrinter/DwarfException.h
+--- a/lib/CodeGen/AsmPrinter/DwarfException.h
++++ b/lib/CodeGen/AsmPrinter/DwarfException.h
 @@ -138,6 +138,9 @@ public:
  
    /// EndFunction - Gather and emit post-function exception information.
@@ -122,37 +120,6 @@ index b5f86ab..f361d36 100644
  };
  
  class Win64Exception : public DwarfException {
-diff --git a/llvm-3.1/tools/clang/include/clang/Driver/Options.td b/llvm-3.1/tools/clang/include/clang/Driver/Options.td
-index 6d138b0..3a31ea1 100644
---- a/llvm-3.1/tools/clang/include/clang/Driver/Options.td
-+++ b/llvm-3.1/tools/clang/include/clang/Driver/Options.td
-@@ -651,6 +651,7 @@ def mno_thumb : Flag<"-mno-thumb">, Group<m_Group>;
- def marm : Flag<"-marm">, Alias<mno_thumb>;
- 
- def mignore_has_ras : Flag<"-mignore-has-ras">;
-+def mehabi : Flag<"-mehabi">;
- 
- def mno_warn_nonportable_cfstrings : Flag<"-mno-warn-nonportable-cfstrings">, Group<m_Group>;
- def mno_omit_leaf_frame_pointer : Flag<"-mno-omit-leaf-frame-pointer">, Group<f_Group>;
-diff --git a/llvm-3.1/tools/clang/lib/Driver/Tools.cpp b/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
-index 2958393..b69e838 100644
---- a/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
-+++ b/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
-@@ -756,6 +756,14 @@ void Clang::AddARMTargetArgs(const ArgList &Args,
-       CmdArgs.push_back("-mno-global-merge");
-   }
- 
-+  if (Args.hasArg(options::OPT_mehabi)) {
-+    CmdArgs.push_back("-backend-option");
-+    CmdArgs.push_back("-arm-enable-ehabi");
-+
-+    CmdArgs.push_back("-backend-option");
-+    CmdArgs.push_back("-arm-enable-ehabi-descriptors");
-+  }
-+
-   if (Args.hasArg(options::OPT_mignore_has_ras)) {
-     CmdArgs.push_back("-backend-option");
-     CmdArgs.push_back("-arm-ignore-has-ras");
 -- 
 1.7.7.3
 

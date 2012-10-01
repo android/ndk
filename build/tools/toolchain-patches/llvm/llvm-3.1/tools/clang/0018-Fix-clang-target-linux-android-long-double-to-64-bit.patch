@@ -1,7 +1,20 @@
-diff -Naur llvm.0/llvm-3.1/tools/clang/lib/Basic/Targets.cpp llvm/llvm-3.1/tools/clang/lib/Basic/Targets.cpp
---- a/llvm-3.1/tools/clang/lib/Basic/Targets.cpp	2012-08-28 00:45:53.000000000 -0700
-+++ b/llvm-3.1/tools/clang/lib/Basic/Targets.cpp	2012-09-25 16:28:53.080650937 -0700
-@@ -1398,8 +1398,11 @@
+From 7f878fea9aad6f205ddf6212abf30720778e2595 Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Thu, 27 Sep 2012 17:07:53 +0800
+Subject: [PATCH 18/20] Fix clang -target *-linux-android long double to
+ 64-bit
+
+To be consistent with Android and its GCC counterpart
+i686-linux-android-gcc (since 65cadbba7f7e816b4b2bff752808b7429d0d0f2a)
+---
+ lib/Basic/Targets.cpp |   21 ++++++++++++++++-----
+ 1 files changed, 16 insertions(+), 5 deletions(-)
+
+diff --git a/lib/Basic/Targets.cpp b/lib/Basic/Targets.cpp
+index 9a9c19e..5fae886 100644
+--- a/lib/Basic/Targets.cpp
++++ b/lib/Basic/Targets.cpp
+@@ -1398,8 +1398,11 @@ public:
      : TargetInfo(triple), SSELevel(NoSSE), MMX3DNowLevel(NoMMX3DNow),
        HasAES(false), HasLZCNT(false), HasBMI(false), HasBMI2(false),
        HasPOPCNT(false), HasFMA4(false), CPU(CK_Generic) {
@@ -14,7 +27,7 @@ diff -Naur llvm.0/llvm-3.1/tools/clang/lib/Basic/Targets.cpp llvm/llvm-3.1/tools
    }
    virtual unsigned getFloatEvalMethod() const {
      // X87 evaluates with 80 bits "long double" precision.
-@@ -2207,13 +2210,21 @@
+@@ -2207,13 +2210,21 @@ namespace {
  class X86_32TargetInfo : public X86TargetInfo {
  public:
    X86_32TargetInfo(const std::string& triple) : X86TargetInfo(triple) {
@@ -40,3 +53,6 @@ diff -Naur llvm.0/llvm-3.1/tools/clang/lib/Basic/Targets.cpp llvm/llvm-3.1/tools
      SizeType = UnsignedInt;
      PtrDiffType = SignedInt;
      IntPtrType = SignedInt;
+-- 
+1.7.7.3
+

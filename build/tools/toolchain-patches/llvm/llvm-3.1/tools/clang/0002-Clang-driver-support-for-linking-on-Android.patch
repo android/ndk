@@ -1,19 +1,19 @@
-From 3be54de4b8317101dedde535cef72ce56c2c20e6 Mon Sep 17 00:00:00 2001
+From 2b7b7fb191cd5f31f30cea3115ca2f10c6ce2560 Mon Sep 17 00:00:00 2001
 From: Evgeniy Stepanov <eugeni.stepanov@gmail.com>
 Date: Thu, 16 Aug 2012 15:58:17 +0800
-Subject: [PATCH 2/2] Clang driver support for linking on Android.
+Subject: [PATCH 02/20] Clang driver support for linking on Android.
 
 ---
- llvm-3.1/tools/clang/lib/Driver/Tools.cpp   |   96 +++++++++++++++++----------
- llvm-3.1/tools/clang/test/Driver/asan-ld.c  |   31 +++++++++
- llvm-3.1/tools/clang/test/Driver/linux-ld.c |   36 ++++++++++
+ lib/Driver/Tools.cpp   |   96 ++++++++++++++++++++++++++++++------------------
+ test/Driver/asan-ld.c  |   31 +++++++++++++++
+ test/Driver/linux-ld.c |   36 ++++++++++++++++++
  3 files changed, 127 insertions(+), 36 deletions(-)
- create mode 100644 llvm-3.1/tools/clang/test/Driver/asan-ld.c
+ create mode 100644 test/Driver/asan-ld.c
 
-diff --git a/llvm-3.1/tools/clang/lib/Driver/Tools.cpp b/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
+diff --git a/lib/Driver/Tools.cpp b/lib/Driver/Tools.cpp
 index 4931f8c..8ef16b5 100644
---- a/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
-+++ b/llvm-3.1/tools/clang/lib/Driver/Tools.cpp
+--- a/lib/Driver/Tools.cpp
++++ b/lib/Driver/Tools.cpp
 @@ -1269,22 +1269,33 @@ static bool UseRelaxAll(Compilation &C, const ArgList &Args) {
  /// This needs to be called before we add the C run-time (malloc, etc).
  static void addAsanRTLinux(const ToolChain &TC, const ArgList &Args,
@@ -190,11 +190,11 @@ index 4931f8c..8ef16b5 100644
      }
    }
  
-diff --git a/llvm-3.1/tools/clang/test/Driver/asan-ld.c b/llvm-3.1/tools/clang/test/Driver/asan-ld.c
+diff --git a/test/Driver/asan-ld.c b/test/Driver/asan-ld.c
 new file mode 100644
 index 0000000..feb8e21
 --- /dev/null
-+++ b/llvm-3.1/tools/clang/test/Driver/asan-ld.c
++++ b/test/Driver/asan-ld.c
 @@ -0,0 +1,31 @@
 +// Test AddressSanitizer ld flags.
 +
@@ -227,10 +227,10 @@ index 0000000..feb8e21
 +// CHECK-ANDROID-SHARED-NOT: "-lc"
 +// CHECK-ANDROID-SHARED-NOT: "-lasan"
 +// CHECK-ANDROID-SHARED: "-lasan_preload" "-ldl"
-diff --git a/llvm-3.1/tools/clang/test/Driver/linux-ld.c b/llvm-3.1/tools/clang/test/Driver/linux-ld.c
+diff --git a/test/Driver/linux-ld.c b/test/Driver/linux-ld.c
 index 9a35d5d..3d6a7e6 100644
---- a/llvm-3.1/tools/clang/test/Driver/linux-ld.c
-+++ b/llvm-3.1/tools/clang/test/Driver/linux-ld.c
+--- a/test/Driver/linux-ld.c
++++ b/test/Driver/linux-ld.c
 @@ -268,3 +268,39 @@
  // CHECK-DEBIAN-PPC64: "-L[[SYSROOT]]/lib"
  // CHECK-DEBIAN-PPC64: "-L[[SYSROOT]]/usr/lib"

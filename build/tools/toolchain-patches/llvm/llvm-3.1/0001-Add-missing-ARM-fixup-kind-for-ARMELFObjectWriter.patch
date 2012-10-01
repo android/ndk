@@ -1,7 +1,7 @@
-From 02638d41bb06858a7b0c25dcbb5aef4ba9724957 Mon Sep 17 00:00:00 2001
+From 2a31018a639dc37598d390d70bde9f933ab8c2ae Mon Sep 17 00:00:00 2001
 From: Logan Chien <loganchien@google.com>
 Date: Fri, 24 Aug 2012 17:06:53 +0800
-Subject: [PATCH 2/2] Add missing ARM fixup kind for ARMELFObjectWriter.
+Subject: [PATCH 1/6] Add missing ARM fixup kind for ARMELFObjectWriter.
 
 ---
  lib/Target/ARM/MCTargetDesc/ARMELFObjectWriter.cpp |    4 +++
@@ -9,10 +9,10 @@ Subject: [PATCH 2/2] Add missing ARM fixup kind for ARMELFObjectWriter.
  2 files changed, 27 insertions(+), 0 deletions(-)
  create mode 100644 test/CodeGen/ARM/fixup-elf.ll
 
-diff --git a/llvm-3.1/lib/Target/ARM/MCTargetDesc/ARMELFObjectWriter.cpp b/llvm-3.1/lib/Target/ARM/MCTargetDesc/ARMELFObjectWriter.cpp
-index 7d6acbc..f24a29f 100644
---- a/llvm-3.1/lib/Target/ARM/MCTargetDesc/ARMELFObjectWriter.cpp
-+++ b/llvm-3.1/lib/Target/ARM/MCTargetDesc/ARMELFObjectWriter.cpp
+diff --git a/lib/Target/ARM/MCTargetDesc/ARMELFObjectWriter.cpp b/lib/Target/ARM/MCTargetDesc/ARMELFObjectWriter.cpp
+index aa649ba..d0917af 100644
+--- a/lib/Target/ARM/MCTargetDesc/ARMELFObjectWriter.cpp
++++ b/lib/Target/ARM/MCTargetDesc/ARMELFObjectWriter.cpp
 @@ -214,6 +214,10 @@ unsigned ARMELFObjectWriter::GetRelocTypeInner(const MCValue &Target,
      case ARM::fixup_arm_thumb_blx:
        Type = ELF::R_ARM_THM_CALL;
@@ -24,11 +24,11 @@ index 7d6acbc..f24a29f 100644
      }
    } else {
      switch ((unsigned)Fixup.getKind()) {
-diff --git a/llvm-3.1/test/CodeGen/ARM/fixup-elf.ll b/llvm-3.1/test/CodeGen/ARM/fixup-elf.ll
+diff --git a/test/CodeGen/ARM/fixup-elf.ll b/test/CodeGen/ARM/fixup-elf.ll
 new file mode 100644
 index 0000000..90d880f
 --- /dev/null
-+++ b/llvm-3.1/test/CodeGen/ARM/fixup-elf.ll
++++ b/test/CodeGen/ARM/fixup-elf.ll
 @@ -0,0 +1,23 @@
 +; RUN: llc -mtriple thumbv7-none-linux-gnueabi -mcpu=cortex-a8 -march=thumb -mattr=thumb2 -filetype=obj -o - < %s | llvm-objdump -r - | FileCheck %s
 +

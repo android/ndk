@@ -1,18 +1,18 @@
-From a3e95da137134a4820937a481fb065c1d1104ac8 Mon Sep 17 00:00:00 2001
+From 187215642b35b8803ee8ccafe857fb5188d2cf16 Mon Sep 17 00:00:00 2001
 From: Logan Chien <loganchien@google.com>
 Date: Wed, 12 Sep 2012 18:32:47 +0800
-Subject: [PATCH] Detect sysroot automatically.
+Subject: [PATCH 14/20] Detect sysroot automatically.
 
 If --sysroot is not specified, try to look for
 sysroot at <clang-executable-dir>/../sysroot.
 ---
- llvm-3.1/tools/clang/lib/Driver/Driver.cpp |   10 +++++++++-
+ lib/Driver/Driver.cpp |   10 +++++++++-
  1 files changed, 9 insertions(+), 1 deletions(-)
 
-diff --git a/llvm-3.1/tools/clang/lib/Driver/Driver.cpp b/llvm-3.1/tools/clang/lib/Driver/Driver.cpp
+diff --git a/lib/Driver/Driver.cpp b/lib/Driver/Driver.cpp
 index 3ddac69..6c65b2d 100644
---- a/llvm-3.1/tools/clang/lib/Driver/Driver.cpp
-+++ b/llvm-3.1/tools/clang/lib/Driver/Driver.cpp
+--- a/lib/Driver/Driver.cpp
++++ b/lib/Driver/Driver.cpp
 @@ -324,8 +324,16 @@ Compilation *Driver::BuildCompilation(ArrayRef<const char *> ArgList) {
      A->claim();
      PrefixDirs.push_back(A->getValue(*Args, 0));

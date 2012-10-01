@@ -1,23 +1,23 @@
-From eeba593364290ec3ea51e191211e1150ac551b24 Mon Sep 17 00:00:00 2001
+From 54703c068bd082f1e59c7c0dde094198154bc441 Mon Sep 17 00:00:00 2001
 From: Logan Chien <loganchien@google.com>
 Date: Thu, 20 Sep 2012 10:55:34 +0800
-Subject: [PATCH] Fix MIPS exception personality relocation.
+Subject: [PATCH 6/6] Fix MIPS exception personality relocation.
 
 Some MIPS executable loaders prohibit the relocation
 in the read-only section.  Thus, we have to use
 DW_EH_PE_indirect instead.
 ---
- .../lib/CodeGen/AsmPrinter/DwarfCFIException.cpp   |    3 +-
- .../lib/CodeGen/TargetLoweringObjectFileImpl.cpp   |   13 +++----
- llvm-3.1/lib/MC/MCObjectFileInfo.cpp               |   16 ++++++++-
- llvm-3.1/test/CodeGen/Mips/ehframe-indirect.ll     |   33 ++++++++++++++++++++
+ lib/CodeGen/AsmPrinter/DwarfCFIException.cpp |    3 +-
+ lib/CodeGen/TargetLoweringObjectFileImpl.cpp |   13 ++++-----
+ lib/MC/MCObjectFileInfo.cpp                  |   16 +++++++++++-
+ test/CodeGen/Mips/ehframe-indirect.ll        |   33 ++++++++++++++++++++++++++
  4 files changed, 55 insertions(+), 10 deletions(-)
- create mode 100644 llvm-3.1/test/CodeGen/Mips/ehframe-indirect.ll
+ create mode 100644 test/CodeGen/Mips/ehframe-indirect.ll
 
-diff --git a/llvm-3.1/lib/CodeGen/AsmPrinter/DwarfCFIException.cpp b/llvm-3.1/lib/CodeGen/AsmPrinter/DwarfCFIException.cpp
+diff --git a/lib/CodeGen/AsmPrinter/DwarfCFIException.cpp b/lib/CodeGen/AsmPrinter/DwarfCFIException.cpp
 index d975f1f..a9d4774 100644
---- a/llvm-3.1/lib/CodeGen/AsmPrinter/DwarfCFIException.cpp
-+++ b/llvm-3.1/lib/CodeGen/AsmPrinter/DwarfCFIException.cpp
+--- a/lib/CodeGen/AsmPrinter/DwarfCFIException.cpp
++++ b/lib/CodeGen/AsmPrinter/DwarfCFIException.cpp
 @@ -59,7 +59,8 @@ void DwarfCFIException::EndModule() {
  
    unsigned PerEncoding = TLOF.getPersonalityEncoding();
@@ -28,10 +28,10 @@ index d975f1f..a9d4774 100644
      return;
  
    // Emit references to all used personality functions
-diff --git a/llvm-3.1/lib/CodeGen/TargetLoweringObjectFileImpl.cpp b/llvm-3.1/lib/CodeGen/TargetLoweringObjectFileImpl.cpp
+diff --git a/lib/CodeGen/TargetLoweringObjectFileImpl.cpp b/lib/CodeGen/TargetLoweringObjectFileImpl.cpp
 index 3660cf7..840d233 100644
---- a/llvm-3.1/lib/CodeGen/TargetLoweringObjectFileImpl.cpp
-+++ b/llvm-3.1/lib/CodeGen/TargetLoweringObjectFileImpl.cpp
+--- a/lib/CodeGen/TargetLoweringObjectFileImpl.cpp
++++ b/lib/CodeGen/TargetLoweringObjectFileImpl.cpp
 @@ -49,15 +49,14 @@ TargetLoweringObjectFileELF::getCFIPersonalitySymbol(const GlobalValue *GV,
                                                       Mangler *Mang,
                                                  MachineModuleInfo *MMI) const {
@@ -54,10 +54,10 @@ index 3660cf7..840d233 100644
    }
  }
  
-diff --git a/llvm-3.1/lib/MC/MCObjectFileInfo.cpp b/llvm-3.1/lib/MC/MCObjectFileInfo.cpp
+diff --git a/lib/MC/MCObjectFileInfo.cpp b/lib/MC/MCObjectFileInfo.cpp
 index b22ae33..8b2ed03 100644
---- a/llvm-3.1/lib/MC/MCObjectFileInfo.cpp
-+++ b/llvm-3.1/lib/MC/MCObjectFileInfo.cpp
+--- a/lib/MC/MCObjectFileInfo.cpp
++++ b/lib/MC/MCObjectFileInfo.cpp
 @@ -219,7 +219,8 @@ void MCObjectFileInfo::InitMachOMCObjectFileInfo(Triple T) {
  }
  
@@ -95,11 +95,11 @@ index b22ae33..8b2ed03 100644
    }
  
    // Solaris requires different flags for .eh_frame to seemingly every other
-diff --git a/llvm-3.1/test/CodeGen/Mips/ehframe-indirect.ll b/llvm-3.1/test/CodeGen/Mips/ehframe-indirect.ll
+diff --git a/test/CodeGen/Mips/ehframe-indirect.ll b/test/CodeGen/Mips/ehframe-indirect.ll
 new file mode 100644
 index 0000000..db422a7
 --- /dev/null
-+++ b/llvm-3.1/test/CodeGen/Mips/ehframe-indirect.ll
++++ b/test/CodeGen/Mips/ehframe-indirect.ll
 @@ -0,0 +1,33 @@
 +; RUN: llc -march=mipsel < %s | FileCheck %s
 +
