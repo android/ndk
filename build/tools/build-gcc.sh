@@ -228,7 +228,7 @@ EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --disable-libquadmath --disable-plugin"
 # Enable Gold as default
 case "$TOOLCHAIN" in
     # Note that only ARM and X86 are supported
-    x86-4.6|arm-linux-androideabi-4.6)
+    x86-4.6|arm-linux-androideabi-4.6|x86-4.7|arm-linux-androideabi-4.7)
         EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-gold=default"
     ;;
 esac

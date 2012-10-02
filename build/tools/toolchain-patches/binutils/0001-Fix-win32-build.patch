@@ -46,6 +46,19 @@ index fcbc32b..8124bd0 100644
  /* Return the filename in a static buffer.  */
  const char *bfd_get_archive_filename (const bfd *);
  
+diff --git a/binutils-2.22/binutils/bucomm.h b/binutils-2.22/binutils/bucomm.h
+index fcbc32b..8124bd0 100644
+--- a/binutils-2.22/binutils/bucomm.h
++++ b/binutils-2.22/binutils/bucomm.h
+@@ -23,6 +23,8 @@
+ #ifndef _BUCOMM_H
+ #define _BUCOMM_H
+ 
++#include <sys/stat.h>
++
+ /* Return the filename in a static buffer.  */
+ const char *bfd_get_archive_filename (const bfd *);
+ 
 -- 
 1.7.6.rc0
 
