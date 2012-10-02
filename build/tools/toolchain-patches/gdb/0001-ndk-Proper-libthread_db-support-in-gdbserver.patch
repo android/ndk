@@ -7,9 +7,9 @@ Change-Id: If1c5f967e0f57d205215f28945e682bb5c291170
 ---
  gdb-6.6/gdb/gdbserver/acinclude.m4   |    2 +-
  gdb-6.6/gdb/gdbserver/configure      |    2 +-
- gdb-7.1.x/gdb/gdbserver/Makefile.in  |    8 ++++----
- gdb-7.1.x/gdb/gdbserver/configure    |    4 ++--
- gdb-7.1.x/gdb/gdbserver/configure.ac |    4 ++--
+ gdb-7.3.x/gdb/gdbserver/Makefile.in  |    8 ++++----
+ gdb-7.3.x/gdb/gdbserver/configure    |    4 ++--
+ gdb-7.3.x/gdb/gdbserver/configure.ac |    4 ++--
  5 files changed, 10 insertions(+), 10 deletions(-)
 
 diff --git a/gdb-6.6/gdb/gdbserver/acinclude.m4 b/gdb-6.6/gdb/gdbserver/acinclude.m4
@@ -38,72 +38,6 @@ index 9d97888..debb43a 100755
    cat >conftest.$ac_ext <<_ACEOF
  /* confdefs.h.  */
  _ACEOF
-diff --git a/gdb-7.1.x/gdb/gdbserver/Makefile.in b/gdb-7.1.x/gdb/gdbserver/Makefile.in
-index 5bf82e2..bc2ed43 100644
---- a/gdb-7.1.x/gdb/gdbserver/Makefile.in
-+++ b/gdb-7.1.x/gdb/gdbserver/Makefile.in
-@@ -176,13 +176,13 @@ clean-info:
- 
- gdbserver$(EXEEXT): $(OBS) ${ADD_DEPS} ${CDEPS}
- 	rm -f gdbserver$(EXEEXT)
--	${CC-LD} $(INTERNAL_CFLAGS) $(INTERNAL_LDFLAGS) -o gdbserver$(EXEEXT) $(OBS) \
--	  $(GDBSERVER_LIBS) $(XM_CLIBS)
-+	${CC-LD} $(INTERNAL_CFLAGS) $(OBS) $(GDBSERVER_LIBS) $(XM_CLIBS) \
-+          $(INTERNAL_LDFLAGS) -o gdbserver$(EXEEXT)
- 
- gdbreplay$(EXEEXT): $(GDBREPLAY_OBS)
- 	rm -f gdbreplay$(EXEEXT)
--	${CC-LD} $(INTERNAL_CFLAGS) $(INTERNAL_LDFLAGS) -o gdbreplay$(EXEEXT) $(GDBREPLAY_OBS) \
--	  $(XM_CLIBS)
-+	${CC-LD} $(INTERNAL_CFLAGS) -o gdbreplay$(EXEEXT) $(GDBREPLAY_OBS) \
-+          $(XM_CLIBS) $(INTERNAL_LDFLAGS)
- 
- # Put the proper machine-specific files first, so M-. on a machine
- # specific routine gets the one for the correct machine.
-diff --git a/gdb-7.1.x/gdb/gdbserver/configure b/gdb-7.1.x/gdb/gdbserver/configure
-index 47bd81a..399d08b 100755
---- a/gdb-7.1.x/gdb/gdbserver/configure
-+++ b/gdb-7.1.x/gdb/gdbserver/configure
-@@ -4291,7 +4291,7 @@ srv_libs=
- USE_THREAD_DB=
- 
- if test "$srv_linux_thread_db" = "yes"; then
--  srv_libs="-ldl"
-+  srv_libs="-lthread_db -lc"
-   old_LDFLAGS="$LDFLAGS"
-   LDFLAGS="$LDFLAGS -rdynamic"
-   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-@@ -4356,7 +4356,7 @@ if test "${with_libthread_db+set}" = set; then :
- 
- $as_echo "#define USE_LIBTHREAD_DB_DIRECTLY 1" >>confdefs.h
- 
--  srv_libs="$srv_libthread_db_path"
-+  srv_libs="$srv_libthread_db_path -lc"
- 
- fi
- 
-diff --git a/gdb-7.1.x/gdb/gdbserver/configure.ac b/gdb-7.1.x/gdb/gdbserver/configure.ac
-index 638c228..a13117b 100644
---- a/gdb-7.1.x/gdb/gdbserver/configure.ac
-+++ b/gdb-7.1.x/gdb/gdbserver/configure.ac
-@@ -180,7 +180,7 @@ srv_libs=
- USE_THREAD_DB=
- 
- if test "$srv_linux_thread_db" = "yes"; then
--  srv_libs="-ldl"
-+  srv_libs="-lthread_db -lc"
-   old_LDFLAGS="$LDFLAGS"
-   LDFLAGS="$LDFLAGS -rdynamic"
-   AC_TRY_LINK([], [], [RDYNAMIC=-rdynamic], [RDYNAMIC=])
-@@ -202,7 +202,7 @@ AC_ARG_WITH(libthread-db,
- AS_HELP_STRING([--with-libthread-db=PATH], [use given libthread_db directly]),
- [srv_libthread_db_path="${withval}"
-   AC_DEFINE(USE_LIBTHREAD_DB_DIRECTLY, 1, [Define if we should use libthread_db directly.])
--  srv_libs="$srv_libthread_db_path"
-+  srv_libs="$srv_libthread_db_path -lc"
- ])
- 
- if test "$srv_xmlfiles" != ""; then
 diff --git a/gdb-7.3.x/gdb/gdbserver/Makefile.in b/gdb-7.3.x/gdb/gdbserver/Makefile.in
 index 7d565af..e5e8ae4 100644
 --- a/gdb-7.3.x/gdb/gdbserver/Makefile.in

@@ -52,7 +52,7 @@ for four different systems:
 TOOLCHAIN_SRC_DIR=
 register_var_option "--toolchain-src-dir=<path>" TOOLCHAIN_SRC_DIR "Select toolchain source directory"
 
-GDB_VERSION="6.6 7.1.x 7.3.x"
+GDB_VERSION="6.6 7.3.x"
 register_var_option "--gdb-version=<version>" GDB_VERSION "Select GDB version(s)."
 
 BUILD_DIR=

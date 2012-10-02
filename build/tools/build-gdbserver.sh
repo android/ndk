@@ -192,14 +192,11 @@ case "$GDB_VERSION" in
     6.6)
         CONFIGURE_FLAGS="--with-sysroot=$BUILD_SYSROOT"
         ;;
-    7.1.x)
+    7.3.x)
         # This flag is required to link libthread_db statically to our
         # gdbserver binary. Otherwise, the program will try to dlopen()
         # the threads binary, which is not possible since we build a
         # static executable.
-        CONFIGURE_FLAGS="--with-libthread-db=$BUILD_SYSROOT/usr/lib/libthread_db.a"
-        ;;
-    7.3.x)
         CONFIGURE_FLAGS="--with-libthread-db=$BUILD_SYSROOT/usr/lib/libthread_db.a"
         # Disable libinproctrace.so which needs crtbegin_so.o and crtbend_so.o instead of
         # CRTBEGIN/END above.  Clean it up and re-enable it in the future.
