@@ -47,6 +47,25 @@ index 63f46a9..845b6d1 100644
      if (_M_init)
        __gthread_key_delete(_M_key);
      _M_init = false;
+diff --git a/gcc-4.7/libstdc++-v3/libsupc++/eh_globals.cc b/gcc-4.7/libstdc++-v3/libsupc++/eh_globals.cc
+index 0c7f6b7..fa9b519 100644
+--- a/gcc-4.7/libstdc++-v3/libsupc++/eh_globals.cc
++++ b/gcc-4.7/libstdc++-v3/libsupc++/eh_globals.cc
+@@ -101,6 +101,14 @@ struct __eh_globals_init
+ 
+   ~__eh_globals_init()
+   {
++    /* Work-around for an Android-specific bug, where this destructor
++     * is called with a NULL object pointer. This is due to a bug in the
++     * __cxa_finalize() implementation that was only fixed in 2.2.
++     */
++#ifdef __ANDROID__
++    if (this == NULL)
++        return;
++#endif
+     if (_M_init)
+       __gthread_key_delete(_M_key);
+     _M_init = false;
 -- 
 1.7.6.rc0
 

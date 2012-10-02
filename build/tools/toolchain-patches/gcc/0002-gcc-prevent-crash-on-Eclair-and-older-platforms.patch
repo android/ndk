@@ -73,6 +73,30 @@ index ecb06e2..8372c64 100644
  #include <pthread.h>
  #include <unistd.h>
  
+diff --git a/gcc-4.7/libgcc/gthr-posix.h b/gcc-4.7/libgcc/gthr-posix.h
+index a935e92..08281b7 100644
+--- a/gcc-4.7/libgcc/gthr-posix.h
++++ b/gcc-4.7/libgcc/gthr-posix.h
+@@ -38,6 +38,19 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+ #define _REENTRANT 1
+ #endif
+ 
++/* The following should normally be in a different header file,
++ * but I couldn't find the right location. The point of the macro
++ * definition below is to prevent libsupc++ and libstdc++ to reference
++ * weak symbols in their static C++ constructors. Such code crashes
++ * when a shared object linked statically to these libraries is
++ * loaded on Android 2.1 (Eclair) and older platform releases, due
++ * to a dynamic linker bug.
++ */
++#ifdef __ANDROID__
++#undef GTHREAD_USE_WEAK
++#define GTHREAD_USE_WEAK 0
++#endif
++
+ #include <pthread.h>
+ 
+ #if ((defined(_LIBOBJC) || defined(_LIBOBJC_WEAK)) \
 -- 
 1.7.6.rc0
 
