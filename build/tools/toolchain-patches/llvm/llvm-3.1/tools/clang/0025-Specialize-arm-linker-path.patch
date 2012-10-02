@@ -1,6 +1,6 @@
 diff -Naur llvm-3.1.0/tools/clang/lib/Driver/ToolChains.cpp llvm-3.1/tools/clang/lib/Driver/ToolChains.cpp
---- a/llvm-3.1/tools/clang/lib/Driver/ToolChains.cpp	2012-09-27 02:55:07.000000000 -0700
-+++ b/llvm-3.1/tools/clang/lib/Driver/ToolChains.cpp	2012-09-27 02:56:02.000000000 -0700
+--- a/lib/Driver/ToolChains.cpp	2012-09-27 02:55:07.000000000 -0700
++++ b/lib/Driver/ToolChains.cpp	2012-09-27 02:56:02.000000000 -0700
 @@ -1118,7 +1118,6 @@
    llvm::Triple MultiarchTriple
      = TargetTriple.isArch32Bit() ? TargetTriple.get64BitArchVariant()
@@ -61,8 +61,8 @@ diff -Naur llvm-3.1.0/tools/clang/lib/Driver/ToolChains.cpp llvm-3.1/tools/clang
          GCCMultiarchSuffix = MultiarchSuffix.str();
        } else {
 diff -Naur llvm-3.1.0/tools/clang/lib/Driver/ToolChains.h llvm-3.1/tools/clang/lib/Driver/ToolChains.h
---- a/llvm-3.1/tools/clang/lib/Driver/ToolChains.h	2012-08-30 03:12:07.000000000 -0700
-+++ b/llvm-3.1/tools/clang/lib/Driver/ToolChains.h	2012-09-27 02:56:09.000000000 -0700
+--- a/lib/Driver/ToolChains.h	2012-08-30 03:12:07.000000000 -0700
++++ b/lib/Driver/ToolChains.h	2012-09-27 02:56:09.000000000 -0700
 @@ -110,7 +110,7 @@
        SmallVectorImpl<StringRef> &MultiarchLibDirs,
        SmallVectorImpl<StringRef> &MultiarchTripleAliases);
