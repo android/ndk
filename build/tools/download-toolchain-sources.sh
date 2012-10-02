@@ -260,8 +260,8 @@ toolchain_checkout gmp  .
 toolchain_checkout mpfr .
 toolchain_checkout mpc  .
 toolchain_checkout expat .
-toolchain_checkout binutils binutils-2.19 binutils-2.21
-toolchain_checkout gcc gcc-4.4.3 gcc-4.6
+toolchain_checkout binutils binutils-2.19 binutils-2.21 binutils-2.22
+toolchain_checkout gcc gcc-4.4.3 gcc-4.6 gcc-4.7
 toolchain_checkout gdb gdb-6.6 gdb-7.3.x
 
 for LLVM_VERSION in $LLVM_VERSION_LIST; do

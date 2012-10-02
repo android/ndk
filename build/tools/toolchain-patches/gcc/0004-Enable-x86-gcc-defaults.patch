@@ -217,6 +217,56 @@ index 7256082..d30e157 100644
  
  #define ANDROID_CC1PLUS_SPEC						\
    "%{!fexceptions:%{!fno-exceptions: -fexceptions}} "		\
+diff --git a/gcc-4.7/gcc/config/arm/linux-eabi.h b/gcc-4.7/gcc/config/arm/linux-eabi.h
+index 80bd825..3331f52 100644
+--- a/gcc-4.7/gcc/config/arm/linux-eabi.h
++++ b/gcc-4.7/gcc/config/arm/linux-eabi.h
+@@ -74,7 +74,7 @@
+ #undef  CC1_SPEC
+ #define CC1_SPEC							\
+   LINUX_OR_ANDROID_CC (GNU_USER_TARGET_CC1_SPEC,			\
+-		       GNU_USER_TARGET_CC1_SPEC " " ANDROID_CC1_SPEC)
++		       GNU_USER_TARGET_CC1_SPEC " " ANDROID_CC1_SPEC("-fpic"))
+ 
+ #define CC1PLUS_SPEC \
+   LINUX_OR_ANDROID_CC ("", ANDROID_CC1PLUS_SPEC)
+diff --git a/gcc-4.7/gcc/config/i386/gnu-user.h b/gcc-4.7/gcc/config/i386/gnu-user.h
+index 98d0a25..5ff72bf 100644
+--- a/gcc-4.7/gcc/config/i386/gnu-user.h
++++ b/gcc-4.7/gcc/config/i386/gnu-user.h
+@@ -83,7 +83,15 @@
+ #undef CC1_SPEC
+ #define CC1_SPEC \
+   LINUX_OR_ANDROID_CC (LINUX_TARGET_CC1_SPEC, \
+-		       LINUX_TARGET_CC1_SPEC " " ANDROID_CC1_SPEC)
++                       LINUX_TARGET_CC1_SPEC \
++                       " -march=i686 -mtune=atom" \
++                       " -mstackrealign -msse3 -mfpmath=sse" \
++                       " -m32 -fno-short-enums" \
++                       " " \
++                       ANDROID_CC1_SPEC("-fPIC"))
++
++#define CC1PLUS_SPEC \
++  LINUX_OR_ANDROID_CC ("", ANDROID_CC1PLUS_SPEC)
+ 
+ /* Provide a LINK_SPEC appropriate for GNU userspace.  Here we provide support
+    for the special GCC options -static and -shared, which allow us to
+diff --git a/gcc-4.7/gcc/config/linux-android.h b/gcc-4.7/gcc/config/linux-android.h
+index 94c5274..dab4006 100644
+--- a/gcc-4.7/gcc/config/linux-android.h
++++ b/gcc-4.7/gcc/config/linux-android.h
+@@ -41,9 +41,9 @@
+ #define ANDROID_LINK_SPEC \
+   "%{shared: -Bsymbolic}"
+ 
+-#define ANDROID_CC1_SPEC						\
++#define ANDROID_CC1_SPEC(ANDROID_PIC_DEFAULT)				\
+   "%{!mglibc:%{!muclibc:%{!mbionic: -mbionic}}} "			\
+-  "%{!fno-pic:%{!fno-PIC:%{!fpic:%{!fPIC: -fPIC}}}}"
++  "%{!fno-pic:%{!fno-PIC:%{!fpic:%{!fPIC: " ANDROID_PIC_DEFAULT "}}}}"
+ 
+ #define ANDROID_CC1PLUS_SPEC						\
+   "%{!fexceptions:%{!fno-exceptions: -fexceptions}} "		\
 -- 
 1.7.6.rc0
 

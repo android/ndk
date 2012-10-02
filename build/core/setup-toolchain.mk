@@ -33,6 +33,8 @@ ifndef NDK_TOOLCHAIN
     $(foreach _ver,$(LLVM_VERSION_LIST), \
         $(eval TARGET_TOOLCHAIN_LIST := \
             $(filter-out %-clang$(_ver),$(TARGET_TOOLCHAIN_LIST))))
+    # Filter out 4.7 which is considered experimental at this moment
+    TARGET_TOOLCHAIN_LIST := $(filter-out %-4.7,$(TARGET_TOOLCHAIN_LIST))
 
     ifndef TARGET_TOOLCHAIN_LIST
         $(call __ndk_info,There is no toolchain that supports the $(TARGET_ARCH_ABI) ABI.)
@@ -41,7 +43,7 @@ ifndef NDK_TOOLCHAIN
         $(call __ndk_error,Aborting)
     endif
     # Select the last toolchain from the sorted list.
-    # For now, this is enough to select armeabi-4.4.0 by default for ARM
+    # For now, this is enough to select armeabi-4.6 by default for ARM
     TARGET_TOOLCHAIN := $(lastword $(TARGET_TOOLCHAIN_LIST))
 
     # If NDK_TOOLCHAIN_VERSION is defined, we replace the toolchain version
