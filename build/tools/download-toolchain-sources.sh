@@ -262,7 +262,7 @@ toolchain_checkout mpc  .
 toolchain_checkout expat .
 toolchain_checkout binutils binutils-2.19 binutils-2.21
 toolchain_checkout gcc gcc-4.4.3 gcc-4.6
-toolchain_checkout gdb gdb-6.6 gdb-7.1.x gdb-7.3.x
+toolchain_checkout gdb gdb-6.6 gdb-7.3.x
 
 for LLVM_VERSION in $LLVM_VERSION_LIST; do
     llvm_checkout $LLVM_VERSION
