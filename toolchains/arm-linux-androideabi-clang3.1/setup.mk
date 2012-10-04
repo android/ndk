@@ -47,7 +47,7 @@ TARGET_CXX := $(LLVM_TOOLCHAIN_PREFIX)clang++
 #
 
 TARGET_CFLAGS := \
-    -B$(TOOLCHAIN_PREBUILT_ROOT) \
+    -gcc-toolchain $(TOOLCHAIN_PREBUILT_ROOT) \
     -isystem $(LLVM_TOOLCHAIN_PREBUILT_ROOT)/lib/clang/$(LLVM_VERSION)/include \
     -fpic \
     -ffunction-sections \
@@ -57,7 +57,7 @@ TARGET_CFLAGS := \
     -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__
 
 TARGET_LDFLAGS := \
-    -B$(TOOLCHAIN_PREBUILT_ROOT)
+    -gcc-toolchain $(TOOLCHAIN_PREBUILT_ROOT)
 
 TARGET_C_INCLUDES := \
     $(SYSROOT)/usr/include
