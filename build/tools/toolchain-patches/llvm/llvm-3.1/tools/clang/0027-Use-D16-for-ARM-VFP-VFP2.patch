@@ -1,0 +1,25 @@
+From dab8c2626db34da60655525e9a6b8ab096f7852d Mon Sep 17 00:00:00 2001
+From: Logan Chien <loganchien@google.com>
+Date: Thu, 4 Oct 2012 16:16:39 +0800
+Subject: [PATCH] Use D16 for ARM VFP (VFP2.)
+
+---
+ lib/Driver/Tools.cpp |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/lib/Driver/Tools.cpp b/lib/Driver/Tools.cpp
+index bf8fc25..91461e5 100644
+--- a/lib/Driver/Tools.cpp
++++ b/lib/Driver/Tools.cpp
+@@ -546,6 +546,8 @@ static void addFPUArgs(const Driver &D, const Arg *A, const ArgList &Args,
+     CmdArgs.push_back("-target-feature");
+     CmdArgs.push_back("+vfp2");
+     CmdArgs.push_back("-target-feature");
++    CmdArgs.push_back("+d16");
++    CmdArgs.push_back("-target-feature");
+     CmdArgs.push_back("-neon");
+   } else if (FPU == "vfp3" || FPU == "vfpv3") {
+     CmdArgs.push_back("-target-feature");
+-- 
+1.7.7.3
+
