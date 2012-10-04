@@ -626,9 +626,9 @@ if is_testable device; then
         SKIP_TESTS=yes
     else
         # Get list of online devices, turn ' ' in device into '.'
-        ADB_DEVICES=`$ADB_CMD devices | grep -v offline | awk 'NR>1 {gsub(/[ \t]+device$/,""); print;}' | sed '/^$/d' | tr ' ' '.'` 
+        ADB_DEVICES=`$ADB_CMD devices | grep -v offline | awk 'NR>1 {gsub(/[ \t]+device$/,""); print;}' | sed '/^$/d' | sort | tr ' ' '.'`
         ADB_DEVICES=$(echo $ADB_DEVICES | tr '\n' ' ')
-        log2 "ADB online devices: $ADB_DEVICES"
+        log2 "ADB online devices (sorted): $ADB_DEVICES"
         ADB_DEVCOUNT=`echo "$ADB_DEVICES" | wc -w`
         if [ "$ADB_DEVCOUNT" = "0" ]; then
             dump "WARNING: No device connected to adb!"
