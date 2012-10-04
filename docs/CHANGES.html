@@ -1,6 +1,286 @@
 <html><body><pre>Android NDK ChangeLog:
 
 -------------------------------------------------------------------------------
+android-ndk-r8c
+
+IMPORTANT CHANGES:
+
+- Added Clang/LLVM 3.1 compiler.  Since GCC 4.6 is still the default,
+  you need to explicitly enable it:
+  1. For ndk-build: Either export NDK_TOOLCHAIN_VERSION=clang3.1 or add it
+     in Application.mk.
+  2. For standalone: Add "--llvm-version=3.1" to make-standalone-toolchain.sh
+     and replace CC and CXX in your makefile with &lt;tool-path&gt;/bin/clang
+     and &lt;tool-path&gt;/bin/clang++.
+
+  See STANDALONE-TOOLCHAIN.html for details.
+  This feature is experimental now but welcome to try and report issues.
+
+- Gold linker ld.gold is now available in Windows toolchain.  Gold is also the
+  default linker for ARM/X86 on all hosts.  You may overrite it to use ld.bfd
+  linker by adding LOCAL_LDLIBS += -fuse-ld=bfd in Android.mk, or pass
+  -fuse-ld=bfd to g++/clang++ commandline which does the linking.
+
+- ndk-build[.cmd] and ndk-gdb now check and bail out if NDK path contains space.
+
+- Projects with android-10 .. 13 specified in project.properties, default.properties,
+  or APP_PLATFORM will link against android-9 instead of android-14.
+
+- X86: long double is still a distinct type but it's 8-byte in size now (same as double)
+
+- APP_ABI=armeabi-v7a: -march=armv7-a is also passed to linker to link v7-specific
+  libraries and crt*.o
+
+
+IMPORTANT BUG FIXES:
+
+- Fixed an issue when make-standalone-toolchain.sh is run under root privilege resulting
+  in standalone toolchain inaccessible to some.
+  1. All files/executables attributes in NDK are set to readable/executable to all
+  2. The ownership/group of file libstdc++.a is now preserved when copied
+
+  See http://code.google.com/p/android/issues/detail?id=35279
+
+- Removed redundant \r from Windows prebuilt echo.exe. The redundant \r in gdb.setup fails
+  GDB because it incorrectly becomes part of path.
+
+  See http://code.google.com/p/android/issues/detail?id=36054
+
+- Fixed windows parallel builds that sometimes failed due to timing issues in the host-mkdir
+  implementation.
+
+  See http://code.google.com/p/android/issues/detail?id=25875
+
+- Fixed GCC 4.4.3 GNU libstdc++ to NOT merge typeinfo names by default.
+
+  See
+    toolchain repo gcc/gcc-4.4.3/libstdc++-v3/libsupc++/typeinfo
+    http://code.google.com/p/android/issues/detail?id=22165
+    https://groups.google.com/forum/#!msg/android-ndk/FlnuAOIKHOo/kLEwaBso7KYJ%5B1-25%5D
+
+- Fixed crash on null context in GCC 4.6 cp/mangle.c::write_unscoped_name, where gcc
+  may crash when context == NULL and dereferenced in TREE_CODE
+
+- Fixed GCC 4.4.3 crashes on NEON specific typedef for float
+
+  See http://code.google.com/p/android/issues/detail?id=34613
+
+- ARM: Fixed ARM GCC 4.4.3/4.6 g++ to not warn about "the mangling of &lt;va_list&gt; has
+  changed in GCC 4.4".  Switch -Wno-psabi is no longer required to workaround.
+
+- ARM: Fix an issue when project with .arm/.neon suffixes in LOCAL_SRC_FILES also
+  uses APP_STL.  With APP_STL, ndk-build searches for C++ file in LOCAL_SRC_FILES before
+  adding STL header/lib paths to compilation.  Fix ndk-build to filter out .arm and .neon
+  suffixes before the search, otherwise file like myfile.cpp.arm.neon won't be
+  considered C++.
+
+- ARM: Fixed binutils-2.21/ld.bfd to be capable of linking object from older binutils w/o
+  tag_FP_arch, which used to produce error message reads
+
+    BFD (GNU Binutils) 2.21 assertion fail
+         ...../binutils/binutils-2.21/bfd/elf32-arm.c:10190
+
+  The root cause is that ARM's binutils-2.21/ld.bfd performs sanity check and asserts
+  when "tag_FP_arch==0 && tag_ABI_HardFP_use !=0".  This can happen in object using FP
+  linked by older binutils when tag_FP_arch isn't produced at all (thus gets the default
+  "zero" in new linker).
+
+  See http://code.google.com/p/android/issues/detail?id=35209
+
+- ARM: Removed warning when binutils-2.19/ld links prebuilt object by newer binutils-2.21
+  which reads
+
+    Unknown EABI object attribute 44
+
+  The reason is that all prebuilt crt*.o and C++ STL are built with later GCC 4.6/binutils-2.21
+  and contain new tag "DIV_use" with value set to "Not allowed".  This tag can be safely ignored
+  by the original GCC4.4.3/binutils-2.19 toolchain since it is only for sanity check.
+
+- ARM: Fixed an issue in GNU stdc++ compilation with both -mthumb and -march=armv7-a, by
+  making make-standalone-toolchain.sh to also populate headers/libs in sub-directory
+  "armv7-a/thumb".
+
+  See http://code.google.com/p/android/issues/detail?id=35616
+
+- ARM: Fix error: unresolvable R_ARM_THM_CALL relocation
+
+  See
+    http://code.google.com/p/android/issues/detail?id=35342
+    https://groups.google.com/forum/?fromgroups#!topic/android-ndk/HaLycHImqL8
+
+- ARM: Fixed internal compiler error reload1.c:3633.  The reason is that ARM back-end
+  expects wrong operand type sign-extend from char.
+
+  Back port fix from http://gcc.gnu.org/bugzilla/show_bug.cgi?id=50099
+
+- ARM: Fixed internal compiler error with negative shift amount.
+    int foo(int a, int b)
+    {
+        return a | (b &lt;&lt; -3);
+    }
+
+  See http://gcc.gnu.org/ml/gcc-patches/2011-10/msg00594.html
+
+- X86: Fixed -fstack-protector, which is now default for ndk-build x86 ABI
+
+- MIPS: Fixed stlport endianess by setting _STLP_LITTLE_ENDIAN to 1 when compiling
+  MIPS' libstlport_*
+
+- MIPS: Fixed GCC __builtin_unreachable issue compiling LLVM
+
+  See Bug 54369: http://gcc.gnu.org/bugzilla/show_bug.cgi?id=54369
+
+- MIPS: Backport fix to bug 50380: cc1 hangs eating 100% CPU
+
+  See
+    http://gcc.gnu.org/bugzilla/show_bug.cgi?id=50380
+    http://gcc.gnu.org/viewcvs/trunk/gcc/cse.c?r1=177852&r2=182498&pathrev=182498
+
+- GDB: Disable python support in gdb-7.x at build, otherwise gdb-7.x/configure may
+  pick up whatever python in host and build gdb with hard-wired dependency to specific
+  version of python.
+
+  See http://code.google.com/p/android/issues/detail?id=36120
+
+- GDB: Fixed ndk-gdb when APP_ABI contains "all" and matchs none of known architecture
+
+  See issue: http://code.google.com/p/android/issues/detail?id=35392
+
+- GDB: Fixed Windows pathname support.  Keep ':' if it looks like it could be part of
+  a Windows path starting with a drive letter.
+
+  See
+    http://sourceware.org/ml/gdb/2011-06/msg00030.html
+    http://sourceware.org/bugzilla/show_bug.cgi?id=12843
+
+- GDB: Fixed add HW breakpoint support for ARM in gdbserver
+
+  See http://sourceware.org/ml/gdb-patches/2011-09/msg00200.html
+
+- GDB: Fixed to only read current solibs when linker is consistent.  Speeds up solib
+  event handling.
+
+  See http://code.google.com/p/android/issues/detail?id=37677
+
+- GDB: Fixed to make repeated attempts to find solib breakpoint.  GDB will retry enable_break()
+  during every call to svr4_current_sos() until it succeeds.
+
+  See https://android-review.googlesource.com/#/c/43563
+
+- GDB: Fixed an issue where gdb cannot stop on breakpoints placed on dlopen-ed
+  libraries.
+
+- GDB: Fixed SIGILL in dynamic linker when calling dlopen(), on system
+  where /system/bin/linker is stripped of symbols and rtld_db_dlactivity()
+  is implemented as Thumb, due to not preserving LSB of sym_addr
+
+  See http://code.google.com/p/android/issues/detail?id=37147
+
+
+OTHER BUG FIXES:
+
+- Fixed a buffer overflow in ndk-stack-parser.
+
+- Fixed _STLP_USE_EXCEPTIONS, when not defined, to omit all declarations
+  and uses of __Named_exception.  Compile and use __Named_exception only
+  when STLport is being allowed to use exceptions.
+
+- Removed unused .ctors, .dtors, and .eh_frame in MIPS crt*_so.S.
+
+- ARM: Fixed symbol decoder (used in objdump) for plt entries to generate more
+  readable form function@plt
+
+
+OTHER CHANGES:
+
+- Removed arch-x86 and arch-mips headers from platforms/android-{3,4,5,8}.
+  Those headers are imcomplete to begin with, since both X86 and MIPS ABIs are only
+  supported at API &gt; 8
+
+- Simplified c++ include path in standalone package, eg. change
+
+    &lt;path&gt;/arm-linux-androideabi/include/c++/4.6.x-google
+  to
+    &lt;path&gt;/include/c++/4.6/
+
+  See http://code.google.com/p/android/issues/detail?id=35279
+
+- Fixed libc.so to not export atexit() and __do_handler.  These symbols are exported
+  on ARM by the system version of the C library to support legacy native libraries.
+  NDK-generated should never reference them directly. Instead, each shared library or
+  executable should embed its own version of these symbols, provided by crtbegin_*.o
+
+  If your project is linked with "-nostdlib -Wl,--no-undefined", you need to provide
+  your own __dso_handle becasue crtbegin_so.o isn't linked.  The content of __dso_handle
+  doesn't matter.  eg.
+
+    extern "C" {
+      extern void *__dso_handle __attribute__((__visibility__ ("hidden")));
+      void *__dso_handle;
+    }
+
+- Fixed ndk-build to recognize more C++ file extensions by default:
+
+    .cc .cp .cxx .cpp .CPP .c++ .C
+
+  You may still use LOCAL_CPP_EXTENSION to overwite it
+
+- Fixed NDK headers
+  1. Fixed arch-mips/include/asm/* previously incorrectly cleaned from original kernel
+     See https://android-review.googlesource.com/#/c/43335
+  2. Replace struct member data "__unused" with "__linux_unused" in linux/sysctl.h
+     and linux/icmp.h to avoid conflict with "#define __unused" in sys/cdefs.h
+  3. Fixed fenv.h to enclosed C functions with __BEGIN_DECLS/__END_DECLS
+  4. Removed unimplemented functions in malloc.h
+  5. Fixed stdint.h.  See http://code.google.com/p/android/issues/detail?id=1952
+  6. Fixed preprocessor macros in &lt;arch&gt;/include/machine/*
+  7. Replaced link.h for mips with new version for all platforms
+  8. Remove linux-unistd.h
+
+- Replaced deprecated APIs in NDK samples
+  1. hello-gl2 from android-5 to android-7
+  2. native-activity from android-9 to android-10
+  3. native-audio from android-9 to android-10
+  4. native-plasma from android-9 to android-10
+
+  See issue: http://code.google.com/p/android/issues/detail?id=20017
+
+- Added new branding for Android executables with a simpler scheme in section
+  .note.android.ident (defined in crtbegin_static/dynamic.o) so that debugging
+  tools can act accordingly.
+
+  The structure member and values are defined as follows:
+
+  static const struct {
+    int32_t namesz;  /* = 8,  sizeof ("Android") */
+    int32_t descsz;  /* = 1 * sizeof(int32_t) */
+    int32_t type;    /* = 1, ABI_NOTETYPE */
+    char name[sizeof "Android"];  /* = "Android" */
+    int32_t android_api; /* = 3, 4, 5, 8, 9, 14 */
+  }
+
+  Previous branding in section .note.ABI-tag is deprecated.
+
+- Added a new script run-tests-all.sh which calls run-tests.sh and standalone/run.sh
+  with various conditions.  Script run-tests.sh w/o --abi is also enhanced to compile
+  most of tests for all supported ABI and run on all attached devices
+
+- Fixed to build Linux-only NDK packages w/o also building windows with the following
+
+    ./build/tools/make-release.sh --force --systems=linux-x86
+
+- X86: Removed the following symbols introduced in GCC 4.6/libgcc.a from X86's libc.so
+
+    __aeabi_idiv0, __aeabi_ldiv0, __aeabi_unwind_cpp_pr1, and __aeabi_unwind_cpp_pr2
+
+- GDB: ndk-gdb now only takes the last line of output for ndk-build DUMP_XXXX.  This
+  ensures that if Application.mk or Android.mk do print something with $(info ...),
+  it doesn't get injected into the result of DUMP_XXX.
+
+  See https://groups.google.com/d/msg/android-ndk/-/ew0lTWGr1UEJ
+
+
+-------------------------------------------------------------------------------
 android-ndk-r8b
 
 IMPORTANT BUG FIXES:

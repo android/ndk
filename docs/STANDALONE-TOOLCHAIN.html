@@ -19,9 +19,9 @@ Before anything else, you need to decide whether your standalone toolchain
 is going to target ARM-based devices, x86-based, or MIPS-based one.
 Each architecture corresponds to a different toolchain name:
 
-  * arm-linux-androideabi-4.4.3   => targetting ARM-based Android devices
-  * x86-4.4.3                     => targetting x86-based Android devices
-  * mipsel-linux-android-4.4.3    => targetting MIPS-based Android devices
+  * arm-linux-androideabi-4.6   => targetting ARM-based Android devices
+  * x86-4.6                     => targetting x86-based Android devices
+  * mipsel-linux-android-4.6    => targetting MIPS-based Android devices
 
 2/ Selecting your sysroot:
 --------------------------
@@ -43,10 +43,9 @@ targeting Android 2.2 (a.k.a. Froyo), you would use:
 
    SYSROOT=$NDK/platforms/android-8/arch-arm
 
-IMPORTANT: Note that only android-9 is supported for the x86 architecture.
-Note that android-9 and later are supported for the MIPS architecture.
+IMPORTANT: Note that X86 and MIPS architectures are only supported at android-9 and later.
 
-2/ Invoking the compiler (the hard way):
+3/ Invoking the compiler (the hard way):
 ----------------------------------------
 
 Invoke the compiler using the --sysroot option to indicate where the system
@@ -59,7 +58,7 @@ Where &lt;name&gt; is the toolchain's name, &lt;system&gt; is the host tag for y
 and &lt;prefix&gt; is a toolchain-specific prefix. For example, if you are on Linux
 using the NDK r5 toolchain, you would use:
 
-    export CC="$NDK/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc --sysroot=$SYSROOT"
+    export CC="$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc --sysroot=$SYSROOT"
 
 As you can see, this is rather verbose, but it works!
 
@@ -70,7 +69,7 @@ IMPORTANT NOTE:
     the GNU libstdc++) with it. Also no exceptions and no RTTI.
 
 
-3/ Invoking the compiler (the easy way):
+4/ Invoking the compiler (the easy way):
 ----------------------------------------
 
 The NDK allows you to create a "customized" toolchain installation to make
@@ -81,15 +80,21 @@ life easier. For example, consider the following command:
 This will create a directory named /tmp/my-android-toolchain containing a
 copy of the android-5/arch-arm sysroot, and of the toolchain binaries.
 
-Note that by default, the ARM-based toolchain will be selected by the script.
+Note that by default, the ARM-based GCC 4.6 toolchain will be selected by the script.
 Use the '--arch=x86' option to specify the x86-based one,
 use the '--arch=mips' option to specify the MIPS-based one, or alternatively
-'--toolchain=&lt;name&gt;'.
+'--toolchain=&lt;name&gt;'.  For example:
+
+  --toolchain=x86-4.4.3                  # select x86 GCC 4.4.3 compiler
+  --toolchain=mipsel-linux-android-4.6   # select MIPS GCC 4.6 compiler, same as --arch=mips
+
+If you wish, add --llvm-version=3.1 to also copy clang/llvm 3.1.
 
 You can later use it directly with something like:
 
    export PATH=/tmp/my-android-toolchain/bin:$PATH
-   export CC=arm-linux-androideabi-gcc
+   export CC=arm-linux-androideabi-gcc   # or export CC=clang
+   export CXX=arm-linux-androideabi-g++  # or export CXX=clang++
 
 Note that without the --install-dir option, make-standalone-toolchain.sh will
 create a tarball in /tmp/ndk/&lt;toolchain-name&gt;.tar.bz2. This allows you to
@@ -109,7 +114,39 @@ NOTE: You can still use the --sysroot option with the new toolchain, but it
       is now simply optional!
 
 
-4/ ABI Compatibility:
+5/ About Clang
+---------------------
+
+Clang/clang++ uses the same assembler, linker, headers, libraries and GNU
+libstdc++ in the same standalone package.  Clang/clang++ are actually scripts
+with "-target" set to the specified architecture at creation.  For example, in
+ARM standalone package, clang is a one liner:
+
+   `dirname $0`/clang3.1 -target armv5te-none-linux-androideabi "$@"
+
+Note that for arm, clang will change target based on the presence of
+subsequent option "-march=armv7-a" and/or "-mthumb".  ie.
+
+  1/ With "-march=armv7-a", -target becomes armv7-none-linux-androideabi
+  2/ With "-mthumb", -target becomes thumb-none-linux-androideabi
+  3/ With both, -target becomes thumbv7-none-linux-androideabi
+
+You may override with your own -target if you wish.
+
+Extra efforts have been made to make clang/clang++ easier drop-in
+replacements for gcc/g++ in Makefile.  When in doubt, use the following
+common techniques to check:
+
+  1/ Add option "-v" to dump commands compiler driver issues
+  2/ Add option "-###" to dump command line options, including those
+     implicitly predefined.
+  3/ Use "-x c /dev/null -dM -E" to dump predefined preprocessor definitions
+  4/ Add option "-save-temps" and compare the preprocessed files *.i or *.ii
+
+See http://clang.llvm.org/, especially the GCC compatibility section.
+
+
+6/ ABI Compatibility:
 ---------------------
 
 The machine code generated by the ARM toolchain should be compatible with
@@ -127,6 +164,9 @@ Note: The first flag enables Thumb-2 instructions, and the second one
       enables H/W FPU instructions while ensuring that floating-point
       parameters are passed in core registers, which is critical for
       ABI compatibility. Do *not* use these flags separately!
+
+You may add proper FPU flag, eg. "-mfpu=vfp" (stands for VFPv2, 16 double-precision
+registers), if you target for architecture which supports it.
 
 If you want to use Neon instructions, you will need one more compiler flag:
 
@@ -149,10 +189,10 @@ will handle all the details for you.
 You don't have to use any specific compiler flag when targetting the x86 ABI
 or the MIPS ABI.
 
-5/ Warnings and Limitations:
+7/ Warnings and Limitations:
 --------------------------
 
-5.1/ Windows support:
+7.1/ Windows support:
 - - - - - - - - - - -
 
 The Windows binaries do *not* depend on Cygwin. The good news is that they
@@ -167,7 +207,7 @@ NOTE: There is no plan to support Cygwin / MSys at the moment, but
       contributions are welcome. Contact the android-ndk forum for details.
 
 
-5.2/ wchar_t support:
+7.2/ wchar_t support:
 - - - - - - - - - - -
 
 As documented, the Android platform did not really support wchar_t until
@@ -186,7 +226,7 @@ and switch to better representations. The support provided in Android is only
 there to help you migrate existing code.
 
 
-5.3/ Exceptions, RTTI and STL:
+7.3/ Exceptions, RTTI and STL:
 - - - - - - - - - - - - - - -
 
 The toolchain binaries *do* support C++ exceptions and RTTI by default.
@@ -200,7 +240,7 @@ NOTE: You will need to explicitly link with libsupc++ if you use these
     arm-linux-androideabi-g++ .... -lsupc++
 
 
-5.4/ C++ STL support:
+7.4/ C++ STL support:
 - - - - - - - - - - -
 
 The standalone toolchain also comes with a copy of the GNU libstdc++
