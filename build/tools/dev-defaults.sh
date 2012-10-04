@@ -26,7 +26,7 @@ GNUSTL_SUBDIR=sources/cxx-stl/gnu-libstdc++
 TOOLCHAIN_GIT_DATE=now
 
 # The space-separated list of all GCC versions we support in this NDK
-DEFAULT_GCC_VERSION_LIST="4.6 4.7 4.4.3"
+DEFAULT_GCC_VERSION_LIST="4.6 4.4.3"
 
 # The default GCC version for this NDK, i.e. the first item in
 # $DEFAULT_GCC_VERSION_LIST
