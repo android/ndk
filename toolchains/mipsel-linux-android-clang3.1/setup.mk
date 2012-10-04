@@ -49,7 +49,7 @@ TARGET_CXX := $(LLVM_TOOLCHAIN_PREFIX)clang++
 LLVM_TRIPLE := mipsel-none-linux-android
 
 TARGET_CFLAGS := \
-        -B$(TOOLCHAIN_PREBUILT_ROOT) \
+        -gcc-toolchain $(TOOLCHAIN_PREBUILT_ROOT) \
         -target $(LLVM_TRIPLE) \
         -fpic \
         -fno-strict-aliasing \
@@ -59,7 +59,7 @@ TARGET_CFLAGS := \
         -fmessage-length=0
 
 TARGET_LDFLAGS := \
-        -B$(TOOLCHAIN_PREBUILT_ROOT) \
+        -gcc-toolchain $(TOOLCHAIN_PREBUILT_ROOT) \
         -target $(LLVM_TRIPLE)
 
 TARGET_C_INCLUDES := \
