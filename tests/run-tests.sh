@@ -50,6 +50,7 @@ FULL_TESTS=no
 RUN_TESTS=
 NDK_PACKAGE=
 WINE=
+CONTINUE_ON_BUILD_FAIL=
 
 while [ -n "$1" ]; do
     opt="$1"
@@ -107,6 +108,9 @@ while [ -n "$1" ]; do
             ;;
         --wine)
             WINE=yes
+            ;;
+        --continue-on-build-fail)
+            CONTINUE_ON_BUILD_FAIL=yes
             ;;
         -*) # unknown options
             echo "ERROR: Unknown option '$opt', use --help for list of valid ones."
@@ -443,14 +447,18 @@ build_project ()
     if [ -f "$1/BUILD_SHOULD_FAIL" ]; then
         if [ $RET = 0 ]; then
             echo "!!! FAILURE: BUILD SHOULD HAVE FAILED [$1]"
-            exit 1
+            if [ "$CONTINUE_ON_BUILD_FAIL" != yes ] ; then
+                exit 1
+            fi
         fi
         log "!!! SUCCESS: BUILD FAILED AS EXPECTED [$(basename $1)]"
         RET=0
     fi
     if [ $RET != 0 ] ; then
         echo "!!! BUILD FAILURE [$1]!!! See $NDK_LOGFILE for details or use --verbose option!"
-        exit 1
+        if [ "$CONTINUE_ON_BUILD_FAIL" != yes ] ; then
+            exit 1
+        fi
     fi
 }
 
@@ -517,7 +525,9 @@ if is_testable build; then
             run $1/build.sh $NDK_BUILD_FLAGS
             if [ $? != 0 ]; then
                 echo "!!! BUILD FAILURE [$1]!!! See $NDK_LOGFILE for details or use --verbose option!"
-                exit 1
+                if [ "$CONTINUE_ON_BUILD_FAIL" != yes ] ; then
+                    exit 1
+                fi
             fi
         else
             build_project $1 "yes"
