@@ -214,15 +214,22 @@ if [ -n "$LLVM_VERSION" ]; then
       *)
         dump "ERROR: Unsupported NDK architecture!"
   esac
-
-  mv "$TMPDIR/bin/clang" "$TMPDIR/bin/clang$LLVM_VERSION"
+  # Need to remove '.' from LLVM_VERSION when constructing new clang name,
+  # otherwise clang3.1++ may still compile *.c code as C, not C++, which
+  # is not consistent with g++
+  LLVM_VERSION_WITHOUT_DOT=$(echo "$LLVM_VERSION" | sed -e "s!\.!!")
+  mv "$TMPDIR/bin/clang" "$TMPDIR/bin/clang$LLVM_VERSION_WITHOUT_DOT"
   rm "$TMPDIR/bin/clang++"
-  ln -s "clang$LLVM_VERSION" "$TMPDIR/bin/clang$LLVM_VERSION++"
+  ln -s "clang$LLVM_VERSION_WITHOUT_DOT" "$TMPDIR/bin/clang$LLVM_VERSION_WITHOUT_DOT++"
   cat > "$TMPDIR/bin/clang" <<EOF
-\`dirname \$0\`/clang$LLVM_VERSION -target $LLVM_TARGET "\$@"
+\`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT -target $LLVM_TARGET "\$@"
 EOF
+  # Add "-x c++" to remove annoying message reads
+  #
+  #   warning: treating 'c' input as 'c++' when in C++ mode, this behavior is deprecate
+  #
   cat > "$TMPDIR/bin/clang++" <<EOF
-\`dirname \$0\`/clang$LLVM_VERSION++ -target $LLVM_TARGET "\$@"
+\`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT++ -target $LLVM_TARGET -x c++ "\$@"
 EOF
   chmod 0755 "$TMPDIR/bin/clang" "$TMPDIR/bin/clang++"
 fi
