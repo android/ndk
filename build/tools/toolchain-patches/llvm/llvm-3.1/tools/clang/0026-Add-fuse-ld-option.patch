@@ -28,7 +28,7 @@ diff --git a/lib/Driver/ToolChains.cpp b/lib/Driver/ToolChains.cpp
 index d1d7412..dd504ea 100644
 --- a/lib/Driver/ToolChains.cpp
 +++ b/lib/Driver/ToolChains.cpp
-@@ -2003,7 +2003,7 @@ Linux::Linux(const Driver &D, const llvm::Triple &Triple, const ArgList &Args)
+@@ -2012,7 +2012,7 @@ Linux::Linux(const Driver &D, const llvm::Triple &Triple, const ArgList &Args)
    PPaths.push_back(Twine(GCCInstallation.getParentLibPath() + "/../" +
                           GCCInstallation.getTriple().str() + "/bin").str());
  
