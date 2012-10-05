@@ -137,7 +137,7 @@ fail_panic "Couldn't configure llvm toolchain"
 # build the toolchain
 dump "Building : llvm toolchain [this can take a long time]."
 cd $BUILD_OUT
-export CC CXX CFLAGS CXXFLAGS
+export CC CXX CFLAGS CXXFLAGS REQUIRES_RTTI=1
 run make -j$NUM_JOBS
 fail_panic "Couldn't compile llvm toolchain"
 
