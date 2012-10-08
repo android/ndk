@@ -51,6 +51,8 @@ dump "### Run simple tests"
 ANDROID_SERIAL=none ./run-tests.sh --continue-on-build-fail --abi=armeabi
 
 # enumerate all cases using $SYSTEM toolchain
+dump "### Running $SYSTEM gcc 4.7 full tests"
+NDK_TOOLCHAIN_VERSION=4.7 ./run-tests.sh --continue-on-build-fail --full
 dump "### Running $SYSTEM gcc 4.6 full tests"
 NDK_TOOLCHAIN_VERSION=4.6 ./run-tests.sh --continue-on-build-fail --full
 dump "### Running $SYSTEM gcc 4.4.3 full tests"
@@ -60,6 +62,8 @@ NDK_TOOLCHAIN_VERSION=clang3.1 ./run-tests.sh --continue-on-build-fail --full
 
 if [ "$SYSTEM" = "linux-x86" -a -d "$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/windows" ] ; then
     # enumerate all cases using windows toolchain
+    dump "### Running windows 4.7 full tests"
+    NDK_TOOLCHAIN_VERSION=4.7 ./run-tests.sh --continue-on-build-fail --full --wine
     dump "### Running windows 4.6 full tests"
     NDK_TOOLCHAIN_VERSION=4.6 ./run-tests.sh --continue-on-build-fail --full --wine
     dump "### Running windows 4.4.3 full tests"
