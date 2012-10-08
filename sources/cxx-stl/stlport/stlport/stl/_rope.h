@@ -905,7 +905,7 @@ public:
   }
   reference operator*() {
     if (0 == this->_M_buf_ptr)
-#if defined(__clang__)
+#if defined(__clang__) || (defined(__GNUC__) && (__GNUC__ > 4 || __GNUC_MINOR__ >= 7))
       this->_S_setcache(*this);
 #elif !defined (__DMC__)
       _S_setcache(*this);
