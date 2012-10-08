@@ -9,6 +9,8 @@ __ashrdi3
 __bswapdi2
 __bswapsi2
 __clear_cache
+__clrsbdi2
+__clrsbsi2
 __clzdi2
 __clzsi2
 __cmpdf2
