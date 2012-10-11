@@ -686,7 +686,12 @@ unpack_archive ()
             run tar z$TARFLAGS "$ARCHIVE" -C $DIR
             ;;
         *.tar.bz2)
-            run tar j$TARFLAGS "$ARCHIVE" -C $DIR
+            PBZIP2=`which pbzip2`
+            if [ -n "$PBZIP2" ] ; then
+                run tar --use-compress-prog=pbzip2 -$TARFLAGS "$ARCHIVE" -C $DIR
+            else
+                run tar j$TARFLAGS "$ARCHIVE" -C $DIR
+            fi
             ;;
         *)
             panic "Cannot unpack archive with unknown extension: $ARCHIVE"
@@ -733,7 +738,12 @@ pack_archive ()
             (cd $SRCDIR && run tar z$TARFLAGS "$ARCHIVE" $SRCFILES)
             ;;
         *.tar.bz2)
-            (cd $SRCDIR && run tar j$TARFLAGS "$ARCHIVE" $SRCFILES)
+            PBZIP2=`which pbzip2`
+            if [ -n "$PBZIP2" ] ; then
+                (cd $SRCDIR && run tar --use-compress-prog=pbzip2 -$TARFLAGS "$ARCHIVE" $SRCFILES)
+            else
+                (cd $SRCDIR && run tar j$TARFLAGS "$ARCHIVE" $SRCFILES)
+            fi
             ;;
         *)
             panic "Unsupported archive format: $ARCHIVE"
