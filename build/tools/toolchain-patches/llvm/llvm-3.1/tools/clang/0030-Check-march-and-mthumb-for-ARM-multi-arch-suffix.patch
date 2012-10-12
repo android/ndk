@@ -1,0 +1,113 @@
+From 00f98fd29887a91ac8778e87798fafac33a9b830 Mon Sep 17 00:00:00 2001
+From: Logan Chien <loganchien@google.com>
+Date: Thu, 11 Oct 2012 18:05:00 +0800
+Subject: [PATCH] Check -march and -mthumb for ARM multi-arch suffix.
+
+Besides the target triple, we should check whether
+the user specified -march for architecture name, such
+as "armv7-a", and -mthumb (or -mno-thumb) for using
+thumb instruction set or not.
+---
+ lib/Driver/ToolChains.cpp |   45 ++++++++++++++++++++++++++++++++++++---------
+ lib/Driver/ToolChains.h   |    1 +
+ 2 files changed, 37 insertions(+), 9 deletions(-)
+
+diff --git a/lib/Driver/ToolChains.cpp b/lib/Driver/ToolChains.cpp
+index 2f730a2..f0a0faa 100644
+--- a/lib/Driver/ToolChains.cpp
++++ b/lib/Driver/ToolChains.cpp
+@@ -146,6 +146,35 @@ static const char *GetArmArchForMCpu(StringRef Value) {
+     .Default(0);
+ }
+ 
++static const char *GetArmMultiArchSuffix(const llvm::Triple &TargetTriple,
++                                         const ArgList &Args) {
++  bool IsV7a = false;
++  bool IsThumb = TargetTriple.getArch() == llvm::Triple::thumb;
++
++  // Get IsV7a from target triple
++  StringRef ArchName(TargetTriple.getArchName());
++  if (ArchName.startswith("armv7") || ArchName.startswith("thumbv7")) {
++    IsV7a = true;
++  }
++
++  // Override target triple with -march
++  if (const Arg *A = Args.getLastArg(options::OPT_march_EQ)) {
++    IsV7a = (strcmp(A->getValue(Args), "armv7-a") == 0);
++  }
++
++  // Override target triple with -mthumb or -mno-thumb
++  if (const Arg *A = Args.getLastArg(options::OPT_mthumb,
++                                     options::OPT_mno_thumb)) {
++    IsThumb = A->getOption().matches(options::OPT_mthumb);
++  }
++
++  if (IsV7a) {
++    return IsThumb ? "/armv7-a/thumb" : "/armv7-a";
++  } else {
++    return IsThumb ? "/thumb" : "";
++  }
++}
++
+ StringRef Darwin::getDarwinArchName(const ArgList &Args) const {
+   switch (getTriple().getArch()) {
+   default:
+@@ -1155,7 +1184,8 @@ Generic_GCC::GCCInstallationDetector::GCCInstallationDetector(
+       if (!llvm::sys::fs::exists(LibDir))
+         continue;
+       for (unsigned k = 0, ke = CandidateTripleAliases.size(); k < ke; ++k)
+-        ScanLibDirForGCCTriple(TargetTriple, LibDir, CandidateTripleAliases[k]);
++        ScanLibDirForGCCTriple(TargetTriple, LibDir,
++                               CandidateTripleAliases[k], Args);
+     }
+     for (unsigned j = 0, je = CandidateMultiarchLibDirs.size(); j < je; ++j) {
+       const std::string LibDir
+@@ -1165,7 +1195,7 @@ Generic_GCC::GCCInstallationDetector::GCCInstallationDetector(
+       for (unsigned k = 0, ke = CandidateMultiarchTripleAliases.size(); k < ke;
+            ++k)
+         ScanLibDirForGCCTriple(TargetTriple, LibDir,
+-                               CandidateMultiarchTripleAliases[k],
++                               CandidateMultiarchTripleAliases[k], Args,
+                                /*NeedsMultiarchSuffix=*/true);
+     }
+   }
+@@ -1310,7 +1340,7 @@ Generic_GCC::GCCInstallationDetector::GCCInstallationDetector(
+ 
+ void Generic_GCC::GCCInstallationDetector::ScanLibDirForGCCTriple(
+     const llvm::Triple &TargetTriple, const std::string &LibDir,
+-    StringRef CandidateTriple, bool NeedsMultiarchSuffix) {
++    StringRef CandidateTriple, const ArgList &Args, bool NeedsMultiarchSuffix) {
+   const llvm::Triple::ArchType TargetArch = TargetTriple.getArch();
+   const bool IsAndroid = TargetTriple.getEnvironment() == llvm::Triple::ANDROID;
+   // There are various different suffixes involving the triple we
+@@ -1357,12 +1387,9 @@ void Generic_GCC::GCCInstallationDetector::ScanLibDirForGCCTriple(
+       if (!IsAndroid) {
+         MultiarchSuffix = (TargetArch == llvm::Triple::x86_64 ||
+                            TargetArch == llvm::Triple::ppc64) ? "/64" : "/32";
+-      } else {
+-        StringRef TargetTripleStr = TargetTriple.str();
+-        if (TargetTripleStr.startswith("armv7") || TargetTripleStr.startswith("thumbv7"))
+-          MultiarchSuffix = (TargetArch == llvm::Triple::thumb)? "/armv7-a/thumb" : "/armv7-a";
+-        else
+-          MultiarchSuffix = (TargetArch == llvm::Triple::thumb)? "/thumb" : "/32";
++      } else if (TargetArch == llvm::Triple::arm ||
++                 TargetArch == llvm::Triple::thumb) {
++        MultiarchSuffix = GetArmMultiArchSuffix(TargetTriple, Args);
+       }
+       if (llvm::sys::fs::exists(LI->path() + MultiarchSuffix + "/crtbegin.o")) {
+         GCCMultiarchSuffix = MultiarchSuffix.str();
+diff --git a/lib/Driver/ToolChains.h b/lib/Driver/ToolChains.h
+index c73dac5..7006f8e 100644
+--- a/lib/Driver/ToolChains.h
++++ b/lib/Driver/ToolChains.h
+@@ -113,6 +113,7 @@ protected:
+     void ScanLibDirForGCCTriple(const llvm::Triple &TargetTriple,
+                                 const std::string &LibDir,
+                                 StringRef CandidateTriple,
++                                const ArgList &Args,
+                                 bool NeedsMultiarchSuffix = false);
+   };
+ 
+-- 
+1.7.7.3
+
