@@ -154,86 +154,26 @@ toolchain_clone ()
 }
 
 # Checkout sources from a git clone created with toolchain_clone
-# $1: repository/clone name (e.g. 'gcc')
-# $2: sub-path to extract, relative to clone top-level (e.g. 'gcc-4.4.3')
+# $1: sub-directory
+# $2: branch (e.g. 'master')
+# $3: repository/clone name (e.g. 'gcc')
+# $4+: sub-path to extract, relative to clone top-level (e.g. 'gcc-4.4.3')
 #
 toolchain_checkout ()
 {
-    local NAME=$1
-    shift
+    local SUBDIR=$1
+    local BRANCH=$2
+    local NAME=$3
+    shift ; shift ; shift
     local GITOPTS="--git-dir=$CLONE_DIR/$NAME/.git"
     log "Checking out $BRANCH branch of $NAME.git: $@"
     local REVISION=origin/$BRANCH
     if [ -n "$GIT_DATE" ] ; then
         REVISION=`git $GITOPTS rev-list -n 1 --until="$GIT_DATE" $REVISION`
     fi
-    (mkdir -p $TMPDIR/$NAME && cd $TMPDIR/$NAME && run git $GITOPTS checkout $REVISION "$@")
+    (mkdir -p $TMPDIR/$SUBDIR/$NAME && cd $TMPDIR/$SUBDIR/$NAME && run git $GITOPTS checkout $REVISION "$@")
     fail_panic "Could not checkout $NAME / $@ ?"
     (printf "%-32s " "toolchain/$NAME.git"; git $GITOPTS log -1 --format=oneline $REVISION) >> $SOURCES_LIST
-}
-
-# Download and extract LLVM/Clang source from $LLVM_URL
-# $1: LLVM/Clang release version
-#
-llvm_checkout () {
-    local VER=$1
-
-    # Determine the tar archive name and directory name by release version
-    if [ $VER = "2.6" ]; then
-        local LLVM_NAME=llvm-$VER
-        local LLVM_TAR=llvm-$VER.tar.gz
-        local CLANG_NAME=clang-$VER
-        local CLANG_TAR=clang-$VER.tar.gz
-    elif [ $VER = "2.7" -o $VER = "2.8" -o $VER = "2.9" ]; then
-        local LLVM_NAME=llvm-$VER
-        local LLVM_TAR=llvm-$VER.tgz
-        local CLANG_NAME=clang-$VER
-        local CLANG_TAR=clang-$VER.tgz
-    elif [ $VER = "3.0" ]; then
-        local LLVM_NAME=llvm-$VER.src
-        local LLVM_TAR=llvm-$VER.tar.gz
-        local CLANG_NAME=clang-$VER.src
-        local CLANG_TAR=clang-$VER.tar.gz
-    else
-        # Use the latest scheme by default (LLVM 3.1)
-        local LLVM_NAME=llvm-$VER.src
-        local LLVM_TAR=llvm-$VER.src.tar.gz
-        local CLANG_NAME=clang-$VER.src
-        local CLANG_TAR=clang-$VER.src.tar.gz
-    fi
-
-    local URL_PREFIX=$LLVM_URL/$VER
-    local OUT_DIR=llvm-$VER
-
-    # Create "llvm" subdirectory under $SRC_DIR
-    LLVM_DIR=$TMPDIR/llvm
-    mkdir -p $LLVM_DIR
-    fail_panic "Could not create $LLVM_DIR as directory"
-
-    # Cleanup existing tar archives or output directory
-    (cd $LLVM_DIR && rm -rf $LLVM_TAR $CLANG_TAR $OUT_DIR || true)
-
-    # Download the source code and extract them
-    dump "Downloading $URL_PREFIX/$LLVM_TAR"
-    (cd $LLVM_DIR && run curl -S -O $URL_PREFIX/$LLVM_TAR && tar xzf $LLVM_TAR)
-    fail_panic "Could not download and extract llvm source code"
-
-    dump "Downloading $URL_PREFIX/$CLANG_TAR"
-    (cd $LLVM_DIR && \
-        run curl -S -O $URL_PREFIX/$CLANG_TAR && tar xzf $CLANG_TAR)
-    fail_panic "Could not download and extract clang source code"
-
-    # Rename the extracted directory
-    if [ $LLVM_NAME != $OUT_DIR ]; then
-        (cd $LLVM_DIR && mv $LLVM_NAME $OUT_DIR)
-        fail_panic "Could not rename $LLVM_NAME to $OUT_DIR"
-    fi
-
-    (cd $LLVM_DIR && mv $CLANG_NAME $OUT_DIR/tools/clang)
-    fail_panic "Could not rename $CLANG_NAME to $OUT_DIR/tools/clang"
-
-    # Cleanup the tar archive
-    (cd $LLVM_DIR && rm $LLVM_TAR $CLANG_TAR || true)
 }
 
 cd $TMPDIR
@@ -245,27 +185,31 @@ SOURCES_LIST=$(pwd)/SOURCES
 rm -f $SOURCES_LIST && touch $SOURCES_LIST
 
 toolchain_clone build
-
 toolchain_clone gmp
 toolchain_clone mpfr
 toolchain_clone mpc
+toolchain_clone expat
 toolchain_clone binutils
 toolchain_clone gcc
 toolchain_clone gdb
-toolchain_clone expat
+toolchain_clone clang
+toolchain_clone llvm
 
-
-toolchain_checkout build .
-toolchain_checkout gmp  .
-toolchain_checkout mpfr .
-toolchain_checkout mpc  .
-toolchain_checkout expat .
-toolchain_checkout binutils binutils-2.19 binutils-2.21 binutils-2.22
-toolchain_checkout gcc gcc-4.4.3 gcc-4.6 gcc-4.7
-toolchain_checkout gdb gdb-6.6 gdb-7.3.x
+toolchain_checkout "" $BRANCH build .
+toolchain_checkout "" $BRANCH gmp .
+toolchain_checkout "" $BRANCH mpfr .
+toolchain_checkout "" $BRANCH mpc .
+toolchain_checkout "" $BRANCH expat .
+toolchain_checkout "" $BRANCH binutils binutils-2.19 binutils-2.21 binutils-2.22
+toolchain_checkout "" $BRANCH gcc gcc-4.4.3 gcc-4.6 gcc-4.7
+toolchain_checkout "" $BRANCH gdb gdb-6.6 gdb-7.3.x
 
 for LLVM_VERSION in $LLVM_VERSION_LIST; do
-    llvm_checkout $LLVM_VERSION
+    LLVM_VERSION_NO_DOT=$(echo $LLVM_VERSION | sed -e 's!\.!!g')
+    LLVM_BRANCH="release_$LLVM_VERSION_NO_DOT"
+    toolchain_checkout "llvm-$LLVM_VERSION" $LLVM_BRANCH clang .
+    toolchain_checkout "llvm-$LLVM_VERSION" $LLVM_BRANCH llvm .
+    (cd "$TMPDIR/$llvm-$LLVM_VERSION/llvm" && ln -s ../../clang tools)
 done
 
 PYVERSION=2.7.3
