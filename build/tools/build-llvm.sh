@@ -66,8 +66,8 @@ set_parameters ()
         exit 1
     fi
 
-    if [ ! -d "$SRC_DIR/llvm" ] ; then
-        echo "ERROR: Source directory does not contain llvm sources: $SRC_DIR"
+    if [ ! -d "$SRC_DIR/$TOOLCHAIN/llvm" ] ; then
+        echo "ERROR: Source directory does not contain llvm sources: $SRC_DIR/$TOOLCHAIN/llvm"
         exit 1
     fi
 
@@ -125,7 +125,7 @@ TOOLCHAIN_BUILD_PREFIX=$BUILD_OUT/prefix
 dump "Configure: $TOOLCHAIN toolchain build"
 cd $BUILD_OUT
 export CC CXX CFLAGS CXXFLAGS
-run $SRC_DIR/llvm/$TOOLCHAIN/configure \
+run $SRC_DIR/$TOOLCHAIN/llvm/configure \
     --prefix=$TOOLCHAIN_BUILD_PREFIX \
     --host=$ABI_CONFIGURE_HOST \
     --build=$ABI_CONFIGURE_BUILD \
