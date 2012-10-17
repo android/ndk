@@ -83,13 +83,29 @@ endif
 # SPECIAL CASES:
 # 1) android-6 and android-7 are the same thing as android-5
 # 2) android-10 .. 13 is the same thing as android-9
-ifneq (,$(filter android-6 android-7,$(APP_PLATFORM)))
+#
+APP_PLATFORM_LEVEL := $(strip $(subst android-,,$(APP_PLATFORM)))
+ifneq (,$(filter 6 7,$(APP_PLATFORM_LEVEL)))
     APP_PLATFORM := android-5
-    $(call ndk_log,  Adjusting APP_PLATFORM to $(APP_PLATFORM))
+    $(call ndk_log,  Adjusting APP_PLATFORM android-$(APP_PLATFORM_LEVEL) to $(APP_PLATFORM))
 endif
-ifneq (,$(filter android-10 android-11 android-12 android-13,$(APP_PLATFORM)))
+ifneq (,$(filter 10 11 12 13,$(APP_PLATFORM_LEVEL)))
     APP_PLATFORM := android-9
-    $(call ndk_log,  Adjusting APP_PLATFORM to $(APP_PLATFORM))
+    $(call ndk_log,  Adjusting APP_PLATFORM android-$(APP_PLATFORM_LEVEL) to $(APP_PLATFORM))
+endif
+
+# If APP_PIE isn't defined, set it to true for android-16 and above
+#
+APP_PIE := $(strip $(APP_PIE))
+$(call ndk_log,  APP_PIE is $(APP_PIE))
+ifndef APP_PIE
+    ifneq (,$(call gte,$(APP_PLATFORM_LEVEL),16))
+        APP_PLATFORM := android-14
+        $(call ndk_log,  Adjusting APP_PLATFORM android-$(APP_PLATFORM_LEVEL) to $(APP_PLATFORM) and enabling -fPIE)
+        APP_PIE := true
+    else
+        APP_PIE := false
+    endif
 endif
 
 # Check that the value of APP_PLATFORM corresponds to a known platform
@@ -100,6 +116,16 @@ ifdef _bad_platform
     $(call ndk_log,Application $(_app) targets unknown platform '$(_bad_platform)')
     APP_PLATFORM := android-$(NDK_MAX_PLATFORM_LEVEL)
     $(call ndk_log,Switching to $(APP_PLATFORM))
+endif
+
+# Check platform level against android:minSdkVersion in AndroidManifest.xml
+#
+APP_MANIFEST := $(strip $(wildcard $(APP_PROJECT_PATH)/AndroidManifest.xml))
+ifdef APP_MANIFEST
+  APP_MIN_PLATFORM_LEVEL := $(shell $(HOST_AWK) -f $(BUILD_AWK)/extract-minsdkversion.awk $(APP_MANIFEST))
+  ifneq (,$(call gt,$(APP_PLATFORM_LEVEL),$(APP_MIN_PLATFORM_LEVEL)))
+    $(call __ndk_warning,WARNING: APP_PLATFORM $(APP_PLATFORM) is larger than android:minSdkVersion $(APP_MIN_PLATFORM_LEVEL) in $(APP_MANIFEST))
+  endif
 endif
 
 # Check that the value of APP_ABI corresponds to known ABIs
@@ -168,7 +194,6 @@ ifdef APP_DEBUG
 else
   # NOTE: To make unit-testing simpler, handle the case where there is no manifest.
   APP_DEBUGGABLE := false
-  APP_MANIFEST := $(strip $(wildcard $(APP_PROJECT_PATH)/AndroidManifest.xml))
   ifdef APP_MANIFEST
     APP_DEBUGGABLE := $(shell $(HOST_AWK) -f $(BUILD_AWK)/extract-debuggable.awk $(APP_MANIFEST))
   endif
