@@ -1295,7 +1295,8 @@ NDK_APP_VARS := $(NDK_APP_VARS_REQUIRED) \
                 $(NDK_APP_VARS_OPTIONAL) \
                 APP_DEBUG \
                 APP_DEBUGGABLE \
-                APP_MANIFEST
+                APP_MANIFEST \
+                APP_PIE
 
 # =============================================================================
 #

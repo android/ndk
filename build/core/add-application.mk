@@ -83,6 +83,8 @@ endif
 # SPECIAL CASES:
 # 1) android-6 and android-7 are the same thing as android-5
 # 2) android-10 .. 13 is the same thing as android-9
+# 3) android-15 .. 17 is the same thing as android-14
+# Also set APP_PIE for android-16 and above
 ifneq (,$(filter android-6 android-7,$(APP_PLATFORM)))
     APP_PLATFORM := android-5
     $(call ndk_log,  Adjusting APP_PLATFORM to $(APP_PLATFORM))
@@ -90,6 +92,17 @@ endif
 ifneq (,$(filter android-10 android-11 android-12 android-13,$(APP_PLATFORM)))
     APP_PLATFORM := android-9
     $(call ndk_log,  Adjusting APP_PLATFORM to $(APP_PLATFORM))
+endif
+ifneq (,$(filter android-15,$(APP_PLATFORM)))
+    APP_PLATFORM := android-14
+    $(call ndk_log,  Adjusting APP_PLATFORM to $(APP_PLATFORM))
+endif
+ifneq (,$(filter android-16 android-17,$(APP_PLATFORM)))
+    APP_PLATFORM := android-14
+    $(call ndk_log,  Adjusting APP_PLATFORM to $(APP_PLATFORM) and enabling -fPIE)
+    APP_PIE := true
+else
+    APP_PIE := false
 endif
 
 # Check that the value of APP_PLATFORM corresponds to a known platform
