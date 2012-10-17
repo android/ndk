@@ -28,6 +28,15 @@
 
 /* ChangeLog for this library:
  *
+ * NDK r??: Add new ARM CPU features: VFPv2, VFP_D32, VFP_FP16,
+ *          VFP_FMA, NEON_FMA, IDIV_ARM, IDIV_THUMB2 and iWMMXt.
+ * 
+ *          Rewrite the code to parse /proc/self/auxv instead of
+ *          the "Features" field in /proc/cpuinfo.
+ *
+ *          Dynamically allocate the buffer that hold the content
+ *          of /proc/cpuinfo to deal with newer hardware.
+ * 
  * NDK r7c: Fix CPU count computation. The old method only reported the
  *           number of _active_ CPUs when the library was initialized,
  *           which could be less than the real total.
@@ -99,6 +108,39 @@ static __inline__ void x86_cpuid(int func, int values[4])
 }
 #endif
 
+/* Get the size of a file by reading it until the end. This is needed
+ * because files under /proc do not always return a valid size when
+ * using fseek(0, SEEK_END) + ftell(). Nor can they be mmap()-ed.
+ */
+static int
+get_file_size(const char* pathname)
+{
+    int fd, ret, result = 0;
+    char buffer[256];
+    
+    fd = open(pathname, O_RDONLY);
+    if (fd < 0) {
+      D("Can't open %s: %s\n", pathname, strerror(errno));
+      return -1;
+    }
+    
+    for (;;) {
+      int ret = read(fd, buffer, sizeof buffer);
+      if (ret < 0) {
+        if (errno == EINTR)
+          continue;
+        D("Error while reading %s: %s\n", pathname, strerror(errno));
+        break;
+      }
+      if (ret == 0)
+        break;
+        
+      result += ret;
+    }
+    close(fd);
+    return result;
+}
+
 /* Read the content of /proc/cpuinfo into a user-provided buffer.
  * Return the length of the data, or -1 on error. Does *not*
  * zero-terminate the content. Will not read more
@@ -107,19 +149,30 @@ static __inline__ void x86_cpuid(int func, int values[4])
 static int
 read_file(const char*  pathname, char*  buffer, size_t  buffsize)
 {
-    int  fd, len;
+    int  fd, count;
 
     fd = open(pathname, O_RDONLY);
-    if (fd < 0)
+    if (fd < 0) {
+        D("Could not open %s: %s\n", pathname, strerror(errno));
         return -1;
-
-    do {
-        len = read(fd, buffer, buffsize);
-    } while (len < 0 && errno == EINTR);
-
+    }
+    count = 0;
+    while (count < (int)buffsize) {
+        int ret = read(fd, buffer + count, buffsize - count);
+        if (ret < 0) {
+            if (errno == EINTR)
+                continue;
+            D("Error while reading from %s: %s\n", pathname, strerror(errno));
+            if (count == 0)
+                count = -1;
+            break;
+        }
+        if (ret == 0)
+            break;
+        count += ret;
+    }
     close(fd);
-
-    return len;
+    return count;
 }
 
 /* Extract the content of a the first occurence of a given field in
@@ -137,8 +190,7 @@ extract_cpuinfo_field(char* buffer, int buflen, const char* field)
     int len, ignore;
     const char *p, *q;
 
-    /* Look for first field occurence, and ensures it starts the line.
-     */
+    /* Look for first field occurence, and ensures it starts the line. */
     p = buffer;
     bufend = buffer + buflen;
     for (;;) {
@@ -354,6 +406,53 @@ cpulist_read_from(CpuList* list, const char* filename)
     cpulist_parse(list, file, filelen);
 }
 
+// See <asm/hwcap.h> kernel header.
+#define HWCAP_VFP       (1 << 6)
+#define HWCAP_IWMMXT    (1 << 9)
+#define HWCAP_NEON      (1 << 12)
+#define HWCAP_VFPv3     (1 << 13)
+#define HWCAP_VFPv3D16  (1 << 14)
+#define HWCAP_VFPv4     (1 << 16)
+#define HWCAP_IDIVA     (1 << 17)
+#define HWCAP_IDIVT     (1 << 18)
+
+#define AT_HWCAP 16
+
+/* Read the ELF HWCAP flags by parsing /proc/self/auxv
+ */
+static uint32_t
+get_elf_hwcap(void)
+{
+    uint32_t result = 0;
+    const char filepath[] = "/proc/self/auxv";
+    int fd = open(filepath, O_RDONLY);
+    if (fd < 0) {
+        D("Could not open %s: %s\n", filepath, strerror(errno));
+        return 0;
+    }
+    
+    struct { uint32_t tag; uint32_t value; } entry;
+
+    for (;;) {
+        int ret = read(fd, (char*)&entry, sizeof entry);
+        if (ret < 0) {
+            if (errno == EINTR)
+                continue;
+            D("Error while reading %s: %s\n", filepath, strerror(errno));
+            break;
+        }
+        // Detect end of list.
+        if (ret == 0 || (entry.tag == 0 && entry.value == 0))
+          break;
+        if (entry.tag == AT_HWCAP) {
+          result = entry.value;
+          break;
+        }
+    }
+    close(fd);
+    return result;
+}
+
 /* Return the number of cpus present on a given device.
  *
  * To handle all weird kernel configurations, we need to compute the
@@ -380,18 +479,29 @@ get_cpu_count(void)
 static void
 android_cpuInit(void)
 {
-    char cpuinfo[4096];
-    int  cpuinfo_len;
+    char* cpuinfo = NULL;
+    int   cpuinfo_len;
 
     g_cpuFamily   = DEFAULT_CPU_FAMILY;
     g_cpuFeatures = 0;
     g_cpuCount    = 1;
 
-    cpuinfo_len = read_file("/proc/cpuinfo", cpuinfo, sizeof cpuinfo);
+    cpuinfo_len = get_file_size("/proc/cpuinfo");
+    if (cpuinfo_len < 0) {
+      D("cpuinfo_len cannot be computed!");
+      return;
+    }
+    cpuinfo = malloc(cpuinfo_len);
+    if (cpuinfo == NULL) {
+      D("cpuinfo buffer could not be allocated");
+      return;
+    }
+    cpuinfo_len = read_file("/proc/cpuinfo", cpuinfo, cpuinfo_len);
     D("cpuinfo_len is (%d):\n%.*s\n", cpuinfo_len,
       cpuinfo_len >= 0 ? cpuinfo_len : 0, cpuinfo);
 
     if (cpuinfo_len < 0)  /* should not happen */ {
+        free(cpuinfo);
         return;
     }
 
@@ -429,9 +539,9 @@ android_cpuInit(void)
             archNumber = strtol(cpuArch, &end, 10);
 
             /* Here we assume that ARMv8 will be upwards compatible with v7
-                * in the future. Unfortunately, there is no 'Features' field to
-                * indicate that Thumb-2 is supported.
-                */
+             * in the future. Unfortunately, there is no 'Features' field to
+             * indicate that Thumb-2 is supported.
+             */
             if (end > cpuArch && archNumber >= 7) {
                 hasARMv7 = 1;
             }
@@ -471,29 +581,70 @@ android_cpuInit(void)
             free(cpuArch);
         }
 
-        /* Extract the list of CPU features from 'Features' field */
-        char* cpuFeatures = extract_cpuinfo_field(cpuinfo, cpuinfo_len, "Features");
+        /* Extract the list of CPU features from ELF hwcaps */
+        uint32_t hwcaps = get_elf_hwcap();
 
-        if (cpuFeatures != NULL) {
+        if (hwcaps != 0) {
+            int has_vfp = (hwcaps & HWCAP_VFP);
+            int has_vfpv3 = (hwcaps & HWCAP_VFPv3);
+            int has_vfpv3d16 = (hwcaps & HWCAP_VFPv3D16);
+            int has_vfpv4 = (hwcaps & HWCAP_VFPv4);
+            int has_neon = (hwcaps & HWCAP_NEON);
+            int has_idiva = (hwcaps & HWCAP_IDIVA);
+            int has_idivt = (hwcaps & HWCAP_IDIVT);
+            int has_iwmmxt = (hwcaps & HWCAP_IWMMXT);
+            
+            // The kernel does a poor job at ensuring consistency when
+            // describing CPU features. So lots of guessing is needed.
+            
+            // 'vfpv4' implies VFPv3|VFP_FMA|FP16
+            if (has_vfpv4)
+              g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_VFPv3    |
+                               ANDROID_CPU_ARM_FEATURE_VFP_FP16 |
+                               ANDROID_CPU_ARM_FEATURE_VFP_FMA;
+            
+            // 'vfpv3' or 'vfpv3d16' imply VFPv3. Note that unlike GCC,
+            // a value of 'vfpv3' doesn't necessarily mean that the D32
+            // feature is present, so be conservative. All CPUs in the
+            // field that support D32 also support NEON, so this should
+            // not be a problem in practice.
+            if (has_vfpv3 || has_vfpv3d16)
+              g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_VFPv3;
 
-            D("found cpuFeatures = '%s'\n", cpuFeatures);
-
-            if (has_list_item(cpuFeatures, "vfpv3"))
+            // 'vfp' is super ambiguous. Depending on the kernel, it can
+            // either mean VFPv2 or VFPv3. Make it depend on ARMv7.
+            if (has_vfp) {
+              if (g_cpuFeatures & ANDROID_CPU_ARM_FEATURE_ARMv7)
                 g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_VFPv3;
-
-            else if (has_list_item(cpuFeatures, "vfpv3d16"))
-                g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_VFPv3;
-
-            if (has_list_item(cpuFeatures, "neon")) {
-                /* Note: Certain kernels only report neon but not vfpv3
-                    *       in their features list. However, ARM mandates
-                    *       that if Neon is implemented, so must be VFPv3
-                    *       so always set the flag.
-                    */
-                g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_NEON |
-                                 ANDROID_CPU_ARM_FEATURE_VFPv3;
+              else
+                g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_VFPv2;
             }
-            free(cpuFeatures);
+            
+            // Neon implies VFPv3|D32, and if vfpv4 is detected, NEON_FMA
+            if (has_neon) {
+              g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_VFPv3 |
+                               ANDROID_CPU_ARM_FEATURE_NEON |
+                               ANDROID_CPU_ARM_FEATURE_VFP_D32;
+              if (has_vfpv4)
+                g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_NEON_FMA;
+            }
+            
+            // VFPv3 implies VFPv2 and ARMv7
+            if (g_cpuFeatures & ANDROID_CPU_ARM_FEATURE_VFPv3)
+              g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_VFPv2 |
+                               ANDROID_CPU_ARM_FEATURE_ARMv7;
+            
+            // Note that some buggy kernels do not report these even when
+            // the CPU actually support the division instructions. However,
+            // assume that if 'vfpv4' is detected, then the CPU supports
+            // sdiv/udiv properly.
+            if (has_idiva || has_vfpv4)
+              g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_IDIV_ARM;
+            if (has_idivt || has_vfpv4)
+              g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_IDIV_THUMB2;
+            
+            if (has_iwmmxt)
+              g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_iWMMXt;
         }
     }
 #endif /* __ARM_ARCH__ */
@@ -528,6 +679,8 @@ android_cpuInit(void)
 #ifdef _MIPS_ARCH
     g_cpuFamily = ANDROID_CPU_FAMILY_MIPS;
 #endif /* _MIPS_ARCH */
+    
+    free(cpuinfo);
 }
 
 
@@ -553,3 +706,189 @@ android_getCpuCount(void)
     pthread_once(&g_once, android_cpuInit);
     return g_cpuCount;
 }
+
+
+/*
+ * Technical note: Making sense of ARM's FPU architecture versions.
+ *
+ * FPA was ARM's first attempt at an FPU architecture. There is no Android
+ * device that actually uses it since this technology was already obsolete
+ * when the project started. If you see references to FPA instructions
+ * somewhere, you can be sure that this doesn't apply to Android at all.
+ * 
+ * FPA was followed by "VFP", soon renamed "VFPv1" due to the emergence of
+ * new versions / additions to it. ARM considers this obsolete right now,
+ * and no known Android device implements it either.
+ * 
+ * VFPv2 added a few instructions to VFPv1, and is an *optional* extension
+ * supported by some ARMv5TE, ARMv6 and ARMv6T2 CPUs. Note that a device
+ * supporting the 'armeabi' ABI doesn't necessarily support these.
+ *
+ * VFPv3-D16 adds a few instructions on top of VFPv2 and is typically used
+ * on ARMv7-A CPUs which implement a FPU. Note that it is also mandated
+ * by the Android 'armeabi-v7a' ABI. The -D16 suffix in its name means
+ * that it provides 16 double-precision FPU registers (d0-d15) and 32
+ * single-precision ones (s0-s31) which happen to be mapped to the same
+ * register banks.
+ * 
+ * VFPv3-D32 is the name of an extension to VFPv3-D16 that provides 16
+ * additional double precision registers (d16-d31). Note that there are
+ * still only 32 single precision registers.
+ * 
+ * VFPv3xD is a *subset* of VFPv3-D16 that only provides single-precision
+ * registers. It is only used on ARMv7-M (i.e. on micro-controllers) which
+ * are not supported by Android. Note that it is not compatible with VFPv2.
+ *
+ * NOTE: The term 'VFPv3' usually designate either VFPv3-D16 or VFPv3-D32
+ *       depending on context. For example GCC uses it for VFPv3-D32, but
+ *       the Linux kernel code uses it for VFPv3-D16 (especially in
+ *       /proc/cpuinfo). Always try to use the full designation when
+ *       possible.
+ * 
+ * NEON, a.k.a. "ARM Advanced SIMD" is an extension that provides
+ * instructions to perform parallel computations on vectors of 8, 16,
+ * 32, 64 and 128 bit quantities. NEON requires VFPv32-D32 since all
+ * NEON registers are also mapped to the same register banks.
+ * 
+ * VFPv4-D16, adds a few instructions on top of VFPv3-D16 in order to
+ * perform fused multiply-accumulate on VFP registers, as well as
+ * half-precision (16-bit) conversion operations.
+ * 
+ * VFPv4-D32 is VFPv4-D16 with 32, instead of 16, FPU double precision
+ * registers.
+ * 
+ * VPFv4-NEON is VFPv4-D32 with NEON instructions. It also adds fused
+ * multiply-accumulate instructions that work on the NEON registers.
+ *
+ * NOTE: Similarly, "VFPv4" might either reference VFPv4-D16 or VFPv4-D32
+ *       depending on context.
+ * 
+ * The following information was determined by scanning the binutils-2.22
+ * sources:
+ * 
+ * Basic VFP instruction subsets:
+ * 
+ * #define FPU_VFP_EXT_V1xD 0x08000000     // Base VFP instruction set.
+ * #define FPU_VFP_EXT_V1   0x04000000     // Double-precision insns.
+ * #define FPU_VFP_EXT_V2   0x02000000     // ARM10E VFPr1.
+ * #define FPU_VFP_EXT_V3xD 0x01000000     // VFPv3 single-precision.
+ * #define FPU_VFP_EXT_V3   0x00800000     // VFPv3 double-precision.
+ * #define FPU_NEON_EXT_V1  0x00400000     // Neon (SIMD) insns.
+ * #define FPU_VFP_EXT_D32  0x00200000     // Registers D16-D31.
+ * #define FPU_VFP_EXT_FP16 0x00100000     // Half-precision extensions.
+ * #define FPU_NEON_EXT_FMA 0x00080000     // Neon fused multiply-add
+ * #define FPU_VFP_EXT_FMA  0x00040000     // VFP fused multiply-add
+ * 
+ * FPU types (excluding NEON)
+ * 
+ * FPU_VFP_V1xD (EXT_V1xD)
+ *    |
+ *    +--------------------------+
+ *    |                          |
+ * FPU_VFP_V1 (+EXT_V1)       FPU_VFP_V3xD (+EXT_V2+EXT_V3xD)
+ *    |                          |
+ *    |                          |
+ * FPU_VFP_V2 (+EXT_V2)       FPU_VFP_V4_SP_D16 (+EXT_FP16+EXT_FMA)
+ *    |
+ * FPU_VFP_V3D16 (+EXT_Vx3D+EXT_V3)
+ *    |
+ *    +--------------------------+
+ *    |                          |
+ * FPU_VFP_V3 (+EXT_D32)     FPU_VFP_V4D16 (+EXT_FP16+EXT_FMA)
+ *    |                          |
+ *    |                      FPU_VFP_V4 (+EXT_D32)
+ *    |
+ * FPU_VFP_HARD (+EXT_FMA+NEON_EXT_FMA)
+ * 
+ * VFP architectures:
+ * 
+ * ARCH_VFP_V1xD  (EXT_V1xD)
+ *   |
+ *   +------------------+
+ *   |                  |
+ *   |             ARCH_VFP_V3xD (+EXT_V2+EXT_V3xD)
+ *   |                  |
+ *   |             ARCH_VFP_V3xD_FP16 (+EXT_FP16)
+ *   |                  |
+ *   |             ARCH_VFP_V4_SP_D16 (+EXT_FMA)
+ *   |
+ * ARCH_VFP_V1 (+EXT_V1)
+ *   |
+ * ARCH_VFP_V2 (+EXT_V2)
+ *   |
+ * ARCH_VFP_V3D16 (+EXT_V3xD+EXT_V3)
+ *   |
+ *   +-------------------+
+ *   |                   |
+ *   |         ARCH_VFP_V3D16_FP16  (+EXT_FP16)
+ *   |
+ *   +-------------------+
+ *   |                   |
+ *   |         ARCH_VFP_V4_D16 (+EXT_FP16+EXT_FMA)
+ *   |                   |
+ *   |         ARCH_VFP_V4 (+EXT_D32)
+ *   |                   |
+ *   |         ARCH_NEON_VFP_V4 (+EXT_NEON+EXT_NEON_FMA)
+ *   |
+ * ARCH_VFP_V3 (+EXT_D32)
+ *   |
+ *   +-------------------+
+ *   |                   |
+ *   |         ARCH_VFP_V3_FP16 (+EXT_FP16)
+ *   |
+ * ARCH_VFP_V3_PLUS_NEON_V1 (+EXT_NEON)
+ *   |
+ * ARCH_NEON_FP16 (+EXT_FP16)
+ * 
+ * -fpu=<name> values and their correspondance with FPU architectures above:
+ * 
+ *   {"vfp",               FPU_ARCH_VFP_V2},
+ *   {"vfp9",              FPU_ARCH_VFP_V2},
+ *   {"vfp3",              FPU_ARCH_VFP_V3}, // For backwards compatbility.
+ *   {"vfp10",             FPU_ARCH_VFP_V2},
+ *   {"vfp10-r0",          FPU_ARCH_VFP_V1},
+ *   {"vfpxd",             FPU_ARCH_VFP_V1xD},
+ *   {"vfpv2",             FPU_ARCH_VFP_V2},
+ *   {"vfpv3",             FPU_ARCH_VFP_V3},
+ *   {"vfpv3-fp16",        FPU_ARCH_VFP_V3_FP16},
+ *   {"vfpv3-d16",         FPU_ARCH_VFP_V3D16},
+ *   {"vfpv3-d16-fp16",    FPU_ARCH_VFP_V3D16_FP16},
+ *   {"vfpv3xd",           FPU_ARCH_VFP_V3xD},
+ *   {"vfpv3xd-fp16",      FPU_ARCH_VFP_V3xD_FP16},
+ *   {"neon",              FPU_ARCH_VFP_V3_PLUS_NEON_V1},
+ *   {"neon-fp16",         FPU_ARCH_NEON_FP16},
+ *   {"vfpv4",             FPU_ARCH_VFP_V4},
+ *   {"vfpv4-d16",         FPU_ARCH_VFP_V4D16},
+ *   {"fpv4-sp-d16",       FPU_ARCH_VFP_V4_SP_D16},
+ *   {"neon-vfpv4",        FPU_ARCH_NEON_VFP_V4},
+ * 
+ * 
+ * Simplified diagram that only includes FPUs supported by Android:
+ * Only ARCH_VFP_V3D16 is actually mandated by the armeabi-v7a ABI,
+ * all others are optional and must be probed at runtime.
+ * 
+ * ARCH_VFP_V3D16 (EXT_V1xD+EXT_V1+EXT_V2+EXT_V3xD+EXT_V3)
+ *   |
+ *   +-------------------+
+ *   |                   |
+ *   |         ARCH_VFP_V3D16_FP16  (+EXT_FP16)
+ *   |
+ *   +-------------------+
+ *   |                   |
+ *   |         ARCH_VFP_V4_D16 (+EXT_FP16+EXT_FMA)
+ *   |                   |
+ *   |         ARCH_VFP_V4 (+EXT_D32)
+ *   |                   |
+ *   |         ARCH_NEON_VFP_V4 (+EXT_NEON+EXT_NEON_FMA)
+ *   |
+ * ARCH_VFP_V3 (+EXT_D32)
+ *   |
+ *   +-------------------+
+ *   |                   |
+ *   |         ARCH_VFP_V3_FP16 (+EXT_FP16)
+ *   |
+ * ARCH_VFP_V3_PLUS_NEON_V1 (+EXT_NEON)
+ *   |
+ * ARCH_NEON_FP16 (+EXT_FP16)
+ *
+ */
