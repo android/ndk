@@ -83,13 +83,30 @@ endif
 # SPECIAL CASES:
 # 1) android-6 and android-7 are the same thing as android-5
 # 2) android-10 .. 13 is the same thing as android-9
-ifneq (,$(filter android-6 android-7,$(APP_PLATFORM)))
+# 3) android-15 and above is the same thing as android-14
+# Also set APP_PIE for android-16 and above
+#
+# Note that makefile doesn't provide numeric comparison, and in Windows we don't have "test" in shell either
+# Enumerate all the possibilities (still assuming __api_level is a positive integer, though)
+#
+APP_PIE := false
+_api_level := $(strip $(subst android-,,$(APP_PLATFORM)))
+ifneq (,$(filter 6 7,$(_api_level)))
     APP_PLATFORM := android-5
     $(call ndk_log,  Adjusting APP_PLATFORM to $(APP_PLATFORM))
 endif
-ifneq (,$(filter android-10 android-11 android-12 android-13,$(APP_PLATFORM)))
+ifneq (,$(filter 10 11 12 13,$(_api_level)))
     APP_PLATFORM := android-9
     $(call ndk_log,  Adjusting APP_PLATFORM to $(APP_PLATFORM))
+endif
+ifneq (,$(filter 15,$(_api_level)))
+    APP_PLATFORM := android-14
+    $(call ndk_log,  Adjusting APP_PLATFORM to $(APP_PLATFORM))
+endif
+ifneq (,$(filter 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 30 40 41 42,$(_api_level)))
+    APP_PLATFORM := android-14
+    $(call ndk_log,  Adjusting APP_PLATFORM to $(APP_PLATFORM) and enabling -fPIE)
+    APP_PIE := true
 endif
 
 # Check that the value of APP_PLATFORM corresponds to a known platform
