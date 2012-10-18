@@ -1405,7 +1405,7 @@ build_host_gcc_core ()
 
     case $TARGET_ARCH in
         arm)
-            ARGS=$ARGS" --with-arch=armv5te --with-float=soft --with-fpu=vfp"
+            ARGS=$ARGS" --with-arch=armv5te --with-float=soft --with-fpu=vfpv3-d16"
             ;;
         mips)
             # Add --disable-fixed-point to disable fixed-point support
