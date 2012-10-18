@@ -39,7 +39,7 @@ TARGET_C_INCLUDES := \
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
     TARGET_CFLAGS += -march=armv7-a \
                      -mfloat-abi=softfp \
-                     -mfpu=vfp
+                     -mfpu=vfpv3d16
 
     TARGET_LDFLAGS += -march=armv7-a \
                      -Wl,--fix-cortex-a8
