@@ -165,19 +165,17 @@ It is recommended to use the -mthumb compiler flag to force the generation
 of 16-bit Thumb-1 instructions (the default being 32-bit ARM ones).
 
 If you want to target the 'armeabi-v7a' ABI, you will need ensure that the
-following two flags are being used:
+following flags are being used:
 
-  CFLAGS='-march=armv7-a -mfloat-abi=softfp'
+  CFLAGS='-march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16'
 
 Note: The first flag enables Thumb-2 instructions, and the second one
       enables H/W FPU instructions while ensuring that floating-point
       parameters are passed in core registers, which is critical for
       ABI compatibility. Do *not* use these flags separately!
 
-You may add proper FPU flag, eg. "-mfpu=vfp" (stands for VFPv2, 16 double-precision
-registers), if you target for architecture which supports it.
-
-If you want to use Neon instructions, you will need one more compiler flag:
+If you want to use Neon instructions, you will need to change the -mfpu
+compiler flag:
 
   CFLAGS='-march=armv7-a -mfloat-abi=softfp -mfpu=neon'
 
@@ -188,7 +186,7 @@ Also, make sure the following two flags are provided to linker:
   LDFLAGS='-march=armv7-a -Wl,--fix-cortex-a8'
 
 Note: The first flag instructs linker to pick libgcc.a, libgcov.a and
-      crt*.o tailored for armv7.  The 2nd flag is *required* to routes
+      crt*.o tailored for armv7-a.  The 2nd flag is *required* to route
       around a CPU bug in some Cortex-A8 implementations:
 
 If none of the above makes sense to you, it's probably better not to use
