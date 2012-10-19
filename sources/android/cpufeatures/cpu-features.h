@@ -46,11 +46,124 @@ typedef enum {
 /* Return family of the device's CPU */
 extern AndroidCpuFamily   android_getCpuFamily(void);
 
+/* The list of feature flags for ARM CPUs that can be recognized by the
+ * library. Value details are:
+ *
+ *   VFPv2:
+ *     CPU supports the VFPv2 instruction set. Many, but not all, ARMv6 CPUs
+ *     support these instructions. VFPv2 is a subset of VFPv3 so this will
+ *     be set whenever VFPv3 is set too.
+ *
+ *   ARMv7:
+ *     CPU supports the ARMv7-A basic instruction set.
+ *     This feature is mandated by the 'armeabi-v7a' ABI.
+ *
+ *   VFPv3:
+ *     CPU supports the VFPv3-D16 instruction set, providing hardware FPU
+ *     support for single and double precision floating point registers.
+ *     Note that only 16 FPU registers are available by default, unless
+ *     the D32 bit is set too. This feature is also mandated by the
+ *     'armeabi-v7a' ABI.
+ *
+ *   VFP_D32:
+ *     CPU VFP optional extension that provides 32 FPU registers,
+ *     instead of 16. Note that ARM mandates this feature is the 'NEON'
+ *     feature is implemented by the CPU.
+ *
+ *   NEON:
+ *     CPU FPU supports "ARM Advanced SIMD" instructions, also known as
+ *     NEON. Note that this mandates the VFP_D32 feature as well, per the
+ *     ARM Architecture specification.
+ *
+ *   VFP_FP16:
+ *     Half-width floating precision VFP extension. If set, the CPU
+ *     supports instructions to perform floating-point operations on
+ *     16-bit registers. This is part of the VFPv4 specification, but
+ *     not mandated by any Android ABI.
+ *
+ *   VFP_FMA:
+ *     Fused multiply-accumulate VFP instructions extension. Also part of
+ *     the VFPv4 specification, but not mandated by any Android ABI.
+ *
+ *   NEON_FMA:
+ *     Fused multiply-accumulate NEON instructions extension. Optional
+ *     extension from the VFPv4 specification, but not mandated by any
+ *     Android ABI.
+ *
+ *   IDIV_ARM:
+ *     Integer division available in ARM mode. Only available
+ *     on recent CPUs (e.g. Cortex-A15).
+ *
+ *   IDIV_THUMB2:
+ *     Integer division available in Thumb-2 mode. Only available
+ *     on recent CPUs (e.g. Cortex-A15).
+ *
+ *   iWMMXt:
+ *     Optional extension that adds MMX registers and operations to an
+ *     ARM CPU. This is only available on a few XScale-based CPU designs
+ *     sold by Marvell. Pretty rare in practice.
+ *
+ * If you want to tell the compiler to generate code that targets one of
+ * the feature set above, you should probably use one of the following
+ * flags (for more details, see technical note at the end of this file):
+ *
+ *   -mfpu=vfp
+ *   -mfpu=vfpv2
+ *     These are equivalent and tell GCC to use VFPv2 instructions for
+ *     floating-point operations. Use this if you want your code to
+ *     run on *some* ARMv6 devices, and any ARMv7-A device supported
+ *     by Android.
+ *
+ *     Generated code requires VFPv2 feature.
+ *
+ *   -mfpu=vfpv3-d16
+ *     Tell GCC to use VFPv3 instructions (using only 16 FPU registers).
+ *     This should be generic code that runs on any CPU that supports the
+ *     'armeabi-v7a' Android ABI. Note that no ARMv6 CPU supports this.
+ *
+ *     Generated code requires VFPv3 feature.
+ *
+ *   -mfpu=vfpv3
+ *     Tell GCC to use VFPv3 instructions with 32 FPU registers.
+ *     Generated code requires VFPv3|VFP_D32 features.
+ *
+ *   -mfpu=neon
+ *     Tell GCC to use VFPv3 instructions with 32 FPU registers, and
+ *     also support NEON intrinsics (see <arm_neon.h>).
+ *     Generated code requires VFPv3|VFP_D32|NEON features.
+ *
+ *   -mfpu=vfpv4-d16
+ *     Generated code requires VFPv3|VFP_FP16|VFP_FMA features.
+ *
+ *   -mfpu=vfpv4
+ *     Generated code requires VFPv3|VFP_FP16|VFP_FMA|VFP_D32 features.
+ *
+ *   -mfpu=neon-vfpv4
+ *     Generated code requires VFPv3|VFP_FP16|VFP_FMA|VFP_D32|NEON|NEON_FMA
+ *     features.
+ *
+ *   -mcpu=cortex-a7
+ *   -mcpu=cortex-a15
+ *     Generated code requires VFPv3|VFP_FP16|VFP_FMA|VFP_D32|
+ *                             NEON|NEON_FMA|IDIV_ARM|IDIV_THUMB2
+ *     This flag implies -mfpu=neon-vfpv4.
+ *
+ *   -mcpu=iwmmxt
+ *     Allows the use of iWMMXt instrinsics with GCC.
+ */
 enum {
     ANDROID_CPU_ARM_FEATURE_ARMv7       = (1 << 0),
     ANDROID_CPU_ARM_FEATURE_VFPv3       = (1 << 1),
     ANDROID_CPU_ARM_FEATURE_NEON        = (1 << 2),
     ANDROID_CPU_ARM_FEATURE_LDREX_STREX = (1 << 3),
+    ANDROID_CPU_ARM_FEATURE_VFPv2       = (1 << 4),
+    ANDROID_CPU_ARM_FEATURE_VFP_D32     = (1 << 5),
+    ANDROID_CPU_ARM_FEATURE_VFP_FP16    = (1 << 6),
+    ANDROID_CPU_ARM_FEATURE_VFP_FMA     = (1 << 7),
+    ANDROID_CPU_ARM_FEATURE_NEON_FMA    = (1 << 8),
+    ANDROID_CPU_ARM_FEATURE_IDIV_ARM    = (1 << 9),
+    ANDROID_CPU_ARM_FEATURE_IDIV_THUMB2 = (1 << 10),
+    ANDROID_CPU_ARM_FEATURE_iWMMXt      = (1 << 11),
 };
 
 enum {
