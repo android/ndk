@@ -58,13 +58,13 @@ Each supported ABI is identified by a unique name.
    - ELF System V Application Binary Interface
      (DRAFT - 24 April 2001)
 
-   - Generic C++ ABI  (http://www.codesourcery.com/public/cxx-abi/abi.html)
+   - Generic C++ ABI  (http://mentorembedded.github.com/cxx-abi/abi.html)
 
   Note that the AAPCS standard defines 'EABI' as a moniker used to specify
   a _family_ of similar but distinct ABIs. Android follows the little-endian
   ARM GNU/Linux ABI as documented in the following document:
 
-      http://www.codesourcery.com/gnu_toolchains/arm/arm_gnu_linux_abi.pdf
+    http://sourcery.mentor.com/sgpp/lite/arm/portal/kbattach142/arm_gnu_linux_abi.pdf
 
   With the exception that wchar_t is only one byte. This should not matter
   in practice since wchar_t is simply *not* really supported by the Android
