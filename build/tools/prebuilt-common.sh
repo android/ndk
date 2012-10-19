@@ -728,12 +728,17 @@ prepare_common_build ()
     # We only do this if the CC variable is not defined to a given value
     # and the --mingw or --try-64 options are not used.
     #
-    if [ "$HOST_OS" = "linux" -a -z "$CC" -a "$MINGW" != "yes" -a "$TRY64" != "yes" ]; then
-        LEGACY_TOOLCHAIN_DIR="$ANDROID_NDK_ROOT/../prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6"
+    if [ "$HOST_OS" = "linux" -a -z "$CC" -a "$MINGW" != "yes" ]; then
+        if [ "$TRY64" != "yes" ]; then
+            LEGACY_PREFIX=i686
+        else
+            LEGACY_PREFIX=x86_64
+        fi
+        LEGACY_TOOLCHAIN_DIR="$ANDROID_NDK_ROOT/../prebuilts/gcc/linux-x86/host/$LEGACY_PREFIX-linux-glibc2.7-4.6"
         if [ -d "$LEGACY_TOOLCHAIN_DIR" ] ; then
-            log "Forcing generation of Linux binaries with legacy toolchain"
-            CC="$LEGACY_TOOLCHAIN_DIR/bin/i686-linux-gcc"
-            CXX="$LEGACY_TOOLCHAIN_DIR/bin/i686-linux-g++"
+            log "Forcing generation of Linux binaries with legacy $LEGACY_PREFIX toolchain"
+            CC="$LEGACY_TOOLCHAIN_DIR/bin/$LEGACY_PREFIX-linux-gcc"
+            CXX="$LEGACY_TOOLCHAIN_DIR/bin/$LEGACY_PREFIX-linux-g++"
         fi
     fi
 
