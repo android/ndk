@@ -293,7 +293,8 @@ endif
 # The list of object/static/shared libraries passed to the linker when
 # building shared libraries and executables. order is important.
 #
-linker_objects_and_libraries := $(strip $(call TARGET-get-linker-objects-and-libraries,\
+# Cannot use immediate evaluation because PRIVATE_LIBGCC may not be defined at this point.
+linker_objects_and_libraries = $(strip $(call TARGET-get-linker-objects-and-libraries,\
     $(LOCAL_OBJECTS), \
     $(static_libraries), \
     $(whole_static_libraries), \
