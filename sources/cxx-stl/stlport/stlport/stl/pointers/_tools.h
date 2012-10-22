@@ -351,7 +351,10 @@ struct _IteWrapper {
 
   _IteWrapper(_Iterator &__ite) : _M_ite(__ite) {}
 
-  const_reference operator*() const { return cast_traits::to_storage_type_cref(*_M_ite); }
+  const_reference operator*() const
+  // See http://code.google.com/p/android/issues/detail?id=38630
+  //{ return cast_traits::to_storage_type_cref(*_M_ite); }
+  { return __REINTERPRET_CAST<const_reference>(*_M_ite); }
 
   _Self& operator= (_Self const& __rhs) {
     _M_ite = __rhs._M_ite;
