@@ -219,6 +219,21 @@ NDK_TOOLCHAIN_VERSION
     Define this variable to either 4.4.3 or 4.6 to select version of GCC compiler.
     4.6 is the default
 
+APP_PIE
+    Starting from Jelly Bean (4.1), Android's dynamic linker supports
+    position-independent executables (PIE), which are built with -fPIE.
+    This flag makes it harder to exploit memory corruption bugs by
+    randomization the location of the code.
+    By default, ndk-build will automatically set this value to 'true' if
+    your project targets android-16 or higher. You may set it manually
+    to either 'true' or 'false'.
+
+    IMPORTANT: PIE executables *cannot* run on Android releases prior to 4.1.
+
+    Note that this only applies to executables. It has no effect when
+    building shared or static libraries.
+
+
 A trivial Application.mk file would be:
 
 -------------- cut here -------------------------

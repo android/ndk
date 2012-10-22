@@ -60,6 +60,14 @@ LOCAL_OBJECTS :=
 #
 LOCAL_CFLAGS := -DANDROID $(LOCAL_CFLAGS)
 
+# enable PIE for executable beyond certain API level
+ifeq ($(NDK_APP_PIE),true)
+  ifeq ($(call module-get-class,$(LOCAL_MODULE)),EXECUTABLE)
+    LOCAL_CFLAGS += -fPIE
+    LOCAL_LDFLAGS += -fPIE -pie
+  endif
+endif
+
 #
 # Add the default system shared libraries to the build
 #
@@ -68,7 +76,6 @@ ifeq ($(LOCAL_SYSTEM_SHARED_LIBRARIES),none)
 else
   LOCAL_SHARED_LIBRARIES += $(LOCAL_SYSTEM_SHARED_LIBRARIES)
 endif
-
 
 #
 # Check LOCAL_CPP_EXTENSION, use '.cpp' by default
