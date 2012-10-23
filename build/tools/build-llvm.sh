@@ -96,10 +96,6 @@ set_parameters ()
         echo "ERROR: Missing toolchain name parameter. See --help for details."
         exit 1
     fi
-
-    if [ ! -d "$SRC_DIR/llvm/$TOOLCHAIN" ] ; then
-        echo "ERROR: Source directory does not contain llvm sources for $TOOLCHAIN"
-    fi
 }
 
 set_parameters $PARAMETERS
