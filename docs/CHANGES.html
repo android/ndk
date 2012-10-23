@@ -5,7 +5,7 @@ android-ndk-r8c
 
 IMPORTANT CHANGES:
 
-- Added Clang/LLVM 3.1 compiler.  Since GCC 4.6 is still the default,
+- Added Clang 3.1 compiler.  Since GCC 4.6 is still the default,
   you need to explicitly enable it:
   1. For ndk-build: Either export NDK_TOOLCHAIN_VERSION=clang3.1 or add it
      in Application.mk.
@@ -18,18 +18,31 @@ IMPORTANT CHANGES:
 
 - Gold linker ld.gold is now available in Windows toolchain.  Gold is also the
   default linker for ARM/X86 on all hosts.  You may overrite it to use ld.bfd
-  linker by adding LOCAL_LDLIBS += -fuse-ld=bfd in Android.mk, or pass
+  linker by adding LOCAL_LDFLAGS += -fuse-ld=bfd in Android.mk, or pass
   -fuse-ld=bfd to g++/clang++ commandline which does the linking.
 
 - ndk-build[.cmd] and ndk-gdb now check and bail out if NDK path contains space.
 
-- Projects with android-10 .. 13 specified in project.properties, default.properties,
-  or APP_PLATFORM will link against android-9 instead of android-14.
+- Changes in API level
+  1. Projects with android-10 .. 13 specified in APP_PLATFORM, project.properties or
+     default.properties will link against android-9 instead of android-14.
+  2. Executable in project with android-16 (Jelly Bean) or higher is compiled
+     with -fPIE (position-independent executables).  A new APP_PIE allow manual control
+     of this behavior.  See APPLICATION-MK.html for details.  Note that all API level
+     above 14 still link against platforms/android-14. ie. no new platforms/android-N
+     is added.
+  3. ndk-build now warns about the adjusted API level is larger than android:minSdkVersion
+     in project's AndroidManifest.xml.
+
+- ARM: Updated 'cpu-features' helper library to include 9 more ARM-specific features
+
+  See sources/android/cpufeatures/cpu-features.h for details.
 
 - X86: long double is still a distinct type but it's 8-byte in size now (same as double)
 
-- APP_ABI=armeabi-v7a: -march=armv7-a is also passed to linker to link v7-specific
-  libraries and crt*.o
+- APP_ABI=armeabi-v7a: 
+  1. -march=armv7-a is also passed to linker to link v7-specific libraries and crt*.o
+  2. -mfpu=vfpv3-d16 is added by ndk-build instead of -mfpu=vfp in the previous releases.
 
 
 IMPORTANT BUG FIXES:
@@ -64,6 +77,11 @@ IMPORTANT BUG FIXES:
 - Fixed GCC 4.4.3 crashes on NEON specific typedef for float
 
   See http://code.google.com/p/android/issues/detail?id=34613
+
+- Fixed the STLport internal _IteWrapper::operator*() implementation where stale
+  stack localtion holding the dereferenced value is returned and leads to runtime crashes
+
+  See http://code.google.com/p/android/issues/detail?id=38630
 
 - ARM: Fixed ARM GCC 4.4.3/4.6 g++ to not warn about "the mangling of &lt;va_list&gt; has
   changed in GCC 4.4".  Switch -Wno-psabi is no longer needed to workaround.
@@ -192,6 +210,8 @@ OTHER BUG FIXES:
   6. Fixed preprocessor macros in &lt;arch&gt;/include/machine/*
   7. Replaced link.h for mips with new version for all platforms
   8. Remove linux-unistd.h
+  9. Move GLibc-specific macros LONG_LONG_MIN, LONG_LONG_MAX and ULONG_LONG_MAX from
+     &lt;pthread.h&gt; to &lt;limits.h&gt;.
 
 - Fixed a buffer overflow in ndk-stack-parser.
 
@@ -237,7 +257,7 @@ OTHER CHANGES:
 
 - Removed arch-x86 and arch-mips headers from platforms/android-{3,4,5,8}.
   Those headers are imcomplete to begin with, since both X86 and MIPS ABIs are only
-  supported at API &gt; 8
+  supported at API &ge; 9
 
 - Simplified c++ include path in standalone package, eg. change
 
@@ -252,6 +272,9 @@ OTHER CHANGES:
     .cc .cp .cxx .cpp .CPP .c++ .C
 
   You may still use LOCAL_CPP_EXTENSION to overwite it
+
+- Fixed an issue in samples/san-angeles about black/freeze frame
+  at re-launch.
 
 - Replaced deprecated APIs in NDK samples
   1. hello-gl2 from android-5 to android-7
@@ -329,10 +352,10 @@ IMPORTANT CHANGES:
 
     * Gold linker support is only avaialble for ARM and x86 architectures on linux-86
       and  darwin-x86 hosts.  It's not turned on by default.  Add
-      "LOCAL_LDLIBS += -fuse-ld=gold" in Android.mk to enable it.
+      "LOCAL_LDFLAGS += -fuse-ld=gold" in Android.mk to enable it.
 
     * You will need the new GDB to debug program compiled with -fPIE (including
-      binaries in JellyBean image)
+      binaries in Jelly Bean image)
 
     * The binutils 2.21 ld also contain back-port of fixes from 2.22
 
