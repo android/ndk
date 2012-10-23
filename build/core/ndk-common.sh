@@ -613,6 +613,14 @@ prepare_download ()
     find_program CMD_SCRP scp
 }
 
+find_pbzip2 ()
+{
+    if [ -z "$_PBZIP2_initialized" ] ; then
+        find_program PBZIP2 pbzip2
+	_PBZIP2_initialized="yes"
+    fi
+}
+
 # Download a file with either 'curl', 'wget' or 'scp'
 #
 # $1: source URL (e.g. http://foo.com, ssh://blah, /some/path)
@@ -686,7 +694,7 @@ unpack_archive ()
             run tar z$TARFLAGS "$ARCHIVE" -C $DIR
             ;;
         *.tar.bz2)
-            PBZIP2=`which pbzip2`
+            find_pbzip2
             if [ -n "$PBZIP2" ] ; then
                 run tar --use-compress-prog=pbzip2 -$TARFLAGS "$ARCHIVE" -C $DIR
             else
@@ -738,7 +746,7 @@ pack_archive ()
             (cd $SRCDIR && run tar z$TARFLAGS "$ARCHIVE" $SRCFILES)
             ;;
         *.tar.bz2)
-            PBZIP2=`which pbzip2`
+            find_pbzip2
             if [ -n "$PBZIP2" ] ; then
                 (cd $SRCDIR && run tar --use-compress-prog=pbzip2 -$TARFLAGS "$ARCHIVE" $SRCFILES)
             else
