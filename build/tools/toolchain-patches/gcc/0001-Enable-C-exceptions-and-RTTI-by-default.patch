@@ -15,7 +15,7 @@ index 5ca3858..d938c22 100644
 --- a/gcc-4.4.3/gcc/config/linux-android.h
 +++ b/gcc-4.4.3/gcc/config/linux-android.h
 @@ -46,8 +46,8 @@
-   "%{!fno-pic:%{!fno-PIC:%{!fpic:%{!fPIC: -fPIC}}}}"
+   "%{!fno-pic:%{!fno-PIC:%{!fpic:%{!fPIC: " ANDROID_PIC_DEFAULT "}}}}"
  
  #define ANDROID_CC1PLUS_SPEC						\
 -  "%{!fexceptions:%{!fno-exceptions: -fno-exceptions}} "		\
@@ -23,14 +23,14 @@ index 5ca3858..d938c22 100644
 +  "%{!fexceptions:%{!fno-exceptions: -fexceptions}} "		\
 +  "%{!frtti:%{!fno-rtti: -frtti}}"
  
- #define ANDROID_LIB_SPEC \
-   "%{!static: -ldl}"
+ #define ANDROID_ASM_SPEC \
+   "--noexecstack"
 diff --git a/gcc-4.6/gcc/config/linux-android.h b/gcc-4.6/gcc/config/linux-android.h
 index 94c5274..7256082 100644
 --- a/gcc-4.6/gcc/config/linux-android.h
 +++ b/gcc-4.6/gcc/config/linux-android.h
 @@ -46,8 +46,8 @@
-   "%{!fno-pic:%{!fno-PIC:%{!fpic:%{!fPIC: -fPIC}}}}"
+   "%{!fno-pic:%{!fno-PIC:%{!fpic:%{!fPIC: " ANDROID_PIC_DEFAULT "}}}}"
  
  #define ANDROID_CC1PLUS_SPEC						\
 -  "%{!fexceptions:%{!fno-exceptions: -fno-exceptions}} "		\
@@ -38,14 +38,14 @@ index 94c5274..7256082 100644
 +  "%{!fexceptions:%{!fno-exceptions: -fexceptions}} "		\
 +  "%{!frtti:%{!fno-rtti: -frtti}}"
  
- #define ANDROID_LIB_SPEC \
-   "%{!static: -ldl}"
+ #define ANDROID_ASM_SPEC \
+   "--noexecstack"
 diff --git a/gcc-4.7/gcc/config/linux-android.h b/gcc-4.7/gcc/config/linux-android.h
 index 94c5274..7256082 100644
 --- a/gcc-4.7/gcc/config/linux-android.h
 +++ b/gcc-4.7/gcc/config/linux-android.h
 @@ -46,8 +46,8 @@
-   "%{!fno-pic:%{!fno-PIC:%{!fpic:%{!fPIC: -fPIC}}}}"
+   "%{!fno-pic:%{!fno-PIC:%{!fpic:%{!fPIC: " ANDROID_PIC_DEFAULT "}}}}"
  
  #define ANDROID_CC1PLUS_SPEC						\
 -  "%{!fexceptions:%{!fno-exceptions: -fno-exceptions}} "		\
@@ -53,8 +53,8 @@ index 94c5274..7256082 100644
 +  "%{!fexceptions:%{!fno-exceptions: -fexceptions}} "		\
 +  "%{!frtti:%{!fno-rtti: -frtti}}"
  
- #define ANDROID_LIB_SPEC \
-   "%{!static: -ldl}"
+ #define ANDROID_ASM_SPEC \
+   "--noexecstack"
 -- 
 1.7.6.rc0
 
