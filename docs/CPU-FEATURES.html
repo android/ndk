@@ -57,6 +57,10 @@ Family-specific optional feature.
 
 Currently, only the following flags are defined, for the ARM CPU Family:
 
+   ANDROID_CPU_ARM_FEATURE_VFPv2
+      Indicates that the device's CPU supports VFPv2 instruction set.
+      Most ARMv6 CPUs support these.
+
    ANDROID_CPU_ARM_FEATURE_ARMv7
       Indicates that the device's CPU supports the ARMv7-A instruction
       set as supported by the "armeabi-v7a" abi (see CPU-ARCH-ABIS.html).
@@ -69,13 +73,49 @@ Currently, only the following flags are defined, for the ARM CPU Family:
       returned.
 
       Note that this corresponds to the minimum profile VFPv3-D16 that
-      _only_ provides 16 hardware FP registers.
+      _only_ provides 16 hardware double-precision FP registers.
+
+   ANDROID_CPU_ARM_FEATURE_VFP_D32
+      Indicates that the device's CPU supports 32 hardware double-precision
+      FP registers instead of 16.  Note that there are still only 32 single-
+      precision registers mapped to the same register banks.
 
    ANDROID_CPU_ARM_FEATURE_NEON
       Indicates that the device's CPU supports the ARM Advanced SIMD
       (a.k.a. NEON) vector instruction set extension. Note that ARM
       mandates that such CPUs also implement VFPv3-D32, which provides
       32 hardware FP registers (shared with the NEON unit).
+
+   ANDROID_CPU_ARM_FEATURE_VFP_FP16
+      Indicates that the device's CPU supports instructions to perform
+      floating-point operations on 16-bit registers. This is part of the
+      VFPv4 specification.
+
+   ANDROID_CPU_ARM_FEATURE_VFP_FMA
+      Indicates that the device's CPU supports fused multiply-accumulate
+      VFP instructions extension. Also part of the VFPv4 specification.
+
+   ANDROID_CPU_ARM_FEATURE_NEON_FMA
+      Indicates that the device's CPU supports fused multiply-accumulate
+      NEON instructions extension.  Also part of the VFPv4 specification.
+
+   ANDROID_CPU_ARM_FEATURE_IDIV_ARM
+      Indicates that the device's CPU supports Integer division in ARM mode.
+      Only available on recent CPUs (e.g. Cortex-A15).
+
+   ANDROID_CPU_ARM_FEATURE_IDIV_THUMB2
+      Indicates that the device's CPU supports Integer division in Thumb-2
+      mode.  Only available on recent CPUs (e.g. Cortex-A15).
+
+   ANDROID_CPU_ARM_FEATURE_iWMMXt
+      Indicates that the device's CPU supports extension that adds MMX
+      registers and instructions.  This is only available on a few XScale-
+      based CPU.
+
+   ANDROID_CPU_ARM_FEATURE_LDREX_STREX
+      Indicates that the device's CPU supports LDREX and STREX instructions
+      available since ARMv6.  Together they provide atomic update on memory
+      with the help of exclusive monitor.
 
 And the following flags for the x86 CPU Family:
 
