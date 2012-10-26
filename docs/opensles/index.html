@@ -942,13 +942,73 @@ Responding" (ANR).
 
 As OpenSL ES is a native C API, non-Dalvik application threads which
 call OpenSL ES have no Dalvik-related overhead such as garbage
-collection pauses. However, there is no additional performance
+collection pauses. With one exception described below, there is no additional performance
 benefit to the use of OpenSL ES other than this. In particular, use
-of OpenSL ES does not result in lower audio latency, higher scheduling
+of OpenSL ES does not guarantee a lower audio latency, higher scheduling
 priority, etc. than what the platform generally provides.
 On the other hand, as the Android platform and specific device
 implementations continue to evolve, an OpenSL ES application can
 expect to benefit from any future system performance improvements.
+<p>
+One such evolution is support for reduced audio output latency.
+The underpinnings for reduced output latency were first included in
+the Android 4.1 platform release ("Jellybean"), and then continued
+progress occurred in the Android 4.2 platform.  These improvements
+are available via OpenSL ES for device implementations that claim feature
+"android.hardware.audio.low_latency". If the device doesn't claim this
+feature but supports API level 9 (Android platform version 2.3) or later,
+then you can still use the OpenSL ES APIs but the output latency may be higher.
+The lower output latency path is used only if the application requests a
+buffer count of 2 or more, and a buffer size and sample rate that are
+compatible with the device's native output configuration.
+These parameters are device-specific and should be obtained as follows.
+<p>
+Beginning with API level 17 (Android platform version 4.2), an application
+can query for the native or optimal output sample rate and buffer size
+for the device's primary output stream.  When combined with the feature
+test just mentioned, an app can now configure itself appropriately for
+lower latency output on devices that claim support.
+<p>
+The recommended sequence is:
+<ol>
+<li>Check for API level 9 or higher, to confirm use of OpenSL ES.
+<li>Check for feature "android.hardware.audio.low_latency" using code such as this:
+<pre>
+import android.content.pm.PackageManager;
+...
+PackageManager pm = getContext().getPackageManager();
+boolean claimsFeature = pm.hasSystemFeature(PackageManager.FEATURE_AUDIO_LOW_LATENCY);
+</pre>
+<li>Check for API level 17 or higher, to confirm use of
+<code>android.media.AudioManager.getProperty()</code>.
+<li>Get the native or optimal output sample rate and buffer size for this device's primary output
+stream, using code such as this:
+<pre>
+import android.media.AudioManager;
+...
+AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+String sampleRate = am.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE));
+String framesPerBuffer = am.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER));
+</pre>
+Note that <code>sampleRate</code> and <code>framesPerBuffer</code>
+are <code>String</code>s.  First check for <code>null</code>
+and then convert to <code>int</code> using <code>Integer.parseInt()</code>.
+<li>Now use OpenSL ES to create an AudioPlayer with PCM buffer queue data locator.
+</ol>
+The number of lower latency audio players is limited. If your application
+requires more than a few audio sources, consider mixing your audio at
+application level.  Be sure to destroy your audio players when your
+activity is paused, as they are a global resource shared with other apps.
+<p>
+To avoid audible glitches, the buffer queue callback handler must execute
+within a small and predictable time window. This typically implies no
+blocking on mutexes, conditions, or I/O operations. Instead consider
+"try locks" and non-blocking algorithms. Avoid algorithms that
+execute in a non-deterministic amount of time, or are "bursty" in
+their computations.
+<p>
+Lower latency audio is for these outputs only: on-device speaker, wired
+headphones, wired headset, and line out.
 
 <h3>Security and permissions</h3>
 
