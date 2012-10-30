@@ -17,7 +17,7 @@ IMPORTANT CHANGES:
   This feature is experimental now but welcome to try and report issues.
 
 - Gold linker ld.gold is now available in Windows toolchain.  Gold is also the
-  default linker for ARM/X86 on all hosts.  You may overrite it to use ld.bfd
+  default linker for ARM/X86 on all hosts.  You may override it to use ld.bfd
   linker by adding LOCAL_LDFLAGS += -fuse-ld=bfd in Android.mk, or pass
   -fuse-ld=bfd to g++/clang++ commandline which does the linking.
 
@@ -79,7 +79,7 @@ IMPORTANT BUG FIXES:
   See http://code.google.com/p/android/issues/detail?id=34613
 
 - Fixed the STLport internal _IteWrapper::operator*() implementation where stale
-  stack localtion holding the dereferenced value is returned and leads to runtime crashes
+  stack location holding the dereferenced value is returned and leads to runtime crashes
 
   See http://code.google.com/p/android/issues/detail?id=38630
 
@@ -160,7 +160,7 @@ IMPORTANT BUG FIXES:
 
   See http://code.google.com/p/android/issues/detail?id=36120
 
-- GDB: Fixed ndk-gdb when APP_ABI contains "all" and matchs none of known architecture
+- GDB: Fixed ndk-gdb when APP_ABI contains "all" and matches none of known architecture
 
   See http://code.google.com/p/android/issues/detail?id=35392
 
@@ -229,7 +229,7 @@ OTHER BUG FIXES:
   executable should embed its own version of these symbols, provided by crtbegin_*.o
 
   If your project is linked with "-nostdlib -Wl,--no-undefined", you need to provide
-  your own __dso_handle becasue crtbegin_so.o isn't linked.  The content of __dso_handle
+  your own __dso_handle because crtbegin_so.o isn't linked.  The content of __dso_handle
   doesn't matter.  eg.
 
     extern "C" {
@@ -256,7 +256,7 @@ OTHER BUG FIXES:
 OTHER CHANGES:
 
 - Removed arch-x86 and arch-mips headers from platforms/android-{3,4,5,8}.
-  Those headers are imcomplete to begin with, since both X86 and MIPS ABIs are only
+  Those headers are incomplete to begin with, since both X86 and MIPS ABIs are only
   supported at API &ge; 9
 
 - Simplified c++ include path in standalone package, eg. change
@@ -271,7 +271,7 @@ OTHER CHANGES:
 
     .cc .cp .cxx .cpp .CPP .c++ .C
 
-  You may still use LOCAL_CPP_EXTENSION to overwite it
+  You may still use LOCAL_CPP_EXTENSION to override it
 
 - Fixed an issue in samples/san-angeles about black/freeze frame
   at re-launch.
@@ -347,10 +347,10 @@ IMPORTANT CHANGES:
   Add GCC 4.6 toolchain (binutils 2.21 with gold + GDB 7.3.x) to co-exists with
   the original GCC 4.4.3 toolchain (binutils 2.19 + GDB 6.6).  Note:
 
-    * GCC 4.6 is the defualt.  You may set NDK_TOOLCHAIN_VERSION=4.4.3 in Application.mk
-      to select the origianl one.
+    * GCC 4.6 is the default.  You may set NDK_TOOLCHAIN_VERSION=4.4.3 in Application.mk
+      to select the original one.
 
-    * Gold linker support is only avaialble for ARM and x86 architectures on linux-86
+    * Gold linker support is only available for ARM and x86 architectures on linux-86
       and  darwin-x86 hosts.  It's not turned on by default.  Add
       "LOCAL_LDFLAGS += -fuse-ld=gold" in Android.mk to enable it.
 
@@ -425,7 +425,7 @@ OTHER BUG FIXES:
 
     * Follow warning symbol link in mips_elf_allocate_lazy_stub.
 
-    * Move MIPS .dynamic to the data segement, so that it is writable.
+    * Move MIPS .dynamic to the data segment, so that it is writable.
       Replace hard-coded 4096 with symbols for correct segment sizes for MIPS.
 
     * Remove -mno-shared as default in MIPS toolchain.  -fPIC (or -fpic if supported)
@@ -476,7 +476,7 @@ android-ndk-r8
 
 IMPORTANT BUG FIXES:
 
-- Fixed a typo in GAbi++ implementaiton where result of dynamic_cast&lt;D&gt;(b)
+- Fixed a typo in GAbi++ implementation where result of dynamic_cast&lt;D&gt;(b)
   of base class object 'b' to derived class D is adjusted wrong
   (in the opposite direction from base class). See
   http://code.google.com/p/android/issues/detail?id=28721
@@ -593,7 +593,7 @@ OTHER CHANGES:
   no longer forcibly enable exceptions and RTTI. This change results in smaller
   code. If you need these features, you need to do either one of these:
 
-     1/ Enable exceptions and/or RTTI explicitely in your modules or
+     1/ Enable exceptions and/or RTTI explicitly in your modules or
         Application.mk. (recommended)
 
      2/ Define APP_GNUSTL_FORCE_CPP_FEATURES to 'exceptions', 'rtti' or both
@@ -729,9 +729,9 @@ IMPORTANT CHANGES:
 
      This feature is still very experimental, but feel free to try it
      and report issues on the public forum (android-ndk@googlegroups.com)
-     or the public bug databse (http://b.android.com).
+     or the public bug database (http://b.android.com).
 
-     Note that all samples and unit tests succesfully compile with it.
+     Note that all samples and unit tests successfully compile with it.
 
 IMPORTANT BUG FIXES:
 
@@ -745,7 +745,7 @@ IMPORTANT BUG FIXES:
   Previously, only libfoo.so was, unless you listed 'bar' in your APP_MODULES
   too.
 
-  If you define APP_MODULES explicitely, the behaviour is unchanged.
+  If you define APP_MODULES explicitly, the behaviour is unchanged.
 
 - Static library imports are now properly transitive. If top-level module
   'foo' imports static library 'bar' which imports static library 'zoo',
@@ -1026,7 +1026,7 @@ IMPORTANT BUG FIXES:
   a static library version of GNU libstdc++.
 
 - ndk-build: Fix a bug that created inconsistent dependency files when a
-  compilation error occured on Windows, preventing building properly after
+  compilation error occurred on Windows, preventing building properly after
   the error was fixed in the source code.
 
 - ndk-build: Fix a Cygwin-specific bug where using very short paths for
@@ -1084,7 +1084,7 @@ OTHER FIXES &amp; CHANGES:
   degradation when compared to the old android-eabi configuration.
 
   This only affects users of the standalone toolchain. The NDK build script
-  always enforced -fpic implicitely.
+  always enforced -fpic implicitly.
 
 -------------------------------------------------------------------------------
 android-ndk-r5
@@ -1253,7 +1253,7 @@ IMPORTANT CHANGES:
   NOTE: Please update your Android.mk to use module imports as soon as
         possible. The location $NDK/source/cpufeatures/ is deprecated
         and will be removed in a future NDK release. Avoid referencing
-        it directly in your build scritps!
+        it directly in your build scripts!
 
 OTHER FIXES AND CHANGES:
 
