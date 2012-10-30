@@ -224,12 +224,8 @@ if [ -n "$LLVM_VERSION" ]; then
   cat > "$TMPDIR/bin/clang" <<EOF
 \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT -target $LLVM_TARGET "\$@"
 EOF
-  # Add "-x c++" to remove annoying message reads
-  #
-  #   warning: treating 'c' input as 'c++' when in C++ mode, this behavior is deprecate
-  #
   cat > "$TMPDIR/bin/clang++" <<EOF
-\`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT++ -target $LLVM_TARGET -x c++ "\$@"
+\`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT++ -target $LLVM_TARGET "\$@"
 EOF
   chmod 0755 "$TMPDIR/bin/clang" "$TMPDIR/bin/clang++"
 fi
