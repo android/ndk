@@ -97,7 +97,7 @@ LOCAL_CFLAGS := $(libstlport_cflags)
 LOCAL_CPPFLAGS := $(libstlport_cppflags)
 LOCAL_C_INCLUDES := $(libstlport_c_includes)
 LOCAL_EXPORT_C_INCLUDES := $(libstlport_c_includes)
-LOCAL_CPP_FEATURES := rtti
+LOCAL_CPP_FEATURES := rtti exceptions
 include $(BUILD_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
@@ -109,7 +109,7 @@ LOCAL_CFLAGS := $(libstlport_cflags)
 LOCAL_CPPFLAGS := $(libstlport_cppflags)
 LOCAL_C_INCLUDES := $(libstlport_c_includes)
 LOCAL_EXPORT_C_INCLUDES := $(libstlport_c_includes)
-LOCAL_CPP_FEATURES := rtti
+LOCAL_CPP_FEATURES := rtti exceptions
 include $(BUILD_SHARED_LIBRARY)
 
 endif # STLPORT_FORCE_REBUILD == true

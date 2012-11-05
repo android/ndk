@@ -87,15 +87,15 @@ fail_panic "Could not create build directory: $BUILD_DIR"
 
 GABIXX_SRCDIR=$ANDROID_NDK_ROOT/$GABIXX_SUBDIR
 GABIXX_CFLAGS="-fPIC -O2 -DANDROID -D__ANDROID__ -I$GABIXX_SRCDIR/include"
-GABIXX_CXXFLAGS="-fno-exceptions -frtti"
+GABIXX_CXXFLAGS="-fexceptions -frtti"
 GABIXX_SOURCES=$(cd $ANDROID_NDK_ROOT/$GABIXX_SUBDIR && ls src/*.cc)
-GABIXX_LDFLAGS=
+GABIXX_LDFLAGS="-ldl"
 
 # Location of the STLPort source tree
 STLPORT_SRCDIR=$ANDROID_NDK_ROOT/$STLPORT_SUBDIR
 STLPORT_CFLAGS="-DGNU_SOURCE -fPIC -O2 -I$STLPORT_SRCDIR/stlport -DANDROID -D__ANDROID__"
 STLPORT_CFLAGS=$STLPORT_CFLAGS" -I$ANDROID_NDK_ROOT/$GABIXX_SUBDIR/include"
-STLPORT_CXXFLAGS="-fuse-cxa-atexit -fno-exceptions -frtti"
+STLPORT_CXXFLAGS="-fuse-cxa-atexit -fexceptions -frtti"
 STLPORT_SOURCES=\
 "src/dll_main.cpp \
 src/fstream.cpp \
