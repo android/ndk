@@ -1,4 +1,4 @@
-// Copyright (C) 2011 The Android Open Source Project
+// Copyright (C) 2012 The Android Open Source Project
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -24,44 +24,17 @@
 // LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 // SUCH DAMAGE.
-//
 
-#include <stdlib.h>
-#include <new>
+#include <cxxabi.h>
 
-namespace std {
+namespace __cxxabiv1 {
 
-  const nothrow_t nothrow;
-
-  bad_alloc::bad_alloc() throw() {
+  extern "C" void __cxa_bad_cast() {
+    throw std::bad_cast();
   }
 
-  bad_alloc::~bad_alloc() throw() {
+  extern "C" void __cxa_bad_typeid() {
+    throw std::bad_typeid();
   }
 
-  const char* bad_alloc::what() const throw() {
-    return "std::bad_alloc";
-  }
-
-} // namespace std
-
-void* operator new(std::size_t size) throw(std::bad_alloc) {
-  void* space = ::operator new(size, std::nothrow_t());
-  if (space) {
-    return space;
-  } else {
-    throw std::bad_alloc();
-  }
-}
-
-void* operator new(std::size_t size, const std::nothrow_t& no) throw() {
-  return malloc(size);
-}
-
-void* operator new[](std::size_t size) throw(std::bad_alloc) {
-  return ::operator new(size);
-}
-
-void* operator new[](std::size_t size, const std::nothrow_t& no) throw() {
-  return ::operator new[](size, no);
-}
+} // namespace __cxxabiv1

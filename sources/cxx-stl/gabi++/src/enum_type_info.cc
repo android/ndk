@@ -34,4 +34,9 @@ namespace __cxxabiv1
   __enum_type_info::~__enum_type_info()
   {
   }
+
+  bool __enum_type_info::can_catch(const std::type_info* thrown_type,
+                                  void*& adjustedPtr) const {
+    return *this == *thrown_type;
+  }
 } // namespace __cxxabiv1

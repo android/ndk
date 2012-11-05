@@ -1,4 +1,4 @@
-// Copyright (C) 2011 The Android Open Source Project
+// Copyright (C) 2012 The Android Open Source Project
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -24,44 +24,14 @@
 // LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 // SUCH DAMAGE.
-//
 
-#include <stdlib.h>
-#include <new>
+#ifndef __GABIXX_UNWIND_H__
+#define __GABIXX_UNWIND_H__
 
-namespace std {
+#ifdef __arm__
+# include "unwind-arm.h"
+#else
+# include "unwind-itanium.h"
+#endif
 
-  const nothrow_t nothrow;
-
-  bad_alloc::bad_alloc() throw() {
-  }
-
-  bad_alloc::~bad_alloc() throw() {
-  }
-
-  const char* bad_alloc::what() const throw() {
-    return "std::bad_alloc";
-  }
-
-} // namespace std
-
-void* operator new(std::size_t size) throw(std::bad_alloc) {
-  void* space = ::operator new(size, std::nothrow_t());
-  if (space) {
-    return space;
-  } else {
-    throw std::bad_alloc();
-  }
-}
-
-void* operator new(std::size_t size, const std::nothrow_t& no) throw() {
-  return malloc(size);
-}
-
-void* operator new[](std::size_t size) throw(std::bad_alloc) {
-  return ::operator new(size);
-}
-
-void* operator new[](std::size_t size, const std::nothrow_t& no) throw() {
-  return ::operator new[](size, no);
-}
+#endif  // __GABIXX_UNWIND_H__

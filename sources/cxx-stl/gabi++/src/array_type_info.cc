@@ -25,13 +25,19 @@
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 // SUCH DAMAGE.
 //
-// fundamental_type_info.cc: Methods for __fundamental_type_info.
+// array_type_info.cc: Methods for __array_type_info.
 
 #include <cxxabi.h>
 
 namespace __cxxabiv1
 {
-  __fundamental_type_info::~__fundamental_type_info()
+  __array_type_info::~__array_type_info()
   {
+  }
+
+  bool __array_type_info::can_catch(const std::type_info* thrown_type,
+                                    void*& adjustedPtr) const {
+    // Thrown array will be decayed to pointer, we cannot convert it back
+    return false;
   }
 } // namespace __cxxabiv1

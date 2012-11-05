@@ -24,44 +24,50 @@
 // LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 // SUCH DAMAGE.
-//
 
-#include <stdlib.h>
-#include <new>
+#ifndef __GABIXX_EXCEPTION__
+#define __GABIXX_EXCEPTION__
 
 namespace std {
 
-  const nothrow_t nothrow;
+  class exception {
+  public:
+    exception() throw();
+    virtual ~exception() throw();
+    virtual const char* what() const throw();
+  };
 
-  bad_alloc::bad_alloc() throw() {
-  }
+  class bad_exception : public exception {
+  public:
+    bad_exception() throw();
+    virtual ~bad_exception() throw();
+    virtual const char* what() const throw();
+  };
 
-  bad_alloc::~bad_alloc() throw() {
-  }
+  typedef void (*terminate_handler)();
+  terminate_handler get_terminate();
+  terminate_handler set_terminate(terminate_handler f);
+  void terminate();
 
-  const char* bad_alloc::what() const throw() {
-    return "std::bad_alloc";
-  }
+  typedef void (*unexpected_handler)();
+  unexpected_handler get_unexpected();
+  unexpected_handler set_unexpected(unexpected_handler f);
+  void unexpected();
+
+  bool uncaught_exception() throw();
+
+  /*
+   * Below APIs are used internally
+   */
+  void __terminate(terminate_handler);
+  void __unexpected(unexpected_handler);
+
+  extern terminate_handler default_terminate_fn;
+  extern terminate_handler current_terminate_fn;
+
+  extern unexpected_handler default_unexpected_fn;
+  extern unexpected_handler current_unexpected_fn;
 
 } // namespace std
 
-void* operator new(std::size_t size) throw(std::bad_alloc) {
-  void* space = ::operator new(size, std::nothrow_t());
-  if (space) {
-    return space;
-  } else {
-    throw std::bad_alloc();
-  }
-}
-
-void* operator new(std::size_t size, const std::nothrow_t& no) throw() {
-  return malloc(size);
-}
-
-void* operator new[](std::size_t size) throw(std::bad_alloc) {
-  return ::operator new(size);
-}
-
-void* operator new[](std::size_t size, const std::nothrow_t& no) throw() {
-  return ::operator new[](size, no);
-}
+#endif // __GABIXX_EXCEPTION__

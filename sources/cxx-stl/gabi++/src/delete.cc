@@ -44,14 +44,14 @@ operator delete[](void* ptr) throw()
 }
 
 void
-operator delete(void* ptr, const std::nothrow_t &)
+operator delete(void* ptr, const std::nothrow_t &) throw()
 {
     if (ptr)
         free(ptr);
 }
 
 void
-operator delete[](void* ptr, const std::nothrow_t &nt)
+operator delete[](void* ptr, const std::nothrow_t &nt) throw()
 {
     ::operator delete(ptr, nt);
 }

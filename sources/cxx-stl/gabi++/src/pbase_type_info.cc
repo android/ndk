@@ -34,4 +34,71 @@ namespace __cxxabiv1
   __pbase_type_info::~__pbase_type_info()
   {
   }
+
+  bool __pbase_type_info::can_catch(const std::type_info* thr_type,
+                                    void*& adjustedPtr) const {
+    unsigned tracker = first_time_init;
+    return can_catch_typeinfo_wrapper(thr_type, adjustedPtr, tracker);
+  }
+
+  bool __pbase_type_info::can_catch_typeinfo_wrapper(const std::type_info* thr_type,
+                                                     void*& adjustedPtr,
+                                                     unsigned tracker) const {
+    if (*this == *thr_type) {
+      return true;
+    }
+
+    if (typeid(*this) != typeid(*thr_type)) {
+      return false;
+    }
+    const __pbase_type_info *thrown_type =
+        static_cast<const __pbase_type_info *>(thr_type);
+
+    // Both side must be the same cv-qualified
+    if (~__flags & thrown_type->__flags) {
+      return false;
+    }
+
+    // Handle the annoying constness problem
+    // Ref: http://www.parashift.com/c++-faq-lite/constptrptr-conversion.html
+    if (tracker == first_time_init &&
+        (tracker & keep_constness) != keep_constness &&
+        (tracker & after_gap) != after_gap) {
+      tracker |= keep_constness;
+    } else {
+      tracker &= ~first_time_init;
+    }
+
+    if ((tracker & first_time_init) != first_time_init &&
+        (tracker & after_gap) == after_gap) {
+      return false;
+    }
+
+    if (!(__flags & __const_mask)) {
+      tracker |= after_gap;
+    }
+
+    return can_catch_ptr(thrown_type, adjustedPtr, tracker);
+  }
+
+  bool __pbase_type_info::can_catch_ptr(const __pbase_type_info* thrown_type,
+                                        void*& adjustedPtr,
+                                        unsigned tracker) const {
+    bool result;
+    if (do_can_catch_ptr(thrown_type, adjustedPtr, tracker,
+                         result)) {
+      return result;
+    }
+
+    const __pbase_type_info* ptr_pointee =
+        dynamic_cast<const __pbase_type_info*>(__pointee);
+
+    if (ptr_pointee) {
+      return ptr_pointee->can_catch_typeinfo_wrapper(thrown_type->__pointee,
+                                                     adjustedPtr,
+                                                     tracker);
+    } else {
+      return __pointee->can_catch(thrown_type->__pointee, adjustedPtr);
+    }
+  }
 } // namespace __cxxabiv1
