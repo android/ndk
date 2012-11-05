@@ -24,74 +24,50 @@
 // LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 // SUCH DAMAGE.
-//
-// typeinfo: RTTI support header.
-//
-// References:
-// Itanium C++ ABI at http://www.codesourcery.com/public/cxx-abi/abi.html.
-// IHI0041A C++ Application Binary Interface for the ARM architecture.
-// Linux Standard Base C++ Specification for S390X 4.1.
-//
-#ifndef __GABIXX_TYPEINFO__
-#define __GABIXX_TYPEINFO__
 
-#include <exception>
+#ifndef __GABIXX_EXCEPTION__
+#define __GABIXX_EXCEPTION__
 
-namespace std
-{
-  // Defintion of type_info based on example in C++ ABI section 2.9.3
-  class type_info
-  {
+namespace std {
+
+  class exception {
   public:
-    virtual
-    ~type_info();
-
-    // Whether two type_infos corresponds to the same types.
-    bool
-    operator==(const type_info &ti) const;
-
-    // Whether two type_infos corresponds to the different types.
-    bool
-    operator!=(const type_info &ti) const;
-
-    bool
-    before(const type_info &ti) const;
-
-    // Return name of type.
-    const char* name() const {
-      // Compatible with GNU
-      return (__type_name[0] == '*') ? __type_name + 1 : __type_name;
-    }
-
-    virtual bool can_catch(const type_info* thrown_type,
-                           void*& adjustedPtr) const = 0;
-
-  private:
-    // Assignment of type_info is not allowed.
-    type_info (const type_info& rhs);
-
-    type_info&
-    operator=(const type_info& rhs);
-
-    // Mangled name of type.
-    const char *__type_name;
-  };
-
-
-  class bad_cast : public exception {
-  public:
-    bad_cast() throw();
-    virtual ~bad_cast() throw();
+    exception() throw();
+    virtual ~exception() throw();
     virtual const char* what() const throw();
   };
 
-  class bad_typeid : public exception {
+  class bad_exception : public exception {
   public:
-    bad_typeid() throw();
-    virtual ~bad_typeid() throw();
+    bad_exception() throw();
+    virtual ~bad_exception() throw();
     virtual const char* what() const throw();
   };
+
+  typedef void (*terminate_handler)();
+  terminate_handler get_terminate();
+  terminate_handler set_terminate(terminate_handler f);
+  void terminate();
+
+  typedef void (*unexpected_handler)();
+  unexpected_handler get_unexpected();
+  unexpected_handler set_unexpected(unexpected_handler f);
+  void unexpected();
+
+  bool uncaught_exception() throw();
+
+  /*
+   * Below APIs are used internally
+   */
+  void __terminate(terminate_handler);
+  void __unexpected(unexpected_handler);
+
+  extern terminate_handler default_terminate_fn;
+  extern terminate_handler current_terminate_fn;
+
+  extern unexpected_handler default_unexpected_fn;
+  extern unexpected_handler current_unexpected_fn;
 
 } // namespace std
 
-#endif // _GABIXX_TYPEINFO_
+#endif // __GABIXX_EXCEPTION__

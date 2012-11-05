@@ -31,18 +31,26 @@
 #define __GABIXX_NEW__
 
 #include <cstddef>
+#include <exception>
 
 namespace std
 {
   struct nothrow_t {};
   extern const nothrow_t nothrow;
   typedef void (*new_handler)();
+
+class bad_alloc : public exception {
+public:
+  bad_alloc() throw();
+  virtual ~bad_alloc() throw();
+  virtual const char* what() const throw();
+};
+
 }
 
-// FIXME: Need to handle exceptions.
-void* operator new(std::size_t size) throw(/*std::bad_alloc*/);
+void* operator new(std::size_t size) throw(std::bad_alloc);
 void* operator new(std::size_t size, const std::nothrow_t&) throw();
-void* operator new[](std::size_t size) throw(/*std::bad_alloc*/);
+void* operator new[](std::size_t size) throw(std::bad_alloc);
 void* operator new[](std::size_t size, const std::nothrow_t&) throw();
 
 void  operator delete[](void* ptr) throw();

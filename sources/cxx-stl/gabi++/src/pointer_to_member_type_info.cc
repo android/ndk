@@ -34,4 +34,24 @@ namespace __cxxabiv1
   __pointer_to_member_type_info::~__pointer_to_member_type_info()
   {
   }
+
+  bool __pointer_to_member_type_info::do_can_catch_ptr(const __pbase_type_info* thr_type,
+                                                       void*& adjustedPtr,
+                                                       unsigned nest_const_level,
+                                                       bool& result) const {
+    const __pointer_to_member_type_info *thrown_type =
+        dynamic_cast<const __pointer_to_member_type_info *>(thr_type);
+    if (!thrown_type) {
+      result = false;
+      return true;
+    }
+
+    if (*__context != *thrown_type->__context) {
+      result = false;     // point to different classes
+      return true;
+    }
+
+    return false; // Have not decided. Need to recursively call.
+  }
+
 } // namespace __cxxabiv1

@@ -34,4 +34,58 @@ namespace __cxxabiv1
   __class_type_info::~__class_type_info()
   {
   }
+
+  bool __class_type_info::can_catch(const std::type_info* thrown_type,
+                                    void*& adjustedPtr) const {
+    if (*this == *thrown_type) {
+      return true;
+    }
+
+    const __class_type_info* thrown_class_type =
+      dynamic_cast<const __class_type_info*>(thrown_type);
+    if (thrown_class_type == 0) {
+      return false;
+    }
+
+    __UpcastInfo info(this);
+    thrown_class_type->walk_to(this, adjustedPtr, info);
+
+    if (info.status != __UpcastInfo::has_public_contained) {
+      return false;
+    }
+
+    adjustedPtr = info.adjustedPtr;
+    return true;
+  }
+
+  bool __class_type_info::walk_to(const __class_type_info* base_type,
+                                  void*& adjustedPtr,
+                                  __UpcastInfo& info) const {
+    return self_class_type_match(base_type, adjustedPtr, info);
+  }
+
+  bool __class_type_info::self_class_type_match(const __class_type_info* base_type,
+                                                void*& adjustedPtr,
+                                                __UpcastInfo& info) const {
+    if (*this == *base_type) {
+      info.status = __UpcastInfo::has_public_contained;
+      info.base_type = base_type;
+      info.adjustedPtr = adjustedPtr;
+      info.nullobj_may_conflict = true;
+      return true;
+    }
+
+    return false;
+  }
+
+
+  __UpcastInfo::__UpcastInfo(const __class_type_info* type)
+    : status(unknown), base_type(0), adjustedPtr(0),
+      premier_flags(0), nullobj_may_conflict(true) {
+    // Keep the shape information for future use.
+    if (const __vmi_class_type_info* p =
+           dynamic_cast<const __vmi_class_type_info*>(type)) {
+      premier_flags = p->__flags;
+    }
+  }
 } // namespace __cxxabiv1
