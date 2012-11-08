@@ -2,7 +2,7 @@
 #include <exception>
 #include <cstdio>
 
-int foo(void)
+void foo()
 {
     try {
         ::printf("Hello ");
