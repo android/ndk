@@ -18,6 +18,8 @@
 # We use the GNU Make Standard Library
 include $(NDK_ROOT)/build/gmsl/gmsl
 
+include $(BUILD_SYSTEM)/definitions-tests.mk
+
 # If NDK_TRACE is enabled then calls to the library functions are
 # traced to stdout using warning messages with their arguments
 
@@ -48,22 +50,6 @@ space  := $(empty) $(empty)
 space4 := $(space)$(space)$(space)$(space)
 
 # -----------------------------------------------------------------------------
-# Function : last2
-# Arguments: a list
-# Returns  : the penultimate (next-to-last) element of a list
-# Usage    : $(call last2, <LIST>)
-# -----------------------------------------------------------------------------
-last2 = $(word $(words $1), x $1)
-
-# -----------------------------------------------------------------------------
-# Function : last3
-# Arguments: a list
-# Returns  : the antepenultimate (second-next-to-last) element of a list
-# Usage    : $(call last3, <LIST>)
-# -----------------------------------------------------------------------------
-last3 = $(word $(words $1), x x $1)
-
-# -----------------------------------------------------------------------------
 # Function : remove-duplicates
 # Arguments: a list
 # Returns  : the list with duplicate items removed, order is preserved.
@@ -81,6 +67,12 @@ remove-duplicates = $(strip \
     )\
   )\
   $(__uniq_ret))
+
+-test-remove-duplicates = \
+  $(call test-expect,,$(call remove-duplicates))\
+  $(call test-expect,foo bar,$(call remove-duplicates,foo bar))\
+  $(call test-expect,foo bar,$(call remove-duplicates,foo bar foo bar))\
+  $(call test-expect,foo bar,$(call remove-duplicates,foo foo bar bar bar))
 
 # -----------------------------------------------------------------------------
 # Macro    : this-makefile
@@ -320,8 +312,26 @@ generate-file-dir = $(eval $(call ev-generate-file-dir,$1))
 index-is-zero = $(filter 0 00 000 0000 00000 000000 0000000,$1)
 bump-0-to-1 = $(if $(call index-is-zero,$1),1,$1)
 
+-test-bump-0-to-1 = \
+  $(call test-expect,$(call bump-0-to-1))\
+  $(call test-expect,1,$(call bump-0-to-1,0))\
+  $(call test-expect,1,$(call bump-0-to-1,1))\
+  $(call test-expect,2,$(call bump-0-to-1,2))\
+  $(call test-expect,1,$(call bump-0-to-1,00))\
+  $(call test-expect,1,$(call bump-0-to-1,000))\
+  $(call test-expect,1,$(call bump-0-to-1,0000))\
+  $(call test-expect,1,$(call bump-0-to-1,00000))\
+  $(call test-expect,1,$(call bump-0-to-1,000000))\
+  $(call test-expect,10,$(call bump-0-to-1,10))\
+  $(call test-expect,100,$(call bump-0-to-1,100))
+
 # Same as $(wordlist ...) except the start index, if 0, is bumped to 1
 index-word-list = $(wordlist $(call bump-0-to-1,$1),$2,$3)
+
+-test-index-word-list = \
+  $(call test-expect,,$(call index-word-list,1,1))\
+  $(call test-expect,a b,$(call index-word-list,0,2,a b c d))\
+  $(call test-expect,b c,$(call index-word-list,2,3,a b c d))\
 
 # NOTE: With GNU Make $1 and $(1) are equivalent, which means
 #       that $10 is equivalent to $(1)0, and *not* $(10).
@@ -486,6 +496,13 @@ generate-list-file = $(eval $(call generate-list-file-ev,$1,$2))
 # -----------------------------------------------------------------------------
 link-whole-archives = $(if $(strip $1),$(call link-whole-archive-flags,$1))
 link-whole-archive-flags = -Wl,--whole-archive $(call host-path,$1) -Wl,--no-whole-archive
+
+-test-link-whole-archive = \
+  $(call test-expect,,$(call link-whole-archives))\
+  $(eval _start := -Wl,--whole-archive)\
+  $(eval _end := -Wl,--no-whole-archive)\
+  $(call test-expect,$(_start) foo $(_end),$(call link-whole-archives,foo))\
+  $(call test-expect,$(_start) foo bar $(_end),$(call link-whole-archives,foo bar))
 
 # =============================================================================
 #
@@ -769,6 +786,66 @@ module-compute-depends = \
 
 module-get-installed = $(__ndk_modules.$1.INSTALLED)
 
+# Internal function used by modules-get-closure
+# Compute the closure of a node in a graph.
+# $1: list of graph nodes
+# $2: dependency function, i.e. $(call $2,<name>) should return the list
+#     of nodes that <name> depends on.
+# Out: list of nodes. This are all the nodes that depend on those in $1
+#      transitively.
+#
+get-closure = $(strip \
+    $(eval __closure_list := $1) \
+    $(eval __closure_wq   := $1) \
+    $(eval __closure_deps_func := $2) \
+    $(call get-closure-recursive)\
+    $(__closure_list))
+
+# Note the tricky use of conditional recursion to work around the fact that
+# the GNU Make language does not have any conditional looping construct
+# like 'while'.
+get-closure-recursive = \
+    $(eval __closure_node := $(call first,$(__closure_wq)))\
+    $(eval __closure_wq   := $(call rest,$(__closure_wq)))\
+    $(eval __closure_depends := $(call $(__closure_deps_func),$(__closure_node)))\
+    $(eval __closure_new := $(filter-out $(__closure_list),$(__closure_depends)))\
+    $(eval __closure_list += $(__closure_new))\
+    $(eval __closure_wq := $(strip $(__closure_wq) $(__closure_new)))\
+    $(if $(__closure_wq),$(call get-closure-recursive))
+
+-test-get-closure.empty = \
+    $(eval deps = $$($$1_depends))\
+    $(call test-expect,$(call get-closure,,deps))\
+
+-test-get-closure.A = \
+    $(eval deps = $$($$1_depends))\
+    $(eval A_depends :=)\
+    $(call test-expect,A,$(call get-closure,A,deps))
+
+-test-get-closure.ABC = \
+    $(eval deps = $$($$1_depends))\
+    $(eval A_depends := B)\
+    $(eval B_depends := C)\
+    $(eval C_depends :=)\
+    $(call test-expect,A B C,$(call get-closure,A,deps))
+
+-test-get-closure.ABC_circular = \
+    $(eval deps = $$($$1_depends))\
+    $(eval A_depends := B)\
+    $(eval B_depends := C)\
+    $(eval C_depends := A)\
+    $(call test-expect,A B C,$(call get-closure,A,deps))
+
+-test-get-closure.ABCDEF = \
+    $(eval deps = $$($$1_depends))\
+    $(eval A_depends := B C)\
+    $(eval B_depends := D E)\
+    $(eval C_depends := E F)\
+    $(eval D_depends :=)\
+    $(eval E_depends :=)\
+    $(eval F_depends :=)\
+    $(call test-expect,A B C D E F,$(call get-closure,A,deps))
+
 # -----------------------------------------------------------------------------
 # Function : modules-get-all-dependencies
 # Arguments: 1: list of module names
@@ -779,26 +856,13 @@ module-get-installed = $(__ndk_modules.$1.INSTALLED)
 module-get-all-dependencies = $(strip \
     $(call modules-get-closure,$1,depends))
 
-modules-get-closure = \
-    $(eval __closure_deps  := $1) \
-    $(eval __closure_wq    := $(__closure_deps)) \
-    $(eval __closure_field := $(strip $2)) \
-    $(call modules-closure)\
-    $(__closure_deps)
+modules-get-closure = $(strip \
+    $(eval __module_closure_field := $2)\
+    $(call get-closure,$1,-module-closure-depends))
 
-# Used internally by modules-get-all-dependencies
-# Note the tricky use of conditional recursion to work around the fact that
-# the GNU Make language does not have any conditional looping construct
-# like 'while'.
-#
-modules-closure = \
-    $(eval __closure_mod := $(call first,$(__closure_wq))) \
-    $(eval __closure_wq  := $(call rest,$(__closure_wq))) \
-    $(eval __closure_val := $(__ndk_modules.$(__closure_mod).$(__closure_field))) \
-    $(eval __closure_new := $(filter-out $(__closure_deps),$(__closure_val)))\
-    $(eval __closure_deps += $(__closure_new)) \
-    $(eval __closure_wq   := $(strip $(__closure_wq) $(__closure_new)))\
-    $(if $(__closure_wq),$(call modules-closure)) \
+# Used internally by modules-get-closure, this is a dependency function
+# to be used with get-closure.
+-module-closure-depends = $(__ndk_modules.$1.$(__module_closure_field))
 
 # -----------------------------------------------------------------------------
 # Function : module-get-depends
@@ -951,8 +1015,13 @@ module-add-c++-deps = \
 # Arguments: 1: path
 # Returns  : Parent dir or path of $1, with final separator removed.
 # -----------------------------------------------------------------------------
-parent-dir = $(patsubst %/,%,$(dir $1))
+parent-dir = $(patsubst %/,%,$(dir $(1:%/=%)))
 
+-test-parent-dir = \
+  $(call test-expect,,$(call parent-dir))\
+  $(call test-expect,.,$(call parent-dir,foo))\
+  $(call test-expect,foo,$(call parent-dir,foo/bar))\
+  $(call test-expect,foo,$(call parent-dir,foo/bar/))
 
 # -----------------------------------------------------------------------------
 # Function : pretty-dir
@@ -962,6 +1031,15 @@ parent-dir = $(patsubst %/,%,$(dir $1))
 # -----------------------------------------------------------------------------
 pretty-dir = $(patsubst $(NDK_ROOT)/%,<NDK>/%,\
                  $(patsubst $(NDK_PROJECT_PATH)/%,%,$1))
+
+# Note: NDK_PROJECT_PATH is typically defined after this test is run.
+-test-pretty-dir = \
+  $(eval NDK_PROJECT_PATH ?= .)\
+  $(call test-expect,foo,$(call pretty-dir,foo))\
+  $(call test-expect,foo,$(call pretty-dir,$(NDK_PROJECT_PATH)/foo))\
+  $(call test-expect,foo/bar,$(call pretty-dir,$(NDK_PROJECT_PATH)/foo/bar))\
+  $(call test-expect,<NDK>/foo,$(call pretty-dir,$(NDK_ROOT)/foo))\
+  $(call test-expect,<NDK>/foo/bar,$(call pretty-dir,$(NDK_ROOT)/foo/bar))
 
 # -----------------------------------------------------------------------------
 # Function : check-user-define
@@ -1097,6 +1175,14 @@ handle-module-built = \
 # Usage    : $(call strip-lib-prefix,$(LOCAL_MODULE))
 # -----------------------------------------------------------------------------
 strip-lib-prefix = $(1:lib%=%)
+
+-test-strip-lib-prefix = \
+  $(call test-expect,,$(call strip-lib-prefix,))\
+  $(call test-expect,foo,$(call strip-lib-prefix,foo))\
+  $(call test-expect,foo,$(call strip-lib-prefix,libfoo))\
+  $(call test-expect,nolibfoo,$(call strip-lib-prefix,nolibfoo))\
+  $(call test-expect,foolib,$(call strip-lib-prefix,foolib))\
+  $(call test-expect,foo bar,$(call strip-lib-prefix,libfoo libbar))
 
 # -----------------------------------------------------------------------------
 # Compute the real path of a prebuilt file.
@@ -1339,6 +1425,13 @@ get-object-name = $(strip \
         )\
         $(__obj)\
     ))
+
+-test-get-object-name = \
+  $(eval LOCAL_CPP_EXTENSION ?= .cpp)\
+  $(call test-expect,foo.o,$(call get-object-name,foo.c))\
+  $(call test-expect,bar.o,$(call get-object-name,bar.s))\
+  $(call test-expect,zoo.o,$(call get-object-name,zoo.S))\
+  $(call test-expect,tot.o,$(call get-object-name,tot.cpp))
 
 # -----------------------------------------------------------------------------
 # Macro    : hide
@@ -1859,3 +1952,7 @@ $(call ndk-stl-register,\
     none,\
     cxx-stl/system,\
     )
+
+ifneq (,$(NDK_UNIT_TESTS))
+$(call ndk-run-all-tests)
+endif
