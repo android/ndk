@@ -282,9 +282,6 @@ CLEAN_OBJS_DIRS     += $(LOCAL_OBJS_DIR)
 #
 # Handle the static and shared libraries this module depends on
 #
-LOCAL_STATIC_LIBRARIES       := $(call strip-lib-prefix,$(LOCAL_STATIC_LIBRARIES))
-LOCAL_WHOLE_STATIC_LIBRARIES := $(call strip-lib-prefix,$(LOCAL_WHOLE_STATIC_LIBRARIES))
-LOCAL_SHARED_LIBRARIES       := $(call strip-lib-prefix,$(LOCAL_SHARED_LIBRARIES))
 
 # Transitive closure of static libraries
 LOCAL_STATIC_LIBRARIES       := $(call module-get-depends,$(LOCAL_STATIC_LIBRARIES),STATIC_LIBRARIES)
