@@ -3,10 +3,10 @@
  * always succeed on later versions of the  platform!
  */
 
-extern int foo(void);
+extern void foo();
 
 int main(int argc, char** argv)
 {
-    (void) foo();
+    foo();
     return 0;
 }
