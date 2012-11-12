@@ -136,6 +136,9 @@ check-required-vars = $(foreach __varname,$1,\
   )\
 )
 
+# The list of default C++ extensions supported by GCC.
+default-c++-extensions := .cc .cp .cxx .cpp .CPP .c++ .C
+
 # -----------------------------------------------------------------------------
 # Function : host-path
 # Arguments: 1: file path
@@ -818,12 +821,12 @@ modules-get-all-installable = $(strip \
         $(if $(call module-is-installable,$(__alldep)),$(__alldep))\
     ))
 
-# Return the C++ extension of a given module
+# Return the C++ extension(s) of a given module
 # $1: module name
-module-get-cpp-extension = $(strip \
+module-get-c++-extensions = $(strip \
     $(if $(__ndk_modules.$1.CPP_EXTENSION),\
         $(__ndk_modules.$1.CPP_EXTENSION),\
-        .cpp\
+        $(default-c++-extensions)\
     ))
 
 # Return the list of C++ sources of a given module
@@ -831,7 +834,8 @@ module-get-cpp-extension = $(strip \
 module-get-c++-sources = \
     $(eval __files := $(__ndk_modules.$1.SRC_FILES:%.neon=%)) \
     $(eval __files := $(__files:%.arm=%)) \
-    $(filter %$(call module-get-cpp-extension,$1),$(__files))
+    $(eval __extensions := $(call module-get-c++-extensions,$1))\
+    $(filter $(foreach __extension,$(__extensions),%$(__extension)),$(__files))
 
 # Returns true if a module has C++ sources
 #
@@ -1371,7 +1375,7 @@ convert-deps = $1.org
 cmd-convert-deps = && $(NDK_DEPENDENCIES_CONVERTER) $1
 else
 convert-deps = $1
-cmd-convert-deps = 
+cmd-convert-deps =
 endif
 
 # This assumes that many variables have been pre-defined:
