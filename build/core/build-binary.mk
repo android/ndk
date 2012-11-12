@@ -88,7 +88,7 @@ endif
 LOCAL_CPP_EXTENSION := $(strip $(LOCAL_CPP_EXTENSION))
 ifeq ($(LOCAL_CPP_EXTENSION),)
   # Match the default GCC C++ extensions.
-  LOCAL_CPP_EXTENSION := .cc .cp .cxx .cpp .CPP .c++ .C
+  LOCAL_CPP_EXTENSION := $(default-c++-extensions)
 else
 endif
 
