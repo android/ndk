@@ -734,11 +734,11 @@ prepare_common_build ()
         else
             LEGACY_PREFIX=x86_64
         fi
-        LEGACY_TOOLCHAIN_DIR="$ANDROID_NDK_ROOT/../prebuilts/gcc/linux-x86/host/$LEGACY_PREFIX-linux-glibc2.7-4.6"
+        LEGACY_TOOLCHAIN_DIR="$ANDROID_NDK_ROOT/../prebuilts/tools/gcc-sdk"
         if [ -d "$LEGACY_TOOLCHAIN_DIR" ] ; then
             log "Forcing generation of Linux binaries with legacy $LEGACY_PREFIX toolchain"
-            CC="$LEGACY_TOOLCHAIN_DIR/bin/$LEGACY_PREFIX-linux-gcc"
-            CXX="$LEGACY_TOOLCHAIN_DIR/bin/$LEGACY_PREFIX-linux-g++"
+            CC="$LEGACY_TOOLCHAIN_DIR/gcc"
+            CXX="$LEGACY_TOOLCHAIN_DIR/g++"
         fi
     fi
 
@@ -887,10 +887,6 @@ parse_toolchain_name ()
         ABI="armeabi"
         ABI_CONFIGURE_TARGET="arm-linux-androideabi"
         ABI_CONFIGURE_EXTRA_FLAGS="--with-arch=armv5te"
-        # Disable ARM Gold linker for now, it doesn't build on Windows, it
-        # crashes with SIGBUS on Darwin, and produces weird executables on
-        # linux that strip complains about... Sigh.
-        #ABI_CONFIGURE_EXTRA_FLAGS="$ABI_CONFIGURE_EXTRA_FLAGS --enable-gold=both/gold"
 
         ;;
     x86-*)
