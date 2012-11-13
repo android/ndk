@@ -41,6 +41,8 @@ command that runs the NDK build scripts. Notable uses include:
   ndk-build NDK_DEBUG=1      --&gt; force a debuggable build (see below)
   ndk-build NDK_DEBUG=0      --&gt; force a release build (see below)
 
+  ndk-build NDK_32BIT=1      --&gt; Always use toolchain in 32-bit (see below)
+
   ndk-build NDK_APPLICATION_MK=&lt;file&gt;
     --&gt; rebuild, using a specific Application.mk pointed to by
         the NDK_APPLICATION_MK command-line variable.
@@ -79,7 +81,22 @@ when you switch between these two modes (even when you only modified one or
 two source files).
 
 
-IV. Requirements:
+IV. Toolchains in 64-bit in 32-bit
+----------------------------------
+
+Some toolchains come with both 64-bit and 32-bit versions.  For example,
+directories $NDK/toolchain/prebuilt and $NDK/prebuilt may contains both
+"linux-x86" and "linux-x86_64" folders for Linux tools in 32-bit and 64-bit,
+respectively.  Script ndk-build automatically chooses 64-bit if it's available
+and the host OS also supports it.  You may override this behavior by setting
+NDK_32BIT=1 to always use 32-bit version.
+
+Note that tools in 64-bit utilize host resource better (faster, handle larger
+programs, etc) and they should function identically to their 32-bit counterparts.
+Ie. 64-bit toolchains still generate 32-bit binaries for Android.
+
+
+V. Requirements:
 -----------------
 
 You need GNU Make 3.81 or later to use 'ndk-build' or the NDK in general.
@@ -100,7 +117,7 @@ Or to make the change more permanent:
 Adapt to your shell and GNU Make 3.81 installation location.
 
 
-V. Internals:
+VI. Internals:
 -------------
 
 'ndk-build' itself is a tiny wrapper around GNU Make, its purpose is simply

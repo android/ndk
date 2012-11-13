@@ -38,6 +38,12 @@
 #
 NDK_LOG := $(strip $(NDK_LOG))
 
+# Define NDK_32BIT in your environment to always use toolchain in 32-bit
+# even if 64-bit is present.  Note that toolchains in 64-bit still produce
+# 32-bit binaries for Android
+#
+NDK_32BIT := $(strip $(NDK_32BIT))
+
 # Check that we have at least GNU Make 3.81
 # We do this by detecting whether 'lastword' is supported
 #
@@ -92,6 +98,23 @@ ifdef NDK_LOG
 ndk_log = $(info $(__ndk_name): $1)
 else
 ndk_log :=
+endif
+
+# -----------------------------------------------------------------------------
+# Function : host-prebuilt-tag
+# Arguments: 1: parent path of "prebuilt"
+# Returns  : path $1/prebuilt/(HOST_TAG64) exists and NDK_32BIT isn't defined,
+#            or $1/prebuilt/(HOST_TAG)
+# Usage    : $(call host-prebuilt-tag, <path>)
+# Rationale: This function is used to proble available 64-bit toolchain or
+#            return 32-bit one as default.  Note that HOST_TAG64==HOST_TAG for
+#            32-bit system (or 32-bit userland in 64-bit system)
+# -----------------------------------------------------------------------------
+ifdef NDK_32BIT
+host-prebuilt-tag = $1/prebuilt/$(HOST_TAG)
+else
+host-prebuilt-tag = \
+   $(if $(strip $(wildcard $1/prebuilt/$(HOST_TAG64))),$1/prebuilt/$(HOST_TAG64),$1/prebuilt/$(HOST_TAG))
 endif
 
 # ====================================================================
@@ -188,11 +211,17 @@ ifndef HOST_ARCH
         HOST_ARCH := $(PROCESSOR_ARCHITECTURE)
         ifeq ($(HOST_ARCH),AMD64)
             HOST_ARCH := x86
+            ifneq ("",$(shell echo "%ProgramFiles(x86)%"))
+                HOST_ARCH64 := x86_64
+            endif
         endif
     else # HOST_OS_BASE != windows
         UNAME := $(shell uname -m)
         ifneq (,$(findstring 86,$(UNAME)))
             HOST_ARCH := x86
+            ifneq (,$(shell file -L $(SHELL) | grep 'x86[_-]64'))
+                HOST_ARCH64 := x86_64
+            endif
         endif
         # We should probably should not care at all
         ifneq (,$(findstring Power,$(UNAME)))
@@ -208,7 +237,12 @@ else
     $(call ndk_log,Host CPU from environment: $(HOST_ARCH))
 endif
 
+ifeq (,$(HOST_ARCH64))
+    HOST_ARCH64 := $(HOST_ARCH)
+endif
+
 HOST_TAG := $(HOST_OS_BASE)-$(HOST_ARCH)
+HOST_TAG64 := $(HOST_OS_BASE)-$(HOST_ARCH64)
 
 # The directory separator used on this host
 HOST_DIRSEP := :
@@ -244,7 +278,8 @@ endif
 $(call ndk_log,HOST_TAG set to $(HOST_TAG))
 
 # Check for NDK-specific versions of our host tools
-HOST_PREBUILT := $(strip $(wildcard $(NDK_ROOT)/prebuilt/$(HOST_TAG)/bin))
+HOST_PREBUILT_ROOT := $(call host-prebuilt-tag, $(NDK_ROOT))
+HOST_PREBUILT := $(strip $(wildcard $(HOST_PREBUILT_ROOT)/bin))
 ifdef HOST_PREBUILT
     $(call ndk_log,Host tools prebuilt directory: $(HOST_PREBUILT))
     # The windows prebuilt binaries are for ndk-build.cmd
@@ -259,11 +294,13 @@ else
 endif
 
 HOST_ECHO := $(strip $(HOST_ECHO))
-ifndef HOST_ECHO
-    # Special case, on Cygwin, always use the host echo, not our prebuilt one
-    # which adds \r\n at the end of lines.
-    ifneq ($(HOST_OS),cygwin)
-        HOST_ECHO := $(strip $(wildcard $(NDK_ROOT)/prebuilt/$(HOST_TAG)/bin/echo$(HOST_EXEEXT)))
+ifdef HOST_PREBUILT
+    ifndef HOST_ECHO
+        # Special case, on Cygwin, always use the host echo, not our prebuilt one
+        # which adds \r\n at the end of lines.
+        ifneq ($(HOST_OS),cygwin)
+            HOST_ECHO := $(strip $(wildcard $(HOST_PREBUILT)/echo$(HOST_EXEEXT)))
+        endif
     endif
 endif
 ifndef HOST_ECHO
@@ -282,8 +319,10 @@ endif
 $(call ndk_log,Host 'echo -n' tool: $(HOST_ECHO_N))
 
 HOST_CMP := $(strip $(HOST_CMP))
-ifndef HOST_CMP
-    HOST_CMP := $(strip $(wildcard $(NDK_ROOT)/prebuilt/$(HOST_TAG)/bin/cmp$(HOST_EXEEXT)))
+ifdef HOST_PREBUILT
+    ifndef HOST_CMP
+        HOST_CMP := $(strip $(wildcard $(HOST_PREBUILT)/cmp$(HOST_EXEEXT)))
+    endif
 endif
 ifndef HOST_CMP
     HOST_CMP := cmp
@@ -443,7 +482,6 @@ endif
 # This is used in setup-toolchain.mk
 #
 NDK_TOOLCHAIN_VERSION := $(strip $(NDK_TOOLCHAIN_VERSION))
-
 
 $(call ndk_log, This NDK supports the following target architectures and ABIS:)
 $(foreach arch,$(NDK_ALL_ARCHS),\
