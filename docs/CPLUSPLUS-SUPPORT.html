@@ -217,10 +217,17 @@ As an example, let's consider the case where we have the following modules
 You will need to load the libraries in reverse dependency order, as in:
 
   static {
-    System.loadLibrary("libstlport_shared");
-    System.loadLibrary("libbar");
-    System.loadLibrary("libfoo");
+    System.loadLibrary("stlport_shared");
+    System.loadLibrary("bar");
+    System.loadLibrary("foo");
   }
+
+Note that you shouldn't use the 'lib' prefix when calling
+System.loadLibrary(), unless you specify the full path as in:
+
+    System.loadLibrary("/path/to/libstlport_shared.so")
+
+Which is not recommended, since this hard-codes the path in your code.
 
 
 III. EXTRAS:
