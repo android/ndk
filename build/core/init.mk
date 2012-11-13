@@ -193,6 +193,9 @@ ifndef HOST_ARCH
         UNAME := $(shell uname -m)
         ifneq (,$(findstring 86,$(UNAME)))
             HOST_ARCH := x86
+	    ifneq (,$(shell file -L $(SHELL) | grep 'x86[_-]64'))
+                HOST_ARCH64 := x86_64
+	    endif
         endif
         # We should probably should not care at all
         ifneq (,$(findstring Power,$(UNAME)))
@@ -208,7 +211,12 @@ else
     $(call ndk_log,Host CPU from environment: $(HOST_ARCH))
 endif
 
+ifeq (,$(HOST_ARCH64))
+    HOST_ARCH64 := $(HOST_ARCH)
+endif
+
 HOST_TAG := $(HOST_OS_BASE)-$(HOST_ARCH)
+HOST_TAG64 := $(HOST_OS_BASE)-$(HOST_ARCH64)
 
 # The directory separator used on this host
 HOST_DIRSEP := :
@@ -444,6 +452,10 @@ endif
 #
 NDK_TOOLCHAIN_VERSION := $(strip $(NDK_TOOLCHAIN_VERSION))
 
+# Allow the user to always use toolchain in 32-bit even if 64-bit is present.
+# Note that toolchains in 64-bit still produce 32-bit binaries for Android
+#
+NDK_TOOLCHAIN_32BIT := $(strip $(NDK_TOOLCHAIN_32BIT))
 
 $(call ndk_log, This NDK supports the following target architectures and ABIS:)
 $(foreach arch,$(NDK_ALL_ARCHS),\
