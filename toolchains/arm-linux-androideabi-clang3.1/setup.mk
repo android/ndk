@@ -87,8 +87,7 @@ TARGET_CFLAGS.neon := -mfpu=neon
 
 TARGET_arm_release_CFLAGS :=  -O2 \
                               -fomit-frame-pointer \
-                              -fstrict-aliasing \
-                              -funswitch-loops
+                              -fstrict-aliasing
 
 TARGET_thumb_release_CFLAGS := -mthumb \
                                -Os \
