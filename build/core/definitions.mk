@@ -19,60 +19,8 @@
 include $(NDK_ROOT)/build/gmsl/gmsl
 
 include $(BUILD_SYSTEM)/definitions-tests.mk
-
-# If NDK_TRACE is enabled then calls to the library functions are
-# traced to stdout using warning messages with their arguments
-
-ifdef NDK_TRACE
-__ndk_tr1 = $(warning $0('$1'))
-__ndk_tr2 = $(warning $0('$1','$2'))
-__ndk_tr3 = $(warning $0('$1','$2','$3'))
-else
-__ndk_tr1 :=
-__ndk_tr2 :=
-__ndk_tr3 :=
-endif
-
-# -----------------------------------------------------------------------------
-# Macro    : empty
-# Returns  : an empty macro
-# Usage    : $(empty)
-# -----------------------------------------------------------------------------
-empty :=
-
-# -----------------------------------------------------------------------------
-# Macro    : space
-# Returns  : a single space
-# Usage    : $(space)
-# -----------------------------------------------------------------------------
-space  := $(empty) $(empty)
-
-space4 := $(space)$(space)$(space)$(space)
-
-# -----------------------------------------------------------------------------
-# Function : remove-duplicates
-# Arguments: a list
-# Returns  : the list with duplicate items removed, order is preserved.
-# Usage    : $(call remove-duplicates, <LIST>)
-# Note     : This is equivalent to the 'uniq' function provided by GMSL,
-#            however this implementation is non-recursive and *much*
-#            faster. It will also not explode the stack with a lot of
-#            items like 'uniq' does.
-# -----------------------------------------------------------------------------
-remove-duplicates = $(strip \
-  $(eval __uniq_ret :=) \
-  $(foreach __uniq_item,$1,\
-    $(if $(findstring $(__uniq_item),$(__uniq_ret)),,\
-      $(eval __uniq_ret += $(__uniq_item))\
-    )\
-  )\
-  $(__uniq_ret))
-
--test-remove-duplicates = \
-  $(call test-expect,,$(call remove-duplicates))\
-  $(call test-expect,foo bar,$(call remove-duplicates,foo bar))\
-  $(call test-expect,foo bar,$(call remove-duplicates,foo bar foo bar))\
-  $(call test-expect,foo bar,$(call remove-duplicates,foo foo bar bar bar))
+include $(BUILD_SYSTEM)/definitions-utils.mk
+include $(BUILD_SYSTEM)/definitions-host.mk
 
 # -----------------------------------------------------------------------------
 # Macro    : this-makefile
@@ -103,16 +51,6 @@ assert-defined = $(foreach __varname,$(strip $1),\
 )
 
 # -----------------------------------------------------------------------------
-# Function : clear-vars
-# Arguments: 1: list of variable names
-#            2: file where the variable should be defined
-# Returns  : None
-# Usage    : $(call clear-vars, VAR1 VAR2 VAR3...)
-# Rationale: Clears/undefines all variables in argument list
-# -----------------------------------------------------------------------------
-clear-vars = $(foreach __varname,$1,$(eval $(__varname) := $(empty)))
-
-# -----------------------------------------------------------------------------
 # Function : check-required-vars
 # Arguments: 1: list of variable names
 #            2: file where the variable(s) should be defined
@@ -130,122 +68,6 @@ check-required-vars = $(foreach __varname,$1,\
 
 # The list of default C++ extensions supported by GCC.
 default-c++-extensions := .cc .cp .cxx .cpp .CPP .c++ .C
-
-# -----------------------------------------------------------------------------
-# Function : host-path
-# Arguments: 1: file path
-# Returns  : file path, as understood by the host file system
-# Usage    : $(call host-path,<path>)
-# Rationale: This function is used to translate Cygwin paths into
-#            Cygwin-specific ones. On other platforms, it will just
-#            return its argument.
-# -----------------------------------------------------------------------------
-ifeq ($(HOST_OS),cygwin)
-host-path = $(if $(strip $1),$(call cygwin-to-host-path,$1))
-else
-host-path = $1
-endif
-
-# -----------------------------------------------------------------------------
-# Function : host-rm
-# Arguments: 1: list of files
-# Usage    : $(call host-rm,<files>)
-# Rationale: This function expands to the host-specific shell command used
-#            to remove some files.
-# -----------------------------------------------------------------------------
-ifeq ($(HOST_OS),windows)
-host-rm = \
-    $(eval __host_rm_files := $(foreach __host_rm_file,$1,$(subst /,\,$(wildcard $(__host_rm_file)))))\
-    $(if $(__host_rm_files),del /f/q $(__host_rm_files) >NUL 2>NUL)
-else
-host-rm = rm -f $1
-endif
-
-# -----------------------------------------------------------------------------
-# Function : host-rmdir
-# Arguments: 1: list of files or directories
-# Usage    : $(call host-rm,<files>)
-# Rationale: This function expands to the host-specific shell command used
-#            to remove some files _and_ directories.
-# -----------------------------------------------------------------------------
-ifeq ($(HOST_OS),windows)
-host-rmdir = \
-    $(eval __host_rmdir_files := $(foreach __host_rmdir_file,$1,$(subst /,\,$(wildcard $(__host_rmdir_file)))))\
-    $(if $(__host_rmdir_files),del /f/s/q $(__host_rmdir_files) >NUL 2>NUL)
-else
-host-rmdir = rm -rf $1
-endif
-
-# -----------------------------------------------------------------------------
-# Function : host-mkdir
-# Arguments: 1: directory path
-# Usage    : $(call host-mkdir,<path>
-# Rationale: This function expands to the host-specific shell command used
-#            to create a path if it doesn't exist.
-# -----------------------------------------------------------------------------
-ifeq ($(HOST_OS),windows)
-host-mkdir = md $(subst /,\,"$1") >NUL 2>NUL || rem
-else
-host-mkdir = mkdir -p $1
-endif
-
-# -----------------------------------------------------------------------------
-# Function : host-cp
-# Arguments: 1: source file
-#            2: target file
-# Usage    : $(call host-cp,<src-file>,<dst-file>)
-# Rationale: This function expands to the host-specific shell command used
-#            to copy a single file
-# -----------------------------------------------------------------------------
-ifeq ($(HOST_OS),windows)
-host-cp = copy /b/y $(subst /,\,"$1" "$2") > NUL
-else
-host-cp = cp -f $1 $2
-endif
-
-# -----------------------------------------------------------------------------
-# Function : host-install
-# Arguments: 1: source file
-#            2: target file
-# Usage    : $(call host-install,<src-file>,<dst-file>)
-# Rationale: This function expands to the host-specific shell command used
-#            to install a file or directory, while preserving its timestamps
-#            (if possible).
-# -----------------------------------------------------------------------------
-ifeq ($(HOST_OS),windows)
-host-install = copy /b/y $(subst /,\,"$1" "$2") > NUL
-else
-host-install = install -p $1 $2
-endif
-
-# -----------------------------------------------------------------------------
-# Function : host-c-includes
-# Arguments: 1: list of file paths (e.g. "foo bar")
-# Returns  : list of include compiler options (e.g. "-Ifoo -Ibar")
-# Usage    : $(call host-c-includes,<paths>)
-# Rationale: This function is used to translate Cygwin paths into
-#            Cygwin-specific ones. On other platforms, it will just
-#            return its argument.
-# -----------------------------------------------------------------------------
-ifeq ($(HOST_OS),cygwin)
-host-c-includes = $(patsubst %,-I%,$(call host-path,$1))
-else
-host-c-includes = $(1:%=-I%)
-endif
-
-# -----------------------------------------------------------------------------
-# Function : copy-if-differ
-# Arguments: 1: source file
-#            2: destination file
-# Usage    : $(call copy-if-differ,<src-file>,<dst-file>)
-# Rationale: This function copy source file to destination file if contents are
-#            different.
-# -----------------------------------------------------------------------------
-ifeq ($(HOST_OS),windows)
-copy-if-differ = $(HOST_CMP) -s $1 $2 > NUL || copy /b/y $(subst /,\,"$1" "$2") > NUL
-else
-copy-if-differ = $(HOST_CMP) -s $1 $2 > /dev/null 2>&1 || cp -f $1 $2
-endif
 
 # -----------------------------------------------------------------------------
 # Function : generate-dir
@@ -786,66 +608,6 @@ module-compute-depends = \
 
 module-get-installed = $(__ndk_modules.$1.INSTALLED)
 
-# Internal function used by modules-get-closure
-# Compute the closure of a node in a graph.
-# $1: list of graph nodes
-# $2: dependency function, i.e. $(call $2,<name>) should return the list
-#     of nodes that <name> depends on.
-# Out: list of nodes. This are all the nodes that depend on those in $1
-#      transitively.
-#
-get-closure = $(strip \
-    $(eval __closure_list := $1) \
-    $(eval __closure_wq   := $1) \
-    $(eval __closure_deps_func := $2) \
-    $(call get-closure-recursive)\
-    $(__closure_list))
-
-# Note the tricky use of conditional recursion to work around the fact that
-# the GNU Make language does not have any conditional looping construct
-# like 'while'.
-get-closure-recursive = \
-    $(eval __closure_node := $(call first,$(__closure_wq)))\
-    $(eval __closure_wq   := $(call rest,$(__closure_wq)))\
-    $(eval __closure_depends := $(call $(__closure_deps_func),$(__closure_node)))\
-    $(eval __closure_new := $(filter-out $(__closure_list),$(__closure_depends)))\
-    $(eval __closure_list += $(__closure_new))\
-    $(eval __closure_wq := $(strip $(__closure_wq) $(__closure_new)))\
-    $(if $(__closure_wq),$(call get-closure-recursive))
-
--test-get-closure.empty = \
-    $(eval deps = $$($$1_depends))\
-    $(call test-expect,$(call get-closure,,deps))\
-
--test-get-closure.A = \
-    $(eval deps = $$($$1_depends))\
-    $(eval A_depends :=)\
-    $(call test-expect,A,$(call get-closure,A,deps))
-
--test-get-closure.ABC = \
-    $(eval deps = $$($$1_depends))\
-    $(eval A_depends := B)\
-    $(eval B_depends := C)\
-    $(eval C_depends :=)\
-    $(call test-expect,A B C,$(call get-closure,A,deps))
-
--test-get-closure.ABC_circular = \
-    $(eval deps = $$($$1_depends))\
-    $(eval A_depends := B)\
-    $(eval B_depends := C)\
-    $(eval C_depends := A)\
-    $(call test-expect,A B C,$(call get-closure,A,deps))
-
--test-get-closure.ABCDEF = \
-    $(eval deps = $$($$1_depends))\
-    $(eval A_depends := B C)\
-    $(eval B_depends := D E)\
-    $(eval C_depends := E F)\
-    $(eval D_depends :=)\
-    $(eval E_depends :=)\
-    $(eval F_depends :=)\
-    $(call test-expect,A B C D E F,$(call get-closure,A,deps))
-
 # -----------------------------------------------------------------------------
 # Function : modules-get-all-dependencies
 # Arguments: 1: list of module names
@@ -1011,19 +773,6 @@ module-add-c++-deps = \
 # =============================================================================
 
 # -----------------------------------------------------------------------------
-# Function : parent-dir
-# Arguments: 1: path
-# Returns  : Parent dir or path of $1, with final separator removed.
-# -----------------------------------------------------------------------------
-parent-dir = $(patsubst %/,%,$(dir $(1:%/=%)))
-
--test-parent-dir = \
-  $(call test-expect,,$(call parent-dir))\
-  $(call test-expect,.,$(call parent-dir,foo))\
-  $(call test-expect,foo,$(call parent-dir,foo/bar))\
-  $(call test-expect,foo,$(call parent-dir,foo/bar/))
-
-# -----------------------------------------------------------------------------
 # Function : pretty-dir
 # Arguments: 1: path
 # Returns  : Remove NDK_PROJECT_PATH prefix from a given path. This can be
@@ -1165,36 +914,6 @@ endef
 handle-module-built = \
     $(eval LOCAL_BUILT_MODULE := $(TARGET_OUT)/$(LOCAL_MODULE_FILENAME))\
     $(eval LOCAL_OBJS_DIR     := $(TARGET_OBJS)/$(LOCAL_MODULE))
-
-# -----------------------------------------------------------------------------
-# Strip any 'lib' prefix in front of a given string.
-#
-# Function : strip-lib-prefix
-# Arguments: 1: module name
-# Returns  : module name, without any 'lib' prefix if any
-# Usage    : $(call strip-lib-prefix,$(LOCAL_MODULE))
-# -----------------------------------------------------------------------------
-strip-lib-prefix = $(1:lib%=%)
-
--test-strip-lib-prefix = \
-  $(call test-expect,,$(call strip-lib-prefix,))\
-  $(call test-expect,foo,$(call strip-lib-prefix,foo))\
-  $(call test-expect,foo,$(call strip-lib-prefix,libfoo))\
-  $(call test-expect,nolibfoo,$(call strip-lib-prefix,nolibfoo))\
-  $(call test-expect,foolib,$(call strip-lib-prefix,foolib))\
-  $(call test-expect,foo bar,$(call strip-lib-prefix,libfoo libbar))
-
-# -----------------------------------------------------------------------------
-# Compute the real path of a prebuilt file.
-#
-# Function : local-prebuilt-path
-# Arguments: 1: prebuilt path (as listed in $(LOCAL_SRC_FILES))
-# Returns  : full path. If $1 begins with a /, the path is considered
-#            absolute and returned as-is. Otherwise, $(LOCAL_PATH)/$1 is
-#            returned instead.
-# Usage    : $(call local-prebuilt-path,$(LOCAL_SRC_FILES))
-# -----------------------------------------------------------------------------
-local-prebuilt-path = $(if $(filter /%,$1),$1,$(LOCAL_PATH)/$1)
 
 # -----------------------------------------------------------------------------
 # This is used to strip any lib prefix from LOCAL_MODULE, then check that
