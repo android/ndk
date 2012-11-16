@@ -256,22 +256,24 @@ copy-if-differ = $(HOST_CMP) -s $1 $2 > /dev/null 2>&1 || cp -f $1 $2
 endif
 
 # -----------------------------------------------------------------------------
-# Function : generate-dir
-# Arguments: 1: directory path
-# Returns  : Generate a rule, but not dependency, to create a directory with
-#            host-mkdir.
-# Usage    : $(call generate-dir,<path>)
+# Function : generate-timestamp-file
+# Arguments: 1: timestamp path
+# Returns  : Generate a timestamp file. This forces the creation of its
+#            parent directory with host-mkdir.
+# Usage    : $(call generate-timestamp-file,<timestamp-path>)
+# Note     : This function can be called multiple times with the same
+#            timestamp path.
 # -----------------------------------------------------------------------------
-define ev-generate-dir
-__ndk_dir := $1
+define ev-generate-timestamp-file
 ifeq (,$$(__ndk_dir_flag__$1))
 __ndk_dir_flag__$1 := true
 $1:
-	@$$(call host-mkdir,$$@)
+	$$(call host-mkdir,$$(call host-path,$$(call parent-dir,$1)))
+	$(HOST_ECHO) 1 > $$(call host-path,$1)
 endif
 endef
 
-generate-dir = $(eval $(call ev-generate-dir,$1))
+generate-timestamp-file = $(eval $(call ev-generate-timestamp-file,$1))
 
 # -----------------------------------------------------------------------------
 # Function : generate-file-dir
@@ -283,13 +285,13 @@ generate-dir = $(eval $(call ev-generate-dir,$1))
 # Rationale: Many object files will be stored in the same output directory.
 #            Introducing a dependency on the latter avoids calling mkdir -p
 #            for every one of them.
-#
 # -----------------------------------------------------------------------------
 
 define ev-generate-file-dir
-__ndk_file_dir := $(call parent-dir,$1)
-$$(call generate-dir,$$(__ndk_file_dir))
-$1: $$(__ndk_file_dir)
+$(info generate-file-dir='$1')
+__ndk_timestamp := $$(call parent-dir,$1)/.ndk-dir-timestamp
+$$(call generate-timestamp-file,$$(__ndk_timestamp))
+$1: $$(__ndk_timestamp)
 endef
 
 generate-file-dir = $(eval $(call ev-generate-file-dir,$1))

@@ -430,7 +430,6 @@ $(LOCAL_INSTALLED): $(LOCAL_BUILT_MODULE) clean-installed-binaries
 	$(hide) $(call host-install,$(PRIVATE_SRC),$(PRIVATE_DST))
 	$(hide) $(PRIVATE_STRIP_CMD)
 
-$(call generate-dir,$(NDK_APP_DST_DIR))
-$(LOCAL_INSTALLED): $(NDK_APP_DST_DIR)
+$(call generate-file-dir,$(LOCAL_INSTALLED))
 
 endif
