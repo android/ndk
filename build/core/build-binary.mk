@@ -427,10 +427,8 @@ $(LOCAL_INSTALLED): PRIVATE_STRIP_CMD := $(call cmd-strip, $(PRIVATE_DST))
 
 $(LOCAL_INSTALLED): $(LOCAL_BUILT_MODULE) clean-installed-binaries
 	@$(HOST_ECHO) "Install        : $(PRIVATE_NAME) => $(call pretty-dir,$(PRIVATE_DST))"
+	$(hide) $(call host-mkdir,$(PRIVATE_DST_DIR))
 	$(hide) $(call host-install,$(PRIVATE_SRC),$(PRIVATE_DST))
 	$(hide) $(PRIVATE_STRIP_CMD)
-
-$(call generate-dir,$(NDK_APP_DST_DIR))
-$(LOCAL_INSTALLED): $(NDK_APP_DST_DIR)
 
 endif
