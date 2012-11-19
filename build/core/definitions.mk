@@ -289,7 +289,7 @@ generate-dir = $(eval $(call ev-generate-dir,$1))
 define ev-generate-file-dir
 __ndk_file_dir := $(call parent-dir,$1)
 $$(call generate-dir,$$(__ndk_file_dir))
-$1: $$(__ndk_file_dir)
+$1:| $$(__ndk_file_dir)
 endef
 
 generate-file-dir = $(eval $(call ev-generate-file-dir,$1))
