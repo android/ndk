@@ -34,4 +34,24 @@ namespace __cxxabiv1
   __pointer_type_info::~__pointer_type_info()
   {
   }
+
+  bool __pointer_type_info::do_can_catch_ptr(const __pbase_type_info* thrown_type,
+                                             void*& adjustedPtr,
+                                             unsigned tracker,
+                                             bool& result) const {
+    // Only check first level pointer
+    if ((tracker & first_time_init) == first_time_init &&
+        *__pointee == typeid(void)) {
+      // pointer to function cannot convert to pointer to void
+      if (dynamic_cast<const __function_type_info*>(thrown_type->__pointee)) {
+        result = false;
+      } else {
+        result = true;  // Otherwise, anything can convert to void*
+      }
+
+      return true;
+    }
+
+    return false; // Have not decided. Need to recursively call.
+  }
 } // namespace __cxxabiv1
