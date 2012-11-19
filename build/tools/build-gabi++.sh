@@ -91,8 +91,8 @@ GABIXX_SRCDIR=$ANDROID_NDK_ROOT/$GABIXX_SUBDIR
 # Compiler flags we want to use
 GABIXX_CFLAGS="-fPIC -O2 -DANDROID -D__ANDROID__"
 GABIXX_CFLAGS=$GABIXX_CFLAGS" -I$GABIXX_SRCDIR/include"
-GABIXX_CXXFLAGS="-fuse-cxa-atexit -fno-exceptions -frtti"
-GABIXX_LDFLAGS=
+GABIXX_CXXFLAGS="-fuse-cxa-atexit -fexceptions -frtti"
+GABIXX_LDFLAGS="-ldl"
 
 # List of sources to compile
 GABIXX_SOURCES=$(cd $GABIXX_SRCDIR && ls src/*.cc)

@@ -34,10 +34,11 @@
 #define _STLP_LITTLE_ENDIAN 1
 
 // No <exception> headers
-#define _STLP_NO_EXCEPTION_HEADER 1
+#undef _STLP_NO_EXCEPTION_HEADER
 
 // No throwing exceptions
-#define _STLP_NO_EXCEPTIONS 1
+#undef _STLP_NO_EXCEPTIONS
+
 
 // No need to define our own namespace
 #define _STLP_NO_OWN_NAMESPACE 1
@@ -67,8 +68,8 @@
 #undef _STLP_USE_GLIBC
 
 // No exceptions.
-#define _STLP_NO_UNCAUGHT_EXCEPT_SUPPORT 1
-#define _STLP_NO_UNEXPECTED_EXCEPT_SUPPORT 1
+#undef _STLP_NO_UNCAUGHT_EXCEPT_SUPPORT
+#undef _STLP_NO_UNEXPECTED_EXCEPT_SUPPORT
 
 // Android does have include_next but it doesn't work well in our build system.
 #undef _STLP_HAS_INCLUDE_NEXT

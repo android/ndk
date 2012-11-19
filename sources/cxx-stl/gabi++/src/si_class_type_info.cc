@@ -34,4 +34,14 @@ namespace __cxxabiv1
   __si_class_type_info::~__si_class_type_info()
   {
   }
+
+  bool __si_class_type_info::walk_to(const __class_type_info* base_type,
+                                     void*& adjustedPtr,
+                                     __UpcastInfo& info) const {
+    if (self_class_type_match(base_type, adjustedPtr, info)) {
+      return true;
+    }
+
+    return __base_type->walk_to(base_type, adjustedPtr, info);
+  }
 } // namespace __cxxabiv1

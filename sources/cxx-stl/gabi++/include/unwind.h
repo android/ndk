@@ -1,4 +1,4 @@
-// Copyright (C) 2011 The Android Open Source Project
+// Copyright (C) 2012 The Android Open Source Project
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -24,19 +24,14 @@
 // LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 // SUCH DAMAGE.
-//
-// fundamental_type_info.cc: Methods for __fundamental_type_info.
 
-#include <cxxabi.h>
+#ifndef __GABIXX_UNWIND_H__
+#define __GABIXX_UNWIND_H__
 
-namespace __cxxabiv1
-{
-  __fundamental_type_info::~__fundamental_type_info()
-  {
-  }
+#ifdef __arm__
+# include "unwind-arm.h"
+#else
+# include "unwind-itanium.h"
+#endif
 
-  bool __fundamental_type_info::can_catch(const std::type_info* thrown_type,
-                                          void*& adjustedPtr) const {
-    return *this == *thrown_type;
-  }
-} // namespace __cxxabiv1
+#endif  // __GABIXX_UNWIND_H__

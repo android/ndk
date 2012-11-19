@@ -29,33 +29,39 @@
 #include <stdlib.h>
 #include <new>
 
-// FIXME: need to handle exceptions
-void*
-operator new(std::size_t size) throw (/*std::bad_alloc*/)
-{
-  void* ptr = malloc(size);
-#if 0
-  if (ptr == NULL)
+namespace std {
+
+  const nothrow_t nothrow = {};
+
+  bad_alloc::bad_alloc() throw() {
+  }
+
+  bad_alloc::~bad_alloc() throw() {
+  }
+
+  const char* bad_alloc::what() const throw() {
+    return "std::bad_alloc";
+  }
+
+} // namespace std
+
+void* operator new(std::size_t size) throw(std::bad_alloc) {
+  void* space = ::operator new(size, std::nothrow_t());
+  if (space) {
+    return space;
+  } else {
     throw std::bad_alloc();
-#endif
-  return ptr;
+  }
 }
 
-void*
-operator new[](std::size_t size) throw(/*std::bad_alloc*/)
-{
-    return ::operator new(size);
+void* operator new(std::size_t size, const std::nothrow_t& no) throw() {
+  return malloc(size);
 }
 
-
-void*
-operator new(std::size_t size, const std::nothrow_t&)
-{
-    return malloc(size);
+void* operator new[](std::size_t size) throw(std::bad_alloc) {
+  return ::operator new(size);
 }
 
-void*
-operator new[](std::size_t size, const std::nothrow_t& nt)
-{
-    return ::operator new(size, nt);
+void* operator new[](std::size_t size, const std::nothrow_t& no) throw() {
+  return ::operator new[](size, no);
 }
