@@ -45,6 +45,7 @@ namespace std {
 
 } // namespace std
 
+__attribute__ ((weak))
 void* operator new(std::size_t size) throw(std::bad_alloc) {
   void* space = ::operator new(size, std::nothrow_t());
   if (space) {
@@ -54,14 +55,17 @@ void* operator new(std::size_t size) throw(std::bad_alloc) {
   }
 }
 
+__attribute__ ((weak))
 void* operator new(std::size_t size, const std::nothrow_t& no) throw() {
   return malloc(size);
 }
 
+__attribute__ ((weak))
 void* operator new[](std::size_t size) throw(std::bad_alloc) {
   return ::operator new(size);
 }
 
+__attribute__ ((weak))
 void* operator new[](std::size_t size, const std::nothrow_t& no) throw() {
   return ::operator new[](size, no);
 }
