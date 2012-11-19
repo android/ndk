@@ -26,7 +26,6 @@
 // SUCH DAMAGE.
 
 #include <cassert>
-#include <cstdio>
 #include <cstdlib>
 #include <cxxabi.h>
 #include <exception>
@@ -75,7 +74,6 @@ namespace {
 namespace __cxxabiv1 {
 
   extern "C" void __cxa_pure_virtual() {
-    fprintf(stderr, "Pure virtual function called. Terminate!\n");
     std::terminate();
   }
 
@@ -137,7 +135,6 @@ namespace __cxxabiv1 {
     __cxa_exception* header = globals->caughtExceptions;
     _Unwind_Exception* exception = &header->unwindHeader;
     if (!header) {
-      fprintf(stderr, "Attempting to rethrow an exception that doesn't exist!\n");
       std::terminate();
     }
 
