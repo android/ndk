@@ -180,7 +180,7 @@ fi
 # Get GCC_BASE_VERSION.  Note that GCC_BASE_VERSION may be slightly different from GCC_VERSION.
 # eg. In gcc4.6 GCC_BASE_VERSION is "4.6.x-google"
 LIBGCC_PATH=`$TOOLCHAIN_GCC -print-libgcc-file-name`
-LIBGCC_BASE_PATH=${LIBGCC_PATH%/libgcc.a}  # base path of libgcc.a
+LIBGCC_BASE_PATH=${LIBGCC_PATH%/*}         # base path of libgcc.a
 GCC_BASE_VERSION=${LIBGCC_BASE_PATH##*/}   # stuff after the last /
 
 # Create temporary directory
