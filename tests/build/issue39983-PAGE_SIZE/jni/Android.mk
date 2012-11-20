@@ -1,0 +1,7 @@
+LOCAL_PATH := $(call my-dir)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := issue39983-PAGE_SIZE
+LOCAL_SRC_FILES := issue39983-PAGE_SIZE.c
+include $(BUILD_EXECUTABLE)
+
