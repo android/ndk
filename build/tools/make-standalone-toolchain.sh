@@ -194,9 +194,9 @@ if [ -n "$LLVM_VERSION" ]; then
   # Copy the clang/llvm toolchain prebuilt binaries
   run copy_directory "$LLVM_TOOLCHAIN_PATH" "$TMPDIR"
 
-  # Move clang and clang++ to clang-LLVM_VERSION/++, then create scripts
-  # linking them with predefined -target flag.  This is to make clang/++
-  # easier drop-in replacement for gcc/++ in NDK standalone mode.
+  # Move clang and clang++ to clang${LLVM_VERSION} and clang${LLVM_VERSION}++,
+  # then create scripts linking them with predefined -target flag.  This is to
+  # make clang/++ easier drop-in replacement for gcc/++ in NDK standalone mode.
   # Note that the file name of "clang" isn't important, and the trailing
   # "++" tells clang to compile in C++ mode
   LLVM_TARGET=
@@ -218,9 +218,15 @@ if [ -n "$LLVM_VERSION" ]; then
   # otherwise clang3.1++ may still compile *.c code as C, not C++, which
   # is not consistent with g++
   LLVM_VERSION_WITHOUT_DOT=$(echo "$LLVM_VERSION" | sed -e "s!\.!!")
-  mv "$TMPDIR/bin/clang" "$TMPDIR/bin/clang$LLVM_VERSION_WITHOUT_DOT"
-  rm "$TMPDIR/bin/clang++"
-  ln -s "clang$LLVM_VERSION_WITHOUT_DOT" "$TMPDIR/bin/clang$LLVM_VERSION_WITHOUT_DOT++"
+  mv "$TMPDIR/bin/clang${HOST_EXE}" "$TMPDIR/bin/clang${LLVM_VERSION_WITHOUT_DOT}${HOST_EXE}"
+  if [ -h "$TMPDIR/bin/clang++${HOST_EXE}" ] ; then
+    ## clang++ is a link to clang.  Remove it and reconstruct
+    rm "$TMPDIR/bin/clang++${HOST_EXE}"
+    ln -s "clang${LLVM_VERSION_WITHOUT_DOT}${HOST_EXE}" "$TMPDIR/bin/clang${LLVM_VERSION_WITHOUT_DOT}++${HOST_EXE}"
+  else
+    mv "$TMPDIR/bin/clang++${HOST_EXE}" "$TMPDIR/bin/clang$LLVM_VERSION_WITHOUT_DOT++${HOST_EXE}"
+  fi
+
   cat > "$TMPDIR/bin/clang" <<EOF
 \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT -target $LLVM_TARGET "\$@"
 EOF
@@ -228,6 +234,15 @@ EOF
 \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT++ -target $LLVM_TARGET "\$@"
 EOF
   chmod 0755 "$TMPDIR/bin/clang" "$TMPDIR/bin/clang++"
+
+  if [ -n "$HOST_EXE" ] ; then
+    cat > "$TMPDIR/bin/clang.cmd" <<EOF
+%~dp0\\clang${LLVM_VERSION_WITHOUT_DOT}${HOST_EXE} -target $LLVM_TARGET %*
+EOF
+    cat > "$TMPDIR/bin/clang++.cmd" <<EOF
+%~dp0\\clang${LLVM_VERSION_WITHOUT_DOT}++${HOST_EXE} -target $LLVM_TARGET %*
+EOF
+  fi
 fi
 
 dump "Copying sysroot headers and libraries..."
