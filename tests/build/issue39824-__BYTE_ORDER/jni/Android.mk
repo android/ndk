@@ -1,0 +1,7 @@
+LOCAL_PATH := $(call my-dir)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := issue39824-__BYTE_ORDER
+LOCAL_SRC_FILES := issue39824-__BYTE_ORDER.c
+include $(BUILD_EXECUTABLE)
+
