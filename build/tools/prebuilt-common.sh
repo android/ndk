@@ -728,17 +728,19 @@ prepare_common_build ()
     # We only do this if the CC variable is not defined to a given value
     # and the --mingw or --try-64 options are not used.
     #
-    if [ "$HOST_OS" = "linux" -a -z "$CC" -a "$MINGW" != "yes" ]; then
-        if [ "$TRY64" != "yes" ]; then
-            LEGACY_PREFIX=i686
-        else
-            LEGACY_PREFIX=x86_64
+    if [ -z "$CC" -a "$MINGW" != "yes" ]; then
+        LEGACY_TOOLCHAIN_DIR=
+        if [ "$HOST_OS" = "linux" ]; then
+            LEGACY_TOOLCHAIN_DIR="$ANDROID_NDK_ROOT/../prebuilts/tools/gcc-sdk"
+            LEGACY_TOOLCHAIN_PREFIX="$LEGACY_TOOLCHAIN_DIR/"
+        elif [ "$HOST_OS" = "darwin" ]; then
+            LEGACY_TOOLCHAIN_DIR="$ANDROID_NDK_ROOT/../prebuilts/gcc/darwin-x86/host/i686-apple-darwin-4.2.1/bin"
+            LEGACY_TOOLCHAIN_PREFIX="$LEGACY_TOOLCHAIN_DIR/i686-apple-darwin10-"
         fi
-        LEGACY_TOOLCHAIN_DIR="$ANDROID_NDK_ROOT/../prebuilts/tools/gcc-sdk"
         if [ -d "$LEGACY_TOOLCHAIN_DIR" ] ; then
-            log "Forcing generation of Linux binaries with legacy $LEGACY_PREFIX toolchain"
-            CC="$LEGACY_TOOLCHAIN_DIR/gcc"
-            CXX="$LEGACY_TOOLCHAIN_DIR/g++"
+            log "Forcing generation of $HOST_OS binaries with legacy toolchain"
+            CC="${LEGACY_TOOLCHAIN_PREFIX}gcc"
+            CXX="${LEGACY_TOOLCHAIN_PREFIX}g++"
         fi
     fi
 
@@ -748,11 +750,7 @@ prepare_common_build ()
     STRIP=${STRIP:-strip}
     case $HOST_TAG in
         darwin-*)
-            # Try to build with Tiger SDK if available
-            if check_darwin_sdk /Developer/SDKs/MacOSX10.4.sdku 10.4; then
-                log "Generating Tiger-compatible binaries!"
-            # Otherwise with Leopard SDK
-            elif check_darwin_sdk /Developer/SDKs/MacOSX10.5.sdk 10.5; then
+            if check_darwin_sdk /Developer/SDKs/MacOSX10.5.sdk 10.5; then
                 log "Generating Leopard-compatible binaries!"
             else
                 local version=`sw_vers -productVersion`
@@ -777,7 +775,6 @@ prepare_common_build ()
     int test_array[1-2*(sizeof(void*) != 4)];
 EOF
     log_n "Checking whether the compiler generates 32-bit binaries..."
-    HOST_BITS=32
     log2 $CC $HOST_CFLAGS -c -o $TMPO $TMPC
     $NDK_CCACHE $CC $HOST_CFLAGS -c -o $TMPO $TMPC >$TMPL 2>&1
     if [ $? != 0 ] ; then
@@ -788,15 +785,18 @@ EOF
             #        will not work well with the GCC toolchain scripts.
             CC="$CC -m32"
             CXX="$CXX -m32"
-        else
-            HOST_BITS=64
         fi
     else
         log "yes"
+        if [ "$TRY64" = "yes" ]; then
+            CC="$CC -m64"
+            CXX="$CXX -m64"
+        fi
     fi
 
-    # For now, we only support building 32-bit binaries anyway
-    if [ "$TRY64" != "yes" ]; then
+    if [ "$TRY64" = "yes" ]; then
+        HOST_BITS=64
+    else
         force_32bit_binaries  # to modify HOST_TAG and others
         HOST_BITS=32
     fi
