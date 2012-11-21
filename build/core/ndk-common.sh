@@ -270,8 +270,10 @@ case "$HOST_ARCH" in
     # "uname -m" reports i386 on Snow Leopard even though its architecture is
     # 64-bit. In order to use it to build 64-bit toolchains we need to fix the
     # reporting anomoly here.
-    if [ "$HOST_OS" = darwin -a "`uname -r`" = 10.8.0 ] ; then
-      HOST_ARCH=x86_64
+    if [ "$HOST_OS" = darwin ] ; then
+        if ! echo __LP64__ | (CCOPTS= gcc -E - 2>/dev/null) | grep -q __LP64__ ; then
+            HOST_ARCH=x86_64
+        fi
     fi
     ;;
     amd64) HOST_ARCH=x86_64
