@@ -75,8 +75,7 @@ namespace {
 namespace __cxxabiv1 {
 
   extern "C" void __cxa_pure_virtual() {
-    fprintf(stderr, "Pure virtual function called. Terminate!\n");
-    std::terminate();
+    fatalError("Pure virtual function called!");
   }
 
   extern "C" __cxa_eh_globals* __cxa_get_globals() {
@@ -96,8 +95,7 @@ namespace __cxxabiv1 {
       // Since Android uses memory-overcommit, we enter here only when
       // the exception object is VERY large. This will propably never happen.
       // Therefore, we decide to use no emergency spaces.
-      // Thank David Turner's advice!
-      std::terminate();
+      fatalError("Not enough memory to allocate exception!");
     }
 
     memset(buffer, 0, sizeof(__cxa_exception));
@@ -111,7 +109,7 @@ namespace __cxxabiv1 {
       try {
         exc->exceptionDestructor(thrown_exception);
       } catch (...) {
-        std::terminate(); // Failed when exception destructing
+        fatalError("Exception destructor has thrown!");
       }
     }
 
@@ -137,8 +135,7 @@ namespace __cxxabiv1 {
     __cxa_exception* header = globals->caughtExceptions;
     _Unwind_Exception* exception = &header->unwindHeader;
     if (!header) {
-      fprintf(stderr, "Attempting to rethrow an exception that doesn't exist!\n");
-      std::terminate();
+      fatalError("Attempting to rethrow an exception that doesn't exist!");
     }
 
     if (isOurCxxException(exception->exception_class)) {
@@ -158,7 +155,7 @@ namespace __cxxabiv1 {
 
     if (!isOurCxxException(exception->exception_class)) {
       if (globals->caughtExceptions) {
-        std::terminate();
+        fatalError("Can't handle non-C++ exception!");
       }
     }
 
@@ -200,7 +197,7 @@ namespace __cxxabiv1 {
       __cxa_free_exception(header+1);
       return;
     } else if (count < 0) {
-      std::terminate(); // Some bug happens here
+      fatalError("Internal error during exception handling!");
     }
 
     header->handlerCount = count;

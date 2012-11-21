@@ -8,14 +8,14 @@ ifeq (,$(GABIXX_FORCE_REBUILD))
   LOCAL_MODULE:= gabi++_shared
   LOCAL_SRC_FILES:= libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).so
   LOCAL_EXPORT_C_INCLUDES := $(libgabi++_c_includes)
-  LOCAL_CPP_FEATURES := rtti
+  LOCAL_CPP_FEATURES := rtti exceptions
   include $(PREBUILT_SHARED_LIBRARY)
 
   include $(CLEAR_VARS)
   LOCAL_MODULE:= gabi++_static
   LOCAL_SRC_FILES:= libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).a
   LOCAL_EXPORT_C_INCLUDES := $(libgabi++_c_includes)
-  LOCAL_CPP_FEATURES := rtti
+  LOCAL_CPP_FEATURES := rtti exceptions
   include $(PREBUILT_STATIC_LIBRARY)
 
 else # ! GABIXX_FORCE_REBUILD
@@ -30,7 +30,7 @@ else # ! GABIXX_FORCE_REBUILD
   LOCAL_SRC_FILES:= $(libgabi++_src_files)
   LOCAL_EXPORT_C_INCLUDES := $(libgabi++_c_includes)
   LOCAL_C_INCLUDES := $(libgabi++_c_includes)
-  LOCAL_CPP_FEATURES := rtti
+  LOCAL_CPP_FEATURES := rtti exceptions
   include $(BUILD_SHARED_LIBRARY)
 
   # And now the static version
@@ -41,7 +41,7 @@ else # ! GABIXX_FORCE_REBUILD
   LOCAL_CPP_EXTENSION := .cc
   LOCAL_EXPORT_C_INCLUDES := $(libgabi++_c_includes)
   LOCAL_C_INCLUDES := $(libgabi++_c_includes)
-  LOCAL_CPP_FEATURES := rtti
+  LOCAL_CPP_FEATURES := rtti exceptions
   include $(BUILD_STATIC_LIBRARY)
 
 endif # ! GABIXX_FORCE_REBUILD
