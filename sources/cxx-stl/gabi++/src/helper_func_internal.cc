@@ -42,6 +42,13 @@
 #include <unwind.h>
 #include "helper_func_internal.h"
 
+#include <android/log.h>
+#include <dlfcn.h>
+#include <pwd.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+
 namespace __cxxabiv1 {
 
   void call_terminate(_Unwind_Exception* unwind_exception) {
@@ -499,5 +506,47 @@ namespace __cxxabiv1 {
                                         const ScanResultInternal& results) {}
 
 #endif // __arm__
+
+  void fatalError(const char* message) {
+
+    // Note: Printing to stderr is only useful when running an executable
+    // from a shell, e.g. when using 'adb shell'. For regular
+    // applications, stderr is redirected to /dev/null by default.
+    fprintf(stderr, "PANIC:GAbi++:%s\n", message);
+
+    // Always print the message to the log, when possible. Use
+    // dlopen()/dlsym() to avoid adding an explicit dependency
+    // to -llog in GAbi++ for this sole feature.
+    //
+    // An explicit dependency to -ldl can be avoided because these
+    // functions are implemented directly by the dynamic linker.
+    // That is, except when this code is linked into a static
+    // executable. In this case, adding -ldl to the final link command
+    // will be necessary, but the dlopen() will always return NULL.
+    //
+    // There is unfortunately no way to detect where this code is going
+    // to be used at compile time, but static executables are strongly
+    // discouraged on the platform because they can't implement ASLR.
+    //
+    typedef void (*logfunc_t)(int, const char*, const char*);
+    logfunc_t logger = NULL;
+
+    // Note that this should always succeed in a regular application,
+    // because the library is already loaded into the process' address
+    // space by Zygote before forking the application process.
+    // This will fail in static executables, because the static
+    // version of -ldl only contains empty stubs.
+    void* liblog = dlopen("liblog.so", RTLD_NOW);
+
+    if (liblog != NULL) {
+      logger = reinterpret_cast<logfunc_t>(dlsym(liblog, "__android_log_print"));
+      if (logger != NULL) {
+        (*logger)(ANDROID_LOG_FATAL, "GAbi++", message);
+      }
+      dlclose(liblog);
+    }
+
+    std::terminate();
+  }
 
 } // namespace __cxxabiv1
