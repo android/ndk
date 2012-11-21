@@ -28,7 +28,7 @@
 
 /* ChangeLog for this library:
  *
- * NDK r??: Add new ARM CPU features: VFPv2, VFP_D32, VFP_FP16,
+ * NDK r8c: Add new ARM CPU features: VFPv2, VFP_D32, VFP_FP16,
  *          VFP_FMA, NEON_FMA, IDIV_ARM, IDIV_THUMB2 and iWMMXt.
  *
  *          Rewrite the code to parse /proc/self/auxv instead of
@@ -96,7 +96,7 @@ static __inline__ void x86_cpuid(int func, int values[4])
     __asm__ __volatile__ ( \
       "push %%ebx\n"
       "cpuid\n" \
-      "mov %1, %%ebx\n"
+      "mov %%ebx, 1\n"
       "pop %%ebx\n"
       : "=a" (a), "=r" (b), "=c" (c), "=d" (d) \
       : "a" (func) \
