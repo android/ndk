@@ -30,6 +30,8 @@
 #include <cstdlib>
 #include <cxxabi.h>
 #include <exception>
+#include <pthread.h>
+
 #include "helper_func_internal.h"
 
 namespace {
@@ -45,14 +47,69 @@ namespace {
     __cxa_free_exception(exc);
   }
 
-  __cxa_thread_info* getThreadInfo() {
-    // Only single thread for now
-    static __cxa_thread_info info;
-    return &info;
-  }
+  // Technical note:
+  // Use a pthread_key_t to hold the key used to store our thread-specific
+  // __cxa_thread_info objects. The key is created and destroyed through
+  // a static C++ object.
+  //
+
+  // Due to a bug in the dynamic linker that was only fixed in Froyo, the
+  // static C++ destructor may be called with a value of NULL for the
+  // 'this' pointer. As such, any attempt to access any field in the
+  // object there will result in a crash. To work-around this, store
+  // the key object as a 'static' variable outside of the C++ object.
+  static pthread_key_t __cxa_thread_key;
+
+  class CxaThreadKey {
+  public:
+    // Called at program initialization time, or when the shared library
+    // is loaded through dlopen().
+    CxaThreadKey() {
+      if (pthread_key_create(&__cxa_thread_key, freeObject) != 0) {
+        fatalError("Can't allocate C++ runtime pthread_key_t");
+      }
+    }
+
+    // Called at program exit time, or when the shared library is
+    // unloaded through dlclose(). See note above.
+    ~CxaThreadKey() {
+      pthread_key_delete(__cxa_thread_key);
+    }
+
+    static __cxa_thread_info* getFast() {
+      void* obj = pthread_getspecific(__cxa_thread_key);
+      return reinterpret_cast<__cxa_thread_info*>(obj);
+    }
+
+    static __cxa_thread_info* getSlow() {
+      void* obj = pthread_getspecific(__cxa_thread_key);
+      if (obj == NULL) {
+        obj = malloc(sizeof(__cxa_thread_info));
+        if (!obj) {
+          // Shouldn't happen, but better be safe than sorry.
+          fatalError("Can't allocate thread-specific C++ runtime info block.");
+        }
+        memset(obj, 0, sizeof(__cxa_thread_info));
+        pthread_setspecific(__cxa_thread_key, obj);
+      }
+      return reinterpret_cast<__cxa_thread_info*>(obj);
+    }
+
+  private:
+    // Called when a thread is destroyed.
+    static void freeObject(void* obj) {
+      free(obj);
+    }
+
+  };
+
+  // The single static instance, this forces the compiler to register
+  // a constructor and destructor for this object in the final library
+  // file. They handle the pthread_key_t allocation/deallocation.
+  static CxaThreadKey instance;
 
   void throwException(__cxa_exception *header) {
-    __cxa_thread_info *info = getThreadInfo();
+    __cxa_thread_info *info = CxaThreadKey::getSlow();
     header->unexpectedHandler = info->unexpectedHandler;
     if (!header->unexpectedHandler) {
       header->unexpectedHandler = std::current_unexpected_fn;
@@ -79,12 +136,13 @@ namespace __cxxabiv1 {
   }
 
   extern "C" __cxa_eh_globals* __cxa_get_globals() {
-    return &getThreadInfo()->globals;
+    __cxa_thread_info* info = CxaThreadKey::getSlow();
+    return &info->globals;
   }
 
   extern "C" __cxa_eh_globals* __cxa_get_globals_fast() {
-    // TODO: Implement a fast version
-    return __cxa_get_globals();
+    __cxa_thread_info* info = CxaThreadKey::getFast();
+    return &info->globals;
   }
 
 
