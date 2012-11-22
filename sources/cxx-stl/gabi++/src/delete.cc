@@ -30,28 +30,28 @@
 #include <stdlib.h>
 #include <new>
 
-void
-operator delete(void* ptr) throw()
+__attribute__ ((weak))
+void operator delete(void* ptr) throw()
 {
   if (ptr)
     free(ptr);
 }
 
-void
-operator delete[](void* ptr) throw()
+__attribute__ ((weak))
+void operator delete[](void* ptr) throw()
 {
     ::operator delete(ptr);
 }
 
-void
-operator delete(void* ptr, const std::nothrow_t &) throw()
+__attribute__ ((weak))
+void operator delete(void* ptr, const std::nothrow_t &) throw()
 {
     if (ptr)
         free(ptr);
 }
 
-void
-operator delete[](void* ptr, const std::nothrow_t &nt) throw()
+__attribute__ ((weak))
+void operator delete[](void* ptr, const std::nothrow_t &nt) throw()
 {
     ::operator delete(ptr, nt);
 }
