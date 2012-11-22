@@ -47,8 +47,7 @@ TARGET_CXX := $(LLVM_TOOLCHAIN_PREFIX)clang++
 #
 
 TARGET_CFLAGS := \
-    -gcc-toolchain $(TOOLCHAIN_PREBUILT_ROOT) \
-    -isystem $(LLVM_TOOLCHAIN_PREBUILT_ROOT)/lib/clang/$(LLVM_VERSION)/include \
+    -gcc-toolchain $(call host-path,$(TOOLCHAIN_PREBUILT_ROOT)) \
     -fpic \
     -ffunction-sections \
     -funwind-tables \
@@ -57,7 +56,7 @@ TARGET_CFLAGS := \
     -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__
 
 TARGET_LDFLAGS := \
-    -gcc-toolchain $(TOOLCHAIN_PREBUILT_ROOT)
+    -gcc-toolchain $(call host-path,$(TOOLCHAIN_PREBUILT_ROOT))
 
 TARGET_C_INCLUDES := \
     $(SYSROOT)/usr/include
