@@ -45,7 +45,7 @@ TARGET_CXX := $(LLVM_TOOLCHAIN_PREFIX)clang++
 LLVM_TRIPLE := i686-none-linux-android
 
 TARGET_CFLAGS := \
-    -gcc-toolchain $(TOOLCHAIN_PREBUILT_ROOT) \
+    -gcc-toolchain $(call host-path,$(TOOLCHAIN_PREBUILT_ROOT)) \
     -target $(LLVM_TRIPLE) \
     -ffunction-sections \
     -funwind-tables \
@@ -57,7 +57,7 @@ TARGET_C_INCLUDES := \
 
 # Add and LDFLAGS for the target here
 TARGET_LDFLAGS := \
-    -gcc-toolchain $(TOOLCHAIN_PREBUILT_ROOT) \
+    -gcc-toolchain $(call host-path,$(TOOLCHAIN_PREBUILT_ROOT)) \
     -target $(LLVM_TRIPLE)
 
 TARGET_x86_release_CFLAGS :=  -O2 \
