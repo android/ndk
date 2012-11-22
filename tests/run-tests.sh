@@ -555,7 +555,7 @@ if is_testable device; then
             echo "Skipping broken device test build: `basename $1`"
             return 0
         fi
-        echo "Building NDK device test: `basename $1` in $1"
+        echo "Building NDK device test: `basename $1`"
         build_project $1 "yes"
     }
 
@@ -568,6 +568,7 @@ if is_testable device; then
         local DEVICE=$1
         local CPU_ABI=$2
         local TEST=$3
+        local TEST_NAME="$(basename $TEST)"
         local SRCDIR
         local DSTDIR="$4/ndk-tests"
         local SRCFILE
@@ -611,7 +612,7 @@ if is_testable device; then
             fi
         done
         for PROGRAM in $PROGRAMS; do
-            dump "Running device test [$CPU_ABI]: `basename $PROGRAM`"
+            dump "Running device test [$CPU_ABI]: $TEST_NAME (`basename $PROGRAM`)"
             adb_var_shell_cmd "$DEVICE" "" LD_LIBRARY_PATH="$DSTDIR" $PROGRAM
             if [ $? != 0 ] ; then
                 dump "   ---> TEST FAILED!!"
@@ -668,12 +669,17 @@ if is_testable device; then
             adb_var_shell_cmd "$DEVICE" CPU_ABI2 getprop ro.product.cpu.abi2
             CPU_ABIS="$CPU_ABI1,$CPU_ABI2"
             CPU_ABIS=$(commas_to_spaces $CPU_ABIS)
+            if [ "$CPU_ABIS" = " " ]; then
+              # Very old cupcake-based Android devices don't have these properties
+              # defined. Fortunately, they are all armeabi-based.
+              CPU_ABIS=armeabi
+            fi
             for CPU_ABI in $CPU_ABIS; do
                 if [ "$ABI" = "default" -o "$ABI" = "$CPU_ABI" ] ; then
                     AT_LEAST_CPU_ABI_MATCH="yes"
                     for DIR in `ls -d $ROOTDIR/tests/device/*`; do
-                        log "Running device test on $DEVICE [$CPU_ABI]: $DIR"
                         if is_buildable $DIR; then
+                            log "Running device test on $DEVICE [$CPU_ABI]: $DIR"
                             run_device_test "$DEVICE" "$CPU_ABI" "$DIR" /data/local/tmp
                         fi
                     done
