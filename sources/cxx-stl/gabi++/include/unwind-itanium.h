@@ -80,7 +80,7 @@ uint64_t _Unwind_GetGR(struct _Unwind_Context*, int index);
 void _Unwind_SetGR(struct _Unwind_Context*, int index, uint64_t new_value);
 
 uint64_t _Unwind_GetIP(struct _Unwind_Context*);
-void _Unwind_SetIP(struct _Unwind_Context*, uint64_t new_value);
+void _Unwind_SetIP(struct _Unwind_Context*, uintptr_t new_value);
 
 uint64_t _Unwind_GetRegionStart(struct _Unwind_Context*);
 uint64_t _Unwind_GetLanguageSpecificData(struct _Unwind_Context*);
