@@ -281,14 +281,23 @@ $(call ndk_log,HOST_TAG set to $(HOST_TAG))
 # Check for NDK-specific versions of our host tools
 HOST_PREBUILT_ROOT := $(call host-prebuilt-tag, $(NDK_ROOT))
 HOST_PREBUILT := $(strip $(wildcard $(HOST_PREBUILT_ROOT)/bin))
+HOST_AWK := $(strip $(HOST_AWK))
+HOST_SED  := $(strip $(HOST_SED))
+HOST_MAKE := $(strip $(HOST_MAKE))
 ifdef HOST_PREBUILT
     $(call ndk_log,Host tools prebuilt directory: $(HOST_PREBUILT))
     # The windows prebuilt binaries are for ndk-build.cmd
     # On cygwin, we must use the Cygwin version of these tools instead.
     ifneq ($(HOST_OS),cygwin)
-        HOST_AWK := $(wildcard $(HOST_PREBUILT)/awk$(HOST_EXEEXT))
-        HOST_SED  := $(wildcard $(HOST_PREBUILT)/sed$(HOST_EXEEXT))
-        HOST_MAKE := $(wildcard $(HOST_PREBUILT)/make$(HOST_EXEEXT))
+        ifndef HOST_AWK
+            HOST_AWK := $(wildcard $(HOST_PREBUILT)/awk$(HOST_EXEEXT))
+        endif
+        ifndef HOST_SED
+            HOST_SED  := $(wildcard $(HOST_PREBUILT)/sed$(HOST_EXEEXT))
+        endif
+        ifndef HOST_MAKE
+            HOST_MAKE := $(wildcard $(HOST_PREBUILT)/make$(HOST_EXEEXT))
+        endif
     endif
 else
     $(call ndk_log,Host tools prebuilt directory not found, using system tools)
