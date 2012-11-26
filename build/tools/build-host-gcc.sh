@@ -973,6 +973,7 @@ setup_build_for_toolchain ()
     case $TARGET_ARCH in
         arm) TARGET=arm-linux-androideabi;;
         x86) TARGET=i686-linux-android;;
+        x86_64) TARGET=x86_64-linux-android;;
         mips|mipsel) TARGET=mipsel-linux-android; TARGET_ARCH=mips;;
         *) panic "Unknown target toolchain architecture: $TARGET_ARCH"
     esac
@@ -1032,6 +1033,33 @@ setup_build_for_toolchain ()
         # by the right gcc config files now. Also TARGET_SYSROOT isn't defined yet.
         #
         #-nostartfiles $TARGET_SYSROOT/usr/lib/crtbegin_dynamic.o $TARGET_SYSROOT/usr/lib/crtend_android.o"
+        ;;
+
+        x86_64)
+        TARGET_CFLAGS=$TARGET_CFLAGS" \
+        -DANDROID -D__ANDROID__ -Ulinux \
+        -fPIC -Wa,--noexecstack -fstack-protector \
+        -W -Wall -Werror=address -Werror=format-security -Werror=non-virtual-dtor -Werror=return-type \
+        -Werror=sequence-point -Winit-self -Wno-multichar -Wno-unused -Wpointer-arith -Wstrict-aliasing=2 \
+        -fexceptions -ffunction-sections -finline-functions \
+        -finline-limit=300 -fmessage-length=0 -fno-inline-functions-called-once \
+        -fno-strict-aliasing -frtti \
+        -fstrict-aliasing -funswitch-loops -funwind-tables \
+        -march=atom -mtune=atom -mbionic -mfpmath=sse -mstackrealign -DUSE_SSE2"
+
+        TARGET_LDFLAGS=$TARGET_LDFLAGS" \
+        -O2 -g -fPIC \
+        -nostartfiles \
+        -Wl,-z,noexecstack -Wl,--gc-sections -nostdlib \
+        -fexceptions -frtti -fstrict-aliasing -ffunction-sections -finline-functions  \
+        -finline-limit=300 -fno-inline-functions-called-once \
+        -funswitch-loops -funwind-tables -mstackrealign \
+        -ffunction-sections -funwind-tables -fmessage-length=0 \
+        -march=atom -mstackrealign -mfpmath=sse -mbionic \
+        -Wno-multichar -Wl,-z,noexecstack -Werror=format-security -Wstrict-aliasing=2 \
+        -W -Wall -Wno-unused -Winit-self -Wpointer-arith -Werror=return-type -Werror=non-virtual-dtor \
+        -Werror=address -Werror=sequence-point \
+        -Werror=format-security -Wl,--no-undefined"
         ;;
 
         mips)
@@ -1439,7 +1467,7 @@ build_host_gcc_core ()
      *)
        case $TARGET_ARCH in
 	     arm) ARGS=$ARGS" --enable-libgomp";;
-	     x86) ARGS=$ARGS" --disable-libgomp";;
+	     x86|x86_64) ARGS=$ARGS" --disable-libgomp";;
 	     mips|mipsel) ARGS=$ARGS" --disable-libgomp";;
 	 esac
 	 ;;
@@ -1456,6 +1484,9 @@ build_host_gcc_core ()
             ;;
         x86)
             ARGS=$ARGS" --with-arch=i686 --with-tune=atom --with-fpmath=sse"
+            ;;
+        x86_64)
+            ARGS=$ARGS" --with-arch=atom --with-tune=atom --with-fpmath=sse --with-multilib-list=m32,m64,mx32"
             ;;
         mips)
             # Add --disable-fixed-point to disable fixed-point support
