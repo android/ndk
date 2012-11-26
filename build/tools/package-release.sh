@@ -264,6 +264,29 @@ unpack_prebuilt ()
     fi
 }
 
+# Unpack a prebuilt into the default destination directory $DSTDIR
+# Also unapck 64-bit version if exists
+# $1: prebuilt name w/o extension, relative to $PREBUILT_DIR
+# $2: prebuilt name extension
+unpack_prebuilt_optional_64bit ()
+{
+    local PREBUILT=${1}.${2}
+    local PREBUILT64=${1}_64.${2}
+    local DDIR="$DSTDIR"
+    echo "Unpacking $PREBUILT"
+    if [ -f "$PREBUILT_DIR/$PREBUILT" ] ; then
+        unpack_archive "$PREBUILT_DIR/$PREBUILT" "$DDIR"
+        fail_panic "Could not unpack prebuilt $PREBUILT. Aborting."
+        if [ -f "$PREBUILT_DIR/$PREBUILT64" ] ; then
+            echo "Unpacking $PREBUILT64"
+            unpack_archive "$PREBUILT_DIR/$PREBUILT64" "$DDIR"
+            fail_panic "Could not unpack prebuilt $PREBUILT64. Aborting."
+        fi
+    else
+        echo "WARNING: Could not find $PREBUILT in $PREBUILT_DIR"
+    fi
+}
+
 # Copy a prebuilt directory from the previous
 # $1: Source directory relative to
 copy_prebuilt ()
@@ -404,26 +427,27 @@ for SYSTEM in $SYSTEMS; do
             done
         done
     else
-        # Unpack gdbserver
+        # Unpack toolchains
         for TC in $TOOLCHAINS; do
-            unpack_prebuilt $TC-$SYSTEM.tar.bz2
+            unpack_prebuilt_optional_64bit $TC-$SYSTEM tar.bz2
             echo "Removing sysroot for $TC"
             rm -rf $DSTDIR/toolchains/$TC/prebuilt/$SYSTEM/sysroot
+            rm -rf $DSTDIR/toolchains/$TC/prebuilt/$SYSTEM_64/sysroot
         done
 
         # Unpack llvm and clang
         for LLVM_VERSION in $LLVM_VERSION_LIST; do
-            unpack_prebuilt llvm-$LLVM_VERSION-$SYSTEM.tar.bz2
+            unpack_prebuilt_optional_64bit llvm-$LLVM_VERSION-$SYSTEM tar.bz2
         done
 
         # Unpack prebuilt ndk-stack and other host tools
-        unpack_prebuilt ndk-stack-$SYSTEM.tar.bz2
-        unpack_prebuilt ndk-make-$SYSTEM.tar.bz2
-        unpack_prebuilt ndk-sed-$SYSTEM.tar.bz2
-        unpack_prebuilt ndk-awk-$SYSTEM.tar.bz2
+        unpack_prebuilt_optional_64bit ndk-stack-$SYSTEM tar.bz2
+        unpack_prebuilt_optional_64bit ndk-make-$SYSTEM tar.bz2
+        unpack_prebuilt_optional_64bit ndk-sed-$SYSTEM tar.bz2
+        unpack_prebuilt_optional_64bit ndk-awk-$SYSTEM tar.bz2
 
         if [ "$SYSTEM" = "windows" ]; then
-            unpack_prebuilt toolbox-$SYSTEM.tar.bz2
+            unpack_prebuilt_optional_64bit toolbox-$SYSTEM tar.bz2
         fi
     fi
 
