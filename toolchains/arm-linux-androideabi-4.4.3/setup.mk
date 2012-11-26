@@ -29,7 +29,7 @@ TARGET_CFLAGS := \
     -funwind-tables \
     -fstack-protector \
     -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ \
-    -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__ \
+    -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__
 
 TARGET_LDFLAGS :=
 
@@ -52,6 +52,8 @@ endif
 TARGET_CFLAGS.neon := -mfpu=neon
 
 TARGET_arm_release_CFLAGS :=  -O2 \
+                              -g \
+                              -DNDEBUG \
                               -fomit-frame-pointer \
                               -fstrict-aliasing    \
                               -funswitch-loops     \
@@ -59,16 +61,22 @@ TARGET_arm_release_CFLAGS :=  -O2 \
 
 TARGET_thumb_release_CFLAGS := -mthumb \
                                -Os \
+                               -g \
+                               -DNDEBUG \
                                -fomit-frame-pointer \
                                -fno-strict-aliasing \
                                -finline-limit=64
 
 # When building for debug, compile everything as arm.
 TARGET_arm_debug_CFLAGS := $(TARGET_arm_release_CFLAGS) \
+                           -O0 \
+                           -UNDEBUG \
                            -fno-omit-frame-pointer \
                            -fno-strict-aliasing
 
 TARGET_thumb_debug_CFLAGS := $(TARGET_thumb_release_CFLAGS) \
+                             -O0 \
+                             -UNDEBUG \
                              -marm \
                              -fno-omit-frame-pointer
 
