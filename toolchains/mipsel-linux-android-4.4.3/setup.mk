@@ -40,12 +40,15 @@ TARGET_LDFLAGS :=
 TARGET_C_INCLUDES := \
     $(SYSROOT)/usr/include
 
-TARGET_mips_release_CFLAGS :=  -O2 \
-                               -fomit-frame-pointer \
-                               -funswitch-loops     \
-                               -finline-limit=300
+TARGET_mips_release_CFLAGS := -O2 \
+                              -g \
+                              -DNDEBUG \
+                              -fomit-frame-pointer \
+                              -funswitch-loops     \
+                              -finline-limit=300
 
-TARGET_mips_debug_CFLAGS := -O0 -g \
+TARGET_mips_debug_CFLAGS := -O0 \
+                            -g \
                             -fno-omit-frame-pointer
 
 

@@ -231,15 +231,7 @@ else
     endif
 endif
 
-# set release/debug build flags. We always use the -g flag because
-# we generate symbol versions of the binaries that are later stripped
-# when they are copied to the final project's libs/<abi> directory.
-#
-ifeq ($(APP_OPTIM),debug)
-  APP_CFLAGS := -O0 -g $(APP_CFLAGS)
-else
-  APP_CFLAGS := -O2 -DNDEBUG -g $(APP_CFLAGS)
-endif
+APP_CFLAGS := $(strip $(APP_CFLAGS))
 
 # Check that APP_STL is defined. If not, use the default value (system)
 # otherwise, check that the name is correct.
@@ -249,8 +241,6 @@ ifndef APP_STL
 else
     $(call ndk-stl-check,$(APP_STL))
 endif
-
-
 
 $(if $(call get,$(_map),defined),\
   $(call __ndk_info,Weird, the application $(_app) is already defined by $(call get,$(_map),defined))\
