@@ -248,17 +248,24 @@ RELEASE_PREFIX=$PREFIX-$RELEASE
 # ensure that the generated files are ug+rx
 umask 0022
 
-# Unpack a prebuilt into the destination directory ($DSTDIR)
+# Unpack a prebuilt into the default destination directory $DSTDIR
+# Also unpack 64-bit version if exists
 # $1: prebuilt name, relative to $PREBUILT_DIR
 # $2: optional, destination directory
 unpack_prebuilt ()
 {
-    local PREBUILT=$1
+    local PREBUILT=${1}.tar.bz2
+    local PREBUILT64=${1}_64.tar.bz2
     local DDIR="${2:-$DSTDIR}"
     echo "Unpacking $PREBUILT"
     if [ -f "$PREBUILT_DIR/$PREBUILT" ] ; then
         unpack_archive "$PREBUILT_DIR/$PREBUILT" "$DDIR"
         fail_panic "Could not unpack prebuilt $PREBUILT. Aborting."
+        if [ -f "$PREBUILT_DIR/$PREBUILT64" ] ; then
+            echo "Unpacking $PREBUILT64"
+            unpack_archive "$PREBUILT_DIR/$PREBUILT64" "$DDIR"
+            fail_panic "Could not unpack prebuilt $PREBUILT64. Aborting."
+        fi
     else
         echo "WARNING: Could not find $PREBUILT in $PREBUILT_DIR"
     fi
@@ -340,17 +347,17 @@ fi
 if [ -z "$PREBUILT_NDK" ]; then
     # Unpack gdbserver
     for ARCH in $ARCHS; do
-        unpack_prebuilt $ARCH-gdbserver.tar.bz2 "$REFERENCE"
+        unpack_prebuilt $ARCH-gdbserver "$REFERENCE"
     done
     # Unpack C++ runtimes
     for VERSION in $DEFAULT_GCC_VERSION_LIST; do
-        unpack_prebuilt gnu-libstdc++-headers-$VERSION.tar.bz2 "$REFERENCE"
+        unpack_prebuilt gnu-libstdc++-headers-$VERSION "$REFERENCE"
     done
     for ABI in $ABIS; do
-        unpack_prebuilt gabixx-libs-$ABI.tar.bz2 "$REFERENCE"
-        unpack_prebuilt stlport-libs-$ABI.tar.bz2 "$REFERENCE"
+        unpack_prebuilt gabixx-libs-$ABI "$REFERENCE"
+        unpack_prebuilt stlport-libs-$ABI "$REFERENCE"
         for VERSION in $DEFAULT_GCC_VERSION_LIST; do
-            unpack_prebuilt gnu-libstdc++-libs-$VERSION-$ABI.tar.bz2 "$REFERENCE"
+            unpack_prebuilt gnu-libstdc++-libs-$VERSION-$ABI "$REFERENCE"
         done
     done
 fi
@@ -404,26 +411,27 @@ for SYSTEM in $SYSTEMS; do
             done
         done
     else
-        # Unpack gdbserver
+        # Unpack toolchains
         for TC in $TOOLCHAINS; do
-            unpack_prebuilt $TC-$SYSTEM.tar.bz2
+            unpack_prebuilt $TC-$SYSTEM
             echo "Removing sysroot for $TC"
             rm -rf $DSTDIR/toolchains/$TC/prebuilt/$SYSTEM/sysroot
+            rm -rf $DSTDIR/toolchains/$TC/prebuilt/${SYSTEM}_64/sysroot
         done
 
         # Unpack llvm and clang
         for LLVM_VERSION in $LLVM_VERSION_LIST; do
-            unpack_prebuilt llvm-$LLVM_VERSION-$SYSTEM.tar.bz2
+            unpack_prebuilt llvm-$LLVM_VERSION-$SYSTEM
         done
 
         # Unpack prebuilt ndk-stack and other host tools
-        unpack_prebuilt ndk-stack-$SYSTEM.tar.bz2
-        unpack_prebuilt ndk-make-$SYSTEM.tar.bz2
-        unpack_prebuilt ndk-sed-$SYSTEM.tar.bz2
-        unpack_prebuilt ndk-awk-$SYSTEM.tar.bz2
+        unpack_prebuilt ndk-stack-$SYSTEM
+        unpack_prebuilt ndk-make-$SYSTEM
+        unpack_prebuilt ndk-sed-$SYSTEM
+        unpack_prebuilt ndk-awk-$SYSTEM
 
         if [ "$SYSTEM" = "windows" ]; then
-            unpack_prebuilt toolbox-$SYSTEM.tar.bz2
+            unpack_prebuilt toolbox-$SYSTEM
         fi
     fi
 
