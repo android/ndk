@@ -38,14 +38,18 @@ TARGET_C_INCLUDES := \
 
 TARGET_CFLAGS += -fstack-protector
 
-TARGET_x86_release_CFLAGS :=  -O2 \
-                              -fomit-frame-pointer \
-                              -fstrict-aliasing    \
-                              -funswitch-loops     \
-                              -finline-limit=300
+TARGET_x86_release_CFLAGS := -O2 \
+                             -g \
+                             -DNDEBUG \
+                             -fomit-frame-pointer \
+                             -fstrict-aliasing    \
+                             -funswitch-loops     \
+                             -finline-limit=300
 
 # When building for debug, compile everything as x86.
 TARGET_x86_debug_CFLAGS := $(TARGET_x86_release_CFLAGS) \
+                           -O0 \
+                           -UNDEBUG \
                            -fno-omit-frame-pointer \
                            -fno-strict-aliasing
 

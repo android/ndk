@@ -203,6 +203,12 @@ ifeq ($(LOCAL_ARM_MODE),thumb)
 endif
 $(call tag-src-files,$(arm_sources),arm)
 
+# tag debug if APP_OPTIM is 'debug'
+#
+ifeq ($(APP_OPTIM),debug)
+    $(call tag-src-files,$(LOCAL_SRC_FILES),debug)
+endif
+
 # Process all source file tags to determine toolchain-specific
 # target compiler flags, and text.
 #
