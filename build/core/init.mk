@@ -281,20 +281,29 @@ $(call ndk_log,HOST_TAG set to $(HOST_TAG))
 # Check for NDK-specific versions of our host tools
 HOST_PREBUILT_ROOT := $(call host-prebuilt-tag, $(NDK_ROOT))
 HOST_PREBUILT := $(strip $(wildcard $(HOST_PREBUILT_ROOT)/bin))
+HOST_AWK := $(strip $(NDK_HOST_AWK))
+HOST_SED  := $(strip $(NDK_HOST_SED))
+HOST_MAKE := $(strip $(NDK_HOST_MAKE))
 ifdef HOST_PREBUILT
     $(call ndk_log,Host tools prebuilt directory: $(HOST_PREBUILT))
     # The windows prebuilt binaries are for ndk-build.cmd
     # On cygwin, we must use the Cygwin version of these tools instead.
     ifneq ($(HOST_OS),cygwin)
-        HOST_AWK := $(wildcard $(HOST_PREBUILT)/awk$(HOST_EXEEXT))
-        HOST_SED  := $(wildcard $(HOST_PREBUILT)/sed$(HOST_EXEEXT))
-        HOST_MAKE := $(wildcard $(HOST_PREBUILT)/make$(HOST_EXEEXT))
+        ifndef HOST_AWK
+            HOST_AWK := $(wildcard $(HOST_PREBUILT)/awk$(HOST_EXEEXT))
+        endif
+        ifndef HOST_SED
+            HOST_SED  := $(wildcard $(HOST_PREBUILT)/sed$(HOST_EXEEXT))
+        endif
+        ifndef HOST_MAKE
+            HOST_MAKE := $(wildcard $(HOST_PREBUILT)/make$(HOST_EXEEXT))
+        endif
     endif
 else
     $(call ndk_log,Host tools prebuilt directory not found, using system tools)
 endif
 
-HOST_ECHO := $(strip $(HOST_ECHO))
+HOST_ECHO := $(strip $(NDK_HOST_ECHO))
 ifdef HOST_PREBUILT
     ifndef HOST_ECHO
         # Special case, on Cygwin, always use the host echo, not our prebuilt one
@@ -319,7 +328,7 @@ else
 endif
 $(call ndk_log,Host 'echo -n' tool: $(HOST_ECHO_N))
 
-HOST_CMP := $(strip $(HOST_CMP))
+HOST_CMP := $(strip $(NDK_HOST_CMP))
 ifdef HOST_PREBUILT
     ifndef HOST_CMP
         HOST_CMP := $(strip $(wildcard $(HOST_PREBUILT)/cmp$(HOST_EXEEXT)))
@@ -346,7 +355,7 @@ BUILD_AWK := $(NDK_ROOT)/build/awk
 AWK_TEST := $(shell $(HOST_AWK) -f $(BUILD_AWK)/check-awk.awk)
 $(call ndk_log,Host 'awk' test returned: $(AWK_TEST))
 ifneq ($(AWK_TEST),Pass)
-    $(call __ndk_info,Host 'awk' tool is outdated. Please define HOST_AWK to point to Gawk or Nawk !)
+    $(call __ndk_info,Host 'awk' tool is outdated. Please define NDK_HOST_AWK to point to Gawk or Nawk !)
     $(call __ndk_error,Aborting.)
 endif
 

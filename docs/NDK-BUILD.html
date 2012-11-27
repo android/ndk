@@ -97,7 +97,7 @@ Ie. 64-bit toolchains still generate 32-bit binaries for Android.
 
 
 V. Requirements:
------------------
+----------------
 
 You need GNU Make 3.81 or later to use 'ndk-build' or the NDK in general.
 The build scripts will detect that you're using a non-compliant Make tool
@@ -115,6 +115,15 @@ Or to make the change more permanent:
     ndk-build
 
 Adapt to your shell and GNU Make 3.81 installation location.
+
+You may override other host prebuilt tools in $NDK/prebuilt/&lt;OS&gt;/bin
+with the following environment variables
+
+    NDK_HOST_AWK=&lt;path-to-awk&gt;
+
+    NDK_HOST_ECHO=&lt;path-to-echo&gt;
+
+    NDK_HOST_CMP=&lt;path-to-cmp&gt;
 
 
 VI. Internals:
