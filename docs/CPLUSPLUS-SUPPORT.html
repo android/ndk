@@ -46,8 +46,8 @@ The capabilities of the various runtimes vary. See this table:
               Exceptions  RTTI    Library
 
     system        no       no        no
-    gabi++        no      yes        no
-    stlport       no      yes       yes
+    gabi++       yes      yes        no
+    stlport      yes      yes       yes
     gnustl       yes      yes       yes
 
 
@@ -76,10 +76,8 @@ I.2. GAbi++ runtime:
 - - - - - - - - - - -
 
 This is a new minimalistic runtime that provides the same headers than
-the system one, with the addition of RTTI (RunTime Type Information) support.
-
-There is very little reason to use it right now, but it is planned to become
-the basis for STLport's exceptions+RTTI support in the future.
+the system one, with the addition of RTTI (RunTime Type Information) and
+exception handling support.
 
 If you insist on using it, read the "RTTI Support" and
 "Static runtime considerations" sections below.
@@ -145,8 +143,7 @@ automatically apply to all your project's NDK modules:
     APP_CPPFLAGS += -fexceptions
 
 IMPORTANT: You *will* have to select a C++ runtime that supports
-           exceptions to be able to link / run your code. At this point
-           this means only 'gnustl_static' or "gnustl_shared'!
+           exceptions to be able to link / run your code.
 
 
 II.2. RTTI support:
@@ -259,8 +256,6 @@ Be sure that you comply with all clauses of this license.
 IV. Future Plans:
 -----------------
 
-  - Add exceptions support to GAbi++
-  - Add exceptions support to STLport (once it is in GAbi++)
   - uSTL support?
 
 </pre></body></html>
