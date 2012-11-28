@@ -126,14 +126,9 @@ ARM standalone package, clang is a one-liner:
 
 clang++ is another:
 
-   `dirname $0`/clang31 -target armv5te-none-linux-androideabi -x c++ "$@"
+   `dirname $0`/clang++31 -target armv5te-none-linux-androideabi "$@"
 
-Note that the extra "-x c++" isn't needed, but it's there to silence warning
-message when compiling *.c file:
-
-   clang31: warning: treating 'c' input as 'c++' when in C++ mode, this behavior is deprecated
-
-Also note that for arm, clang will change target based on the presence of
+Note that for arm, clang will change target based on the presence of
 subsequent option "-march=armv7-a" and/or "-mthumb".  ie.
 
   1/ With "-march=armv7-a", -target becomes armv7-none-linux-androideabi
