@@ -70,6 +70,9 @@ DEFAULT_LLVM_URL="http://llvm.org/releases"
 # The list of default host NDK systems we support
 DEFAULT_SYSTEMS="linux-x86 windows darwin-x86"
 
+# The default issue tracker URL
+DEFAULT_ISSUE_TRACKER_URL="https://code.google.com/p/android/issues"
+
 # Return default NDK ABI for a given architecture name
 # $1: Architecture name
 # Out: ABI name
