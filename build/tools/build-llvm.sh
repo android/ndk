@@ -139,6 +139,12 @@ export CC CXX CFLAGS CXXFLAGS REQUIRES_RTTI=1
 run make -j$NUM_JOBS
 fail_panic "Couldn't compile llvm toolchain"
 
+# run the regression test
+dump "Running  : llvm toolchain regression test"
+cd $BUILD_OUT
+run make check-all
+fail_panic "Couldn't pass all regression test"
+
 # install the toolchain to its final location
 dump "Install  : llvm toolchain binaries."
 cd $BUILD_OUT && run make install
