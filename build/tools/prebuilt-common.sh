@@ -920,7 +920,7 @@ parse_toolchain_name ()
         ABI_CONFIGURE_EXTRA_FLAGS="$ABI_CONFIGURE_EXTRA_FLAGS --disable-fixed-point --disable-threads"
         ;;
     * )
-        echo "Invalid toolchain specified. Expected (arm-linux-androideabi-*|x86-*|mips*)"
+        echo "Invalid toolchain specified. Expected (arm-linux-androideabi-*|arm-eabi-*|x86-*|mips*)"
         echo ""
         print_help
         exit 1
