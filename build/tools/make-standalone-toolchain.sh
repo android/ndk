@@ -89,6 +89,16 @@ if [ -z "$TOOLCHAIN_NAME" ]; then
     echo "Auto-config: --toolchain=$TOOLCHAIN_NAME"
 fi
 
+# Detect LLVM version from toolchain name
+if [ -z "$LLVM_VERSION" ]; then
+    LLVM_VERSION_EXTRACT=$(echo "$TOOLCHAIN_NAME" | grep 'clang[0-9]\.[0-9]$' | sed -e 's/.*-clang//')
+    if [ -n "$LLVM_VERSION_EXTRACT" ]; then
+        TOOLCHAIN_NAME=$(get_default_toolchain_name_for_arch $ARCH)
+        LLVM_VERSION=$LLVM_VERSION_EXTRACT
+        echo "Auto-config: --toolchain=$TOOLCHAIN_NAME, --llvm-version=$LLVM_VERSION"
+    fi
+fi
+
 # Check PLATFORM
 if [ -z "$PLATFORM" ]; then
     case $ARCH in
