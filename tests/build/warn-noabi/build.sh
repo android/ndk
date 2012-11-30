@@ -2,6 +2,8 @@
 # See https://android-review.googlesource.com/#/c/42274/
 #
 
+export ANDROID_NDK_ROOT=$NDK
+
 NDK_BUILDTOOLS_PATH=$NDK/build/tools
 . $NDK/build/tools/prebuilt-common.sh
 

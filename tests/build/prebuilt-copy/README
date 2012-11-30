@@ -1,0 +1,9 @@
+This build test checks that:
+
+- Prebuilt shared libraries are always copied to $NDK_OUT/<armeabi>/objs/
+- Prebuilt static libraries are never copied to $NDK_OUT/<armeabi>/objs/
+
+It works by first building two prebuilt libraries in a sub-project, then
+using them in the main project. See build.sh
+
+For context, see http://code.google.com/p/android/issues/detail?id=40302

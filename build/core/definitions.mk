@@ -659,11 +659,12 @@ module-get-built = $(__ndk_modules.$1.BUILT_MODULE)
 #
 module-is-installable = $(call module-class-is-installable,$(call module-get-class,$1))
 
-# Returns $(true) if module $1 is prebuilt
-# A prebuilt module is one declared with BUILD_PREBUILT_SHARED_LIBRARY or
-# BUILD_PREBUILT_STATIC_LIBRARY
+# Returns $(true) if module $1 is a copyable prebuilt
+# A copyable prebuilt module is one declared with BUILD_PREBUILT_SHARED_LIBRARY or
+# BUILD_PREBUILT_STATIC_LIBRARY and which will be copied to TARGET_OUT during
+# the build.
 #
-module-is-prebuilt = $(call module-class-is-prebuilt,$(call module-get-class,$1))
+module-is-copyable = $(call module-class-is-copyable,$(call module-get-class,$1))
 
 # -----------------------------------------------------------------------------
 # Function : module-get-export
@@ -1092,6 +1093,18 @@ handle-module-built = \
 # Usage    : $(call strip-lib-prefix,$(LOCAL_MODULE))
 # -----------------------------------------------------------------------------
 strip-lib-prefix = $(1:lib%=%)
+
+# -----------------------------------------------------------------------------
+# Compute the real path of a prebuilt file.
+#
+# Function : local-prebuilt-path
+# Arguments: 1: prebuilt path (as listed in $(LOCAL_SRC_FILES))
+# Returns  : full path. If $1 begins with a /, the path is considered
+#            absolute and returned as-is. Otherwise, $(LOCAL_PATH)/$1 is
+#            returned instead.
+# Usage    : $(call local-prebuilt-path,$(LOCAL_SRC_FILES))
+# -----------------------------------------------------------------------------
+local-prebuilt-path = $(if $(filter /%,$1),$1,$(LOCAL_PATH)/$1)
 
 # -----------------------------------------------------------------------------
 # This is used to strip any lib prefix from LOCAL_MODULE, then check that
@@ -1690,9 +1703,6 @@ module-class-register-installable = \
     $(call module-class-register,$1,$2,$3) \
     $(eval NDK_MODULE_CLASS.$1.INSTALLABLE := $(true))
 
-module-class-set-prebuilt = \
-    $(eval NDK_MODULE_CLASS.$1.PREBUILT := $(true))
-
 # Returns $(true) if $1 is a valid/registered LOCAL_MODULE_CLASS value
 #
 module-class-check = $(call set_is_member,$(NDK_MODULE_CLASSES),$1)
@@ -1701,9 +1711,9 @@ module-class-check = $(call set_is_member,$(NDK_MODULE_CLASSES),$1)
 #
 module-class-is-installable = $(if $(NDK_MODULE_CLASS.$1.INSTALLABLE),$(true),$(false))
 
-# Returns $(true) if $1 corresponds to an installable module class
+# Returns $(true) if $1 corresponds to a copyable prebuilt module class
 #
-module-class-is-prebuilt = $(if $(NDK_MODULE_CLASS.$1.PREBUILT),$(true),$(false))
+module-class-is-copyable = $(if $(call seq,$1,PREBUILT_SHARED_LIBRARY),$(true),$(false))
 
 #
 # Register valid module classes
@@ -1727,12 +1737,10 @@ $(call module-class-register-installable,EXECUTABLE,,)
 # <foo> -> <foo>  (we assume it is already well-named)
 # it is installable
 $(call module-class-register-installable,PREBUILT_SHARED_LIBRARY,,)
-$(call module-class-set-prebuilt,PREBUILT_SHARED_LIBRARY)
 
 # prebuilt static library
 # <foo> -> <foo> (we assume it is already well-named)
 $(call module-class-register,PREBUILT_STATIC_LIBRARY,,)
-$(call module-class-set-prebuilt,PREBUILT_STATIC_LIBRARY)
 
 #
 # C++ STL support
