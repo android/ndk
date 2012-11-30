@@ -892,7 +892,7 @@ parse_toolchain_name ()
         ARCH="arm"
         ABI="armeabi"
         ABI_CONFIGURE_TARGET="arm-eabi"
-        ABI_CONFIGURE_EXTRA_FLAGS="--with-arch=armv5te --disable-gold --disable-multilib"
+        ABI_CONFIGURE_EXTRA_FLAGS="--with-arch=armv5te --disable-gold"
         ;;
     x86-*)
         ARCH="x86"
