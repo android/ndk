@@ -519,10 +519,13 @@ fi
 if is_testable build; then
     build_build_test ()
     {
+        local NAME="$(basename $1)"
         echo "Building NDK build test: `basename $1`"
         if [ -f $1/build.sh ]; then
+            local DIR="$BUILD_DIR/$NAME"
+            rm -rf "$DIR" && cp -r "$1" "$DIR"
             export NDK
-            run $1/build.sh $NDK_BUILD_FLAGS
+            (cd "$DIR" && run ./build.sh $NDK_BUILD_FLAGS)
             if [ $? != 0 ]; then
                 echo "!!! BUILD FAILURE [$1]!!! See $NDK_LOGFILE for details or use --verbose option!"
                 if [ "$CONTINUE_ON_BUILD_FAIL" != yes ] ; then
