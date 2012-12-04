@@ -424,7 +424,7 @@ gen_shared_libraries ()
     fi
 
     # Let's list the libraries we're going to generate
-    LIBS=$( (cd $SYMDIR && 2>/dev/null ls *.functions.txt) | sort -u | sed -e 's!\.functions\.txt$!!g')
+    LIBS=$( (cd $SYMDIR && 2>/dev/null ls *.functions.txt *.variables.txt) | sort -u | sed -e 's!\.functions\.txt$!!g')
 
     for LIB in $LIBS; do
         funcs=$(cat "$SYMDIR/$LIB.functions.txt" 2>/dev/null)
