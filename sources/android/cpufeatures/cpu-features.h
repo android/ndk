@@ -177,6 +177,18 @@ extern uint64_t    android_getCpuFeatures(void);
 /* Return the number of CPU cores detected on this device. */
 extern int         android_getCpuCount(void);
 
+/* The following functions can be used to set the CPU count and features
+ * mask in sandboxed processes. Under 4.1 and higher, these processes
+ * cannot access /proc, which is the only way to get information from
+ * the kernel about the current hardware.
+ *
+ * These functions return 1 on success, and 0 on failure.
+ * Failure happens when any of android_getCpuFeatures or
+ * android_getCpuCount was called before these.
+ */
+extern int android_setCpu(int      cpu_count,
+                          uint64_t cpu_features);
+
 __END_DECLS
 
 #endif /* CPU_FEATURES_H */
