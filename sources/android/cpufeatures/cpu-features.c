@@ -28,6 +28,8 @@
 
 /* ChangeLog for this library:
  *
+ * NDK r??: Add android_setCpu().
+ *
  * NDK r8c: Add new ARM CPU features: VFPv2, VFP_D32, VFP_FP16,
  *          VFP_FMA, NEON_FMA, IDIV_ARM, IDIV_THUMB2 and iWMMXt.
  *
@@ -66,6 +68,7 @@
 #include <errno.h>
 
 static  pthread_once_t     g_once;
+static  int                g_inited;
 static  AndroidCpuFamily   g_cpuFamily;
 static  uint64_t           g_cpuFeatures;
 static  int                g_cpuCount;
@@ -477,14 +480,30 @@ get_cpu_count(void)
 }
 
 static void
+android_cpuInitFamily(void)
+{
+#if defined(__ARM_ARCH__)
+    g_cpuFamily = ANDROID_CPU_FAMILY_ARM;
+#elif defined(__i386__)
+    g_cpuFamily = ANDROID_CPU_FAMILY_X86;
+#elif defined(_MIPS_ARCH)
+    g_cpuFamily = ANDROID_CPU_FAMILY_MIPS;
+#else
+    g_cpuFamily = ANDROID_CPU_FAMILY_UNKNOWN;
+#endif
+}
+
+static void
 android_cpuInit(void)
 {
     char* cpuinfo = NULL;
     int   cpuinfo_len;
 
-    g_cpuFamily   = DEFAULT_CPU_FAMILY;
+    android_cpuInitFamily();
+
     g_cpuFeatures = 0;
     g_cpuCount    = 1;
+    g_inited      = 1;
 
     cpuinfo_len = get_file_size("/proc/cpuinfo");
     if (cpuinfo_len < 0) {
@@ -650,8 +669,6 @@ android_cpuInit(void)
 #endif /* __ARM_ARCH__ */
 
 #ifdef __i386__
-    g_cpuFamily = ANDROID_CPU_FAMILY_X86;
-
     int regs[4];
 
 /* According to http://en.wikipedia.org/wiki/CPUID */
@@ -675,10 +692,6 @@ android_cpuInit(void)
         g_cpuFeatures |= ANDROID_CPU_X86_FEATURE_MOVBE;
     }
 #endif
-
-#ifdef _MIPS_ARCH
-    g_cpuFamily = ANDROID_CPU_FAMILY_MIPS;
-#endif /* _MIPS_ARCH */
 
     free(cpuinfo);
 }
@@ -707,6 +720,26 @@ android_getCpuCount(void)
     return g_cpuCount;
 }
 
+static void
+android_cpuInitDummy(void)
+{
+    g_inited = 1;
+}
+
+int
+android_setCpu(int cpu_count, uint64_t cpu_features)
+{
+    /* Fail if the library was already initialized. */
+    if (g_inited)
+        return 0;
+
+    android_cpuInitFamily();
+    g_cpuCount = (cpu_count <= 0 ? 1 : cpu_count);
+    g_cpuFeatures = cpu_features;
+    pthread_once(&g_once, android_cpuInitDummy);
+
+    return 1;
+}
 
 /*
  * Technical note: Making sense of ARM's FPU architecture versions.
