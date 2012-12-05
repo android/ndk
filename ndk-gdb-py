@@ -1,0 +1,17 @@
+#!/bin/sh
+
+PROGDIR=`dirname $0`
+PROGDIR=`cd $PROGDIR && pwd`
+
+# Check if absolute NDK path contain space
+#
+case $PROGDIR in
+    *\ *) echo "ERROR: NDK path cannot contain space"
+          exit 1
+        ;;
+esac
+
+. $PROGDIR/build/core/ndk-common.sh
+
+# -u means unbuffered standard io.
+$PROGDIR/prebuilt/$HOST_TAG/bin/python -u $PROGDIR/ndk-gdb.py "$@"
