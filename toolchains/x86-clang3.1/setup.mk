@@ -50,7 +50,8 @@ TARGET_CFLAGS := \
     -ffunction-sections \
     -funwind-tables \
     -fstack-protector \
-    -fPIC
+    -fPIC \
+    -no-canonical-prefixes
 
 TARGET_C_INCLUDES := \
     $(SYSROOT)/usr/include
@@ -58,7 +59,8 @@ TARGET_C_INCLUDES := \
 # Add and LDFLAGS for the target here
 TARGET_LDFLAGS := \
     -gcc-toolchain $(call host-path,$(TOOLCHAIN_PREBUILT_ROOT)) \
-    -target $(LLVM_TRIPLE)
+    -target $(LLVM_TRIPLE) \
+    -no-canonical-prefixes
 
 TARGET_x86_release_CFLAGS := -O2 \
                              -g \

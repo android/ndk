@@ -34,8 +34,9 @@ TARGET_CFLAGS := \
         -fgcse-after-reload \
         -frerun-cse-after-loop \
         -frename-registers \
+        -no-canonical-prefixes
 
-TARGET_LDFLAGS :=
+TARGET_LDFLAGS := -no-canonical-prefixes
 
 TARGET_C_INCLUDES := \
     $(SYSROOT)/usr/include
