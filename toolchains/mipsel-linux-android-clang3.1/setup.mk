@@ -56,11 +56,13 @@ TARGET_CFLAGS := \
         -finline-functions \
         -ffunction-sections \
         -funwind-tables \
-        -fmessage-length=0
+        -fmessage-length=0 \
+        -no-canonical-prefixes
 
 TARGET_LDFLAGS := \
         -gcc-toolchain $(call host-path,$(TOOLCHAIN_PREBUILT_ROOT)) \
-        -target $(LLVM_TRIPLE)
+        -target $(LLVM_TRIPLE) \
+        -no-canonical-prefixes
 
 TARGET_C_INCLUDES := \
     $(SYSROOT)/usr/include

@@ -28,13 +28,14 @@ TOOLCHAIN_PREFIX := $(TOOLCHAIN_PREBUILT_ROOT)/bin/i686-linux-android-
 
 TARGET_CFLAGS := \
     -ffunction-sections \
-    -funwind-tables
+    -funwind-tables \
+    -no-canonical-prefixes
 
 TARGET_C_INCLUDES := \
     $(SYSROOT)/usr/include
 
 # Add and LDFLAGS for the target here
-# TARGET_LDFLAGS :=
+TARGET_LDFLAGS := -no-canonical-prefixes
 
 TARGET_CFLAGS += -fstack-protector
 

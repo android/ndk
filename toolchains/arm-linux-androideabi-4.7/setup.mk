@@ -29,9 +29,10 @@ TARGET_CFLAGS := \
     -funwind-tables \
     -fstack-protector \
     -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ \
-    -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__
+    -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__ \
+    -no-canonical-prefixes
 
-TARGET_LDFLAGS :=
+TARGET_LDFLAGS := -no-canonical-prefixes
 
 TARGET_C_INCLUDES := \
     $(SYSROOT)/usr/include
