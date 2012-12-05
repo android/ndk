@@ -576,23 +576,41 @@ if is_testable device; then
         local PROGRAMS=
         local PROGRAM
         # Do not run the test if BROKEN_RUN is defined
-        if [ -f "$TEST/BROKEN_RUN" -o -f "$TEST/BROKEN_BUILD" ] ; then
-	    if [ -z "$RUN_TESTS" ]; then
-		dump "Skipping NDK device test run: `basename $TEST`"
-		return 0
-	    fi
+        if [ -z "$RUN_TESTS" ]; then
+            if [ -f "$TEST/BROKEN_BUILD" ] ; then
+                dump "Skipping NDK device test not built: $TEST_NAME"
+                return 0
+            fi
+            if [ -f "$TEST/BROKEN_RUN" ] ; then
+                if [ ! -s "$TEST/BROKEN_RUN" ] ; then
+                    # skip all
+                    dump "Skipping NDK device test run: $TEST_NAME"
+                    return 0
+                else
+                    # only skip listed in file
+                    SKIPPED_EXECUTABLES=`cat $TEST/BROKEN_RUN | tr '\n' ' '`
+                    dump "Skipping NDK device test run: $TEST_NAME ($SKIPPED_EXECUTABLES)"
+                fi
+            fi
         fi
         SRCDIR="$BUILD_DIR/`basename $TEST`/libs/$CPU_ABI"
         if [ ! -d "$SRCDIR" ]; then
-            dump "Skipping NDK device test run (no $CPU_ABI binaries): `basename $TEST`"
+            dump "Skipping NDK device test run (no $CPU_ABI binaries): $TEST_NAME"
             return 0
         fi
-        # First, copy all files to the device, except for gdbserver or gdb.setup.
+        # First, copy all files to the device, except for gdbserver, gdb.setup, and
+        # those declared in $TEST/BROKEN_RUN
         adb_shell_mkdir "$DEVICE" $DSTDIR
         for SRCFILE in `ls $SRCDIR`; do
             DSTFILE=`basename $SRCFILE`
             if [ "$DSTFILE" = "gdbserver" -o "$DSTFILE" = "gdb.setup" ] ; then
                 continue
+            fi
+            if [ -z "$RUN_TESTS" -a -f "$TEST/BROKEN_RUN" ]; then
+                grep -q -w -e "$DSTFILE" "$TEST/BROKEN_RUN"
+                if [ $? = 0 ] ; then
+                    continue
+                fi
             fi
             SRCFILE="$SRCDIR/$SRCFILE"
             if [ $HOST_OS = cygwin ]; then
