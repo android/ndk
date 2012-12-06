@@ -1,6 +1,144 @@
 <html><body><pre>Android NDK ChangeLog:
 
 -------------------------------------------------------------------------------
+android-ndk-r8d
+
+IMPORTANT CHANGES:
+
+- Added GCC 4.7 compiler.  Since GCC 4.6 is still the default,
+  you need to explicitly enable it:
+  1. For ndk-build: Either export NDK_TOOLCHAIN_VERSION=4.7 or add it
+     in Application.mk.
+  2. For standalone: Use "--toolchain=" option in make-standalone-toolchain.sh.
+     eg. "--toolchain=arm-linux-androideabi-4.7"
+
+  This feature is experimental now but welcome to try and report issues.
+
+- Added stlport exception support via gabi++.  Note that the new gabi++
+  depends on dlopen, etc, meaning that:
+  1. libstlport_static.a can no longer be used in "static" executable (-static,
+     only possible with standalone toolchain).  "dynamic" executable (eg.
+     include $(BUILD_EXECUTABLE)) can link fine because compiler impliciently adds -ldl
+  2. If your project links with "-nostdlib -Wl,--no-undefined", you need to provide
+     your own -ldl
+
+  See CPLUSPLUS-SUPPORT.html.
+
+  This feature is experimental now and works better with GCC 4.6/4.7
+  than with GCC 4.4.3 and clang3.1.  Welcome to try and report issues.
+
+- Add -mstack-protector-guard option for x86 to choose between "global"
+  (default, compatible with older bionic) and "tls" (new %gs:20) for
+  -fstack-protector, -fstack-protector-all, and -fstack-protector-strong
+  (GCC 4.6+).  Note that this alone doesn't enable any -fstack-protector*
+
+- Add android_setCpu() to sources/android/cpufeatures/cpu-features.c
+  when auto-detection via /proc isn't possible in and after JB
+  See http://code.google.com/p/chromium/issues/detail?id=164154
+
+
+IMPORTANT BUG FIXES:
+
+- Fixed un-needed rebuild of object files via ndk-build
+  See http://code.google.com/p/android/issues/detail?id=39810
+
+- Fixed r8c linker fail in MacOSX 10.6.x with error reads:
+
+    dyld: lazy symbol binding failed: Symbol not found: _memmem
+    Referenced from: ...../arm-linux-androideabi/bin/ld
+    Expected in: /usr/lib/libSystem.B.dylib
+
+  r8c was packaged on 10.7 machine which produced binaries not
+  compatible with 10.6 SDK/NDK still supports.  Will build it
+  on 10.6 from now on.
+
+- Removed '-x c++' from clang++ in standalone.
+  See http://code.google.com/p/android/issues/detail?id=39089
+
+- Fixed issues using NDK_TOOLCHAIN_VERSION=clang3.1 in cygwin
+  See http://code.google.com/p/android/issues/detail?id=39585
+
+- Fixed make-standalone-toolchain.sh to create standalone toolchain
+  on cygwin and MinGW, which works for all cygwin, MingGW, and CMD.exe.
+  See http://code.google.com/p/android/issues/detail?id=39915 and
+  http://code.google.com/p/android/issues/detail?id=39585 (again)
+
+- Added  missing SL_IID_ANDROIDBUFFERQUEUESOURCE in android-14 for
+  ARM/X86.  See http://code.google.com/p/android/issues/detail?id=40625
+
+- Fixed x86 cpu detection for MOVBE
+  See http://code.google.com/p/android/issues/detail?id=39317
+
+- Fixed an issue preventing STL dependencies to C++ sources not
+  in .cpp extension.
+
+- Fixed GCC 4.6 ARM ICE at reload1.c:1061
+  See http://code.google.com/p/android/issues/detail?id=20862
+
+- Fixed GCC 4.4.3 ARM ICE at emit-rtl.c:1954
+  See http://code.google.com/p/android/issues/detail?id=22336
+
+- Fixed GCC 4.4.3 ARM ICE at postreload.c:396
+  See http://code.google.com/p/android/issues/detail?id=22345
+
+- Fixed GCC 4.6/4.7 elides lambdas
+  See http://code.google.com/p/android/issues/detail?id=35933
+
+
+OTHER BUG FIXES:
+
+- Fixed NDK headers
+  1. Fixed __WINT_TYPE__ and wint_t to be the same type
+  2. Corrected typo in &lt;android/bitmap.h&gt;
+     See http://code.google.com/p/android/issues/detail?id=15134
+  3. Corrected typo in &lt;errono.h&gt;
+     See http://code.google.com/p/android/issues/detail?id=15134
+  4. Check the presence of __STDC_VERSION__ in &lt;sys/cdefs.h&gt;
+     See http://code.google.com/p/android/issues/detail?id=14627
+  5. Re-org headers byteswap.h and dirent.h
+  6. Fixed limits.h to include page.h which provides PAGE_SIZE
+     See http://code.google.com/p/android/issues/detail?id=39983
+  7. Fixed return type of glGetAttribLocation and glGetUniformLocation
+     from int to GLint.
+  8. Fixed __BYTE_ORDER for x86
+     See http://code.google.com/p/android/issues/detail?id=39824
+
+- Fixed ndk-build to not overwrite -Os with -O2 in ARM
+
+- Fixed to allow overwriting HOST_AWK, HOST_SED, and HOST_MAKE.
+
+- Fixed ld.gold issue on fsck_msdos build linking objects built by ICC
+
+- Fixed ARM EHABI support in clang conforming to spec.
+
+- Fixed GDB to shorten the time spending on walking target's link map upon
+  solib events.  See http://code.google.com/p/android/issues/detail?id=38402
+
+- Fixed missing libgcc.a when linking shared libraries
+
+
+OTHER CHANGES:
+
+- Backported 64-bit built-in atomic functions for ARM to GCC 4.6
+
+- Documentation for audio output latency, other misc docs/ fixes
+
+- Non-void functions in debug build by Clang now raise SIGILL on path w/o
+  return statement
+
+- make-standalone-toolchain.sh now accepts surffix "-clang3.1" which is
+  equivalent to adding "--llvm-version=3.1" on GCC 4.6 toolchain.
+
+- Changed GCC and Clang bug report URL to http://source.android.com/source/report-bugs.html
+
+- Added ARM ELF support to llvm-objdump.
+
+- Suppressed warning "treating c input as c++" in clang.
+
+- Only 32-bit of libiberty.a is built (placed at lib32/)
+
+
+-------------------------------------------------------------------------------
 android-ndk-r8c
 
 IMPORTANT CHANGES:
