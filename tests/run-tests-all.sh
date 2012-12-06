@@ -61,15 +61,21 @@ dump "### Running $SYSTEM clang 3.1 full tests"
 NDK_TOOLCHAIN_VERSION=clang3.1 ./run-tests.sh --continue-on-build-fail --full
 
 if [ "$SYSTEM" = "linux-x86" -a -d "$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/windows" ] ; then
-    # enumerate all cases using windows toolchain
-    dump "### Running windows 4.7 full tests"
-    NDK_TOOLCHAIN_VERSION=4.7 ./run-tests.sh --continue-on-build-fail --full --wine
-    dump "### Running windows 4.6 full tests"
-    NDK_TOOLCHAIN_VERSION=4.6 ./run-tests.sh --continue-on-build-fail --full --wine
-    dump "### Running windows 4.4.3 full tests"
-    NDK_TOOLCHAIN_VERSION=4.4.3 ./run-tests.sh --continue-on-build-fail --full --wine
-    dump "### Running windows clang 3.1 full tests"
-    NDK_TOOLCHAIN_VERSION=clang3.1 ./run-tests.sh --continue-on-build-fail --full --wine
+    find_program WINE wine
+    if [ -n "$WINE" ]; then
+        WINE_VERSION=`$WINE --version`
+        if [ -n "$WINE_VERSION" -a "$WINE_VERSION" != "wine-1.4" ]; then
+            # enumerate all cases using windows toolchain
+            dump "### Running windows 4.7 tests"
+            NDK_TOOLCHAIN_VERSION=4.7 ./run-tests.sh --continue-on-build-fail --wine # --full
+            dump "### Running windows 4.6 tests"
+            NDK_TOOLCHAIN_VERSION=4.6 ./run-tests.sh --continue-on-build-fail --wine # --full
+            dump "### Running windows 4.4.3 tests"
+            NDK_TOOLCHAIN_VERSION=4.4.3 ./run-tests.sh --continue-on-build-fail --wine # --full
+            dump "### Running windows clang 3.1 tests"
+            NDK_TOOLCHAIN_VERSION=clang3.1 ./run-tests.sh --continue-on-build-fail --wine # --full
+        fi
+    fi
 fi
 
 # add more if you want ...
