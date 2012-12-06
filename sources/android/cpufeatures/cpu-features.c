@@ -28,7 +28,7 @@
 
 /* ChangeLog for this library:
  *
- * NDK r??: Add android_setCpu().
+ * NDK r8d: Add android_setCpu().
  *
  * NDK r8c: Add new ARM CPU features: VFPv2, VFP_D32, VFP_FP16,
  *          VFP_FMA, NEON_FMA, IDIV_ARM, IDIV_THUMB2 and iWMMXt.
