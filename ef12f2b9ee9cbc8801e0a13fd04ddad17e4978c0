@@ -1,0 +1,11 @@
+Code-Review+1: Ben Cheng <bccheng@android.com>
+Verified+1: Deckard Autoverifier <deckard@android.com>
+Code-Review+2: Andrew Hsieh <andrewhsieh@google.com>
+Verified+1: Andrew Hsieh <andrewhsieh@google.com>
+Code-Review+1: Pavel Chupin <pavel.v.chupin@intel.com>
+Code-Review+1: WenHan Gu <Wenhan.gu@mediatek.com>
+Submitted-by: Andrew Hsieh <andrewhsieh@google.com>
+Submitted-at: Thu, 06 Dec 2012 19:15:58 -0800
+Reviewed-on: https://android-review.googlesource.com/47623
+Project: platform/ndk
+Branch: refs/heads/master
