@@ -17,7 +17,7 @@ This document explains how to do that:
 
 Before anything else, you need to decide whether your standalone toolchain
 is going to target ARM-based devices, x86-based, or MIPS-based one.
-Each architecture corresponds to a different toolchain name:
+Each architecture corresponds to a different toolchain name.  For example:
 
   * arm-linux-androideabi-4.6   => targeting ARM-based Android devices
   * x86-4.6                     => targeting x86-based Android devices
@@ -81,14 +81,18 @@ This will create a directory named /tmp/my-android-toolchain containing a
 copy of the android-5/arch-arm sysroot, and of the toolchain binaries.
 
 Note that by default, the ARM-based GCC 4.6 toolchain will be selected by the script.
-Use the '--arch=x86' option to specify the x86-based one,
-use the '--arch=mips' option to specify the MIPS-based one, or alternatively
+Use the '--arch=x86' option to specify the x86 GCC 4.6, or add '--arch=mips' option
+to specify the MIPS GCC 4.6, or alternatively
 '--toolchain=&lt;name&gt;'.  For example:
 
   --toolchain=x86-4.4.3                  # select x86 GCC 4.4.3 compiler
+  --toolchain=arm-linux-androideabi-4.7  # select ARM GCC 4.7 compiler
   --toolchain=mipsel-linux-android-4.6   # select MIPS GCC 4.6 compiler, same as --arch=mips
 
-If you wish, add --llvm-version=3.1 to also copy clang/llvm 3.1.
+If you wish, add '--llvm-version=3.1' to also copy clang/llvm 3.1, or
+use --toolchain with '-clang3.1' suffix.  For example:
+
+  --toolchain=arm-linux-androideabi-clang3.1  # same as --arch=arm --llvm-version=3.1
 
 You can later use it directly with something like:
 
