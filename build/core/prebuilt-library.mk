@@ -23,9 +23,9 @@ $(call check-defined-LOCAL_MODULE,$(LOCAL_BUILD_SCRIPT))
 $(call check-LOCAL_MODULE,$(LOCAL_MAKEFILE))
 $(call check-LOCAL_MODULE_FILENAME)
 
-# Check that LOCAL_SRC_FILES contains only paths to shared libraries
+# Check that LOCAL_SRC_FILES contains only the path to one library
 ifneq ($(words $(LOCAL_SRC_FILES)),1)
-$(call __ndk_info,ERROR:$(LOCAL_MAKEFILE):$(LOCAL_MODULE): The LOCAL_SRC_FILES for a prebuilt static library should only contain one item))
+$(call __ndk_info,ERROR:$(LOCAL_MAKEFILE):$(LOCAL_MODULE): The LOCAL_SRC_FILES for a prebuilt library should only contain one item))
 $(call __ndk_error,Aborting)
 endif
 
@@ -36,10 +36,12 @@ $(call __ndk_info,The following file is unsupported: $(bad_prebuilts))
 $(call __ndk_error,Aborting)
 endif
 
-prebuilt := $(strip $(wildcard $(LOCAL_PATH)/$(LOCAL_SRC_FILES)))
+prebuilt_path := $(call local-prebuilt-path,$(LOCAL_SRC_FILES))
+prebuilt := $(strip $(wildcard $(prebuilt_path)))
+
 ifndef prebuilt
 $(call __ndk_info,ERROR:$(LOCAL_MAKEFILE):$(LOCAL_MODULE): LOCAL_SRC_FILES points to a missing file)
-$(call __ndk_info,Check that $(LOCAL_PATH)/$(LOCAL_SRC_FILES) exists, or that its path is correct)
+$(call __ndk_info,Check that $(prebuilt_path) exists, or that its path is correct)
 $(call __ndk_error,Aborting)
 endif
 
@@ -56,11 +58,17 @@ ifndef LOCAL_MODULE_FILENAME
 endif
 $(eval $(call ev-check-module-filename))
 
-LOCAL_BUILT_MODULE := $(TARGET_OUT)/$(LOCAL_MODULE_FILENAME)$(LOCAL_PREBUILT_SUFFIX)
-LOCAL_OBJS_DIR     := $(TARGET_OBJS)/$(LOCAL_MODULE)
-LOCAL_OBJECTS      := $(prebuilt)
-LOCAL_SRC_FILES    :=
+# If LOCAL_BUILT_MODULE is not defined, then ensure that the prebuilt is
+# copied to TARGET_OUT during the build.
+LOCAL_BUILT_MODULE := $(strip $(LOCAL_BUILT_MODULE))
+ifndef LOCAL_BUILT_MODULE
+  LOCAL_BUILT_MODULE := $(TARGET_OUT)/$(LOCAL_MODULE_FILENAME)$(LOCAL_PREBUILT_SUFFIX)
+  LOCAL_OBJECTS      := $(prebuilt)
 
-$(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
+  $(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
+endif
+
+LOCAL_OBJS_DIR  := $(TARGET_OBJS)/$(LOCAL_MODULE)
+LOCAL_SRC_FILES :=
 
 include $(BUILD_SYSTEM)/build-module.mk

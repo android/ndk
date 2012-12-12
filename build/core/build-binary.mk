@@ -412,9 +412,9 @@ ALL_EXECUTABLES += $(LOCAL_BUILT_MODULE)
 endif
 
 #
-# If this is a prebuilt module
+# If this is a copyable prebuilt module
 #
-ifeq ($(call module-is-prebuilt,$(LOCAL_MODULE)),$(true))
+ifeq ($(call module-is-copyable,$(LOCAL_MODULE)),$(true))
 $(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
 	@ $(HOST_ECHO) "Prebuilt       : $(PRIVATE_NAME) <= $(call pretty-dir,$(dir $<))"
 	$(hide) $(call host-cp,$<,$@)
