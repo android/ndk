@@ -27,9 +27,7 @@ TARGET_CFLAGS := \
     -fpic \
     -ffunction-sections \
     -funwind-tables \
-    -fstack-protector \
-    -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ \
-    -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__
+    -fstack-protector
 
 TARGET_LDFLAGS :=
 
