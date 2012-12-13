@@ -39,7 +39,17 @@
 //===----------------------------------------------------------------------===//
 
 #include <cstdlib>
+#include <endian.h>
 #include "dwarf_helper.h"
+
+#if !defined(__BYTE_ORDER) || \
+    !defined(__LITTLE_ENDIAN) || !defined(__BIG_ENDIAN)
+#error "Endianness testing macros are not defined"
+#endif
+
+#if __BYTE_ORDER != __LITTLE_ENDIAN && __BYTE_ORDER != __BIG_ENDIAN
+#error "Unsupported endianness"
+#endif
 
 namespace __cxxabiv1 {
 
@@ -74,6 +84,62 @@ namespace __cxxabiv1 {
     return static_cast<intptr_t>(result);
   }
 
+  static inline uint16_t readUData2(const uint8_t* data) {
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+    return ((static_cast<uint16_t>(data[0])) |
+            (static_cast<uint16_t>(data[1]) << 8));
+#elif __BYTE_ORDER == __BIG_ENDIAN
+    return ((static_cast<uint16_t>(data[0]) << 8) |
+            (static_cast<uint16_t>(data[1])));
+#endif
+  }
+
+  static inline uint32_t readUData4(const uint8_t* data) {
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+    return ((static_cast<uint32_t>(data[0])) |
+            (static_cast<uint32_t>(data[1]) << 8) |
+            (static_cast<uint32_t>(data[2]) << 16) |
+            (static_cast<uint32_t>(data[3]) << 24));
+#elif __BYTE_ORDER == __BIG_ENDIAN
+    return ((static_cast<uint32_t>(data[0]) << 24) |
+            (static_cast<uint32_t>(data[1]) << 16) |
+            (static_cast<uint32_t>(data[2]) << 8) |
+            (static_cast<uint32_t>(data[3])));
+#endif
+  }
+
+  static inline uint64_t readUData8(const uint8_t* data) {
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+    return ((static_cast<uint64_t>(data[0])) |
+            (static_cast<uint64_t>(data[1]) << 8) |
+            (static_cast<uint64_t>(data[2]) << 16) |
+            (static_cast<uint64_t>(data[3]) << 24) |
+            (static_cast<uint64_t>(data[4]) << 32) |
+            (static_cast<uint64_t>(data[5]) << 40) |
+            (static_cast<uint64_t>(data[6]) << 48) |
+            (static_cast<uint64_t>(data[7]) << 56));
+#elif __BYTE_ORDER == __BIG_ENDIAN
+    return ((static_cast<uint64_t>(data[0]) << 56) |
+            (static_cast<uint64_t>(data[1]) << 48) |
+            (static_cast<uint64_t>(data[2]) << 40) |
+            (static_cast<uint64_t>(data[3]) << 32) |
+            (static_cast<uint64_t>(data[4]) << 24) |
+            (static_cast<uint64_t>(data[5]) << 16) |
+            (static_cast<uint64_t>(data[6]) << 8) |
+            (static_cast<uint64_t>(data[7])));
+#endif
+  }
+
+  static inline uintptr_t readAbsPtr(const uint8_t* data) {
+    if (sizeof(uintptr_t) == 4) {
+      return static_cast<uintptr_t>(readUData4(data));
+    } else if (sizeof(uintptr_t) == 8) {
+      return static_cast<uintptr_t>(readUData8(data));
+    } else {
+      abort();
+    }
+  }
+
   uintptr_t readEncodedPointer(const uint8_t** data,
                                uint8_t encoding) {
     uintptr_t result = 0;
@@ -87,7 +153,7 @@ namespace __cxxabiv1 {
       abort();
       break;
     case DW_EH_PE_absptr:
-      result = *((uintptr_t*)p);
+      result = readAbsPtr(p);
       p += sizeof(uintptr_t);
       break;
     case DW_EH_PE_uleb128:
@@ -97,27 +163,27 @@ namespace __cxxabiv1 {
       result = static_cast<uintptr_t>(readSLEB128(&p));
       break;
     case DW_EH_PE_udata2:
-      result = *((uint16_t*)p);
+      result = readUData2(p);
       p += sizeof(uint16_t);
       break;
     case DW_EH_PE_udata4:
-      result = *((uint32_t*)p);
+      result = readUData4(p);
       p += sizeof(uint32_t);
       break;
     case DW_EH_PE_udata8:
-      result = static_cast<uintptr_t>(*((uint64_t*)p));
+      result = static_cast<uintptr_t>(readUData8(p));
       p += sizeof(uint64_t);
       break;
     case DW_EH_PE_sdata2:
-      result = static_cast<uintptr_t>(*((int16_t*)p));
+      result = static_cast<uintptr_t>(static_cast<int16_t>(readUData2(p)));
       p += sizeof(int16_t);
       break;
     case DW_EH_PE_sdata4:
-      result = static_cast<uintptr_t>(*((int32_t*)p));
+      result = static_cast<uintptr_t>(static_cast<int32_t>(readUData4(p)));
       p += sizeof(int32_t);
       break;
     case DW_EH_PE_sdata8:
-      result = static_cast<uintptr_t>(*((int64_t*)p));
+      result = static_cast<uintptr_t>(static_cast<int64_t>(readUData8(p)));
       p += sizeof(int64_t);
       break;
     }
