@@ -62,6 +62,12 @@ register_var_option "--mpfr-version=<version>" MPFR_VERSION "Specify mpfr versio
 MPC_VERSION=$DEFAULT_MPC_VERSION
 register_var_option "--mpc-version=<version>" MPC_VERSION "Specify mpc version"
 
+CLOOG_VERSION=$DEFAULT_CLOOG_VERSION
+register_var_option "--cloog-version=<version>" CLOOG_VERSION "Specify cloog version"
+
+PPL_VERSION=$DEFAULT_PPL_VERSION
+register_var_option "--ppl-version=<version>" PPL_VERSION "Specify ppl version"
+
 PACKAGE_DIR=
 register_var_option "--package-dir=<path>" PACKAGE_DIR "Create archive tarball in specific directory"
 
@@ -230,6 +236,14 @@ case "$TOOLCHAIN" in
     # Note that only ARM and X86 are supported
     x86-4.6|arm-linux-androideabi-4.6|x86-4.7|arm-linux-androideabi-4.7)
         EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-gold=default"
+    ;;
+esac
+
+# Enable Graphite
+case "$TOOLCHAIN" in
+    # Only for 4.6 and 4.7 for now
+    *-4.6|*-4.7)
+        EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-graphite=yes --with-cloog-version=$CLOOG_VERSION --with-ppl-version=$PPL_VERSION"
     ;;
 esac
 
