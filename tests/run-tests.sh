@@ -407,12 +407,56 @@ run_ndk_build ()
     fi
 }
 
+# get build var
+# $1: project directory
+# $2: var
 get_build_var ()
 {
+    local PROJECT=$1
+    local VAR=$2
+
     if [ -z "$GNUMAKE" ] ; then
         GNUMAKE=make
     fi
-    $GNUMAKE --no-print-dir -f $NDK/build/core/build-local.mk -C $DIR DUMP_$1 | tail -1
+    $GNUMAKE --no-print-dir -f $NDK/build/core/build-local.mk -C $PROJECT DUMP_$VAR | tail -1
+}
+
+
+# check if the project is broken and shouldn't be built
+# $1: project directory
+# $2: optional error message
+is_broken_build ()
+{
+    local PROJECT="$1"
+    local ERRMSG="$2"
+
+    if [ -z $RUN_TESTS ] ; then
+        if [ -f "$PROJECT/BROKEN_BUILD" ] ; then
+            if [ ! -s "$PROJECT/BROKEN_BUILD" ] ; then
+                # skip all
+                if [ -z "$ERRMSG" ] ; then
+                    echo "Skipping `basename $PROJECT`: (build)"
+                else
+                    echo "Skipping $ERRMSG: `basename $PROJECT`"
+                fi
+                return 0
+            else
+                # only skip listed in file
+                TARGET_TOOLCHAIN=`get_build_var $PROJECT TARGET_TOOLCHAIN`
+                TARGET_TOOLCHAIN_VERSION=`echo $TARGET_TOOLCHAIN | tr '-' '\n' | tail -1`
+                grep -q -w -e "$TARGET_TOOLCHAIN_VERSION" "$PROJECT/BROKEN_BUILD"
+                if [ $? = 0 ] ; then
+                    if [ -z "$ERRMSG" ] ; then
+                        echo "Skipping `basename $PROJECT`: (no build for $TARGET_TOOLCHAIN_VERSION)"
+                    else
+                        echo "Skipping $ERRMSG: `basename $PROJECT` (no build for $TARGET_TOOLCHAIN_VERSION)"
+                    fi
+                    return 0
+                fi
+            fi
+        fi
+    fi
+    return 1
 }
 
 build_project ()
@@ -420,18 +464,18 @@ build_project ()
     local NAME=`basename $1`
     local CHECK_ABI=$2
     local DIR="$BUILD_DIR/$NAME"
-    if [ -f "$1/BROKEN_BUILD" -a -z "$RUN_TESTS" ] ; then
-        echo "Skipping `basename $1`: (build)"
-        return 0
+
+    if is_broken_build $1; then
+        return 0;
     fi
     rm -rf "$DIR" && cp -r "$1" "$DIR"
     if [ "$ABI" != "default" -a "$CHECK_ABI" = "yes" ] ; then
         # check APP_ABI
-        local APP_ABIS=`get_build_var APP_ABI`
+        local APP_ABIS=`get_build_var $DIR APP_ABI`
         APP_ABIS=$APP_ABIS" "
         if [ "$APP_ABIS" != "${APP_ABIS%%all*}" ] ; then
         # replace the first "all" with all available ABIs
-          ALL_ABIS=`get_build_var NDK_ALL_ABIS`
+          ALL_ABIS=`get_build_var $DIR NDK_ALL_ABIS`
           APP_ABIS_FRONT="${APP_ABIS%%all*}"
           APP_ABIS_BACK="${APP_ABIS#*all}"
           APP_ABIS="${APP_ABIS_FRONT}${ALL_ABIS}${APP_ABIS_BACK}"
@@ -552,11 +596,8 @@ CPU_ABIS=
 if is_testable device; then
     build_device_test ()
     {
-        # Do not build test if BROKEN_BUILD is defined, except if we
-        # Have listed the test explicitely.
-        if [ -f "$1/BROKEN_BUILD" -a -z "$RUN_TESTS" ] ; then
-            echo "Skipping broken device test build: `basename $1`"
-            return 0
+        if is_broken_build $1 "broken device test build"; then
+            return 0;
         fi
         echo "Building NDK device test: `basename $1`"
         build_project $1 "yes"
@@ -580,8 +621,7 @@ if is_testable device; then
         local PROGRAM
         # Do not run the test if BROKEN_RUN is defined
         if [ -z "$RUN_TESTS" ]; then
-            if [ -f "$TEST/BROKEN_BUILD" ] ; then
-                dump "Skipping NDK device test not built: $TEST_NAME"
+            if is_broken_build $TEST "NDK device test not built"; then
                 return 0
             fi
             if [ -f "$TEST/BROKEN_RUN" ] ; then
