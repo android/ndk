@@ -434,6 +434,9 @@ for SYSTEM in $SYSTEMS; do
             unpack_prebuilt toolbox-$SYSTEM
         fi
     fi
+    
+    # Unpack other host tools
+    unpack_prebuilt scan-build
 
     # Create an archive for the final package. Extension depends on the
     # host system.

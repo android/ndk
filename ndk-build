@@ -50,8 +50,13 @@ esac
 
 # If NDK_LOG is set to 1 or true in the environment, or the command-line
 # then enable log messages below
+# Also normalize NDK_ANALYZE to 1 or 0
 if [ -z "$NDK_LOG" ]; then
   NDK_LOG=0
+fi
+
+if [ -z "$NDK_ANALYZE" ]; then
+  NDK_ANALYZE=0
 fi
 
 for opt; do
@@ -62,12 +67,23 @@ for opt; do
       NDK_LOG=*)
         NDK_LOG=0
         ;;
+      NDK_ANALYZE=1|NDK_ANALYZE=true)
+        NDK_ANALYZE=1
+        ;;
+      NDK_ANALYZE=*)
+        NDK_ANALYZE=0
+        ;;
     esac
 done
 
 if [ "$NDK_LOG" = "true" ]; then
   NDK_LOG=1
 fi
+
+if [ "$NDK_ANALYZE" = "true" ]; then
+  NDK_ANALYZE=1
+fi
+
 if [ "$NDK_LOG" = 1 ]; then
   log () {
     echo "$@"
@@ -190,4 +206,36 @@ if [ "$OSTYPE" = "cygwin" ] ; then
     log "Cygwin-compatible GNU make detected"
 fi
 
-$GNUMAKE -f $PROGDIR/build/core/build-local.mk "$@"
+if [ "$NDK_ANALYZE" = 1 ]; then
+
+    get_build_var ()
+    {
+        local VAR=$1
+	shift
+        $GNUMAKE --no-print-dir -f $PROGDIR/build/core/build-local.mk "$@" DUMP_${VAR} | tail -1
+    }
+
+    get_build_var_for_abi ()
+    {
+        local VAR=$1
+	local ABI=$2
+	shift ; shift
+        $GNUMAKE --no-print-dir -f $PROGDIR/build/core/build-local.mk "$@" DUMP_${VAR} APP_ABI=${ABI} | tail -1
+    }
+
+    NDK_APP_ABIS=`get_build_var APP_ABI "$@"`
+    for ABI in $NDK_APP_ABIS; do
+        TOOLCHAIN_PREFIX=`get_build_var_for_abi TOOLCHAIN_PREFIX $ABI "$@"`
+        TARGET_ARCH=`get_build_var_for_abi TARGET_ARCH $ABI "$@"`
+#echo "$PROGDIR/prebuilt/common/scan-build/scan-build --use-analyzer $PROGDIR/toolchains/llvm-3.1/prebuilt/$HOST_TAG/bin/${TARGET_ARCH}/analyzer --use-cc ${TOOLCHAIN_PREFIX}gcc --use-c++ ${TOOLCHAIN_PREFIX}g++ --status-bugs -v $GNUMAKE -f $PROGDIR/build/core/build-local.mk NDK_APP_ABI=$ABI $@"
+	$PROGDIR/prebuilt/common/scan-build/scan-build \
+	    --use-analyzer $PROGDIR/toolchains/llvm-3.1/prebuilt/$HOST_TAG/bin/${TARGET_ARCH}/analyzer \
+            --use-cc ${TOOLCHAIN_PREFIX}gcc \
+	    --use-c++ ${TOOLCHAIN_PREFIX}g++ \
+            --status-bugs -v -v \
+	    $GNUMAKE -f $PROGDIR/build/core/build-local.mk NDK_APP_ABI=$ABI "$@"
+    done
+else
+    $GNUMAKE -f $PROGDIR/build/core/build-local.mk "$@"
+fi
+
