@@ -50,7 +50,7 @@ esac
 
 # If NDK_LOG is set to 1 or true in the environment, or the command-line
 # then enable log messages below
-# Also normalize NDK_HOST_32BIT to 1 or 0
+# Also normalize NDK_HOST_32BIT and NDK_ANALYZE to 1 or 0
 if [ -z "$NDK_LOG" ]; then
   NDK_LOG=0
 fi
@@ -59,21 +59,47 @@ if [ -z "$NDK_HOST_32BIT" ]; then
   NDK_HOST_32BIT=0
 fi
 
+if [ -z "$NDK_ANALYZE" ]; then
+  NDK_ANALYZE=0
+fi
+
+PROJECT_PATH=
+PROJECT_PATH_NEXT=
 for opt; do
-    case $opt in
-      NDK_LOG=1|NDK_LOG=true)
-        NDK_LOG=1
-        ;;
-      NDK_LOG=*)
-        NDK_LOG=0
-        ;;
-      NDK_HOST_32BIT=1|NDK_HOST_32BIT=true)
-        NDK_HOST_32BIT=1
-        ;;
-      NDK_HOST_32BIT=*)
-        NDK_HOST_32BIT=0
-        ;;
-    esac
+    if [ -z "$PROJECT_PATH" -a "$PROJECT_PATH_NEXT" = "yes" ] ; then
+        PROJECT_PATH=$opt
+        PROJECT_PATH_NEXT=
+    else
+        case $opt in
+          NDK_LOG=1|NDK_LOG=true)
+            NDK_LOG=1
+            ;;
+          NDK_LOG=*)
+            NDK_LOG=0
+            ;;
+          NDK_HOST_32BIT=1|NDK_HOST_32BIT=true)
+            NDK_HOST_32BIT=1
+            ;;
+          NDK_HOST_32BIT=*)
+            NDK_HOST_32BIT=0
+            ;;
+          NDK_ANALYZE=1|NDK_ANALYZE=true)
+            NDK_ANALYZE=1
+            ;;
+          NDK_ANALYZE=*)
+            NDK_ANALYZE=0
+            ;;
+          NDK_TOOLCHAIN_VERSION=*)
+            NDK_TOOLCHAIN_VERSION=${opt#NDK_TOOLCHAIN_VERSION=}
+            ;;
+          APP_ABI=*)
+            APP_ABI=${opt#APP_ABI=}
+            ;;
+          -C)
+            PROJECT_PATH_NEXT="yes"
+            ;;
+        esac
+    fi
 done
 
 if [ "$NDK_LOG" = "true" ]; then
@@ -82,6 +108,10 @@ fi
 
 if [ "$NDK_HOST_32BIT" = "true" ]; then
   NDK_HOST_32BIT=1
+fi
+
+if [ "$NDK_ANALYZE" = "true" ]; then
+  NDK_ANALYZE=1
 fi
 
 if [ "$NDK_LOG" = "1" ]; then
@@ -213,4 +243,55 @@ if [ "$OSTYPE" = "cygwin" ] ; then
     log "Cygwin-compatible GNU make detected"
 fi
 
-$GNUMAKE -f $PROGDIR/build/core/build-local.mk "$@"
+if [ "$NDK_ANALYZE" = 1 ]; then
+    . $PROGDIR/build/tools/dev-defaults.sh  # for DEFAULT_LLVM_VERSION
+
+    # Return flags send in env. or command line which are enough to retrive APP_ABI and TOOLCHAIN_PREFIX later
+    gen_flags ()
+    {
+        local FLAGS=
+
+        if [ -n "$PROJECT_PATH" ] ; then
+            FLAGS=$FLAGS" -C $PROJECT_PATH"
+        fi
+        if [ -n "$APP_ABI" ] ; then
+            FLAGS=$FLAGS" APP_ABI=$APP_ABI"
+        fi
+        if [ -n "$NDK_HOST_32BIT" ] ; then
+            FLAGS=$FLAGS" NDK_HOST_32BIT=$NDK_HOST_32BIT"
+        fi
+        if [ -n "$NDK_TOOLCHAIN_VERSION" ] ; then
+            FLAGS=$FLAGS" NDK_TOOLCHAIN_VERSION=$NDK_TOOLCHAIN_VERSION"
+        fi
+        echo "$FLAGS"
+    }
+
+    get_build_var ()
+    {
+        local VAR=$1
+        local FLAGS=`gen_flags`
+        $GNUMAKE --no-print-dir -f $PROGDIR/build/core/build-local.mk $FLAGS DUMP_${VAR} | tail -1
+    }
+
+    get_build_var_for_abi ()
+    {
+        local VAR=$1
+        local ABI=$2
+        local FLAGS=`gen_flags`
+        $GNUMAKE --no-print-dir -f $PROGDIR/build/core/build-local.mk $FLAGS DUMP_${VAR} APP_ABI=${ABI} | tail -1
+    }
+
+    APP_ABIS=`get_build_var APP_ABI`
+    for ABI in $APP_ABIS; do
+        TOOLCHAIN_PREFIX=`get_build_var_for_abi TOOLCHAIN_PREFIX $ABI`
+        $PROGDIR/prebuilt/common/scan-build/scan-build \
+            --use-analyzer $PROGDIR/toolchains/llvm-${DEFAULT_LLVM_VERSION}/prebuilt/$HOST_TAG/bin/${ABI}/analyzer \
+            --use-cc ${TOOLCHAIN_PREFIX}gcc \
+            --use-c++ ${TOOLCHAIN_PREFIX}g++ \
+            --status-bugs -v -v \
+            $GNUMAKE -f $PROGDIR/build/core/build-local.mk "$@" APP_ABI=$ABI
+    done
+else
+    $GNUMAKE -f $PROGDIR/build/core/build-local.mk "$@"
+fi
+
