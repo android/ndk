@@ -435,6 +435,9 @@ for SYSTEM in $SYSTEMS; do
         fi
     fi
 
+    # Unpack other host tools
+    unpack_prebuilt scan-build
+
     # Create an archive for the final package. Extension depends on the
     # host system.
     case "$SYSTEM" in
