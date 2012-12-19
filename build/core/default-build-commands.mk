@@ -102,10 +102,18 @@ TARGET_LDLIBS := -lc -lm
 # the toolchain's setup.mk script.
 #
 
+ifneq ($(findstring ccc-analyzer,$(CC)),)
+TARGET_CC       = $(CC)
+else
 TARGET_CC       = $(TOOLCHAIN_PREFIX)gcc
+endif
 TARGET_CFLAGS   =
 
+ifneq ($(findstring c++-analyzer,$(CXX)),)
+TARGET_CXX      = $(CXX)
+else
 TARGET_CXX      = $(TOOLCHAIN_PREFIX)g++
+endif
 TARGET_CXXFLAGS = $(TARGET_CFLAGS) -fno-exceptions -fno-rtti
 
 TARGET_LD       = $(TOOLCHAIN_PREFIX)ld
