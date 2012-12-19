@@ -292,6 +292,9 @@ for SYSTEM in $SYSTEMS; do
     # We're done for this system
 done
 
+# Build tools common to all system
+run $BUILDTOOLS/build-analyzer.sh "$SRC_DIR" "$NDK_DIR" "llvm-$DEFAULT_LLVM_VERSION" --package-dir="$PACKAGE_DIR"
+
 if [ "$PACKAGE_DIR" ]; then
     echo "Done, please look at $PACKAGE_DIR"
 else
