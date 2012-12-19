@@ -213,7 +213,13 @@ for LLVM_VERSION in $LLVM_VERSION_LIST; do
     LLVM_BRANCH="release_$LLVM_VERSION_NO_DOT"
     toolchain_checkout "llvm-$LLVM_VERSION" $LLVM_BRANCH clang .
     toolchain_checkout "llvm-$LLVM_VERSION" $LLVM_BRANCH llvm .
-    (cd "$TMPDIR/llvm-$LLVM_VERSION/llvm" && ln -s ../../clang tools)
+    # Adjust directory structure a bit
+    # 1. Create symbolic link for clang which is always built
+    # 2. Move tools/polly up to be a sibling of llvm and clang.  Script build-llvm.sh
+    #    will only create symbolic link when --with-polly is specified.
+    (cd "$TMPDIR/llvm-$LLVM_VERSION/llvm" && \
+        ln -s ../../clang tools && \
+        mv tools/polly ..)
 done
 
 PYVERSION=2.7.3
