@@ -96,7 +96,7 @@ fail_panic "Could not create build directory: $BUILD_DIR"
 # $2: Build directory
 # $3: "static" or "shared"
 # $4: GCC version
-# $5: Destination directory (optional, will default to $GNUSTL_SUBDIR/<gcc-version>/lib/$ABI)
+# $5: optional "thumb"
 build_gnustl_for_abi ()
 {
     local ARCH BINPREFIX SYSROOT GNUSTL_SRCDIR
@@ -104,19 +104,16 @@ build_gnustl_for_abi ()
     local BUILDDIR="$2"
     local LIBTYPE="$3"
     local GCC_VERSION="$4"
-    local DSTDIR="$5"
+    local THUMB="$5"
+    local DSTDIR=$NDK_DIR/$GNUSTL_SUBDIR/$GCC_VERSION/libs/$ABI/$THUMB
     local SRC OBJ OBJECTS CFLAGS CXXFLAGS
 
     prepare_target_build $ABI $PLATFORM $NDK_DIR
     fail_panic "Could not setup target build."
 
-    INSTALLDIR=$BUILDDIR/install
-    BUILDDIR=$BUILDDIR/$LIBTYPE-$ABI-$GCC_VERSION
+    INSTALLDIR=$BUILDDIR/install-$ABI-$GCC_VERSION/$THUMB
+    BUILDDIR=$BUILDDIR/$LIBTYPE-${ABI}${THUMB}-$GCC_VERSION
 
-    # If the output directory is not specified, use default location
-    if [ -z "$DSTDIR" ]; then
-        DSTDIR=$NDK_DIR/$GNUSTL_SUBDIR/$GCC_VERSION/libs/$ABI
-    fi
     mkdir -p $DSTDIR
 
     ARCH=$(convert_abi_to_arch $ABI)
@@ -159,8 +156,12 @@ build_gnustl_for_abi ()
             ;;
     esac
 
-    export CFLAGS="-fPIC $CFLAGS --sysroot=$SYSROOT -fexceptions -funwind-tables -D__BIONIC__ -O2"
-    export CXXFLAGS="-fPIC $CXXFLAGS --sysroot=$SYSROOT -fexceptions -frtti -funwind-tables -D__BIONIC__ -O2"
+    EXTRA_FLAGS=
+    if [ -n "$THUMB" ] ; then
+        EXTRA_FLAGS="-mthumb"
+    fi
+    export CFLAGS="-fPIC $CFLAGS --sysroot=$SYSROOT -fexceptions -funwind-tables -D__BIONIC__ -O2 $EXTRA_FLAGS"
+    export CXXFLAGS="-fPIC $CXXFLAGS --sysroot=$SYSROOT -fexceptions -frtti -funwind-tables -D__BIONIC__ -O2 $EXTRA_FLAGS"
 
     export CC=${BINPREFIX}gcc
     export CXX=${BINPREFIX}g++
@@ -172,7 +173,7 @@ build_gnustl_for_abi ()
 
     setup_ccache
 
-    export LDFLAGS="-nostdinc -L$SYSROOT/usr/lib -lc"
+    export LDFLAGS="-nostdinc -L$SYSROOT/usr/lib -lc $EXTRA_FLAGS"
 
     if [ "$ABI" = "armeabi-v7a" ]; then
         CXXFLAGS=$CXXFLAGS" -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16"
@@ -195,7 +196,7 @@ build_gnustl_for_abi ()
         #LDFLAGS=$LDFLAGS" -lsupc++"
     fi
 
-    PROJECT="gnustl_$LIBTYPE gcc-$GCC_VERSION $ABI"
+    PROJECT="gnustl_$LIBTYPE gcc-$GCC_VERSION $ABI $THUMB"
     echo "$PROJECT: configuring"
     mkdir -p $BUILDDIR && rm -rf $BUILDDIR/* &&
     cd $BUILDDIR &&
@@ -219,7 +220,7 @@ build_gnustl_for_abi ()
 
     echo "$PROJECT: installing"
     run make install
-    fail_panic "Could not create $ABI prebuilts for GNU libsupc++/libstdc++"
+    fail_panic "Could not create $ABI $THUMB prebuilts for GNU libsupc++/libstdc++"
 }
 
 
@@ -237,7 +238,7 @@ copy_gnustl_libs ()
     local PREFIX=$(get_default_toolchain_prefix_for_arch $ARCH)
     PREFIX=${PREFIX%%-}
 
-    local SDIR="$BUILDDIR/install"
+    local SDIR="$BUILDDIR/install-$ABI-$GCC_VERSION"
     local DDIR="$NDK_DIR/$GNUSTL_SUBDIR/$GCC_VERSION"
 
     local GCC_VERSION_NO_DOT=$(echo $GCC_VERSION|sed 's/\./_/g')
@@ -248,7 +249,7 @@ copy_gnustl_libs ()
 	eval HAS_COMMON_HEADERS_$GCC_VERSION_NO_DOT=true
     fi
 
-    rm -rf "$DIR/libs/$ABI" && 
+    rm -rf "$DDIR/libs/$ABI" &&
     mkdir -p "$DDIR/libs/$ABI/include"
 
     # Copy the ABI-specific headers
@@ -259,6 +260,10 @@ copy_gnustl_libs ()
     copy_file_list "$SDIR/lib" "$DDIR/libs/$ABI" libsupc++.a libgnustl_shared.so
     # Note: we need to rename libgnustl_shared.a to libgnustl_static.a
     cp "$SDIR/lib/libgnustl_shared.a" "$DDIR/libs/$ABI/libgnustl_static.a"
+    if [ -d "$SDIR/thumb" ] ; then
+        copy_file_list "$SDIR/thumb/lib" "$DDIR/libs/$ABI/thumb" libsupc++.a libgnustl_shared.so
+        cp "$SDIR/thumb/lib/libgnustl_shared.a" "$DDIR/libs/$ABI/thumb/libgnustl_static.a"
+    fi
 }
 
 GCC_VERSION_LIST=$(commas_to_spaces $GCC_VERSION_LIST)
@@ -266,6 +271,10 @@ for VERSION in $GCC_VERSION_LIST; do
     for ABI in $ABIS; do
         build_gnustl_for_abi $ABI "$BUILD_DIR" static $VERSION
         build_gnustl_for_abi $ABI "$BUILD_DIR" shared $VERSION
+        if [ "$ABI" != "${ABI%%arm*}" ] ; then
+            build_gnustl_for_abi $ABI "$BUILD_DIR" static $VERSION thumb
+            build_gnustl_for_abi $ABI "$BUILD_DIR" shared $VERSION thumb
+        fi
         copy_gnustl_libs $ABI "$BUILD_DIR" $VERSION
     done
 done
@@ -283,6 +292,10 @@ if [ -n "$PACKAGE_DIR" ] ; then
             FILES=""
             for LIB in include/bits libsupc++.a libgnustl_static.a libgnustl_shared.so; do
                 FILES="$FILES $GNUSTL_SUBDIR/$VERSION/libs/$ABI/$LIB"
+                THUMB_FILE="$GNUSTL_SUBDIR/$VERSION/libs/$ABI/thumb/$LIB"
+                if [ -f "$THUMB_FILE" ] ; then
+                    FILES="$FILES $THUMB_FILE"
+                fi
             done
             PACKAGE="$PACKAGE_DIR/gnu-libstdc++-libs-$VERSION-$ABI.tar.bz2"
             dump "Packaging: $PACKAGE"
