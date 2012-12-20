@@ -45,7 +45,7 @@ OUT=$NDK_DIR/$SUBDIR
 AWK_VERSION=20071023
 AWK_SRCDIR=$ANDROID_NDK_ROOT/sources/host-tools/nawk-$AWK_VERSION
 if [ ! -d "$AWK_SRCDIR" ]; then
-    echo "ERROR: Can't find sed-$AWK_VERSION source tree: $AWK_SRCDIR"
+    echo "ERROR: Can't find nawk-$AWK_VERSION source tree: $AWK_SRCDIR"
     exit 1
 fi
 

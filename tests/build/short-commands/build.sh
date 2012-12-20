@@ -152,6 +152,7 @@ RET=$?
 # Clean everything we generated
 rm -f $CLEAN_FILES
 rm -rf "$PROGDIR/obj" "$PROGDIR/libs"
+rm -rf jni
 
 # Exit
 exit $RET
