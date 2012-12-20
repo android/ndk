@@ -50,3 +50,5 @@ find_instruction "nmadd.d" mips-fp4-test3-6.s
 find_instruction "nmsub.d" mips-fp4-test3-6.s
 find_instruction "recip.d" mips-fp4-test3-6.s
 find_instruction "rsqrt.d" mips-fp4-test3-6.s
+
+rm -f *.s *.i
