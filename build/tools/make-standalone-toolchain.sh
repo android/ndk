@@ -280,9 +280,9 @@ case "$ARCH" in
         cp -p "$GNUSTL_LIBS/armeabi/libgnustl_static.a" "$ABI_STL/lib/libstdc++.a"
 
         copy_directory "$GNUSTL_LIBS/armeabi/include/bits" "$ABI_STL_INCLUDE_TARGET/thumb/bits"
-        copy_file_list "$GNUSTL_LIBS/armeabi" "$ABI_STL/lib/thumb" "libgnustl_shared.so"
-        copy_file_list "$GNUSTL_LIBS/armeabi" "$ABI_STL/lib/thumb" "libsupc++.a"
-        cp -p "$GNUSTL_LIBS/armeabi/libgnustl_static.a" "$ABI_STL/lib/thumb/libstdc++.a"
+        copy_file_list "$GNUSTL_LIBS/armeabi/thumb" "$ABI_STL/lib/thumb" "libgnustl_shared.so"
+        copy_file_list "$GNUSTL_LIBS/armeabi/thumb" "$ABI_STL/lib/thumb" "libsupc++.a"
+        cp -p "$GNUSTL_LIBS/armeabi/thumb/libgnustl_static.a" "$ABI_STL/lib/thumb/libstdc++.a"
 
         copy_directory "$GNUSTL_LIBS/armeabi-v7a/include/bits" "$ABI_STL_INCLUDE_TARGET/armv7-a/bits"
         copy_file_list "$GNUSTL_LIBS/armeabi-v7a" "$ABI_STL/lib/armv7-a" "libgnustl_shared.so"
@@ -290,9 +290,9 @@ case "$ARCH" in
         cp -p "$GNUSTL_LIBS/armeabi-v7a/libgnustl_static.a" "$ABI_STL/lib/armv7-a/libstdc++.a"
 
         copy_directory "$GNUSTL_LIBS/armeabi-v7a/include/bits" "$ABI_STL_INCLUDE_TARGET/armv7-a/thumb/bits"
-        copy_file_list "$GNUSTL_LIBS/armeabi-v7a" "$ABI_STL/lib/armv7-a/thumb/" "libgnustl_shared.so"
-        copy_file_list "$GNUSTL_LIBS/armeabi-v7a" "$ABI_STL/lib/armv7-a/thumb/" "libsupc++.a"
-        cp -p "$GNUSTL_LIBS/armeabi-v7a/libgnustl_static.a" "$ABI_STL/lib/armv7-a//thumb/libstdc++.a"
+        copy_file_list "$GNUSTL_LIBS/armeabi-v7a/thumb" "$ABI_STL/lib/armv7-a/thumb/" "libgnustl_shared.so"
+        copy_file_list "$GNUSTL_LIBS/armeabi-v7a/thumb" "$ABI_STL/lib/armv7-a/thumb/" "libsupc++.a"
+        cp -p "$GNUSTL_LIBS/armeabi-v7a/thumb/libgnustl_static.a" "$ABI_STL/lib/armv7-a//thumb/libstdc++.a"
         ;;
     x86)
         copy_directory "$GNUSTL_LIBS/x86/include/bits" "$ABI_STL_INCLUDE_TARGET/bits"
