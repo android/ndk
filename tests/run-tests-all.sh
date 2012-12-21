@@ -42,6 +42,21 @@ echo "DEVICE_x86=$DEVICE_x86"
 echo "DEVICE_mips=$DEVICE_mips"
 
 #
+# check if we need to also test 32-bit host toolchain
+#
+TEST_HOST_32BIT=no
+
+case "$HOST_TAG" in
+    linux-x86_64|darwin-x86_64)
+        if [ -d "$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/$HOST_TAG" ] ; then
+            # ideally we should check each individual compiler the presence of 64-bit
+            # but for test script this is fine
+            TEST_HOST_32BIT=yes
+        fi
+    ;;
+esac
+
+#
 # Run run-tests.sh
 #
 SYSTEM=$(get_prebuilt_host_tag)
@@ -60,6 +75,17 @@ NDK_TOOLCHAIN_VERSION=4.4.3 ./run-tests.sh --continue-on-build-fail --full
 dump "### Running $SYSTEM clang 3.1 full tests"
 NDK_TOOLCHAIN_VERSION=clang3.1 ./run-tests.sh --continue-on-build-fail --full
 
+if [ "$TEST_HOST_32BIT" = "yes" ] ; then
+    dump "### Running $SYSTEM gcc 4.7 full tests (32-bit host)"
+    NDK_HOST_32BIT=1 NDK_TOOLCHAIN_VERSION=4.7 ./run-tests.sh --continue-on-build-fail
+    dump "### Running $SYSTEM gcc 4.6 full tests (32-bit host)"
+    NDK_HOST_32BIT=1 NDK_TOOLCHAIN_VERSION=4.6 ./run-tests.sh --continue-on-build-fail
+    dump "### Running $SYSTEM gcc 4.4.3 full tests (32-bit host)"
+    NDK_HOST_32BIT=1 NDK_TOOLCHAIN_VERSION=4.4.3 ./run-tests.sh --continue-on-build-fail
+    dump "### Running $SYSTEM clang 3.1 full tests (32-bit host)"
+    NDK_HOST_32BIT=1 NDK_TOOLCHAIN_VERSION=clang3.1 ./run-tests.sh --continue-on-build-fail
+fi
+
 if [ "$SYSTEM" = "linux-x86" -a -d "$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/windows" ] ; then
     find_program WINE wine
     if [ -n "$WINE" ]; then
@@ -75,6 +101,7 @@ if [ "$SYSTEM" = "linux-x86" -a -d "$NDK/toolchains/arm-linux-androideabi-4.6/pr
             dump "### Running windows clang 3.1 tests"
             NDK_TOOLCHAIN_VERSION=clang3.1 ./run-tests.sh --continue-on-build-fail --wine # --full
         fi
+        # No need to check TEST_HOST_32BIT because Windows doesn't have 64-bit toolchain to begin with
     fi
 fi
 
