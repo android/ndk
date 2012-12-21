@@ -80,7 +80,7 @@ life easier. For example, consider the following command:
 This will create a directory named /tmp/my-android-toolchain containing a
 copy of the android-5/arch-arm sysroot, and of the toolchain binaries.
 
-Note that by default, the ARM-based GCC 4.6 toolchain will be selected by the script.
+Note that by default, the 32-bit ARM-based GCC 4.6 toolchain will be selected by the script.
 Use the '--arch=x86' option to specify the x86 GCC 4.6, or add '--arch=mips' option
 to specify the MIPS GCC 4.6, or alternatively
 '--toolchain=&lt;name&gt;'.  For example:
@@ -93,6 +93,10 @@ If you wish, add '--llvm-version=3.1' to also copy clang/llvm 3.1, or
 use --toolchain with '-clang3.1' suffix.  For example:
 
   --toolchain=arm-linux-androideabi-clang3.1  # same as --arch=arm --llvm-version=3.1
+
+You may specify --system=linux-x86_64 on 64-bit Linux or --system=darwin-x86_64 on 64-bit
+MacOSX to make 64-bit host toolchain instead of the 32-bit one (default).
+64-bit Windows toolchain isn't available yet.  See IV of NDK-BUILD.html
 
 You can later use it directly with something like:
 

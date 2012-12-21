@@ -24,8 +24,6 @@ a working sysroot. The result is something that can more easily be
 used as a standalone cross-compiler, e.g. to run configure and
 make scripts."
 
-force_32bit_binaries
-
 # For now, this is the only toolchain that works reliably.
 TOOLCHAIN_NAME=
 register_var_option "--toolchain=<name>" TOOLCHAIN_NAME "Specify toolchain name"
@@ -42,7 +40,8 @@ NDK_DIR=`dirname $NDK_DIR`
 NDK_DIR=`dirname $NDK_DIR`
 register_var_option "--ndk-dir=<path>" NDK_DIR "Take source files from NDK at <path>"
 
-SYSTEM=$HOST_TAG
+# Create 32-bit host toolchain by default
+SYSTEM=$HOST_TAG32
 register_var_option "--system=<name>" SYSTEM "Specify host system"
 
 PACKAGE_DIR=/tmp/ndk-$USER
