@@ -459,6 +459,31 @@ is_broken_build ()
     return 1
 }
 
+# check if $ABI is incompatible and shouldn't be built
+# $1: project directory
+is_incompatible_abi ()
+{
+    local PROJECT="$1"
+
+    if [ "$ABI" != "default" ] ; then
+        # check APP_ABI
+        local APP_ABIS=`get_build_var $PROJECT APP_ABI`
+        APP_ABIS=$APP_ABIS" "
+        if [ "$APP_ABIS" != "${APP_ABIS%%all*}" ] ; then
+        # replace the first "all" with all available ABIs
+          ALL_ABIS=`get_build_var $PROJECT NDK_ALL_ABIS`
+          APP_ABIS_FRONT="${APP_ABIS%%all*}"
+          APP_ABIS_BACK="${APP_ABIS#*all}"
+          APP_ABIS="${APP_ABIS_FRONT}${ALL_ABIS}${APP_ABIS_BACK}"
+        fi
+        if [ "$APP_ABIS" = "${APP_ABIS%$ABI *}" ] ; then
+            echo "Skipping `basename $PROJECT`: incompatible ABI, needs $APP_ABIS"
+            return 0
+        fi
+    fi
+    return 1
+}
+
 build_project ()
 {
     local NAME=`basename $1`
@@ -468,23 +493,12 @@ build_project ()
     if is_broken_build $1; then
         return 0;
     fi
-    rm -rf "$DIR" && cp -r "$1" "$DIR"
-    if [ "$ABI" != "default" -a "$CHECK_ABI" = "yes" ] ; then
-        # check APP_ABI
-        local APP_ABIS=`get_build_var $DIR APP_ABI`
-        APP_ABIS=$APP_ABIS" "
-        if [ "$APP_ABIS" != "${APP_ABIS%%all*}" ] ; then
-        # replace the first "all" with all available ABIs
-          ALL_ABIS=`get_build_var $DIR NDK_ALL_ABIS`
-          APP_ABIS_FRONT="${APP_ABIS%%all*}"
-          APP_ABIS_BACK="${APP_ABIS#*all}"
-          APP_ABIS="${APP_ABIS_FRONT}${ALL_ABIS}${APP_ABIS_BACK}"
-        fi
-        if [ "$APP_ABIS" = "${APP_ABIS%$ABI *}" ] ; then
-            echo "Skipping `basename $1`: incompatible ABI, needs $APP_ABIS"
+    if [ "$CHECK_ABI" = "yes" ] ; then
+        if is_incompatible_abi $1 ; then
             return 0
         fi
     fi
+    rm -rf "$DIR" && cp -r "$1" "$DIR"
     # build it
     (run cd "$DIR" && run_ndk_build $NDK_BUILD_FLAGS)
     RET=$?
@@ -567,6 +581,15 @@ if is_testable build; then
         echo "Building NDK build test: `basename $1`"
         if [ -f $1/build.sh ]; then
             local DIR="$BUILD_DIR/$NAME"
+            if [ -f "$1/jni/Android.mk" -a -f "$1/jni/Application.mk" ] ; then
+                # exclude jni/Android.mk with import-module because it needs NDK_MODULE_PATH
+                grep -q  "call import-module" "$1/jni/Android.mk"
+                if [ $? != 0 ] ; then
+                    if (is_broken_build $1 || is_incompatible_abi $1) then
+                        return 0;
+                    fi
+                fi
+            fi
             rm -rf "$DIR" && cp -r "$1" "$DIR"
             export NDK
             (cd "$DIR" && run ./build.sh $NDK_BUILD_FLAGS)
