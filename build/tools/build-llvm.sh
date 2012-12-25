@@ -136,15 +136,14 @@ mkdir -p $BUILD_OUT
 
 TOOLCHAIN_BUILD_PREFIX=$BUILD_OUT/prefix
 
-CFLAGS="$CFLAGS -I$TOOLCHAIN_BUILD_PREFIX/include"
+CFLAGS="$HOST_CFLAGS $CFLAGS -I$TOOLCHAIN_BUILD_PREFIX/include"
 CXXFLAGS="$CXXFLAGS -I$TOOLCHAIN_BUILD_PREFIX/include"  # polly doesn't look at CFLAGS !
 LDFLAGS="$LDFLAGS -L$TOOLCHAIN_BUILD_PREFIX/lib"
 export CC CXX CFLAGS CXXFLAGS LDFLAGS REQUIRES_RTTI=1
 
 EXTRA_CONFIG_FLAGS=
-if [ "$POLLY" != "yes" ]; then
-    rm -f $SRC_DIR/$TOOLCHAIN/llvm/tools/polly
-else
+rm -rf $SRC_DIR/$TOOLCHAIN/llvm/tools/polly
+if [ "$POLLY" = "yes" ]; then
     # crate symbolic link
     ln -s ../../polly $SRC_DIR/$TOOLCHAIN/llvm/tools
 
@@ -215,11 +214,25 @@ cd $LLVM_BUILD_OUT
 run make -j$NUM_JOBS
 fail_panic "Couldn't compile llvm toolchain"
 
-# run the regression test
-dump "Running  : llvm toolchain regression test"
-cd $LLVM_BUILD_OUT
-run make check-all
-#fail_panic "Couldn't pass all regression test"
+if [ "$MINGW" != "yes" ] ; then
+    # run the regression test
+    dump "Running  : llvm toolchain regression test"
+    cd $LLVM_BUILD_OUT
+    run make check-all
+    if [ $? != 0 ] ; then
+        dump "ERROR: Couldn't pass all llvm regression test"
+        #exit 1
+    fi
+    if [ "$POLLY" = "yes" ]; then
+        dump "Running  : polly toolchain regression test"
+        cd $LLVM_BUILD_OUT
+        run make polly-test -C tools/polly/test
+        if [ $? != 0 ] ; then
+            dump "ERROR: Couldn't pass all polly regression test"
+            #exit 1
+        fi
+    fi
+fi
 
 # install the toolchain to its final location
 dump "Install  : llvm toolchain binaries."

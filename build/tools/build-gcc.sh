@@ -168,8 +168,10 @@ fi
 
 set_toolchain_ndk $NDK_DIR $TOOLCHAIN
 
-dump "Using C compiler: $CC"
-dump "Using C++ compiler: $CXX"
+if [ "$MINGW" != "yes" ] ; then
+    dump "Using C compiler: $CC"
+    dump "Using C++ compiler: $CXX"
+fi
 
 rm -rf $BUILD_OUT
 mkdir -p $BUILD_OUT
@@ -222,7 +224,7 @@ export CXXFLAGS_FOR_TARGET="$ABI_CXXFLAGS_FOR_TARGET"
 export ABI=$HOST_GMP_ABI
 # -Wno-error is needed because our gdb-6.6 sources use -Werror by default
 # and fail to build with recent GCC versions.
-export CFLAGS="-Wno-error"
+export CFLAGS=$HOST_CFLAGS" -O2 -s -Wno-error"
 
 # This extra flag is used to slightly speed up the build
 EXTRA_CONFIG_FLAGS="--disable-bootstrap"
