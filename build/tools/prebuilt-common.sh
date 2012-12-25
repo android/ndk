@@ -750,8 +750,8 @@ prepare_common_build ()
     STRIP=${STRIP:-strip}
     case $HOST_TAG in
         darwin-*)
-            if check_darwin_sdk /Developer/SDKs/MacOSX10.5.sdk 10.5; then
-                log "Generating Leopard-compatible binaries!"
+            if check_darwin_sdk /Developer/SDKs/MacOSX10.6.sdk 10.6; then
+                log "Generating Snow Leopard-compatible binaries!"
             else
                 local version=`sw_vers -productVersion`
                 log "Generating $version-compatible binaries!"
