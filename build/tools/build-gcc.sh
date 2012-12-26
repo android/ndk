@@ -233,6 +233,9 @@ EXTRA_CONFIG_FLAGS="--disable-bootstrap"
 # the flags are ignored for older GCC versions.
 EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --disable-libquadmath --disable-plugin"
 
+# Enable OpenMP
+EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-libgomp"
+
 # Enable Gold as default
 case "$TOOLCHAIN" in
     # Note that only ARM and X86 are supported
@@ -315,6 +318,16 @@ fi
 
 # copy to toolchain path
 run copy_directory "$TOOLCHAIN_BUILD_PREFIX" "$TOOLCHAIN_PATH"
+
+if [ "$MINGW" = "yes" ] ; then
+    # For some reasons, libraries in $ABI_CONFIGURE_TARGET (*) are not installed.
+    # Hack here to copy them over.
+    # (*) FYI: libgcc.a and libgcov.a not installed there in the first place
+    INSTALL_TARGET_LIB_PATH="$BUILD_OUT/host-$ABI_CONFIGURE_BUILD/install/$ABI_CONFIGURE_TARGET/lib"
+    TOOLCHAIN_TARGET_LIB_PATH="$TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/lib"
+    (cd "$INSTALL_TARGET_LIB_PATH" &&
+        find . \( -name "*.a" -o -name "*.la" -o -name "*.spec" \) -exec install -D "{}" "$TOOLCHAIN_TARGET_LIB_PATH/{}" \;)
+fi
 
 # don't forget to copy the GPL and LGPL license files
 run cp -f $TOOLCHAIN_LICENSES/COPYING $TOOLCHAIN_LICENSES/COPYING.LIB $TOOLCHAIN_PATH
