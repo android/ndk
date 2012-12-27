@@ -917,7 +917,7 @@ parse_toolchain_name ()
         ABI_CXXFLAGS_FOR_TARGET="-frtti -fpic"
         # Add --disable-fixed-point to disable fixed-point support
         # Add --disable-threads for eh_frame handling in a single thread
-        ABI_CONFIGURE_EXTRA_FLAGS="$ABI_CONFIGURE_EXTRA_FLAGS --disable-fixed-point --disable-threads"
+        ABI_CONFIGURE_EXTRA_FLAGS="$ABI_CONFIGURE_EXTRA_FLAGS --disable-fixed-point"
         ;;
     * )
         echo "Invalid toolchain specified. Expected (arm-linux-androideabi-*|arm-eabi-*|x86-*|mips*)"
