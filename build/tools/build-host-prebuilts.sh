@@ -53,6 +53,10 @@ register_var_option "--no-gen-platforms" NO_GEN_PLATFORMS "Don't generate platfo
 LLVM_VERSION_LIST=$DEFAULT_LLVM_VERSION_LIST
 register_var_option "--llvm-version-list=<vers>" LLVM_VERSION_LIST "List of LLVM release versions"
 
+CHECK_FLAG=
+do_check_option () { CHECK_FLAG="--check"; }
+register_option "--check" do_check_option "Check host prebuilts"
+
 register_try64_option
 
 PROGRAM_PARAMETERS="<toolchain-src-dir>"
@@ -264,7 +268,7 @@ for SYSTEM in $SYSTEMS; do
     fi
     for LLVM_VERSION in $LLVM_VERSION_LIST; do
         echo "Building $SYSTEM clang/llvm-$LLVM_VERSION"
-        run $BUILDTOOLS/build-llvm.sh "$SRC_DIR" "$NDK_DIR" "llvm-$LLVM_VERSION" $TOOLCHAIN_FLAGS $POLLY_FLAGS
+        run $BUILDTOOLS/build-llvm.sh "$SRC_DIR" "$NDK_DIR" "llvm-$LLVM_VERSION" $TOOLCHAIN_FLAGS $POLLY_FLAGS $CHECK_FLAG
         fail_panic "Could not build llvm for $SYSTEM"
     done
 
