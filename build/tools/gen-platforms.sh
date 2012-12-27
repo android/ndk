@@ -633,6 +633,9 @@ for ARCH in $ARCHS; do
 
             # Generate shared libraries from symbol files
             gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $PLATFORM_DST/arch-$ARCH
+        else
+            # Copy the prebuilt binaries to bootstrap GCC
+            copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib-bootstrap $SYSROOT_DST/lib "$ARCH sysroot libs (boostrap)"
         fi
         PREV_SYSROOT_DST=$SYSROOT_DST
     done
