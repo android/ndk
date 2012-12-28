@@ -47,8 +47,11 @@ register_var_option "--package-dir=<path>" PACKAGE_DIR "Create archive tarball i
 
 POLLY=no
 do_polly_option () { POLLY=yes; }
-
 register_option "--with-polly" do_polly_option "Enable Polyhedral optimizations for LLVM"
+
+CHECK=no
+do_check_option () { CHECK=yes; }
+register_option "--check" do_check_option "Check LLVM"
 
 register_jobs_option
 register_mingw_option
@@ -214,7 +217,7 @@ cd $LLVM_BUILD_OUT
 run make -j$NUM_JOBS
 fail_panic "Couldn't compile llvm toolchain"
 
-if [ "$MINGW" != "yes" ] ; then
+if [ "$CHECK" = "yes" -a "$MINGW" != "yes" ] ; then
     # run the regression test
     dump "Running  : llvm toolchain regression test"
     cd $LLVM_BUILD_OUT
