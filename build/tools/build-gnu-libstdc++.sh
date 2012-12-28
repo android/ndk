@@ -173,7 +173,7 @@ build_gnustl_for_abi ()
 
     setup_ccache
 
-    export LDFLAGS="-nostdinc -L$SYSROOT/usr/lib -lc $EXTRA_FLAGS"
+    export LDFLAGS="-L$SYSROOT/usr/lib -lc $EXTRA_FLAGS"
 
     if [ "$ABI" = "armeabi-v7a" ]; then
         CXXFLAGS=$CXXFLAGS" -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16"
@@ -204,6 +204,7 @@ build_gnustl_for_abi ()
         --prefix=$INSTALLDIR \
         --host=$BUILD_HOST \
         $LIBTYPE_FLAGS \
+        --enable-libstdcxx-time \
         --disable-symvers \
         --disable-multilib \
         --disable-nls \
