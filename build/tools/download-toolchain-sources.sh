@@ -259,9 +259,10 @@ else
     SRC_DIR=`cd $SRC_DIR && pwd`
     rm -rf $SRC_DIR && mkdir -p $SRC_DIR
     fail_panic "Could not create target source directory: $SRC_DIR"
-    copy_directory "$TMPDIR" "$SRC_DIR"
     cp $SOURCES_LIST $SRC_DIR/SOURCES
-    fail_panic "Could not copy downloaded sources to: $SRC_DIR"
+    fail_panic "Could not copy $SOURCES_LIST to $SRC_DIR"
+    mv "$TMPDIR"/* "$SRC_DIR"  #copy_directory "$TMPDIR" "$SRC_DIR"
+    fail_panic "Could not move to target source directory: $TMPDIR -> $SRC_DIR"
     dump "Toolchain sources downloaded and copied to $SRC_DIR"
 fi
 

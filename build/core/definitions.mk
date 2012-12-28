@@ -932,7 +932,9 @@ module-has-c++-features = $(strip \
 # $3: list of C++ runtime shared libraries (if any)
 #
 module-add-c++-deps = \
+    $(if $(call strip,$2),$(call ndk_log,Add dependency '$(call strip,$2)' to module '$1'))\
     $(eval __ndk_modules.$1.STATIC_LIBRARIES += $(2))\
+    $(if $(call strip,$3),$(call ndk_log,Add dependency '$(call strip,$3)' to module '$1'))\
     $(eval __ndk_modules.$1.SHARED_LIBRARIES += $(3))
 
 
