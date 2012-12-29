@@ -231,7 +231,19 @@ EXTRA_CONFIG_FLAGS="--disable-bootstrap"
 
 # This is to disable GCC 4.6 specific features that don't compile well
 # the flags are ignored for older GCC versions.
-EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --disable-libquadmath --disable-plugin"
+EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --disable-libquadmath"
+# Plugins are not supported well before 4.7. On 4.7 it's required to have
+# -flto working. Flag --enable-plugins (note 's') is actually for binutils,
+# this is compiler requirement to have binutils configured this way. Flag
+# --disable-plugin is for gcc.
+case "$GCC_VERSION" in
+    4.4.3|4.6)
+        EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --disable-plugin"
+        ;;
+    *)
+        EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-plugins"
+        ;;
+esac
 
 # Enable OpenMP
 EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-libgomp"

@@ -1329,6 +1329,17 @@ build_host_binutils ()
     # like build-host-libbfd.sh in the future.
     ARGS=$ARGS" --enable-install-libbfd"
 
+    # Enable plugins support for binutils-2.21+
+    # This is common feature for binutils and gcc
+    case "$BINUTILS_VERSION" in
+      2.19)
+        # Add nothing
+        ;;
+      *)
+        ARGS=$ARGS" --enable-plugins"
+        ;;
+    esac
+
     dump "$(host_text)$(target_text) Building binutils-$BINUTILS_VERSION"
     (
         setup_host_env &&
@@ -1389,12 +1400,18 @@ build_host_gcc_core ()
 
     ARGS=$HOST_PREREQS_ARGS
 
+    case "$GCC_VERSION" in
+      4.4.3|4.6)
+        ARGS=$ARGS" --disable-plugin"
+        ;;
+    esac
+
     ARGS=$ARGS" --with-gnu-as --with-gnu-ld"
     ARGS=$ARGS" --enable-threads --disable-libssp --disable-libmudflap"
     ARGS=$ARGS" --disable-libgomp"  # TODO: Add option to enable this
     ARGS=$ARGS" --disable-libstdc__-v3 --disable-sjlj-exceptions"
     ARGS=$ARGS" --disable-tls"
-    ARGS=$ARGS" --disable-libquadmath --disable-plugin --disable-libitm --disable-bootstrap"
+    ARGS=$ARGS" --disable-libquadmath --disable-libitm --disable-bootstrap"
     ARGS=$ARGS" --enable-languages=c,c++"
     ARGS=$ARGS" --disable-shared"
     ARGS=$ARGS" --disable-nls"
