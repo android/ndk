@@ -494,7 +494,8 @@ get_default_binutils_version_for_gcc ()
     local RET
     case $1 in
         arm-*-4.4.3|x86-*-4.4.3|x86-4.4.3) RET=2.19;;
-        *) RET=2.21;;
+        *-4.6) RET=2.21;;
+        *) RET=2.22;;
     esac
     echo "$RET"
 }
@@ -776,8 +777,6 @@ select_toolchain_for_host ()
                 *) panic "Sorry, this script only supports building windows binaries on Linux."
                 ;;
             esac
-            HOST_CFLAGS=$HOST_CFLAGS" -D__USE_MINGW_ANSI_STDIO=1"
-            HOST_CXXFLAGS=$HOST_CXXFLAGS" -D__USE_MINGW_ANSI_STDIO=1"
             ;;
 
         windows-x86_64)
@@ -823,8 +822,6 @@ select_toolchain_for_host ()
                 *) panic "Sorry, this script only supports building windows binaries on Linux."
                 ;;
             esac
-            HOST_CFLAGS=$HOST_CFLAGS" -D__USE_MINGW_ANSI_STDIO=1"
-            HOST_CXXFLAGS=$HOST_CXXFLAGS" -D__USE_MINGW_ANSI_STDIO=1"
             ;;
     esac
 
@@ -1316,6 +1313,12 @@ build_host_binutils ()
             else
                 ARGS=$ARGS" --enable-gold=both/gold"
             fi
+        fi
+        if [ "$HOST_OS" = 'windows' ]; then
+            # gold may have runtime dependency on libgcc_sjlj_1.dll and
+            # libstdc++-6.dll when built by newer versions of mingw.
+            # Link them statically to avoid that.
+            ARGS=$ARGS" --with-gold-ldflags='-static-libgcc -static-libstdc++'"
         fi
     fi
 
