@@ -151,10 +151,10 @@ private:
       str << limits::max();
 
       CPPUNIT_ASSERT(!str.fail());
-      CPPUNIT_CHECK( str.str() != "inf" );
-      CPPUNIT_CHECK( str.str() != "-inf" );
-      CPPUNIT_CHECK( str.str() != "nan" );
-      CPPUNIT_CHECK( str.str() != "-nan" );
+      CPPUNIT_CHECK( str.str() != "inf" && str.str() != "Inf" );
+      CPPUNIT_CHECK( str.str() != "-inf" && str.str() != "-Inf" );
+      CPPUNIT_CHECK( str.str() != "nan" && str.str() != "NaN" );
+      CPPUNIT_CHECK( str.str() != "-nan" && str.str() != "-NaN" );
       //CPPUNIT_MESSAGE( str.str().c_str() );
 
       //str.str("");
@@ -174,10 +174,10 @@ private:
       str << fixed << limits::max();
 
       CPPUNIT_ASSERT(!str.fail());
-      CPPUNIT_CHECK( str.str() != "inf" );
-      CPPUNIT_CHECK( str.str() != "-inf" );
-      CPPUNIT_CHECK( str.str() != "nan" );
-      CPPUNIT_CHECK( str.str() != "-nan" );
+      CPPUNIT_CHECK( str.str() != "inf" && str.str() != "Inf" );
+      CPPUNIT_CHECK( str.str() != "-inf" && str.str() != "-Inf" );
+      CPPUNIT_CHECK( str.str() != "nan" && str.str() != "NaN" );
+      CPPUNIT_CHECK( str.str() != "-nan" && str.str() != "-NaN" );
       //CPPUNIT_MESSAGE( str.str().c_str() );
 
       //str.str("");
@@ -197,10 +197,10 @@ private:
       str << scientific << setprecision(50) << limits::max();
 
       CPPUNIT_ASSERT(!str.fail());
-      CPPUNIT_CHECK( str.str() != "inf" );
-      CPPUNIT_CHECK( str.str() != "-inf" );
-      CPPUNIT_CHECK( str.str() != "nan" );
-      CPPUNIT_CHECK( str.str() != "-nan" );
+      CPPUNIT_CHECK( str.str() != "inf" && str.str() != "Inf" );
+      CPPUNIT_CHECK( str.str() != "-inf" && str.str() != "-Inf" );
+      CPPUNIT_CHECK( str.str() != "nan" && str.str() != "NaN" );
+      CPPUNIT_CHECK( str.str() != "-nan" && str.str() != "-NaN" );
       //CPPUNIT_MESSAGE( str.str().c_str() );
 
       //str.str("");
@@ -221,7 +221,7 @@ private:
       str << limits::infinity();
 
       CPPUNIT_ASSERT( !str.fail() );
-      CPPUNIT_ASSERT( !limits::has_infinity || str.str() == "inf" );
+      CPPUNIT_ASSERT( !limits::has_infinity || str.str() == "inf" || str.str() == "Inf" );
     }
     {
       stringstream str;
@@ -229,7 +229,7 @@ private:
       str << -limits::infinity();
 
       CPPUNIT_ASSERT( !str.fail() );
-      CPPUNIT_ASSERT( !limits::has_infinity || str.str() == "-inf" );
+      CPPUNIT_ASSERT( !limits::has_infinity || str.str() == "-inf" || str.str() == "-Inf" );
     }
     {
       stringstream str;
@@ -237,7 +237,7 @@ private:
       str << limits::quiet_NaN();
 
       CPPUNIT_ASSERT( !str.fail() );
-      CPPUNIT_ASSERT( !limits::has_quiet_NaN || str.str() == "nan" );
+      CPPUNIT_ASSERT( !limits::has_quiet_NaN || str.str() == "nan" || str.str() == "NaN" );
     }
     {
       stringstream str;
@@ -245,7 +245,7 @@ private:
       str << -limits::quiet_NaN();
 
       CPPUNIT_ASSERT( !str.fail() );
-      CPPUNIT_ASSERT( !limits::has_quiet_NaN || str.str() == "-nan" );
+      CPPUNIT_ASSERT( !limits::has_quiet_NaN || str.str() == "-nan" || str.str() == "NaN" );
     }
     {
       stringstream str;
@@ -457,7 +457,7 @@ void NumPutGetTest::num_put_float()
 
     {
       ostringstream ostr;
-      ostr << scientific << setprecision(8) << 0.12345678f;
+      ostr << scientific << setprecision(8) <<  0.12345678; // float doesn't have enough precision, 0.12345678f ended up 0.1234567836..
       CPPUNIT_ASSERT(ostr.good());
       output = reset_stream(ostr);
       digits = "1";
@@ -820,7 +820,7 @@ void NumPutGetTest::num_get_float()
   check_get_float( 0.0F );
   CPPUNIT_MESSAGE( "double" );
   check_get_float( 0.0 );
-#if !defined (STLPORT) || !defined (_STLP_NO_LONG_DOUBLE)
+#if (!defined (STLPORT) || !defined (_STLP_NO_LONG_DOUBLE)) && !defined(__ANDROID__)
   CPPUNIT_MESSAGE( "long double" );
   check_get_float( 0.0L );
 #endif
@@ -877,6 +877,7 @@ void NumPutGetTest::num_get_float()
     CPPUNIT_ASSERT( numeric_limits<long double>::min_exponent10 >= numeric_limits<double>::min_exponent10 ||
                     val == 0.0 );
   }
+#if !defined(__ANDROID__) // "long double" in Android is still a distinct type but size is the same as "double"
   {
     const char* p = "2.718281828459045235360287471352662497757247093e0";
     std::stringstream s;
@@ -885,6 +886,7 @@ void NumPutGetTest::num_get_float()
     s >> x;
     CPPUNIT_ASSERT( x > 2.70l && x < 2.72l );
   }
+#endif
 #endif
 }
 
@@ -1231,9 +1233,14 @@ class CommaSepNumPunct : public numpunct<char> {
   os.str(""); os << fixed << setprecision(3) << showpos << val; \
   CPPUNIT_ASSERT( os.str() == expected )
 
+// Use unadulterated os2 when expecting inf
+#define CHECKINF(val, expected, expected2) \
+  os2.str(""); os2 << fixed << setprecision(4) << showpos << val; \
+  CPPUNIT_ASSERT( os2.str() == expected || os2.str() == expected2 )
+
 void NumPutGetTest::custom_numpunct()
 {
-    ostringstream os;
+    ostringstream os, os2;
     locale loc(os.getloc(), new CommaSepNumPunct());
     os.imbue(loc);
 
@@ -1250,7 +1257,7 @@ void NumPutGetTest::custom_numpunct()
     CHECK2(1234567.891, "+1,234,56,7.891");
     CHECK2(123456789.123, "+123,456,78,9.123");
     //CHECK2(100000000000000000000000000000.0, "+100000000000000000000000,000,00,0.000");
-    CHECK2(numeric_limits<double>::infinity(), "+inf");
+    CHECKINF(numeric_limits<double>::infinity(), "+inf", "+Inf");
 
     CHECK2(-1.234, "-1.234");
     CHECK2(-123.456, "-12,3.456");
@@ -1260,7 +1267,7 @@ void NumPutGetTest::custom_numpunct()
     CHECK2(-1234567.891, "-1,234,56,7.891");
     CHECK2(-123456789.123, "-123,456,78,9.123");
     //CHECK2(-100000000000000000000000000000.0, "-100000000000000000000000,000,00,0.000");
-    CHECK2(-numeric_limits<double>::infinity(), "-inf");
+    CHECKINF(-numeric_limits<double>::infinity(), "-inf", "-Inf");
 }
 
 #endif
