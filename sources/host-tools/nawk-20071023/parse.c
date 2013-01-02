@@ -265,12 +265,12 @@ int isarg(const char *s)		/* is s in argument list for current function? */
 	return -1;
 }
 
-int ptoi(void *p)	/* convert pointer to integer */
+intptr_t ptoi(void *p)	/* convert pointer to integer */
 {
-	return (int) (long) p;	/* swearing that p fits, of course */
+	return (intptr_t) p;
 }
 
-Node *itonp(int i)	/* and vice versa */
+Node *itonp(intptr_t i)	/* and vice versa */
 {
-	return (Node *) (long) i;
+	return (Node *) i;
 }

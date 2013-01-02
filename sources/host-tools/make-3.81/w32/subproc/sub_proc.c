@@ -30,9 +30,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.  */
 static char *make_command_line(char *shell_name, char *exec_path, char **argv);
 
 typedef struct sub_process_t {
-	int sv_stdin[2];
-	int sv_stdout[2];
-	int sv_stderr[2];
+	intptr_t sv_stdin[2];
+	intptr_t sv_stdout[2];
+	intptr_t sv_stderr[2];
 	int using_pipes;
 	char *inp;
 	DWORD incnt;
@@ -40,7 +40,7 @@ typedef struct sub_process_t {
 	volatile DWORD outcnt;
 	char * volatile errp;
 	volatile DWORD errcnt;
-	int pid;
+	intptr_t pid;
 	int exit_code;
 	int signal;
 	long last_err;
@@ -309,12 +309,12 @@ process_init()
 		pproc->lerrno = E_SCALL;
 		return((HANDLE)pproc);
 	}
-	pproc->sv_stdin[0]  = (int) stdin_pipes[0];
-	pproc->sv_stdin[1]  = (int) stdin_pipes[1];
-	pproc->sv_stdout[0] = (int) stdout_pipes[0];
-	pproc->sv_stdout[1] = (int) stdout_pipes[1];
-	pproc->sv_stderr[0] = (int) stderr_pipes[0];
-	pproc->sv_stderr[1] = (int) stderr_pipes[1];
+	pproc->sv_stdin[0]  = (intptr_t) stdin_pipes[0];
+	pproc->sv_stdin[1]  = (intptr_t) stdin_pipes[1];
+	pproc->sv_stdout[0] = (intptr_t) stdout_pipes[0];
+	pproc->sv_stdout[1] = (intptr_t) stdout_pipes[1];
+	pproc->sv_stderr[0] = (intptr_t) stderr_pipes[0];
+	pproc->sv_stderr[1] = (intptr_t) stderr_pipes[1];
 
 	pproc->using_pipes = 1;
 
@@ -336,9 +336,9 @@ process_init_fd(HANDLE stdinh, HANDLE stdouth, HANDLE stderrh)
 	 * Just pass the provided file handles to the 'child side' of the
 	 * pipe, bypassing pipes altogether.
 	 */
-	pproc->sv_stdin[1]  = (int) stdinh;
-	pproc->sv_stdout[1] = (int) stdouth;
-	pproc->sv_stderr[1] = (int) stderrh;
+	pproc->sv_stdin[1]  = (intptr_t) stdinh;
+	pproc->sv_stdout[1] = (intptr_t) stdouth;
+	pproc->sv_stderr[1] = (intptr_t) stderrh;
 
 	pproc->last_err = pproc->lerrno = 0;
 
@@ -358,35 +358,35 @@ find_file(char *exec_path, LPOFSTRUCT file_info)
 	ext = fname + strlen(fname);
 
 	strcpy(ext, ".exe");
-	if ((exec_handle = (HANDLE)OpenFile(fname, file_info,
+	if ((exec_handle = (HANDLE)(intptr_t)OpenFile(fname, file_info,
 			OF_READ | OF_SHARE_COMPAT)) != (HANDLE)HFILE_ERROR) {
 		free(fname);
 		return(exec_handle);
 	}
 
 	strcpy(ext, ".cmd");
-	if ((exec_handle = (HANDLE)OpenFile(fname, file_info,
+	if ((exec_handle = (HANDLE)(intptr_t)OpenFile(fname, file_info,
 			OF_READ | OF_SHARE_COMPAT)) != (HANDLE)HFILE_ERROR) {
 		free(fname);
 		return(exec_handle);
 	}
 
 	strcpy(ext, ".bat");
-	if ((exec_handle = (HANDLE)OpenFile(fname, file_info,
+	if ((exec_handle = (HANDLE)(intptr_t)OpenFile(fname, file_info,
 			OF_READ | OF_SHARE_COMPAT)) != (HANDLE)HFILE_ERROR) {
 		free(fname);
 		return(exec_handle);
 	}
 
 	/* should .com come before this case? */
-	if ((exec_handle = (HANDLE)OpenFile(exec_path, file_info,
+	if ((exec_handle = (HANDLE)(intptr_t)OpenFile(exec_path, file_info,
 			OF_READ | OF_SHARE_COMPAT)) != (HANDLE)HFILE_ERROR) {
 		free(fname);
 		return(exec_handle);
 	}
 
 	strcpy(ext, ".com");
-	if ((exec_handle = (HANDLE)OpenFile(fname, file_info,
+	if ((exec_handle = (HANDLE)(intptr_t)OpenFile(fname, file_info,
 			OF_READ | OF_SHARE_COMPAT)) != (HANDLE)HFILE_ERROR) {
 		free(fname);
 		return(exec_handle);
@@ -562,7 +562,7 @@ process_begin(
 		}
 	}
 
-	pproc->pid = (int)procInfo.hProcess;
+	pproc->pid = (intptr_t)procInfo.hProcess;
 	/* Close the thread handle -- we'll just watch the process */
 	CloseHandle(procInfo.hThread);
 
