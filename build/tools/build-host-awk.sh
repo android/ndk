@@ -58,6 +58,9 @@ BUILD_MINGW=
 if [ "$MINGW" = "yes" ]; then
   BUILD_MINGW=yes
 fi
+if [ "$TRY64" = "yes" ]; then
+  BUILD_TRY64=yes
+fi
 
 log "Configuring the build"
 mkdir -p $BUILD_DIR && rm -rf $BUILD_DIR/*
@@ -69,8 +72,9 @@ run $GNUMAKE \
     -C "$AWK_SRCDIR" \
     -j $NUM_JOBS \
     BUILD_DIR="$BUILD_DIR" \
-    MINGW="$BUILD_MINGW"
-fail_panic "Failed to build the sed-$AWK_VERSION executable!"
+    MINGW="$BUILD_MINGW" \
+    TRY64="$BUILD_TRY64"
+fail_panic "Failed to build the awk-$AWK_VERSION executable!"
 
 log "Copying executable to prebuilt location"
 run mkdir -p $(dirname "$OUT") && cp "$BUILD_DIR/$(get_host_exec_name ndk-awk)" "$OUT"
