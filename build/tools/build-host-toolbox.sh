@@ -86,16 +86,15 @@ TOOLBOX_SRCDIR=$ANDROID_NDK_ROOT/sources/host-tools/toolbox
 BUILD_WINDOWS_SOURCES=yes
 
 if [ "$BUILD_WINDOWS_SOURCES" ]; then
+    ORIGINAL_HOST_TAG=$HOST_TAG
+    MINGW=yes
+    handle_mingw
+    prepare_mingw_toolchain $BUILD_DIR
 
-    SUBDIR=$(get_prebuilt_install_prefix windows)/bin
+    SUBDIR=$(get_prebuilt_install_prefix $HOST_TAG)/bin
     DSTDIR=$NDK_DIR/$SUBDIR
     mkdir -p "$DSTDIR"
     fail_panic "Could not create destination directory: $DSTDIR"
-
-    MINGW=yes
-    prepare_mingw_toolchain $BUILD_DIR
-
-    ORIGINAL_HOST_TAG=$HOST_TAG
 
     # Build echo.exe
     HOST_TAG=$ORIGINAL_HOST_TAG
@@ -116,8 +115,8 @@ if [ "$BUILD_WINDOWS_SOURCES" ]; then
     builder_end
 
     if [ "$PACKAGE_DIR" ]; then
-        ARCHIVE=toolbox-windows.tar.bz2
-        log "Packaging : $ARCHIVE"
+        ARCHIVE=toolbox-$HOST_TAG.tar.bz2
+        dump "Packaging : $ARCHIVE"
         pack_archive "$PACKAGE_DIR/$ARCHIVE" "$NDK_DIR" "$SUBDIR/echo.exe" "$SUBDIR/cmp.exe"
         fail_panic "Could not package toolbox binaires"
     fi
