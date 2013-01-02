@@ -212,9 +212,9 @@ ifndef HOST_ARCH
         HOST_ARCH := $(PROCESSOR_ARCHITECTURE)
         ifeq ($(HOST_ARCH),AMD64)
             HOST_ARCH := x86
-            ifneq ("",$(shell echo "%ProgramFiles(x86)%"))
-                HOST_ARCH64 := x86_64
-            endif
+        endif
+        ifneq ("",$(shell echo "%ProgramFiles(x86)%"))
+            HOST_ARCH64 := x86_64
         endif
     else # HOST_OS_BASE != windows
         UNAME := $(shell uname -m)
