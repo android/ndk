@@ -1481,13 +1481,13 @@ windows32_openpipe (int *pipedes, int *pid_p, char **command_argv, char **envp)
     process_register(hProcess);
 
     /* set the pid for returning to caller */
-    *pid_p = (int) hProcess;
+    *pid_p = (intptr_t) hProcess;
 
   /* set up to read data from child */
-  pipedes[0] = _open_osfhandle((long) hChildOutRd, O_RDONLY);
+  pipedes[0] = _open_osfhandle((intptr_t) hChildOutRd, O_RDONLY);
 
   /* this will be closed almost right away */
-  pipedes[1] = _open_osfhandle((long) hChildOutWr, O_APPEND);
+  pipedes[1] = _open_osfhandle((intptr_t) hChildOutWr, O_APPEND);
   } else {
     /* reap/cleanup the failed process */
 	process_cleanup(hProcess);

@@ -367,7 +367,7 @@ extern int strcmpi (const char *,const char *);
 # define kill(pid,sig) w32_kill(pid,sig)
 
 extern void sync_Path_environment(void);
-extern int kill(int pid, int sig);
+extern int kill(intptr_t pid, int sig);
 extern char *end_of_token_w32(char *s, char stopchar);
 extern int find_and_set_default_shell(char *token);
 

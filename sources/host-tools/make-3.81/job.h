@@ -49,7 +49,7 @@ struct child
     unsigned int command_line;	/* Index into above.  */
     char *command_ptr;		/* Ptr into command_lines[command_line].  */
 
-    pid_t pid;			/* Child process's ID number.  */
+    intptr_t pid;		/* Child process's ID number.  */
 #ifdef VMS
     int efn;			/* Completion event flag number */
     int cstatus;		/* Completion status */

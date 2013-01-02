@@ -134,7 +134,7 @@ VMS_get_member_info (struct dsc$descriptor_s *module, unsigned long *rfa)
    Returns 0 if have scanned successfully.  */
 
 long int
-ar_scan (char *archive, long int (*function) PARAMS ((void)), long int arg)
+ar_scan (char *archive, long int (*function) PARAMS ((void)), intptr_t arg)
 {
   char *p;
 
@@ -301,7 +301,7 @@ struct ar_hdr
    Returns 0 if have scanned successfully.  */
 
 long int
-ar_scan (char *archive, long int (*function)(), long int arg)
+ar_scan (char *archive, long int (*function)(), intptr_t arg)
 {
 #ifdef AIAMAG
   FL_HDR fl_header;
@@ -757,7 +757,7 @@ ar_member_pos (int desc UNUSED, char *mem, int truncated,
 int
 ar_member_touch (char *arname, char *memname)
 {
-  long int pos = ar_scan (arname, ar_member_pos, (long int) memname);
+  long int pos = ar_scan (arname, ar_member_pos, (intptr_t) memname);
   int fd;
   struct ar_hdr ar_hdr;
   int i;
@@ -815,7 +815,7 @@ ar_member_touch (char *arname, char *memname)
 
 #ifdef TEST
 
-long int
+intptr_t
 describe_member (int desc, char *name, int truncated,
 		 long int hdrpos, long int datapos, long int size,
                  long int date, int uid, int gid, int mode)

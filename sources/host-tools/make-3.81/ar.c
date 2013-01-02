@@ -25,7 +25,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.  */
 #include <fnmatch.h>
 
 /* Defined in arscan.c.  */
-extern long int ar_scan PARAMS ((char *archive, long int (*function) (), long int arg));
+extern long int ar_scan PARAMS ((char *archive, long int (*function) (), intptr_t arg));
 extern int ar_name_equal PARAMS ((char *name, char *mem, int truncated));
 #ifndef VMS
 extern int ar_member_touch PARAMS ((char *arname, char *memname));
@@ -107,7 +107,7 @@ ar_member_date (char *name)
       (void) f_mtime (arfile, 0);
   }
 
-  val = ar_scan (arname, ar_member_date_1, (long int) memname);
+  val = ar_scan (arname, ar_member_date_1, (intptr_t) memname);
 
   if (!arname_used)
     free (arname);
@@ -284,7 +284,7 @@ ar_glob (char *arname, char *member_pattern, unsigned int size)
   state.size = size;
   state.chain = 0;
   state.n = 0;
-  (void) ar_scan (arname, ar_glob_match, (long int) &state);
+  (void) ar_scan (arname, ar_glob_match, (intptr_t) &state);
 
   if (state.chain == 0)
     return 0;
