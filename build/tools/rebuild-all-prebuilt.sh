@@ -38,6 +38,10 @@ CUSTOM_SYSTEMS=
 register_option "--systems=<list>" do_SYSTEMS "Specify host systems"
 do_SYSTEMS () { CUSTOM_SYSTEMS=true; SYSTEMS=$1; }
 
+ALSO_64=
+register_option "--also-64" do_ALSO_64 "Also build 64-bit host toolchain"
+do_ALSO_64 () { ALSO_64=yes; }
+
 RELEASE=`date +%Y%m%d`
 PACKAGE_DIR=/tmp/ndk-$USER/prebuilt-$RELEASE
 register_var_option "--package-dir=<path>" PACKAGE_DIR "Put prebuilt tarballs into <path>."
@@ -96,6 +100,10 @@ fi
 
 $PROGDIR/build-host-prebuilts.sh $HOST_FLAGS "$SRC_DIR"
 fail_panic "Could not build host prebuilts!"
+if [ "$ALSO_64" = "yes" -a "$TRY64" != "yes" ] ; then
+    $PROGDIR/build-host-prebuilts.sh $HOST_FLAGS "$SRC_DIR" --try-64
+    fail_panic "Could not build host prebuilts in 64-bit!"
+fi
 
 TARGET_FLAGS=$FLAGS
 
