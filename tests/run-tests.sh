@@ -172,10 +172,10 @@ adb_var_shell_cmd ()
     # Run the command, while storing the standard output to ADB_SHELL_CMD_LOG
     # and appending the exit code as the last line.
     if [ $VERBOSE = "yes" ] ; then
-        echo "$ADB_CMD -s \"$DEVICE\" shell $@"
-        $ADB_CMD -s "$DEVICE" shell $@ ";" echo \$? | sed -e 's![[:cntrl:]]!!g' | tee $ADB_SHELL_CMD_LOG
+        echo "$ADB_CMD -s \"$DEVICE\" shell \"$@\""
+        $ADB_CMD -s "$DEVICE" shell "$@" ";" echo \$? | sed -e 's![[:cntrl:]]!!g' | tee $ADB_SHELL_CMD_LOG
     else
-        $ADB_CMD -s "$DEVICE" shell $@ ";" echo \$? | sed -e 's![[:cntrl:]]!!g' > $ADB_SHELL_CMD_LOG
+        $ADB_CMD -s "$DEVICE" shell "$@" ";" echo \$? | sed -e 's![[:cntrl:]]!!g' > $ADB_SHELL_CMD_LOG
     fi
     # Get last line in log, which contains the exit code from the command
     RET=`sed -e '$!d' $ADB_SHELL_CMD_LOG`
@@ -700,12 +700,12 @@ if is_testable device; then
             # If its name doesn't end with .so, add it to PROGRAMS
             echo "$DSTFILE" | grep -q -e '\.so$'
             if [ $? != 0 ] ; then
-                PROGRAMS="$PROGRAMS $DSTFILE"
+                PROGRAMS="$PROGRAMS `basename $DSTFILE`"
             fi
         done
         for PROGRAM in $PROGRAMS; do
             dump "Running device test [$CPU_ABI]: $TEST_NAME (`basename $PROGRAM`)"
-            adb_var_shell_cmd "$DEVICE" "" LD_LIBRARY_PATH="$DSTDIR" $PROGRAM
+            adb_var_shell_cmd "$DEVICE" "" "cd $DSTDIR && LD_LIBRARY_PATH=$DSTDIR ./$PROGRAM"
             if [ $? != 0 ] ; then
                 dump "   ---> TEST FAILED!!"
             fi
