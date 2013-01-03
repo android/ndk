@@ -232,6 +232,7 @@ else
 endif
 
 APP_CFLAGS := $(strip $(APP_CFLAGS))
+APP_LDFLAGS := $(strip $(APP_LDFLAGS))
 
 # Check that APP_STL is defined. If not, use the default value (system)
 # otherwise, check that the name is correct.
