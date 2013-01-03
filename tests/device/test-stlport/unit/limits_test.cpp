@@ -278,7 +278,8 @@ void LimitTest::test() {
   CPPUNIT_CHECK(test_signed_integral_limits(signed_char()));
   typedef unsigned char unsigned_char;
   CPPUNIT_CHECK(test_unsigned_integral_limits(unsigned_char()));
-#  if defined (_STLP_HAS_WCHAR_T) && !defined (_STLP_WCHAR_T_IS_USHORT)
+#  if (defined (_STLP_HAS_WCHAR_T) && !defined (_STLP_WCHAR_T_IS_USHORT)) && !defined(__arm__)
+ /* wchar_t is unsigned in arm */
   CPPUNIT_CHECK(test_integral_limits(wchar_t()));
 #  endif
   CPPUNIT_CHECK(test_signed_integral_limits(short()));
