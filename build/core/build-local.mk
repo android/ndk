@@ -28,7 +28,7 @@ ifeq ($(NDK_ROOT),)
     # for the case when we're invoked from the NDK install path
     NDK_ROOT := .
 endif
-ifdef NDK_LOG
+ifeq ($(NDK_LOG),1)
     $(info Android NDK: NDK installation path auto-detected: '$(NDK_ROOT)')
 endif
 ifneq ($(words $(NDK_ROOT)),1)

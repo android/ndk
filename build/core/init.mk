@@ -33,16 +33,22 @@
 .DELETE_ON_ERROR:
 
 
-# Define NDK_LOG in your environment to display log traces when
+# Define NDK_LOG=1 in your environment to display log traces when
 # using the build scripts. See also the definition of ndk_log below.
 #
 NDK_LOG := $(strip $(NDK_LOG))
+ifeq ($(NDK_LOG),true)
+    NDK_LOG := 1
+endif
 
-# Define NDK_HOST_32BIT in your environment to always use toolchain in 32-bit
+# Define NDK_HOST_32BIT=1 in your environment to always use toolchain in 32-bit
 # even if 64-bit is present.  Note that toolchains in 64-bit still produce
 # 32-bit binaries for Android
 #
 NDK_HOST_32BIT := $(strip $(NDK_HOST_32BIT))
+ifeq ($(NDK_HOST_32BIT),true)
+    NDK_HOST_32BIT := 1
+endif
 
 # Check that we have at least GNU Make 3.81
 # We do this by detecting whether 'lastword' is supported
@@ -51,7 +57,7 @@ MAKE_TEST := $(lastword a b c d e f)
 ifneq ($(MAKE_TEST),f)
     $(error Android NDK: GNU Make version $(MAKE_VERSION) is too low (should be >= 3.81))
 endif
-ifdef NDK_LOG
+ifeq ($(NDK_LOG),1)
     $(info Android NDK: GNU Make version $(MAKE_VERSION) detected)
 endif
 
@@ -90,11 +96,11 @@ endif
 
 # -----------------------------------------------------------------------------
 # Function : ndk_log
-# Arguments: 1: text to print when NDK_LOG is defined
+# Arguments: 1: text to print when NDK_LOG is defined to 1
 # Returns  : None
 # Usage    : $(call ndk_log,<some text>)
 # -----------------------------------------------------------------------------
-ifdef NDK_LOG
+ifeq ($(NDK_LOG),1)
 ndk_log = $(info $(__ndk_name): $1)
 else
 ndk_log :=
@@ -103,14 +109,14 @@ endif
 # -----------------------------------------------------------------------------
 # Function : host-prebuilt-tag
 # Arguments: 1: parent path of "prebuilt"
-# Returns  : path $1/prebuilt/(HOST_TAG64) exists and NDK_HOST_32BIT isn't defined,
+# Returns  : path $1/prebuilt/(HOST_TAG64) exists and NDK_HOST_32BIT isn't defined to 1,
 #            or $1/prebuilt/(HOST_TAG)
 # Usage    : $(call host-prebuilt-tag, <path>)
 # Rationale: This function is used to proble available 64-bit toolchain or
 #            return 32-bit one as default.  Note that HOST_TAG64==HOST_TAG for
 #            32-bit system (or 32-bit userland in 64-bit system)
 # -----------------------------------------------------------------------------
-ifdef NDK_HOST_32BIT
+ifeq ($(NDK_HOST_32BIT),1)
 host-prebuilt-tag = $1/prebuilt/$(HOST_TAG)
 else
 host-prebuilt-tag = \
