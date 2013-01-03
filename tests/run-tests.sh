@@ -653,7 +653,15 @@ if is_testable device; then
                     dump "Skipping NDK device test run: $TEST_NAME"
                     return 0
                 else
-                    # only skip listed in file
+                    # skip all tests built by toolchain
+                    TARGET_TOOLCHAIN=`get_build_var $TEST TARGET_TOOLCHAIN`
+                    TARGET_TOOLCHAIN_VERSION=`echo $TARGET_TOOLCHAIN | tr '-' '\n' | tail -1`
+                    grep -q -w -e "$TARGET_TOOLCHAIN_VERSION" "$TEST/BROKEN_RUN"
+                    if [ $? = 0 ] ; then
+                        dump "Skipping NDK device test run: $TEST_NAME (no run for binary built by $TARGET_TOOLCHAIN_VERSION)"
+                        return 0
+                    fi
+                    # skip tests listed in file
                     SKIPPED_EXECUTABLES=`cat $TEST/BROKEN_RUN | tr '\n' ' '`
                     dump "Skipping NDK device test run: $TEST_NAME ($SKIPPED_EXECUTABLES)"
                 fi
