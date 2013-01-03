@@ -132,14 +132,16 @@ if [ "$OS" != "linux" ]; then
     echo "WARNING: WARNING: WARNING: THIS SCRIPT PROBABLY ONLY WORKS ON LINUX!!"
 fi
 
-GMP_VERSION=5.0.4
-MPFR_VERSION=3.1.0
-MPC_VERSION=0.8.2
+GMP_VERSION=5.0.5
+MPFR_VERSION=3.1.1
+MPC_VERSION=1.0.1
 BINUTILS_VERSION=2.22
-GCC_VERSION=4.6.3
+GCC_VERSION=4.7.2
 # Need at least revision 5166
 #  "stdio.h (asprintf, vasprintf): Disable definitions stubs"
 #  as otherwise gold can't be built.
+# Only work up to svn@5177.  Better use
+#  https://mingw-w64.svn.sourceforge.net/svnroot/mingw-w64/stable/v2.x
 MINGW_W64_VERSION=svn@5166
 
 JOBS=$(( $NUM_CORES * 2 ))
@@ -278,9 +280,19 @@ log "Target bits: $TARGET_BITS"
 
 # Determine bitness of host architecture
 PROBE_CC=${CC:-gcc}
-if [ "$HOST_BINPREFIX" ]; then
-    PROBE_CC=$HOST_BINPREFIX-gcc
+if [ -n "$HOST_BINPREFIX" ]; then
+    # If $HOST_BINPREFIX is a directory but not ends with '/', append '/'.
+    # Otherwise, append '-'.
+    if [ -d "$HOST_BINPREFIX" ] ; then
+        if [ -n "${HOST_BINPREFIX##*/}" ] ; then
+	    HOST_BINPREFIX="${HOST_BINPREFIX}/"
+	fi
+    else
+        HOST_BINPREFIX="${HOST_BINPREFIX}-"
+    fi
+    PROBE_CC=${HOST_BINPREFIX}gcc
 fi
+echo "Using GCC: $PROBE_CC"
 echo "int main() { return 0; }" > $TEMP_DIR/test-host-cc.c
 $PROBE_CC -c $TEMP_DIR/test-host-cc.c -o $TEMP_DIR/test-host-cc.o > /dev/null
 fail_panic "Host compiler doesn't work: $PROBE_CC"
@@ -356,6 +368,9 @@ mkdir -p $ARCHIVE_DIR
 mkdir -p $SRC_DIR
 mkdir -p $STAMP_DIR
 
+INSTALL_DIR=$TEMP_DIR/install-$HOST_TAG/$TARGET_TAG
+BUILD_DIR=$TEMP_DIR/build-$HOST_TAG
+
 if [ "$FORCE_BUILD" ]; then
     rm -f $STAMP_DIR/*
     rm -rf $INSTALL_DIR
@@ -363,9 +378,6 @@ if [ "$FORCE_BUILD" ]; then
 fi
 
 # Make temp install directory
-INSTALL_DIR=$TEMP_DIR/install-$HOST_TAG/$TARGET_TAG
-BUILD_DIR=$TEMP_DIR/build-$HOST_TAG
-
 mkdir -p $INSTALL_DIR
 mkdir -p $BUILD_DIR
 
@@ -429,13 +441,13 @@ setup_build_env ()
     local BINPREFIX=$1
 
     if [ "$BINPREFIX" ]; then
-        CC=$BINPREFIX-gcc
-        CXX=$BINPREFIX-g++
-        LD=$BINPREFIX-ld
-        AS=$BINPREFIX-as
-        AR=$BINPREFIX-ar
-        RANLIB=$BINPREFIX-ranlib
-        STRIP=$BINPREFIX-strip
+        CC=${BINPREFIX}gcc
+        CXX=${BINPREFIX}g++
+        LD=${BINPREFIX}ld
+        AS=${BINPREFIX}as
+        AR=${BINPREFIX}ar
+        RANLIB=${BINPREFIX}ranlib
+        STRIP=${BINPREFIX}strip
         export CC CXX LD AS AR RANLIB STRIP
     elif [ "$OS" = darwin ]; then
         # Needed on OS X otherwise libtool will try to use gcc and $BUILD_CFLAGS
