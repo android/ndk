@@ -25,6 +25,8 @@ THIS SOFTWARE.
 /* To avoid conflicts with <stdio.h> getline declaration on Linux */
 #define getline awk_getline
 
+#include <stdint.h>
+
 extern	int	yywrap(void);
 extern	void	setfname(Cell *);
 extern	int	constnode(Node *);
@@ -93,8 +95,8 @@ extern	void	defn(Cell *, Node *, Node *);
 extern	int	isarg(const char *);
 extern	char	*tokname(int);
 extern	Cell	*(*proctab[])(Node **, int);
-extern	int	ptoi(void *);
-extern	Node	*itonp(int);
+extern	intptr_t ptoi(void *);
+extern	Node	*itonp(intptr_t);
 
 extern	void	syminit(void);
 extern	void	arginit(int, char **);
@@ -194,5 +196,12 @@ extern	void	closeall(void);
 extern	Cell	*sub(Node **, int);
 extern	Cell	*gsub(Node **, int);
 
+#if !defined(_WIN32)
+/* In mingw, the following are defined with dllimport attributes.
+  Redefining here will only get warning reads:
+
+  ... redeclared without dllimport attribute: previous dllimport ignored
+ */
 extern	FILE	*popen(const char *, const char *);
 extern	int	pclose(FILE *);
+#endif

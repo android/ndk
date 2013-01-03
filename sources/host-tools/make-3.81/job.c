@@ -235,7 +235,7 @@ unsigned int jobserver_tokens = 0;
  * The macro which references this function is defined in make.h.
  */
 int
-w32_kill(int pid, int sig)
+w32_kill(intptr_t pid, int sig)
 {
   return ((process_kill((HANDLE)pid, sig) == TRUE) ? 0 : -1);
 }
@@ -303,7 +303,7 @@ create_batch_file (char const *base, int unixy, int *fd)
           const unsigned final_size = path_size + size + 1;
           char *const path = (char *) xmalloc (final_size);
           memcpy (path, temp_path, final_size);
-          *fd = _open_osfhandle ((long)h, 0);
+          *fd = _open_osfhandle ((intptr_t)h, 0);
           if (unixy)
             {
               char *p;
@@ -515,8 +515,8 @@ reap_children (int block, int err)
 	{
 	  any_remote |= c->remote;
 	  any_local |= ! c->remote;
-	  DB (DB_JOBS, (_("Live child 0x%08lx (%s) PID %ld %s\n"),
-                        (unsigned long int) c, c->file->name,
+	  DB (DB_JOBS, (_("Live child %p (%s) PID %ld %s\n"),
+                        c, c->file->name,
                         (long) c->pid, c->remote ? _(" (remote)") : ""));
 #ifdef VMS
 	  break;
@@ -638,8 +638,8 @@ reap_children (int block, int err)
                              e, map_windows32_error_to_string(e));
                   }
                 else
-                  DB (DB_VERBOSE, ("Main thread handle = 0x%08lx\n",
-                                   (unsigned long)main_thread));
+                  DB (DB_VERBOSE, ("Main thread handle = %p\n",
+                                   main_thread));
               }
 
             /* wait for anything to finish */
@@ -695,9 +695,9 @@ reap_children (int block, int err)
         continue;
 
       DB (DB_JOBS, (child_failed
-                    ? _("Reaping losing child 0x%08lx PID %ld %s\n")
+                    ? _("Reaping losing child %p PID %ld %s\n")
                     : _("Reaping winning child 0x%08lx PID %ld %s\n"),
-                    (unsigned long int) c, (long) c->pid,
+                    c, (long) c->pid,
                     c->remote ? _(" (remote)") : ""));
 
       if (c->sh_batch_file) {
@@ -799,8 +799,8 @@ reap_children (int block, int err)
            update_status to its also_make files.  */
         notice_finished_file (c->file);
 
-      DB (DB_JOBS, (_("Removing child 0x%08lx PID %ld%s from chain.\n"),
-                    (unsigned long int) c, (long) c->pid,
+      DB (DB_JOBS, (_("Removing child %p PID %ld%s from chain.\n"),
+                    c, (long) c->pid,
                     c->remote ? _(" (remote)") : ""));
 
       /* Block fatal signals while frobnicating the list, so that
@@ -844,8 +844,8 @@ static void
 free_child (struct child *child)
 {
   if (!jobserver_tokens)
-    fatal (NILF, "INTERNAL: Freeing child 0x%08lx (%s) but no tokens left!\n",
-           (unsigned long int) child, child->file->name);
+    fatal (NILF, "INTERNAL: Freeing child %p (%s) but no tokens left!\n",
+           child, child->file->name);
 
   /* If we're using the jobserver and this child is not the only outstanding
      job, put a token back into the pipe for it.  */
@@ -861,8 +861,8 @@ free_child (struct child *child)
       if (r != 1)
 	pfatal_with_name (_("write jobserver"));
 
-      DB (DB_JOBS, (_("Released token for child 0x%08lx (%s).\n"),
-                    (unsigned long int) child, child->file->name));
+      DB (DB_JOBS, (_("Released token for child %p (%s).\n"),
+                    child, child->file->name));
     }
 
   --jobserver_tokens;
@@ -1375,7 +1375,7 @@ start_job_command (struct child *child)
       hPID = process_easy(argv, child->environment);
 
       if (hPID != INVALID_HANDLE_VALUE)
-        child->pid = (int) hPID;
+        child->pid = (intptr_t) hPID;
       else {
         int i;
         unblock_sigs();
@@ -1452,8 +1452,8 @@ start_waiting_job (struct child *c)
     {
     case cs_running:
       c->next = children;
-      DB (DB_JOBS, (_("Putting child 0x%08lx (%s) PID %ld%s on the chain.\n"),
-                    (unsigned long int) c, c->file->name,
+      DB (DB_JOBS, (_("Putting child %p (%s) PID %ld%s on the chain.\n"),
+                    c, c->file->name,
                     (long) c->pid, c->remote ? _(" (remote)") : ""));
       children = c;
       /* One more job slot is in use.  */
@@ -2043,8 +2043,8 @@ exec_command (char **argv, char **envp)
           break;
       else
           fprintf(stderr,
-                  _("make reaped child pid %ld, still waiting for pid %ld\n"),
-                  (DWORD)hWaitPID, (DWORD)hPID);
+                  _("make reaped child pid %lld, still waiting for pid %lld\n"),
+                  (intptr_t)hWaitPID, (intptr_t)hPID);
     }
 
   /* return child's exit code as our exit code */
