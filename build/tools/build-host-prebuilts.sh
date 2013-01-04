@@ -203,14 +203,14 @@ do_remote_host_build ()
 
 for SYSTEM in $SYSTEMS; do
 
-    # First, build the toolchains
+    # Add --mingw flag
     TOOLCHAIN_FLAGS=$FLAGS
-    if [ "$HOST_TAG" = "linux-x86" -a "$SYSTEM" = "windows" ]; then
+    if [ "$HOST_TAG32" = "linux-x86" -a "$SYSTEM" = "windows" ]; then
         TOOLCHAIN_FLAGS=$TOOLCHAIN_FLAGS" --mingw"
     fi
 
-     # Should we do a remote build?
-    if [ "$SYSTEM" != "$HOST_TAG" ]; then
+    # Should we do a remote build?
+    if [ "$SYSTEM" != "$HOST_TAG32" ]; then
         case $SYSTEM in
             darwin-*)
                 if [ "$DARWIN_SSH" ]; then
@@ -223,25 +223,42 @@ for SYSTEM in $SYSTEMS; do
         esac
     fi
 
-    # First, ndk-stack
-    echo "Building $SYSTEM ndk-stack"
-    run $BUILDTOOLS/build-ndk-stack.sh $TOOLCHAIN_FLAGS
-    fail_panic "ndk-stack build failure!"
+    # Determin the display system name
+    SYSNAME=$SYSTEM
+    if [ "$TRY64" = "yes" ]; then
+        case $SYSTEM in
+            darwin-x86|linux-x86)
+                SYSNAME=${SYSTEM%%x86}x86-64
+                ;;
+            windows)
+                SYSNAME=windows-x86_64
+                ;;
+        esac
+    fi
 
-    echo "Building $SYSTEM ndk-make"
+    # First, ndk-stack
+    if [ "$TRY64" != "yes" ]; then
+        # Don't build ndk-stack in 64-bit because unlike other host toolchains
+        # ndk-stack doesn't have separate directories for 32-bit and 64-bit.
+        # 64-bit one will overwrite the 32-bit one
+        echo "Building $SYSNAME ndk-stack"
+        run $BUILDTOOLS/build-ndk-stack.sh $TOOLCHAIN_FLAGS
+        fail_panic "ndk-stack build failure!"
+    fi
+    echo "Building $SYSNAME ndk-make"
     run $BUILDTOOLS/build-host-make.sh $TOOLCHAIN_FLAGS
     fail_panic "make build failure!"
 
-    echo "Building $SYSTEM ndk-awk"
+    echo "Building $SYSNAME ndk-awk"
     run $BUILDTOOLS/build-host-awk.sh $TOOLCHAIN_FLAGS
     fail_panic "awk build failure!"
 
-    echo "Building $SYSTEM ndk-sed"
+    echo "Building $SYSNAME ndk-sed"
     run $BUILDTOOLS/build-host-sed.sh $TOOLCHAIN_FLAGS
     fail_panic "sed build failure!"
 
     if [ "$SYSTEM" = "windows" ]; then
-        echo "Building $SYSTEM toolbox"
+        echo "Building $SYSNAME toolbox"
         run $BUILDTOOLS/build-host-toolbox.sh $FLAGS
         fail_panic "Windows toolbox build failure!"
     fi
@@ -255,7 +272,7 @@ for SYSTEM in $SYSTEMS; do
         fi
 
         for TOOLCHAIN_NAME in $TOOLCHAIN_NAMES; do
-            echo "Building $SYSTEM toolchain for $ARCH architecture: $TOOLCHAIN_NAME"
+            echo "Building $SYSNAME toolchain for $ARCH architecture: $TOOLCHAIN_NAME"
             run $BUILDTOOLS/build-gcc.sh "$SRC_DIR" "$NDK_DIR" $TOOLCHAIN_NAME $TOOLCHAIN_FLAGS
             fail_panic "Could not build $TOOLCHAIN_NAME-$SYSTEM!"
         done
@@ -267,7 +284,7 @@ for SYSTEM in $SYSTEMS; do
         POLLY_FLAGS="--with-polly"
     fi
     for LLVM_VERSION in $LLVM_VERSION_LIST; do
-        echo "Building $SYSTEM clang/llvm-$LLVM_VERSION"
+        echo "Building $SYSNAME clang/llvm-$LLVM_VERSION"
         run $BUILDTOOLS/build-llvm.sh "$SRC_DIR" "$NDK_DIR" "llvm-$LLVM_VERSION" $TOOLCHAIN_FLAGS $POLLY_FLAGS $CHECK_FLAG
         fail_panic "Could not build llvm for $SYSTEM"
     done
