@@ -13,9 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#if defined(__arm__) && defined(__SOFTFP__)
+#error Please specify -mfloat-abi=softfp or -mfloat-abi=hard
+#endif
+
 #include <fenv.h>
+
+void test1()
+{
+     FE_DIVBYZERO;
+}
+
+void test2(fexcept_t *__flagp)
+{
+    fexcept_t __fpscr;
+    fegetexceptflag(__flagp, -1);
+}
 
 int main()
 {
-     FE_DIVBYZERO;
+    fexcept_t __fpscr;
+    test1();
+    test2(&__fpscr);
+    return __fpscr;
 }
