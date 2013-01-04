@@ -184,6 +184,11 @@ else
     }
 fi
 
+if [ "$HOST_OS" = "cygwin" ] ; then
+    NULL="NUL"
+else
+    NULL="/dev/null"
+fi
 
 # Probe a given sub-directory and see if it contains valid test files.
 # $1: sub-directory path
@@ -262,7 +267,7 @@ if [ "$PREFIX" = "${PREFIX%clang}" ]; then
         panic "Missing compiler, please fix your prefix definition: $GCC"
     fi
 
-    GCC=$(which $GCC 2>/dev/null)
+    GCC=$(which $GCC 2>$NULL)
     if [ -z "$GCC" -o ! -f "$GCC" ]; then
         panic "Bad compiler path: ${PREFIX}gcc"
     fi
@@ -299,13 +304,13 @@ else
     PREFIX=${CLANG%%clang}
 
     # Find *-ld in the same directory eventaully usable as ${PREFIX}-ld
-    GNU_LD=$(cd $CLANGDIR && ls *-ld)
+    GNU_LD=$(cd $CLANGDIR && ls *-ld${HOST_EXE})
     GNU_LD=$CLANGDIR/$GNU_LD
     if [ ! -f "$GNU_LD" ]; then
         panic "Missing linker in the same directory as clang/clang++: $CLANGDIR"
     fi
 
-    PREFIX=${GNU_LD%ld}
+    PREFIX=${GNU_LD%ld${HOST_EXE}}
 
     CC=$CLANG
     CXX=${CLANG%clang}clang++
@@ -409,7 +414,7 @@ for TEST_SUBDIR in $TEST_SUBDIRS; do
     case $TEST_TYPE in
         script)
             (
-                export PREFIX CC CXX CFLAGS CXXFLAGS LDFLAGS VERBOSE ABI
+                export PREFIX CC CXX CFLAGS CXXFLAGS LDFLAGS VERBOSE ABI NULL
                 run cd "$BUILD_DIR" && run_script $SCRIPT
             )
             RET=$?
@@ -417,14 +422,14 @@ for TEST_SUBDIR in $TEST_SUBDIRS; do
 
         c_executable)
             (
-                run cd "$BUILD_DIR" && run $CC $LDFLAGS $CFLAGS -o /dev/null $SOURCES
+                run cd "$BUILD_DIR" && run $CC $LDFLAGS $CFLAGS -o $NULL $SOURCES
             )
             RET=$?
             ;;
 
         cxx_executable)
             (
-                run cd "$BUILD_DIR" && run $CXX $LDFLAGS $CXXFLAGS -o /dev/null $SOURCES
+                run cd "$BUILD_DIR" && run $CXX $LDFLAGS $CXXFLAGS -o $NULL $SOURCES
             )
             RET=$?
             ;;
