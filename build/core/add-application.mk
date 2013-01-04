@@ -185,7 +185,7 @@ endif
 #
 ifdef APP_DEBUG
   APP_DEBUGGABLE := $(APP_DEBUG)
-  ifdef NDK_LOG
+  ifeq ($(NDK_LOG),1)
     ifeq ($(APP_DEBUG),true)
       $(call ndk_log,Application '$(_app)' forced debuggable through NDK_DEBUG)
     else
@@ -198,7 +198,7 @@ else
   ifdef APP_MANIFEST
     APP_DEBUGGABLE := $(shell $(HOST_AWK) -f $(BUILD_AWK)/extract-debuggable.awk $(call host-path,$(APP_MANIFEST)))
   endif
-  ifdef NDK_LOG
+  ifeq ($(NDK_LOG),1)
     ifeq ($(APP_DEBUGGABLE),true)
       $(call ndk_log,Application '$(_app)' *is* debuggable)
     else

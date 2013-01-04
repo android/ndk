@@ -32,7 +32,7 @@ else
     # get rid of trailing slash
     NDK_ROOT := $(NDK_ROOT:%/=%)
 endif
-ifdef NDK_LOG
+ifeq ($(NDK_LOG),1)
     $(info Android NDK: NDK installation path auto-detected: '$(NDK_ROOT)')
 endif
 

@@ -50,8 +50,13 @@ esac
 
 # If NDK_LOG is set to 1 or true in the environment, or the command-line
 # then enable log messages below
+# Also normalize NDK_HOST_32BIT to 1 or 0
 if [ -z "$NDK_LOG" ]; then
   NDK_LOG=0
+fi
+
+if [ -z "$NDK_HOST_32BIT" ]; then
+  NDK_HOST_32BIT=0
 fi
 
 for opt; do
@@ -62,13 +67,24 @@ for opt; do
       NDK_LOG=*)
         NDK_LOG=0
         ;;
+      NDK_HOST_32BIT=1|NDK_HOST_32BIT=true)
+        NDK_HOST_32BIT=1
+        ;;
+      NDK_HOST_32BIT=*)
+        NDK_HOST_32BIT=0
+        ;;
     esac
 done
 
 if [ "$NDK_LOG" = "true" ]; then
   NDK_LOG=1
 fi
-if [ "$NDK_LOG" = 1 ]; then
+
+if [ "$NDK_HOST_32BIT" = "true" ]; then
+  NDK_HOST_32BIT=1
+fi
+
+if [ "$NDK_LOG" = "1" ]; then
   log () {
     echo "$@"
   }
@@ -112,25 +128,32 @@ case $HOST_TAG in
     file -L "$SHELL" | grep -q "x86[_-]64"
     if [ $? != 0 ]; then
       HOST_ARCH=x86
-      HOST_TAG=$HOST_OS-x86
       log "HOST_ARCH=$HOST_ARCH (32-bit userland detected)"
     fi
     ;;
-  windows-x86) # Special case windows-x86 -> windows
-    HOST_TAG=windows
 esac
 
 # Check that we have 64-bit binaries on 64-bit system, otherwise fallback
 # on 32-bit ones. This gives us more freedom in packaging the NDK.
-if [ $HOST_ARCH = x86_64 -a ! -d $PROGDIR/prebuilt/$HOST_TAG ]; then
-  HOST_TAG=$HOST_OS-x86
-  if [ $HOST_TAG = windows-x86 ]; then
-    HOST_TAG=windows
+LOG_MESSAGE=
+if [ $HOST_ARCH = x86_64 ]; then
+  if [ ! -d $PROGDIR/prebuilt/$HOST_TAG ]; then
+    HOST_ARCH=x86
+    LOG_MESSAGE="(no 64-bit prebuilt binaries detected)"
   fi
-  log "HOST_TAG=$HOST_TAG (no 64-bit prebuilt binaries detected)"
-else
-  log "HOST_TAG=$HOST_TAG"
+
+  if [ "$NDK_HOST_32BIT" = "1" ]; then
+    HOST_ARCH=x86
+    LOG_MESSAGE="(force 32-bit host toolchain)"
+  fi
 fi
+
+HOST_TAG=$HOST_OS-$HOST_ARCH
+# Special case windows-x86 -> windows
+if [ $HOST_TAG = windows-x86 ]; then
+  HOST_TAG=windows
+fi
+log "HOST_TAG=$HOST_TAG $LOG_MESSAGE"
 
 # If GNUMAKE is defined, check that it points to a valid file
 if [ -n "$GNUMAKE" ] ; then
