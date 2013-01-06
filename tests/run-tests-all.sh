@@ -54,6 +54,11 @@ case "$HOST_TAG" in
             TEST_HOST_32BIT=yes
         fi
     ;;
+    windows*)
+        if [ "$ProgramW6432"!="" -a \
+             -d "$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/windows-x86_64" ] ; then
+            TEST_HOST_32BIT=yes
+        fi
 esac
 
 #
@@ -76,33 +81,38 @@ dump "### Running $SYSTEM clang 3.1 full tests"
 NDK_TOOLCHAIN_VERSION=clang3.1 ./run-tests.sh --continue-on-build-fail --full
 
 if [ "$TEST_HOST_32BIT" = "yes" ] ; then
-    dump "### Running $SYSTEM gcc 4.7 full tests (32-bit host)"
+    dump "### Running $SYSTEM gcc 4.7 tests (32-bit host)"
     NDK_HOST_32BIT=1 NDK_TOOLCHAIN_VERSION=4.7 ./run-tests.sh --continue-on-build-fail
-    dump "### Running $SYSTEM gcc 4.6 full tests (32-bit host)"
+    dump "### Running $SYSTEM gcc 4.6 tests (32-bit host)"
     NDK_HOST_32BIT=1 NDK_TOOLCHAIN_VERSION=4.6 ./run-tests.sh --continue-on-build-fail
-    dump "### Running $SYSTEM gcc 4.4.3 full tests (32-bit host)"
+    dump "### Running $SYSTEM gcc 4.4.3 tests (32-bit host)"
     NDK_HOST_32BIT=1 NDK_TOOLCHAIN_VERSION=4.4.3 ./run-tests.sh --continue-on-build-fail
-    dump "### Running $SYSTEM clang 3.1 full tests (32-bit host)"
+    dump "### Running $SYSTEM clang 3.1 tests (32-bit host)"
     NDK_HOST_32BIT=1 NDK_TOOLCHAIN_VERSION=clang3.1 ./run-tests.sh --continue-on-build-fail
 fi
 
+if [ "$SYSTEM" = "linux-x86" -a -d "$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/windows-x86_64" ] ; then
+    # using 64-bit windows toolchain
+    dump "### Running windows-x86_64 4.7 tests"
+    NDK_TOOLCHAIN_VERSION=4.7 ./run-tests.sh --continue-on-build-fail --wine # --full
+    dump "### Running windows-x86_64 4.6 tests"
+    NDK_TOOLCHAIN_VERSION=4.6 ./run-tests.sh --continue-on-build-fail --wine # --full
+    dump "### Running windows-x86_64 4.4.3 tests"
+    NDK_TOOLCHAIN_VERSION=4.4.3 ./run-tests.sh --continue-on-build-fail --wine # --full
+    dump "### Running windows-x86_64 clang 3.1 tests"
+    NDK_TOOLCHAIN_VERSION=clang3.1 ./run-tests.sh --continue-on-build-fail --wine # --full
+fi
+
 if [ "$SYSTEM" = "linux-x86" -a -d "$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/windows" ] ; then
-    find_program WINE wine
-    if [ -n "$WINE" ]; then
-        WINE_VERSION=`$WINE --version`
-        if [ -n "$WINE_VERSION" -a "$WINE_VERSION" != "wine-1.4" ]; then
-            # enumerate all cases using windows toolchain
-            dump "### Running windows 4.7 tests"
-            NDK_TOOLCHAIN_VERSION=4.7 ./run-tests.sh --continue-on-build-fail --wine # --full
-            dump "### Running windows 4.6 tests"
-            NDK_TOOLCHAIN_VERSION=4.6 ./run-tests.sh --continue-on-build-fail --wine # --full
-            dump "### Running windows 4.4.3 tests"
-            NDK_TOOLCHAIN_VERSION=4.4.3 ./run-tests.sh --continue-on-build-fail --wine # --full
-            dump "### Running windows clang 3.1 tests"
-            NDK_TOOLCHAIN_VERSION=clang3.1 ./run-tests.sh --continue-on-build-fail --wine # --full
-        fi
-        # No need to check TEST_HOST_32BIT because Windows doesn't have 64-bit toolchain to begin with
-    fi
+    # using 32-bit windows toolchain
+    dump "### Running windows 4.7 tests"
+    NDK_HOST_32BIT=1 NDK_TOOLCHAIN_VERSION=4.7 ./run-tests.sh --continue-on-build-fail --wine # --full
+    dump "### Running windows 4.6 tests"
+    NDK_HOST_32BIT=1 NDK_TOOLCHAIN_VERSION=4.6 ./run-tests.sh --continue-on-build-fail --wine # --full
+    dump "### Running windows 4.4.3 tests"
+    NDK_HOST_32BIT=1 NDK_TOOLCHAIN_VERSION=4.4.3 ./run-tests.sh --continue-on-build-fail --wine # --full
+    dump "### Running windows clang 3.1 tests"
+    NDK_HOST_32BIT=1 NDK_TOOLCHAIN_VERSION=clang3.1 ./run-tests.sh --continue-on-build-fail --wine # --full
 fi
 
 # add more if you want ...
