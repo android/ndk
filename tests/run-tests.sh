@@ -592,7 +592,7 @@ if is_testable build; then
             fi
             rm -rf "$DIR" && cp -r "$1" "$DIR"
             export NDK
-            (cd "$DIR" && run ./build.sh $NDK_BUILD_FLAGS)
+            (cd "$DIR" && run ./build.sh -j$JOBS $NDK_BUILD_FLAGS)
             if [ $? != 0 ]; then
                 echo "!!! BUILD FAILURE [$1]!!! See $NDK_LOGFILE for details or use --verbose option!"
                 if [ "$CONTINUE_ON_BUILD_FAIL" != yes ] ; then
