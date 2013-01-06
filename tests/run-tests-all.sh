@@ -45,19 +45,21 @@ echo "DEVICE_mips=$DEVICE_mips"
 # check if we need to also test 32-bit host toolchain
 #
 TEST_HOST_32BIT=no
-
+TAGS=$HOST_TAG
 case "$HOST_TAG" in
     linux-x86_64|darwin-x86_64)
         if [ -d "$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/$HOST_TAG" ] ; then
             # ideally we should check each individual compiler the presence of 64-bit
             # but for test script this is fine
             TEST_HOST_32BIT=yes
+            TAGS=$TAGS" $HOST_TAG32"
         fi
     ;;
     windows*)
         if [ "$ProgramW6432"!="" -a \
              -d "$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/windows-x86_64" ] ; then
             TEST_HOST_32BIT=yes
+            TAGS=$TAGS" windows-x86_64"
         fi
 esac
 
@@ -122,54 +124,62 @@ fi
 #
 STANDALONE_TMPDIR=$NDK_TMPDIR
 
-# $1: API level
-# $2: Arch
-# $3: GCC version
+# $1: Host tag
+# $2: API level
+# $3: Arch
+# $4: GCC version
 standalone_path ()
 {
-    local API=$1
-    local ARCH=$2
-    local GCC_VERSION=$3
+    local TAG=$1
+    local API=$2
+    local ARCH=$3
+    local GCC_VERSION=$4
 
-    echo ${STANDALONE_TMPDIR}/android-ndk-api${API}-${ARCH}-${GCC_VERSION}
+    echo ${STANDALONE_TMPDIR}/android-ndk-api${API}-${ARCH}-${TAG}-${GCC_VERSION}
 }
 
-# $1: API level
-# $2: Arch
-# $3: GCC version
-# $4: LLVM version
+# $1: Host tag
+# $2: API level
+# $3: Arch
+# $4: GCC version
+# $5: LLVM version
 make_standalone ()
 {
-    local API=$1
-    local ARCH=$2
-    local GCC_VERSION=$3
-    local LLVM_VERSION=$4
+    local TAG=$1
+    local API=$2
+    local ARCH=$3
+    local GCC_VERSION=$4
+    local LLVM_VERSION=$5
 
     (cd $NDK && \
      ./build/tools/make-standalone-toolchain.sh \
         --platform=android-$API \
-        --install-dir=$(standalone_path $API $ARCH $GCC_VERSION) \
+        --install-dir=$(standalone_path $TAG $API $ARCH $GCC_VERSION) \
         --llvm-version=$LLVM_VERSION \
-        --toolchain=$(get_toolchain_name_for_arch $ARCH $GCC_VERSION))
+        --toolchain=$(get_toolchain_name_for_arch $ARCH $GCC_VERSION) \
+        --system=$TAG)
 }
 
 API=14
 LLVM_VERSION=$DEFAULT_LLVM_VERSION
 for ARCH in $(commas_to_spaces $DEFAULT_ARCHS); do
     for GCC_VERSION in $(commas_to_spaces $DEFAULT_GCC_VERSION_LIST); do
-        dump "### Testing $ARCH gcc-$GCC_VERSION toolchain with --sysroot"
-        (cd $NDK && \
-            ./tests/standalone/run.sh --prefix=$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION)-gcc)
-        dump "### Making $ARCH gcc-$GCC_VERSION standalone toolchain"
-        make_standalone $API $ARCH $GCC_VERSION $LLVM_VERSION
-        dump "### Testing $ARCH gcc-$GCC_VERSION standalone toolchain"
-        (cd $NDK && \
-            ./tests/standalone/run.sh --no-sysroot \
-                --prefix=$(standalone_path $API $ARCH $GCC_VERSION)/bin/$(get_default_toolchain_prefix_for_arch $ARCH)-gcc)
-        dump "### Testing clang in $ARCH gcc-$GCC_VERSION standalone toolchain"
-        (cd $NDK && \
-            ./tests/standalone/run.sh --no-sysroot \
-                --prefix=$(standalone_path $API $ARCH $GCC_VERSION)/bin/clang)
+        for TAG in $TAGS; do
+            dump "### [$TAG] Testing $ARCH gcc-$GCC_VERSION toolchain with --sysroot"
+            (cd $NDK && \
+                ./tests/standalone/run.sh --prefix=$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION $TAG)-gcc)
+            dump "### [$TAG] Making $ARCH gcc-$GCC_VERSION standalone toolchain"
+            make_standalone $TAG $API $ARCH $GCC_VERSION $LLVM_VERSION
+            dump "### [$TAG] Testing $ARCH gcc-$GCC_VERSION standalone toolchain"
+            (cd $NDK && \
+                ./tests/standalone/run.sh --no-sysroot \
+                    --prefix=$(standalone_path $TAG $API $ARCH $GCC_VERSION)/bin/$(get_default_toolchain_prefix_for_arch $ARCH)-gcc)
+            dump "### [$TAG] Testing clang in $ARCH gcc-$GCC_VERSION standalone toolchain"
+            (cd $NDK && \
+                ./tests/standalone/run.sh --no-sysroot \
+                    --prefix=$(standalone_path $TAG $API $ARCH $GCC_VERSION)/bin/clang)
+	    rm -rf $(standalone_path $TAG $API $ARCH $GCC_VERSION)
+        done
     done
 done
 
