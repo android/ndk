@@ -42,9 +42,12 @@ clean: $(cleantarget)
 
 $(cleantarget): PRIVATE_MODULE      := $(LOCAL_MODULE)
 $(cleantarget): PRIVATE_TEXT        := [$(TARGET_ARCH_ABI)]
+ifneq ($(LOCAL_BUILT_MODULE_NOT_COPIED),true)
 $(cleantarget): PRIVATE_CLEAN_FILES := $(LOCAL_BUILT_MODULE) \
                                        $($(my)OBJS)
-
+else
+$(cleantarget): PRIVATE_CLEAN_FILES := ($(my)OBJS)
+endif
 $(cleantarget)::
 	@$(HOST_ECHO) "Clean: $(PRIVATE_MODULE) $(PRIVATE_TEXT)"
 	$(hide) $(call host-rmdir,$(PRIVATE_CLEAN_FILES))
