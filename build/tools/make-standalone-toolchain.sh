@@ -237,19 +237,47 @@ if [ -n "$LLVM_VERSION" ]; then
   fi
 
   cat > "$TMPDIR/bin/clang" <<EOF
-\`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT -target $LLVM_TARGET "\$@"
+if [ "\$1" != "-cc1" ]; then
+    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT -target $LLVM_TARGET "\$@"
+else
+    # target/triple already spelled out.
+    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT "\$@"
+fi
 EOF
   cat > "$TMPDIR/bin/clang++" <<EOF
-\`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT++ -target $LLVM_TARGET "\$@"
+if [ "\$1" != "-cc1" ]; then
+    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT++ -target $LLVM_TARGET "\$@"
+else
+    # target/triple already spelled out.
+    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT++ "\$@"
+fi
 EOF
   chmod 0755 "$TMPDIR/bin/clang" "$TMPDIR/bin/clang++"
 
   if [ -n "$HOST_EXE" ] ; then
     cat > "$TMPDIR/bin/clang.cmd" <<EOF
+@echo off
+if "%1" == "-cc1" goto :L
 %~dp0\\clang${LLVM_VERSION_WITHOUT_DOT}${HOST_EXE} -target $LLVM_TARGET %*
+if ERRORLEVEL 1 exit /b 1
+goto :done
+:L
+rem target/triple already spelled out.
+%~dp0\\clang${LLVM_VERSION_WITHOUT_DOT}${HOST_EXE} %*
+if ERRORLEVEL 1 exit /b 1
+:done
 EOF
     cat > "$TMPDIR/bin/clang++.cmd" <<EOF
+@echo off
+if "%1" == "-cc1" goto :L
 %~dp0\\clang${LLVM_VERSION_WITHOUT_DOT}++${HOST_EXE} -target $LLVM_TARGET %*
+if ERRORLEVEL 1 exit /b 1
+goto :done
+:L
+rem target/triple already spelled out.
+%~dp0\\clang${LLVM_VERSION_WITHOUT_DOT}++${HOST_EXE} %*
+if ERRORLEVEL 1 exit /b 1
+:done
 EOF
   fi
 fi
