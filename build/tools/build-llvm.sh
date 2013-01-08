@@ -222,18 +222,12 @@ if [ "$CHECK" = "yes" -a "$MINGW" != "yes" ] ; then
     dump "Running  : llvm toolchain regression test"
     cd $LLVM_BUILD_OUT
     run make check-all
-    if [ $? != 0 ] ; then
-        dump "ERROR: Couldn't pass all llvm regression test"
-        #exit 1
-    fi
+    fail_warning "Couldn't pass all llvm regression test"  # change to fail_panic later
     if [ "$POLLY" = "yes" ]; then
         dump "Running  : polly toolchain regression test"
         cd $LLVM_BUILD_OUT
         run make polly-test -C tools/polly/test
-        if [ $? != 0 ] ; then
-            dump "ERROR: Couldn't pass all polly regression test"
-            #exit 1
-        fi
+        fail_warning "Couldn't pass all polly regression test"  # change to fail_panic later
     fi
 fi
 
