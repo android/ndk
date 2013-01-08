@@ -184,7 +184,7 @@ else
     }
 fi
 
-if [ "$HOST_OS" = "cygwin" ] ; then
+if [ "$HOST_OS" = "cygwin" -o "$HOST_OS" = "windows" ] ; then
     NULL="NUL"
 else
     NULL="/dev/null"
@@ -271,6 +271,9 @@ if [ "$PREFIX" = "${PREFIX%clang}" ]; then
     if [ -z "$GCC" -o ! -f "$GCC" ]; then
         panic "Bad compiler path: ${PREFIX}gcc"
     fi
+
+    # Remove trailing .exe if any
+    GCC=${GCC%${HOST_EXE}}
 
     GCCDIR=$(dirname "$GCC")
     GCCBASE=$(basename "$GCC")
@@ -365,8 +368,13 @@ else
     if [ ! -f "$SYSROOT/usr/lib/libc.so" ]; then
         panic "Incomplete sysroot, use --sysroot to point to valid one: $SYSROOT"
     fi
-    if [ $HOST_OS = cygwin ]; then
+    if [ "$HOST_OS" = "cygwin" ]; then
         SYSROOT=`cygpath -m $SYSROOT`
+    else
+        if [ "$HOST_OS" = "windows" -a "$OSTYPE" = "msys" ]; then
+            # use -W specific to MSys to get windows path
+            SYSROOT=$(cd $SYSROOT ; pwd -W)
+        fi
     fi
     dump "Auto-config: --sysroot=$SYSROOT"
     COMMON_FLAGS=$COMMON_FLAGS" --sysroot=$SYSROOT"

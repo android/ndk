@@ -91,7 +91,7 @@ $(foreach _app,$(NDK_APPS),\
 # 'mount' command to a special Awk script.
 #
 ifeq ($(HOST_OS),cygwin)
-  GEN_CYGWIN_DEPS_CONVERTER := mount | awk -f $(BUILD_AWK)/gen-cygwin-deps-converter.awk
+  GEN_CYGWIN_DEPS_CONVERTER := mount | tr '\\' '/' | awk -f $(BUILD_AWK)/gen-cygwin-deps-converter.awk
   ifeq ($(NDK_LOG),1)
     $(call __ndk_info,Cygwin dependency file conversion script:)
     $(info ----- start of script ----)
