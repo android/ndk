@@ -61,6 +61,10 @@ fi
 if [ "$TRY64" = "yes" ]; then
   BUILD_TRY64=yes
 fi
+V=0
+if [ "$VERBOSE2" = "yes" ]; then
+  V=1
+fi
 
 log "Configuring the build"
 mkdir -p $BUILD_DIR && rm -rf $BUILD_DIR/*
@@ -73,7 +77,8 @@ run $GNUMAKE \
     -j $NUM_JOBS \
     BUILD_DIR="$BUILD_DIR" \
     MINGW="$BUILD_MINGW" \
-    TRY64="$BUILD_TRY64"
+    TRY64="$BUILD_TRY64" \
+    V="$V"
 fail_panic "Failed to build the awk-$AWK_VERSION executable!"
 
 log "Copying executable to prebuilt location"

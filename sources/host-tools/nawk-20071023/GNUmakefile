@@ -37,6 +37,8 @@ else
 CC      := i586-pc-mingw32msvc-gcc
 endif
 EXE     := .exe
+else
+WINE    :=
 endif
 
 PROGRAM := $(BUILD_DIR)/ndk-awk$(EXE)
@@ -82,7 +84,7 @@ $(eval $(call build-c-file,$(PROCTAB_C),$(PROCTAB_O)))
 
 $(PROCTAB_C): $(MAKETAB) $(YTAB_H)
 	@echo "Gen: $(notdir $@)"
-	$(hide)$(MAKETAB) $(YTAB_H) > $@
+	$(hide)$(WINE) $(MAKETAB) $(YTAB_H) > $@
 
 
 $(PROGRAM): $(OBJECTS)
