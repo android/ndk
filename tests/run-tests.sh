@@ -376,6 +376,23 @@ fi
 ###
 
 NDK_BUILD_FLAGS="-B"
+if [ "$WINE" ]; then
+    case "$NDK_HOST_32BIT" in
+        1|true)
+            WINE=wine12
+            ;;
+        *)
+            WINE=wine15
+            NDK_BUILD_FLAGS=""  # make.exe -B hangs in wine > 1.2.x
+            if [ "$NDK_TOOLCHAIN_VERSION" != "4.4.3" ] ; then
+                APP_LDFLAGS=-fuse-ld=bfd # 64-bit ld.gold can't run in any wine!
+            fi
+            ;;
+    esac
+    find_program WINE_PROG $WINE
+    fail_panic "Can't locate $WINE"
+fi
+
 case $ABI in
     default)  # Let the APP_ABI in jni/Application.mk decide what to build
         ;;
@@ -400,10 +417,22 @@ fi
 
 run_ndk_build ()
 {
+    EXTRA_FLAGS=
+    if [ -n "$APP_LDFLAGS" ] ; then
+        # APP_LDFLAGS in env. var. doesn't work
+        EXTRA_FLAGS="APP_LDFLAGS=$APP_LDFLAGS"
+    fi
     if [ "$WINE" ]; then
-        run wine cmd /c Z:$NDK/ndk-build.cmd -j$JOBS "$@"
+        if [ "$WINE" = "wine12" ]; then
+            run $WINE cmd /c Z:$NDK/ndk-build.cmd -j$JOBS "$@" $EXTRA_FLAGS
+        else
+            # do "clean" instead of -B
+            run $WINE cmd /c Z:$NDK/ndk-build.cmd clean
+            # make.exe can't do parallel build in wine > 1.2.x
+            run $WINE cmd /c Z:$NDK/ndk-build.cmd "$@" -j1 $EXTRA_FLAGS
+        fi
     else
-        run $NDK/ndk-build -j$JOBS "$@"
+        run $NDK/ndk-build -j$JOBS "$@" $EXTRA_FLAGS
     fi
 }
 
