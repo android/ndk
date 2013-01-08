@@ -61,7 +61,13 @@ prepare_mingw_toolchain $BUILD_DIR
 cd $BUILD_DIR &&
 CFLAGS=$HOST_CFLAGS" -O2 -s" &&
 export CC CFLAGS &&
-run $SED_SRCDIR/configure --disable-nls --disable-rpath --disable-i18n --disable-acl
+run $SED_SRCDIR/configure \
+    --disable-nls \
+    --disable-rpath \
+    --disable-i18n \
+    --disable-acl \
+    --host=$ABI_CONFIGURE_HOST \
+    --build=$ABI_CONFIGURE_BUILD
 fail_panic "Failed to configure the sed-$SED_VERSION build!"
 
 log "Building sed"
