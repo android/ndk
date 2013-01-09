@@ -204,6 +204,13 @@ fail_panic ()
     fi
 }
 
+fail_warning ()
+{
+    if [ $? != 0 ] ; then
+        dump "WARNING: $@"
+    fi
+}
+
 
 ## Utilities
 ##
