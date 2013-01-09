@@ -264,6 +264,75 @@ done
 # copy to toolchain path
 run copy_directory "$TOOLCHAIN_BUILD_PREFIX" "$TOOLCHAIN_PATH"
 
+# create analyzer/++ scripts
+for ABI in $PREBUILT_ABIS; do
+    ANALYZER_PATH="$TOOLCHAIN_PATH/bin/$ABI"
+    ANALYZER="$ANALYZER_PATH/analyzer"
+    mkdir -p "$ANALYZER_PATH"
+    case "$ABI" in
+      armeabi)
+          LLVM_TARGET=armv5te-none-linux-androideabi
+          ;;
+      armeabi-v7a)
+          LLVM_TARGET=armv7-none-linux-androideabi
+          ;;
+      x86)
+          LLVM_TARGET=i686-none-linux-android
+          ;;
+      mips)
+          LLVM_TARGET=mipsel-none-linux-android
+          ;;
+      *)
+        dump "ERROR: Unsupported NDK ABI: $ABI"
+        exit 1
+    esac
+
+    cat > "${ANALYZER}" <<EOF
+if [ "\$1" != "-cc1" ]; then
+    \`dirname \$0\`/../clang -target $LLVM_TARGET "\$@"
+else
+    # target/triple already spelled out.
+    \`dirname \$0\`/../clang "\$@"
+fi
+EOF
+    cat > "${ANALYZER}++" <<EOF
+if [ "\$1" != "-cc1" ]; then
+    \`dirname \$0\`/../clang++ -target $LLVM_TARGET "\$@"
+else
+    # target/triple already spelled out.
+    \`dirname \$0\`/../clang++ "\$@"
+fi
+EOF
+    chmod 0755 "${ANALYZER}" "${ANALYZER}++"
+
+    if [ -n "$HOST_EXE" ] ; then
+        cat > "${ANALYZER}.cmd" <<EOF
+@echo off
+if "%1" == "-cc1" goto :L
+%~dp0\\..\\clang${HOST_EXE} -target $LLVM_TARGET %*
+if ERRORLEVEL 1 exit /b 1
+goto :done
+:L
+rem target/triple already spelled out.
+%~dp0\\..\\clang${HOST_EXE} %*
+if ERRORLEVEL 1 exit /b 1
+:done
+EOF
+        cat > "${ANALYZER}++.cmd" <<EOF
+@echo off
+if "%1" == "-cc1" goto :L
+%~dp0\\..\\clang++${HOST_EXE} -target $LLVM_TARGET %*
+if ERRORLEVEL 1 exit /b 1
+goto :done
+:L
+rem target/triple already spelled out.
+%~dp0\\..\\clang++${HOST_EXE} %*
+if ERRORLEVEL 1 exit /b 1
+:done
+EOF
+    fi
+done
+
 if [ "$PACKAGE_DIR" ]; then
     ARCHIVE="$TOOLCHAIN-$HOST_TAG.tar.bz2"
     SUBDIR=$(get_toolchain_install_subdir $TOOLCHAIN $HOST_TAG)
