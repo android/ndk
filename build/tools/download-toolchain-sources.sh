@@ -220,6 +220,11 @@ for LLVM_VERSION in $LLVM_VERSION_LIST; do
     (cd "$TMPDIR/llvm-$LLVM_VERSION/llvm" && \
         ln -s ../../clang tools && \
         mv tools/polly ..)
+    # In polly/utils/cloog_src, touch configure and Makefile.in to make sure they
+    # are not regenerated.
+    (cd "$TMPDIR/llvm-$LLVM_VERSION/polly" && \
+        find . -name "Makefile.in" -exec touch {} \; && \
+        find . -name "configure" -exec touch {} \; )
 done
 
 PYVERSION=2.7.3
