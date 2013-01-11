@@ -53,7 +53,7 @@ for six different systems:
 TOOLCHAIN_SRC_DIR=
 register_var_option "--toolchain-src-dir=<path>" TOOLCHAIN_SRC_DIR "Select toolchain source directory"
 
-PYTHON_VERSION=2.7.3
+PYTHON_VERSION=$DEFAULT_PYTHON_VERSION
 register_var_option "--python-version=<version>" PYTHON_VERSION "Select Python version."
 
 NDK_DIR=$ANDROID_NDK_ROOT
