@@ -194,6 +194,7 @@ toolchain_clone expat
 toolchain_clone binutils
 toolchain_clone gcc
 toolchain_clone gdb
+toolchain_clone python
 toolchain_clone clang
 toolchain_clone llvm
 
@@ -207,6 +208,7 @@ toolchain_checkout "" $BRANCH expat .
 toolchain_checkout "" $BRANCH binutils binutils-2.19 binutils-2.21 binutils-2.22
 toolchain_checkout "" $BRANCH gcc gcc-4.4.3 gcc-4.6 gcc-4.7
 toolchain_checkout "" $BRANCH gdb gdb-6.6 gdb-7.3.x
+toolchain_checkout "" $BRANCH python Python-2.7.3
 
 for LLVM_VERSION in $LLVM_VERSION_LIST; do
     LLVM_VERSION_NO_DOT=$(echo $LLVM_VERSION | sed -e 's!\.!!g')
@@ -227,11 +229,6 @@ for LLVM_VERSION in $LLVM_VERSION_LIST; do
         find . -name "aclocal.m4" -exec touch {} \; && \
         find . -name "configure" -exec touch {} \; )
 done
-
-PYVERSION=2.7.3
-PYVERSION_FOLDER=$(echo ${PYVERSION} | sed 's/\([0-9\.]*\).*/\1/')
-dump "Downloading http://www.python.org/ftp/python/${PYVERSION_FOLDER}/Python-${PYVERSION}.tar.bz2"
-(mkdir -p $TMPDIR/python && cd $TMPDIR/python && run curl -S -O http://www.python.org/ftp/python/${PYVERSION_FOLDER}/Python-${PYVERSION}.tar.bz2 && tar -xjf Python-${PYVERSION}.tar.bz2)
 
 # Patch the toolchain sources
 if [ "$OPTION_NO_PATCHES" != "yes" ]; then
