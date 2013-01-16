@@ -17,7 +17,7 @@ extern "C" _Unwind_Ptr __gnu_Unwind_Find_exidx(_Unwind_Ptr pc, int *pcount)
 }
 static void* g_func_ptr;
 
-static int foo(void)
+static void foo(void)
 {
     try
     {
