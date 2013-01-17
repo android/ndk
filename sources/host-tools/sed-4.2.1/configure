@@ -2271,7 +2271,7 @@ fi
 
 
 ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
+ac_cpp='$CPP $CFLAGS $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
@@ -2789,7 +2789,7 @@ _ACEOF
 
 
 ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
+ac_cpp='$CPP $CFLAGS $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
@@ -3716,7 +3716,7 @@ esac
 
 
 ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
+ac_cpp='$CPP $CFLAGS $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
@@ -4068,7 +4068,7 @@ case $host_os in *\ *) host_os=`echo "$host_os" | sed 's/ /-/g'`;; esac
 
 
 ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
+ac_cpp='$CPP $CFLAGS $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
@@ -4298,7 +4298,7 @@ See \`config.log' for more details." >&2;}
 fi
 
 ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
+ac_cpp='$CPP $CFLAGS $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu

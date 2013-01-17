@@ -271,12 +271,29 @@ register_var_option ()
 
 
 MINGW=no
-do_mingw_option () { MINGW=yes; }
+DARWIN=no
+do_mingw_option ()
+{
+    if [ "$DARWIN" = "yes" ]; then
+        echo "Can not have both --mingw and --darwin"
+        exit 1
+    fi
+    MINGW=yes; 
+}
+do_darwin_option ()
+{
+    if [ "$MINGW" = "yes" ]; then
+        echo "Can not have both --mingw and --darwin"
+        exit 1
+    fi
+    DARWIN=yes; 
+}
 
-register_mingw_option ()
+register_canadian_option ()
 {
     if [ "$HOST_OS" = "linux" ] ; then
         register_option "--mingw" do_mingw_option "Generate windows binaries on Linux."
+        register_option "--darwin" do_darwin_option "Generate darwin binaries on Linux."
     fi
 }
 
@@ -531,50 +548,87 @@ fix_sysroot ()
     fi
 }
 
-# Use the check for the availability of a compatibility SDK in Darwin
+# Check for the availability of a compatibility SDK in Darwin
 # this can be used to generate binaries compatible with either Tiger or
 # Leopard.
 #
 # $1: SDK root path
-# $2: MacOS X minimum version (e.g. 10.4)
+# $2: Optional MacOS X minimum version (e.g. 10.5)
 check_darwin_sdk ()
 {
-    if [ -d "$1" ] ; then
-        HOST_CFLAGS="-isysroot $1 -mmacosx-version-min=$2 -DMAXOSX_DEPLOYEMENT_TARGET=$2"
-        HOST_LDFLAGS="-Wl,-syslibroot,$sdk -mmacosx-version-min=$2"
+    local MACSDK="$1"
+    local MINVER=$2
+
+    if [ -z "$MINVER" ] ; then
+        # expect SDK root path ended up with either MacOSX##.#.sdk or MacOSX##.#u.sdk
+        MINVER=${MACSDK##*MacOSX}
+        MINVER=${MINVER%%.sdk*}
+	if [ "$MINVER" = "10.4u" ]; then
+            MINVER=10.4
+	fi
+    fi
+    if [ -d "$MACSDK" ] ; then
+        HOST_CFLAGS=$HOST_CFLAGS" -isysroot $MACSDK -mmacosx-version-min=$MINVER -DMAXOSX_DEPLOYEMENT_TARGET=$MINVER"
+        HOST_LDFLAGS=$HOST_LDFLAGS" -Wl,-syslibroot,$MACSDK -mmacosx-version-min=$MINVER"
         return 0  # success
     fi
     return 1
 }
 
-
-handle_mingw ()
+# Probe Darwin SDK in specified diectory $DARWIN_SYSROOT, or 
+# /Developer/SDKs/MacOSX10.6.sdk
+#
+probe_darwin_sdk ()
 {
-    # Now handle the --mingw flag
+    if [ -n "$DARWIN_SYSROOT" ]; then
+        if check_darwin_sdk "$DARWIN_SYSROOT"; then
+            log "Use darwin sysroot $DARWIN_SYSROOT"
+        else
+            echo "darwin sysroot $DARWIN_SYSROOT is not valid"
+            exit 1
+        fi
+    elif check_darwin_sdk /Developer/SDKs/MacOSX10.6.sdk 10.6; then
+        log "Generating Snow Leopard-compatible binaries!"
+    else
+        local version=`sw_vers -productVersion`
+        log "Generating $version-compatible binaries!"
+    fi
+}
+
+handle_canadian_build ()
+{
     HOST_EXE=
-    if [ "$MINGW" = "yes" ] ; then
+    if [ "$MINGW" = "yes" -o "$DARWIN" = "yes" ] ; then
         case $HOST_TAG in
             linux-*)
                 ;;
             *)
-                echo "ERROR: Can only enable mingw on Linux platforms !"
+                echo "ERROR: Can only enable --mingw or --darwin on Linux platforms !"
                 exit 1
                 ;;
         esac
-        if [ "$TRY64" = "yes" ]; then
-            ABI_CONFIGURE_HOST=x86_64-pc-mingw32msvc
-            HOST_TAG=windows-x86_64
-        else
-            # NOTE: The canadian-cross build of Binutils 2.19 will fail if you
-            #        use i586-pc-mingw32msvc here. Binutils 2.21 will work ok
-            #        with both names.
-            #       Use i586-pc-mingw32msvc here because wrappers are generated
-            #        using this name
-            ABI_CONFIGURE_HOST=i586-pc-mingw32msvc
-            HOST_TAG=windows
-        fi
-        HOST_OS=windows
-        HOST_EXE=.exe
+        if [ "$MINGW" = "yes" ] ; then
+            # NOTE: Use x86_64-pc-mingw32msvc or i586-pc-mingw32msvc because wrappers are generated
+            #       using these names
+            if [ "$TRY64" = "yes" ]; then
+                ABI_CONFIGURE_HOST=x86_64-pc-mingw32msvc
+                HOST_TAG=windows-x86_64
+            else
+                ABI_CONFIGURE_HOST=i586-pc-mingw32msvc
+                HOST_TAG=windows
+            fi
+            HOST_OS=windows
+            HOST_EXE=.exe
+	else
+            if [ "$TRY64" = "yes" ]; then
+                ABI_CONFIGURE_HOST=x86_64-apple-darwin
+                HOST_TAG=darwin-x86_64
+            else
+                ABI_CONFIGURE_HOST=i686-apple-darwin
+                HOST_TAG=darwin-x86
+            fi
+            HOST_OS=darwin
+	fi
     fi
 }
 
@@ -622,74 +676,97 @@ find_mingw_toolchain ()
     done
 }
 
-# If --mingw option is used, check that there is a working
-# mingw32 toolchain installed.
+# Check there is a working cross-toolchain installed.
 #
-# If there is, check that it's working
+# $1: install directory for mingw/darwin wrapper toolchain
 #
-# $1: install directory for wrapper toolchain
-#
-prepare_mingw_toolchain ()
+prepare_canadian_toolchain ()
 {
-    if [ "$MINGW" != "yes" ]; then
+    if [ "$MINGW" != "yes" -a "$DARWIN" != "yes" ]; then
         return
     fi
-    find_mingw_toolchain
-    if [ -z "$MINGW_GCC" ]; then
-        echo "ERROR: Could not find in your PATH any of:"
-        for i in $BINPREFIXLST; do echo "   ${i}gcc"; done
-        echo "Please install the corresponding cross-toolchain and re-run this script"
-        echo "TIP: On Debian or Ubuntu, try: sudo apt-get install $DEBIAN_NAME"
-        exit 1
+    CROSS_GCC=
+    if [ "$MINGW" = "yes" ]; then
+        find_mingw_toolchain
+        if [ -z "$MINGW_GCC" ]; then
+            echo "ERROR: Could not find in your PATH any of:"
+            for i in $BINPREFIXLST; do echo "   ${i}gcc"; done
+            echo "Please install the corresponding cross-toolchain and re-run this script"
+            echo "TIP: On Debian or Ubuntu, try: sudo apt-get install $DEBIAN_NAME"
+            exit 1
+        fi
+	CROSS_GCC=$MINGW_GCC
+    else
+        if [ -z "$DARWIN_TOOLCHAIN" ]; then
+            echo "Please set DARWIN_TOOLCHAIN to darwin cross-toolchain"
+            exit 1
+	fi
+        if [ ! -f "${DARWIN_TOOLCHAIN}-gcc" ]; then
+            echo "darwin cross-toolchain $DARWIN_TOOLCHAIN-gcc doesn't exist"
+            exit 1
+        fi
+        if [ "$HOST_ARCH" = "x86_64" -a "$TRY64" = "yes" ]; then
+            BINPREFIX=x86_64-apple-darwin-
+            DEBIAN_NAME=darwin64
+	    HOST_CFLAGS=$HOST_CFLAGS" -m64"
+        else
+            force_32bit_binaries
+            BINPREFIX=i686-apple-darwin-
+            DEBIAN_NAME=darwin32
+	    HOST_CFLAGS=$HOST_CFLAGS" -m32"
+        fi
+	CROSS_GCC=${DARWIN_TOOLCHAIN}-gcc
+	probe_darwin_sdk
     fi
-    # Create a wrapper toolchain, and prepend its dir to our PATH
-    MINGW_WRAP_DIR="$1"/$DEBIAN_NAME-wrapper
-    rm -rf "$MINGW_WRAP_DIR"
 
-    DST_PREFIX=${MINGW_GCC%gcc}
+    # Create a wrapper toolchain, and prepend its dir to our PATH
+    CROSS_WRAP_DIR="$1"/$DEBIAN_NAME-wrapper
+    rm -rf "$CROSS_WRAP_DIR"
+
+    DST_PREFIX=${CROSS_GCC%gcc}
     if [ "$NDK_CCACHE" ]; then
         DST_PREFIX="$NDK_CCACHE $DST_PREFIX"
     fi
-    $NDK_BUILDTOOLS_PATH/gen-toolchain-wrapper.sh --src-prefix=$BINPREFIX --dst-prefix="$DST_PREFIX" "$MINGW_WRAP_DIR"
+    $NDK_BUILDTOOLS_PATH/gen-toolchain-wrapper.sh --src-prefix=$BINPREFIX --dst-prefix="$DST_PREFIX" "$CROSS_WRAP_DIR" \
+        --cflags="$HOST_CFLAGS" --cxxflags="$HOST_CFLAGS" --ldflags="HOST_LDFLAGS"
     # generate wrappers for BUILD toolchain
-    # this is required for mingw build to avoid tools canadian cross configuration issues
+    # this is required for mingw/darwin build to avoid tools canadian cross configuration issues
     # 32-bit BUILD toolchain
     LEGACY_TOOLCHAIN_DIR="$ANDROID_NDK_ROOT/../prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6"
     $NDK_BUILDTOOLS_PATH/gen-toolchain-wrapper.sh --src-prefix=i386-linux-gnu- \
-            --dst-prefix="$LEGACY_TOOLCHAIN_DIR/bin/i686-linux-" "$MINGW_WRAP_DIR"
+            --dst-prefix="$LEGACY_TOOLCHAIN_DIR/bin/i686-linux-" "$CROSS_WRAP_DIR"
     $NDK_BUILDTOOLS_PATH/gen-toolchain-wrapper.sh --src-prefix=i386-pc-linux-gnu- \
-            --dst-prefix="$LEGACY_TOOLCHAIN_DIR/bin/i686-linux-" "$MINGW_WRAP_DIR"
+            --dst-prefix="$LEGACY_TOOLCHAIN_DIR/bin/i686-linux-" "$CROSS_WRAP_DIR"
     # 64-bit BUILD toolchain.  libbfd is still built in 32-bit.  Use gcc-sdk instead
-    # of x86_64-linux-glibc2.7-4.6 which is a 64-bit-only tol
+    # of x86_64-linux-glibc2.7-4.6 which is a 64-bit-only tool
     LEGACY_TOOLCHAIN_DIR="$ANDROID_NDK_ROOT/../prebuilts/tools/gcc-sdk"
     $NDK_BUILDTOOLS_PATH/gen-toolchain-wrapper.sh --src-prefix=x86_64-linux-gnu- \
-            --dst-prefix="$LEGACY_TOOLCHAIN_DIR/" "$MINGW_WRAP_DIR"
+            --dst-prefix="$LEGACY_TOOLCHAIN_DIR/" "$CROSS_WRAP_DIR"
     $NDK_BUILDTOOLS_PATH/gen-toolchain-wrapper.sh --src-prefix=x86_64-pc-linux-gnu- \
-            --dst-prefix="$LEGACY_TOOLCHAIN_DIR/" "$MINGW_WRAP_DIR"
-    fail_panic "Could not create mingw wrapper toolchain in $MINGW_WRAP_DIR"
+            --dst-prefix="$LEGACY_TOOLCHAIN_DIR/" "$CROSS_WRAP_DIR"
+    fail_panic "Could not create $DEBIAN_NAME wrapper toolchain in $CROSS_WRAP_DIR"
 
-    export PATH=$MINGW_WRAP_DIR:$PATH
-    dump "Using mingw wrapper: $MINGW_WRAP_DIR/${BINPREFIX}gcc"
+    export PATH=$CROSS_WRAP_DIR:$PATH
+    dump "Using $DEBIAN_NAME wrapper: $CROSS_WRAP_DIR/${BINPREFIX}gcc"
 }
 
 handle_host ()
 {
-    # For now, we only support building 32-bit binaries anyway
     if [ "$TRY64" != "yes" ]; then
         force_32bit_binaries  # to modify HOST_TAG and others
         HOST_BITS=32
     fi
-    handle_mingw
+    handle_canadian_build
 }
 
 setup_ccache ()
 {
     # Support for ccache compilation
-    # We can't use this here when building Windows binaries on Linux with
+    # We can't use this here when building Windows/darwin binaries on Linux with
     # binutils 2.21, because defining CC/CXX in the environment makes the
     # configure script fail later
     #
-    if [ "$NDK_CCACHE" -a "$MINGW" != "yes" ]; then
+    if [ "$NDK_CCACHE" -a "$MINGW" != "yes" -a "$DARWIN" != "yes" ]; then
         NDK_CCACHE_CC=$CC
         NDK_CCACHE_CXX=$CXX
         # Unfortunately, we can just do CC="$NDK_CCACHE $CC" because some
@@ -707,20 +784,23 @@ setup_ccache ()
 
 prepare_common_build ()
 {
-    if [ "$MINGW" = "yes" ]; then
+    if [ "$MINGW" = "yes" -o "$DARWIN" = "yes" ]; then
         if [ "$TRY64" = "yes" ]; then
-            log "Generating 64-bit Windows binaries"
             HOST_BITS=64
         else
-            log "Generating 32-bit Windows binaries"
             HOST_BITS=32
         fi
-        # Do *not* set CC and CXX when building the Windows binaries
+        if [ "$MINGW" = "yes" ]; then
+            log "Generating $HOST_BITS-bit Windows binaries"
+        else
+            log "Generating $HOST_BITS-bit Darwin binaries"
+        fi
+        # Do *not* set CC and CXX when building the Windows/Darwin binaries in canadian build.
         # Otherwise, the GCC configure/build script will mess that Canadian cross
         # build in weird ways. Instead we rely on the toolchain detected or generated
-        # previously in prepare_mingw_toolchain.
+        # previously in prepare_canadian_toolchain.
         unset CC CXX STRIP
-        return
+	return
     fi
 
     # On Linux, detect our legacy-compatible toolchain when in the Android
@@ -728,9 +808,7 @@ prepare_common_build ()
     # binaries.
     #
     # We only do this if the CC variable is not defined to a given value
-    # and the --mingw or --try-64 options are not used.
-    #
-    if [ -z "$CC" -a "$MINGW" != "yes" ]; then
+    if [ -z "$CC" ]; then
         LEGACY_TOOLCHAIN_DIR=
         if [ "$HOST_OS" = "linux" ]; then
             LEGACY_TOOLCHAIN_DIR="$ANDROID_NDK_ROOT/../prebuilts/tools/gcc-sdk"
@@ -746,19 +824,13 @@ prepare_common_build ()
         fi
     fi
 
-    # Force generation of 32-bit binaries on 64-bit systems
     CC=${CC:-gcc}
     CXX=${CXX:-g++}
     STRIP=${STRIP:-strip}
     case $HOST_TAG in
         darwin-*)
-            if check_darwin_sdk /Developer/SDKs/MacOSX10.6.sdk 10.6; then
-                log "Generating Snow Leopard-compatible binaries!"
-            else
-                local version=`sw_vers -productVersion`
-                log "Generating $version-compatible binaries!"
-            fi
-            ;;
+            probe_darwin_sdk
+	   ;;
     esac
 
     # Force generation of 32-bit binaries on 64-bit systems.
@@ -808,17 +880,18 @@ prepare_host_build ()
 {
     prepare_common_build
 
-    # Now deal with mingw
-    if [ "$MINGW" = "yes" ]; then
-        handle_mingw
+    # Now deal with mingw or darwin
+    if [ "$MINGW" = "yes" -o "$DARWIN" = "yes" ]; then
+        handle_canadian_build
         CC=$ABI_CONFIGURE_HOST-gcc
         CXX=$ABI_CONFIGURE_HOST-g++
+        CPP=$ABI_CONFIGURE_HOST-cpp
         LD=$ABI_CONFIGURE_HOST-ld
         AR=$ABI_CONFIGURE_HOST-ar
         AS=$ABI_CONFIGURE_HOST-as
         RANLIB=$ABI_CONFIGURE_HOST-ranlib
         STRIP=$ABI_CONFIGURE_HOST-strip
-        export CC CXX LD AR AS RANLIB STRIP
+        export CC CXX CPP LD AR AS RANLIB STRIP
     fi
 
     setup_ccache
@@ -856,13 +929,15 @@ prepare_target_build ()
     prepare_common_build
     HOST_GMP_ABI=$HOST_BITS
 
-    # Now handle the --mingw flag
-    if [ "$MINGW" = "yes" ] ; then
-        handle_mingw
-        # It turns out that we need to undefine this to be able to
-        # perform a canadian-cross build with mingw. Otherwise, the
-        # GMP configure scripts will not be called with the right options
-        HOST_GMP_ABI=
+    # Now handle the --mingw/--darwin flag
+    if [ "$MINGW" = "yes" -o "$DARWIN" = "yes" ] ; then
+        handle_canadian_build
+        if [ "$MINGW" = "yes" ] ; then
+            # It turns out that we need to undefine this to be able to
+            # perform a canadian-cross build with mingw. Otherwise, the
+            # GMP configure scripts will not be called with the right options
+            HOST_GMP_ABI=
+        fi
     fi
 
     setup_ccache
@@ -956,7 +1031,7 @@ parse_toolchain_name ()
 }
 
 # Return the host "tag" used to identify prebuilt host binaries.
-# NOTE: Handles the case where '$MINGW = true'
+# NOTE: Handles the case where '$MINGW = true' or '$DARWIN = true'
 # For now, valid values are: linux-x86, darwin-x86 and windows
 get_prebuilt_host_tag ()
 {
@@ -967,6 +1042,9 @@ get_prebuilt_host_tag ()
         else
             RET=windows-x86_64
         fi
+    fi
+    if [ "$DARWIN" = "yes" ]; then
+        RET=darwin-x86_64  # let the following handles 32-bit case
     fi
     case $RET in
         linux-x86_64)
@@ -1144,7 +1222,7 @@ get_toolchain_install_subdir ()
 
 # Return the relative install prefix for prebuilt host
 # executables (relative to the NDK top directory).
-# NOTE: This deals with MINGW==yes appropriately
+# NOTE: This deals with MINGW==yes or DARWIN==yes appropriately
 #
 # $1: optional, system name
 # Out: relative path to prebuilt install prefix
@@ -1156,7 +1234,7 @@ get_prebuilt_install_prefix ()
 
 # Return the relative path of an installed prebuilt host
 # executable
-# NOTE: This deals with MINGW==yes appropriately.
+# NOTE: This deals with MINGW==yes or DARWIN==yes appropriately.
 #
 # $1: executable name
 # $2: optional, host system name

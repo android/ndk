@@ -54,12 +54,12 @@ do_check_option () { CHECK=yes; }
 register_option "--check" do_check_option "Check LLVM"
 
 register_jobs_option
-register_mingw_option
+register_canadian_option
 register_try64_option
 
 extract_parameters "$@"
 
-prepare_mingw_toolchain /tmp/ndk-$USER/build
+prepare_canadian_toolchain /tmp/ndk-$USER/build
 
 fix_option BUILD_OUT "$OPTION_BUILD_OUT" "build directory"
 setup_default_log_file $BUILD_OUT/config.log
@@ -217,7 +217,7 @@ cd $LLVM_BUILD_OUT
 run make -j$NUM_JOBS
 fail_panic "Couldn't compile llvm toolchain"
 
-if [ "$CHECK" = "yes" -a "$MINGW" != "yes" ] ; then
+if [ "$CHECK" = "yes" -a "$MINGW" != "yes" -a "$DARWIN" != "yes" ] ; then
     # run the regression test
     dump "Running  : llvm toolchain regression test"
     cd $LLVM_BUILD_OUT
