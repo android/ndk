@@ -65,6 +65,10 @@ if [ "$HOST_TAG" == "linux-x86" ] ; then
     find_mingw_toolchain
     if [ -n "$MINGW_GCC" ] ; then
         HOST_SYSTEMS="$HOST_SYSTEMS,windows"
+        # If darwin toolchain exist, build darwin too
+        if [ -z "$DARWIN_SSH" -a -f "${DARWIN_TOOLCHAIN}-gcc" ]; then
+            HOST_SYSTEMS="$HOST_SYSTEMS,darwin-x86"
+        fi
     fi
 fi
 if [ -n "$DARWIN_SSH" ] ; then

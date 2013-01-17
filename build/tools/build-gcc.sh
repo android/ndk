@@ -72,12 +72,12 @@ PACKAGE_DIR=
 register_var_option "--package-dir=<path>" PACKAGE_DIR "Create archive tarball in specific directory"
 
 register_jobs_option
-register_mingw_option
+register_canadian_option
 register_try64_option
 
 extract_parameters "$@"
 
-prepare_mingw_toolchain /tmp/ndk-$USER/build
+prepare_canadian_toolchain /tmp/ndk-$USER/build
 
 fix_option BUILD_OUT "$OPTION_BUILD_OUT" "build directory"
 setup_default_log_file $BUILD_OUT/config.log
@@ -168,7 +168,7 @@ fi
 
 set_toolchain_ndk $NDK_DIR $TOOLCHAIN
 
-if [ "$MINGW" != "yes" ] ; then
+if [ "$MINGW" != "yes" -a "$DARWIN" != "yes" ] ; then
     dump "Using C compiler: $CC"
     dump "Using C++ compiler: $CXX"
 fi
@@ -222,9 +222,17 @@ export CFLAGS_FOR_TARGET="$ABI_CFLAGS_FOR_TARGET"
 export CXXFLAGS_FOR_TARGET="$ABI_CXXFLAGS_FOR_TARGET"
 # Needed to build a 32-bit gmp on 64-bit systems
 export ABI=$HOST_GMP_ABI
+
+# Note that the following flags only apply for "build" in canadian
 # -Wno-error is needed because our gdb-6.6 sources use -Werror by default
 # and fail to build with recent GCC versions.
-export CFLAGS=$HOST_CFLAGS" -O2 -s -Wno-error"
+CFLAGS_FOR_BUILD="-O2 -s -Wno-error"
+LDFLAGS_FOR_BUILD=
+
+CFLAGS="$CFLAGS_FOR_BUILD $HOST_CFLAGS"
+LDFLAGS="$LDFLAGS_FOR_BUILD $HOST_LDFLAGS"
+
+export CFLAGS LDFLAGS CFLAGS_FOR_BUILD LDFLAGS_FOR_BUILD
 
 # This extra flag is used to slightly speed up the build
 EXTRA_CONFIG_FLAGS="--disable-bootstrap"
@@ -232,18 +240,25 @@ EXTRA_CONFIG_FLAGS="--disable-bootstrap"
 # This is to disable GCC 4.6 specific features that don't compile well
 # the flags are ignored for older GCC versions.
 EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --disable-libquadmath"
-# Plugins are not supported well before 4.7. On 4.7 it's required to have
-# -flto working. Flag --enable-plugins (note 's') is actually for binutils,
-# this is compiler requirement to have binutils configured this way. Flag
-# --disable-plugin is for gcc.
-case "$GCC_VERSION" in
-    4.4.3|4.6)
-        EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --disable-plugin"
-        ;;
-    *)
-        EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-plugins"
-        ;;
-esac
+if [ "$DARWIN" = "yes" ]; then
+    # Disable plugin because in canadian cross build, plugin gengtype
+    # will be incorrectly linked with build's library and fails.
+    # ToDo
+    EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --disable-plugin"
+else
+    # Plugins are not supported well before 4.7. On 4.7 it's required to have
+    # -flto working. Flag --enable-plugins (note 's') is actually for binutils,
+    # this is compiler requirement to have binutils configured this way. Flag
+    # --disable-plugin is for gcc.
+    case "$GCC_VERSION" in
+        4.4.3|4.6)
+            EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --disable-plugin"
+            ;;
+        *)
+            EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-plugins"
+            ;;
+    esac
+fi
 
 # Enable OpenMP
 EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-libgomp"
@@ -264,7 +279,6 @@ case "$TOOLCHAIN" in
     ;;
 esac
 
-#export LDFLAGS="$HOST_LDFLAGS"
 cd $BUILD_OUT && run \
 $BUILD_SRCDIR/configure --target=$ABI_CONFIGURE_TARGET \
                         --enable-initfini-array \
@@ -300,17 +314,17 @@ while [ -n "1" ]; do
     if [ $? = 0 ] ; then
         break
     else
-        if [ "$MINGW" = "yes" ] ; then
+        if [ "$MINGW" = "yes" -o "$DARWIN" = "yes" ] ; then
             # Unfortunately, there is a bug in the GCC build scripts that prevent
-            # parallel mingw builds to work properly on some multi-core machines
-            # (but not all, sounds like a race condition). Detect this and restart
-            # in less parallelism, until -j1 also fail
+            # parallel mingw/darwin canadian cross builds to work properly on some
+            # multi-core machines (but not all, sounds like a race condition). Detect
+            # this and restart in less parallelism, until -j1 also fail
             JOBS=$((JOBS/2))
             if [ $JOBS -lt 1 ] ; then
-                echo "Error while building mingw toolchain. See $TMPLOG"
+                echo "Error while building mingw/darwin toolchain. See $TMPLOG"
                 exit 1
             fi
-            dump "Parallel mingw build failed - continuing in less parallelism -j$JOBS"
+            dump "Parallel canadian build failed - continuing in less parallelism -j$JOBS"
         else
             echo "Error while building toolchain. See $TMPLOG"
             exit 1
@@ -331,7 +345,7 @@ fi
 # copy to toolchain path
 run copy_directory "$TOOLCHAIN_BUILD_PREFIX" "$TOOLCHAIN_PATH"
 
-if [ "$MINGW" = "yes" ] ; then
+if [ "$MINGW" = "yes" -o "$DARWIN" = "yes" ] ; then
     # For some reasons, libraries in $ABI_CONFIGURE_TARGET (*) are not installed.
     # Hack here to copy them over.
     # (*) FYI: libgcc.a and libgcov.a not installed there in the first place
@@ -365,11 +379,12 @@ run rm -rf $TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/lib/*/libstdc++.*
 run rm -rf $TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/include/c++
 
 # strip binaries to reduce final package size
-run strip $TOOLCHAIN_PATH/bin/*
-run strip $TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/bin/*
-run strip $TOOLCHAIN_PATH/libexec/gcc/*/*/cc1$HOST_EXE
-run strip $TOOLCHAIN_PATH/libexec/gcc/*/*/cc1plus$HOST_EXE
-run strip $TOOLCHAIN_PATH/libexec/gcc/*/*/collect2$HOST_EXE
+test -z "$STRIP" && STRIP=strip
+run $STRIP $TOOLCHAIN_PATH/bin/*
+run $STRIP $TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/bin/*
+run $STRIP $TOOLCHAIN_PATH/libexec/gcc/*/*/cc1$HOST_EXE
+run $STRIP $TOOLCHAIN_PATH/libexec/gcc/*/*/cc1plus$HOST_EXE
+run $STRIP $TOOLCHAIN_PATH/libexec/gcc/*/*/collect2$HOST_EXE
 
 # copy SOURCES file if present
 if [ -f "$SRC_DIR/SOURCES" ]; then
