@@ -25,7 +25,7 @@ PROGRAM_DESCRIPTION=\
 "Rebuild the host sed tool used by the NDK."
 
 register_try64_option
-register_mingw_option
+register_canadian_option
 register_jobs_option
 
 NDK_DIR=$ANDROID_NDK_ROOT
@@ -57,7 +57,7 @@ BUILD_DIR=$NDK_TMPDIR
 
 log "Configuring the build"
 mkdir -p $BUILD_DIR && rm -rf $BUILD_DIR/*
-prepare_mingw_toolchain $BUILD_DIR
+prepare_canadian_toolchain $BUILD_DIR
 cd $BUILD_DIR &&
 CFLAGS=$HOST_CFLAGS" -O2 -s" &&
 export CC CFLAGS &&

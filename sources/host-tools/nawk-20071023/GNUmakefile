@@ -5,10 +5,18 @@
 BUILD_DIR ?= /tmp/ndk-$(USER)/build-awk
 
 
-CC      := $(HOST_CC)
-CFLAGS  := -O2 -I$(BUILD_DIR) -I.
-LDFLAGS := -Wl,-s
-BISON   := bison
+CC       := $(HOST_CC)
+CFLAGS   := $(CFLAGS) -O2 -I$(BUILD_DIR) -I.
+LDFLAGS  := $(LDFLAGS) -Wl,-s
+BISON    := bison
+
+# NATIVE_CC is to build maketab which needs to run in order
+# to generate proctab.c from ytab.h.  Set it to host native
+# cc if host can run windows binary (MINGW=yes) or darwin binary
+# (DARWIN=yes)
+NATIVE_CC       ?= $(CC)
+NATIVE_CFLAGS   ?= $(CFLAGS)
+NATIVE_LDFLAGS  ?= $(LDFLAGS)
 
 MINGW := $(strip $(WIN32))
 TRY64 := $(strip $(TRY64))
@@ -37,8 +45,6 @@ else
 CC      := i586-pc-mingw32msvc-gcc
 endif
 EXE     := .exe
-else
-WINE    :=
 endif
 
 PROGRAM := $(BUILD_DIR)/ndk-awk$(EXE)
@@ -74,8 +80,8 @@ $(foreach src,$(filter %.c,$(SOURCES)),\
 
 MAKETAB := $(BUILD_DIR)/maketab$(EXE)
 $(MAKETAB): maketab.c $(BUILD_DIR)/ytab.h
-	@echo "Executable: $(notdir $@)"
-	$(hide)$(CC) $(CFLAGS) $(LDFLAGS) maketab.c -o $@
+	@echo "Native Executable: $(notdir $@)"
+	$(hide)$(NATIVE_CC) $(NATIVE_CFLAGS) $(NATIVE_LDFLAGS) maketab.c -o $@
 
 PROCTAB_C := $(BUILD_DIR)/proctab.c
 PROCTAB_O := $(PROCTAB_C:%.c=%.o)
@@ -84,7 +90,7 @@ $(eval $(call build-c-file,$(PROCTAB_C),$(PROCTAB_O)))
 
 $(PROCTAB_C): $(MAKETAB) $(YTAB_H)
 	@echo "Gen: $(notdir $@)"
-	$(hide)$(WINE) $(MAKETAB) $(YTAB_H) > $@
+	$(hide)$(MAKETAB) $(YTAB_H) > $@
 
 
 $(PROGRAM): $(OBJECTS)

@@ -54,12 +54,12 @@ do_check_option () { CHECK=yes; }
 register_option "--check" do_check_option "Check LLVM"
 
 register_jobs_option
-register_mingw_option
+register_canadian_option
 register_try64_option
 
 extract_parameters "$@"
 
-prepare_mingw_toolchain /tmp/ndk-$USER/build
+prepare_canadian_toolchain /tmp/ndk-$USER/build
 
 fix_option BUILD_OUT "$OPTION_BUILD_OUT" "build directory"
 setup_default_log_file $BUILD_OUT/config.log
@@ -131,18 +131,36 @@ fi
 
 set_toolchain_ndk $NDK_DIR $TOOLCHAIN
 
-dump "Using C compiler: $CC"
-dump "Using C++ compiler: $CXX"
+if [ "$MINGW" != "yes" -a "$DARWIN" != "yes" ] ; then
+    dump "Using C compiler: $CC"
+    dump "Using C++ compiler: $CXX"
+fi
 
 rm -rf $BUILD_OUT
 mkdir -p $BUILD_OUT
 
+MAKE_FLAGS=
+if [ "$VERBOSE" = "yes" ]; then
+    MAKE_FLAGS="VERBOSE=1"
+fi
+
 TOOLCHAIN_BUILD_PREFIX=$BUILD_OUT/prefix
 
-CFLAGS="$HOST_CFLAGS $CFLAGS -I$TOOLCHAIN_BUILD_PREFIX/include"
-CXXFLAGS="$CXXFLAGS -I$TOOLCHAIN_BUILD_PREFIX/include"  # polly doesn't look at CFLAGS !
-LDFLAGS="$LDFLAGS -L$TOOLCHAIN_BUILD_PREFIX/lib"
-export CC CXX CFLAGS CXXFLAGS LDFLAGS REQUIRES_RTTI=1
+# Note that the following 2 flags only apply for BUILD_CC in canadian cross build
+CFLAGS_FOR_BUILD="-O2 -I$TOOLCHAIN_BUILD_PREFIX/include"
+LDFLAGS_FOR_BUILD="-L$TOOLCHAIN_BUILD_PREFIX/lib"
+
+CFLAGS="$CFLAGS $CFLAGS_FOR_BUILD $HOST_CFLAGS"
+CXXFLAGS="$CXXFLAGS $CFLAGS_FOR_BUILD $HOST_CFLAGS"  # polly doesn't look at CFLAGS !
+LDFLAGS="$LDFLAGS $LDFLAGS_FOR_BUILD $HOST_LDFLAGS"
+export CC CXX CFLAGS CXXFLAGS LDFLAGS CFLAGS_FOR_BUILD LDFLAGS_FOR_BUILD REQUIRES_RTTI=1
+
+if [ "$DARWIN" = "yes" ]; then
+    # To stop /usr/bin/install -s calls strip on darwin binary
+    export KEEP_SYMBOLS=1
+    # Disable polly for now
+    POLLY=no
+fi
 
 EXTRA_CONFIG_FLAGS=
 rm -rf $SRC_DIR/$TOOLCHAIN/llvm/tools/polly
@@ -214,10 +232,10 @@ fail_panic "Couldn't configure llvm toolchain"
 # build the toolchain
 dump "Building : llvm toolchain [this can take a long time]."
 cd $LLVM_BUILD_OUT
-run make -j$NUM_JOBS
+run make -j$NUM_JOBS $MAKE_FLAGS
 fail_panic "Couldn't compile llvm toolchain"
 
-if [ "$CHECK" = "yes" -a "$MINGW" != "yes" ] ; then
+if [ "$CHECK" = "yes" -a "$MINGW" != "yes" -a "$DARWIN" != "yes" ] ; then
     # run the regression test
     dump "Running  : llvm toolchain regression test"
     cd $LLVM_BUILD_OUT
@@ -233,7 +251,7 @@ fi
 
 # install the toolchain to its final location
 dump "Install  : llvm toolchain binaries."
-cd $LLVM_BUILD_OUT && run make install
+cd $LLVM_BUILD_OUT && run make install $MAKE_FLAGS
 fail_panic "Couldn't install llvm toolchain to $TOOLCHAIN_BUILD_PREFIX"
 
 # clean static or shared libraries
@@ -260,6 +278,11 @@ for i in $UNUSED_LLVM_EXECUTABLES; do
     rm -f $TOOLCHAIN_BUILD_PREFIX/bin/$i
     rm -f $TOOLCHAIN_BUILD_PREFIX/bin/$i.exe
 done
+
+if [ -n "$KEEP_SYMBOLS" ]; then
+    # strip because /usr/bin/install wasn't called with -s
+    $STRIP $TOOLCHAIN_BUILD_PREFIX/bin/*
+fi
 
 # copy to toolchain path
 run copy_directory "$TOOLCHAIN_BUILD_PREFIX" "$TOOLCHAIN_PATH"
