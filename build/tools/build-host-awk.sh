@@ -25,7 +25,7 @@ PROGRAM_DESCRIPTION=\
 "Rebuild the host awk tool used by the NDK."
 
 register_try64_option
-register_mingw_option
+register_canadian_option
 register_jobs_option
 
 NDK_DIR=$ANDROID_NDK_ROOT
@@ -68,10 +68,14 @@ fi
 
 log "Configuring the build"
 mkdir -p $BUILD_DIR && rm -rf $BUILD_DIR/*
-prepare_mingw_toolchain $BUILD_DIR
+prepare_canadian_toolchain $BUILD_DIR
 log "Building $HOST_TAG awk"
 export HOST_CC="$CC" &&
 export CFLAGS=$HOST_CFLAGS" -O2 -s" &&
+export LDFLAGS=$HOST_LDFLAGS &&
+export NATIVE_CC="gcc" &&
+export NATIVE_CFLAGS=" -O2 -s -I$BUILD_DIR -I." &&
+export NATIVE_LDFLAGS= &&
 run $GNUMAKE \
     -C "$AWK_SRCDIR" \
     -j $NUM_JOBS \

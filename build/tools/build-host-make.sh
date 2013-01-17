@@ -28,7 +28,7 @@ NDK_DIR=$ANDROID_NDK_ROOT
 register_var_option "--ndk-dir=<path>" NDK_DIR "Install to specific NDK directory"
 
 register_try64_option
-register_mingw_option
+register_canadian_option
 register_jobs_option
 
 OUT=
@@ -74,22 +74,27 @@ BUILD_DIR=$NDK_TMPDIR/build
 
 CONFIGURE_FLAGS="--disable-nls --disable-rpath"
 if [ "$MINGW" = "yes" ]; then
-    # Required for a proper mingw compile
+    # Required for a proper mingw cross compile
     CONFIGURE_FLAGS=$CONFIGURE_FLAGS" --host=i586-pc-mingw32"
+fi
+
+if [ "$DARWIN" = "yes" ]; then
+    # Required for a proper darwin cross compile
+    CONFIGURE_FLAGS=$CONFIGURE_FLAGS" --host=$ABI_CONFIGURE_HOST"
 fi
 
 log "Configuring the build"
 mkdir -p $BUILD_DIR && rm -rf $BUILD_DIR/*
-prepare_mingw_toolchain $BUILD_DIR
+prepare_canadian_toolchain $BUILD_DIR
 cd $BUILD_DIR &&
 CFLAGS=$HOST_CFLAGS" -O2 -s" &&
 export CC CFLAGS &&
 run $TMP_SRCDIR/configure $CONFIGURE_FLAGS
-fail_panic "Failed to configure the sed-$GNUMAKE_VERSION build!"
+fail_panic "Failed to configure the make-$GNUMAKE_VERSION build!"
 
 log "Building make"
 run $GNUMAKE -j $NUM_JOBS
-fail_panic "Failed to build the sed-$GNUMAKE_VERSION executable!"
+fail_panic "Failed to build the make-$GNUMAKE_VERSION executable!"
 
 log "Copying executable to prebuilt location"
 run mkdir -p $(dirname "$OUT") && cp $(get_host_exec_name make) $OUT

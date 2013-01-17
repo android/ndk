@@ -44,7 +44,7 @@ register_var_option "--debug" DEBUG "Build debug version"
 PACKAGE_DIR=
 register_var_option "--package-dir=<path>" PACKAGE_DIR "Archive binary into specific directory"
 
-register_mingw_option
+register_canadian_option
 register_try64_option
 
 extract_parameters "$@"
@@ -56,7 +56,7 @@ if [ -z "$BUILD_DIR" ]; then
     BUILD_DIR=$NDK_TMPDIR/build-ndk-stack
     log "Auto-config: --build-dir=$BUILD_DIR"
 fi
-prepare_mingw_toolchain $BUILD_DIR
+prepare_canadian_toolchain $BUILD_DIR
 
 OUT=$NDK_DIR/$(get_host_exec_name ndk-stack)
 
@@ -87,6 +87,7 @@ SRCDIR=$ANDROID_NDK_ROOT/sources/host-tools/ndk-stack
 
 # Let's roll
 export CFLAGS=$HOST_CFLAGS" -O2 -s"
+export LDFLAGS=$HOST_LDFLAGS
 run $GNUMAKE -C $SRCDIR -f $SRCDIR/GNUMakefile \
     -B -j$NUM_JOBS \
     PROGNAME="$OUT" \
@@ -107,6 +108,9 @@ if [ "$PACKAGE_DIR" ]; then
     pack_archive "$PACKAGE_DIR/$ARCHIVE" "$NDK_DIR" "$SUBDIR"
     fail_panic "Could not create package: $PACKAGE_DIR/$ARCHIVE from $OUT"
 fi
+
+log "Cleaning up"
+rm -rf $BUILD_DIR
 
 log "Done!"
 exit 0
