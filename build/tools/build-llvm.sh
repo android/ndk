@@ -146,6 +146,8 @@ fi
 
 TOOLCHAIN_BUILD_PREFIX=$BUILD_OUT/prefix
 
+ARCH=$HOST_ARCH
+
 # Note that the following 2 flags only apply for BUILD_CC in canadian cross build
 CFLAGS_FOR_BUILD="-O2 -I$TOOLCHAIN_BUILD_PREFIX/include"
 LDFLAGS_FOR_BUILD="-L$TOOLCHAIN_BUILD_PREFIX/lib"
@@ -153,7 +155,7 @@ LDFLAGS_FOR_BUILD="-L$TOOLCHAIN_BUILD_PREFIX/lib"
 CFLAGS="$CFLAGS $CFLAGS_FOR_BUILD $HOST_CFLAGS"
 CXXFLAGS="$CXXFLAGS $CFLAGS_FOR_BUILD $HOST_CFLAGS"  # polly doesn't look at CFLAGS !
 LDFLAGS="$LDFLAGS $LDFLAGS_FOR_BUILD $HOST_LDFLAGS"
-export CC CXX CFLAGS CXXFLAGS LDFLAGS CFLAGS_FOR_BUILD LDFLAGS_FOR_BUILD REQUIRES_RTTI=1
+export CC CXX CFLAGS CXXFLAGS LDFLAGS CFLAGS_FOR_BUILD LDFLAGS_FOR_BUILD REQUIRES_RTTI=1 ARCH
 
 if [ "$DARWIN" = "yes" ]; then
     # To stop /usr/bin/install -s calls strip on darwin binary
@@ -210,6 +212,12 @@ if [ "$POLLY" = "yes" ]; then
     fail_panic "Couldn't install cloog to $TOOLCHAIN_BUILD_PREFIX"
 
     EXTRA_CONFIG_FLAGS="--with-cloog=$TOOLCHAIN_BUILD_PREFIX --with-isl=$TOOLCHAIN_BUILD_PREFIX"
+
+    # Allow text relocs when linking LLVMPolly.dylib against statically linked libgmp.a
+    if [ "$HOST_TAG32" = "darwin-x86" -o "$DARWIN" = "yes" ]; then   # -a "$HOST_ARCH" = "x86"
+        LDFLAGS="$LDFLAGS -read_only_relocs suppress"
+        export LDFLAGS
+    fi
 fi # POLLY = yes
 
 # configure the toolchain
