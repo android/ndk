@@ -88,8 +88,8 @@ BUILD_WINDOWS_SOURCES=yes
 if [ "$BUILD_WINDOWS_SOURCES" ]; then
     ORIGINAL_HOST_TAG=$HOST_TAG
     MINGW=yes
-    handle_mingw
-    prepare_mingw_toolchain $BUILD_DIR
+    handle_canadian_build
+    prepare_canadian_toolchain $BUILD_DIR
 
     SUBDIR=$(get_prebuilt_install_prefix $HOST_TAG)/bin
     DSTDIR=$NDK_DIR/$SUBDIR
