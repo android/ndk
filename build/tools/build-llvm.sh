@@ -139,10 +139,12 @@ mkdir -p $BUILD_OUT
 
 TOOLCHAIN_BUILD_PREFIX=$BUILD_OUT/prefix
 
+ARCH=$HOST_ARCH
+
 CFLAGS="$HOST_CFLAGS $CFLAGS -I$TOOLCHAIN_BUILD_PREFIX/include"
 CXXFLAGS="$CXXFLAGS -I$TOOLCHAIN_BUILD_PREFIX/include"  # polly doesn't look at CFLAGS !
 LDFLAGS="$LDFLAGS -L$TOOLCHAIN_BUILD_PREFIX/lib"
-export CC CXX CFLAGS CXXFLAGS LDFLAGS REQUIRES_RTTI=1
+export CC CXX CFLAGS CXXFLAGS LDFLAGS REQUIRES_RTTI=1 ARCH
 
 EXTRA_CONFIG_FLAGS=
 rm -rf $SRC_DIR/$TOOLCHAIN/llvm/tools/polly
@@ -192,6 +194,12 @@ if [ "$POLLY" = "yes" ]; then
     fail_panic "Couldn't install cloog to $TOOLCHAIN_BUILD_PREFIX"
 
     EXTRA_CONFIG_FLAGS="--with-cloog=$TOOLCHAIN_BUILD_PREFIX --with-isl=$TOOLCHAIN_BUILD_PREFIX"
+
+    # Allow text relocs when linking LLVMPolly.dylib against statically linked gmp
+    if [ "$HOST_TAG32" = "darwin-x86" -o "$DARWIN" = "yes" ]; then   # -a "$HOST_ARCH" = "x86"
+        LDFLAGS="$LDFLAGS -read_only_relocs suppress"
+	    export LDFLAGS
+    fi
 fi # POLLY = yes
 
 # configure the toolchain
