@@ -20,7 +20,7 @@
 $(call assert-defined,TARGET_PLATFORM TARGET_ARCH TARGET_ARCH_ABI)
 $(call assert-defined,NDK_APPS NDK_APP_STL)
 
-LLVM_VERSION_LIST := 2.6 2.7 2.8 2.9 3.0 3.1
+LLVM_VERSION_LIST := 2.6 2.7 2.8 2.9 3.0 3.1 3.2
 
 # Check that we have a toolchain that supports the current ABI.
 # NOTE: If NDK_TOOLCHAIN is defined, we're going to use it.
@@ -50,6 +50,10 @@ ifndef NDK_TOOLCHAIN
     # suffix with it.
     #
     ifdef NDK_TOOLCHAIN_VERSION
+        # Replace "clang" with the most recent verion
+        ifeq ($(NDK_TOOLCHAIN_VERSION),clang)
+            NDK_TOOLCHAIN_VERSION=clang$(lastword $(LLVM_VERSION_LIST))
+        fi
         # We assume the toolchain name uses dashes (-) as separators and doesn't
         # contain any space. The following is a bit subtle, but essentially
         # does the following:
