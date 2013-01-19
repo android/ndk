@@ -162,6 +162,11 @@ if [ "$DARWIN" = "yes" ]; then
     POLLY=no
 fi
 
+if [ ! -d "$SRC_DIR/$TOOLCHAIN/polly" ] ; then
+    dump "Disable polly because $SRC_DIR/$TOOLCHAIN/polly doesn't exist"
+    POLLY=no
+fi
+
 EXTRA_CONFIG_FLAGS=
 rm -rf $SRC_DIR/$TOOLCHAIN/llvm/tools/polly
 if [ "$POLLY" = "yes" ]; then
@@ -269,10 +274,10 @@ rm -rf $TOOLCHAIN_BUILD_PREFIX/lib/LLVMH*.dylib
 rm -rf $TOOLCHAIN_BUILD_PREFIX/share
 
 UNUSED_LLVM_EXECUTABLES="
-bugpoint c-index-test clang-tblgen lli llvm-ar llvm-as llvm-bcanalyzer
+bugpoint c-index-test clang-check clang-tblgen lli llvm-ar llvm-as llvm-bcanalyzer
 llvm-config llvm-cov llvm-diff llvm-dwarfdump llvm-extract llvm-ld llvm-mc
-llvm-nm llvm-objdump llvm-prof llvm-ranlib llvm-readobj llvm-rtdyld llvm-size
-llvm-stress llvm-stub llvm-tblgen macho-dump cloog"
+llvm-nm llvm-mcmarkup llvm-objdump llvm-prof llvm-ranlib llvm-readobj llvm-rtdyld
+llvm-size llvm-stress llvm-stub llvm-tblgen macho-dump cloog"
 
 for i in $UNUSED_LLVM_EXECUTABLES; do
     rm -f $TOOLCHAIN_BUILD_PREFIX/bin/$i

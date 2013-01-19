@@ -50,6 +50,10 @@ ifndef NDK_TOOLCHAIN
     # suffix with it.
     #
     ifdef NDK_TOOLCHAIN_VERSION
+        # Replace "clang" with the most recent verion at this moment
+        ifeq ($(NDK_TOOLCHAIN_VERSION),clang)
+            NDK_TOOLCHAIN_VERSION=clang3.2
+        fi
         # We assume the toolchain name uses dashes (-) as separators and doesn't
         # contain any space. The following is a bit subtle, but essentially
         # does the following:
