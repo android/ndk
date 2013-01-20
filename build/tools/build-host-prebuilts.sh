@@ -209,19 +209,22 @@ for SYSTEM in $SYSTEMS; do
 
     # Add --mingw/--darwin flag
     TOOLCHAIN_FLAGS=$FLAGS
+    CANADIAN_BUILD=no
     if [ "$HOST_TAG32" = "linux-x86" ]; then
         case "$SYSTEM" in
             windows)
                 TOOLCHAIN_FLAGS=$TOOLCHAIN_FLAGS" --mingw"
+                CANADIAN_BUILD=yes
                 ;;
-            darwin) 
+            darwin-x86)
                 TOOLCHAIN_FLAGS=$TOOLCHAIN_FLAGS" --darwin"
+                CANADIAN_BUILD=yes
                 ;;
         esac
     fi
 
     # Should we do a remote build?
-    if [ "$SYSTEM" != "$HOST_TAG32" ]; then
+    if [ "$SYSTEM" != "$HOST_TAG32" -a "$CANADIAN_BUILD" != "yes" ]; then
         case $SYSTEM in
             darwin-*)
                 if [ "$DARWIN_SSH" ]; then

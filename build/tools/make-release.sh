@@ -61,17 +61,19 @@ fi
 HOST_SYSTEMS="$HOST_TAG32"
 
 MINGW_GCC=
+CANADIAN_DARWIN_BUILD=no
 if [ "$HOST_TAG" == "linux-x86" ] ; then
     find_mingw_toolchain
     if [ -n "$MINGW_GCC" ] ; then
         HOST_SYSTEMS="$HOST_SYSTEMS,windows"
-        # If darwin toolchain exist, build darwin too
-        if [ -z "$DARWIN_SSH" -a -f "${DARWIN_TOOLCHAIN}-gcc" ]; then
-            HOST_SYSTEMS="$HOST_SYSTEMS,darwin-x86"
-        fi
+    fi
+    # If darwin toolchain exist, build darwin too
+    if [ -z "$DARWIN_SSH" -a -f "${DARWIN_TOOLCHAIN}-gcc" ]; then
+        HOST_SYSTEMS="$HOST_SYSTEMS,darwin-x86"
+        CANADIAN_DARWIN_BUILD=yes
     fi
 fi
-if [ -n "$DARWIN_SSH" ] ; then
+if [ -n "$DARWIN_SSH" -a "$HOST_SYSTEMS" = "${HOST_SYSTEMS%darwin-x86*}" ]; then
     HOST_SYSTEMS="$HOST_SYSTEMS,darwin-x86"
 fi
 
@@ -88,13 +90,20 @@ if [ "$HOST_SYSTEMS" != "${HOST_SYSTEMS%windows*}" ] ; then
         exit 1
     fi
 fi
-HOST_SYSTEMS_FLAGS="--systems=$HOST_SYSTEMS"
-# Filter out darwin-x86 in $HOST_SYSTEMS_FLAGS, because
-# 1) On linux, cross-compiling is done via "--darwin-ssh".  Keeping darwin-x86 in --systems list
-#    actually disable --darwin-ssh later on.
-# 2) On MacOSX, darwin-x86 is the default, no need to be explicit.
-#
-HOST_SYSTEMS_FLAGS=$(echo "$HOST_SYSTEMS_FLAGS" | sed -e 's/darwin-x86//')
+
+ALSO_64_FLAG=
+register_option "--also-64" do_ALSO_64 "Also build 64-bit host toolchain"
+do_ALSO_64 () { ALSO_64_FLAG=--try-64; }
+
+HOST_FLAGS="--systems=$HOST_SYSTEMS $ALSO_64_FLAG"
+if [ -z "$CANADIAN_DARWIN_BUILD" ]; then
+    # Filter out darwin-x86 in $HOST_FLAGS, because
+    # 1) On linux when cross-compiling is done via "--darwin-ssh", keeping darwin-x86 in --systems list
+    #    actually disable --darwin-ssh later on.
+    # 2) On MacOSX, darwin-x86 is the default, no need to be explicit.
+    #
+    HOST_FLAGS=$(echo "$HOST_FLAGS" | sed -e 's/darwin-x86//')
+fi
 
 TOOLCHAIN_SRCDIR=
 register_var_option "--toolchain-src-dir=<path>" TOOLCHAIN_SRCDIR "Use toolchain sources from <path>"
@@ -218,7 +227,7 @@ if timestamp_check build-prebuilts; then
     PREBUILT_DIR="$RELEASE_DIR/prebuilt"
     if timestamp_check build-host-prebuilts; then
         dump "Building host toolchain binaries..."
-        run $ANDROID_NDK_ROOT/build/tools/rebuild-all-prebuilt.sh --package-dir="$PREBUILT_DIR" --build-dir="$RELEASE_DIR/build" "$TOOLCHAIN_SRCDIR" "$HOST_SYSTEMS_FLAGS"
+        run $ANDROID_NDK_ROOT/build/tools/rebuild-all-prebuilt.sh --package-dir="$PREBUILT_DIR" --build-dir="$RELEASE_DIR/build" "$TOOLCHAIN_SRCDIR" "$HOST_FLAGS"
         fail_panic "Can't build $HOST_SYSTEM binaries."
         timestamp_set build-host-prebuilts
     fi
