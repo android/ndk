@@ -53,7 +53,7 @@ ifndef NDK_TOOLCHAIN
         # Replace "clang" with the most recent verion
         ifeq ($(NDK_TOOLCHAIN_VERSION),clang)
             NDK_TOOLCHAIN_VERSION=clang$(lastword $(LLVM_VERSION_LIST))
-        fi
+        endif
         # We assume the toolchain name uses dashes (-) as separators and doesn't
         # contain any space. The following is a bit subtle, but essentially
         # does the following:
