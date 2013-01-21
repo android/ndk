@@ -67,54 +67,48 @@ esac
 # Run run-tests.sh
 #
 SYSTEM=$(get_prebuilt_host_tag)
+NDK_TOOLCHAIN_VERSIONS=
+for V in $DEFAULT_GCC_VERSION_LIST; do
+    NDK_TOOLCHAIN_VERSIONS=$NDK_TOOLCHAIN_VERSIONS" gcc"$V
+done
+for V in $DEFAULT_LLVM_VERSION_LIST; do
+    NDK_TOOLCHAIN_VERSIONS=$NDK_TOOLCHAIN_VERSIONS" clang"$V
+done
 
 # keep this simple, only intend to test the case when NDK_TOOLCHAIN_VERSION isn't specified
 dump "### Run simple tests"
 ANDROID_SERIAL=none ./run-tests.sh --continue-on-build-fail --abi=armeabi
+# Another simple test to test NDK_TOOLCHAIN_VERSION=clang which picks up the most recent version
+dump "### Run simple tests with clang"
+NDK_TOOLCHAIN_VERSION=clang ANDROID_SERIAL=none ./run-tests.sh --continue-on-build-fail --abi=armeabi-v7a
 
 # enumerate all cases using $SYSTEM toolchain
-dump "### Running $SYSTEM gcc 4.7 full tests"
-NDK_TOOLCHAIN_VERSION=4.7 ./run-tests.sh --continue-on-build-fail --full
-dump "### Running $SYSTEM gcc 4.6 full tests"
-NDK_TOOLCHAIN_VERSION=4.6 ./run-tests.sh --continue-on-build-fail --full
-dump "### Running $SYSTEM gcc 4.4.3 full tests"
-NDK_TOOLCHAIN_VERSION=4.4.3 ./run-tests.sh --continue-on-build-fail --full
-dump "### Running $SYSTEM clang 3.1 full tests"
-NDK_TOOLCHAIN_VERSION=clang3.1 ./run-tests.sh --continue-on-build-fail --full
+for V in $NDK_TOOLCHAIN_VERSIONS; do
+    dump "### Running $SYSTEM $V full tests"
+    NDK_TOOLCHAIN_VERSION="${V#gcc*}" ./run-tests.sh --continue-on-build-fail --full
+done
 
 if [ "$TEST_HOST_32BIT" = "yes" ] ; then
-    dump "### Running $SYSTEM gcc 4.7 tests (32-bit host)"
-    NDK_HOST_32BIT=1 NDK_TOOLCHAIN_VERSION=4.7 ./run-tests.sh --continue-on-build-fail
-    dump "### Running $SYSTEM gcc 4.6 tests (32-bit host)"
-    NDK_HOST_32BIT=1 NDK_TOOLCHAIN_VERSION=4.6 ./run-tests.sh --continue-on-build-fail
-    dump "### Running $SYSTEM gcc 4.4.3 tests (32-bit host)"
-    NDK_HOST_32BIT=1 NDK_TOOLCHAIN_VERSION=4.4.3 ./run-tests.sh --continue-on-build-fail
-    dump "### Running $SYSTEM clang 3.1 tests (32-bit host)"
-    NDK_HOST_32BIT=1 NDK_TOOLCHAIN_VERSION=clang3.1 ./run-tests.sh --continue-on-build-fail
+    for V in $NDK_TOOLCHAIN_VERSIONS; do
+        dump "### Running $SYSTEM $V full tests (32-bit host)"
+        NDK_HOST_32BIT=1 NDK_TOOLCHAIN_VERSION="${V#gcc*}" ./run-tests.sh --continue-on-build-fail
+    done
 fi
 
 if [ "$SYSTEM" = "linux-x86" -a -d "$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/windows-x86_64" ] ; then
     # using 64-bit windows toolchain
-    dump "### Running windows-x86_64 4.7 tests"
-    NDK_TOOLCHAIN_VERSION=4.7 ./run-tests.sh --continue-on-build-fail --wine # --full
-    dump "### Running windows-x86_64 4.6 tests"
-    NDK_TOOLCHAIN_VERSION=4.6 ./run-tests.sh --continue-on-build-fail --wine # --full
-    dump "### Running windows-x86_64 4.4.3 tests"
-    NDK_TOOLCHAIN_VERSION=4.4.3 ./run-tests.sh --continue-on-build-fail --wine # --full
-    dump "### Running windows-x86_64 clang 3.1 tests"
-    NDK_TOOLCHAIN_VERSION=clang3.1 ./run-tests.sh --continue-on-build-fail --wine # --full
+    for V in $NDK_TOOLCHAIN_VERSIONS; do
+        dump "### Running windows-x86_64 $V tests"
+        NDK_TOOLCHAIN_VERSION="${V#gcc*}" ./run-tests.sh --continue-on-build-fail --wine # --full
+    done
 fi
 
 if [ "$SYSTEM" = "linux-x86" -a -d "$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/windows" ] ; then
     # using 32-bit windows toolchain
-    dump "### Running windows 4.7 tests"
-    NDK_HOST_32BIT=1 NDK_TOOLCHAIN_VERSION=4.7 ./run-tests.sh --continue-on-build-fail --wine # --full
-    dump "### Running windows 4.6 tests"
-    NDK_HOST_32BIT=1 NDK_TOOLCHAIN_VERSION=4.6 ./run-tests.sh --continue-on-build-fail --wine # --full
-    dump "### Running windows 4.4.3 tests"
-    NDK_HOST_32BIT=1 NDK_TOOLCHAIN_VERSION=4.4.3 ./run-tests.sh --continue-on-build-fail --wine # --full
-    dump "### Running windows clang 3.1 tests"
-    NDK_HOST_32BIT=1 NDK_TOOLCHAIN_VERSION=clang3.1 ./run-tests.sh --continue-on-build-fail --wine # --full
+    for V in $NDK_TOOLCHAIN_VERSIONS; do
+        dump "### Running windows $V tests"
+        NDK_HOST_32BIT=1 NDK_TOOLCHAIN_VERSION="${V#gcc*}" ./run-tests.sh --continue-on-build-fail --wine # --full
+    done
 fi
 
 # add more if you want ...
