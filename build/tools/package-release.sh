@@ -340,6 +340,10 @@ rm -rf $REFERENCE/samples/*/{obj,libs,build.xml,local.properties,Android.mk} &&
 rm -rf $REFERENCE/tests/build/*/{obj,libs} &&
 rm -rf $REFERENCE/tests/device/*/{obj,libs}
 
+# Remove the libc++ sources, they're not ready for release.
+# http://b.android.com/36496
+rm -rf $REFERENCE/sources/cxx-stl/llvm-libc++
+
 # copy sources files
 if [ -d $DEVELOPMENT_ROOT/sources ] ; then
     echo "Copying NDK sources files"
