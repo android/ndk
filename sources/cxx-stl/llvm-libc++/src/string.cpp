@@ -26,6 +26,20 @@ template
     string
     operator+<char, char_traits<char>, allocator<char> >(char const*, string const&);
 
+namespace {
+
+// Private helper function used in place of std::swap() to handle the case
+// where errno is declared as a volatile int (making std::swap inappropriate
+// since its two parameters have different types, volatile int vs int).
+template <typename A, typename B>
+inline _LIBCPP_INLINE_VISIBILITY void swap_errno(A& a, B& b) {
+  A a_copy = a;
+  a = b;
+  b = a_copy;
+}
+
+}  // namespace
+
 int
 stoi(const string& str, size_t* idx, int base)
 {
@@ -34,7 +48,7 @@ stoi(const string& str, size_t* idx, int base)
     int errno_save = errno;
     errno = 0;
     long r = strtol(p, &ptr, base);
-    swap(errno, errno_save);
+    swap_errno(errno, errno_save);
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (errno_save == ERANGE || r < numeric_limits<int>::min() ||
                                 numeric_limits<int>::max() < r)
@@ -55,7 +69,7 @@ stoi(const wstring& str, size_t* idx, int base)
     int errno_save = errno;
     errno = 0;
     long r = wcstol(p, &ptr, base);
-    swap(errno, errno_save);
+    swap_errno(errno, errno_save);
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (errno_save == ERANGE || r < numeric_limits<int>::min() ||
                                 numeric_limits<int>::max() < r)
@@ -76,7 +90,7 @@ stol(const string& str, size_t* idx, int base)
     int errno_save = errno;
     errno = 0;
     long r = strtol(p, &ptr, base);
-    swap(errno, errno_save);
+    swap_errno(errno, errno_save);
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (errno_save == ERANGE)
         throw out_of_range("stol: out of range");
@@ -96,7 +110,7 @@ stol(const wstring& str, size_t* idx, int base)
     int errno_save = errno;
     errno = 0;
     long r = wcstol(p, &ptr, base);
-    swap(errno, errno_save);
+    swap_errno(errno, errno_save);
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (errno_save == ERANGE)
         throw out_of_range("stol: out of range");
@@ -116,7 +130,7 @@ stoul(const string& str, size_t* idx, int base)
     int errno_save = errno;
     errno = 0;
     unsigned long r = strtoul(p, &ptr, base);
-    swap(errno, errno_save);
+    swap_errno(errno, errno_save);
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (errno_save == ERANGE)
         throw out_of_range("stoul: out of range");
@@ -136,7 +150,7 @@ stoul(const wstring& str, size_t* idx, int base)
     int errno_save = errno;
     errno = 0;
     unsigned long r = wcstoul(p, &ptr, base);
-    swap(errno, errno_save);
+    swap_errno(errno, errno_save);
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (errno_save == ERANGE)
         throw out_of_range("stoul: out of range");
@@ -156,7 +170,7 @@ stoll(const string& str, size_t* idx, int base)
     int errno_save = errno;
     errno = 0;
     long long r = strtoll(p, &ptr, base);
-    swap(errno, errno_save);
+    swap_errno(errno, errno_save);
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (errno_save == ERANGE)
         throw out_of_range("stoll: out of range");
@@ -176,7 +190,7 @@ stoll(const wstring& str, size_t* idx, int base)
     int errno_save = errno;
     errno = 0;
     long long r = wcstoll(p, &ptr, base);
-    swap(errno, errno_save);
+    swap_errno(errno, errno_save);
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (errno_save == ERANGE)
         throw out_of_range("stoll: out of range");
@@ -196,7 +210,7 @@ stoull(const string& str, size_t* idx, int base)
     int errno_save = errno;
     errno = 0;
     unsigned long long r = strtoull(p, &ptr, base);
-    swap(errno, errno_save);
+    swap_errno(errno, errno_save);
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (errno_save == ERANGE)
         throw out_of_range("stoull: out of range");
@@ -216,7 +230,7 @@ stoull(const wstring& str, size_t* idx, int base)
     int errno_save = errno;
     errno = 0;
     unsigned long long r = wcstoull(p, &ptr, base);
-    swap(errno, errno_save);
+    swap_errno(errno, errno_save);
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (errno_save == ERANGE)
         throw out_of_range("stoull: out of range");
@@ -236,7 +250,7 @@ stof(const string& str, size_t* idx)
     int errno_save = errno;
     errno = 0;
     float r = strtof(p, &ptr);
-    swap(errno, errno_save);
+    swap_errno(errno, errno_save);
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (errno_save == ERANGE)
         throw out_of_range("stof: out of range");
@@ -256,7 +270,7 @@ stof(const wstring& str, size_t* idx)
     int errno_save = errno;
     errno = 0;
     float r = wcstof(p, &ptr);
-    swap(errno, errno_save);
+    swap_errno(errno, errno_save);
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (errno_save == ERANGE)
         throw out_of_range("stof: out of range");
@@ -276,7 +290,7 @@ stod(const string& str, size_t* idx)
     int errno_save = errno;
     errno = 0;
     double r = strtod(p, &ptr);
-    swap(errno, errno_save);
+    swap_errno(errno, errno_save);
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (errno_save == ERANGE)
         throw out_of_range("stod: out of range");
@@ -296,7 +310,7 @@ stod(const wstring& str, size_t* idx)
     int errno_save = errno;
     errno = 0;
     double r = wcstod(p, &ptr);
-    swap(errno, errno_save);
+    swap_errno(errno, errno_save);
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (errno_save == ERANGE)
         throw out_of_range("stod: out of range");
@@ -316,7 +330,7 @@ stold(const string& str, size_t* idx)
     int errno_save = errno;
     errno = 0;
     long double r = strtold(p, &ptr);
-    swap(errno, errno_save);
+    swap_errno(errno, errno_save);
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (errno_save == ERANGE)
         throw out_of_range("stold: out of range");
@@ -336,7 +350,7 @@ stold(const wstring& str, size_t* idx)
     int errno_save = errno;
     errno = 0;
     long double r = wcstold(p, &ptr);
-    swap(errno, errno_save);
+    swap_errno(errno, errno_save);
 #ifndef _LIBCPP_NO_EXCEPTIONS
     if (errno_save == ERANGE)
         throw out_of_range("stold: out of range");
