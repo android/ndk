@@ -109,7 +109,6 @@ fi
 
 # Normalize the parameters
 LLVM_VERSION_LIST=$(commas_to_spaces $LLVM_VERSION_LIST)
-LLVM_URL=${LLVM_URL%"/"}
 
 # Create temp directory where everything will be copied first
 #
@@ -173,7 +172,12 @@ toolchain_checkout ()
     fi
     (mkdir -p $TMPDIR/$SUBDIR/$NAME && cd $TMPDIR/$SUBDIR/$NAME && run git $GITOPTS checkout $REVISION "$@")
     fail_panic "Could not checkout $NAME / $@ ?"
-    (printf "%-32s " "toolchain/$NAME.git"; git $GITOPTS log -1 --format=oneline $REVISION) >> $SOURCES_LIST
+    if [ "$BRANCH" = "master" ]; then
+        BRANCH=
+    else
+        BRANCH="($BRANCH)"
+    fi
+    (printf "%-32s " "toolchain/$NAME.git $BRANCH"; git $GITOPTS log -1 --format=oneline $REVISION) >> $SOURCES_LIST
 }
 
 cd $TMPDIR
@@ -221,10 +225,11 @@ for LLVM_VERSION in $LLVM_VERSION_LIST; do
     #    will only create symbolic link when --with-polly is specified.
     (cd "$TMPDIR/llvm-$LLVM_VERSION/llvm" && \
         ln -s ../../clang tools && \
-        mv tools/polly ..)
+        test -d tools/polly && mv tools/polly ..)
     # In polly/utils/cloog_src, touch Makefile.in, aclocal.m4, and configure to
     # make sure they are not regenerated.
-    (cd "$TMPDIR/llvm-$LLVM_VERSION/polly" && \
+    (test -d "$TMPDIR/llvm-$LLVM_VERSION/polly" && \
+     cd "$TMPDIR/llvm-$LLVM_VERSION/polly" && \
         find . -name "Makefile.in" -exec touch {} \; && \
         find . -name "aclocal.m4" -exec touch {} \; && \
         find . -name "configure" -exec touch {} \; )
