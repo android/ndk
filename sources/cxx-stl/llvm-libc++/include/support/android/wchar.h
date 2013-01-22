@@ -8,9 +8,10 @@ extern "C" {
 
 // Add missing declarations that are not in the NDK.
 float               wcstof(const wchar_t*, wchar_t**);
+long                wcstol(const wchar_t* nptr, wchar_t**, int);
 long double         wcstold(const wchar_t*, wchar_t**);
-long long           wcstoll(const wchar_t*, wchar_t**);
-unsigned long long  wcstoull(const wchar_t*, wchar_t**);
+long long           wcstoll(const wchar_t*, wchar_t**, int);
+unsigned long long  wcstoull(const wchar_t*, wchar_t**, int);
 
 extern size_t wcsnrtombs (char *dst,
                           const wchar_t **src,

@@ -26,6 +26,24 @@ template
     string
     operator+<char, char_traits<char>, allocator<char> >(char const*, string const&);
 
+#ifdef __ANDROID__
+
+namespace {
+
+// Private helper function used in place of std::swap() to handle the case
+// where errno is declared as a volatile int (making std::swap inappropriate
+// since its two parameters have different types, volatile int vs int).
+template <typename A, typename B>
+inline _LIBCPP_INLINE_VISIBILITY void swap(A& a, B& b) {
+  A a_copy = a;
+  a = b;
+  b = a_copy;
+}
+
+}  // namespace
+
+#endif  // __ANDROID__
+
 int
 stoi(const string& str, size_t* idx, int base)
 {
