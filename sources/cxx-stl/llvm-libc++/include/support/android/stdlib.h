@@ -4,7 +4,9 @@
 #include_next <stdlib.h>
 #include <xlocale.h>
 
+#ifdef __cplusplus
 extern "C" {
+#endif
 
 long long   strtoll(const char*, char**, int);
 long double strtold(const char*, char**);
@@ -16,6 +18,8 @@ unsigned long        strtoul_l(const char *nptr, char **endptr, int base, locale
 unsigned long long   strtoull_l(const char *nptr, char **endptr, int base, locale_t loc);
 long double          strtold_l (const char *nptr, char **endptr, locale_t loc);
 
+#ifdef __cplusplus
 }  // extern "C"
+#endif
 
 #endif  // LLVM_LIBCXX_SUPPORT_ANDROID_STDLIB_H

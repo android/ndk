@@ -4,7 +4,9 @@
 #include_next <ctype.h>
 #include <xlocale.h>
 
+#ifdef __cplusplus
 extern "C" {
+#endif
 
 # define __exctype_l(name)  extern int name (int, locale_t)
 
@@ -24,6 +26,8 @@ __exctype_l (isblank_l);
 int tolower_l(int c, locale_t);
 int toupper_l(int c, locale_t);
 
+#ifdef __cplusplus
 }  // extern "C"
+#endif
 
 #endif  // LLVM_LIBCXX_SUPPORT_ANDROID_CTYPE_H
