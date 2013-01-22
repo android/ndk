@@ -3,6 +3,10 @@
 
 #include_next <math.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // TODO(digit): Check that this is not needed for Clang.
 typedef double      double_t;
 typedef double      float_t;
@@ -55,5 +59,9 @@ float           nanf(const char*);
 
 float           log2f(float);
 double          log2(double);
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
 #endif  /* LLVM_LIBCXX_SUPPORT_ANDROID_MATH_H */

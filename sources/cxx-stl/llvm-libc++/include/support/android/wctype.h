@@ -4,7 +4,9 @@
 #include_next <wctype.h>
 #include <xlocale.h>
 
+#ifdef __cplusplus
 extern "C" {
+#endif
 
 // Add missing declarations from the NDK header. Implemented under
 // src/android/wctype.cc
@@ -25,6 +27,8 @@ int iswblank_l(wint_t, locale_t);
 wint_t towlower_l(wint_t, locale_t);
 wint_t towupper_l(wint_t, locale_t);
 
+#ifdef __cplusplus
 }  // extern "C"
+#endif
 
 #endif  // LLVM_LIBCXX_SUPPORT_ANDROID_WCTYPES_H
