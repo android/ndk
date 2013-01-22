@@ -8,7 +8,9 @@
 #undef localeconv
 #include <xlocale.h>
 
+#ifdef __cplusplus
 extern "C" {
+#endif
 
 #define LC_CTYPE_MASK  (1 << LC_CTYPE)
 #define LC_NUMERIC_MASK (1 << LC_NUMERIC)
@@ -48,7 +50,8 @@ struct lconv {
     char* thousands_sep;       /* Thousands separator */
     char* grouping;            /* Grouping */
     char* int_curr_symbol;
-   char* currency_symbol;
+  
+ char* currency_symbol;
     char* mon_decimal_point;
     char* mon_thousands_sep;
     char* mon_grouping;
@@ -73,6 +76,8 @@ struct lconv {
 
 struct lconv* localeconv(void);
 
+#ifdef __cplusplus
 }  // extern "C"
+#endif
 
 #endif  // LLVM_LIBCXX_SUPPORT_ANDROID_LOCALE_H

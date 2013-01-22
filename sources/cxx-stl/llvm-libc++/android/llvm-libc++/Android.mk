@@ -28,6 +28,9 @@ llvm_libc++_sources := \
 	utility.cpp \
 	valarray.cpp
 
+llvm_libc++_sources += \
+    support/android/locale_support.c
+
 llvm_libc++_sources := $(llvm_libc++_sources:%=src/%)
 llvm_libc++_cxxflags := -std=c++11
 

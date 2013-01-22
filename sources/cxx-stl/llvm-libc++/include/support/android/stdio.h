@@ -10,9 +10,11 @@
 #include <stdarg.h>
 #include <xlocale.h>
 
+#ifdef __cplusplus
 extern "C" {
+#endif
 
-char* asprintf_l(char**, locale_t, const char*, ...);
+int asprintf_l(char**, locale_t, const char*, ...);
 int sprintf_l(char*, locale_t, const char*, ...);
 int snprintf_l(char*, size_t, locale_t, const char*, ...);
 int sscanf_l(const char*, locale_t, const char*, ...);
@@ -21,6 +23,8 @@ int vfwscanf(FILE*, const wchar_t*, va_list);
 int vswscanf(const wchar_t *, const wchar_t *, va_list);
 int vwscanf(const wchar_t *, va_list);
 
+#ifdef __cplusplus
 }  // extern "C"
+#endif
 
 #endif  // LLVM_LIBCXX_SUPPORT_ANDROID_STDIO_H

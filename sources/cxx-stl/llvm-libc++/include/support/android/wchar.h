@@ -4,7 +4,9 @@
 #include_next <wchar.h>
 #include <xlocale.h>
 
+#ifdef __cplusplus
 extern "C" {
+#endif
 
 // Add missing declarations that are not in the NDK.
 float               wcstof(const wchar_t*, wchar_t**);
@@ -24,6 +26,8 @@ extern size_t mbsnrtowcs (wchar_t *dst,
 int wcscoll_l(const wchar_t*, const wchar_t*, locale_t);
 int wcsxfrm_l(wchar_t*, const wchar_t*, size_t, locale_t);
 
+#ifdef __cplusplus
 }  // extern "C"
+#endif
 
 #endif  // LLVM_LIBCXX_SUPPORT_ANDROID_WCHAR_H
