@@ -157,11 +157,7 @@ namespace std {
   bool uncaught_exception() throw() {
     using namespace __cxxabiv1;
 
-    __cxa_eh_globals* globals = __cxa_get_globals_fast();
-    if (!globals) {
-      return false;
-    }
-
+    __cxa_eh_globals* globals = __cxa_get_globals();
     return globals->uncaughtExceptions != 0;
   }
 
