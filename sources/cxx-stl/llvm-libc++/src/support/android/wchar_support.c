@@ -17,6 +17,7 @@ static int _wc_indelim(wchar_t wc, const wchar_t* delim) {
     while (*delim) {
         if (wc == *delim)
             return 1;
+        delim++;
     }
     return 0;
 }
@@ -30,7 +31,7 @@ wchar_t *wcpcpy(wchar_t *to, const wchar_t *from) {
             break;
         n++;
     }
-    return to;
+    return to + n;
 }
 
 wchar_t *wcpncpy(wchar_t *dst, const wchar_t *src, size_t n) {
@@ -72,6 +73,7 @@ wchar_t *wcscat(wchar_t *s1, const wchar_t *s2) {
         s1[n+i] = wc;
         if (wc == L'\0')
             break;
+        i++;
     }
     return s1;
 }
@@ -82,9 +84,12 @@ size_t wcslcat(wchar_t *dst, const wchar_t *src, size_t siz) {
         return 0;
 
     // Skip dst characters.
-    size_t n;
-    for (n = 0; n < siz && dst[n] != L'\0'; ++n)
-        ;
+    size_t n = 0;
+    while (n < siz && dst[n] != L'\0')
+      n++;
+
+    if (n == siz)
+      return n + wcslen(src);
 
     // Copy as much source characters as they fit into siz-1 bytes.
     size_t i;

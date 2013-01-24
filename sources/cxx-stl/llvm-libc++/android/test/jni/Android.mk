@@ -1,3 +1,6 @@
+# This file is dual licensed under the MIT and the University of Illinois Open
+# Source Licenses. See LICENSE.TXT for details.
+
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
