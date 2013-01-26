@@ -70,8 +70,9 @@ run $SED_SRCDIR/configure \
     --build=$ABI_CONFIGURE_BUILD
 fail_panic "Failed to configure the sed-$SED_VERSION build!"
 
-log "Building sed"
-run $GNUMAKE -j $NUM_JOBS
+log "Building sed (lib/ and sed/ only)"
+run $GNUMAKE -j $NUM_JOBS -C lib
+run $GNUMAKE -j $NUM_JOBS -C sed
 fail_panic "Failed to build the sed-$SED_VERSION executable!"
 
 log "Copying executable to prebuilt location"
