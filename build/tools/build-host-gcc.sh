@@ -1427,6 +1427,9 @@ build_host_gcc_core ()
         arm)
             ARGS=$ARGS" --with-arch=armv5te --with-float=soft --with-fpu=vfpv3-d16"
             ;;
+        x86)
+            ARGS=$ARGS" --with-arch=i686 --with-tune=atom --with-fpmath=sse"
+            ;;
         mips)
             # Add --disable-fixed-point to disable fixed-point support
             # Add --disable-threads for eh_frame handling in a single thread
