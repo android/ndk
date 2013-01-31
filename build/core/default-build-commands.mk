@@ -105,21 +105,21 @@ TARGET_LDLIBS := -lc -lm
 ifneq ($(findstring ccc-analyzer,$(CC)),)
 TARGET_CC       = $(CC)
 else
-TARGET_CC       = $(TOOLCHAIN_PREFIX)gcc
+TARGET_CC       = $(if $(TOOLCHAIN_CC),$(TOOLCHAIN_CC),$(TOOLCHAIN_PREFIX)gcc)
 endif
 TARGET_CFLAGS   =
 
 ifneq ($(findstring c++-analyzer,$(CXX)),)
 TARGET_CXX      = $(CXX)
 else
-TARGET_CXX      = $(TOOLCHAIN_PREFIX)g++
+TARGET_CXX      = $(if $(TOOLCHAIN_CXX),$(TOOLCHAIN_CXX),$(TOOLCHAIN_PREFIX)g++)
 endif
 TARGET_CXXFLAGS = $(TARGET_CFLAGS) -fno-exceptions -fno-rtti
 
-TARGET_LD       = $(TOOLCHAIN_PREFIX)ld
+TARGET_LD       = $(if $(TOOLCHAIN_LD),$(TOOLCHAIN_LD),$(TOOLCHAIN_PREFIX)ld)
 TARGET_LDFLAGS :=
 
-TARGET_AR       = $(TOOLCHAIN_PREFIX)ar
+TARGET_AR       = $(if $(TOOLCHAIN_AR),$(TOOLCHAIN_AR),$(TOOLCHAIN_PREFIX)ar)
 TARGET_ARFLAGS := crs
 
-TARGET_STRIP    = $(TOOLCHAIN_PREFIX)strip
+TARGET_STRIP    = $(if $(TOOLCHAIN_STRIP),$(TOOLCHAIN_STRIP),$(TOOLCHAIN_PREFIX)strip)
