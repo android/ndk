@@ -34,6 +34,14 @@ $(call clear-vars,$(NDK_TOOLCHAIN_VARS_OPTIONAL))
 # Include the config file
 include $(_config_mk)
 
+# Plug in the undefined
+ifeq ($(TOOLCHAIN_ABIS)$(TOOLCHAIN_ARCH),)
+ifeq (1,$(words $(filter-out $(NDK_KNOWN_ARCHS),$(NDK_FOUND_ARCHS))))
+TOOLCHAIN_ARCH := $(filter-out $(NDK_KNOWN_ARCHS),$(NDK_FOUND_ARCHS))
+TOOLCHAIN_ABIS := $(TOOLCHAIN_ARCH)
+endif
+endif
+
 # Check that the proper variables were defined
 $(call check-required-vars,$(NDK_TOOLCHAIN_VARS_REQUIRED),$(_config_mk))
 

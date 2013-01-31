@@ -53,9 +53,15 @@ endif
 # Otherwise, check that we don't have an invalid value here.
 #
 ifeq ($(NDK_APP_ABI),all)
-    NDK_APP_ABI := $(NDK_ALL_ABIS)
+    NDK_APP_ABI := $(NDK_KNOWN_ABIS)  # $(NDK_ALL_ABIS)
 else
     # check the target ABIs for this application
+    _unknown_abis = $(strip $(filter-out $(NDK_ALL_ABIS),$(NDK_APP_ABI)))
+    ifeq (1,$(words $(_unknown_abis)))
+        ifeq (1,$(words $(filter-out $(NDK_KNOWN_ARCHS),$(NDK_FOUND_ARCHS))))
+            NDK_APP_ABI := $(subst $(_unknown_abis),$(filter-out $(NDK_KNOWN_ARCHS),$(NDK_FOUND_ARCHS)),$(NDK_APP_ABI))
+	endif
+    endif
     _bad_abis = $(strip $(filter-out $(NDK_ALL_ABIS),$(NDK_APP_ABI)))
     ifneq ($(_bad_abis),)
         $(call __ndk_info,NDK Application '$(_app)' targets unknown ABI(s): $(_bad_abis))
