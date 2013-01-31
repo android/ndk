@@ -139,6 +139,18 @@ check-required-vars = $(foreach __varname,$1,\
 # The list of default C++ extensions supported by GCC.
 default-c++-extensions := .cc .cp .cxx .cpp .CPP .c++ .C
 
+# target object, lib and soname extension
+# -----------------------------------------------------------------------------
+# Function : target-obj-extension, target-lib-extension, and target-soname-extension
+# Arguments: None
+# Returns  : either TARGET_OBJ_EXTENSION, or .o (likewise for .a and .so)
+# Usage    : $(call target-obj-extension)
+# Rationale: This function return suffix for obj (lib, soname) file, or default
+# -----------------------------------------------------------------------------
+target-obj-extension = $(if $(TARGET_OBJ_EXTENSION),$(TARGET_OBJ_EXTENSION),.o)
+target-lib-extension = $(if $(TARGET_LIB_EXTENSION),$(TARGET_LIB_EXTENSION),.a)
+target-soname-extension = $(if $(TARGET_SONAME_EXTENSION),$(TARGET_SONAME_EXTENSION),.so)
+
 # -----------------------------------------------------------------------------
 # Function : host-path
 # Arguments: 1: file path
@@ -1002,7 +1014,7 @@ check-LOCAL_MODULE_FILENAME = \
         $(call __ndk_info,$(LOCAL_MAKEFILE):$(LOCAL_MODULE): LOCAL_MODULE_FILENAME must not contain spaces)\
         $(call __ndk_error,Plase correct error. Aborting)\
     )\
-    $(if $(filter %.a %.so,$(LOCAL_MODULE_FILENAME)),\
+    $(if $(filter %$(call target-lib-extension) %$(call target-soname-extension),$(LOCAL_MODULE_FILENAME)),\
         $(call __ndk_info,$(LOCAL_MAKEFILE):$(LOCAL_MODULE): LOCAL_MODULE_FILENAME should not include file extensions)\
     )\
   )
@@ -1029,7 +1041,7 @@ ifneq (1,$$(words $$(LOCAL_MODULE_FILENAME)))
     $$(call __ndk_info,$$(LOCAL_MAKEFILE):$$(LOCAL_MODULE): LOCAL_MODULE_FILENAME must not contain any space)
     $$(call __ndk_error,Aborting)
 endif
-ifneq (,$$(filter %.a %.so,$$(LOCAL_MODULE_FILENAME)))
+ifneq (,$$(filter %$$(call target-lib-extension) %$$(call target-soname-extension),$$(LOCAL_MODULE_FILENAME)))
     $$(call __ndk_info,$$(LOCAL_MAKEFILE):$$(LOCAL_MODULE): LOCAL_MODULE_FILENAME must not contain a file extension)
     $$(call __ndk_error,Aborting)
 endif
@@ -1067,8 +1079,8 @@ define ev-handle-prebuilt-module-filename
 LOCAL_MODULE_FILENAME := $$(strip $$(LOCAL_MODULE_FILENAME))
 ifndef LOCAL_MODULE_FILENAME
     LOCAL_MODULE_FILENAME := $$(notdir $(LOCAL_SRC_FILES))
-    LOCAL_MODULE_FILENAME := $$(LOCAL_MODULE_FILENAME:%.a=%)
-    LOCAL_MODULE_FILENAME := $$(LOCAL_MODULE_FILENAME:%.so=%)
+    LOCAL_MODULE_FILENAME := $$(LOCAL_MODULE_FILENAME:%$$(call target-lib-extension)=%)
+    LOCAL_MODULE_FILENAME := $$(LOCAL_MODULE_FILENAME:%$$(call target-soname-extension)=%)
 endif
 LOCAL_MODULE_FILENAME := $$(LOCAL_MODULE_FILENAME)$1
 $$(eval $$(call ev-check-module-filename))
@@ -1333,7 +1345,7 @@ get-object-name = $(strip \
     $(subst ../,__/,\
         $(eval __obj := $1)\
         $(foreach __ext,.c .s .S $(LOCAL_CPP_EXTENSION),\
-            $(eval __obj := $(__obj:%$(__ext)=%.o))\
+            $(eval __obj := $(__obj:%$(__ext)=%$(call target-obj-extension)))\
         )\
         $(__obj)\
     ))
@@ -1445,8 +1457,8 @@ else
   _ORG_FLAGS := $$(_FLAGS)
   _ORG_TEXT  := $$(_TEXT)
 
-  _OBJ_ASM_ORIGINAL := $$(patsubst %.o,%.s,$$(_ORG_OBJ))
-  _OBJ_ASM_FILTERED := $$(patsubst %.o,%.filtered.s,$$(_ORG_OBJ))
+  _OBJ_ASM_ORIGINAL := $$(patsubst %$$(call target-obj-extension),%.s,$$(_ORG_OBJ))
+  _OBJ_ASM_FILTERED := $$(patsubst %$$(call target-obj-extension),%.filtered.s,$$(_ORG_OBJ))
 
   # If the source file is a plain assembler file, we're going to
   # use it directly in our filter.
@@ -1723,12 +1735,12 @@ module-class-is-copyable = $(if $(call seq,$1,PREBUILT_SHARED_LIBRARY),$(true),$
 
 # static libraries:
 # <foo> -> lib<foo>.a by default
-$(call module-class-register,STATIC_LIBRARY,lib,.a)
+$(call module-class-register,STATIC_LIBRARY,lib,$(call target-lib-extension))
 
 # shared libraries:
 # <foo> -> lib<foo>.so
 # a shared library is installable.
-$(call module-class-register-installable,SHARED_LIBRARY,lib,.so)
+$(call module-class-register-installable,SHARED_LIBRARY,lib,$(call target-soname-extension))
 
 # executable
 # <foo> -> <foo>

@@ -22,6 +22,6 @@ LOCAL_MODULE_CLASS := PREBUILT_SHARED_LIBRARY
 LOCAL_MAKEFILE     := $(local-makefile)
 
 LOCAL_PREBUILT_PREFIX := lib
-LOCAL_PREBUILT_SUFFIX := .so
+LOCAL_PREBUILT_SUFFIX := $(call target-soname-extension)
 
 include $(BUILD_SYSTEM)/prebuilt-library.mk
