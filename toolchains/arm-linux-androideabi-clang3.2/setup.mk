@@ -61,7 +61,7 @@ TARGET_LDFLAGS := \
 TARGET_C_INCLUDES := \
     $(SYSROOT)/usr/include
 
-ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
+ifneq ($(filter %armeabi-v7a,$(TARGET_ARCH_ABI)),)
     LLVM_TRIPLE := armv7-none-linux-androideabi
 
     TARGET_CFLAGS += -target $(LLVM_TRIPLE) \

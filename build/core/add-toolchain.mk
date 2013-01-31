@@ -34,6 +34,18 @@ $(call clear-vars,$(NDK_TOOLCHAIN_VARS_OPTIONAL))
 # Include the config file
 include $(_config_mk)
 
+# Plug in the undefined
+ifeq ($(TOOLCHAIN_ABIS)$(TOOLCHAIN_ARCH),)
+ifeq (1,$(words $(filter-out $(NDK_KNOWN_ARCHS),$(NDK_FOUND_ARCHS))))
+TOOLCHAIN_ARCH := $(filter-out $(NDK_KNOWN_ARCHS),$(NDK_FOUND_ARCHS))
+TOOLCHAIN_ABIS := $(TOOLCHAIN_ARCH) $(NDK_KNOWN_ABIS:%=$(TOOLCHAIN_ARCH)%)
+endif
+endif
+
+ifeq ($(TOOLCHAIN_ABIS)$(TOOLCHAIN_ARCH),)
+# Ignore if both TOOLCHAIN_ABIS and TOOLCHAIN_ARCH are not defined
+else
+
 # Check that the proper variables were defined
 $(call check-required-vars,$(NDK_TOOLCHAIN_VARS_REQUIRED),$(_config_mk))
 
@@ -75,5 +87,7 @@ $(foreach _abi,$(_abis),\
 
 NDK_ARCH.$(_arch).toolchains += $(_name)
 NDK_ARCH.$(_arch).abis := $(sort $(NDK_ARCH.$(_arch).abis) $(_abis))
+
+endif
 
 # done
