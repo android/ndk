@@ -26,7 +26,7 @@ $(call check-LOCAL_MODULE,$(LOCAL_MAKEFILE))
 # we are building target objects
 my := TARGET_
 
-$(call handle-module-filename,lib,.a)
+$(call handle-module-filename,lib,$(TARGET_LIB_EXTENSION))
 $(call handle-module-built)
 
 LOCAL_MODULE_CLASS := STATIC_LIBRARY

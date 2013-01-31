@@ -47,7 +47,7 @@ endif
 
 # If LOCAL_MODULE_FILENAME is defined, it will be used to name the file
 # in the TARGET_OUT directory, and then the installation one. Note that
-# if shouldn't have an .a or .so extension nor contain directory separators.
+# it shouldn't have an .a or .so extension nor contain directory separators.
 #
 # If the variable is not defined, we determine its value from LOCAL_SRC_FILES
 #

@@ -27,7 +27,7 @@ $(call check-LOCAL_MODULE_FILENAME)
 # we are building target objects
 my := TARGET_
 
-$(call handle-module-filename,lib,.so)
+$(call handle-module-filename,lib,$(TARGET_SONAME_EXTENSION))
 $(call handle-module-built)
 
 LOCAL_MODULE_CLASS := SHARED_LIBRARY

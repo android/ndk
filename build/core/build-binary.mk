@@ -239,9 +239,9 @@ endif
 #
 LOCAL_OBJECTS := $(LOCAL_SRC_FILES)
 $(foreach _ext,$(all_source_extensions),\
-    $(eval LOCAL_OBJECTS := $$(LOCAL_OBJECTS:%$(_ext)=%.o))\
+    $(eval LOCAL_OBJECTS := $$(LOCAL_OBJECTS:%$(_ext)=%$$(TARGET_OBJ_EXTENSION)))\
 )
-LOCAL_OBJECTS := $(filter %.o,$(LOCAL_OBJECTS))
+LOCAL_OBJECTS := $(filter %$(TARGET_OBJ_EXTENSION),$(LOCAL_OBJECTS))
 LOCAL_OBJECTS := $(subst ../,__/,$(LOCAL_OBJECTS))
 LOCAL_OBJECTS := $(foreach _obj,$(LOCAL_OBJECTS),$(LOCAL_OBJS_DIR)/$(_obj))
 
@@ -259,7 +259,7 @@ endif
 #
 ifneq (,$(call module-has-c++-features,$(LOCAL_MODULE),rtti exceptions))
     ifeq (system,$(NDK_APP_STL))
-      LOCAL_LDLIBS := $(LOCAL_LDLIBS) $(call host-path,$(NDK_ROOT)/sources/cxx-stl/gnu-libstdc++/$(TOOLCHAIN_VERSION)/libs/$(TARGET_ARCH_ABI)/libsupc++.a)
+      LOCAL_LDLIBS := $(LOCAL_LDLIBS) $(call host-path,$(NDK_ROOT)/sources/cxx-stl/gnu-libstdc++/$(TOOLCHAIN_VERSION)/libs/$(TARGET_ARCH_ABI)/libsupc++$(TARGET_LIB_EXTENSION))
     endif
 endif
 

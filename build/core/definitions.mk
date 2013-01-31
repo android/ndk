@@ -1002,7 +1002,7 @@ check-LOCAL_MODULE_FILENAME = \
         $(call __ndk_info,$(LOCAL_MAKEFILE):$(LOCAL_MODULE): LOCAL_MODULE_FILENAME must not contain spaces)\
         $(call __ndk_error,Plase correct error. Aborting)\
     )\
-    $(if $(filter %.a %.so,$(LOCAL_MODULE_FILENAME)),\
+    $(if $(filter %$(TARGET_LIB_EXTENSION) %$(TARGET_SONAME_EXTENSION),$(LOCAL_MODULE_FILENAME)),\
         $(call __ndk_info,$(LOCAL_MAKEFILE):$(LOCAL_MODULE): LOCAL_MODULE_FILENAME should not include file extensions)\
     )\
   )
@@ -1029,7 +1029,7 @@ ifneq (1,$$(words $$(LOCAL_MODULE_FILENAME)))
     $$(call __ndk_info,$$(LOCAL_MAKEFILE):$$(LOCAL_MODULE): LOCAL_MODULE_FILENAME must not contain any space)
     $$(call __ndk_error,Aborting)
 endif
-ifneq (,$$(filter %.a %.so,$$(LOCAL_MODULE_FILENAME)))
+ifneq (,$$(filter %$$(TARGET_LIB_EXTENSION) %$$(TARGET_SONAME_EXTENSION),$$(LOCAL_MODULE_FILENAME)))
     $$(call __ndk_info,$$(LOCAL_MAKEFILE):$$(LOCAL_MODULE): LOCAL_MODULE_FILENAME must not contain a file extension)
     $$(call __ndk_error,Aborting)
 endif
@@ -1067,8 +1067,8 @@ define ev-handle-prebuilt-module-filename
 LOCAL_MODULE_FILENAME := $$(strip $$(LOCAL_MODULE_FILENAME))
 ifndef LOCAL_MODULE_FILENAME
     LOCAL_MODULE_FILENAME := $$(notdir $(LOCAL_SRC_FILES))
-    LOCAL_MODULE_FILENAME := $$(LOCAL_MODULE_FILENAME:%.a=%)
-    LOCAL_MODULE_FILENAME := $$(LOCAL_MODULE_FILENAME:%.so=%)
+    LOCAL_MODULE_FILENAME := $$(LOCAL_MODULE_FILENAME:%$$(TARGET_LIB_EXTENSION)=%)
+    LOCAL_MODULE_FILENAME := $$(LOCAL_MODULE_FILENAME:%$$(TARGET_SONAME_EXTENSION)=%)
 endif
 LOCAL_MODULE_FILENAME := $$(LOCAL_MODULE_FILENAME)$1
 $$(eval $$(call ev-check-module-filename))
@@ -1333,7 +1333,7 @@ get-object-name = $(strip \
     $(subst ../,__/,\
         $(eval __obj := $1)\
         $(foreach __ext,.c .s .S $(LOCAL_CPP_EXTENSION),\
-            $(eval __obj := $(__obj:%$(__ext)=%.o))\
+            $(eval __obj := $(__obj:%$(__ext)=%$(TARGET_OBJ_EXTENSION)))\
         )\
         $(__obj)\
     ))
@@ -1445,8 +1445,8 @@ else
   _ORG_FLAGS := $$(_FLAGS)
   _ORG_TEXT  := $$(_TEXT)
 
-  _OBJ_ASM_ORIGINAL := $$(patsubst %.o,%.s,$$(_ORG_OBJ))
-  _OBJ_ASM_FILTERED := $$(patsubst %.o,%.filtered.s,$$(_ORG_OBJ))
+  _OBJ_ASM_ORIGINAL := $$(patsubst %$$(TARGET_OBJ_EXTENSION),%.s,$$(_ORG_OBJ))
+  _OBJ_ASM_FILTERED := $$(patsubst %$$(TARGET_OBJ_EXTENSION),%.filtered.s,$$(_ORG_OBJ))
 
   # If the source file is a plain assembler file, we're going to
   # use it directly in our filter.
@@ -1723,12 +1723,12 @@ module-class-is-copyable = $(if $(call seq,$1,PREBUILT_SHARED_LIBRARY),$(true),$
 
 # static libraries:
 # <foo> -> lib<foo>.a by default
-$(call module-class-register,STATIC_LIBRARY,lib,.a)
+$(call module-class-register,STATIC_LIBRARY,lib,$(TARGET_LIB_EXTENSION))
 
 # shared libraries:
 # <foo> -> lib<foo>.so
 # a shared library is installable.
-$(call module-class-register-installable,SHARED_LIBRARY,lib,.so)
+$(call module-class-register-installable,SHARED_LIBRARY,lib,$(TARGET_SONAME_EXTENSION))
 
 # executable
 # <foo> -> <foo>
