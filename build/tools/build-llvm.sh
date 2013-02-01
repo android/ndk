@@ -282,7 +282,7 @@ rm -rf $TOOLCHAIN_BUILD_PREFIX/lib/LLVMH*.dylib
 rm -rf $TOOLCHAIN_BUILD_PREFIX/share
 
 UNUSED_LLVM_EXECUTABLES="
-bugpoint c-index-test clang-check clang-tblgen lli llvm-ar llvm-as llvm-bcanalyzer
+bugpoint c-index-test clang-check clang-tblgen lli llvm-as llvm-bcanalyzer
 llvm-config llvm-config-host llvm-cov llvm-diff llvm-dwarfdump llvm-extract llvm-ld
 llvm-mc llvm-nm llvm-mcmarkup llvm-objdump llvm-prof llvm-ranlib llvm-readobj llvm-rtdyld
 llvm-size llvm-stress llvm-stub llvm-tblgen macho-dump cloog"
