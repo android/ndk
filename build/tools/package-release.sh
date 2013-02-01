@@ -456,7 +456,7 @@ for SYSTEM in $SYSTEMS; do
     fi
 
     # Unpack other host tools
-    unpack_prebuilt scan-build "$DSTDIR" "$DSTDIR64"
+    unpack_prebuilt scan-build-view "$DSTDIR" "$DSTDIR64"
 
     # Create an archive for the final package. Extension depends on the
     # host system.

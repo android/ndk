@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-#  This shell script is used to copy clang tool "scan-build"
+#  This shell script is used to copy clang tool "scan-build" and "scan-view"
 #  for the Android NDK.
 #
 
@@ -56,6 +56,12 @@ set_parameters ()
         exit 1
     fi
 
+    SCAN_VIEW_SRC_DIR=$SRC_DIR/$TOOLCHAIN/clang/tools/scan-view
+    if [ ! -d "$SCAN_VIEW_SRC_DIR" ] ; then
+        echo "ERROR: Source directory does not contain scan-view: $SCAN_VIEW_SRC_DIR"
+        exit 1
+    fi
+
     LICENSE_FILE=$SRC_DIR/$TOOLCHAIN/clang/LICENSE.TXT
     if [ ! -f "$LICENSE_FILE" ] ; then
         echo "ERROR: Source directory does not contain clang license file: $LICENSE_FILE"
@@ -93,18 +99,20 @@ if [ "$PACKAGE_DIR" ]; then
     fail_panic "Could not create package directory: $PACKAGE_DIR"
 fi
 
-# copy scan_build
+# copy scan_build and scan_view
 SCAN_BUILD_SUBDIR="prebuilt/common/scan-build"
 run copy_directory "$SCAN_BUILD_SRC_DIR" "$NDK_DIR/$SCAN_BUILD_SUBDIR"
 cp -p "$LICENSE_FILE" "$NDK_DIR/$SCAN_BUILD_SUBDIR"
-
-# remove unneeded file(s)
 rm -f $NDK_DIR/$SCAN_BUILD_SUBDIR/scan-build.1
 
+SCAN_VIEW_SUBDIR="prebuilt/common/scan-view"
+run copy_directory "$SCAN_VIEW_SRC_DIR" "$NDK_DIR/$SCAN_VIEW_SUBDIR"
+cp -p "$LICENSE_FILE" "$NDK_DIR/$SCAN_VIEW_SUBDIR"
+
 if [ "$PACKAGE_DIR" ]; then
-    ARCHIVE="scan-build.tar.bz2"
+    ARCHIVE="scan-build-view.tar.bz2"
     dump "Packaging $ARCHIVE"
-    pack_archive "$PACKAGE_DIR/$ARCHIVE" "$NDK_DIR" "$SCAN_BUILD_SUBDIR"
+    pack_archive "$PACKAGE_DIR/$ARCHIVE" "$NDK_DIR" "$SCAN_BUILD_SUBDIR" "$SCAN_VIEW_SUBDIR"
 fi
 
 dump "Done."
