@@ -28,6 +28,8 @@ unsigned long        strtoul_l(const char *nptr, char **endptr, int base, locale
 unsigned long long   strtoull_l(const char *nptr, char **endptr, int base, locale_t loc);
 long double          strtold_l (const char *nptr, char **endptr, locale_t loc);
 
+int                  mbtowc(wchar_t *pwc, const char *pmb, size_t max);
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif

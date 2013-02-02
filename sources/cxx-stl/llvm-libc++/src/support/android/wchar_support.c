@@ -382,3 +382,42 @@ wchar_t* wmemset(wchar_t* s, wchar_t c, size_t n) {
     return s;
 }
 
+float wcstof(const wchar_t* nptr, wchar_t** endptr) {
+#warning Not implemented
+  return 0;
+}
+
+long wcstol(const wchar_t* nptr, wchar_t** endptr, int base) {
+#warning Not implemented
+  return 0;
+}
+
+long double wcstold(const wchar_t* nptr, wchar_t** endptr) {
+#warning Not implemented
+  return 0;
+}
+
+long long wcstoll(const wchar_t* nptr, wchar_t** endptr, int base) {
+#warning Not implemented
+  return 0;
+}
+
+unsigned long long wcstoull(const wchar_t* nptr, wchar_t** endptr, int base) {
+#warning Not implemented
+  return 0;
+}
+
+size_t wcsnrtombs(char *dst,
+                  const wchar_t **src,
+                  size_t nwc, size_t len,
+                  mbstate_t *ps) {
+#warning Not implemented
+  return 0;
+}
+
+size_t mbsnrtowcs(wchar_t *dst,
+                  const char **src, size_t nmc,
+                  size_t len, mbstate_t *ps) {
+#warning Not implemented
+  return 0;
+}
