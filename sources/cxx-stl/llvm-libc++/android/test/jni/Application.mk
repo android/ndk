@@ -2,3 +2,4 @@
 # Source Licenses. See LICENSE.TXT for details.
 
 APP_ABI := all
+APP_STL := gabi++_shared
