@@ -1329,10 +1329,12 @@ build_host_binutils ()
     # like build-host-libbfd.sh in the future.
     ARGS=$ARGS" --enable-install-libbfd"
 
-    # Enable plugins support for binutils-2.21+
+    # Enable plugins support for > binutils-2.21
     # This is common feature for binutils and gcc
+    # (If https://android-review.googlesource.com/51005 is merged then
+    # --enable-plugins can also be enabled with 2.21).
     case "$BINUTILS_VERSION" in
-      2.19)
+      2.19|2.21)
         # Add nothing
         ;;
       *)
@@ -1400,10 +1402,20 @@ build_host_gcc_core ()
 
     ARGS=$HOST_PREREQS_ARGS
 
+    # Plugins are not supported well before 4.7. On 4.7 it's required to have
+    # -flto working. Flag --enable-plugins (note 's') is actually for binutils,
+    # this is compiler requirement to have binutils configured this way. Flag
+    # --disable-plugin is for gcc -
+    # In fact, enable-plugins is broken all Canadian Cross GCC.
+    #  see http://gcc.gnu.org/bugzilla/show_bug.cgi?id=50229
     case "$GCC_VERSION" in
-      4.4.3|4.6)
-        ARGS=$ARGS" --disable-plugin"
-        ;;
+     4.4.3|4.6|4.7)
+       ARGS=$ARGS" --disable-plugins --disable-plugin"
+       ;;
+    # Doesn't even work on 4.8
+     *)
+       ARGS=$ARGS" --enable-plugins  --enable-plugin"
+       ;;
     esac
 
     ARGS=$ARGS" --with-gnu-as --with-gnu-ld"
