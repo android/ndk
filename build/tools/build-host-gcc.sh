@@ -127,6 +127,9 @@ register_var_option "--toolchain-src-dir=<path>" TOOLCHAIN_SRC_DIR "Select toolc
 NDK_DIR=$ANDROID_NDK_ROOT
 register_var_option "--ndk-dir=<path>" NDK_DIR "Select NDK install directory"
 
+BUILD_DIR=
+register_var_option "--build-dir=<path>" BUILD_DIR "Build GCC into directory"
+
 PACKAGE_DIR=
 register_var_option "--package-dir=<path>" PACKAGE_DIR "Package prebuilt tarballs into directory"
 
@@ -172,6 +175,10 @@ fi
 
 if [ -z "$TOOLCHAIN_SRC_DIR" ]; then
     panic "Please use --toolchain-src-dir=<path> to select toolchain source directory."
+fi
+
+if [ -z "$BUILD_DIR" ]; then
+    BUILD_DIR=/tmp/ndk-$USER/build/host-gcc
 fi
 
 case $DEFAULT_LD in
@@ -451,7 +458,6 @@ run_on_setup ()
 
 setup_build ()
 {
-    BUILD_DIR=/tmp/ndk-$USER/build/host-gcc
     run_on_setup mkdir -p "$BUILD_DIR"
     if [ -n "$FORCE" ]; then
         rm -rf "$BUILD_DIR"/*
