@@ -1,0 +1,91 @@
+Index: mingw-w64-headers/Makefile.am
+===================================================================
+--- mingw-w64-headers/Makefile.am	(revision 5578)
++++ mingw-w64-headers/Makefile.am	(working copy)
+@@ -118,10 +118,14 @@
+ BUILT_SOURCES = $(IDL_SRCS:.idl=.h)
+ 
+ .idl.h: crt/_mingw.h
+-	$(WIDL) -DBOOL=WINBOOL -I$(srcdir)/include -I$(srcdir)/direct-x/include -Icrt -I$(srcdir)/crt -h -o $(srcdir)/$@ $<
++	$(WIDL) -DBOOL=WINBOOL -I$(srcdir)/include -I$(srcdir)/direct-x/include -Icrt -I$(srcdir)/crt -h -o $@ $<
+ 
++if SRCDIR_NEQ_BUILDDIR
++$(warning "srcdir != builddir, debugging comments in idl files will be sub-optimal")
+ endif
+ 
++endif
++
+ _mingw_directx.h: $(srcdir)/crt/sdks/_mingw_directx.h.in
+ 	$(SED) s/MINGW_HAS_DX$$/@MINGW_HAS_DX@/ $< > $@
+ 
+Index: mingw-w64-headers/Makefile.in
+===================================================================
+--- mingw-w64-headers/Makefile.in	(revision 5578)
++++ mingw-w64-headers/Makefile.in	(working copy)
+@@ -1016,8 +1016,10 @@
+ 	find $(distdir) -name ".svn" -type d -delete
+ 
+ @HAVE_WIDL_TRUE@.idl.h: crt/_mingw.h
+-@HAVE_WIDL_TRUE@	$(WIDL) -DBOOL=WINBOOL -I$(srcdir)/include -I$(srcdir)/direct-x/include -Icrt -I$(srcdir)/crt -h -o $(srcdir)/$@ $<
++@HAVE_WIDL_TRUE@	$(WIDL) -DBOOL=WINBOOL -I$(srcdir)/include -I$(srcdir)/direct-x/include -Icrt -I$(srcdir)/crt -h -o $@ $<
+ 
++@HAVE_WIDL_TRUE@@SRCDIR_NEQ_BUILDDIR_TRUE@$(warning "srcdir != builddir, debugging comments in idl files will be sub-optimal")
++
+ _mingw_directx.h: $(srcdir)/crt/sdks/_mingw_directx.h.in
+ 	$(SED) s/MINGW_HAS_DX$$/@MINGW_HAS_DX@/ $< > $@
+ 
+Index: mingw-w64-headers/configure
+===================================================================
+--- mingw-w64-headers/configure	(revision 5578)
++++ mingw-w64-headers/configure	(working copy)
+@@ -617,6 +617,8 @@
+ build_vendor
+ build_cpu
+ build
++SRCDIR_NEQ_BUILDDIR_FALSE
++SRCDIR_NEQ_BUILDDIR_TRUE
+ MAINT
+ MAINTAINER_MODE_FALSE
+ MAINTAINER_MODE_TRUE
+@@ -2310,6 +2312,16 @@
+ 
+ 
+ 
++# Check so we can warn about this.
++ if test ! "$srcdir" = "$builddir"; then
++  SRCDIR_NEQ_BUILDDIR_TRUE=
++  SRCDIR_NEQ_BUILDDIR_FALSE='#'
++else
++  SRCDIR_NEQ_BUILDDIR_TRUE='#'
++  SRCDIR_NEQ_BUILDDIR_FALSE=
++fi
++
++
+ # Make sure we can run config.sub.
+ $SHELL "$ac_aux_dir/config.sub" sun4 >/dev/null 2>&1 ||
+   as_fn_error $? "cannot run $SHELL $ac_aux_dir/config.sub" "$LINENO" 5
+@@ -2831,6 +2843,10 @@
+   as_fn_error $? "conditional \"MAINTAINER_MODE\" was never defined.
+ Usually this means the macro was only invoked conditionally." "$LINENO" 5
+ fi
++if test -z "${SRCDIR_NEQ_BUILDDIR_TRUE}" && test -z "${SRCDIR_NEQ_BUILDDIR_FALSE}"; then
++  as_fn_error $? "conditional \"SRCDIR_NEQ_BUILDDIR\" was never defined.
++Usually this means the macro was only invoked conditionally." "$LINENO" 5
++fi
+ if test -z "${HAVE_WIDL_TRUE}" && test -z "${HAVE_WIDL_FALSE}"; then
+   as_fn_error $? "conditional \"HAVE_WIDL\" was never defined.
+ Usually this means the macro was only invoked conditionally." "$LINENO" 5
+Index: mingw-w64-headers/configure.ac
+===================================================================
+--- mingw-w64-headers/configure.ac	(revision 5578)
++++ mingw-w64-headers/configure.ac	(working copy)
+@@ -10,6 +10,9 @@
+ AM_INIT_AUTOMAKE([foreign])
+ AM_MAINTAINER_MODE
+ 
++# Check so we can warn about this.
++AM_CONDITIONAL([SRCDIR_NEQ_BUILDDIR],[test ! "$srcdir" = "$builddir"])
++
+ AC_CANONICAL_HOST
+ 
+ # Checks for programs.
