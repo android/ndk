@@ -489,17 +489,6 @@ stamps_do ()
     fi
 }
 
-get_default_binutils_version_for_gcc ()
-{
-    local RET
-    case $1 in
-        arm-*-4.4.3|x86-*-4.4.3|x86-4.4.3) RET=2.19;;
-        *-4.6) RET=2.21;;
-        *) RET=2.22;;
-    esac
-    echo "$RET"
-}
-
 # Check that a given compiler generates code correctly
 #
 # This is to detect bad/broken toolchains, e.g. amd64-mingw32msvc
