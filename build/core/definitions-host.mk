@@ -121,16 +121,16 @@ host-c-includes = $(1:%=-I%)
 endif
 
 # -----------------------------------------------------------------------------
-# Function : copy-if-differ
+# Function : host-copy-if-differ
 # Arguments: 1: source file
 #            2: destination file
-# Usage    : $(call copy-if-differ,<src-file>,<dst-file>)
+# Usage    : $(call host-copy-if-differ,<src-file>,<dst-file>)
 # Rationale: This function copy source file to destination file if contents are
 #            different.
 # -----------------------------------------------------------------------------
 ifeq ($(HOST_OS),windows)
-copy-if-differ = $(HOST_CMP) -s $1 $2 > NUL || copy /b/y $(subst /,\,"$1" "$2") > NUL
+host-copy-if-differ = $(HOST_CMP) -s $1 $2 > NUL || copy /b/y $(subst /,\,"$1" "$2") > NUL
 else
-copy-if-differ = $(HOST_CMP) -s $1 $2 > /dev/null 2>&1 || cp -f $1 $2
+host-copy-if-differ = $(HOST_CMP) -s $1 $2 > /dev/null 2>&1 || cp -f $1 $2
 endif
 
