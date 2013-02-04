@@ -21,6 +21,7 @@ include $(NDK_ROOT)/build/gmsl/gmsl
 include $(BUILD_SYSTEM)/definitions-tests.mk
 include $(BUILD_SYSTEM)/definitions-utils.mk
 include $(BUILD_SYSTEM)/definitions-host.mk
+include $(BUILD_SYSTEM)/definitions-graph.mk
 
 # -----------------------------------------------------------------------------
 # Macro    : this-makefile
@@ -298,7 +299,7 @@ $(call list-file-maybe-gen-1000,4,$1)
 $(call list-file-maybe-gen-1000,5,$1)
 
 $$(__list_file): $$(__list_file).tmp
-	$$(hide) $$(call copy-if-differ,$$@.tmp,$$@)
+	$$(hide) $$(call host-copy-if-differ,$$@.tmp,$$@)
 	$$(hide) $$(call host-rm,$$@.tmp)
 
 endef
@@ -594,6 +595,145 @@ module-add-shared-depends = \
 module-add-depends-any = \
     $(eval __ndk_modules.$1.$3 += $(filter-out $(__ndk_modules.$1.$3),$2))
 
+
+# -----------------------------------------------------------------------------
+# Returns non-empty if a module is a static library
+# Arguments: 1: module name
+# Returns     : non-empty iff the module is a static library.
+# Usage       : $(if $(call module-is-static-library,<name>),...)
+# -----------------------------------------------------------------------------
+module-is-static-library = $(strip \
+  $(filter STATIC_LIBRARY PREBUILT_STATIC_LIBRARY,\
+    $(call module-get-class,$1)))
+
+# -----------------------------------------------------------------------------
+# Returns non-empty if a module is a shared library
+# Arguments: 1: module name
+# Returns     : non-empty iff the module is a shared library.
+# Usage       : $(if $(call module-is-shared-library,<name>),...)
+# -----------------------------------------------------------------------------
+module-is-shared-library = $(strip \
+  $(filter SHARED_LIBRARY PREBUILT_SHARED_LIBRARY,\
+    $(call module-get-class,$1)))
+
+# -----------------------------------------------------------------------------
+# Filter a list of module names to retain only the static libraries.
+# Arguments: 1: module name list
+# Returns     : input list modules which are static libraries.
+# -----------------------------------------------------------------------------
+module-filter-static-libraries = $(call filter-by,$1,module-is-static-library)
+
+# -----------------------------------------------------------------------------
+# Filter a list of module names to retain only the shared libraries.
+# Arguments: 1: module name list
+# Returns     : input list modules which are shared libraries.
+# -----------------------------------------------------------------------------
+module-filter-shared-libraries = $(call filter-by,$1,module-is-shared-library)
+
+# -----------------------------------------------------------------------------
+# Return the LOCAL_STATIC_LIBRARIES for a given module.
+# Arguments: 1: module name
+# Returns     : List of static library modules.
+# -----------------------------------------------------------------------------
+module-get-static-libs = $(__ndk_modules.$1.STATIC_LIBRARIES)
+
+# -----------------------------------------------------------------------------
+# Return the LOCAL_WHOLE_STATIC_LIBRARIES for a given module.
+# Arguments: 1: module name
+# Returns     : List of whole static library modules.
+# -----------------------------------------------------------------------------
+module-get-whole-static-libs = $(__ndk_modules.$1.WHOLE_STATIC_LIBRARIES)
+
+# -----------------------------------------------------------------------------
+# Return all static libraries for a given module.
+# Arguments: 1: module name
+# Returns     : List of static library modules (whole or not).
+# -----------------------------------------------------------------------------
+module-get-all-static-libs = $(strip \
+  $(__ndk_modules.$1.STATIC_LIBRARIES) \
+  $(__ndk_modules.$1.WHOLE_STATIC_LIBRARIES))
+
+# -----------------------------------------------------------------------------
+# Return the list of LOCAL_SHARED_LIBRARIES for a given module.
+# Arguments: 1: module name
+# Returns     : List of shared library modules.
+# -----------------------------------------------------------------------------
+module-get-shared-libs = $(__ndk_modules.$1.SHARED_LIBRARIES)
+
+# -----------------------------------------------------------------------------
+# Return the list of all libraries a modules depends directly on.
+# This is the concatenation of its LOCAL_STATIC_LIBRARIES,
+# LOCAL_WHOLE_STATIC_LIBRARIES, and LOCAL_SHARED_LIBRARIES variables.
+# Arguments: 1: module name
+# Returns     : List of library modules (static or shared).
+# -----------------------------------------------------------------------------
+module-get-direct-libs = $(strip \
+  $(__ndk_modules.$1.STATIC_LIBRARIES) \
+  $(__ndk_modules.$1.WHOLE_STATIC_LIBRARIES) \
+  $(__ndk_modules.$1.SHARED_LIBRARIES))
+
+
+# -----------------------------------------------------------------------------
+# Computes the full closure of a module and its dependencies. Order is
+# defined by a breadth-first walk of the graph.
+# $1 will be the first item in the result.
+#
+# Arguments: 1: module name
+# Returns     : List of all modules $1 depends on.
+#
+# Note: Do not use this to determine build dependencies. The returned list
+#       is much too large for this. For example consider the following
+#       dependency graph:
+#
+#   main.exe -> libA.a -> libfoo.so -> libB.a
+#
+#       This function will return all four modules in the result, while
+#       at link time building main.exe only requires the first three.
+#
+# -----------------------------------------------------------------------------
+module-get-all-dependencies = $(call -ndk-mod-get-closure,$1,module-get-depends)
+
+# -----------------------------------------------------------------------------
+# Compute the list of all static and shared libraries required to link a
+# given module.
+#
+# Note that the result is topologically ordered, i.e. if library A depends
+# on library B, then A will always appear after B in the result.
+#
+# Arguments: 1: module name
+# Returns     : List of all library $1 depends at link time.
+#
+# Note: This doesn't differentiate between regular and whole static
+#       libraries. Use module-extract-whole-static-libs to filter the
+#       result returned by this function.
+# -----------------------------------------------------------------------------
+module-get-link-libs = $(strip \
+  $(eval _ndk_mod_link_module := $1) \
+  $(call -ndk-mod-get-topological-depends,$1,-ndk-mod-link-deps))
+
+# Special dependency function used by nodule-get-link-libs.
+# The rules to follow are the following:
+#  - if $1 is the link module, or if it is a static library, then all
+#    direct dependencies.
+#  - otherwise, the module is a shared library, don't add build deps.
+-ndk-mod-link-deps = \
+  $(if $(call seq,$1,$(_ndk_mod_link_module))$(call module-is-static-library,$1),\
+    $(call module-get-direct-libs,$1))
+
+# -----------------------------------------------------------------------------
+# This function is used to extract the list of static libraries that need
+# to be linked as whole, i.e. placed in a special section on the final
+# link command.
+# Arguments: $1: module name.
+#            $2: list of all static link-time libraries (regular or whole).
+# Returns  : list of static libraries from '$2' that need to be linked
+#            as whole.
+# -----------------------------------------------------------------------------
+module-extract-whole-static-libs = $(strip \
+  $(eval _ndk_mod_whole_all := $(call map,module-get-whole-static-libs,$1 $2))\
+  $(eval _ndk_mod_whole_result := $(filter $(_ndk_mod_whole_all),$2))\
+  $(_ndk_mod_whole_result))
+
 # Used to recompute all dependencies once all module information has been recorded.
 #
 modules-compute-dependencies = \
@@ -608,34 +748,7 @@ module-compute-depends = \
 
 module-get-installed = $(__ndk_modules.$1.INSTALLED)
 
-# -----------------------------------------------------------------------------
-# Function : modules-get-all-dependencies
-# Arguments: 1: list of module names
-# Returns  : List of all the modules $1 depends on transitively.
-# Usage    : $(call modules-all-get-dependencies,<list of module names>)
-# Rationale: This computes the closure of all module dependencies starting from $1
-# -----------------------------------------------------------------------------
-module-get-all-dependencies = $(strip \
-    $(call modules-get-closure,$1,depends))
-
-modules-get-closure = $(strip \
-    $(eval __module_closure_field := $2)\
-    $(call get-closure,$1,-module-closure-depends))
-
-# Used internally by modules-get-closure, this is a dependency function
-# to be used with get-closure.
--module-closure-depends = $(__ndk_modules.$1.$(__module_closure_field))
-
-# -----------------------------------------------------------------------------
-# Function : module-get-depends
-# Arguments: 1: list of module names
-#            2: local module type (e.g. SHARED_LIBRARIES)
-# Returns  : List all the <local-type> modules $1 depends on transitively.
-# Usage    : $(call module-get-depends,<list of module names>,<local-type>)
-# Rationale: This computes the closure of all local module dependencies starting from $1
-# -----------------------------------------------------------------------------
-module-get-depends = $(strip $(call modules-get-closure,$1,$2))
-
+module-get-depends = $(__ndk_modules.$1.depends)
 
 # -----------------------------------------------------------------------------
 # Function : modules-get-all-installable
@@ -646,7 +759,7 @@ module-get-depends = $(strip $(call modules-get-closure,$1,$2))
 # -----------------------------------------------------------------------------
 # For now, only the closure of LOCAL_SHARED_LIBRARIES is enough
 modules-get-all-installable = $(strip \
-    $(foreach __alldep,$(call module-get-depends,$1,depends),\
+    $(foreach __alldep,$(call module-get-all-dependencies,$1),\
         $(if $(call module-is-installable,$(__alldep)),$(__alldep))\
     ))
 
@@ -914,6 +1027,18 @@ endef
 handle-module-built = \
     $(eval LOCAL_BUILT_MODULE := $(TARGET_OUT)/$(LOCAL_MODULE_FILENAME))\
     $(eval LOCAL_OBJS_DIR     := $(TARGET_OBJS)/$(LOCAL_MODULE))
+
+# -----------------------------------------------------------------------------
+# Compute the real path of a prebuilt file.
+#
+# Function : local-prebuilt-path
+# Arguments: 1: prebuilt path (as listed in $(LOCAL_SRC_FILES))
+# Returns  : full path. If $1 begins with a /, the path is considered
+#            absolute and returned as-is. Otherwise, $(LOCAL_PATH)/$1 is
+#            returned instead.
+# Usage    : $(call local-prebuilt-path,$(LOCAL_SRC_FILES))
+# -----------------------------------------------------------------------------
+local-prebuilt-path = $(if $(filter /%,$1),$1,$(LOCAL_PATH)/$1)
 
 # -----------------------------------------------------------------------------
 # This is used to strip any lib prefix from LOCAL_MODULE, then check that
