@@ -68,6 +68,7 @@ OPTION_MINIMAL=
 OPTION_ARCH=
 OPTION_ABI=
 OPTION_DEBUG_LIBS=
+OPTION_OVERLAY=
 PACKAGE_DIR=
 
 VERBOSE=no
@@ -117,6 +118,9 @@ for opt do
     ;;
   --debug-libs)
     OPTION_DEBUG_LIBS=true
+    ;;
+  --overlay)
+    OPTION_OVERLAY=true
     ;;
   *)
     echo "unknown option '$opt', use --help"
@@ -565,7 +569,9 @@ EOF
 #   $SRC/android-$PLATFORM/arch-$ARCH/include --> $DST/android-$PLATFORM/arch-$ARCH/usr/include
 #   $SRC/android-$PLATFORM/arch-$ARCH/lib --> $DST/android-$PLATFORM/arch-$ARCH/usr/lib
 #
-rm -rf $DSTDIR/platforms && mkdir -p $DSTDIR/platforms
+if [ -z "$OPTION_OVERLAY" ]; then
+    rm -rf $DSTDIR/platforms && mkdir -p $DSTDIR/platforms
+fi
 for ARCH in $ARCHS; do
     # Find first platform for this arch
     PREV_SYSROOT_DST=
@@ -651,7 +657,9 @@ if [ "$OPTION_SAMPLES" ] ; then
     # $SRC/android-$PLATFORM/samples/ --> $DST/samples
     #
     dump "Copying generic samples"
-    rm -rf $DSTDIR/samples && mkdir -p $DSTDIR/samples
+    if [ -z "OPTION_OVERLAY" ]; then
+        rm -rf $DSTDIR/samples && mkdir -p $DSTDIR/samples
+    fi
     copy_src_directory  samples samples samples
 
     for PLATFORM in $PLATFORMS; do
