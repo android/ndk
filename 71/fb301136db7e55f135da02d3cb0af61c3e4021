@@ -1,0 +1,8 @@
+Change-Id: I71fb301136db7e55f135da02d3cb0af61c3e4021
+Code-Review+2: Andrew Hsieh <andrewhsieh@google.com>
+Verified+1: Andrew Hsieh <andrewhsieh@google.com>
+Submitted-by: Andrew Hsieh <andrewhsieh@google.com>
+Submitted-at: Tue, 05 Feb 2013 08:16:33 +0000
+Reviewed-on: https://android-review.googlesource.com/51001
+Project: platform/ndk
+Branch: refs/heads/master
