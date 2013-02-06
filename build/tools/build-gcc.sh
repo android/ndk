@@ -251,7 +251,7 @@ else
     # this is compiler requirement to have binutils configured this way. Flag
     # --disable-plugin is for gcc.
     case "$GCC_VERSION" in
-        4.4.3|4.6)
+        4.4.3)
             EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --disable-plugin"
             ;;
         *)
