@@ -1413,7 +1413,6 @@ build_host_gcc_core ()
 
     ARGS=$ARGS" --with-gnu-as --with-gnu-ld"
     ARGS=$ARGS" --enable-threads --disable-libssp --disable-libmudflap"
-    ARGS=$ARGS" --disable-libgomp"  # TODO: Add option to enable this
     ARGS=$ARGS" --disable-libstdc__-v3 --disable-sjlj-exceptions"
     ARGS=$ARGS" --disable-tls"
     ARGS=$ARGS" --disable-libquadmath --disable-libitm --disable-bootstrap"
@@ -1422,6 +1421,19 @@ build_host_gcc_core ()
     ARGS=$ARGS" --disable-nls"
     ARGS=$ARGS" --disable-werror"
     ARGS=$ARGS" --enable-target-optspace"
+
+    case "$GCC_VERSION" in
+     4.4.3)
+       ARGS=$ARGS" --disable-libgomp"
+       ;;
+     *)
+       case $TARGET_ARCH in
+	     arm) ARGS=$ARGS" --enable-libgomp";;
+	     x86) ARGS=$ARGS" --disable-libgomp";;
+	     mips|mipsel) ARGS=$ARGS" --disable-libgomp";;
+	 esac
+	 ;;
+    esac
 
     # Place constructors/destructors in .init_array/.fini_array, not in
     # .ctors/.dtors on Android. Note that upstream Linux GLibc is now doing
