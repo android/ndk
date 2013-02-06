@@ -1257,16 +1257,11 @@ build_host_binutils ()
 
     LD_NAME=$DEFAULT_LD
 
-    # Enable Gold, for specific builds. The version before binutils 2.21
-    # is buggy so don't use it
-    case $HOST_OS in
-        windows) BUILD_GOLD=;; # Gold doesn't compile on Windows!
-        darwin) BUILD_GOLD=;;  # Building Gold fails with an internal compiler error on Darwin!
-        *) BUILD_GOLD=true;;
-    esac
+    # Enable Gold globally. It can be built for all hosts.
+    BUILD_GOLD=true
 
-    # Special case, gold in binutil-2.21 doesn't build when targetting mips
-    if [ "$BINUTILS_VERSION" = "2.21" -a "$TARGET" = "mipsel-linux-android" ]; then
+    # Special case, gold is not ready for mips yet.
+    if [ "$TARGET" = "mipsel-linux-android" ]; then
         BUILD_GOLD=
     fi
 
@@ -1275,6 +1270,12 @@ build_host_binutils ()
     #
     if [ "$BINUTILS_VERSION" = "2.21" -a "$TARGET" = "i686-linux-android" ]; then
         USE_LD_DEFAULT=true
+        BUILD_GOLD=
+    fi
+
+    # Another special case. Not or 2.19, it wasn't ready
+    if [ "$BINUTILS_VERSION" = "2.19" ]; then
+        BUILD_GOLD=
     fi
 
     if [ "$DEFAULT_LD" = "gold" -a -z "$BUILD_GOLD" ]; then
@@ -1294,6 +1295,7 @@ build_host_binutils ()
     # The BFD linker is always built, but to build Gold, we need a specific
     # option for the binutils configure script. Note that its format has
     # changed during development.
+    export host_configargs=
     if [ "$BUILD_GOLD" ]; then
         # The syntax of the --enable-gold option has changed.
         if version_is_greater_than $BINUTILS_VERSION 2.20; then
@@ -1309,11 +1311,19 @@ build_host_binutils ()
                 ARGS=$ARGS" --enable-gold=both/gold"
             fi
         fi
+	# This ARG needs quoting when passed to run2.
+	GOLD_LDFLAGS_ARG=
         if [ "$HOST_OS" = 'windows' ]; then
             # gold may have runtime dependency on libgcc_sjlj_1.dll and
             # libstdc++-6.dll when built by newer versions of mingw.
             # Link them statically to avoid that.
-            ARGS=$ARGS" --with-gold-ldflags='-static-libgcc -static-libstdc++'"
+            if version_is_greater_than $BINUTILS_VERSION 2.22; then
+                export host_configargs="--with-gold-ldflags='-static-libgcc -static-libstdc++'"
+            elif version_is_greater_than $BINUTILS_VERSION 2.21; then
+                GOLD_LDFLAGS_ARG="--with-gold-ldflags=-static-libgcc -static-libstdc++"
+            else
+                export LDFLAGS=$LDFLAGS" -static-libgcc -static-libstdc++"
+            fi
         fi
     fi
 
