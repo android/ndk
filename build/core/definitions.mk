@@ -1271,6 +1271,7 @@ get-object-name = $(strip \
     ))
 
 -test-get-object-name = \
+  $(eval TARGET_OBJ_EXTENSION=.o)\
   $(eval LOCAL_CPP_EXTENSION ?= .cpp)\
   $(call test-expect,foo.o,$(call get-object-name,foo.c))\
   $(call test-expect,bar.o,$(call get-object-name,bar.s))\
