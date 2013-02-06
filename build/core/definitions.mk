@@ -641,6 +641,8 @@ module-add = \
   $(if $(call module-class-is-installable,$(LOCAL_MODULE_CLASS)),\
     $(eval LOCAL_INSTALLED := $(NDK_APP_DST_DIR)/$(notdir $(LOCAL_BUILT_MODULE)))\
   )\
+  $(foreach __field,STATIC_LIBRARIES WHOLE_STATIC_LIBRARIES SHARED_LIBRARIES,\
+    $(eval LOCAL_$(__field) := $(call strip-lib-prefix,$(LOCAL_$(__field)))))\
   $(foreach __local,$(modules-LOCALS),\
     $(eval __ndk_modules.$1.$(__local) := $(LOCAL_$(__local)))\
   )\
@@ -704,7 +706,7 @@ module-restore-locals = \
 
 # Dump all module information. Only use this for debugging
 modules-dump-database = \
-    $(info Modules: $(__ndk_modules)) \
+    $(info Modules [$(TARGET_ARCH_ABI)]: $(__ndk_modules)) \
     $(foreach __mod,$(__ndk_modules),\
         $(info $(space4)$(__mod):)\
         $(foreach __field,$(modules-fields),\
@@ -751,7 +753,7 @@ module-add-shared-depends = \
 # NOTE: this function must not modify the existing dependency order when new depends are added.
 #
 module-add-depends-any = \
-    $(eval __ndk_modules.$1.$3 += $(filter-out $(__ndk_modules.$1.$3),$(call strip-lib-prefix,$2)))
+    $(eval __ndk_modules.$1.$3 += $(filter-out $(__ndk_modules.$1.$3),$2))
 
 # Used to recompute all dependencies once all module information has been recorded.
 #
@@ -778,7 +780,7 @@ module-get-all-dependencies = $(strip \
     $(call modules-get-closure,$1,depends))
 
 modules-get-closure = \
-    $(eval __closure_deps  := $(strip $(call strip-lib-prefix,$1))) \
+    $(eval __closure_deps  := $1) \
     $(eval __closure_wq    := $(__closure_deps)) \
     $(eval __closure_field := $(strip $2)) \
     $(call modules-closure)\
@@ -792,7 +794,7 @@ modules-get-closure = \
 modules-closure = \
     $(eval __closure_mod := $(call first,$(__closure_wq))) \
     $(eval __closure_wq  := $(call rest,$(__closure_wq))) \
-    $(eval __closure_val := $(call strip-lib-prefix,$(__ndk_modules.$(__closure_mod).$(__closure_field)))) \
+    $(eval __closure_val := $(__ndk_modules.$(__closure_mod).$(__closure_field))) \
     $(eval __closure_new := $(filter-out $(__closure_deps),$(__closure_val)))\
     $(eval __closure_deps += $(__closure_new)) \
     $(eval __closure_wq   := $(strip $(__closure_wq) $(__closure_new)))\
@@ -1762,8 +1764,8 @@ ndk-stl-register = \
     $(eval __ndk_stl := $(strip $1)) \
     $(eval NDK_STL_LIST += $(__ndk_stl)) \
     $(eval NDK_STL.$(__ndk_stl).IMPORT_MODULE := $(strip $2)) \
-    $(eval NDK_STL.$(__ndk_stl).STATIC_LIBS := $(strip $3)) \
-    $(eval NDK_STL.$(__ndk_stl).SHARED_LIBS := $(strip $4))
+    $(eval NDK_STL.$(__ndk_stl).STATIC_LIBS := $(strip $(call strip-lib-prefix,$3))) \
+    $(eval NDK_STL.$(__ndk_stl).SHARED_LIBS := $(strip $(call strip-lib-prefix,$4)))
 
 # Called to check that the value of APP_STL is a valid one.
 # $1: STL name as it apperas in APP_STL (e.g. 'system')
