@@ -150,68 +150,6 @@ parent-dir = $(patsubst %/,%,$(dir $(1:%/=%)))
   $(call test-expect,foo,$(call parent-dir,foo/bar))\
   $(call test-expect,foo,$(call parent-dir,foo/bar/))
 
-
-###########################################################################
-# Internal function used by modules-get-closure
-# Compute the closure of a node in a graph.
-# $1: list of graph nodes
-# $2: dependency function, i.e. $(call $2,<name>) should return the list
-#     of nodes that <name> depends on.
-# Out: list of nodes. This are all the nodes that depend on those in $1
-#      transitively.
-#
-get-closure = $(strip \
-    $(eval __closure_list := $1) \
-    $(eval __closure_wq   := $1) \
-    $(eval __closure_deps_func := $2) \
-    $(call get-closure-recursive)\
-    $(__closure_list))
-
-# Note the tricky use of conditional recursion to work around the fact that
-# the GNU Make language does not have any conditional looping construct
-# like 'while'.
-get-closure-recursive = \
-    $(eval __closure_node := $(call first,$(__closure_wq)))\
-    $(eval __closure_wq   := $(call rest,$(__closure_wq)))\
-    $(eval __closure_depends := $(call $(__closure_deps_func),$(__closure_node)))\
-    $(eval __closure_new := $(filter-out $(__closure_list),$(__closure_depends)))\
-    $(eval __closure_list += $(__closure_new))\
-    $(eval __closure_wq := $(strip $(__closure_wq) $(__closure_new)))\
-    $(if $(__closure_wq),$(call get-closure-recursive))
-
--test-get-closure.empty = \
-    $(eval deps = $$($$1_depends))\
-    $(call test-expect,$(call get-closure,,deps))\
-
--test-get-closure.A = \
-    $(eval deps = $$($$1_depends))\
-    $(eval A_depends :=)\
-    $(call test-expect,A,$(call get-closure,A,deps))
-
--test-get-closure.ABC = \
-    $(eval deps = $$($$1_depends))\
-    $(eval A_depends := B)\
-    $(eval B_depends := C)\
-    $(eval C_depends :=)\
-    $(call test-expect,A B C,$(call get-closure,A,deps))
-
--test-get-closure.ABC_circular = \
-    $(eval deps = $$($$1_depends))\
-    $(eval A_depends := B)\
-    $(eval B_depends := C)\
-    $(eval C_depends := A)\
-    $(call test-expect,A B C,$(call get-closure,A,deps))
-
--test-get-closure.ABCDEF = \
-    $(eval deps = $$($$1_depends))\
-    $(eval A_depends := B C)\
-    $(eval B_depends := D E)\
-    $(eval C_depends := E F)\
-    $(eval D_depends :=)\
-    $(eval E_depends :=)\
-    $(eval F_depends :=)\
-    $(call test-expect,A B C D E F,$(call get-closure,A,deps))
-
 # -----------------------------------------------------------------------------
 # Strip any 'lib' prefix in front of a given string.
 #
