@@ -64,6 +64,9 @@ register_var_option "--abis=<list>" ABIS "Specify list of target ABIs."
 NO_MAKEFILE=
 register_var_option "--no-makefile" NO_MAKEFILE "Do not use makefile to speed-up build"
 
+VISIBLE_LIBGNUSTL_STATIC=
+register_var_option "--visible-libgnustl-static" VISIBLE_LIBGNUSTL_STATIC "Do not use hidden visibility for libgnustl_static.a"
+
 register_jobs_option
 
 extract_parameters "$@"
@@ -184,13 +187,15 @@ build_gnustl_for_abi ()
     if [ $LIBTYPE = "static" ]; then
         # Ensure we disable visibility for the static library to reduce the
         # size of the code that will be linked against it.
-        LIBTYPE_FLAGS="--enable-static --disable-shared"
-        if [ $GCC_VERSION = "4.4.3" -o $GCC_VERSION = "4.6" ]; then
-            LIBTYPE_FLAGS=$LIBTYPE_FLAGS" --disable-visibility"
-        else
-            LIBTYPE_FLAGS=$LIBTYPE_FLAGS" --disable-libstdcxx-visibility"
+        if [ -z "$VISIBLE_LIBGNUSTL_STATIC" ] ; then
+            LIBTYPE_FLAGS="--enable-static --disable-shared"
+            if [ $GCC_VERSION = "4.4.3" -o $GCC_VERSION = "4.6" ]; then
+                LIBTYPE_FLAGS=$LIBTYPE_FLAGS" --disable-visibility"
+            else
+                LIBTYPE_FLAGS=$LIBTYPE_FLAGS" --disable-libstdcxx-visibility"
+            fi
+            CXXFLAGS=$CXXFLAGS" -fvisibility=hidden -fvisibility-inlines-hidden"
         fi
-        CXXFLAGS=$CXXFLAGS" -fvisibility=hidden -fvisibility-inlines-hidden"
     else
         LIBTYPE_FLAGS="--disable-static --enable-shared"
         #LDFLAGS=$LDFLAGS" -lsupc++"

@@ -29,6 +29,9 @@ register_var_option "--arch=<list>" ARCHS "List of target archs to build for"
 PACKAGE_DIR=
 register_var_option "--package-dir=<path>" PACKAGE_DIR "Package toolchain into this directory"
 
+VISIBLE_LIBGNUSTL_STATIC=
+register_var_option "--visible-libgnustl-static" VISIBLE_LIBGNUSTL_STATIC "Do not use hidden visibility for libgnustl_static.a"
+
 register_jobs_option
 
 PROGRAM_PARAMETERS="<toolchain-src-dir>"
@@ -92,6 +95,10 @@ fail_panic "Could not build gabi++!"
 dump "Building $ABIS stlport binaries..."
 run $BUILDTOOLS/build-stlport.sh $FLAGS
 fail_panic "Could not build stlport!"
+
+if [ ! -z $VISIBLE_LIBGNUSTL_STATIC ]; then
+    FLAGS=$FLAGS" --visible-libgnustl-static"
+fi
 
 dump "Building $ABIS gnustl binaries..."
 run $BUILDTOOLS/build-gnu-libstdc++.sh $FLAGS "$SRC_DIR"
