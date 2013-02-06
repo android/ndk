@@ -123,22 +123,22 @@ get_file_size(const char* pathname)
 
     fd = open(pathname, O_RDONLY);
     if (fd < 0) {
-      D("Can't open %s: %s\n", pathname, strerror(errno));
-      return -1;
+        D("Can't open %s: %s\n", pathname, strerror(errno));
+        return -1;
     }
 
     for (;;) {
-      int ret = read(fd, buffer, sizeof buffer);
-      if (ret < 0) {
-        if (errno == EINTR)
-          continue;
-        D("Error while reading %s: %s\n", pathname, strerror(errno));
-        break;
-      }
-      if (ret == 0)
-        break;
+        int ret = read(fd, buffer, sizeof buffer);
+        if (ret < 0) {
+            if (errno == EINTR)
+                continue;
+            D("Error while reading %s: %s\n", pathname, strerror(errno));
+            break;
+        }
+        if (ret == 0)
+            break;
 
-      result += ret;
+        result += ret;
     }
     close(fd);
     return result;
@@ -185,10 +185,10 @@ read_file(const char*  pathname, char*  buffer, size_t  buffsize)
  * Return NULL if not found
  */
 static char*
-extract_cpuinfo_field(char* buffer, int buflen, const char* field)
+extract_cpuinfo_field(const char* buffer, int buflen, const char* field)
 {
     int  fieldlen = strlen(field);
-    char* bufend = buffer + buflen;
+    const char* bufend = buffer + buflen;
     char* result = NULL;
     int len, ignore;
     const char *p, *q;
@@ -421,11 +421,22 @@ cpulist_read_from(CpuList* list, const char* filename)
 
 #define AT_HWCAP 16
 
-/* Read the ELF HWCAP flags by parsing /proc/self/auxv
+#if defined(__arm__)
+/* Compute the ELF HWCAP flags.
  */
 static uint32_t
-get_elf_hwcap(void)
+get_elf_hwcap(const char* cpuinfo, int cpuinfo_len)
 {
+  /* IMPORTANT:
+   *   Accessing /proc/self/auxv doesn't work anymore on all
+   *   platform versions. More specifically, when running inside
+   *   a regular application process, most of /proc/self/ will be
+   *   non-readable, including /proc/self/auxv. This doesn't
+   *   happen however if the application is debuggable, or when
+   *   running under the "shell" UID, which is why this was not
+   *   detected appropriately.
+   */
+#if 0
     uint32_t result = 0;
     const char filepath[] = "/proc/self/auxv";
     int fd = open(filepath, O_RDONLY);
@@ -454,7 +465,40 @@ get_elf_hwcap(void)
     }
     close(fd);
     return result;
+#else
+    // Recreate ELF hwcaps by parsing /proc/cpuinfo Features tag.
+    uint32_t hwcaps = 0;
+
+    char* cpuFeatures = extract_cpuinfo_field(cpuinfo, cpuinfo_len, "Features");
+
+    if (cpuFeatures != NULL) {
+        D("Found cpuFeatures = '%s'\n", cpuFeatures);
+
+        if (has_list_item(cpuFeatures, "vfp"))
+            hwcaps |= HWCAP_VFP;
+        if (has_list_item(cpuFeatures, "vfpv3"))
+            hwcaps |= HWCAP_VFPv3;
+        if (has_list_item(cpuFeatures, "vfpv3d16"))
+            hwcaps |= HWCAP_VFPv3D16;
+        if (has_list_item(cpuFeatures, "vfpv4"))
+            hwcaps |= HWCAP_VFPv4;
+        if (has_list_item(cpuFeatures, "neon"))
+            hwcaps |= HWCAP_NEON;
+        if (has_list_item(cpuFeatures, "idiva"))
+            hwcaps |= HWCAP_IDIVA;
+        if (has_list_item(cpuFeatures, "idivt"))
+            hwcaps |= HWCAP_IDIVT;
+        if (has_list_item(cpuFeatures, "idiv"))
+            hwcaps |= HWCAP_IDIVA | HWCAP_IDIVT;
+        if (has_list_item(cpuFeatures, "iwmmxt"))
+            hwcaps |= HWCAP_IWMMXT;
+
+        free(cpuFeatures);
+    }
+    return hwcaps;
+#endif
 }
+#endif  /* __arm__ */
 
 /* Return the number of cpus present on a given device.
  *
@@ -601,7 +645,7 @@ android_cpuInit(void)
         }
 
         /* Extract the list of CPU features from ELF hwcaps */
-        uint32_t hwcaps = get_elf_hwcap();
+        uint32_t hwcaps = get_elf_hwcap(cpuinfo, cpuinfo_len);
 
         if (hwcaps != 0) {
             int has_vfp = (hwcaps & HWCAP_VFP);
@@ -618,9 +662,9 @@ android_cpuInit(void)
 
             // 'vfpv4' implies VFPv3|VFP_FMA|FP16
             if (has_vfpv4)
-              g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_VFPv3    |
-                               ANDROID_CPU_ARM_FEATURE_VFP_FP16 |
-                               ANDROID_CPU_ARM_FEATURE_VFP_FMA;
+                g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_VFPv3    |
+                                 ANDROID_CPU_ARM_FEATURE_VFP_FP16 |
+                                 ANDROID_CPU_ARM_FEATURE_VFP_FMA;
 
             // 'vfpv3' or 'vfpv3d16' imply VFPv3. Note that unlike GCC,
             // a value of 'vfpv3' doesn't necessarily mean that the D32
@@ -628,42 +672,42 @@ android_cpuInit(void)
             // field that support D32 also support NEON, so this should
             // not be a problem in practice.
             if (has_vfpv3 || has_vfpv3d16)
-              g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_VFPv3;
+                g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_VFPv3;
 
             // 'vfp' is super ambiguous. Depending on the kernel, it can
             // either mean VFPv2 or VFPv3. Make it depend on ARMv7.
             if (has_vfp) {
               if (g_cpuFeatures & ANDROID_CPU_ARM_FEATURE_ARMv7)
-                g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_VFPv3;
+                  g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_VFPv3;
               else
-                g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_VFPv2;
+                  g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_VFPv2;
             }
 
             // Neon implies VFPv3|D32, and if vfpv4 is detected, NEON_FMA
             if (has_neon) {
-              g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_VFPv3 |
-                               ANDROID_CPU_ARM_FEATURE_NEON |
-                               ANDROID_CPU_ARM_FEATURE_VFP_D32;
+                g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_VFPv3 |
+                                 ANDROID_CPU_ARM_FEATURE_NEON |
+                                 ANDROID_CPU_ARM_FEATURE_VFP_D32;
               if (has_vfpv4)
-                g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_NEON_FMA;
+                  g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_NEON_FMA;
             }
 
             // VFPv3 implies VFPv2 and ARMv7
             if (g_cpuFeatures & ANDROID_CPU_ARM_FEATURE_VFPv3)
-              g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_VFPv2 |
-                               ANDROID_CPU_ARM_FEATURE_ARMv7;
+                g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_VFPv2 |
+                                 ANDROID_CPU_ARM_FEATURE_ARMv7;
 
             // Note that some buggy kernels do not report these even when
             // the CPU actually support the division instructions. However,
             // assume that if 'vfpv4' is detected, then the CPU supports
             // sdiv/udiv properly.
             if (has_idiva || has_vfpv4)
-              g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_IDIV_ARM;
+                g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_IDIV_ARM;
             if (has_idivt || has_vfpv4)
-              g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_IDIV_THUMB2;
+                g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_IDIV_THUMB2;
 
             if (has_iwmmxt)
-              g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_iWMMXt;
+                g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_iWMMXt;
         }
     }
 #endif /* __ARM_ARCH__ */
