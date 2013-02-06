@@ -144,7 +144,7 @@ build_expat ()
     local ARGS
     local SRCDIR=$TOOLCHAIN_SRC_DIR/expat/expat-2.0.1
     local BUILDDIR=$BH_BUILD_DIR/build-expat-2.0.1-$1
-    local INSTALLDIR=$BH_BUILD_DIR/install-expat-2.0.1-$1
+    local INSTALLDIR=$BH_BUILD_DIR/install-host-$1
 
     ARGS=" --prefix=$INSTALLDIR"
     ARGS=$ARGS" --disable-shared --enable-static"
@@ -184,7 +184,7 @@ build_host_gdb ()
     bh_setup_host_env
 
     need_build_expat $1
-    local EXPATPREFIX=$BH_BUILD_DIR/install-expat-2.0.1-$1
+    local EXPATPREFIX=$BH_BUILD_DIR/install-host-$1
 
     ARGS=" --prefix=$INSTALLDIR"
     ARGS=$ARGS" --disable-shared"
@@ -194,7 +194,8 @@ build_host_gdb ()
     ARGS=$ARGS" --disable-werror"
     ARGS=$ARGS" --disable-nls"
     ARGS=$ARGS" --disable-docs"
-    ARGS=$ARGS" --with-expat=$EXPATPREFIX"
+    ARGS=$ARGS" --with-expat"
+    ARGS=$ARGS" --with-libexpat-prefix=$EXPATPREFIX"
     if [ "$PYTHON_VERSION" ]; then
         ARGS=$ARGS" --with-python=$(python_build_install_dir $BH_HOST_TAG)/bin/python-config.sh"
         if [ $1 = windows-x86 -o $1 = windows-x86_64 ]; then
@@ -203,7 +204,6 @@ build_host_gdb ()
             CXXFLAGS=$CXXFLAGS" -D__USE_MINGW_ANSI_STDIO=1"
         fi
     fi
-
     TEXT="$(bh_host_text) gdb-$BH_TARGET_ARCH-$3:"
 
     mkdir -p "$BUILDDIR" && rm -rf "$BUILDDIR"/* &&
@@ -280,7 +280,7 @@ if [ "$PACKAGE_DIR" ]; then
         bh_setup_build_for_host $SYSTEM
         for ARCH in $ARCHS; do
             for VERSION in $GDB_VERSION; do
-                package_host_gdb $SYSTEM android-$ARCH $VERSION
+                bh_stamps_do package_host_gdb-$SYSTEM-$ARCH-$VERSION package_host_gdb $SYSTEM android-$ARCH $VERSION
             done
         done
     done
