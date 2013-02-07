@@ -48,6 +48,7 @@ LOCAL_C_INCLUDES := $(llvm_libc++_includes)
 LOCAL_CPPFLAGS := $(llvm_libc++_cxxflags)
 LOCAL_CPP_FEATURES := rtti exceptions
 LOCAL_EXPORT_C_INCLUDES := $(llvm_libc++_export_includes)
+# TODO(ajwong): This LOCAL_EXPORT_STATIC_LIBRARIES doesn't seem to work.
 LOCAL_EXPORT_STATIC_LIBRARIES := libgabi++_static
 LOCAL_EXPORT_CPPFLAGS := $(llvm_libc++_cxxflags)
 include $(BUILD_STATIC_LIBRARY)
@@ -58,8 +59,9 @@ LOCAL_SRC_FILES := $(llvm_libc++_sources)
 LOCAL_C_INCLUDES := $(llvm_libc++_includes)
 LOCAL_CPPFLAGS := $(llvm_libc++_cxxflags)
 LOCAL_CPP_FEATURES := rtti exceptions
-LOCAL_EXPORT_C_INCLUDES := $(llvm_libc++_export_includes)
 LOCAL_WHOLE_STATIC_LIBRARIES := libgabi++_static
+LOCAL_EXPORT_C_INCLUDES := $(llvm_libc++_export_includes)
+LOCAL_EXPORT_CPPFLAGS := $(llvm_libc++_cxxflags)
 include $(BUILD_SHARED_LIBRARY)
 
 GABIXX_FORCE_REBUILD := true
