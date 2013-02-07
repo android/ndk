@@ -50,7 +50,7 @@ using ::getenv;
 using ::putenv;
 using ::setenv;
 using ::unsetenv;
-using ::clearenv;
+//using ::clearenv;
 
 using ::mktemp;
 using ::mkstemp;
