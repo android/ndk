@@ -93,7 +93,7 @@ endef
 # when applied to static libraries or object files.
 cmd-strip = $(PRIVATE_STRIP) --strip-unneeded $(call host-path,$1)
 
-TARGET_LIBGCC = $(shell $(TARGET_CC) -print-libgcc-file-name)
+TARGET_LIBGCC = -lgcc
 TARGET_LDLIBS := -lc -lm
 
 #
