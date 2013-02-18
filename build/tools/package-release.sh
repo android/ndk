@@ -82,9 +82,18 @@ register_var_option "--development-root=<path>" DEVELOPMENT_ROOT "Specify platfo
 LLVM_VERSION_LIST=$DEFAULT_LLVM_VERSION_LIST
 register_var_option "--llvm=<versions>" LLVM_VERSION_LIST "List of LLVM release versions"
 
+register_try64_option
+
 SEPARATE_64=no
 register_option "--separate-64" do_SEPARATE_64 "Separate 64-bit host toolchain to its own package"
-do_SEPARATE_64 () { SEPARATE_64=yes; }
+do_SEPARATE_64 ()
+{
+    if [ "$TRY64" = "yes" ]; then
+        echo "ERROR: You cannot use both --try-64 and --separate-64 at the same time."
+        exit 1
+    fi
+    SEPARATE_64=yes;
+}
 
 PROGRAM_PARAMETERS=
 PROGRAM_DESCRIPTION=\
@@ -252,24 +261,49 @@ RELEASE_PREFIX=$PREFIX-$RELEASE
 # ensure that the generated files are ug+rx
 umask 0022
 
+# Translate name to 64-bit's counterpart
+# $1: prebuilt name
+name64 ()
+{
+    local NAME=$1
+    case $NAME in
+        *windows)
+            NAME=${NAME}-x86_64
+            ;;
+        *linux-x86|*darwin-x86)
+            NAME=${NAME}_64
+            ;;
+    esac
+    echo $NAME
+}
+
 # Unpack a prebuilt into specified destination directory
 # $1: prebuilt name, relative to $PREBUILT_DIR
 # $2: destination directory
 # $3: optional destination directory for 64-bit toolchain
+# $4: optional flag to use 32-bit prebuilt in place of 64-bit
 unpack_prebuilt ()
 {
-    local PREBUILT=${1}.tar.bz2
-    local PREBUILT64=${1}_64.tar.bz2
-    local PREBUILT64_ALT=${1}-x86_64.tar.bz2
+    local PREBUILT=
+    local PREBUILT64=null
     local DDIR="$2"
     local DDIR64="${3:-$DDIR}"
+    local USE32="${4:-no}"
+
+    if [ "$TRY64" = "yes" -a "$USE32" = "no" ]; then
+        PREBUILT=`name64 $1`
+    else
+        PREBUILT=$1
+        PREBUILT64=`name64 $1`
+    fi
+
+    PREBUILT=${PREBUILT}.tar.bz2
+    PREBUILT64=${PREBUILT64}.tar.bz2
+
     echo "Unpacking $PREBUILT"
     if [ -f "$PREBUILT_DIR/$PREBUILT" ] ; then
         unpack_archive "$PREBUILT_DIR/$PREBUILT" "$DDIR"
         fail_panic "Could not unpack prebuilt $PREBUILT. Aborting."
-        if [ ! -f "$PREBUILT_DIR/$PREBUILT64" ] ; then
-            PREBUILT64=$PREBUILT64_ALT
-        fi
         if [ -f "$PREBUILT_DIR/$PREBUILT64" ] ; then
             echo "Unpacking $PREBUILT64"
             unpack_archive "$PREBUILT_DIR/$PREBUILT64" "$DDIR64"
@@ -380,7 +414,11 @@ fi
 # invoking the NDK from a release package or from the development
 # tree.
 #
-echo "$RELEASE" > $REFERENCE/RELEASE.TXT
+if [ "$TRY64" = "yes" ]; then
+    echo "$RELEASE (64-bit)" > $REFERENCE/RELEASE.TXT
+else
+    echo "$RELEASE" > $REFERENCE/RELEASE.TXT
+fi
 
 # Remove un-needed files
 rm -f $REFERENCE/CleanSpec.mk
@@ -445,10 +483,11 @@ for SYSTEM in $SYSTEMS; do
         done
 
         # Unpack prebuilt ndk-stack and other host tools
-        unpack_prebuilt ndk-stack-$SYSTEM "$DSTDIR" "$DSTDIR64"
+        unpack_prebuilt ndk-stack-$SYSTEM "$DSTDIR" "$DSTDIR64" "yes"
         unpack_prebuilt ndk-make-$SYSTEM "$DSTDIR" "$DSTDIR64"
         unpack_prebuilt ndk-sed-$SYSTEM "$DSTDIR" "$DSTDIR64"
         unpack_prebuilt ndk-awk-$SYSTEM "$DSTDIR" "$DSTDIR64"
+        unpack_prebuilt ndk-perl-$SYSTEM "$DSTDIR" "$DSTDIR64"
 
         if [ "$SYSTEM" = "windows" ]; then
             unpack_prebuilt toolbox-$SYSTEM "$DSTDIR" "$DSTDIR64"
@@ -460,14 +499,18 @@ for SYSTEM in $SYSTEMS; do
 
     # Create an archive for the final package. Extension depends on the
     # host system.
+    ARCHIVE=$BIN_RELEASE
+    if [ "$TRY64" = "yes" ]; then
+        ARCHIVE=`name64 $ARCHIVE`
+    fi
     case "$SYSTEM" in
         windows)
-            ARCHIVE="$BIN_RELEASE.zip"
-            ARCHIVE64="$BIN_RELEASE-64bit-tools.zip"
+            ARCHIVE="$ARCHIVE.zip"
+            ARCHIVE64="$ARCHIVE-64bit-tools.zip"
             ;;
         *)
-            ARCHIVE="$BIN_RELEASE.tar.bz2"
-            ARCHIVE64="$BIN_RELEASE-64bit-tools.tar.bz2"
+            ARCHIVE="$ARCHIVE.tar.bz2"
+            ARCHIVE64="$ARCHIVE-64bit-tools.tar.bz2"
             ;;
     esac
     echo "Creating $ARCHIVE"
