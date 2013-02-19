@@ -58,6 +58,14 @@
 #ifndef __SGI_STL_INTERNAL_PAIR_H
 #define __SGI_STL_INTERNAL_PAIR_H
 
+#ifndef __STL_BEGIN_NAMESPACE
+#define __STL_BEGIN_NAMESPACE namespace std {
+#endif
+
+#ifndef __STL_END_NAMESPACE
+#define __STL_END_NAMESPACE   }
+#endif
+
 __STL_BEGIN_NAMESPACE
 
 template <class _T1, class _T2>

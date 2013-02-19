@@ -50,7 +50,6 @@ using ::getenv;
 using ::putenv;
 using ::setenv;
 using ::unsetenv;
-using ::clearenv;
 
 using ::mktemp;
 using ::mkstemp;
@@ -112,6 +111,11 @@ using ::mbstowcs;
 using ::mbtowc;
 using ::wctomb;
 using ::wcstombs;
+
+#if __ANDROID_API__ >= 9
+using ::clearenv;
+#endif
+
 }  // namespace std
 
 }  // extern C++
