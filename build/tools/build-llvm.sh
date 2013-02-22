@@ -238,6 +238,7 @@ run $SRC_DIR/$TOOLCHAIN/llvm/configure \
     --with-bug-report-url=$DEFAULT_ISSUE_TRACKER_URL \
     --enable-targets=arm,mips,x86 \
     --enable-optimized \
+    --with-binutils-include=$SRC_DIR/binutils/binutils-2.21/include \
     $EXTRA_CONFIG_FLAGS
 fail_panic "Couldn't configure llvm toolchain"
 
@@ -267,14 +268,15 @@ dump "Install  : llvm toolchain binaries."
 cd $LLVM_BUILD_OUT && run make install $MAKE_FLAGS
 fail_panic "Couldn't install llvm toolchain to $TOOLCHAIN_BUILD_PREFIX"
 
+
 # clean static or shared libraries
 rm -rf $TOOLCHAIN_BUILD_PREFIX/docs
 rm -rf $TOOLCHAIN_BUILD_PREFIX/include
 rm -rf $TOOLCHAIN_BUILD_PREFIX/lib/*.a
 rm -rf $TOOLCHAIN_BUILD_PREFIX/lib/*.la
 rm -rf $TOOLCHAIN_BUILD_PREFIX/lib/pkgconfig
-rm -rf $TOOLCHAIN_BUILD_PREFIX/lib/lib*.so
-rm -rf $TOOLCHAIN_BUILD_PREFIX/lib/lib*.dylib
+rm -rf $TOOLCHAIN_BUILD_PREFIX/lib/lib[cp]*.so
+rm -rf $TOOLCHAIN_BUILD_PREFIX/lib/lib[cp]*.dylib
 rm -rf $TOOLCHAIN_BUILD_PREFIX/lib/B*.so
 rm -rf $TOOLCHAIN_BUILD_PREFIX/lib/B*.dylib
 rm -rf $TOOLCHAIN_BUILD_PREFIX/lib/LLVMH*.so
