@@ -49,17 +49,26 @@ TAGS=$HOST_TAG
 case "$HOST_TAG" in
     linux-x86_64|darwin-x86_64)
         if [ -d "$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/$HOST_TAG" ] ; then
-            # ideally we should check each individual compiler the presence of 64-bit
-            # but for test script this is fine
-            TEST_HOST_32BIT=yes
-            TAGS=$TAGS" $HOST_TAG32"
+            if [ -d "$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/$HOST_TAG32" ] ; then
+                # ideally we should check each individual compiler the presence of 64-bit
+                # but for test script this is fine
+                TEST_HOST_32BIT=yes
+                TAGS=$TAGS" $HOST_TAG32"
+	    fi
+        else
+            TAGS=$HOST_TAG32
         fi
     ;;
     windows*)
-        if [ "$ProgramW6432"!="" -a \
-             -d "$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/windows-x86_64" ] ; then
-            TEST_HOST_32BIT=yes
-            TAGS=$TAGS" windows-x86_64"
+        if [ "$ProgramW6432"!="" -a ] ; then
+            if [ -d "$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/windows-x86_64" ] ; then
+                if [ -d "$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/windows" ] ; then
+                    TEST_HOST_32BIT=yes
+                    TAGS=$TAGS" windows-x86_64"
+                fi
+	    else
+                TAGS=windows
+	    fi
         fi
 esac
 

@@ -473,7 +473,7 @@ is_broken_build ()
                 # only skip listed in file
                 TARGET_TOOLCHAIN=`get_build_var $PROJECT TARGET_TOOLCHAIN`
                 TARGET_TOOLCHAIN_VERSION=`echo $TARGET_TOOLCHAIN | tr '-' '\n' | tail -1`
-                grep -q -w -e "$TARGET_TOOLCHAIN_VERSION" "$PROJECT/BROKEN_BUILD"
+                grep -q -e "$TARGET_TOOLCHAIN_VERSION" "$PROJECT/BROKEN_BUILD"
                 if [ $? = 0 ] ; then
                     if [ -z "$ERRMSG" ] ; then
                         echo "Skipping `basename $PROJECT`: (no build for $TARGET_TOOLCHAIN_VERSION)"
@@ -685,7 +685,7 @@ if is_testable device; then
                     # skip all tests built by toolchain
                     TARGET_TOOLCHAIN=`get_build_var $TEST TARGET_TOOLCHAIN`
                     TARGET_TOOLCHAIN_VERSION=`echo $TARGET_TOOLCHAIN | tr '-' '\n' | tail -1`
-                    grep -q -w -e "$TARGET_TOOLCHAIN_VERSION" "$TEST/BROKEN_RUN"
+                    grep -q -e "$TARGET_TOOLCHAIN_VERSION" "$TEST/BROKEN_RUN"
                     if [ $? = 0 ] ; then
                         dump "Skipping NDK device test run: $TEST_NAME (no run for binary built by $TARGET_TOOLCHAIN_VERSION)"
                         return 0
