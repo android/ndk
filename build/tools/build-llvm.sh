@@ -267,6 +267,9 @@ dump "Install  : llvm toolchain binaries."
 cd $LLVM_BUILD_OUT && run make install $MAKE_FLAGS
 fail_panic "Couldn't install llvm toolchain to $TOOLCHAIN_BUILD_PREFIX"
 
+# move LTO shared library to bin
+mv -f  $TOOLCHAIN_BUILD_PREFIX/lib/libLTO.[sd]* $TOOLCHAIN_BUILD_PREFIX/bin
+
 # clean static or shared libraries
 rm -rf $TOOLCHAIN_BUILD_PREFIX/docs
 rm -rf $TOOLCHAIN_BUILD_PREFIX/include
