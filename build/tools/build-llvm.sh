@@ -241,8 +241,7 @@ run $SRC_DIR/$TOOLCHAIN/llvm/configure \
     $EXTRA_CONFIG_FLAGS
 fail_panic "Couldn't configure llvm toolchain"
 
-
-# build the toolchain
+# build llvm/clang
 dump "Building : llvm toolchain [this can take a long time]."
 cd $LLVM_BUILD_OUT
 run make -j$NUM_JOBS $MAKE_FLAGS
@@ -263,11 +262,56 @@ if [ "$CHECK" = "yes" -a "$MINGW" != "yes" -a "$DARWIN" != "yes" ] ; then
 fi
 
 # install the toolchain to its final location
-dump "Install  : llvm toolchain binaries."
+dump "Install  : llvm toolchain binaries"
 cd $LLVM_BUILD_OUT && run make install $MAKE_FLAGS
 fail_panic "Couldn't install llvm toolchain to $TOOLCHAIN_BUILD_PREFIX"
 
-# clean static or shared libraries
+# Build mclinker only against default the LLVM version, once
+# mclinker isn't mingw-ready yet.  ToDo
+if [ "$TOOLCHAIN" = "llvm-$DEFAULT_LLVM_VERSION" -a "$MINGW" != "yes" ] ; then
+    dump "Copy     : mclinker source"
+    MCLINKER_SRC_DIR=$BUILD_OUT/mclinker
+    mkdir -p $MCLINKER_SRC_DIR
+    fail_panic "Couldn't create mclinker source directory: $MCLINKER_SRC_DIR"
+
+    run copy_directory "$SRC_DIR/mclinker" "$MCLINKER_SRC_DIR"
+    fail_panic "Couldn't copy mclinker source: $MCLINKER_SRC_DIR"
+
+    cd $MCLINKER_SRC_DIR && run ./autogen.sh
+    fail_panic "Couldn't run autogen.sh in $MCLINKER_SRC_DIR"
+
+    dump "Configure: mclinker against $TOOLCHAIN"
+    MCLINKER_BUILD_OUT=$MCLINKER_SRC_DIR/build
+    mkdir -p $MCLINKER_BUILD_OUT && cd $MCLINKER_BUILD_OUT
+    fail_panic "Couldn't cd into mclinker build path: $MCLINKER_BUILD_OUT"
+
+    run $MCLINKER_SRC_DIR/configure \
+        --prefix=$TOOLCHAIN_BUILD_PREFIX \
+        --with-llvm-config=$TOOLCHAIN_BUILD_PREFIX/bin/llvm-config \
+        --host=$ABI_CONFIGURE_HOST \
+        --build=$ABI_CONFIGURE_BUILD \
+        --with-bug-report-url=$DEFAULT_ISSUE_TRACKER_URL
+    fail_panic "Couldn't configure mclinker"
+
+    dump "Building : mclinker"
+    cd $MCLINKER_BUILD_OUT
+    run make -j$NUM_JOBS $MAKE_FLAGS
+    fail_panic "Couldn't compile mclinker"
+
+    dump "Install  : mclinker"
+    cd $MCLINKER_BUILD_OUT && run make install $MAKE_FLAGS
+    fail_panic "Couldn't install mclinker to $TOOLCHAIN_BUILD_PREFIX"
+
+    if [ "$CHECK" = "yes" -a "$MINGW" != "yes" -a "$DARWIN" != "yes" ] ; then
+        # run the regression test
+        dump "Running  : mclinker regression test"
+        cd $MCLINKER_BUILD_OUT
+        run make check
+        fail_warning "Couldn't pass all mclinker regression test"  # change to fail_panic later
+    fi
+fi
+
+# remove redundant bits
 rm -rf $TOOLCHAIN_BUILD_PREFIX/docs
 rm -rf $TOOLCHAIN_BUILD_PREFIX/include
 rm -rf $TOOLCHAIN_BUILD_PREFIX/lib/*.a
@@ -279,6 +323,7 @@ rm -rf $TOOLCHAIN_BUILD_PREFIX/lib/B*.so
 rm -rf $TOOLCHAIN_BUILD_PREFIX/lib/B*.dylib
 rm -rf $TOOLCHAIN_BUILD_PREFIX/lib/LLVMH*.so
 rm -rf $TOOLCHAIN_BUILD_PREFIX/lib/LLVMH*.dylib
+rm -rf $TOOLCHAIN_BUILD_PREFIX/bin/ld.bcc*
 rm -rf $TOOLCHAIN_BUILD_PREFIX/share
 
 UNUSED_LLVM_EXECUTABLES="
