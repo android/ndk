@@ -548,6 +548,13 @@ LOCAL_LDLIBS
     See docs/STABLE-APIS.html for the list of exposed system libraries you
     can linked against with this NDK release.
 
+LOCAL_LDFLAGS
+    The list of other linker flags to be used when building your module.
+    For example, the following will use linker ld.bfd on ARM/X86 GCC 4.6/4.7
+    where ld.gold is the default
+
+      LOCAL_LDFLAGS += -fuse-ld=bfd
+
 LOCAL_ALLOW_UNDEFINED_SYMBOLS
     By default, any undefined reference encountered when trying to build
     a shared library will result in an "undefined symbol" error. This is a
