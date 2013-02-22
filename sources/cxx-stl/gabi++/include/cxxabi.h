@@ -265,7 +265,7 @@ namespace __cxxabiv1
   extern "C" {
 
     // Compatible with GNU C++
-    const uint64_t __gxx_exception_class = 0x474E5543432B2B00; // GNUCC++\0
+    const uint64_t __gxx_exception_class = 0x474E5543432B2B00LL; // GNUCC++\0
 
     // TODO: Support dependent exception
     // TODO: Support C++0x exception propagation

@@ -657,7 +657,7 @@ if [ "$OPTION_SAMPLES" ] ; then
     # $SRC/android-$PLATFORM/samples/ --> $DST/samples
     #
     dump "Copying generic samples"
-    if [ -z "OPTION_OVERLAY" ]; then
+    if [ -z "$OPTION_OVERLAY" ]; then
         rm -rf $DSTDIR/samples && mkdir -p $DSTDIR/samples
     fi
     copy_src_directory  samples samples samples
