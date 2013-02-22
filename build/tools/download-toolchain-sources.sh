@@ -201,6 +201,7 @@ toolchain_clone gdb
 toolchain_clone python
 toolchain_clone clang
 toolchain_clone llvm
+toolchain_clone mclinker
 
 toolchain_checkout "" $BRANCH build .
 toolchain_checkout "" $BRANCH gmp .
@@ -213,6 +214,7 @@ toolchain_checkout "" $BRANCH binutils binutils-2.19 binutils-2.21 binutils-2.22
 toolchain_checkout "" $BRANCH gcc gcc-4.4.3 gcc-4.6 gcc-4.7
 toolchain_checkout "" $BRANCH gdb gdb-6.6 gdb-7.3.x
 toolchain_checkout "" $BRANCH python Python-2.7.3
+toolchain_checkout "" $BRANCH mclinker .
 
 for LLVM_VERSION in $LLVM_VERSION_LIST; do
     LLVM_VERSION_NO_DOT=$(echo $LLVM_VERSION | sed -e 's!\.!!g')

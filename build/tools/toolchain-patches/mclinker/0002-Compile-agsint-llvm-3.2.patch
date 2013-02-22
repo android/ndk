@@ -1,0 +1,92 @@
+From fb2eb10813621ec22963258220abd41e592fc430 Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Fri, 22 Feb 2013 12:33:36 +0800
+Subject: [PATCH 2/2] Compile agsint llvm 3.2
+
+Current mclinker needs LLVM -r 173175 which contains re-org of
+some headers from since LLVM 3.2.  This patch is to roll back
+so we can build from LLVM 3.2
+
+Change-Id: I634b7b0fa085e5bdb7a0a2861c47d6063bf36d25
+---
+ lib/CodeGen/MCLDTargetMachine.cpp |    2 +-
+ lib/CodeGen/MCLinker.cpp          |    2 +-
+ lib/Target/X86/X86Emulation.cpp   |    3 +--
+ lib/Target/X86/X86LDBackend.cpp   |    3 +--
+ tools/llvm-mcld/llvm-mcld.cpp     |    6 +++---
+ 5 files changed, 7 insertions(+), 9 deletions(-)
+
+diff --git a/lib/CodeGen/MCLDTargetMachine.cpp b/lib/CodeGen/MCLDTargetMachine.cpp
+index 785ef1f..8f5d998 100644
+--- a/lib/CodeGen/MCLDTargetMachine.cpp
++++ b/lib/CodeGen/MCLDTargetMachine.cpp
+@@ -26,7 +26,7 @@
+ #include <llvm/CodeGen/MachineModuleInfo.h>
+ #include <llvm/CodeGen/GCStrategy.h>
+ #include <llvm/CodeGen/Passes.h>
+-#include <llvm/IR/DataLayout.h>
++#include <llvm/DataLayout.h>
+ #include <llvm/MC/MCAsmInfo.h>
+ #include <llvm/MC/MCStreamer.h>
+ #include <llvm/MC/MCInstrInfo.h>
+diff --git a/lib/CodeGen/MCLinker.cpp b/lib/CodeGen/MCLinker.cpp
+index 3613a03..909278f 100644
+--- a/lib/CodeGen/MCLinker.cpp
++++ b/lib/CodeGen/MCLinker.cpp
+@@ -28,7 +28,7 @@
+ #include <mcld/Support/raw_ostream.h>
+ #include <mcld/Support/MemoryArea.h>
+ 
+-#include <llvm/IR/Module.h>
++#include <llvm/Module.h>
+ #include <llvm/Support/CommandLine.h>
+ 
+ #include <algorithm>
+diff --git a/lib/Target/X86/X86Emulation.cpp b/lib/Target/X86/X86Emulation.cpp
+index 753d7cc..1e17b03 100644
+--- a/lib/Target/X86/X86Emulation.cpp
++++ b/lib/Target/X86/X86Emulation.cpp
+@@ -23,8 +23,7 @@ static bool MCLDEmulateX86ELF(LinkerConfig& pConfig)
+   unsigned int bitclass;
+   Triple::ArchType arch = pConfig.targets().triple().getArch();
+   assert (arch == Triple::x86 || arch == Triple::x86_64);
+-  if (arch == Triple::x86 ||
+-      pConfig.targets().triple().getEnvironment() == Triple::GNUX32) {
++  if (arch == Triple::x86) {
+     bitclass = 32;
+   }
+   else {
+diff --git a/lib/Target/X86/X86LDBackend.cpp b/lib/Target/X86/X86LDBackend.cpp
+index 85c80a7..2203499 100644
+--- a/lib/Target/X86/X86LDBackend.cpp
++++ b/lib/Target/X86/X86LDBackend.cpp
+@@ -46,8 +46,7 @@ X86GNULDBackend::X86GNULDBackend(const LinkerConfig& pConfig,
+ {
+   Triple::ArchType arch = pConfig.targets().triple().getArch();
+   assert (arch == Triple::x86 || arch == Triple::x86_64);
+-  if (arch == Triple::x86 ||
+-      pConfig.targets().triple().getEnvironment() == Triple::GNUX32) {
++  if (arch == Triple::x86) {
+     m_RelEntrySize = 8;
+     m_RelaEntrySize = 12;
+     if (arch == Triple::x86)
+diff --git a/tools/llvm-mcld/llvm-mcld.cpp b/tools/llvm-mcld/llvm-mcld.cpp
+index e478729..1f77ed1 100644
+--- a/tools/llvm-mcld/llvm-mcld.cpp
++++ b/tools/llvm-mcld/llvm-mcld.cpp
+@@ -24,9 +24,9 @@
+ 
+ #include <llvm/PassManager.h>
+ #include <llvm/Pass.h>
+-#include <llvm/IR/Module.h>
+-#include <llvm/IR/DataLayout.h>
+-#include <llvm/IR/LLVMContext.h>
++#include <llvm/Module.h>
++#include <llvm/DataLayout.h>
++#include <llvm/LLVMContext.h>
+ #include <llvm/ADT/Triple.h>
+ #include <llvm/MC/SubtargetFeature.h>
+ #include <llvm/Support/CommandLine.h>
+-- 
+1.7.7.3
+
