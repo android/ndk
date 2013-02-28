@@ -31,14 +31,19 @@
 
 namespace std {
 
+#if defined(GABIXX_NEEDS_NOTHROW)
   const nothrow_t nothrow = {};
+#endif // define(GABIXX_NEEDS_NOTHROW)
 
+  __attribute__ ((weak))
   bad_alloc::bad_alloc() throw() {
   }
 
+  __attribute__ ((weak))
   bad_alloc::~bad_alloc() throw() {
   }
 
+  __attribute__ ((weak))
   const char* bad_alloc::what() const throw() {
     return "std::bad_alloc";
   }

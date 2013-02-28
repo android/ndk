@@ -100,6 +100,7 @@ terminate() _NOEXCEPT
 #endif // !defined(LIBCXXRT) && !defined(_LIBCPPABI_VERSION)
 
 #if !defined(LIBCXXRT) && !defined(__GLIBCXX__)
+#if 0
 bool uncaught_exception() _NOEXCEPT
 {
 #if __APPLE__ || defined(_LIBCPPABI_VERSION)
@@ -110,6 +111,7 @@ bool uncaught_exception() _NOEXCEPT
     ::abort();
 #endif  // __APPLE__
 }
+#endif
 
 #ifndef _LIBCPPABI_VERSION
 
