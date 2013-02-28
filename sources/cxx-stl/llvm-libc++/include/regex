@@ -933,7 +933,7 @@ public:
     typedef locale                  locale_type;
     typedef ctype_base::mask        char_class_type;
 
-    static const char_class_type __regex_word = 0x80;
+    static const char_class_type __regex_word;
 private:
     locale __loc_;
     const ctype<char_type>* __ct_;
@@ -1007,6 +1007,8 @@ private:
         {return __value(static_cast<unsigned char>(__ch), __radix);}
     int __value(wchar_t __ch, int __radix) const;
 };
+
+template <class _CharT> const typename regex_traits<_CharT>::char_class_type regex_traits<_CharT>::__regex_word = 0x80;
 
 template <class _CharT>
 regex_traits<_CharT>::regex_traits()

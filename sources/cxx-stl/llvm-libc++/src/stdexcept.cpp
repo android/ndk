@@ -123,7 +123,8 @@ logic_error::operator=(const logic_error& le) _NOEXCEPT
     return *this;
 }
 
-#ifndef _LIBCPPABI_VERSION
+#if defined(__ANDROID__) || !defined(_LIBCPPABI_VERSION)
+// TODO(ajwong): It's unclear if gabi++ or libcxx should be providing these.
 
 logic_error::~logic_error() _NOEXCEPT
 {
@@ -138,7 +139,7 @@ logic_error::what() const _NOEXCEPT
     return s.c_str();
 }
 
-#endif
+#endif  // defined(__ANDROID__) || !defined(_LIBCPPABI_VERSION)
 
 runtime_error::runtime_error(const string& msg)
 {
@@ -191,6 +192,6 @@ range_error::~range_error() _NOEXCEPT {}
 overflow_error::~overflow_error() _NOEXCEPT {}
 underflow_error::~underflow_error() _NOEXCEPT {}
 
-#endif
+#endif // _LIBCPPABI_VERSION
 
 }  // std
