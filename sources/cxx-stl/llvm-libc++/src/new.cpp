@@ -51,7 +51,7 @@ operator new(std::size_t size)
     {
         // If malloc fails and there is a new_handler,
         // call it to try free up memory.
-        std::new_handler nh = std::get_new_handler();
+        std::new_handler nh = NULL; //std::get_new_handler();
         if (nh)
             nh();
         else
@@ -144,7 +144,9 @@ operator delete[] (void* ptr, const std::nothrow_t&) _NOEXCEPT
 namespace std
 {
 
+#if !defined(__ANDROID__)
 const nothrow_t nothrow = {};
+#endif // !defined(__ANDROID__)
 
 #ifndef _LIBCPPABI_VERSION
 
