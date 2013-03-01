@@ -45,6 +45,9 @@ register_var_option "--gmp-version=<version>" GMP_VERSION "Specify gmp version"
 PACKAGE_DIR=
 register_var_option "--package-dir=<path>" PACKAGE_DIR "Create archive tarball in specific directory"
 
+WINE=wine
+register_var_option "--wine=<path>" WINE "WINE needed to run llvm-config.exe for building mclinker with --mingw"
+
 POLLY=no
 do_polly_option () { POLLY=yes; }
 register_option "--with-polly" do_polly_option "Enable Polyhedral optimizations for LLVM"
@@ -267,9 +270,21 @@ dump "Install  : llvm toolchain binaries"
 cd $LLVM_BUILD_OUT && run make install $MAKE_FLAGS
 fail_panic "Couldn't install llvm toolchain to $TOOLCHAIN_BUILD_PREFIX"
 
-# Build mclinker only against default the LLVM version, once
-# mclinker isn't mingw-ready yet.  ToDo
-if [ "$TOOLCHAIN" = "llvm-$DEFAULT_LLVM_VERSION" -a "$MINGW" != "yes" ] ; then
+# create llvm-config wrapper if needed.
+# llvm-config is invoked by other llvm projects (eg. mclinker/configure)
+# to figure out flags and libs dependencies.  Unfortunately in canadian-build
+# llvm-config[.exe] may not run directly.  Create a wrapper.
+LLVM_CONFIG=llvm-config
+if [ "$MINGW" = "yes" ] ; then
+    LLVM_CONFIG=llvm-config.sh
+    cat > $TOOLCHAIN_BUILD_PREFIX/bin/$LLVM_CONFIG <<EOF
+$WINE \`dirname \$0\`/llvm-config.exe "\$@"
+EOF
+    chmod 0755 $TOOLCHAIN_BUILD_PREFIX/bin/$LLVM_CONFIG
+fi
+
+# build mclinker only against default the LLVM version, once
+if [ "$TOOLCHAIN" = "llvm-$DEFAULT_LLVM_VERSION" -a "$DARWIN" != "yes" ] ; then
     dump "Copy     : mclinker source"
     MCLINKER_SRC_DIR=$BUILD_OUT/mclinker
     mkdir -p $MCLINKER_SRC_DIR
@@ -288,10 +303,9 @@ if [ "$TOOLCHAIN" = "llvm-$DEFAULT_LLVM_VERSION" -a "$MINGW" != "yes" ] ; then
 
     run $MCLINKER_SRC_DIR/configure \
         --prefix=$TOOLCHAIN_BUILD_PREFIX \
-        --with-llvm-config=$TOOLCHAIN_BUILD_PREFIX/bin/llvm-config \
+        --with-llvm-config=$TOOLCHAIN_BUILD_PREFIX/bin/$LLVM_CONFIG \
         --host=$ABI_CONFIGURE_HOST \
-        --build=$ABI_CONFIGURE_BUILD \
-        --with-bug-report-url=$DEFAULT_ISSUE_TRACKER_URL
+        --build=$ABI_CONFIGURE_BUILD
     fail_panic "Couldn't configure mclinker"
 
     dump "Building : mclinker"

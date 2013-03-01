@@ -1,0 +1,615 @@
+From 9a50212671d7df41e624421c16ff67c5ebff1062 Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Wed, 27 Feb 2013 16:34:52 +0800
+Subject: [PATCH] Fix mingw build
+
+Change-Id: I11f3ac34154aa5cd1f2d4f9630f877e5bf0e5f6a
+---
+ debug/Makefile.am                  |    1 +
+ include/mcld/LD/Diagnostic.h       |    6 +
+ include/mcld/LD/DiagnosticEngine.h |    1 +
+ include/mcld/LD/MsgHandler.h       |    7 ++
+ include/mcld/Support/FileHandle.h  |    2 +
+ include/mcld/Support/mingw/mman.h  |   55 +++++++++++
+ lib/LD/Diagnostic.cpp              |    5 +
+ lib/Support/FileHandle.cpp         |    4 +
+ lib/Support/FileSystem.cpp         |    3 +
+ lib/Support/Path.cpp               |   10 ++-
+ lib/Support/Space.cpp              |   14 +++
+ lib/Support/Unix/FileSystem.inc    |   20 ++++
+ lib/Support/Unix/PathV3.inc        |   10 ++
+ lib/Support/mingw/mman.inc         |  180 ++++++++++++++++++++++++++++++++++++
+ lib/Support/raw_ostream.cpp        |    2 +-
+ lib/Target/GNULDBackend.cpp        |    4 +
+ lib/Target/Mips/MipsLDBackend.cpp  |    4 +
+ m4/llvm.m4                         |    2 +-
+ optimized/Makefile.am              |    1 +
+ tools/llvm-mcld/llvm-mcld.cpp      |    2 +-
+ 20 files changed, 329 insertions(+), 4 deletions(-)
+ create mode 100644 include/mcld/Support/mingw/mman.h
+ create mode 100644 lib/Support/mingw/mman.inc
+
+diff --git a/debug/Makefile.am b/debug/Makefile.am
+index e41d1aa..cf8442a 100644
+--- a/debug/Makefile.am
++++ b/debug/Makefile.am
+@@ -174,6 +174,7 @@ SOURCE = ${LIBDIR}/ADT/StringEntry.cpp \
+ 	${LIBDIR}/Support/Windows/FileSystem.inc \
+ 	${LIBDIR}/Support/Windows/PathV3.inc \
+ 	${LIBDIR}/Support/Windows/System.inc \
++	${LIBDIR}/Support/mingw/mman.inc \
+ 	${LIBDIR}/CodeGen/MCLDTargetMachine.cpp \
+ 	${LIBDIR}/CodeGen/MCLinker.cpp \
+ 	${LIBDIR}/Object/ObjectLinker.cpp \
+diff --git a/include/mcld/LD/Diagnostic.h b/include/mcld/LD/Diagnostic.h
+index 5e7d436..2b125db 100644
+--- a/include/mcld/LD/Diagnostic.h
++++ b/include/mcld/LD/Diagnostic.h
+@@ -64,6 +64,12 @@ public:
+     return (unsigned int)m_Engine.state().ArgumentVals[pIdx];
+   }
+ 
++  unsigned long long getArgULongLong(unsigned int pIdx) const {
++    assert(getArgKind(pIdx) == DiagnosticEngine::ak_ulonglong &&
++           "Invalid argument accessor!");
++    return (unsigned long long)m_Engine.state().ArgumentVals[pIdx];
++  }
++
+   bool getArgBool(unsigned int pIdx) const {
+     assert(getArgKind(pIdx) == DiagnosticEngine::ak_bool &&
+            "Invalid argument accessor!");
+diff --git a/include/mcld/LD/DiagnosticEngine.h b/include/mcld/LD/DiagnosticEngine.h
+index 9d24c7a..f3d3b3c 100644
+--- a/include/mcld/LD/DiagnosticEngine.h
++++ b/include/mcld/LD/DiagnosticEngine.h
+@@ -53,6 +53,7 @@ public:
+     ak_c_string,    // const char *
+     ak_sint,        // int
+     ak_uint,        // unsigned int
++    ak_ulonglong,   // unsigned long long, (eg. size_t in 64-bit)
+     ak_bool         // bool
+   };
+ 
+diff --git a/include/mcld/LD/MsgHandler.h b/include/mcld/LD/MsgHandler.h
+index c89f744..9b1ed80 100644
+--- a/include/mcld/LD/MsgHandler.h
++++ b/include/mcld/LD/MsgHandler.h
+@@ -103,6 +103,13 @@ operator<<(const MsgHandler& pHandler, unsigned long pValue)
+ }
+ 
+ inline const MsgHandler &
++operator<<(const MsgHandler& pHandler, unsigned long long pValue)
++{
++  pHandler.addTaggedVal(pValue, DiagnosticEngine::ak_ulonglong);
++  return pHandler;
++}
++
++inline const MsgHandler &
+ operator<<(const MsgHandler& pHandler, bool pValue)
+ {
+   pHandler.addTaggedVal(pValue, DiagnosticEngine::ak_bool);
+diff --git a/include/mcld/Support/FileHandle.h b/include/mcld/Support/FileHandle.h
+index ce43e0f..4130c7a 100644
+--- a/include/mcld/Support/FileHandle.h
++++ b/include/mcld/Support/FileHandle.h
+@@ -58,12 +58,14 @@ public:
+     ReadOwner   = S_IRUSR,
+     WriteOwner  = S_IWUSR,
+     ExeOwner    = S_IXUSR,
++#if !defined(_WIN32)
+     ReadGroup   = S_IRGRP,
+     WriteGroup  = S_IWGRP,
+     ExeGroup    = S_IXGRP,
+     ReadOther   = S_IROTH,
+     WriteOther  = S_IWOTH,
+     ExeOther    = S_IXOTH,
++#endif
+     System      = 0xFFFFFFFF
+   };
+ 
+diff --git a/include/mcld/Support/mingw/mman.h b/include/mcld/Support/mingw/mman.h
+new file mode 100644
+index 0000000..96f68b2
+--- /dev/null
++++ b/include/mcld/Support/mingw/mman.h
+@@ -0,0 +1,55 @@
++/*
++ * sys/mman.h
++ * mman-win32
++ */
++
++#ifndef _SYS_MMAN_H_
++#define _SYS_MMAN_H_
++
++#ifndef _WIN32_WINNT		// Allow use of features specific to Windows XP or later.                   
++#define _WIN32_WINNT 0x0501	// Change this to the appropriate value to target other versions of Windows.
++#endif						
++
++/* All the headers include this file. */
++#ifndef _MSC_VER
++#include <_mingw.h>
++#endif
++
++#include <sys/types.h>
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
++#define PROT_NONE       0
++#define PROT_READ       1
++#define PROT_WRITE      2
++#define PROT_EXEC       4
++
++#define MAP_FILE        0
++#define MAP_SHARED      1
++#define MAP_PRIVATE     2
++#define MAP_TYPE        0xf
++#define MAP_FIXED       0x10
++#define MAP_ANONYMOUS   0x20
++#define MAP_ANON        MAP_ANONYMOUS
++
++#define MAP_FAILED      ((void *)-1)
++
++/* Flags for msync. */
++#define MS_ASYNC        1
++#define MS_SYNC         2
++#define MS_INVALIDATE   4
++
++void*   mmap(void *addr, size_t len, int prot, int flags, int fildes, off_t off);
++int     munmap(void *addr, size_t len);
++int     mprotect(void *addr, size_t len, int prot);
++int     msync(void *addr, size_t len, int flags);
++int     mlock(const void *addr, size_t len);
++int     munlock(const void *addr, size_t len);
++
++#ifdef __cplusplus
++};
++#endif
++
++#endif /*  _SYS_MMAN_H_ */
+diff --git a/lib/LD/Diagnostic.cpp b/lib/LD/Diagnostic.cpp
+index 786a68b..b596a94 100644
+--- a/lib/LD/Diagnostic.cpp
++++ b/lib/LD/Diagnostic.cpp
+@@ -157,6 +157,11 @@ void Diagnostic::format(const char* pBegin, const char* pEnd,
+         llvm::raw_string_ostream(pOutStr) << val;
+         break;
+       }
++      case DiagnosticEngine::ak_ulonglong: {
++        unsigned long long val = getArgULongLong(arg_no);
++        llvm::raw_string_ostream(pOutStr) << val;
++        break;
++      }
+       case DiagnosticEngine::ak_bool: {
+         bool val = getArgBool(arg_no);
+         if (val)
+diff --git a/lib/Support/FileHandle.cpp b/lib/Support/FileHandle.cpp
+index 437e741..52c68a3 100644
+--- a/lib/Support/FileHandle.cpp
++++ b/lib/Support/FileHandle.cpp
+@@ -18,7 +18,11 @@
+ #endif
+ 
+ #include <sys/stat.h>
++#if defined(HAVE_SYS_MMAN_H)
+ #include <sys/mman.h>
++#elif defined(_WIN32)
++#include <mcld/Support/mingw/mman.h>
++#endif
+ 
+ #if defined(_MSC_VER)
+ #include <io.h>
+diff --git a/lib/Support/FileSystem.cpp b/lib/Support/FileSystem.cpp
+index fb2633d..7084a9a 100644
+--- a/lib/Support/FileSystem.cpp
++++ b/lib/Support/FileSystem.cpp
+@@ -27,3 +27,6 @@ using namespace mcld::sys::fs;
+ #include "Windows/FileSystem.inc"
+ #include "Windows/PathV3.inc" 
+ #endif 
++#if defined(_WIN32)
++#include "mingw/mman.inc"
++#endif
+\ No newline at end of file
+diff --git a/lib/Support/Path.cpp b/lib/Support/Path.cpp
+index d359162..2f439de 100644
+--- a/lib/Support/Path.cpp
++++ b/lib/Support/Path.cpp
+@@ -78,12 +78,20 @@ Path& Path::append(const Path& pPath)
+     unsigned int new_size = old_size + pPath.native().size();
+ 
+     m_PathName.resize(new_size);
+-    strcpy(const_cast<char*>(m_PathName.data()+old_size), pPath.native().data());
++#if defined(MCLD_ON_WIN32)
++    wcscpy(const_cast<ValueType*>(m_PathName.data()+old_size), pPath.native().data());
++#else
++    strcpy(const_cast<ValueType*>(m_PathName.data()+old_size), pPath.native().data());
++#endif
+   }
+   //first path is a,second path is b
+   else if(this->string()[this->native().size()-1] != separator &&
+           pPath.string()[0] != separator) {
++#if defined(MCLD_ON_WIN32)
++    m_PathName.append(L"\\");
++#else
+     m_PathName.append("/");
++#endif
+     m_PathName.append(pPath.native());
+   }
+   // a/,b or a,/b just append
+diff --git a/lib/Support/Space.cpp b/lib/Support/Space.cpp
+index 6ec2c53..db5ad03 100644
+--- a/lib/Support/Space.cpp
++++ b/lib/Support/Space.cpp
+@@ -16,6 +16,20 @@ using namespace mcld;
+ 
+ //===----------------------------------------------------------------------===//
+ // constant data
++#if defined(_WIN32)
++#include <windows.h>
++int getpagesize (void) 
++{
++  static int _pagesize = 0;
++  if (! _pagesize) 
++  {
++    SYSTEM_INFO sysinfo;
++    GetSystemInfo (&sysinfo);
++    _pagesize = sysinfo.dwPageSize;
++  }
++  return _pagesize;
++}
++#endif
+ static const off_t PageSize = getpagesize();
+ 
+ //===----------------------------------------------------------------------===//
+diff --git a/lib/Support/Unix/FileSystem.inc b/lib/Support/Unix/FileSystem.inc
+index ce6d0df..96d1e10 100644
+--- a/lib/Support/Unix/FileSystem.inc
++++ b/lib/Support/Unix/FileSystem.inc
+@@ -36,12 +36,32 @@ int open(const Path& pPath, int pOFlag, int pPerm)
+ 
+ ssize_t pread(int pFD, void* pBuf, size_t pCount, size_t pOffset)
+ {
++#if !defined(_WIN32)
+   return ::pread(pFD, pBuf, pCount, pOffset);
++#else
++  off_t curr_pos = lseek (pFD, 0, SEEK_CUR);
++  if (lseek (pFD, pOffset, SEEK_SET) != pOffset)
++    return -1;
++  ssize_t retval = read (pFD, pBuf, pCount);
++  if (lseek (pFD, curr_pos, SEEK_SET) != curr_pos)
++    return -1;
++  return retval;    
++#endif
+ }
+ 
+ ssize_t pwrite(int pFD, const void* pBuf, size_t pCount, size_t pOffset)
+ {
++#if !defined(_WIN32)
+   return ::pwrite(pFD, pBuf, pCount, pOffset);
++#else
++  off_t curr_pos = lseek (pFD, 0, SEEK_CUR);
++  if (lseek (pFD, pOffset, SEEK_SET) != pOffset)
++    return -1;
++  ssize_t retval = write (pFD, pBuf, pCount);
++  if (lseek (pFD, curr_pos, SEEK_SET) != curr_pos)
++    return -1;
++  return retval;    
++#endif
+ }
+ 
+ int ftruncate(int pFD, size_t pLength)
+diff --git a/lib/Support/Unix/PathV3.inc b/lib/Support/Unix/PathV3.inc
+index 1506e94..65ba267 100644
+--- a/lib/Support/Unix/PathV3.inc
++++ b/lib/Support/Unix/PathV3.inc
+@@ -20,6 +20,10 @@
+ #include <stack>
+ #include <unistd.h>
+ 
++#if defined(_WIN32)
++#include <limits.h>
++#endif
++
+ namespace mcld{
+ namespace sys{
+ namespace fs{
+@@ -154,14 +158,19 @@ void status(const Path& p, FileStatus& pFileStatus)
+     pFileStatus.setType(CharacterFile);
+   else if(S_ISFIFO(path_stat.st_mode))
+     pFileStatus.setType(FifoFile);
++#if !defined(_WIN32)
+   else if(S_ISSOCK(path_stat.st_mode))
+     pFileStatus.setType(SocketFile);
++#endif    
+   else
+     pFileStatus.setType(TypeUnknown);
+ }
+ 
+ void symlink_status(const Path& p, FileStatus& pFileStatus)
+ {
++#if defined(_WIN32)
++  pFileStatus.setType(FileNotFound);
++#else
+   struct stat path_stat;
+   if(lstat(p.c_str(), &path_stat)!= 0)
+   {
+@@ -188,6 +197,7 @@ void symlink_status(const Path& p, FileStatus& pFileStatus)
+     pFileStatus.setType(SocketFile);
+   else
+     pFileStatus.setType(TypeUnknown);
++#endif
+ }
+ 
+ /// read_dir - return true if we read one entry
+diff --git a/lib/Support/mingw/mman.inc b/lib/Support/mingw/mman.inc
+new file mode 100644
+index 0000000..be4be5b
+--- /dev/null
++++ b/lib/Support/mingw/mman.inc
+@@ -0,0 +1,180 @@
++
++#include <windows.h>
++#include <errno.h>
++#include <io.h>
++
++#include "mcld/Support/mingw/mman.h"
++
++#ifndef FILE_MAP_EXECUTE
++#define FILE_MAP_EXECUTE    0x0020
++#endif /* FILE_MAP_EXECUTE */
++
++static int __map_mman_error(const DWORD err, const int deferr)
++{
++    if (err == 0)
++        return 0;
++    //TODO: implement
++    return err;
++}
++
++static DWORD __map_mmap_prot_page(const int prot)
++{
++    DWORD protect = 0;
++    
++    if (prot == PROT_NONE)
++        return protect;
++        
++    if ((prot & PROT_EXEC) != 0)
++    {
++        protect = ((prot & PROT_WRITE) != 0) ? 
++                    PAGE_EXECUTE_READWRITE : PAGE_EXECUTE_READ;
++    }
++    else
++    {
++        protect = ((prot & PROT_WRITE) != 0) ?
++                    PAGE_READWRITE : PAGE_READONLY;
++    }
++    
++    return protect;
++}
++
++static DWORD __map_mmap_prot_file(const int prot)
++{
++    DWORD desiredAccess = 0;
++    
++    if (prot == PROT_NONE)
++        return desiredAccess;
++        
++    if ((prot & PROT_READ) != 0)
++        desiredAccess |= FILE_MAP_READ;
++    if ((prot & PROT_WRITE) != 0)
++        desiredAccess |= FILE_MAP_WRITE;
++    if ((prot & PROT_EXEC) != 0)
++        desiredAccess |= FILE_MAP_EXECUTE;
++    
++    return desiredAccess;
++}
++
++void* mmap(void *addr, size_t len, int prot, int flags, int fildes, off_t off)
++{
++    HANDLE fm, h;
++    
++    void * map = MAP_FAILED;
++    
++#ifdef _MSC_VER
++#pragma warning(push)
++#pragma warning(disable: 4293)
++#endif
++
++    const DWORD dwFileOffsetLow = (sizeof(off_t) <= sizeof(DWORD)) ? 
++                    (DWORD)off : (DWORD)(off & 0xFFFFFFFFL);
++    const DWORD dwFileOffsetHigh = (sizeof(off_t) <= sizeof(DWORD)) ?
++                    (DWORD)0 : (DWORD)((off >> 32) & 0xFFFFFFFFL);
++    const DWORD protect = __map_mmap_prot_page(prot);
++    const DWORD desiredAccess = __map_mmap_prot_file(prot);
++
++    const off_t maxSize = off + (off_t)len;
++
++    const DWORD dwMaxSizeLow = (sizeof(off_t) <= sizeof(DWORD)) ? 
++                    (DWORD)maxSize : (DWORD)(maxSize & 0xFFFFFFFFL);
++    const DWORD dwMaxSizeHigh = (sizeof(off_t) <= sizeof(DWORD)) ?
++                    (DWORD)0 : (DWORD)((maxSize >> 32) & 0xFFFFFFFFL);
++
++#ifdef _MSC_VER
++#pragma warning(pop)
++#endif
++
++    errno = 0;
++    
++    if (len == 0 
++        /* Unsupported flag combinations */
++        || (flags & MAP_FIXED) != 0
++        /* Usupported protection combinations */
++        || prot == PROT_EXEC)
++    {
++        errno = EINVAL;
++        return MAP_FAILED;
++    }
++    
++    h = ((flags & MAP_ANONYMOUS) == 0) ? 
++                    (HANDLE)_get_osfhandle(fildes) : INVALID_HANDLE_VALUE;
++
++    if ((flags & MAP_ANONYMOUS) == 0 && h == INVALID_HANDLE_VALUE)
++    {
++        errno = EBADF;
++        return MAP_FAILED;
++    }
++
++    fm = CreateFileMapping(h, NULL, protect, dwMaxSizeHigh, dwMaxSizeLow, NULL);
++
++    if (fm == NULL)
++    {
++        errno = __map_mman_error(GetLastError(), EPERM);
++        return MAP_FAILED;
++    }
++  
++    map = MapViewOfFile(fm, desiredAccess, dwFileOffsetHigh, dwFileOffsetLow, len);
++
++    CloseHandle(fm);
++  
++    if (map == NULL)
++    {
++        errno = __map_mman_error(GetLastError(), EPERM);
++        return MAP_FAILED;
++    }
++
++    return map;
++}
++
++int munmap(void *addr, size_t len)
++{
++    if (UnmapViewOfFile(addr))
++        return 0;
++        
++    errno =  __map_mman_error(GetLastError(), EPERM);
++    
++    return -1;
++}
++
++int mprotect(void *addr, size_t len, int prot)
++{
++    DWORD newProtect = __map_mmap_prot_page(prot);
++    DWORD oldProtect = 0;
++    
++    if (VirtualProtect(addr, len, newProtect, &oldProtect))
++        return 0;
++    
++    errno =  __map_mman_error(GetLastError(), EPERM);
++    
++    return -1;
++}
++
++int msync(void *addr, size_t len, int flags)
++{
++    if (FlushViewOfFile(addr, len))
++        return 0;
++    
++    errno =  __map_mman_error(GetLastError(), EPERM);
++    
++    return -1;
++}
++
++int mlock(const void *addr, size_t len)
++{
++    if (VirtualLock((LPVOID)addr, len))
++        return 0;
++        
++    errno =  __map_mman_error(GetLastError(), EPERM);
++    
++    return -1;
++}
++
++int munlock(const void *addr, size_t len)
++{
++    if (VirtualUnlock((LPVOID)addr, len))
++        return 0;
++        
++    errno =  __map_mman_error(GetLastError(), EPERM);
++    
++    return -1;
++}
+diff --git a/lib/Support/raw_ostream.cpp b/lib/Support/raw_ostream.cpp
+index e294bc3..836438b 100644
+--- a/lib/Support/raw_ostream.cpp
++++ b/lib/Support/raw_ostream.cpp
+@@ -12,7 +12,7 @@
+ # include <unistd.h>
+ #endif
+ 
+-#if defined(_MSC_VER)
++#if defined(_WIN32)
+ #include <io.h>
+ #ifndef STDIN_FILENO
+ # define STDIN_FILENO 0
+diff --git a/lib/Target/GNULDBackend.cpp b/lib/Target/GNULDBackend.cpp
+index 3e8915d..67c28cf 100644
+--- a/lib/Target/GNULDBackend.cpp
++++ b/lib/Target/GNULDBackend.cpp
+@@ -37,6 +37,10 @@
+ #include <mcld/LD/StubFactory.h>
+ #include <mcld/Object/ObjectBuilder.h>
+ 
++#if defined(_WIN32)
++  #define bzero(b,l) (memset((b), 0, (l)), (void)0)
++#endif
++
+ using namespace mcld;
+ 
+ //===--------------------------------------------------------------------===//
+diff --git a/lib/Target/Mips/MipsLDBackend.cpp b/lib/Target/Mips/MipsLDBackend.cpp
+index 8a62bd3..2f8f2fa 100644
+--- a/lib/Target/Mips/MipsLDBackend.cpp
++++ b/lib/Target/Mips/MipsLDBackend.cpp
+@@ -27,6 +27,10 @@
+ #include <mcld/Target/OutputRelocSection.h>
+ #include <mcld/Object/ObjectBuilder.h>
+ 
++#if defined(_WIN32)
++  #define bzero(b,l) (memset((b), 0, (l)), (void)0)
++#endif
++
+ using namespace mcld;
+ 
+ //===----------------------------------------------------------------------===//
+diff --git a/m4/llvm.m4 b/m4/llvm.m4
+index 42c9f58..a8732ad 100644
+--- a/m4/llvm.m4
++++ b/m4/llvm.m4
+@@ -111,7 +111,7 @@ AC_DEFUN([CHECK_LLVM],
+ 			*-*-win32*)
+ 				llvm_cv_platform_type="Win32" ;;
+ 			*-*-mingw*)
+-				llvm_cv_platform_type="Win32" ;;
++				llvm_cv_platform_type="Unix" ;;
+ 			*-*-haiku*)
+ 				llvm_cv_platform_type="Unix" ;;
+ 			*-unknown-eabi*)
+diff --git a/optimized/Makefile.am b/optimized/Makefile.am
+index 2e5df69..efd46dc 100644
+--- a/optimized/Makefile.am
++++ b/optimized/Makefile.am
+@@ -173,6 +173,7 @@ SOURCE = ${LIBDIR}/ADT/StringEntry.cpp \
+ 	${LIBDIR}/Support/Windows/FileSystem.inc \
+ 	${LIBDIR}/Support/Windows/PathV3.inc \
+ 	${LIBDIR}/Support/Windows/System.inc \
++	${LIBDIR}/Support/mingw/mman.inc \
+ 	${LIBDIR}/CodeGen/MCLDTargetMachine.cpp \
+ 	${LIBDIR}/CodeGen/MCLinker.cpp \
+ 	${LIBDIR}/Object/ObjectLinker.cpp \
+diff --git a/tools/llvm-mcld/llvm-mcld.cpp b/tools/llvm-mcld/llvm-mcld.cpp
+index 1f77ed1..68eebf0 100644
+--- a/tools/llvm-mcld/llvm-mcld.cpp
++++ b/tools/llvm-mcld/llvm-mcld.cpp
+@@ -45,7 +45,7 @@
+ # include <unistd.h>
+ #endif
+ 
+-#if defined(_MSC_VER)
++#if defined(_WIN32)
+ #include <io.h>
+ #ifndef STDIN_FILENO
+ # define STDIN_FILENO 0
+-- 
+1.7.7.3
+
