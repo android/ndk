@@ -242,7 +242,7 @@ for SYSTEM in $SYSTEMS; do
     if [ "$TRY64" = "yes" ]; then
         case $SYSTEM in
             darwin-x86|linux-x86)
-                SYSNAME=${SYSTEM%%x86}x86-64
+                SYSNAME=${SYSTEM%%x86}x86_64
                 ;;
             windows)
                 SYSNAME=windows-x86_64
@@ -288,7 +288,7 @@ for SYSTEM in $SYSTEMS; do
         for TOOLCHAIN_NAME in $TOOLCHAIN_NAMES; do
             echo "Building $SYSNAME toolchain for $ARCH architecture: $TOOLCHAIN_NAME"
             run $BUILDTOOLS/build-gcc.sh "$SRC_DIR" "$NDK_DIR" $TOOLCHAIN_NAME $TOOLCHAIN_FLAGS
-            fail_panic "Could not build $TOOLCHAIN_NAME-$SYSTEM!"
+            fail_panic "Could not build $TOOLCHAIN_NAME-$SYSNAME!"
         done
     done
 
@@ -300,8 +300,12 @@ for SYSTEM in $SYSTEMS; do
     for LLVM_VERSION in $LLVM_VERSION_LIST; do
         echo "Building $SYSNAME clang/llvm-$LLVM_VERSION"
         run $BUILDTOOLS/build-llvm.sh "$SRC_DIR" "$NDK_DIR" "llvm-$LLVM_VERSION" $TOOLCHAIN_FLAGS $POLLY_FLAGS $CHECK_FLAG
-        fail_panic "Could not build llvm for $SYSTEM"
+        fail_panic "Could not build llvm for $SYSNAME"
     done
+
+    # Deploy ld.mcld
+    $PROGDIR/deploy-host-mcld.sh --package-dir=$PACKAGE_DIR --systems=$SYSNAME
+    fail_panic "Could not deploy ld.mcld for $SYSNAME"
 
     # We're done for this system
 done
