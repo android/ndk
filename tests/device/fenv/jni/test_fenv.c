@@ -132,6 +132,6 @@ int main()
     fesetround_fegetround_FE_UPWARD();
     fesetround_fegetround_FE_DOWNWARD();
     feclearexcept_fetestexcept();
-
+    printf("total_fail = %d\n", total_fail);
     return total_fail == 0 ? 0 : 1;
 }
