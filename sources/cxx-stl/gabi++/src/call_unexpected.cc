@@ -63,6 +63,7 @@
  */
 
 
+#include <cstdlib>
 #include <cxxabi.h>
 #include <unwind.h>
 #include "dwarf_helper.h"
@@ -70,34 +71,62 @@
 
 namespace __cxxabiv1 {
 
+namespace {
+
 #ifdef __arm__
-  extern "C" __cxa_type_match_result __cxa_type_match(_Unwind_Exception* ucbp,
-                                                      const std::type_info* rttip,
-                                                      bool is_reference_type,
-                                                      void** matched_object) {
-    __cxa_exception* header = reinterpret_cast<__cxa_exception*>(ucbp+1)-1;
-    __cxa_type_match_result result = ctm_succeeded;
+enum type_match_result {
+  ctm_failed = 0,
+  ctm_succeeded = 1,
+  ctm_succeeded_with_ptr_to_base = 2
+};
 
-    void* adjustedPtr = header+1;
-    if (dynamic_cast<const __pointer_type_info*>(header->exceptionType)) {
-      adjustedPtr = *reinterpret_cast<void**>(adjustedPtr);
-      result = ctm_succeeded_with_ptr_to_base;
-    }
+type_match_result exception_type_match(_Unwind_Exception* ucbp,
+                                       const __shim_type_info* rttip,
+                                       bool is_reference_type,
+                                       void** matched_object) {
 
-    const std::type_info* catch_type = rttip;
-    const std::type_info* thrown_type = header->exceptionType;
-    if (!catch_type || !thrown_type) {
-      return ctm_failed;
-    }
+  __cxa_exception* header = reinterpret_cast<__cxa_exception*>(ucbp+1)-1;
+  type_match_result result = ctm_succeeded;
 
-    if (catch_type->can_catch(thrown_type, adjustedPtr)) {
-      *matched_object = adjustedPtr;
-      return result;
-    }
+  void* adjustedPtr = header+1;
+  if (dynamic_cast<const __pointer_type_info*>(header->exceptionType)) {
+    adjustedPtr = *reinterpret_cast<void**>(adjustedPtr);
+    result = ctm_succeeded_with_ptr_to_base;
+  }
 
+  const __shim_type_info* catch_type = rttip;
+  const __shim_type_info* thrown_type =
+      static_cast<const __shim_type_info*>(header->exceptionType);
+  if (!catch_type || !thrown_type) {
     return ctm_failed;
   }
 
+  if (catch_type->can_catch(thrown_type, adjustedPtr)) {
+    *matched_object = adjustedPtr;
+    return result;
+  }
+
+  return ctm_failed;
+}
+#endif
+
+void terminate_helper(std::terminate_handler t_handler) {
+  try {
+    t_handler();
+    abort();
+  } catch (...) {
+    abort();
+  }
+}
+
+void unexpected_helper(std::unexpected_handler u_handler) {
+  u_handler();
+  std::terminate();
+}
+
+}  // namespace
+
+#ifdef __arm__
   extern "C" bool __cxa_begin_cleanup(_Unwind_Exception* exc) {
     __cxa_eh_globals *globals = __cxa_get_globals();
     __cxa_exception *header = reinterpret_cast<__cxa_exception*>(exc+1)-1;
@@ -174,7 +203,7 @@ namespace __cxxabiv1 {
 
     __cxa_begin_catch(unwind_exception);    // unexpected is also a handler
     try {
-      std::__unexpected(header->unexpectedHandler);
+      unexpected_helper(header->unexpectedHandler);
     } catch (...) {
       // A new exception thrown when calling unexpected.
       bool allow_bad_exception = false;
@@ -182,19 +211,21 @@ namespace __cxxabiv1 {
       for (uint32_t i = 0; i != count; ++i) {
         uint32_t offset = reinterpret_cast<uint32_t>(&list[i * (stride >> 2)]);
         offset = decodeRelocTarget2(offset);
-        const std::type_info* catch_type = reinterpret_cast<const std::type_info*>(offset);
+        const __shim_type_info* catch_type = reinterpret_cast<const __shim_type_info*>(offset);
 
         __cxa_exception* new_header = __cxa_get_globals()->caughtExceptions;
         void* adjustedPtr = new_header + 1;
-        if (__cxa_type_match(&new_header->unwindHeader,
-                             catch_type,
-                             false/* is_ref_type */,
-                             &adjustedPtr) != ctm_failed) {
+        if (exception_type_match(&new_header->unwindHeader,
+                                 catch_type,
+                                 false/* is_ref_type */,
+                                 &adjustedPtr) != ctm_failed) {
           throw;
         }
 
         void* null_adjustedPtr = NULL;
-        if (catch_type->can_catch(&typeid(std::bad_exception), null_adjustedPtr)) {
+        const __shim_type_info* bad_excp =
+            static_cast<const __shim_type_info*>(&typeid(std::bad_exception));
+        if (catch_type->can_catch(bad_excp, null_adjustedPtr)) {
           allow_bad_exception = true;
         }
       }
@@ -206,7 +237,7 @@ namespace __cxxabiv1 {
         throw std::bad_exception();
       }
 
-      std::__terminate(header->terminateHandler);
+      terminate_helper(header->terminateHandler);
     }
   }
 #else // ! __arm__
@@ -227,7 +258,7 @@ namespace __cxxabiv1 {
       old_exception_header = reinterpret_cast<__cxa_exception*>(unwind_exception+1)-1;
       t_handler = old_exception_header->terminateHandler;
       u_handler = old_exception_header->unexpectedHandler;
-      // If std::__unexpected(u_handler) rethrows the same exception,
+      // If unexpected_helper(u_handler) rethrows the same exception,
       //   these values get overwritten by the rethrow.  So save them now:
       ttypeIndex = old_exception_header->handlerSwitchValue;
       lsda = old_exception_header->languageSpecificData;
@@ -237,7 +268,7 @@ namespace __cxxabiv1 {
     }
 
     try {
-      std::__unexpected(u_handler);
+      unexpected_helper(u_handler);
     } catch (...) {
       // A new exception thrown when calling unexpected.
 
@@ -248,14 +279,14 @@ namespace __cxxabiv1 {
       const uint8_t* lpStart = (const uint8_t*)readEncodedPointer(&lsda, lpStartEncoding);
       uint8_t ttypeEncoding = *lsda++;
       if (ttypeEncoding == DW_EH_PE_omit) {
-        std::__terminate(t_handler);
+        terminate_helper(t_handler);
       }
       uintptr_t classInfoOffset = readULEB128(&lsda);
       const uint8_t* classInfo = lsda + classInfoOffset;
       __cxa_eh_globals* globals = __cxa_get_globals_fast();
       __cxa_exception* new_exception_header = globals->caughtExceptions;
       if (new_exception_header == 0) {  // This shouldn't be able to happen!
-        std::__terminate(t_handler);
+        terminate_helper(t_handler);
       }
       bool native_new_exception =
         new_exception_header->unwindHeader.exception_class == __gxx_exception_class;
@@ -289,7 +320,7 @@ namespace __cxxabiv1 {
     } // catch (...)
 
     // Call terminate after unexpected normally done
-    std::__terminate(t_handler);
+    terminate_helper(t_handler);
   }
 #endif // __arm__
 

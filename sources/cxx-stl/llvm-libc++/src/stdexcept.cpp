@@ -123,9 +123,6 @@ logic_error::operator=(const logic_error& le) _NOEXCEPT
     return *this;
 }
 
-#if defined(__ANDROID__) || !defined(_LIBCPPABI_VERSION)
-// TODO(ajwong): It's unclear if gabi++ or libcxx should be providing these.
-
 logic_error::~logic_error() _NOEXCEPT
 {
     __libcpp_nmstr& s = (__libcpp_nmstr&)__imp_;
@@ -138,8 +135,6 @@ logic_error::what() const _NOEXCEPT
     __libcpp_nmstr& s = (__libcpp_nmstr&)__imp_;
     return s.c_str();
 }
-
-#endif  // defined(__ANDROID__) || !defined(_LIBCPPABI_VERSION)
 
 runtime_error::runtime_error(const string& msg)
 {

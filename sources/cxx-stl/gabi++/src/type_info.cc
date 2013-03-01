@@ -28,6 +28,7 @@
 // type_info.cc: Methods for std::type_info.
 //
 
+
 #include <cxxabi.h>
 #ifdef __ARM_EABI__
 // ARM EABI requires string comprison for mangled type names for type_info
@@ -43,6 +44,7 @@ namespace std
   {
   }
 
+#if !defined(GXXABI_LIBCXX)
   bool
   type_info::operator==(const type_info& rhs) const
   {
@@ -72,4 +74,6 @@ namespace std
     return this < &rhs;
 #endif
   }
+
+#endif // !defined(GXXABI_LIBCXX)
 } // end namespace std

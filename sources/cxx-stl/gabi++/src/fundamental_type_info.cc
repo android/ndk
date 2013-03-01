@@ -35,7 +35,7 @@ namespace __cxxabiv1
   {
   }
 
-  bool __fundamental_type_info::can_catch(const std::type_info* thrown_type,
+  bool __fundamental_type_info::can_catch(const __shim_type_info* thrown_type,
                                           void*& adjustedPtr) const {
     return *this == *thrown_type;
   }

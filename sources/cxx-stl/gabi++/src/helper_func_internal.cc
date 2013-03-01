@@ -48,6 +48,11 @@
 
 namespace __cxxabiv1 {
 
+  const __shim_type_info* getTypePtr(uint64_t ttypeIndex,
+                                     const uint8_t* classInfo,
+                                     uint8_t ttypeEncoding,
+                                     _Unwind_Exception* unwind_exception);
+
   void call_terminate(_Unwind_Exception* unwind_exception) {
     __cxa_begin_catch(unwind_exception);  // terminate is also a handler
     std::terminate();
@@ -147,7 +152,7 @@ namespace __cxxabiv1 {
           if (ttypeIndex > 0) {
             // Found a catch, does it actually catch?
             // First check for catch (...)
-            const std::type_info* catchType =
+            const __shim_type_info* catchType =
               getTypePtr(static_cast<uint64_t>(ttypeIndex),
                          classInfo, ttypeEncoding, unwind_exception);
             if (catchType == 0) {
@@ -171,7 +176,8 @@ namespace __cxxabiv1 {
             } else if (native_exception) {
               __cxa_exception* exception_header = (__cxa_exception*)(unwind_exception+1) - 1;
               void* adjustedPtr = unwind_exception+1;
-              const std::type_info* excpType = exception_header->exceptionType;
+              const __shim_type_info* excpType =
+                  static_cast<const __shim_type_info*>(exception_header->exceptionType);
               if (adjustedPtr == 0 || excpType == 0) {
                 // Such a disaster! What's wrong?
                 call_terminate(unwind_exception);
@@ -297,15 +303,15 @@ namespace __cxxabiv1 {
     return tmp;
   }
 
-  const std::type_info* getTypePtr(uint64_t ttypeIndex,
-                                   const uint8_t* classInfo,
-                                   uint8_t ttypeEncoding,
-                                   _Unwind_Exception* unwind_exception) {
+  const __shim_type_info* getTypePtr(uint64_t ttypeIndex,
+                                     const uint8_t* classInfo,
+                                     uint8_t ttypeEncoding,
+                                     _Unwind_Exception* unwind_exception) {
     if (classInfo == 0) { // eh table corrupted!
       call_terminate(unwind_exception);
     }
     const uint8_t* ptr = classInfo - ttypeIndex * 4;
-    return (const std::type_info*)decodeRelocTarget2((uint32_t)ptr);
+    return (const __shim_type_info*)decodeRelocTarget2((uint32_t)ptr);
   }
 
   bool canExceptionSpecCatch(int64_t specIndex,
@@ -329,9 +335,10 @@ namespace __cxxabiv1 {
       }
       ttypeIndex = decodeRelocTarget2((uint32_t)temp);
       temp += 1;
-      const std::type_info* catchType = (const std::type_info*) ttypeIndex;
+      const __shim_type_info* catchType = (const __shim_type_info*) ttypeIndex;
       void* tempPtr = adjustedPtr;
-      if (catchType->can_catch(excpType, tempPtr)) {
+      if (catchType->can_catch(
+              static_cast<const __shim_type_info*>(excpType), tempPtr)) {
         return false;
       }
     } // while
@@ -409,10 +416,10 @@ namespace __cxxabiv1 {
 
 #else // ! __arm__
 
-  const std::type_info* getTypePtr(uint64_t ttypeIndex,
-                                   const uint8_t* classInfo,
-                                   uint8_t ttypeEncoding,
-                                   _Unwind_Exception* unwind_exception) {
+  const __shim_type_info* getTypePtr(uint64_t ttypeIndex,
+                                     const uint8_t* classInfo,
+                                     uint8_t ttypeEncoding,
+                                     _Unwind_Exception* unwind_exception) {
     if (classInfo == 0) { // eh table corrupted!
       call_terminate(unwind_exception);
     }
@@ -438,7 +445,7 @@ namespace __cxxabiv1 {
       call_terminate(unwind_exception);
     }
     classInfo -= ttypeIndex;
-    return (const std::type_info*)readEncodedPointer(&classInfo, ttypeEncoding);
+    return (const __shim_type_info*)readEncodedPointer(&classInfo, ttypeEncoding);
   }
 
   bool canExceptionSpecCatch(int64_t specIndex,
@@ -460,12 +467,13 @@ namespace __cxxabiv1 {
       if (ttypeIndex == 0) {
         break;
       }
-      const std::type_info* catchType = getTypePtr(ttypeIndex,
-                                                   classInfo,
-                                                   ttypeEncoding,
-                                                   unwind_exception);
+      const __shim_type_info* catchType = getTypePtr(ttypeIndex,
+                                                     classInfo,
+                                                     ttypeEncoding,
+                                                     unwind_exception);
       void* tempPtr = adjustedPtr;
-      if (catchType->can_catch(excpType, tempPtr)) {
+      if (catchType->can_catch(
+              static_cast<const __shim_type_info*>(excpType), tempPtr)) {
         return false;
       }
     } // while

@@ -9,8 +9,10 @@
 //===----------------------------------------------------------------------===//
 
 #include <iostream>
+#include <locale>
 
 int main(void) {
+  std::cout.imbue(std::locale("C"));
   std::cout << "Hello World\n" << std::endl;
   return 0;
 }
