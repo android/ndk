@@ -1,39 +1,49 @@
 From bd187102557cfff78b1fe929db3466a3c775ebde Mon Sep 17 00:00:00 2001
 From: Andrew Hsieh <andrewhsieh@google.com>
 Date: Fri, 22 Feb 2013 12:30:18 +0800
-Subject: [PATCH 1/2] Add GCC/collect2 compatibility flags
+Subject: Add GCC/collect2 compatibility flags
 
 Add -use-gold, -use-mcld, and use-ld passed by GCC/collect2
 both ld.bfd ld.gold ignore
 
 Change-Id: Iaa1cb032c773d99bdc26ebf7335965c76e03a22d
 ---
- tools/llvm-mcld/llvm-mcld.cpp |   19 +++++++++++++++++++
- 1 files changed, 19 insertions(+), 0 deletions(-)
+ tools/llvm-mcld/llvm-mcld.cpp |   29 +++++++++++++++++++
+ 1 files changed, 29 insertions(+), 0 deletions(-)
 
 diff --git a/tools/llvm-mcld/llvm-mcld.cpp b/tools/llvm-mcld/llvm-mcld.cpp
 index 088ba07..e478729 100644
 --- a/tools/llvm-mcld/llvm-mcld.cpp
 +++ b/tools/llvm-mcld/llvm-mcld.cpp
-@@ -792,6 +792,25 @@ ArgTextSegAddr("Ttext",
+@@ -792,6 +792,35 @@ ArgTextSegAddr("Ttext",
                 cl::init(-1U));
  
  //===----------------------------------------------------------------------===//
 +// Ignored GCC Compatibility Options
 +//===----------------------------------------------------------------------===//
 +static cl::opt<bool>
-+ArgLDgold("use-gold",
++Arguse_gold("use-gold",
 +          cl::desc("GCC/collect2 compatibility: uses ld.gold.  Ignored"),
 +          cl::init(false));
 +
 +static cl::opt<bool>
-+ArgLDmcld("use-mcld",
++Arguse_mcld("use-mcld",
 +          cl::desc("GCC/collect2 compatibility: uses ld.mcld.  Ignored"),
 +          cl::init(false));
 +
 +static cl::opt<bool>
-+ArgLDbfd("use-ld",
++Arguse_ld("use-ld",
 +          cl::desc("GCC/collect2 compatibility: uses ld.bfd.  Ignored"),
++          cl::init(false));
++
++static cl::opt<bool>
++ArgEL("EL",
++          cl::desc("GCC/collect2 compatibility: MIPS little endian.  Ignored"),
++          cl::init(false));
++
++static cl::opt<bool>
++ArgEB("EB",
++          cl::desc("GCC/collect2 compatibility: MIPS big endian.  Ignored"),
 +          cl::init(false));
 +
 +

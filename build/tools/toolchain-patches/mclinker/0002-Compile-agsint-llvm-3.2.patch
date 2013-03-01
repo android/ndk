@@ -1,7 +1,7 @@
 From fb2eb10813621ec22963258220abd41e592fc430 Mon Sep 17 00:00:00 2001
 From: Andrew Hsieh <andrewhsieh@google.com>
 Date: Fri, 22 Feb 2013 12:33:36 +0800
-Subject: [PATCH 2/2] Compile agsint llvm 3.2
+Subject: Compile agsint llvm 3.2
 
 Current mclinker needs LLVM -r 173175 which contains re-org of
 some headers from since LLVM 3.2.  This patch is to roll back

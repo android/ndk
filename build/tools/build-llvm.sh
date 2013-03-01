@@ -338,11 +338,9 @@ for i in $UNUSED_LLVM_EXECUTABLES; do
     rm -f $TOOLCHAIN_BUILD_PREFIX/bin/$i.exe
 done
 
-if [ -n "$KEEP_SYMBOLS" ]; then
-    # strip because /usr/bin/install wasn't called with -s
-    test -z "$STRIP" && STRIP=strip
-    $STRIP $TOOLCHAIN_BUILD_PREFIX/bin/*
-fi
+test -z "$STRIP" && STRIP=strip
+$STRIP $TOOLCHAIN_BUILD_PREFIX/bin/*
+$STRIP $TOOLCHAIN_BUILD_PREFIX/lib/*
 
 # copy to toolchain path
 run copy_directory "$TOOLCHAIN_BUILD_PREFIX" "$TOOLCHAIN_PATH"
