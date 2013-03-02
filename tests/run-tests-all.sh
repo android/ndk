@@ -60,7 +60,7 @@ case "$HOST_TAG" in
         fi
     ;;
     windows*)
-        if [ "$ProgramW6432"!="" -a ] ; then
+        if [ "$ProgramW6432" != "" ] ; then
             if [ -d "$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/windows-x86_64" ] ; then
                 if [ -d "$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/windows" ] ; then
                     TEST_HOST_32BIT=yes

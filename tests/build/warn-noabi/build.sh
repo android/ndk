@@ -25,12 +25,21 @@ if [ -n "$NDK_TOOLCHAIN_VERSION" ];  then
 fi
 
 SYSTEM=$(get_prebuilt_host_tag)
-ARM_GPP=$NDK/toolchains/arm-linux-androideabi-$VERSION/prebuilt/$SYSTEM/bin/arm-linux-androideabi-g++
-
 if [ "$SYSTEM" = "windows" ] ; then
+  SYSTEM64=windows-x86_64
   NULL="NUL"
 else
+  SYSTEM64=${SYSTEM}_64
   NULL="/dev/null"
+fi
+
+ARM_GPP=$NDK/toolchains/arm-linux-androideabi-$VERSION/prebuilt/$SYSTEM/bin/arm-linux-androideabi-g++${HOST_EXE}
+if [ ! -f "$ARM_GPP" ]; then
+    ARM_GPP=$NDK/toolchains/arm-linux-androideabi-$VERSION/prebuilt/$SYSTEM64/bin/arm-linux-androideabi-g++${HOST_EXE}
+fi
+if [ ! -f "$ARM_GPP" ]; then
+    echo "ERROR: Can't locate compiler $ARM_GPP"
+    exit 1
 fi
 
 OUT=$(echo "#include <stdarg.h>
