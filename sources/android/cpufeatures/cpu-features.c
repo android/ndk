@@ -195,7 +195,6 @@ extract_cpuinfo_field(const char* buffer, int buflen, const char* field)
 
     /* Look for first field occurence, and ensures it starts the line. */
     p = buffer;
-    bufend = buffer + buflen;
     for (;;) {
         p = memmem(p, bufend-p, field, fieldlen);
         if (p == NULL)
