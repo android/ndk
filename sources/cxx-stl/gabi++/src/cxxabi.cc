@@ -112,11 +112,11 @@ namespace {
     __cxa_thread_info *info = CxaThreadKey::getSlow();
     header->unexpectedHandler = info->unexpectedHandler;
     if (!header->unexpectedHandler) {
-      header->unexpectedHandler = std::current_unexpected_fn;
+      header->unexpectedHandler = std::get_unexpected();
     }
     header->terminateHandler = info->terminateHandler;
     if (!header->terminateHandler) {
-      header->terminateHandler = std::current_terminate_fn;
+      header->terminateHandler = std::get_terminate();
     }
     info->globals.uncaughtExceptions += 1;
 
@@ -130,6 +130,8 @@ namespace {
 
 
 namespace __cxxabiv1 {
+  __shim_type_info::~__shim_type_info() {
+  }
 
   extern "C" void __cxa_pure_virtual() {
     fatalError("Pure virtual function called!");
@@ -266,6 +268,53 @@ namespace __cxxabiv1 {
       reinterpret_cast<__cxa_exception*>(
         reinterpret_cast<_Unwind_Exception *>(exceptionObject)+1)-1;
     return header->adjustedPtr;
+  }
+
+  extern "C" bool __cxa_uncaught_exception() throw() {
+    __cxa_eh_globals* globals = __cxa_get_globals();
+    if (globals == NULL)
+      return false;
+    return globals->uncaughtExceptions == 0;
+  }
+
+  extern "C" void __cxa_decrement_exception_refcount(void* exceptionObject) throw() {
+    if (exceptionObject != NULL)
+    {
+      __cxa_exception* header =
+          reinterpret_cast<__cxa_exception*>(
+              reinterpret_cast<_Unwind_Exception *>(exceptionObject)+1)-1;
+      if (__sync_sub_and_fetch(&header->referenceCount, 1) == 0) {
+        if (header->exceptionDestructor)
+          header->exceptionDestructor(exceptionObject);
+        __cxa_free_exception(exceptionObject);
+      }
+    }
+  }
+
+  extern "C" void __cxa_increment_exception_refcount(void* exceptionObject) throw() {
+    if (exceptionObject != NULL)
+    {
+      __cxa_exception* header =
+          reinterpret_cast<__cxa_exception*>(
+              reinterpret_cast<_Unwind_Exception *>(exceptionObject)+1)-1;
+        __sync_add_and_fetch(&header->referenceCount, 1);
+    }
+  }
+
+  extern "C" void __cxa_rethrow_primary_exception(void* primary_exception) {
+#if defined(GABIXX_LIBCXX)
+// Only warn if we're building for libcxx since other libraries do not use
+// this.
+#warning "not implemented."
+#endif /* defined(GABIXX_LIBCXX) */
+  }
+
+  extern "C" void* __cxa_current_primary_exception() throw() {
+#if defined(GABIXX_LIBCXX)
+// Only warn if we're building for libcxx since other libraries do not use
+// this.
+#warning "not implemented."
+#endif /* defined(GABIXX_LIBCXX) */
   }
 
 } // namespace __cxxabiv1

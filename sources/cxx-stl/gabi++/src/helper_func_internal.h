@@ -42,11 +42,6 @@ namespace __cxxabiv1 {
   uint32_t decodeRelocTarget2 (uint32_t ptr);
 #endif
 
-  const std::type_info* getTypePtr(uint64_t ttypeIndex,
-                                   const uint8_t* classInfo,
-                                   uint8_t ttypeEncoding,
-                                   _Unwind_Exception* unwind_exception);
-
   // An exception spec acts like a catch handler, but in reverse.
   // If any catchType in the list can catch an excpType,
   // then this exception spec does not catch the excpType.

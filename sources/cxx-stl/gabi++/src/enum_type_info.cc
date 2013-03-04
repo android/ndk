@@ -35,8 +35,8 @@ namespace __cxxabiv1
   {
   }
 
-  bool __enum_type_info::can_catch(const std::type_info* thrown_type,
-                                  void*& adjustedPtr) const {
+  bool __enum_type_info::can_catch(const __shim_type_info* thrown_type,
+                                   void*& adjustedPtr) const {
     return *this == *thrown_type;
   }
 } // namespace __cxxabiv1

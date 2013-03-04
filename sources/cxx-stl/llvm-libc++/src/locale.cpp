@@ -978,6 +978,11 @@ ctype<char>::classic_table()  _NOEXCEPT
     return _DefaultRuneLocale.__runetype;
 #elif defined(__GLIBC__)
     return __cloc()->__ctype_b;
+#elif defined(__ANDROID__)
+    // TODO(ajwong): Should the actual traits functions delegate to the
+    // bionic ctype variants? Or should we do something similar to how we
+    // handle glibc where we use the _tolower_tab_ and _toupper_tab_ directly?
+    return __ctype_c_mask_table;
 #elif __sun__
     return __ctype_mask;
 #elif _WIN32
