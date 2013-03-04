@@ -60,6 +60,9 @@ register_var_option "--abis=<list>" ABIS "Specify list of target ABIs."
 NO_MAKEFILE=
 register_var_option "--no-makefile" NO_MAKEFILE "Do not use makefile to speed-up build"
 
+VISIBLE_LIBSTLPORT_STATIC=
+register_var_option "--visible-libstlport-static" VISIBLE_LIBSTLPORT_STATIC "Do not use hidden visibility for libstlport_static.a"
+
 register_jobs_option
 
 extract_parameters "$@"
@@ -140,12 +143,18 @@ else
     MAKEFILE=
 fi
 
+# build_stlport_libs_for_abi
+# $1: ABI
+# $2: build directory
+# $3: build type: "static" or "shared"
+# $4: (optional) installation directory
 build_stlport_libs_for_abi ()
 {
     local ARCH BINPREFIX SYSROOT
     local ABI=$1
     local BUILDDIR="$2"
-    local DSTDIR="$3"
+    local TYPE="$3"
+    local DSTDIR="$4"
     local SRC OBJ OBJECTS CFLAGS CXXFLAGS
 
     mkdir -p "$BUILDDIR"
@@ -163,7 +172,11 @@ build_stlport_libs_for_abi ()
 
     builder_set_srcdir "$GABIXX_SRCDIR"
     builder_cflags "$GABIXX_CFLAGS"
-    builder_cxxflags "$GABIXX_CXXFLAGS"
+    if [ "$TYPE" = "static" -a -z "$VISIBLE_LIBSTLPORT_STATIC" ]; then
+        builder_cxxflags "$GABIXX_CXXFLAGS -fvisibility=hidden -fvisibility-inlines-hidden"
+    else
+        builder_cxxflags "$GABIXX_CXXFLAGS"
+    fi
     builder_ldflags "$GABIXX_LDFLAGS"
     builder_sources $GABIXX_SOURCES
 
@@ -171,19 +184,26 @@ build_stlport_libs_for_abi ()
     builder_reset_cflags
     builder_cflags "$STLPORT_CFLAGS"
     builder_reset_cxxflags
-    builder_cxxflags "$STLPORT_CXXFLAGS"
+    if [ "$TYPE" = "static" -a -z "$VISIBLE_LIBSTLPORT_STATIC" ]; then
+        builder_cxxflags "$STLPORT_CXXFLAGS -fvisibility=hidden -fvisibility-inlines-hidden"
+    else
+        builder_cxxflags "$STLPORT_CXXFLAGS"
+    fi
     builder_sources $STLPORT_SOURCES
 
-    log "Building $DSTDIR/libstlport_static.a"
-    builder_static_library libstlport_static
-
-    log "Building $DSTDIR/libstlport_shared.so"
-    builder_shared_library libstlport_shared
+    if [ "$TYPE" = "static" ]; then
+        log "Building $DSTDIR/libstlport_static.a"
+        builder_static_library libstlport_static
+    else
+        log "Building $DSTDIR/libstlport_shared.so"
+        builder_shared_library libstlport_shared
+    fi
     builder_end
 }
 
 for ABI in $ABIS; do
-    build_stlport_libs_for_abi $ABI "$BUILD_DIR/$ABI"
+    build_stlport_libs_for_abi $ABI "$BUILD_DIR/$ABI/shared" "shared"
+    build_stlport_libs_for_abi $ABI "$BUILD_DIR/$ABI/static" "static"
 done
 
 # If needed, package files into tarballs
