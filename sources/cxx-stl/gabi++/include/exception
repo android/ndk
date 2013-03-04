@@ -28,6 +28,8 @@
 #ifndef __GABIXX_EXCEPTION__
 #define __GABIXX_EXCEPTION__
 
+#if !defined(GABIXX_LIBCXX)
+
 namespace std {
 
   class exception {
@@ -56,18 +58,8 @@ namespace std {
 
   bool uncaught_exception() throw();
 
-  /*
-   * Below APIs are used internally
-   */
-  void __terminate(terminate_handler);
-  void __unexpected(unexpected_handler);
-
-  extern terminate_handler default_terminate_fn;
-  extern terminate_handler current_terminate_fn;
-
-  extern unexpected_handler default_unexpected_fn;
-  extern unexpected_handler current_unexpected_fn;
-
 } // namespace std
+
+#endif  // !defined(GABIXX_LIBCXX)
 
 #endif // __GABIXX_EXCEPTION__

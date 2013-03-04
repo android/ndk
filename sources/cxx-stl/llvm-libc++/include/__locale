@@ -367,6 +367,20 @@ public:
     static const mask punct  = _ISPUNCT;
     static const mask xdigit = _ISXDIGIT;
     static const mask blank  = _ISBLANK;
+#elif __ANDROID__
+    typedef char mask;
+    static const mask space  = _S;
+    static const mask print  = _P | _U | _L | _N | _B;
+    static const mask cntrl  = _C;
+    static const mask upper  = _U;
+    static const mask lower  = _L;
+    static const mask alpha  = _U | _L;
+    static const mask digit  = _N;
+    static const mask punct  = _P;
+    static const mask xdigit = _N | _X;
+
+    // TODO(ajwong): bionic doesn't have a blank mask
+    static const mask blank  = 0;
 #else  // __GLIBC__ || _WIN32 || __APPLE__ || __FreeBSD__ || __sun__
     typedef unsigned long mask;
     static const mask space  = 1<<0;
@@ -585,6 +599,8 @@ public:
 
 #ifdef _CACHED_RUNES
     static const size_t table_size = _CACHED_RUNES;
+#elif __ANDROID__
+    static const size_t table_size = __ctype_c_mask_table_size;
 #else
     static const size_t table_size = 256;  // FIXME: Don't hardcode this.
 #endif
