@@ -31,7 +31,9 @@
 
 namespace std {
 
+#if !defined(GXXABI_LIBCXX)
   const nothrow_t nothrow = {};
+#endif  // !defined(GXXABI_LIBCXX)
 
   bad_alloc::bad_alloc() throw() {
   }

@@ -30,6 +30,8 @@
 #ifndef __GABIXX_NEW__
 #define __GABIXX_NEW__
 
+#if !defined(GXXABI_LIBCXX)
+
 #include <cstddef>
 #include <exception>
 
@@ -62,5 +64,7 @@ inline void* operator new(std::size_t, void* p) throw() { return p; }
 inline void* operator new[](std::size_t, void* p) throw() { return p; }
 inline void  operator delete(void*, void*) throw() {}
 inline void  operator delete[](void*, void*) throw() {}
+
+#endif // !defined(GXXABI_LIBCXX)
 
 #endif // __GABIXX_NEW__

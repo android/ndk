@@ -51,6 +51,49 @@ define_char_wrapper_l (isblank);
 define_char_wrapper_l (tolower)
 define_char_wrapper_l (toupper)
 
+// TODO(ajwong): This table is copied from bionic's ctype implementation.
+// It doesn't support signed chars and will index out of bounds. The best way
+// to fix is to patch bionic's ctype array to support both signed and
+// unsigned char and then just directly reference it.
+static char const real_ctype_c_mask_table[256] = {
+        0,
+        _C,     _C,     _C,     _C,     _C,     _C,     _C,     _C,
+        _C,     _C|_S,  _C|_S,  _C|_S,  _C|_S,  _C|_S,  _C,     _C,
+        _C,     _C,     _C,     _C,     _C,     _C,     _C,     _C,
+        _C,     _C,     _C,     _C,     _C,     _C,     _C,     _C,
+   _S|(char)_B, _P,     _P,     _P,     _P,     _P,     _P,     _P,
+        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P,
+        _N,     _N,     _N,     _N,     _N,     _N,     _N,     _N,
+        _N,     _N,     _P,     _P,     _P,     _P,     _P,     _P,
+        _P,     _U|_X,  _U|_X,  _U|_X,  _U|_X,  _U|_X,  _U|_X,  _U,
+        _U,     _U,     _U,     _U,     _U,     _U,     _U,     _U,
+        _U,     _U,     _U,     _U,     _U,     _U,     _U,     _U,
+        _U,     _U,     _U,     _P,     _P,     _P,     _P,     _P,
+        _P,     _L|_X,  _L|_X,  _L|_X,  _L|_X,  _L|_X,  _L|_X,  _L,
+        _L,     _L,     _L,     _L,     _L,     _L,     _L,     _L,
+        _L,     _L,     _L,     _L,     _L,     _L,     _L,     _L,
+        /* determine printability based on the IS0 8859 8-bit standard */
+        _L,     _L,     _L,     _P,     _P,     _P,     _P,     _C,
+
+        _C,     _C,     _C,     _C,     _C,     _C,     _C,     _C, /* 80 */
+        _C,     _C,     _C,     _C,     _C,     _C,     _C,     _C, /* 88 */
+        _C,     _C,     _C,     _C,     _C,     _C,     _C,     _C, /* 90 */
+        _C,     _C,     _C,     _C,     _C,     _C,     _C,     _C, /* 98 */
+        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* A0 */
+        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* A8 */
+        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* B0 */
+        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* B8 */
+        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* C0 */
+        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* C8 */
+        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* D0 */
+        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* D8 */
+        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* E0 */
+        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* E8 */
+        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* F0 */
+        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P  /* F8 */
+};
+char const* const __ctype_c_mask_table = &real_ctype_c_mask_table[0];
+
 ///////////////////////////////////////////////////////////////////////
 // stdio.h declarations
 
@@ -208,7 +251,6 @@ locale_t duplocale(locale_t loc) {
     copy[0] = loc[0];
     return copy;
 }
-
 
 // Static mutable variable because setlocale() is supposed to return
 // a pointer to a writable C string.

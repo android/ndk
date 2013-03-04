@@ -33,28 +33,35 @@ llvm_libc++_sources := \
 
 llvm_libc++_sources += \
     support/android/locale_support.c \
-    support/android/wchar_support.c
+    support/android/nl_types_support.c \
+    support/android/stdlib_support.c \
+    support/android/wchar_support.c \
+    support/android/wctype_support.c
 
 llvm_libc++_sources := $(llvm_libc++_sources:%=src/%)
 llvm_libc++_cxxflags := -std=c++11
 
+include $(dir $(LOCAL_PATH))../../gabi++/sources.mk
+llvm_libc++_includes += $(libgabi++_c_includes)
+
 include $(CLEAR_VARS)
 LOCAL_MODULE := llvm_libc++_static
 LOCAL_SRC_FILES := $(llvm_libc++_sources)
+LOCAL_SRC_FILES += $(libgabi++_src_files:%=../gabi++/%)
 LOCAL_C_INCLUDES := $(llvm_libc++_includes)
-LOCAL_CPPFLAGS := $(llvm_libc++_cxxflags)
+LOCAL_CPPFLAGS := $(llvm_libc++_cxxflags) -DGXXABI_LIBCXX=1 -DLIBCXXRT=1
+LOCAL_CPP_FEATURES := rtti exceptions
 LOCAL_EXPORT_C_INCLUDES := $(llvm_libc++_export_includes)
-LOCAL_EXPORT_STATIC_LIBRARIES := libgabi++_static
+LOCAL_EXPORT_CPPFLAGS := $(llvm_libc++_cxxflags)
 include $(BUILD_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := llvm_libc++_shared
 LOCAL_SRC_FILES := $(llvm_libc++_sources)
+LOCAL_SRC_FILES += $(libgabi++_src_files:%=../gabi++/%)
 LOCAL_C_INCLUDES := $(llvm_libc++_includes)
-LOCAL_CPPFLAGS := $(llvm_libc++_cxxflags)
+LOCAL_CPPFLAGS := $(llvm_libc++_cxxflags) -DGXXABI_LIBCXX=1 -DLIBCXXRT=1
+LOCAL_CPP_FEATURES := rtti exceptions
 LOCAL_EXPORT_C_INCLUDES := $(llvm_libc++_export_includes)
-LOCAL_WHOLE_STATIC_LIBRARIES := libgabi++_static
+LOCAL_EXPORT_CPPFLAGS := $(llvm_libc++_cxxflags)
 include $(BUILD_SHARED_LIBRARY)
-
-$(call import-module,cxx-stl/gabi++)
-

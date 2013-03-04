@@ -43,6 +43,7 @@ namespace std
   {
   }
 
+#if !defined(GXXABI_LIBCXX)
   bool
   type_info::operator==(const type_info& rhs) const
   {
@@ -72,4 +73,6 @@ namespace std
     return this < &rhs;
 #endif
   }
+
+#endif // !defined(GXXABI_LIBCXX)
 } // end namespace std

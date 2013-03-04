@@ -9,8 +9,14 @@
 //===----------------------------------------------------------------------===//
 
 #include <iostream>
+#include <locale>
 
 int main(void) {
-  std::cout << "Hello World\n" << std::endl;
+  // TODO(ajwong): This imbue should not be required. There is a problem with
+  // the module initialization code that causes the default "C" locale to not
+  // be created correctly. The manual imbue allows us to proceed with
+  // development for now.
+  std::cout.imbue(std::locale("C"));
+  std::cout << "Hello World" << std::endl;
   return 0;
 }
