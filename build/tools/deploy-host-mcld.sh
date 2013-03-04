@@ -40,6 +40,8 @@ toolchains/llvm-$DEFAULT_LLVM_VERSION
 Note that one copy of ld.mcld serves all GCC {4.7, 4.6, 4.4.3} x {arm, x86, mips}.
 GCC passes -m flag for ld.mcld to figure out the right target.
 "
+NDK_DIR=
+register_var_option "--ndk-dir=<path>" NDK_DIR "NDK installation directory"
 
 PACKAGE_DIR=
 register_var_option "--package-dir=<path>" PACKAGE_DIR "Create archive tarball in specific directory"
@@ -49,10 +51,22 @@ register_var_option "--systems=<list>" SYSTEMS "List of host systems to deply ld
 
 extract_parameters "$@"
 
+if [ -z "$NDK_DIR" ] ; then
+    NDK_DIR=$ANDROID_NDK_ROOT
+    log "Auto-config: --ndk-dir=$NDK_DIR"
+else
+    if [ ! -d "$NDK_DIR" ] ; then
+        echo "ERROR: NDK directory does not exists: $NDK_DIR"
+        exit 1
+    fi
+fi
+
 if [ "$PACKAGE_DIR" ]; then
     mkdir -p "$PACKAGE_DIR"
     fail_panic "Could not create package directory: $PACKAGE_DIR"
 fi
+
+cd $NDK_DIR
 
 if [ -z "$SYSTEMS" ]; then
     # find all ld.mcld
@@ -76,7 +90,7 @@ for SYSTEM in $SYSTEMS; do
     test -f "$MCLD" || fail_panic "Could not find $MCLD"
 
     # find all GNU ld with the same SYSTEM
-    ALL_LDS=`find . \( -name "*-ld" -o -name "ld" -o -name "*-ld.exe" -o -name "ld.exe" \) | grep $SYSTEM/`
+    ALL_LDS=`find toolchains \( -name "*-ld" -o -name "ld" -o -name "*-ld.exe" -o -name "ld.exe" \) | grep $SYSTEM/`
 
     ALL_LD_MCLDS=
     for LD in $ALL_LDS; do
@@ -92,7 +106,7 @@ for SYSTEM in $SYSTEMS; do
         ARCHIVE="ld.mcld-$SYSTEM.tar.bz2"
         #echo $ARCHIVE
         echo  "Packaging $ARCHIVE"
-        pack_archive "$PACKAGE_DIR/$ARCHIVE" "$ANDROID_NDK_ROOT" $ALL_LD_MCLDS
+        pack_archive "$PACKAGE_DIR/$ARCHIVE" "$NDK_DIR" $ALL_LD_MCLDS
     fi
 done
 
