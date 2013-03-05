@@ -261,6 +261,10 @@ public:
 # endif
 };
 
+#ifdef __ANDROID__
+static ios_base::Init _IosInit;
+#endif
+
 // ----------------------------------------------------------------------
 // ios_base manipulator functions, from section 27.4.5 of the C++ standard.
 // All of them are trivial one-line wrapper functions.

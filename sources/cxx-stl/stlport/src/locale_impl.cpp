@@ -618,7 +618,9 @@ locale* _Stl_get_global_locale() {
 #  pragma init_seg(lib)
 #endif
 
+#ifndef __ANDROID__
 static ios_base::Init _IosInit;
+#endif
 
 void _Locale_impl::make_classic_locale() {
   // This funcion will be called once: during build classic _Locale_impl
