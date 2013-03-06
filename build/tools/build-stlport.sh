@@ -155,6 +155,7 @@ build_stlport_libs_for_abi ()
     local BUILDDIR="$2"
     local TYPE="$3"
     local DSTDIR="$4"
+    local DEFAULT_CFLAGS DEFAULT_CXXLAGS
     local SRC OBJ OBJECTS CFLAGS CXXFLAGS
 
     mkdir -p "$BUILDDIR"
@@ -171,23 +172,26 @@ build_stlport_libs_for_abi ()
     builder_set_dstdir "$DSTDIR"
 
     builder_set_srcdir "$GABIXX_SRCDIR"
-    builder_cflags "$GABIXX_CFLAGS"
+    builder_reset_cflags DEFAULT_CFLAGS
+
+    builder_cflags "$DEFAULT_CFLAGS $GABIXX_CFLAGS"
+    builder_reset_cxxflags DEFAULT_CXXLAGS
     if [ "$TYPE" = "static" -a -z "$VISIBLE_LIBSTLPORT_STATIC" ]; then
-        builder_cxxflags "$GABIXX_CXXFLAGS -fvisibility=hidden -fvisibility-inlines-hidden"
+        builder_cxxflags "$DEFAULT_CXXLAGS $GABIXX_CXXFLAGS -fvisibility=hidden -fvisibility-inlines-hidden"
     else
-        builder_cxxflags "$GABIXX_CXXFLAGS"
+        builder_cxxflags "$DEFAULT_CXXLAGS $GABIXX_CXXFLAGS"
     fi
     builder_ldflags "$GABIXX_LDFLAGS"
     builder_sources $GABIXX_SOURCES
 
     builder_set_srcdir "$STLPORT_SRCDIR"
     builder_reset_cflags
-    builder_cflags "$STLPORT_CFLAGS"
+    builder_cflags "$DEFAULT_CFLAGS $STLPORT_CFLAGS"
     builder_reset_cxxflags
     if [ "$TYPE" = "static" -a -z "$VISIBLE_LIBSTLPORT_STATIC" ]; then
-        builder_cxxflags "$STLPORT_CXXFLAGS -fvisibility=hidden -fvisibility-inlines-hidden"
+        builder_cxxflags "$DEFAULT_CXXLAGS $STLPORT_CXXFLAGS -fvisibility=hidden -fvisibility-inlines-hidden"
     else
-        builder_cxxflags "$STLPORT_CXXFLAGS"
+        builder_cxxflags "$DEFAULT_CXXLAGS $STLPORT_CXXFLAGS"
     fi
     builder_sources $STLPORT_SOURCES
 

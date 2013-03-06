@@ -171,18 +171,33 @@ builder_c_includes ()
     _builder_varadd _BUILD_C_INCLUDES "$@"
 }
 
+# $1: optional var to hold the original cflags before reset
 builder_reset_cflags ()
 {
+    local _varname="$1"
+    if [ -n "$_varname" ] ; then
+        eval $_varname=\"$_BUILD_CFLAGS\"
+    fi
     _BUILD_CFLAGS=
 }
 
+# $1: optional var to hold the original cxxflags before reset
 builder_reset_cxxflags ()
 {
+    local _varname="$1"
+    if [ -n "$_varname" ] ; then
+        eval $_varname=\"$_BUILD_CXXFLAGS\"
+    fi
     _BUILD_CXXFLAGS=
 }
 
+# $1: optional var to hold the original c_includes before reset
 builder_reset_c_includes ()
 {
+    local _varname="$1"
+    if [ -n "$_varname" ] ; then
+        eval $_varname=\"$_BUILD_C_INCLUDES\"
+    fi
     _BUILD_C_INCLUDES=
 }
 
@@ -460,7 +475,7 @@ builder_begin_android ()
             ;;
         armeabi-v7a)
             builder_cflags "-mthumb -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16"
-            builder_ldflags "-Wl,--fix-cortex-a8"
+            builder_ldflags "-march=armv7-a -Wl,--fix-cortex-a8"
             ;;
     esac
 }
