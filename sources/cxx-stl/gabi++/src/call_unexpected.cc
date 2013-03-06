@@ -78,10 +78,12 @@ extern "C" enum type_match_result {
   ctm_succeeded_with_ptr_to_base = 2
 };
 
-extern "C" type_match_result __cxa_type_match(_Unwind_Exception* ucbp,
-                                              const __shim_type_info* rttip,
-                                              bool is_reference_type,
-                                              void** matched_object) {
+
+extern "C" type_match_result __attribute__((visibility("default")))
+__cxa_type_match(_Unwind_Exception* ucbp,
+                 const __shim_type_info* rttip,
+                 bool is_reference_type,
+                 void** matched_object) {
 
   __cxa_exception* header = reinterpret_cast<__cxa_exception*>(ucbp+1)-1;
   type_match_result result = ctm_succeeded;
@@ -127,7 +129,8 @@ void unexpected_helper(std::unexpected_handler u_handler) {
 }  // namespace
 
 #ifdef __arm__
-  extern "C" bool __cxa_begin_cleanup(_Unwind_Exception* exc) {
+  extern "C" bool   __attribute__((visibility("default")))
+  __cxa_begin_cleanup(_Unwind_Exception* exc) {
     __cxa_eh_globals *globals = __cxa_get_globals();
     __cxa_exception *header = reinterpret_cast<__cxa_exception*>(exc+1)-1;
     bool native = header->unwindHeader.exception_class == __gxx_exception_class;
@@ -179,7 +182,8 @@ void unexpected_helper(std::unexpected_handler u_handler) {
   ".popsection                             \n"
   );
 
-  extern "C" void __cxa_call_unexpected(void* arg) {
+  extern "C" void __attribute__((visibility("default")))
+  __cxa_call_unexpected(void* arg) {
     _Unwind_Exception* unwind_exception = static_cast<_Unwind_Exception*>(arg);
     __cxa_exception* header = reinterpret_cast<__cxa_exception*>(unwind_exception+1)-1;
     bool native_exception = unwind_exception->exception_class == __gxx_exception_class;
@@ -241,7 +245,8 @@ void unexpected_helper(std::unexpected_handler u_handler) {
     }
   }
 #else // ! __arm__
-  extern "C" void __cxa_call_unexpected(void* arg) {
+  extern "C" void __attribute__((visibility("default")))
+  __cxa_call_unexpected(void* arg) {
     _Unwind_Exception* unwind_exception = static_cast<_Unwind_Exception*>(arg);
     if (unwind_exception == 0) {
       call_terminate(unwind_exception);
