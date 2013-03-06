@@ -1,0 +1,9 @@
+Verified+1: Deckard Autoverifier <deckard@android.com>
+Code-Review+2: Andrew Hsieh <andrewhsieh@google.com>
+Verified+1: Andrew Hsieh <andrewhsieh@google.com>
+Code-Review+1: WenHan Gu <Wenhan.gu@mediatek.com>
+Submitted-by: Andrew Hsieh <andrewhsieh@google.com>
+Submitted-at: Wed, 06 Mar 2013 09:41:21 +0000
+Reviewed-on: https://android-review.googlesource.com/50985
+Project: platform/ndk
+Branch: refs/heads/master
