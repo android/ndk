@@ -84,8 +84,8 @@ setup_default_log_file $BUILD_OUT/config.log
 
 set_parameters ()
 {
-    SRC_DIR="$1"
-    NDK_DIR="$2"
+    SRC_DIR=`cd $1; pwd`
+    NDK_DIR=`cd $2; pwd`
     TOOLCHAIN="$3"
 
     # Check source directory
