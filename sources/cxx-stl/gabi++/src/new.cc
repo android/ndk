@@ -31,7 +31,9 @@
 
 namespace std {
 
+#if !defined(GABIXX_LIBCXX)
   const nothrow_t nothrow = {};
+#endif  // !defined(GABIXX_LIBCXX)
 
   bad_alloc::bad_alloc() throw() {
   }

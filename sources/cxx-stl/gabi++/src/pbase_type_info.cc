@@ -35,13 +35,13 @@ namespace __cxxabiv1
   {
   }
 
-  bool __pbase_type_info::can_catch(const std::type_info* thr_type,
+  bool __pbase_type_info::can_catch(const __shim_type_info* thr_type,
                                     void*& adjustedPtr) const {
     unsigned tracker = first_time_init;
     return can_catch_typeinfo_wrapper(thr_type, adjustedPtr, tracker);
   }
 
-  bool __pbase_type_info::can_catch_typeinfo_wrapper(const std::type_info* thr_type,
+  bool __pbase_type_info::can_catch_typeinfo_wrapper(const __shim_type_info* thr_type,
                                                      void*& adjustedPtr,
                                                      unsigned tracker) const {
     if (*this == *thr_type) {

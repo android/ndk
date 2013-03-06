@@ -37,39 +37,47 @@ namespace __cxxabiv1
 {
   // Derived types of type_info below are based on 2.9.5 of C++ ABI.
 
+  class __shim_type_info : public std::type_info
+  {
+   public:
+    virtual ~__shim_type_info();
+    virtual bool can_catch(const __shim_type_info* thrown_type,
+                           void*& adjustedPtr) const = 0;
+  };
+
   // Typeinfo for fundamental types.
-  class __fundamental_type_info : public std::type_info
+  class __fundamental_type_info : public __shim_type_info
   {
   public:
     virtual ~__fundamental_type_info();
-    virtual bool can_catch(const std::type_info* thrown_type,
+    virtual bool can_catch(const __shim_type_info* thrown_type,
                            void*& adjustedPtr) const;
   };
 
   // Typeinfo for array types.
-  class __array_type_info : public std::type_info
+  class __array_type_info : public __shim_type_info
   {
   public:
     virtual ~__array_type_info();
-    virtual bool can_catch(const std::type_info* thrown_type,
+    virtual bool can_catch(const __shim_type_info* thrown_type,
                            void*& adjustedPtr) const;
   };
 
   // Typeinfo for function types.
-  class __function_type_info : public std::type_info
+  class __function_type_info : public __shim_type_info
   {
   public:
     virtual ~__function_type_info();
-    virtual bool can_catch(const std::type_info* thrown_type,
+    virtual bool can_catch(const __shim_type_info* thrown_type,
                            void*& adjustedPtr) const;
   };
 
   // Typeinfo for enum types.
-  class __enum_type_info : public std::type_info
+  class __enum_type_info : public __shim_type_info
   {
   public:
     virtual ~__enum_type_info();
-    virtual bool can_catch(const std::type_info* thrown_type,
+    virtual bool can_catch(const __shim_type_info* thrown_type,
                            void*& adjustedPtr) const;
   };
 
@@ -127,12 +135,12 @@ namespace __cxxabiv1
   };
 
   // Typeinfo for classes with no bases.
-  class __class_type_info : public std::type_info
+  class __class_type_info : public __shim_type_info
   {
   public:
     virtual ~__class_type_info();
-    virtual bool can_catch(const std::type_info* thrown_type,
-                          void*& adjustedPtr) const;
+    virtual bool can_catch(const __shim_type_info* thrown_type,
+                           void*& adjustedPtr) const;
 
     enum class_type_info_code {
       CLASS_TYPE_INFO_CODE,
@@ -193,14 +201,14 @@ namespace __cxxabiv1
                          __UpcastInfo& info) const;
   };
 
-  class __pbase_type_info : public std::type_info
+  class __pbase_type_info : public __shim_type_info
   {
   public:
     virtual ~__pbase_type_info();
-    virtual bool can_catch(const std::type_info* thrown_type,
-                          void*& adjustedPtr) const;
+    virtual bool can_catch(const __shim_type_info* thrown_type,
+                           void*& adjustedPtr) const;
     unsigned int __flags;
-    const std::type_info *__pointee;
+    const __shim_type_info* __pointee;
 
     enum __masks {
       __const_mask = 0x1,
@@ -211,7 +219,7 @@ namespace __cxxabiv1
     };
 
 
-    virtual bool can_catch_typeinfo_wrapper(const std::type_info* thrown_type,
+    virtual bool can_catch_typeinfo_wrapper(const __shim_type_info* thrown_type,
                                             void*& adjustedPtr,
                                             unsigned tracker) const;
 
@@ -271,6 +279,8 @@ namespace __cxxabiv1
     // TODO: Support C++0x exception propagation
     // http://sourcery.mentor.com/archives/cxx-abi-dev/msg01924.html
     struct __cxa_exception {
+      size_t referenceCount;
+
       std::type_info* exceptionType;
       void (*exceptionDestructor)(void*);
       std::unexpected_handler unexpectedHandler;
@@ -334,18 +344,12 @@ namespace __cxxabiv1
 
     void __cxa_pure_virtual();
 
-#ifdef __arm__
-    typedef enum {
-      ctm_failed = 0,
-      ctm_succeeded = 1,
-      ctm_succeeded_with_ptr_to_base = 2
-    } __cxa_type_match_result;
-
-    __cxa_type_match_result __cxa_type_match(_Unwind_Control_Block* ucbp,
-                                             const std::type_info* rttip,
-                                             bool is_reference_type,
-                                             void** matched_object);
-#endif
+    // Missing libcxxabi functions.
+    bool __cxa_uncaught_exception() throw();
+    void __cxa_decrement_exception_refcount(void* exceptionObject) throw();
+    void __cxa_increment_exception_refcount(void* exceptionObject) throw();
+    void __cxa_rethrow_primary_exception(void* exceptionObject);
+    void* __cxa_current_primary_exception() throw();
 
   } // extern "C"
 

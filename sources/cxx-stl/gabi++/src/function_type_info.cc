@@ -35,8 +35,8 @@ namespace __cxxabiv1
   {
   }
 
-  bool __function_type_info::can_catch(const std::type_info* thrown_type,
-                                      void*& adjustedPtr) const {
+  bool __function_type_info::can_catch(const __shim_type_info* thrown_type,
+                                       void*& adjustedPtr) const {
     // Thrown function will be converted to pointer, cannot convert it back
     return false;
   }

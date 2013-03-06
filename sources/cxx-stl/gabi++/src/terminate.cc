@@ -31,43 +31,43 @@
 
 namespace std {
 
-  // The default std::terminate() implementation will crash the process.
-  // This is done to help debugging, i.e.:
-  //   - When running the program in a debugger, it's trivial to get
-  //     a complete stack trace explaining the failure.
-  //
-  //   - Otherwise, the default SIGSEGV handler will generate a stack
-  //     trace in the log, that can later be processed with ndk-stack
-  //     and other tools.
-  //
-  //   - Finally, this also works when a custom SIGSEGV handler has been
-  //     installed. E.g. when using Google Breakpad, the termination will
-  //     be recorded in a Minidump, which contains a stack trace to be
-  //     later analyzed.
-  //
-  // The C++ specification states that the default std::terminate()
-  // handler is library-specific, even though most implementation simply
-  // choose to call abort() in this case.
-  //
-  static void default_terminate(void) {
-    // The crash address is just a "magic" constant that can be used to
-    // identify stack traces (like 0xdeadbaad is used when heap corruption
-    // is detected in the C library). 'cab1' stands for "C++ ABI" :-)
-    *(reinterpret_cast<char*>(0xdeadcab1)) = 0;
+  namespace {
+    // The default std::terminate() implementation will crash the process.
+    // This is done to help debugging, i.e.:
+    //   - When running the program in a debugger, it's trivial to get
+    //     a complete stack trace explaining the failure.
+    //
+    //   - Otherwise, the default SIGSEGV handler will generate a stack
+    //     trace in the log, that can later be processed with ndk-stack
+    //     and other tools.
+    //
+    //   - Finally, this also works when a custom SIGSEGV handler has been
+    //     installed. E.g. when using Google Breakpad, the termination will
+    //     be recorded in a Minidump, which contains a stack trace to be
+    //     later analyzed.
+    //
+    // The C++ specification states that the default std::terminate()
+    // handler is library-specific, even though most implementation simply
+    // choose to call abort() in this case.
+    //
+    void default_terminate(void) {
+      // The crash address is just a "magic" constant that can be used to
+      // identify stack traces (like 0xdeadbaad is used when heap corruption
+      // is detected in the C library). 'cab1' stands for "C++ ABI" :-)
+      *(reinterpret_cast<char*>(0xdeadcab1)) = 0;
 
-    // should not be here, but just in case.
-    abort();
-  }
+      // should not be here, but just in case.
+      abort();
+    }
 
-  terminate_handler default_terminate_fn = default_terminate;
-  terminate_handler current_terminate_fn = default_terminate_fn;
+    terminate_handler current_terminate_fn = default_terminate;
+    unexpected_handler current_unexpected_fn = terminate;
+  }  // namespace
 
-  unexpected_handler default_unexpected_fn = terminate;
-  unexpected_handler current_unexpected_fn = default_unexpected_fn;
-
-
+#if !defined(GABIXX_LIBCXX)
   exception::exception() throw() {
   }
+#endif // !defined(GABIXX_LIBCXX)
 
   exception::~exception() throw() {
   }
@@ -76,6 +76,7 @@ namespace std {
     return "std::exception";
   }
 
+#if !defined(GABIXX_LIBCXX)
   bad_exception::bad_exception() throw() {
   }
 
@@ -85,6 +86,7 @@ namespace std {
   const char* bad_exception::what() const throw() {
     return "std::bad_exception";
   }
+#endif // !defined(GABIXX_LIBCXX)
 
   bad_cast::bad_cast() throw() {
   }
@@ -137,20 +139,6 @@ namespace std {
 
   void unexpected() {
     current_unexpected_fn();
-    terminate();
-  }
-
-  void __terminate(terminate_handler t_handler) {
-    try {
-      t_handler();
-      abort();
-    } catch (...) {
-      abort();
-    }
-  }
-
-  void __unexpected(unexpected_handler u_handler) {
-    u_handler();
     terminate();
   }
 

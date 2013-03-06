@@ -13,7 +13,7 @@ include $(BUILD_EXECUTABLE)
 include $(CLEAR_VARS)
 LOCAL_MODULE := test_1_static
 LOCAL_SRC_FILES := test_1.cc
-LOCAL_SHARED_LIBRARIES := llvm_libc++_static
+LOCAL_STATIC_LIBRARIES := llvm_libc++_static
 include $(BUILD_EXECUTABLE)
 
 include $(LOCAL_PATH)/../../llvm-libc++/Android.mk
