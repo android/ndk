@@ -1,7 +1,25 @@
 // { dg-do run  }
-//Lifetime of temporaries: 
-//egcs 2.92 performs cleanup for temporaries inside new expressions
-//after the new is complete, not at the end of the full expression.
+//
+// Purpose: Check the lifetime of the temporaries.
+//
+// Lifetime of temporaries:
+// egcs 2.92 performs cleanup for temporaries inside new expressions
+// after the new is complete, not at the end of the full expression.
+//
+// In GCC, the operands are computed first.  If no exception is raised, then
+// the result should be "ctor, new, func, dtor".  If the new operator throws
+// the exception, then the result should be "ctor, new, dtor".  If the
+// constructor of the temporary throws the exception, then the result should
+// be "ctor".
+//
+// In Clang, the new operator is called first.  If no exception is raised,
+// then the result should be "new, ctor, func, dtor".  If the new operator
+// throws the exception, then the result should be "new".  If the constructor
+// of the temporary throws the exception, then the result should be
+// "new, ctor, delete".
+//
+// Both of them are allowed by the C++ language specification, so we are using
+// #ifdef for different compilers.
 
 #include <new>
 #include <cstdlib>
@@ -71,11 +89,21 @@ void test1()
     func(new B(A(10).addr()));
   }catch(int){
   }
+#if defined(__clang__)
+  CHECK(new_done==1);
+  CHECK(ctor_done==2);
+  CHECK(func_done==3);
+  CHECK(dtor_done==4);
+  CHECK(delete_done==0);
+#elif defined(__GNUC__)
   CHECK(ctor_done==1);
   CHECK(new_done==2);
   CHECK(func_done==3);
   CHECK(dtor_done==4);
   CHECK(delete_done==0);
+#else
+#error "Unknown compiler"
+#endif
 }
 
 void test2()
@@ -86,11 +114,21 @@ void test2()
     func(new B(A(10).addr()));
   }catch(int){
   }
+#if defined(__clang__)
+  CHECK(new_done==1);
+  CHECK(ctor_done==0);
+  CHECK(func_done==0);
+  CHECK(dtor_done==0);
+  CHECK(delete_done==0);
+#elif defined(__GNUC__)
   CHECK(ctor_done==1);
   CHECK(new_done==2);
   CHECK(func_done==0);
   CHECK(dtor_done==3);
   CHECK(delete_done==0);
+#else
+#error "Unknown compiler"
+#endif
 }
 
 void test3()
@@ -101,11 +139,21 @@ void test3()
     func(new B(A(10).addr()));
   }catch(int){
   }
+#if defined(__clang__)
+  CHECK(new_done==1);
+  CHECK(ctor_done==2);
+  CHECK(func_done==0);
+  CHECK(dtor_done==0);
+  CHECK(delete_done==3);
+#elif defined(__GNUC__)
   CHECK(new_done==0);
   CHECK(ctor_done==1);
   CHECK(func_done==0);
   CHECK(dtor_done==0);
   CHECK(delete_done==0);
+#else
+#error "Unknown compiler"
+#endif
 }
 
 int main()
