@@ -48,6 +48,9 @@ public:
   virtual const char* what() const throw();
 };
 
+typedef void (*new_handler)();
+new_handler set_new_handler(new_handler) throw();
+
 }
 
 void* operator new(std::size_t size) throw(std::bad_alloc);
