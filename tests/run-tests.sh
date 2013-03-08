@@ -669,7 +669,6 @@ if is_testable device; then
         local DSTDIR="$4/ndk-tests"
         local SRCFILE
         local DSTFILE
-        local PROGRAMS=
         local PROGRAM
         # Do not run the test if BROKEN_RUN is defined
         if [ -z "$RUN_TESTS" ]; then
@@ -704,10 +703,34 @@ if is_testable device; then
         # First, copy all files to the device, except for gdbserver, gdb.setup, and
         # those declared in $TEST/BROKEN_RUN
         adb_shell_mkdir "$DEVICE" $DSTDIR
+
+        for SRCFILE in `ls $SRCDIR`; do
+            DSTFILE=`basename $SRCFILE`
+            echo "$DSTFILE" | grep -q -e '\.so$'
+            if [ $? != 0 ] ; then
+                continue
+            fi
+            SRCFILE="$SRCDIR/$SRCFILE"
+            if [ $HOST_OS = cygwin ]; then
+                SRCFILE=`cygpath -m $SRCFILE`
+            fi
+            DSTFILE="$DSTDIR/$DSTFILE"
+            run $ADB_CMD -s "$DEVICE" push "$SRCFILE" "$DSTFILE" &&
+            run $ADB_CMD -s "$DEVICE" shell chmod 0755 $DSTFILE
+            if [ $? != 0 ] ; then
+                dump "ERROR: Could not install $SRCFILE to device $DEVICE!"
+                exit 1
+            fi
+        done
+
         for SRCFILE in `ls $SRCDIR`; do
             DSTFILE=`basename $SRCFILE`
             if [ "$DSTFILE" = "gdbserver" -o "$DSTFILE" = "gdb.setup" ] ; then
                 continue
+            fi
+            echo "$DSTFILE" | grep -q -e '\.so$'
+            if [ $? = 0 ] ; then
+              continue
             fi
             if [ -z "$RUN_TESTS" -a -f "$TEST/BROKEN_RUN" ]; then
                 grep -q -w -e "$DSTFILE" "$TEST/BROKEN_RUN"
@@ -726,13 +749,7 @@ if is_testable device; then
                 dump "ERROR: Could not install $SRCFILE to device $DEVICE!"
                 exit 1
             fi
-            # If its name doesn't end with .so, add it to PROGRAMS
-            echo "$DSTFILE" | grep -q -e '\.so$'
-            if [ $? != 0 ] ; then
-                PROGRAMS="$PROGRAMS `basename $DSTFILE`"
-            fi
-        done
-        for PROGRAM in $PROGRAMS; do
+            PROGRAM="`basename $DSTFILE`"
             dump "Running device test [$CPU_ABI]: $TEST_NAME (`basename $PROGRAM`)"
             adb_var_shell_cmd "$DEVICE" "" "cd $DSTDIR && LD_LIBRARY_PATH=$DSTDIR ./$PROGRAM"
             if [ $? != 0 ] ; then
