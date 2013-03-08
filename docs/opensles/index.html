@@ -916,21 +916,26 @@ Callback handlers are generally called <i>synchronously</i> with
 respect to the event, that is, at the moment and location where the
 event is detected by the implementation. But this point is
 <i>asynchronous</i> with respect to the application. Thus you should
-use a mutex or other synchronization mechanism to control access
+use a non-blocking synchronization mechanism to control access
 to any variables shared between the application and the callback
 handler. In the example code, such as for buffer queues, we have
-omitted this synchronization in the interest of simplicity. However,
-proper mutual exclusion would be critical for any production code.
+either omitted this synchronization or used blocking synchronization in
+the interest of simplicity. However, proper non-blocking synchronization
+would be critical for any production code.
 <p>
 Callback handlers are called from internal
 non-application thread(s) which are not attached to the Dalvik virtual machine and thus
 are ineligible to use JNI. Because these internal threads are
 critical to the integrity of the OpenSL ES implementation, a callback
-handler should also not block or perform excessive work. Therefore,
-if your callback handler needs to use JNI or do anything significant
-(e.g. beyond an <code>Enqueue</code> or something else simple such as the "Get"
-family), the handler should instead post an event for another thread
-to process.
+handler should also not block or perform excessive work.
+<p>
+If your callback handler needs to use JNI, or execute work that is
+not proportional to the callback, the handler should instead post an
+event for another thread to process.  Examples of acceptable callback
+workload include rendering and enqueuing the next output buffer (for an
+AudioPlayer), processing the just-filled input buffer and enqueueing the
+next empty buffer (for an AudioRecorder), or simple APIs such as most
+of the "Get" family.  See section "Performance" below regarding the workload.
 <p>
 Note that the converse is safe: a Dalvik application thread which has
 entered JNI is allowed to directly call OpenSL ES APIs, including
@@ -1002,10 +1007,17 @@ activity is paused, as they are a global resource shared with other apps.
 <p>
 To avoid audible glitches, the buffer queue callback handler must execute
 within a small and predictable time window. This typically implies no
-blocking on mutexes, conditions, or I/O operations. Instead consider
-"try locks" and non-blocking algorithms. Avoid algorithms that
-execute in a non-deterministic amount of time, or are "bursty" in
-their computations.
+unbounded blocking on mutexes, conditions, or I/O operations. Instead consider
+"try locks", locks and waits with timeouts, and non-blocking algorithms.
+<p>
+The computation required to render the next buffer (for AudioPlayer) or
+consume the previous buffer (for AudioRecord) should take approximately
+the same amount of time for each callback.  Avoid algorithms that execute in
+a non-deterministic amount of time, or are "bursty" in their computations.
+A callback computation is bursty if the CPU time spent in any
+given callback is significantly larger than the average.
+In summary, the ideal is for the CPU execution time of the handler to have
+variance near zero, and for the handler to not block for unbounded times.
 <p>
 Lower latency audio is for these outputs only: on-device speaker, wired
 headphones, wired headset, and line out.
