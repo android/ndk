@@ -29,6 +29,11 @@
 #include <stdlib.h>
 #include <new>
 
+using std::new_handler;
+namespace {
+  new_handler cur_handler;
+}
+
 namespace std {
 
 #if !defined(GABIXX_LIBCXX)
@@ -45,21 +50,37 @@ namespace std {
     return "std::bad_alloc";
   }
 
+  new_handler set_new_handler(new_handler next_handler) throw() {
+    new_handler old_handler = cur_handler;
+    cur_handler = next_handler;
+    return old_handler;
+  }
+
 } // namespace std
 
 __attribute__ ((weak))
 void* operator new(std::size_t size) throw(std::bad_alloc) {
-  void* space = ::operator new(size, std::nothrow_t());
-  if (space) {
-    return space;
-  } else {
-    throw std::bad_alloc();
-  }
+  void* space;
+  do {
+    space = malloc(size);
+    if (space) {
+      return space;
+    }
+    new_handler handler = cur_handler;
+    if (handler == NULL) {
+      throw std::bad_alloc();
+    }
+    handler();
+  } while (space == 0);
 }
 
 __attribute__ ((weak))
 void* operator new(std::size_t size, const std::nothrow_t& no) throw() {
-  return malloc(size);
+  try {
+    ::operator new(size);
+  } catch (const std::bad_alloc&) {
+    return 0;
+  }
 }
 
 __attribute__ ((weak))
