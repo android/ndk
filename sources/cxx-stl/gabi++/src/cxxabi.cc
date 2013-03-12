@@ -282,11 +282,8 @@ namespace __cxxabiv1 {
     {
       __cxa_exception* header =
           reinterpret_cast<__cxa_exception*>(exceptionObject)-1;
-      if (__sync_sub_and_fetch(&header->referenceCount, 1) == 0) {
-        if (header->exceptionDestructor)
-          header->exceptionDestructor(exceptionObject);
+      if (__sync_sub_and_fetch(&header->referenceCount, 1) == 0)
         __cxa_free_exception(exceptionObject);
-      }
     }
   }
 
