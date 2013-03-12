@@ -1177,6 +1177,19 @@ get_toolchain_binprefix_for_arch ()
     echo "$BINPREFIX"
 }
 
+# Return llvm toolchain binary path prefix for given llvm version
+# $1: llvm version
+# $2: optional, system name, defaults to $HOST_TAG
+get_llvm_toolchain_binprefix ()
+{
+    local NAME DIR BINPREFIX
+    local SYSTEM=${2:-$(get_prebuilt_host_tag)}
+    NAME=llvm-$1
+    DIR=$(get_toolchain_install . $NAME $SYSTEM)
+    BINPREFIX=${DIR#./}/bin/
+    echo "$BINPREFIX"
+}
+
 # Return the default toochain binary path prefix for a given architecture
 # For example: arm -> toolchains/arm-linux-androideabi-4.6/prebuilt/<system>/bin/arm-linux-androideabi-
 # $1: Architecture name

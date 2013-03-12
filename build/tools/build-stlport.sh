@@ -36,6 +36,9 @@ toolchain binaries for all target architectures.
 By default, this will try with the current NDK directory, unless
 you use the --ndk-dir=<path> option.
 
+If you want use clang to rebuild the binaries, please
+use --llvm-version=<ver> option.
+
 The output will be placed in appropriate sub-directories of
 <ndk>/$STLPORT_SUBDIR, but you can override this with the --out-dir=<path>
 option.
@@ -62,6 +65,9 @@ register_var_option "--no-makefile" NO_MAKEFILE "Do not use makefile to speed-up
 
 VISIBLE_LIBSTLPORT_STATIC=
 register_var_option "--visible-libstlport-static" VISIBLE_LIBSTLPORT_STATIC "Do not use hidden visibility for libstlport_static.a"
+
+LLVM_VERSION=
+register_var_option "--llvm-version=<ver>" LLVM_VERSION "Specify LLVM version"
 
 register_jobs_option
 
@@ -167,7 +173,7 @@ build_stlport_libs_for_abi ()
 
     mkdir -p "$DSTDIR"
 
-    builder_begin_android $ABI "$BUILDDIR" "$MAKEFILE"
+    builder_begin_android $ABI "$BUILDDIR" "$LLVM_VERSION" "$MAKEFILE"
 
     builder_set_dstdir "$DSTDIR"
 

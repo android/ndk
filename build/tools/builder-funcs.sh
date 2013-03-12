@@ -131,6 +131,13 @@ builder_set_binprefix ()
     _BUILD_AR=${1}ar
 }
 
+builder_set_binprefix_llvm ()
+{
+    _BUILD_BINPREFIX=$1
+    _BUILD_CC=${1}clang
+    _BUILD_CXX=${1}clang++
+}
+
 builder_set_builddir ()
 {
     _BUILD_DIR=$1
@@ -295,8 +302,11 @@ builder_static_library ()
         _BUILD_TARGETS=$_BUILD_TARGETS" $lib"
         echo "$lib: $_BUILD_OBJECTS" >> $_BUILD_MK
     fi
+    if [ -z "${_BUILD_AR}" ]; then
+        _BUILD_AR=${AR:-ar}
+    fi
     builder_log "${_BUILD_PREFIX}Archive: $libname"
-    builder_command ${_BUILD_BINPREFIX}ar crs "$lib" "$_BUILD_OBJECTS"
+    builder_command ${_BUILD_AR} crs "$lib" "$_BUILD_OBJECTS"
     fail_panic "Could not archive ${_BUILD_PREFIX}$libname objects!"
 }
 
@@ -336,7 +346,7 @@ builder_shared_library ()
     # Important: -lgcc must appear after objects and static libraries,
     #            but before shared libraries for Android. It doesn't hurt
     #            for other platforms.
-    builder_command ${_BUILD_BINPREFIX}g++ \
+    builder_command ${_BUILD_CXX} \
         -Wl,-soname,$(basename $lib) \
         -Wl,-shared,-Bsymbolic \
         $_BUILD_LDFLAGS_BEGIN_SO \
@@ -427,11 +437,13 @@ builder_end ()
 # Same as builder_begin, but to target Android with a specific ABI
 # $1: ABI name (e.g. armeabi)
 # $2: Build directory
-# $3: Optional Makefile name
+# $3: Optional llvm version
+# $4: Optional Makefile name
 builder_begin_android ()
 {
     local ARCH ABI PLATFORM BUILDDIR DSTDIR SYSROOT CFLAGS
     local CRTBEGIN_SO_O CRTEND_SO_O CRTBEGIN_EXE_SO CRTEND_SO_O
+    local BINPREFIX GCC_TOOLCHAIN LLVM_TRIPLE
     if [ -z "$NDK_DIR" ]; then
         panic "NDK_DIR is not defined!"
     elif [ ! -d "$NDK_DIR/platforms" ]; then
@@ -442,7 +454,14 @@ builder_begin_android ()
     PLATFORM=${2##android-}
     SYSROOT=$NDK_DIR/platforms/android-$PLATFORM/arch-$ARCH
 
-    BINPREFIX=$NDK_DIR/$(get_default_toolchain_binprefix_for_arch $ARCH)
+    if [ -z "$3" ]; then
+        BINPREFIX=$NDK_DIR/$(get_default_toolchain_binprefix_for_arch $ARCH)
+    else
+        BINPREFIX=$NDK_DIR/$(get_llvm_toolchain_binprefix $3)
+        GCC_TOOLCHAIN=`dirname $NDK_DIR/$(get_default_toolchain_binprefix_for_arch $ARCH)`
+        GCC_TOOLCHAIN=`dirname $GCC_TOOLCHAIN`
+    fi
+
     SYSROOT=$NDK_DIR/$(get_default_platform_sysroot_for_arch $ARCH)
 
     CRTBEGIN_EXE_O=$SYSROOT/usr/lib/crtbegin_dynamic.o
@@ -457,9 +476,29 @@ builder_begin_android ()
         CRTEND_SO_O=$CRTEND_EXE_O
     fi
 
-    builder_begin "$2" "$3"
+    builder_begin "$2" "$4"
     builder_set_prefix "$ABI "
-    builder_set_binprefix "$BINPREFIX"
+    if [ -z "$3" ]; then
+        builder_set_binprefix "$BINPREFIX"
+    else
+        builder_set_binprefix_llvm "$BINPREFIX"
+        case $ABI in
+            armeabi)
+                LLVM_TRIPLE=armv5te-none-linux-androideabi
+                ;;
+            armeabi-v7a)
+                LLVM_TRIPLE=armv7-none-linux-androideabi
+                ;;
+            x86)
+                LLVM_TRIPLE=i686-none-linux-android
+                ;;
+            mips)
+                LLVM_TRIPLE=mipsel-none-linux-android
+                ;;
+        esac
+        builder_cflags "-target $LLVM_TRIPLE -gcc-toolchain $GCC_TOOLCHAIN"
+        builder_ldflags "-target $LLVM_TRIPLE -gcc-toolchain $GCC_TOOLCHAIN"
+    fi
 
     builder_cflags "--sysroot=$SYSROOT"
     builder_cxxflags "--sysroot=$SYSROOT"

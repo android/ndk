@@ -36,6 +36,9 @@ toolchain binaries for all target architectures.
 By default, this will try with the current NDK directory, unless
 you use the --ndk-dir=<path> option.
 
+If you want use clang to rebuild the binaries, please
+use --llvm-version=<ver> option.
+
 The output will be placed in appropriate sub-directories of
 <ndk>/$GABIXX_SUBDIR, but you can override this with the --out-dir=<path>
 option.
@@ -62,6 +65,9 @@ register_var_option "--no-makefile" NO_MAKEFILE "Do not use makefile to speed-up
 
 VISIBLE_LIBGABIXX_STATIC=
 register_var_option "--visible-libgabixx-static" VISIBLE_LIBGABIXX_STATIC "Do not use hidden visibility for libgabi++_static.a"
+
+LLVM_VERSION=
+register_var_option "--llvm-version=<ver>" LLVM_VERSION "Specify LLVM version"
 
 register_jobs_option
 
@@ -133,7 +139,7 @@ build_gabixx_libs_for_abi ()
 
     mkdir -p "$DSTDIR"
 
-    builder_begin_android $ABI "$BUILDDIR" "$MAKEFILE"
+    builder_begin_android $ABI "$BUILDDIR" "$LLVM_VERSION" "$MAKEFILE"
     builder_set_srcdir "$GABIXX_SRCDIR"
     builder_set_dstdir "$DSTDIR"
 
