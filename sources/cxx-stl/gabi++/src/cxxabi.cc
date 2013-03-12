@@ -44,7 +44,7 @@ namespace {
   }
 
   void defaultExceptionCleanupFunc(_Unwind_Reason_Code reason, _Unwind_Exception* exc) {
-    __cxa_free_exception(exc);
+    __cxa_free_exception(exc+1);
   }
 
   // Technical note:
@@ -281,8 +281,7 @@ namespace __cxxabiv1 {
     if (exceptionObject != NULL)
     {
       __cxa_exception* header =
-          reinterpret_cast<__cxa_exception*>(
-              reinterpret_cast<_Unwind_Exception *>(exceptionObject)+1)-1;
+          reinterpret_cast<__cxa_exception*>(exceptionObject)-1;
       if (__sync_sub_and_fetch(&header->referenceCount, 1) == 0) {
         if (header->exceptionDestructor)
           header->exceptionDestructor(exceptionObject);
@@ -295,9 +294,8 @@ namespace __cxxabiv1 {
     if (exceptionObject != NULL)
     {
       __cxa_exception* header =
-          reinterpret_cast<__cxa_exception*>(
-              reinterpret_cast<_Unwind_Exception *>(exceptionObject)+1)-1;
-        __sync_add_and_fetch(&header->referenceCount, 1);
+          reinterpret_cast<__cxa_exception*>(exceptionObject)-1;
+      __sync_add_and_fetch(&header->referenceCount, 1);
     }
   }
 
