@@ -271,6 +271,13 @@ for SYSTEM in $SYSTEMS; do
     run $BUILDTOOLS/build-host-sed.sh $TOOLCHAIN_FLAGS
     fail_panic "sed build failure!"
 
+    # ToDo: perl in windows
+    if [ "$SYSTEM" != "windows" ]; then
+        echo "Building $SYSNAME ndk-perl"
+        run $BUILDTOOLS/build-host-perl.sh $TOOLCHAIN_FLAGS "$SRC_DIR"
+        fail_panic "perl build failure!"
+    fi
+
     if [ "$SYSTEM" = "windows" ]; then
         echo "Building $SYSNAME toolbox"
         run $BUILDTOOLS/build-host-toolbox.sh $FLAGS
