@@ -127,6 +127,19 @@ list_files_under ()
     fi
 }
 
+# Returns all words in text that do not match any of the pattern
+# $1: pattern
+# $2: text
+filter_out ()
+{
+    local PATTERN="$1"
+    local TEXT="$2"
+    for pat in $PATTERN; do
+        TEXT=$(echo $TEXT | sed -e 's/'$pat' //g' -e 's/'$pat'$//g')
+    done
+    echo $TEXT
+}
+
 # Assign a value to a variable
 # $1: Variable name
 # $2: Value
@@ -1091,13 +1104,40 @@ get_prebuilt_host_exe_ext ()
     fi
 }
 
+# Find all archs from $NDK_DIR/platforms/android-*
+# Return: the list of found arch names
+find_ndk_archs ()
+{
+    local RESULT FOUND_ARCHS
+    if [ ! -d $NDK_DIR/platforms ]; then
+        echo "ERROR: Cannot find directory '$NDK_DIR/platforms'!"
+        exit 1
+    fi
+    RESULT=$(ls $NDK_DIR/platforms/android-* | grep "arch-")
+    for arch in $RESULT; do
+        arch=$(basename $arch | sed -e 's/^arch-//')
+        FOUND_ARCHS="$FOUND_ARCHS $arch"
+    done
+    echo "$(sort_uniq $FOUND_ARCHS)"
+}
+
+# Find unknown archs from $NDK_DIR/platforms
+# Return: arch names not in ndk default archs
+find_ndk_unknown_archs()
+{
+  local FOUND_ARCHS=$(find_ndk_archs)
+  echo "$(filter_out "$DEFAULT_ARCHS" "$FOUND_ARCHS")"
+}
+
 # Convert an ABI name into an Architecture name
 # $1: ABI name
 # Result: Arch name
 convert_abi_to_arch ()
 {
     local RET
-    case $1 in
+    local ABI=$1
+    local FOUND_ARCH
+    case $ABI in
         armeabi|armeabi-v7a)
             RET=arm
             ;;
@@ -1108,8 +1148,13 @@ convert_abi_to_arch ()
             RET=mips
             ;;
         *)
-            2> echo "ERROR: Unsupported ABI name: $1, use one of: armeabi, armeabi-v7a or x86 or mips"
-            exit 1
+            FOUND_ARCH=$(echo $(find_ndk_unknown_archs) | grep $ABI)
+            if [ ! -z $FOUND_ARCH ]; then
+                RET=$ABI
+            else
+                >&2 echo "ERROR: Unsupported ABI name: $ABI, use one of: armeabi, armeabi-v7a or x86 or mips"
+                exit 1
+            fi
             ;;
     esac
     echo "$RET"
@@ -1122,7 +1167,9 @@ convert_abi_to_arch ()
 convert_arch_to_abi ()
 {
     local RET
-    case $1 in
+    local ARCH=$1
+    local FOUND_ARCH
+    case $ARCH in
         arm)
             RET=armeabi,armeabi-v7a
             ;;
@@ -1133,8 +1180,13 @@ convert_arch_to_abi ()
             RET=mips
             ;;
         *)
-            >&2 echo "ERROR: Unsupported ARCH name: $1, use one of: arm, x86, mips"
-            exit 1
+            FOUND_ARCH=$(echo $(find_ndk_unknown_archs) | grep $ARCH)
+            if [ ! -z $FOUND_ARCH ]; then
+                RET=$ARCH
+            else
+                >&2 echo "ERROR: Unsupported ARCH name: $ARCH, use one of: arm, x86, mips"
+                exit 1
+            fi
             ;;
     esac
     echo "$RET"

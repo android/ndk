@@ -446,7 +446,8 @@ builder_end ()
 # $4: Optional Makefile name
 builder_begin_android ()
 {
-    local ARCH ABI PLATFORM BUILDDIR DSTDIR SYSROOT CFLAGS
+    local ABI BUILDDIR LLVM_VERSION MAKEFILE
+    local ARCH UNKNOWN_ARCH PLATFORM SYSROOT FLAGS
     local CRTBEGIN_SO_O CRTEND_SO_O CRTBEGIN_EXE_SO CRTEND_SO_O
     local BINPREFIX GCC_TOOLCHAIN LLVM_TRIPLE
     if [ -z "$NDK_DIR" ]; then
@@ -455,14 +456,22 @@ builder_begin_android ()
         panic "Missing directory: $NDK_DIR/platforms"
     fi
     ABI=$1
+    BUILDDIR=$2
+    LLVM_VERSION=$3
+    MAKEFILE=$4
     ARCH=$(convert_abi_to_arch $ABI)
+    UNKNOWN_ARCH=$(find_ndk_unknown_archs | grep $ARCH)
     PLATFORM=${2##android-}
     SYSROOT=$NDK_DIR/platforms/android-$PLATFORM/arch-$ARCH
 
-    if [ -z "$3" ]; then
+    if [ ! -z "$UNKNOWN_ARCH" ]; then
+        LLVM_VERSION=$DEFAULT_LLVM_VERSION
+    fi
+
+    if [ -z "$LLVM_VERSION" ]; then
         BINPREFIX=$NDK_DIR/$(get_default_toolchain_binprefix_for_arch $ARCH)
     else
-        BINPREFIX=$NDK_DIR/$(get_llvm_toolchain_binprefix $3)
+        BINPREFIX=$NDK_DIR/$(get_llvm_toolchain_binprefix $LLVM_VERSION)
         GCC_TOOLCHAIN=`dirname $NDK_DIR/$(get_default_toolchain_binprefix_for_arch $ARCH)`
         GCC_TOOLCHAIN=`dirname $GCC_TOOLCHAIN`
     fi
@@ -481,9 +490,9 @@ builder_begin_android ()
         CRTEND_SO_O=$CRTEND_EXE_O
     fi
 
-    builder_begin "$2" "$4"
+    builder_begin "$BUILDDIR" "$MAKEFILE"
     builder_set_prefix "$ABI "
-    if [ -z "$3" ]; then
+    if [ -z "$LLVM_VERSION" ]; then
         builder_set_binprefix "$BINPREFIX"
     else
         builder_set_binprefix_llvm "$BINPREFIX"
@@ -500,9 +509,22 @@ builder_begin_android ()
             mips)
                 LLVM_TRIPLE=mipsel-none-linux-android
                 ;;
+            *)
+                LLVM_TRIPLE=le32-none-ndk
+                GCC_TOOLCHAIN=
+                CRTBEGIN_SO_O=
+                CRTEND_SO_O=
+                CRTBEGIN_EXE_O=
+                CRTEND_EXE_O=
+                FLAGS=-emit-llvm
+                ;;
         esac
-        builder_cflags "-target $LLVM_TRIPLE -gcc-toolchain $GCC_TOOLCHAIN"
-        builder_ldflags "-target $LLVM_TRIPLE -gcc-toolchain $GCC_TOOLCHAIN"
+        builder_cflags "-target $LLVM_TRIPLE $FLAGS"
+        builder_ldflags "-target $LLVM_TRIPLE $FLAGS"
+        if [ ! -z $GCC_TOOLCHAIN ]; then
+            builder_cflags "-gcc-toolchain $GCC_TOOLCHAIN"
+            builder_ldflags "-gcc-toolchain $GCC_TOOLCHAIN"
+        fi
     fi
 
     builder_cflags "--sysroot=$SYSROOT"
