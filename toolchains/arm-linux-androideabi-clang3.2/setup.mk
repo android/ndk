@@ -59,7 +59,7 @@ TARGET_LDFLAGS := \
     -no-canonical-prefixes
 
 TARGET_C_INCLUDES := \
-    $(SYSROOT)/usr/include
+    $(SYSROOT_INC)/usr/include
 
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
     LLVM_TRIPLE := armv7-none-linux-androideabi

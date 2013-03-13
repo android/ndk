@@ -31,7 +31,7 @@ TARGET_CFLAGS := \
     -funwind-tables
 
 TARGET_C_INCLUDES := \
-    $(SYSROOT)/usr/include
+    $(SYSROOT_INC)/usr/include
 
 # Add and LDFLAGS for the target here
 # TARGET_LDFLAGS :=
