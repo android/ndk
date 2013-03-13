@@ -467,6 +467,15 @@ for SYSTEM in $SYSTEMS; do
                 copy_prebuilt "$GNUSTL_SUBDIR/$VERSION/libs/$STL_ABI" "$GNUSTL_SUBDIR/$VERSION/libs"
             done
         done
+
+        if [ -d "$DSTDIR/$LIBPORTABLE_SUBDIR" ]; then
+            LIBPORTABLE_ABIS=$PREBUILT_ABIS
+            for LIBPORTABLE_ABI in $LIBPORTABLE_ABIS; do
+                copy_prebuilt "$LIBPORTABLE_SUBDIR/libs/$LIBPORTABLE_ABI" "$LIBPORTABLE_SUBDIR/libs"
+            done
+        else
+            echo "WARNING: Could not find libportable source tree!"
+        fi
     else
         # Unpack toolchains
         for TC in $TOOLCHAINS; do

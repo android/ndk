@@ -104,6 +104,10 @@ dump "Building $ABIS gnustl binaries..."
 run $BUILDTOOLS/build-gnu-libstdc++.sh $FLAGS "$SRC_DIR"
 fail_panic "Could not build gnustl!"
 
+dump "Building $ABIS libportable binaries..."
+run $BUILDTOOLS/build-build-libportable.sh $FLAGS
+fail_panic "Could not build libportable!"
+
 if [ "$PACKAGE_DIR" ]; then
     dump "Done, see $PACKAGE_DIR"
 else

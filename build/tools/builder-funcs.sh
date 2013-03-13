@@ -268,6 +268,11 @@ builder_sources ()
                 cc=$_BUILD_CXX
                 cflags="$cflags $_BUILD_CXXFLAGS"
                 ;;
+            *.S|*.s)
+                obj=${obj%%.$obj}
+                text="ASM"
+                cc=$_BUILD_CC
+                ;;
             *)
                 echo "Unknown source file extension: $obj"
                 exit 1
