@@ -406,6 +406,7 @@ if [ -z "$PREBUILT_NDK" ]; then
         for VERSION in $DEFAULT_GCC_VERSION_LIST; do
             unpack_prebuilt gnu-libstdc++-libs-$VERSION-$ABI "$REFERENCE"
         done
+        unpack_prebuilt libportable-libs-$ABI "$REFERENCE"
     done
 fi
 
@@ -467,6 +468,15 @@ for SYSTEM in $SYSTEMS; do
                 copy_prebuilt "$GNUSTL_SUBDIR/$VERSION/libs/$STL_ABI" "$GNUSTL_SUBDIR/$VERSION/libs"
             done
         done
+
+        if [ -d "$DSTDIR/$LIBPORTABLE_SUBDIR" ]; then
+            LIBPORTABLE_ABIS=$PREBUILT_ABIS
+            for LIBPORTABLE_ABI in $LIBPORTABLE_ABIS; do
+                copy_prebuilt "$LIBPORTABLE_SUBDIR/libs/$LIBPORTABLE_ABI" "$LIBPORTABLE_SUBDIR/libs"
+            done
+        else
+            echo "WARNING: Could not find libportable source tree!"
+        fi
     else
         # Unpack toolchains
         for TC in $TOOLCHAINS; do

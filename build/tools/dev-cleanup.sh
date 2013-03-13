@@ -45,6 +45,7 @@ rm -rf $DIR/$GABIXX_SUBDIR/libs
 for VERSION in $DEFAULT_GCC_VERSION_LIST; do
     rm -rf $DIR/$GNUSTL_SUBDIR/$VERSION
 done
+rm -rf $DIR/$LIBPORTABLE/libs
 
 rm -f $DIR/ndk-stack*
 
