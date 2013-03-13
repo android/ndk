@@ -284,11 +284,11 @@ CLEAN_OBJS_DIRS     += $(LOCAL_OBJS_DIR)
 #
 
 # If LOCAL_LDLIBS contains anything like -l<library> then
-# prepend a -L$(SYSROOT)/usr/lib to it to ensure that the linker
+# prepend a -L$(SYSROOT_LINK)/usr/lib to it to ensure that the linker
 # looks in the right location
 #
 ifneq ($(filter -l%,$(LOCAL_LDLIBS)),)
-    LOCAL_LDLIBS := -L$(call host-path,$(SYSROOT)/usr/lib) $(LOCAL_LDLIBS)
+    LOCAL_LDLIBS := -L$(call host-path,$(SYSROOT_LINK)/usr/lib) $(LOCAL_LDLIBS)
 endif
 
 # When LOCAL_SHORT_COMMANDS is defined to 'true' we are going to write the
@@ -315,7 +315,7 @@ $(LOCAL_BUILT_MODULE): PRIVATE_LDLIBS  := $(LOCAL_LDLIBS) $(TARGET_LDLIBS)
 $(LOCAL_BUILT_MODULE): PRIVATE_NAME := $(notdir $(LOCAL_BUILT_MODULE))
 $(LOCAL_BUILT_MODULE): PRIVATE_CXX := $(TARGET_CXX)
 $(LOCAL_BUILT_MODULE): PRIVATE_CC := $(TARGET_CC)
-$(LOCAL_BUILT_MODULE): PRIVATE_SYSROOT := $(SYSROOT)
+$(LOCAL_BUILT_MODULE): PRIVATE_SYSROOT_LINK := $(SYSROOT_LINK)
 
 ifeq ($(call module-get-class,$(LOCAL_MODULE)),STATIC_LIBRARY)
 
