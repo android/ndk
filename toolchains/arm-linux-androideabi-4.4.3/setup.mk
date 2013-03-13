@@ -32,7 +32,7 @@ TARGET_CFLAGS := \
 TARGET_LDFLAGS :=
 
 TARGET_C_INCLUDES := \
-    $(SYSROOT)/usr/include
+    $(SYSROOT_INC)/usr/include
 
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
     TARGET_CFLAGS += -march=armv7-a \

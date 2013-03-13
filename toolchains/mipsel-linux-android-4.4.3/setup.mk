@@ -38,7 +38,7 @@ TARGET_CFLAGS := \
 TARGET_LDFLAGS :=
 
 TARGET_C_INCLUDES := \
-    $(SYSROOT)/usr/include
+    $(SYSROOT_INC)/usr/include
 
 TARGET_mips_release_CFLAGS := -O2 \
                               -g \

@@ -66,7 +66,7 @@ define cmd-build-shared-library
 $(PRIVATE_CXX) \
     -Wl,-soname,$(notdir $(LOCAL_BUILT_MODULE)) \
     -shared \
-    --sysroot=$(call host-path,$(PRIVATE_SYSROOT)) \
+    --sysroot=$(call host-path,$(PRIVATE_SYSROOT_LINK)) \
     $(PRIVATE_LINKER_OBJECTS_AND_LIBRARIES) \
     $(PRIVATE_LDFLAGS) \
     $(PRIVATE_LDLIBS) \
@@ -77,7 +77,7 @@ define cmd-build-executable
 $(PRIVATE_CXX) \
     -Wl,--gc-sections \
     -Wl,-z,nocopyreloc \
-    --sysroot=$(call host-path,$(PRIVATE_SYSROOT)) \
+    --sysroot=$(call host-path,$(PRIVATE_SYSROOT_LINK)) \
     $(PRIVATE_LINKER_OBJECTS_AND_LIBRARIES) \
     $(PRIVATE_LDFLAGS) \
     $(PRIVATE_LDLIBS) \

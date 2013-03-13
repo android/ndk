@@ -39,7 +39,7 @@ TARGET_CFLAGS := \
 TARGET_LDFLAGS := -no-canonical-prefixes
 
 TARGET_C_INCLUDES := \
-    $(SYSROOT)/usr/include
+    $(SYSROOT_INC)/usr/include
 
 TARGET_mips_release_CFLAGS := -O2 \
                               -g \

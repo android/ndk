@@ -89,22 +89,14 @@ endif # NDK_TOOLCHAIN is not empty
 
 TARGET_ABI := $(TARGET_PLATFORM)-$(TARGET_ARCH_ABI)
 
-# setup sysroot-related variables. The SYSROOT point to a directory
-# that contains all public header files for a given platform, plus
-# some libraries and object files used for linking the generated
-# target files properly.
+# setup sysroot variable.
+# SYSROOT_INC points to a directory that contains all public header
+# files for a given platform, and
+# SYSROOT_LIB points to libraries and object files used for linking
+# the generated target files properly.
 #
-SYSROOT := $(NDK_PLATFORMS_ROOT)/$(TARGET_PLATFORM)/arch-$(TARGET_ARCH)
-
-TARGET_CRTBEGIN_STATIC_O  := $(SYSROOT)/usr/lib/crtbegin_static.o
-TARGET_CRTBEGIN_DYNAMIC_O := $(SYSROOT)/usr/lib/crtbegin_dynamic.o
-TARGET_CRTEND_O           := $(SYSROOT)/usr/lib/crtend_android.o
-
-# crtbegin_so.o and crtend_so.o are not available for all platforms, so
-# only define them if they are in the sysroot
-#
-TARGET_CRTBEGIN_SO_O := $(strip $(wildcard $(SYSROOT)/usr/lib/crtbegin_so.o))
-TARGET_CRTEND_SO_O   := $(strip $(wildcard $(SYSROOT)/usr/lib/crtend_so.o))
+SYSROOT_INC := $(NDK_PLATFORMS_ROOT)/$(TARGET_PLATFORM)/arch-$(TARGET_ARCH)
+SYSROOT_LINK := $(SYSROOT_INC)
 
 TARGET_PREBUILT_SHARED_LIBRARIES :=
 
@@ -127,17 +119,17 @@ TOOLCHAIN_PREBUILT_ROOT := $(call host-prebuilt-tag,$(TOOLCHAIN_ROOT))
 TOOLCHAIN_PREFIX := $(call merge,-,$(call chop,$(call split,-,$(TOOLCHAIN_NAME))))-
 TOOLCHAIN_PREFIX := $(TOOLCHAIN_PREBUILT_ROOT)/bin/$(TOOLCHAIN_PREFIX)
 
-# Default build commands, can be overriden by the toolchain's setup script
-include $(BUILD_SYSTEM)/default-build-commands.mk
-
-# now call the toolchain-specific setup script
-include $(NDK_TOOLCHAIN.$(TARGET_TOOLCHAIN).setup)
-
 # We expect the gdbserver binary for this toolchain to be located at its root.
 TARGET_GDBSERVER := $(NDK_ROOT)/prebuilt/android-$(TARGET_ARCH)/gdbserver/gdbserver
 
 # compute NDK_APP_DST_DIR as the destination directory for the generated files
 NDK_APP_DST_DIR := $(NDK_APP_PROJECT_PATH)/libs/$(TARGET_ARCH_ABI)
+
+# Default build commands, can be overriden by the toolchain's setup script
+include $(BUILD_SYSTEM)/default-build-commands.mk
+
+# now call the toolchain-specific setup script
+include $(NDK_TOOLCHAIN.$(TARGET_TOOLCHAIN).setup)
 
 clean-installed-binaries::
 
@@ -166,7 +158,7 @@ installed_modules: $(NDK_APP_GDBSETUP)
 
 $(NDK_APP_GDBSETUP): PRIVATE_DST := $(NDK_APP_GDBSETUP)
 $(NDK_APP_GDBSETUP): PRIVATE_SOLIB_PATH := $(TARGET_OUT)
-$(NDK_APP_GDBSETUP): PRIVATE_SRC_DIRS := $(SYSROOT)/usr/include
+$(NDK_APP_GDBSETUP): PRIVATE_SRC_DIRS := $(SYSROOT_INC)/usr/include
 
 $(NDK_APP_GDBSETUP):
 	@ $(HOST_ECHO) "Gdbsetup       : $(call pretty-dir,$(PRIVATE_DST))"
