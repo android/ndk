@@ -1,6 +1,272 @@
 <html><body><pre>Android NDK ChangeLog:
 
 -------------------------------------------------------------------------------
+android-ndk-r8e
+
+IMPORTANT CHANGES:
+
+- NDK now delivers additional 64-bit host toolchain set (package name suffix
+  *-x86_64.*)
+  1. The ndk-build script uses 64-bit toolchain if it's present and your OS
+     supports it.  If you install both 32-bit and 64-bit toolchain on 64-bit
+     OS, you may export NDK_HOST_32BIT=1 or add it to the command-line to
+     always use the 32-bit host toolchain.
+  2. For standalone: add to make-standalone-toolchain.sh "--system=linux-x86_64"
+     on Linux or "--system=darwin-x86_64" on MacOSX to generate 64-bit host
+     toolchain instead of the default 32-bit
+
+  See NDK-BUILD.html
+
+- Added Clang 3.2 compiler.  Since GCC 4.6 is still the default, you need to
+  explicitly enable it:
+  1. For ndk-build: Either export NDK_TOOLCHAIN_VERSION=clang3.2 (or
+     NDK_TOOLCHAIN_VERSION=clang which picks the most recent among the
+     clang compilers in the package) or add it in Application.mk.
+  2. For standalone: Add "--llvm-version=3.2" to make-standalone-toolchain.sh
+     and replace CC and CXX in your makefile with &lt;tool-path&gt;/bin/clang
+     and &lt;tool-path&gt;/bin/clang++.
+
+- Added static code analyzer for Linux/MacOSX hosts
+  1. For ndk-build, either export NDK_ANALYZE=1 or add it to the command-line.
+  2. For standalone, set CC=/path/to/standalone/bin/&lt;arch&gt;/analyzer
+     and CC=/path/to/standalone/bin/&lt;arch&gt;/analyzer++
+
+  This feature is experimental now but welcome to try and report issues.
+
+- Added MCLinker for for Linux/MacOSX hosts.  Since ld.gold is the default
+  where available, you need to add -fuse-ld=mcld in LOCAL_LDFLAGS or
+  APP_LDFLAGS to explicitly enable it.
+
+  This feature is experimental now but welcome to try and report issues.
+  Please find project page: https://code.google.com/p/mclinker/
+
+- Enabled OpenMP for GCC 4.4.3/4.6/4.7:  Add the following flags
+     LOCAL_CFLAGS += -fopenmp
+     LOCAL_LDFLAGS += -fopenmp
+
+  Please find examples in tests/device/test-openmp
+
+- ndk-build now uses topological sort for module dependencies, ie.
+  it automatically sorts out the order of libraries specified in
+  LOCAL_STATIC_LIBRARIES, LOCAL_WHOLE_STATIC_LIBRARIES and
+  LOCAL_SHARED_LIBRARIES.
+
+  See http://b.android.com/39378
+  and an example in tests/build/topological-sort.
+
+
+IMPORTANT BUG FIXES:
+
+- Fixed build script to build all toolchains in -O2.  Toolchains
+  in previous releases were incorrectly built without optimization.
+
+- Fixed build script which unconditionally builds Clang/llvm for MacOSX
+  in 64-bit
+
+- Fixed GCC 4.6/4.7 ICE gen_thumb_movhi_clobber at config/arm/arm.md:5832
+  See http://b.android.com/52732
+
+- Fixed GCC/ARM 4.6/4.7 fails to link code using 64-bit atomic built-in
+  See http://b.android.com/41297
+
+- Fixed GCC 4.7 linker error reads like
+  .../arm-linux-androideabi/bin/ld: error: DIV usage mismatch between
+  out/target/product/generic/obj/STATIC_LIBRARIES/ds_intermediates/ds.a(ak.o)
+  and output
+
+  See http://sourceware.org/ml/binutils/2012-12/msg00202.html
+
+- Fixed GCC 4.7 ICE in build_data_member_initialization, at
+  cp/semantics.c:5790
+
+- Fixed GCC 4.7 ICE in redirect_eh_edge_1, at tree-eh.c:2214
+  See http://b.android.com/52909
+
+- Fixed a GCC 4.7 segfault
+  See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=55245
+
+- Fixed to &lt;chrono&gt; clock resolution and enable steady_clock
+  See http://b.android.com/39680
+
+- Fixed to enable _GLIBCXX_HAS_GTHREADS for GCC 4.7 libstdc++
+  See http://b.android.com/41770 and http://b.android.com/41859
+
+- Fixed X86 MXX/SSE code fails to link due to missing posix_memalign
+  See https://android-review.googlesource.com/#/c/51872
+
+- Fixed GCC4.7/X86 segfault in i386.c distance_non_agu_define_in_bb()
+  See https://android-review.googlesource.com/#/c/50383
+
+- Fixed GCC4.7/X86 to resotre earlier cmov behavior
+  See http://gcc.gnu.org/viewcvs?view=revision&revision=193554
+
+- More fixes to handle NULL return value of setlocale() in
+  libstdc++/GCC4.7
+  See http://b.android.com/46718
+
+- Fixed ld.gold runtime undefined reference to __exidx_start/_end
+  See https://android-review.googlesource.com/#/c/52134
+
+- Fixed Clang3.1 ICE using Eigen library
+  See http://b.android.com/41246
+
+- Fixed Clang3.1 ICE including &lt;chrono&gt; in C++11 mode
+  See http://b.android.com/39600
+
+- Fixed Clang3.1 ICE when generating object code for a method
+  call to a uniform initialized rvalue
+  See http://b.android.com/41387
+
+- Fixed Clang3.1/X86 stack realignment
+  See https://android-review.googlesource.com/#/c/52154
+
+- Fixed GDB SIGILL when debugging on platform 4.1.2
+  See http://b.android.com/40941
+
+- Fixed GDB cannot set "source:line" breakpoints when symbols contain
+  frankenpaths
+  See http://b.android.com/42448
+
+- Fixed GDB read_program_header for MIPS PIE executables
+  See https://android-review.googlesource.com/#/c/49592
+
+- Fixed STLport segfault in uncaught_exception()
+  See https://android-review.googlesource.com/#/c/50236
+
+- Fixed STLport Bus error in exception handling due
+  to unaligned access of DW_EH_PE_udata2, 4 and 8.
+
+- Fixed Gabi++ nothrow new[] infinite recursion.
+  See http://b.android.com/52833
+
+- Fixed Gabi++ wrong offset to EH pointer
+  See https://android-review.googlesource.com/#/c/53446
+
+- Removed Gabi++ redundant free on exception object
+  See https://android-review.googlesource.com/#/c/53447
+
+
+OTHER BUG FIXES:
+
+- Fix NDK headers
+  1. Remove redundant definitions of size_t, ssize_t, and ptrdiff_t
+  2. Fixed MIPS and ARM fenv.h
+  3. Fixed stddef.h to not re-define offsetof already exists
+     in toolchain
+  4. Fixed elf.h to contain Elf32_auxv_t and Elf64_auxv_t
+     See http://b.android.com/38441
+  5. Fixed the #ifdef C++ in OpenSLES_AndroidConfiguration.h
+     See http://b.android.com/53163
+
+- Fixed STLport to abort after OOM instead of (silent) exit
+
+- Fixed 'system' and 'Gabi++' headers to be able to compile
+  with API level &lt; 9
+
+- Fixed cpufeatures to not parse /proc/self/auxv
+  See http://b.android.com/43055
+
+- Fixed ld.gold to not depending on host libstdc++, and in case
+  of windows, library libgcc_sjlj_1.dll
+
+- Fixed Clang3.1 which emits inconsistent register list in .vsave
+  and fails assembler. eg.
+   .vsave  {d8, d9, d10, d11, d12, d13, d14, s20, s21, s22}
+  See https://android-review.googlesource.com/#/c/49930
+
+- Fixed Clang3.1 to be able to compile libgabi++ and pass test-stlport
+  on MIPS
+  See https://android-review.googlesource.com/#/c/51961
+
+- Fixed Clang3.1 to only enable exception by default for C++,
+  not for C
+
+- Misc fixes in Clang3.1 to pass most GNU exception tests
+
+- Fixed script clang/clang++ in standalone NDK compiler to
+  detect -cc1 and don't specify "-target" when found
+
+- Fixed ndk-build to observe NDK_APP_OUT set in Application.mk
+
+
+OTHER CHANGES:
+
+- Enabled threading support in GCC/MIPS toolchain
+
+- Unhided GCC EH helpers __cxa_begin_cleanup and __cxa_type_match
+  in GNU libstdc++
+
+  See tests/build/b8247455-hidden-cxa/jni/Android.mk
+
+- Gabi++ and STLport static libraries are now built with hidden
+  visibility except for EH helpers
+
+- Added support for std::set_new_handler in Gabi++
+  See http://b.android.com/52805
+
+- Enabled FUTEX in GNU libstdc++
+
+- ndk-build no longer copies prebuilt static library to project's
+  obj/local/&lt;abi&gt;/directory
+  See http://b.android.com/40302
+
+- Removed __ARM_ARCH_5*__ from ARM toolchains/*/setup.mk
+  See http://b.android.com/21132
+
+- Built additional GNU libstdc++ libaries in thumb for ARM
+
+- Enabled MIPS floating-point madd/msub/nmadd/nmsub/recip/rsqrt
+  instructions with 32-bit FPU
+
+- Enabled graphite in GCC 4.6 and 4.7.  Allow more loop optimizations:
+  -fgraphite, -fgraphite-identity, -floop-block, -floop-flatten,
+  -floop-interchange, -floop-strip-mine, -floop-parallelize-all,
+  and -ftree-loop-linear
+
+  See http://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html
+
+- Enabled polly for clang3.1 which analyzes and optimizes memory access
+  pattern
+
+  See http://polly.llvm.org
+
+- Enabled -flto in GCC 4.7, 4.6, clang3.2 and Clang3.1 on linux (Clang LTO
+  via LLVMgold.so, ie. no MIPS because it doesn't have ld.gold)
+
+- Enabled --plugin and --plugin-opt for ld.gold in GCC 4.6/4.7
+
+- Enabled --text-reorder for ld.gold in GCC 4.7
+
+- GNU libstdc++ is now configured with _GLIBCXX_USE_C99_MATH which will undef
+  isinf, etc (*1), in bionic header.  If you have code which does the following
+     #include <math.h>
+       ... use isinf
+     #include <cmath>
+     #include <math.h>
+       ... use isinf // fails
+  The 2nd use of isinf may fail because cmath undefined isinf
+
+  (*1) Math macro in bionic undefined by cmath: fpclassify, isfinite, isinf,
+       isnan, isnormal, isgreater, isgreaterequal, isless, islessequal,
+       islessgreater, isunordered, signbit
+
+- Added APP_LDFLAGS.  See ANDROID-MK.html.
+
+- Allow NDK_LOG=0, NDK_HOST_32BIT=0 to disable NDK_LOG and host 32-bit toolchain,
+  respectively.
+
+- Changed the default GCC/X86 -march=/-mtune= from pentiumpro/generic to i686/atom
+
+- Misc toolchain build script enhancements:
+  1. Fixed a race condition in build-gcc.sh mingw build which used to prevent
+     high degree of parallel build
+  2. build-gabi++.sh and build-stlport.sh can now run from NDK package
+     See http://b.android.com/52835
+  3. Fixed run-tests.sh in MSys
+  4. Better 64-bit host toolchain and canadian build supports
+
+
+-------------------------------------------------------------------------------
 android-ndk-r8d
 
 IMPORTANT CHANGES:
@@ -27,7 +293,7 @@ IMPORTANT CHANGES:
   This feature is experimental now and works better with GCC 4.6/4.7
   than with GCC 4.4.3 and clang3.1.  Welcome to try and report issues.
 
-- Add -mstack-protector-guard option for x86 to choose between "global"
+- Add -mstack-protector-guard= option for x86 to choose between "global"
   (default, compatible with older bionic) and "tls" (new %gs:20) for
   -fstack-protector, -fstack-protector-all, and -fstack-protector-strong
   (GCC 4.6+).  Note that this alone doesn't enable any -fstack-protector*
@@ -91,7 +357,7 @@ OTHER BUG FIXES:
   1. Fixed __WINT_TYPE__ and wint_t to be the same type
   2. Corrected typo in &lt;android/bitmap.h&gt;
      See http://code.google.com/p/android/issues/detail?id=15134
-  3. Corrected typo in &lt;errono.h&gt;
+  3. Corrected typo in &lt;errno.h&gt;
      See http://code.google.com/p/android/issues/detail?id=15134
   4. Check the presence of __STDC_VERSION__ in &lt;sys/cdefs.h&gt;
      See http://code.google.com/p/android/issues/detail?id=14627
