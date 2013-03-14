@@ -428,6 +428,66 @@ include $(BUILD_SYSTEM)/definitions.mk
 
 # ====================================================================
 #
+# Read all platform-specific configuration files.
+#
+# Each platform must be located in build/platforms/android-<apilevel>
+# where <apilevel> corresponds to an API level number, with:
+#   3 -> Android 1.5
+#   4 -> next platform release
+#
+# ====================================================================
+
+# The platform files were moved in the Android source tree from
+# $TOP/ndk/build/platforms to $TOP/development/ndk/platforms. However,
+# the official NDK release packages still place them under the old
+# location for now, so deal with this here
+#
+NDK_PLATFORMS_ROOT := $(strip $(NDK_PLATFORMS_ROOT))
+ifndef NDK_PLATFORMS_ROOT
+    NDK_PLATFORMS_ROOT := $(strip $(wildcard $(NDK_ROOT)/platforms))
+    ifndef NDK_PLATFORMS_ROOT
+        NDK_PLATFORMS_ROOT := $(strip $(wildcard $(NDK_ROOT)/build/platforms))
+    endif
+
+    ifndef NDK_PLATFORMS_ROOT
+        $(call __ndk_info,Could not find platform files (headers and libraries))
+        $(if $(strip $(wildcard $(NDK_ROOT)/RELEASE.TXT)),\
+            $(call __ndk_info,Please define NDK_PLATFORMS_ROOT to point to a valid directory.)\
+        ,\
+            $(call __ndk_info,Please run build/tools/build-platforms.sh to build the corresponding directory.)\
+        )
+        $(call __ndk_error,Aborting)
+    endif
+
+    $(call ndk_log,Found platform root directory: $(NDK_PLATFORMS_ROOT))
+endif
+ifeq ($(strip $(wildcard $(NDK_PLATFORMS_ROOT)/android-*)),)
+    $(call __ndk_info,Your NDK_PLATFORMS_ROOT points to an invalid directory)
+    $(call __ndk_info,Current value: $(NDK_PLATFORMS_ROOT))
+    $(call __ndk_error,Aborting)
+endif
+
+NDK_ALL_PLATFORMS := $(strip $(notdir $(wildcard $(NDK_PLATFORMS_ROOT)/android-*)))
+$(call ndk_log,Found supported platforms: $(NDK_ALL_PLATFORMS))
+
+$(foreach _platform,$(NDK_ALL_PLATFORMS),\
+  $(eval include $(BUILD_SYSTEM)/add-platform.mk)\
+)
+
+# we're going to find the maximum platform number of the form android-<number>
+# ignore others, which could correspond to special and experimental cases
+NDK_ALL_PLATFORM_LEVELS := $(filter android-%,$(NDK_ALL_PLATFORMS))
+NDK_ALL_PLATFORM_LEVELS := $(patsubst android-%,%,$(NDK_ALL_PLATFORM_LEVELS))
+$(call ndk_log,Found stable platform levels: $(NDK_ALL_PLATFORM_LEVELS))
+
+NDK_MAX_PLATFORM_LEVEL := 3
+$(foreach level,$(NDK_ALL_PLATFORM_LEVELS),\
+  $(eval NDK_MAX_PLATFORM_LEVEL := $$(call max,$$(NDK_MAX_PLATFORM_LEVEL),$$(level)))\
+)
+$(call ndk_log,Found max platform level: $(NDK_MAX_PLATFORM_LEVEL))
+
+# ====================================================================
+#
 # Read all toolchain-specific configuration files.
 #
 # Each toolchain must have a corresponding config.mk file located
@@ -444,6 +504,12 @@ include $(BUILD_SYSTEM)/definitions.mk
 
 # the build script to include in each toolchain config.mk
 ADD_TOOLCHAIN := $(BUILD_SYSTEM)/add-toolchain.mk
+
+# the list of known values
+NDK_KNOWN_ABIS     := armeabi armeabi-v7a x86 mips
+NDK_KNOWN_ARCHS    := arm x86 mips
+_archs := $(sort $(strip $(notdir $(wildcard $(NDK_PLATFORMS_ROOT)/android-*/arch-*))))
+NDK_FOUND_ARCHS    := $(_archs:arch-%=%)
 
 # the list of all toolchains in this NDK
 NDK_ALL_TOOLCHAINS :=
@@ -506,64 +572,4 @@ $(call ndk_log, This NDK supports the following toolchains and target ABIs:)
 $(foreach tc,$(NDK_ALL_TOOLCHAINS),\
     $(call ndk_log, $(space)$(space)$(tc):  $(NDK_TOOLCHAIN.$(tc).abis))\
 )
-
-# ====================================================================
-#
-# Read all platform-specific configuration files.
-#
-# Each platform must be located in build/platforms/android-<apilevel>
-# where <apilevel> corresponds to an API level number, with:
-#   3 -> Android 1.5
-#   4 -> next platform release
-#
-# ====================================================================
-
-# The platform files were moved in the Android source tree from
-# $TOP/ndk/build/platforms to $TOP/development/ndk/platforms. However,
-# the official NDK release packages still place them under the old
-# location for now, so deal with this here
-#
-NDK_PLATFORMS_ROOT := $(strip $(NDK_PLATFORMS_ROOT))
-ifndef NDK_PLATFORMS_ROOT
-    NDK_PLATFORMS_ROOT := $(strip $(wildcard $(NDK_ROOT)/platforms))
-    ifndef NDK_PLATFORMS_ROOT
-        NDK_PLATFORMS_ROOT := $(strip $(wildcard $(NDK_ROOT)/build/platforms))
-    endif
-
-    ifndef NDK_PLATFORMS_ROOT
-        $(call __ndk_info,Could not find platform files (headers and libraries))
-        $(if $(strip $(wildcard $(NDK_ROOT)/RELEASE.TXT)),\
-            $(call __ndk_info,Please define NDK_PLATFORMS_ROOT to point to a valid directory.)\
-        ,\
-            $(call __ndk_info,Please run build/tools/build-platforms.sh to build the corresponding directory.)\
-        )
-        $(call __ndk_error,Aborting)
-    endif
-
-    $(call ndk_log,Found platform root directory: $(NDK_PLATFORMS_ROOT))
-endif
-ifeq ($(strip $(wildcard $(NDK_PLATFORMS_ROOT)/android-*)),)
-    $(call __ndk_info,Your NDK_PLATFORMS_ROOT points to an invalid directory)
-    $(call __ndk_info,Current value: $(NDK_PLATFORMS_ROOT))
-    $(call __ndk_error,Aborting)
-endif
-
-NDK_ALL_PLATFORMS := $(strip $(notdir $(wildcard $(NDK_PLATFORMS_ROOT)/android-*)))
-$(call ndk_log,Found supported platforms: $(NDK_ALL_PLATFORMS))
-
-$(foreach _platform,$(NDK_ALL_PLATFORMS),\
-  $(eval include $(BUILD_SYSTEM)/add-platform.mk)\
-)
-
-# we're going to find the maximum platform number of the form android-<number>
-# ignore others, which could correspond to special and experimental cases
-NDK_ALL_PLATFORM_LEVELS := $(filter android-%,$(NDK_ALL_PLATFORMS))
-NDK_ALL_PLATFORM_LEVELS := $(patsubst android-%,%,$(NDK_ALL_PLATFORM_LEVELS))
-$(call ndk_log,Found stable platform levels: $(NDK_ALL_PLATFORM_LEVELS))
-
-NDK_MAX_PLATFORM_LEVEL := 3
-$(foreach level,$(NDK_ALL_PLATFORM_LEVELS),\
-  $(eval NDK_MAX_PLATFORM_LEVEL := $$(call max,$$(NDK_MAX_PLATFORM_LEVEL),$$(level)))\
-)
-$(call ndk_log,Found max platform level: $(NDK_MAX_PLATFORM_LEVEL))
 
