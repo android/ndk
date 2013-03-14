@@ -7,6 +7,7 @@ int main (int argc, char *argv[])
 {
     int nthreads, tid;
     printf("SC_NPROCESSORS_ONLN: %d\n", sysconf (_SC_NPROCESSORS_ONLN));
+    printf("SC_NPROCESSORS_CONF: %d\n", sysconf (_SC_NPROCESSORS_CONF));
   #pragma omp parallel default(shared) private(nthreads, tid)
     /* Fork a team of threads giving them their own copies of variables */
     {
