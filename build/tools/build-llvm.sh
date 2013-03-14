@@ -353,8 +353,10 @@ for i in $UNUSED_LLVM_EXECUTABLES; do
 done
 
 test -z "$STRIP" && STRIP=strip
-$STRIP $TOOLCHAIN_BUILD_PREFIX/bin/*
-$STRIP $TOOLCHAIN_BUILD_PREFIX/lib/*
+find $TOOLCHAIN_BUILD_PREFIX/bin -maxdepth 1 -type f -exec $STRIP {} \;
+# Note that MacOSX strip generate the follow error on .dylib:
+# "symbols referenced by indirect symbol table entries that can't be stripped "
+find $TOOLCHAIN_BUILD_PREFIX/lib -maxdepth 1 -type f \( -name "*.dll" -o -name "*.so" \) -exec $STRIP {} \;
 
 # copy to toolchain path
 run copy_directory "$TOOLCHAIN_BUILD_PREFIX" "$TOOLCHAIN_PATH"

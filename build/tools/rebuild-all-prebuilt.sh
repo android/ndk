@@ -102,12 +102,12 @@ if [ "$DARWIN_SSH" ]; then
     HOST_FLAGS=$HOST_FLAGS" --darwin-ssh=$DARWIN_SSH"
 fi
 
-$PROGDIR/build-host-prebuilts.sh $HOST_FLAGS "$SRC_DIR"
-fail_panic "Could not build host prebuilts!"
 if [ "$ALSO_64" = "yes" -a "$TRY64" != "yes" ] ; then
     $PROGDIR/build-host-prebuilts.sh $HOST_FLAGS "$SRC_DIR" --try-64
     fail_panic "Could not build host prebuilts in 64-bit!"
 fi
+$PROGDIR/build-host-prebuilts.sh $HOST_FLAGS "$SRC_DIR"
+fail_panic "Could not build host prebuilts!"
 
 TARGET_FLAGS=$FLAGS
 

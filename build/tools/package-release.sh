@@ -482,8 +482,10 @@ for SYSTEM in $SYSTEMS; do
             unpack_prebuilt llvm-$LLVM_VERSION-$SYSTEM "$DSTDIR" "$DSTDIR64"
         done
 
-        # Unpack ld.mcld
-        unpack_prebuilt ld.mcld-$SYSTEM "$DSTDIR" "$DSTDIR64"
+        if [ "$SYSTEM" != "windows" ]; then
+            # Unpack ld.mcld. Todo: windows
+            unpack_prebuilt ld.mcld-$SYSTEM "$DSTDIR" "$DSTDIR64"
+        fi
 
         # Unpack prebuilt ndk-stack and other host tools
         unpack_prebuilt ndk-stack-$SYSTEM "$DSTDIR" "$DSTDIR64" "yes"
