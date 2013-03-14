@@ -48,7 +48,7 @@ int main(int argc, char * argv[])
    time_end.tv_usec = time_end.tv_usec-time_start.tv_usec;
    time_end.tv_sec = time_end.tv_sec-time_start.tv_sec;
    time_end.tv_usec += (time_end.tv_sec*1000000);
-   printf("Time of Fibonacci with OpenMP : %lf sec\n",      time_end.tv_usec / 1000000.0);
+   printf("Execution time of The Fibonacci Numbers with OpenMP : %lf sec\n", time_end.tv_usec / 1000000.0);
    for(i = 0; i < MAX; i++)
        printf("%d ", FibNumber[i]);
    printf("\n-------------------------------\n");
