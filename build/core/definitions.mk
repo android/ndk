@@ -79,8 +79,14 @@ default-c++-extensions := .cc .cp .cxx .cpp .CPP .c++ .C
 # -----------------------------------------------------------------------------
 define ev-generate-dir
 __ndk_dir := $1
-ifeq (,$$(__ndk_dir_flag__$1))
-__ndk_dir_flag__$1 := true
+ifeq (,$$(__ndk_dir_flag__$$(__ndk_dir)))
+# Note that the following doesn't work because path in windows may contain
+# ':' if ndk-build is called inside jni/ directory when path is expanded
+# to full-path, eg. C:/path/to/project/jni/
+#
+#    __ndk_dir_flag__$1 := true
+#
+__ndk_dir_flag__$$(__ndk_dir) := true
 $1:
 	@$$(call host-mkdir,$$@)
 endif
