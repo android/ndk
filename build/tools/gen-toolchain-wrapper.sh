@@ -120,10 +120,17 @@ gen_wrapper_program ()
     local DST_PREFIX="$3"
     local DST_FILE="$4/${SRC_PREFIX}$PROG"
     local FLAGS=""
+    local LDL_FLAGS=""
 
     case $PROG in
-      cc|gcc) FLAGS=$FLAGS" $EXTRA_CFLAGS";;
-      c++|g++) FLAGS=$FLAGS" $EXTRA_CXXFLAGS";;
+      cc|gcc)
+          FLAGS=$FLAGS" $EXTRA_CFLAGS"
+          LDL_FLAGS="-ldl"
+          ;;
+      c++|g++)
+          FLAGS=$FLAGS" $EXTRA_CXXFLAGS"
+          LDL_FLAGS="-ldl"
+          ;;
       ar) FLAGS=$FLAGS" $EXTRA_ARFLAGS";;
       as) FLAGS=$FLAGS" $EXTRA_ASFLAGS";;
       ld|ld.bfd|ld.gold) FLAGS=$FLAGS" $EXTRA_LDFLAGS";;
@@ -136,7 +143,7 @@ gen_wrapper_program ()
     cat > "$DST_FILE" << EOF
 #!/bin/sh
 # Auto-generated, do not edit
-${DST_PREFIX}$PROG $FLAGS "\$@"
+${DST_PREFIX}$PROG $FLAGS "\$@" $LDL_FLAGS
 EOF
     chmod +x "$DST_FILE"
     log "Generating: ${SRC_PREFIX}$PROG"
