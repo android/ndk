@@ -91,6 +91,8 @@ prepare_canadian_toolchain $BUILD_OUT
 run copy_directory "$SRC_DIR/perl/perl-$PERL_VERSION" "$BUILD_OUT"
 fail_panic "Could not copy perl source $SRC_DIR/perl/perl-$PERL_VERSION to build directory $BUILD_OUT"
 
+LIBS_SEARCH=`$CC -print-search-dirs | grep libraries | sed ' s/^.*=// ' | sed ' s/:/ /g '`
+
 cd $BUILD_OUT &&
 CFLAGS=$HOST_CFLAGS" -O2 -s" &&
 run ./Configure \
@@ -99,6 +101,7 @@ run ./Configure \
     -Dcc="$CC" \
     -Dcc_as_ld \
     -Dccflags="$CFLAGS" \
+    -A prepend:libpth="$LIBS_SEARCH" \
 fail_panic "Failed to configure the perl-$PERL_VERSION build!"
 
 log "Building perl"
