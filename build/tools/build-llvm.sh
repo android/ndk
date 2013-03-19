@@ -153,7 +153,7 @@ ARCH=$HOST_ARCH
 
 # Note that the following 2 flags only apply for BUILD_CC in canadian cross build
 CFLAGS_FOR_BUILD="-O2 -I$TOOLCHAIN_BUILD_PREFIX/include"
-LDFLAGS_FOR_BUILD="-L$TOOLCHAIN_BUILD_PREFIX/lib"
+LDFLAGS_FOR_BUILD="-L$TOOLCHAIN_BUILD_PREFIX/lib -static-libgcc -static-libstdc++"
 
 CFLAGS="$CFLAGS $CFLAGS_FOR_BUILD $HOST_CFLAGS"
 CXXFLAGS="$CXXFLAGS $CFLAGS_FOR_BUILD $HOST_CFLAGS"  # polly doesn't look at CFLAGS !
