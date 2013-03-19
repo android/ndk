@@ -1,0 +1,38 @@
+From 695734ad55d58ac27b2e0e53ab039834a07b7432 Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Tue, 19 Mar 2013 10:39:35 -0700
+Subject: [PATCH 4/5] Fix --build-id to not accept next arg
+
+Only the following two forms are allowed
+  --build-id             # default to sha1
+  --build-id=style       # choose style
+
+Neither swallow next arg, which happen to be "-m" when ld.mcld is invoked
+from clang, and cause GNU linker emulation fail
+
+Change-Id: Ib7ea2da8fdca2cb028d3c6be0204fdfe5fa4ccc6
+---
+ tools/llvm-mcld/llvm-mcld.cpp | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/tools/llvm-mcld/llvm-mcld.cpp b/tools/llvm-mcld/llvm-mcld.cpp
+index 81a7f55..207f4bb 100644
+--- a/tools/llvm-mcld/llvm-mcld.cpp
++++ b/tools/llvm-mcld/llvm-mcld.cpp
+@@ -590,8 +590,12 @@ ArgExcludeLIBS("exclude-libs",
+                cl::desc("Exclude libraries from automatic export"),
+                cl::value_desc("lib1,lib2,..."));
+ 
++static cl::opt<bool>
++ArgBuildIDDefault("build-id",
++           cl::desc("Request creation of \".note.gnu.build-id\" ELF note section in sha1."));
++
+ static cl::opt<std::string>
+-ArgBuildID("build-id",
++ArgBuildID("build-id=",
+            cl::desc("Request creation of \".note.gnu.build-id\" ELF note section."),
+            cl::value_desc("style"));
+ 
+-- 
+1.8.1.3
+
