@@ -147,7 +147,7 @@ toolchain_clone ()
         run ln -s "$GITPREFIX/$1" $CLONE_DIR/$1.git
     else
         log "cloning $GITPREFIX/$1.git"
-        (cd $CLONE_DIR && run git clone $GITFLAGS $GITPREFIX/$1.git)
+        (cd $CLONE_DIR && run $GITCMD clone $GITFLAGS $GITPREFIX/$1.git)
     fi
     fail_panic "Could not clone $GITPREFIX/$1.git ?"
 }
@@ -168,16 +168,16 @@ toolchain_checkout ()
     log "Checking out $BRANCH branch of $NAME.git: $@"
     local REVISION=origin/$BRANCH
     if [ -n "$GIT_DATE" ] ; then
-        REVISION=`git $GITOPTS rev-list -n 1 --until="$GIT_DATE" $REVISION`
+        REVISION=`$GITCMD $GITOPTS rev-list -n 1 --until="$GIT_DATE" $REVISION`
     fi
-    (mkdir -p $TMPDIR/$SUBDIR/$NAME && cd $TMPDIR/$SUBDIR/$NAME && run git $GITOPTS checkout $REVISION "$@")
+    (mkdir -p $TMPDIR/$SUBDIR/$NAME && cd $TMPDIR/$SUBDIR/$NAME && run $GITCMD $GITOPTS checkout $REVISION "$@")
     fail_panic "Could not checkout $NAME / $@ ?"
     if [ "$BRANCH" = "master" ]; then
         BRANCH=
     else
         BRANCH="($BRANCH)"
     fi
-    (printf "%-32s " "toolchain/$NAME.git $BRANCH"; git $GITOPTS log -1 --format=oneline $REVISION) >> $SOURCES_LIST
+    (printf "%-32s " "toolchain/$NAME.git $BRANCH"; $GITCMD $GITOPTS log -1 --format=oneline $REVISION) >> $SOURCES_LIST
 }
 
 cd $TMPDIR
