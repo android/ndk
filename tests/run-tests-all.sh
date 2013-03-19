@@ -27,7 +27,7 @@ if [ -n $ADB_CMD ] ; then
             x86)
                     DEVICE_x86=$DEVICE
                     ;;
-            mips)
+            mips*)
                     DEVICE_mips=$DEVICE
                     ;;
             *)
