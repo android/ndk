@@ -506,7 +506,7 @@ $(call ndk_log,Found max platform level: $(NDK_MAX_PLATFORM_LEVEL))
 ADD_TOOLCHAIN := $(BUILD_SYSTEM)/add-toolchain.mk
 
 # the list of known values
-NDK_KNOWN_ABIS     := armeabi armeabi-v7a x86 mips
+NDK_KNOWN_ABIS     := armeabi-v7a armeabi x86 mips
 NDK_KNOWN_ARCHS    := arm x86 mips
 _archs := $(sort $(strip $(notdir $(wildcard $(NDK_PLATFORMS_ROOT)/android-*/arch-*))))
 NDK_FOUND_ARCHS    := $(_archs:arch-%=%)
