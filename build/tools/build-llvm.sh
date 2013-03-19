@@ -155,6 +155,11 @@ ARCH=$HOST_ARCH
 CFLAGS_FOR_BUILD="-O2 -I$TOOLCHAIN_BUILD_PREFIX/include"
 LDFLAGS_FOR_BUILD="-L$TOOLCHAIN_BUILD_PREFIX/lib"
 
+# Eliminate dependency on libgcc_s_sjlj-1.dll and libstdc++-6.dll on cross builds
+if [ "$DARWIN" = "yes" -o "$MINGW" = "yes" ]; then
+    LDFLAGS_FOR_BUILD=$LDFLAGS_FOR_BUILD" -static-libgcc -static-libstdc++"
+fi
+
 CFLAGS="$CFLAGS $CFLAGS_FOR_BUILD $HOST_CFLAGS"
 CXXFLAGS="$CXXFLAGS $CFLAGS_FOR_BUILD $HOST_CFLAGS"  # polly doesn't look at CFLAGS !
 LDFLAGS="$LDFLAGS $LDFLAGS_FOR_BUILD $HOST_LDFLAGS"
