@@ -68,7 +68,7 @@ ifndef NDK_TOOLCHAIN
         TARGET_TOOLCHAIN_BASE := $(subst $(space),-,$(call chop,$(subst -,$(space),$(TARGET_TOOLCHAIN))))
         # if TARGET_TOOLCHAIN_BASE is llvm, remove clang from NDK_TOOLCHAIN_VERSION
         ifeq ($(TARGET_TOOLCHAIN_BASE),llvm)
-            NDK_TOOLCHAIN_VERSION := $(subst clang,,$(NDK_TOOLCHAIN_VERSION))
+            override NDK_TOOLCHAIN_VERSION := $(subst clang,,$(NDK_TOOLCHAIN_VERSION))
         endif
         TARGET_TOOLCHAIN := $(TARGET_TOOLCHAIN_BASE)-$(NDK_TOOLCHAIN_VERSION)
         $(call ndk_log,Using target toolchain '$(TARGET_TOOLCHAIN)' for '$(TARGET_ARCH_ABI)' ABI (through NDK_TOOLCHAIN_VERSION))
