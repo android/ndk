@@ -91,8 +91,8 @@ fail_panic "Could not create build directory: $BUILD_DIR"
 LIBPORTABLE_SRCDIR_BASE=$ANDROID_NDK_ROOT/../development/ndk/$LIBPORTABLE_SUBDIR
 
 # Compiler flags we want to use
-LIBPORTABLE_CFLAGS="-fPIC -O2 -DANDROID -D__ANDROID__"
-LIBPORTABLE_CFLAGS=$LIBPORTABLE_CFLAGS" -I$LIBPORTABLE_SRCDIR_BASE/common/include -DHAS_NO_LOG_H"
+LIBPORTABLE_CFLAGS="-fPIC -O2 -DANDROID -D__ANDROID__" # ToDo: -ffunction-sections -fdata-sections
+LIBPORTABLE_CFLAGS=$LIBPORTABLE_CFLAGS" -I$LIBPORTABLE_SRCDIR_BASE/common/include -D__HOST__"
 LIBPORTABLE_CXXFLAGS="-fno-exceptions -fno-rtti"
 LIBPORTABLE_LDFLAGS=""
 
@@ -132,7 +132,9 @@ build_libportable_libs_for_abi ()
     builder_set_dstdir "$DSTDIR"
 
     if [ -z "$VISIBLE_LIBLIBPORTABLE_STATIC" ]; then
-        builder_cflags "$LIBPORTABLE_CFLAGS -fvisibility=hidden -fvisibility-inlines-hidden"
+        # No -fvisibility-inlines-hidden because it is for C++, and there is
+        # no C++ code in libportable
+        builder_cflags "$LIBPORTABLE_CFLAGS -fvisibility=hidden"
     else
         builder_cflags "$LIBPORTABLE_CFLAGS"
     fi
@@ -143,6 +145,13 @@ build_libportable_libs_for_abi ()
     builder_static_library libportable
 
     builder_end
+  # Extract __wrap functions and create a *.wrap file of "--wrap=symbol".
+  # This file will be passed to g++ doing the link in
+  #
+  #    g++ -Wl,@/path/to/libportable.wrap
+  #
+    nm -a $DSTDIR/libportable.a | grep -r __wrap_ | awk '{print $3}' | sed '/^$/d' | \
+        sed 's/^__wrap_//g' | sort | awk '{printf "--wrap=%s\n",$1}' > "$DSTDIR/libportable.wrap"
 }
 
 for ABI in $ABIS; do

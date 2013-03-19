@@ -54,7 +54,7 @@ TARGET_CFLAGS := \
     -fstack-protector \
     -no-canonical-prefixes
 
-TARGET_LDFLAGS := \
+TARGET_LDFLAGS += \
     -gcc-toolchain $(call host-path,$(TOOLCHAIN_PREBUILT_ROOT)) \
     -no-canonical-prefixes
 

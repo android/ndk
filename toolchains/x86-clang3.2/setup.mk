@@ -57,7 +57,7 @@ TARGET_C_INCLUDES := \
     $(SYSROOT_INC)/usr/include
 
 # Add and LDFLAGS for the target here
-TARGET_LDFLAGS := \
+TARGET_LDFLAGS += \
     -gcc-toolchain $(call host-path,$(TOOLCHAIN_PREBUILT_ROOT)) \
     -target $(LLVM_TRIPLE) \
     -no-canonical-prefixes
