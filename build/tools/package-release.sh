@@ -486,6 +486,8 @@ for SYSTEM in $SYSTEMS; do
             rm -rf $DSTDIR64/toolchains/$TC/prebuilt/${SYSTEM}_64/sysroot
             rm -rf $DSTDIR64/toolchains/$TC/prebuilt/${SYSTEM}-x86_64/sysroot
         done
+        echo "Remove ld.mcld deployed/packaged earlier by accident "
+        find $DSTDIR/toolchains $DSTDIR64/toolchains  -name "*ld.mcld*" -exec rm -f {} \;
 
         # Unpack llvm and clang
         for LLVM_VERSION in $LLVM_VERSION_LIST; do
