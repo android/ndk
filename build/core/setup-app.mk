@@ -49,6 +49,11 @@ ifndef NDK_APP_ABI
     NDK_APP_ABI := armeabi
 endif
 
+NDK_ABI_FILTER := $(strip $(NDK_ABI_FILTER))
+ifdef NDK_ABI_FILTER
+    $(eval $(NDK_ABI_FILTER))
+endif
+
 # If APP_ABI is 'all', then set it to all supported ABIs
 # Otherwise, check that we don't have an invalid value here.
 #
@@ -59,10 +64,15 @@ else
     _unknown_abis := $(strip $(filter-out $(NDK_ALL_ABIS),$(NDK_APP_ABI)))
     ifneq ($(_unknown_abis),)
         ifeq (1,$(words $(filter-out $(NDK_KNOWN_ARCHS),$(NDK_FOUND_ARCHS))))
-            $(foreach _abi,$(NDK_KNOWN_ABIS),\
-                $(eval _unknown_abis := $(subst $(_abi),,$(_unknown_abis)))\
-            )
-            _unknown_abis_prefix := $(sort $(_unknown_abis))
+            ifneq ($(filter %all,$(_unknown_abis)),)
+                _unknown_abis_prefix := $(_unknown_abis:%all=%)
+                NDK_APP_ABI := $(NDK_KNOWN_ABIS:%=$(_unknown_abis_prefix)%)
+            else
+                $(foreach _abi,$(NDK_KNOWN_ABIS),\
+                    $(eval _unknown_abis := $(subst $(_abi),,$(_unknown_abis)))\
+                )
+                _unknown_abis_prefix := $(sort $(_unknown_abis))
+            endif
             ifeq (1,$(words $(_unknown_abis_prefix)))
                 NDK_APP_ABI := $(subst $(_unknown_abis_prefix),$(filter-out $(NDK_KNOWN_ARCHS),$(NDK_FOUND_ARCHS)),$(NDK_APP_ABI))
             endif
