@@ -1,0 +1,35 @@
+From a414ed878190c6fc68f0b1362223558130c0fca6 Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Tue, 19 Mar 2013 10:42:09 -0700
+Subject: [PATCH 5/5] Fixed darwin ld.mcld GNU -m emulation fail
+
+GNU -m emulation doesn't provide OS.  If ld.mcld is built on darwin
+the OS is incorrectly set to darwin.  Force to "linux" for Android.
+
+Change-Id: Ibb394fc90f938247643f4b7ef8c02460bd175e9e
+---
+ tools/llvm-mcld/llvm-mcld.cpp | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/tools/llvm-mcld/llvm-mcld.cpp b/tools/llvm-mcld/llvm-mcld.cpp
+index 207f4bb..49fe328 100644
+--- a/tools/llvm-mcld/llvm-mcld.cpp
++++ b/tools/llvm-mcld/llvm-mcld.cpp
+@@ -991,12 +991,12 @@ static Triple ParseEmulation(const std::string& pEmulation)
+ {
+   Triple result = StringSwitch<Triple>(pEmulation)
+     .Case("armelf_linux_eabi", Triple("arm", "", "linux", "gnueabi"))
+-    .Case("elf_i386",          Triple("i386", "", "", "gnu"))
++    .Case("elf_i386",          Triple("i386", "", "linux", "gnu"))
+     .Case("elf_x86_64",        Triple("x86_64", "", "", "gnu"))
+     .Case("elf32_x86_64",      Triple("x86_64", "", "", "gnux32"))
+     .Case("elf_i386_fbsd",     Triple("i386", "", "freebsd", "gnu"))
+     .Case("elf_x86_64_fbsd",   Triple("x86_64", "", "freebsd", "gnu"))
+-    .Case("elf32ltsmip",       Triple("mipsel", "", "", "gnu"))
++    .Case("elf32ltsmip",       Triple("mipsel", "", "linux", "gnu"))
+     .Default(Triple());
+ 
+   if (result.getArch()        == Triple::UnknownArch &&
+-- 
+1.8.1.3
+

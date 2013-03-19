@@ -1,23 +1,37 @@
-From fb2eb10813621ec22963258220abd41e592fc430 Mon Sep 17 00:00:00 2001
+From 21b4a36988a3cd59fb40615eaec6d468d5045a1f Mon Sep 17 00:00:00 2001
 From: Andrew Hsieh <andrewhsieh@google.com>
-Date: Fri, 22 Feb 2013 12:33:36 +0800
-Subject: Compile agsint llvm 3.2
+Date: Tue, 19 Mar 2013 10:35:10 -0700
+Subject: [PATCH 2/5] Compile agsint llvm 3.2
 
 Current mclinker needs LLVM -r 173175 which contains re-org of
 some headers from since LLVM 3.2.  This patch is to roll back
 so we can build from LLVM 3.2
 
-Change-Id: I634b7b0fa085e5bdb7a0a2861c47d6063bf36d25
+Change-Id: Iea929ae893269a6f7d5293e20b9641c917ec920b
 ---
- lib/CodeGen/MCLDTargetMachine.cpp |    2 +-
- lib/CodeGen/MCLinker.cpp          |    2 +-
- lib/Target/X86/X86Emulation.cpp   |    3 +--
- lib/Target/X86/X86LDBackend.cpp   |    3 +--
- tools/llvm-mcld/llvm-mcld.cpp     |    6 +++---
- 5 files changed, 7 insertions(+), 9 deletions(-)
+ configure.ac                      | 2 +-
+ lib/CodeGen/MCLDTargetMachine.cpp | 2 +-
+ lib/CodeGen/MCLinker.cpp          | 2 +-
+ lib/Target/X86/X86Emulation.cpp   | 3 +--
+ lib/Target/X86/X86LDBackend.cpp   | 3 +--
+ tools/llvm-mcld/llvm-mcld.cpp     | 6 +++---
+ 6 files changed, 8 insertions(+), 10 deletions(-)
 
+diff --git a/configure.ac b/configure.ac
+index c56d333..70fecd4 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -101,7 +101,7 @@ AC_CHECK_HEADERS([sys/mman.h])
+ 
+ ####################
+ # Configure LLVM
+-CHECK_LLVM([3.3])
++CHECK_LLVM([3.2])
+ ENUM_MCLD_TARGETS
+ CHECK_ALONE_TARGET
+ 
 diff --git a/lib/CodeGen/MCLDTargetMachine.cpp b/lib/CodeGen/MCLDTargetMachine.cpp
-index 785ef1f..8f5d998 100644
+index 57da5b5..9afadad 100644
 --- a/lib/CodeGen/MCLDTargetMachine.cpp
 +++ b/lib/CodeGen/MCLDTargetMachine.cpp
 @@ -26,7 +26,7 @@
@@ -57,7 +71,7 @@ index 753d7cc..1e17b03 100644
    }
    else {
 diff --git a/lib/Target/X86/X86LDBackend.cpp b/lib/Target/X86/X86LDBackend.cpp
-index 85c80a7..2203499 100644
+index 87c1192..4001170 100644
 --- a/lib/Target/X86/X86LDBackend.cpp
 +++ b/lib/Target/X86/X86LDBackend.cpp
 @@ -46,8 +46,7 @@ X86GNULDBackend::X86GNULDBackend(const LinkerConfig& pConfig,
@@ -71,10 +85,10 @@ index 85c80a7..2203499 100644
      m_RelaEntrySize = 12;
      if (arch == Triple::x86)
 diff --git a/tools/llvm-mcld/llvm-mcld.cpp b/tools/llvm-mcld/llvm-mcld.cpp
-index e478729..1f77ed1 100644
+index 7a3a0c4..98bdcad 100644
 --- a/tools/llvm-mcld/llvm-mcld.cpp
 +++ b/tools/llvm-mcld/llvm-mcld.cpp
-@@ -24,9 +24,9 @@
+@@ -25,9 +25,9 @@
  
  #include <llvm/PassManager.h>
  #include <llvm/Pass.h>
@@ -85,8 +99,8 @@ index e478729..1f77ed1 100644
 +#include <llvm/DataLayout.h>
 +#include <llvm/LLVMContext.h>
  #include <llvm/ADT/Triple.h>
+ #include <llvm/ADT/StringSwitch.h>
  #include <llvm/MC/SubtargetFeature.h>
- #include <llvm/Support/CommandLine.h>
 -- 
-1.7.7.3
+1.8.1.3
 
