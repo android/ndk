@@ -98,7 +98,7 @@ fail_panic "Could not create build directory: $BUILD_DIR"
 GABIXX_SRCDIR=$ANDROID_NDK_ROOT/$GABIXX_SUBDIR
 
 # Compiler flags we want to use
-GABIXX_CFLAGS="-fPIC -O2 -DANDROID -D__ANDROID__"
+GABIXX_CFLAGS="-fPIC -O2 -DANDROID -D__ANDROID__ -ffunction-sections"
 GABIXX_CFLAGS=$GABIXX_CFLAGS" -I$GABIXX_SRCDIR/include"
 GABIXX_CXXFLAGS="-fuse-cxa-atexit -fexceptions -frtti"
 GABIXX_LDFLAGS="-ldl"

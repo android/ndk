@@ -91,7 +91,7 @@ fail_panic "Could not create build directory: $BUILD_DIR"
 LIBPORTABLE_SRCDIR_BASE=$ANDROID_NDK_ROOT/../development/ndk/$LIBPORTABLE_SUBDIR
 
 # Compiler flags we want to use
-LIBPORTABLE_CFLAGS="-fPIC -O2 -DANDROID -D__ANDROID__" # ToDo: -ffunction-sections -fdata-sections
+LIBPORTABLE_CFLAGS="-fPIC -O2 -DANDROID -D__ANDROID__ -ffunction-sections"
 LIBPORTABLE_CFLAGS=$LIBPORTABLE_CFLAGS" -I$LIBPORTABLE_SRCDIR_BASE/common/include -D__HOST__"
 LIBPORTABLE_CXXFLAGS="-fno-exceptions -fno-rtti"
 LIBPORTABLE_LDFLAGS=""
@@ -151,7 +151,8 @@ build_libportable_libs_for_abi ()
   #    g++ -Wl,@/path/to/libportable.wrap
   #
     nm -a $DSTDIR/libportable.a | grep -r __wrap_ | awk '{print $3}' | sed '/^$/d' | \
-        sed 's/^__wrap_//g' | sort | awk '{printf "--wrap=%s\n",$1}' > "$DSTDIR/libportable.wrap"
+        sed 's/_wrap_/|/' | awk -F'|' '{print $2}' | sort | uniq | \
+        awk '{printf "--wrap=%s\n",$1}' > "$DSTDIR/libportable.wrap"
 }
 
 for ABI in $ABIS; do
