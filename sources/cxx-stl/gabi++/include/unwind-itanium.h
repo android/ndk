@@ -68,8 +68,8 @@ typedef _Unwind_Reason_Code (*_Unwind_Stop_Fn) (int version,
 struct _Unwind_Exception {
   uint64_t exception_class;
   _Unwind_Exception_Cleanup_Fn exception_cleanup;
-  uint64_t private_1;
-  uint64_t private_2;
+  uint32_t private_1;
+  uint32_t private_2;
 } __attribute__((__aligned__)); // must be double-word aligned
 
 _Unwind_Reason_Code _Unwind_RaiseException(struct _Unwind_Exception*);
