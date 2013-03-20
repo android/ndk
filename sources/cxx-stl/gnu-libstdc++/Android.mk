@@ -9,7 +9,10 @@ gnustl_exported_cppflags := $(strip \
   $(if $(filter rtti,$(APP_GNUSTL_FORCE_CPP_FEATURES)),-frtti))
 
 # Include path to export
-gnustl_exported_c_includes := $(LOCAL_PATH)/$(TOOLCHAIN_VERSION)/include $(LOCAL_PATH)/$(TOOLCHAIN_VERSION)/libs/$(TARGET_ARCH_ABI)/include
+gnustl_exported_c_includes := \
+  $(LOCAL_PATH)/$(TOOLCHAIN_VERSION)/include \
+  $(LOCAL_PATH)/$(TOOLCHAIN_VERSION)/libs/$(TARGET_ARCH_ABI)/include \
+  $(LOCAL_PATH)/$(TOOLCHAIN_VERSION)/include/backward
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := gnustl_static
