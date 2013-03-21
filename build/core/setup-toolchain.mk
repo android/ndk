@@ -52,7 +52,7 @@ ifndef NDK_TOOLCHAIN
     ifdef NDK_TOOLCHAIN_VERSION
         # Replace "clang" with the most recent verion
         ifeq ($(NDK_TOOLCHAIN_VERSION),clang)
-            NDK_TOOLCHAIN_VERSION=clang$(lastword $(LLVM_VERSION_LIST))
+            override NDK_TOOLCHAIN_VERSION := clang$(lastword $(LLVM_VERSION_LIST))
         endif
         # We assume the toolchain name uses dashes (-) as separators and doesn't
         # contain any space. The following is a bit subtle, but essentially
@@ -67,10 +67,11 @@ ifndef NDK_TOOLCHAIN
         #
         TARGET_TOOLCHAIN_BASE := $(subst $(space),-,$(call chop,$(subst -,$(space),$(TARGET_TOOLCHAIN))))
         # if TARGET_TOOLCHAIN_BASE is llvm, remove clang from NDK_TOOLCHAIN_VERSION
+        VERSION := $(NDK_TOOLCHAIN_VERSION)
         ifeq ($(TARGET_TOOLCHAIN_BASE),llvm)
-            override NDK_TOOLCHAIN_VERSION := $(subst clang,,$(NDK_TOOLCHAIN_VERSION))
+            VERSION := $(subst clang,,$(NDK_TOOLCHAIN_VERSION))
         endif
-        TARGET_TOOLCHAIN := $(TARGET_TOOLCHAIN_BASE)-$(NDK_TOOLCHAIN_VERSION)
+        TARGET_TOOLCHAIN := $(TARGET_TOOLCHAIN_BASE)-$(VERSION)
         $(call ndk_log,Using target toolchain '$(TARGET_TOOLCHAIN)' for '$(TARGET_ARCH_ABI)' ABI (through NDK_TOOLCHAIN_VERSION))
     else
         $(call ndk_log,Using target toolchain '$(TARGET_TOOLCHAIN)' for '$(TARGET_ARCH_ABI)' ABI)
