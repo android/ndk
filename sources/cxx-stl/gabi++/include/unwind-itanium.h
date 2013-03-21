@@ -68,9 +68,20 @@ typedef _Unwind_Reason_Code (*_Unwind_Stop_Fn) (int version,
 struct _Unwind_Exception {
   uint64_t exception_class;
   _Unwind_Exception_Cleanup_Fn exception_cleanup;
-  uint64_t private_1;
-  uint64_t private_2;
-} __attribute__((__aligned__)); // must be double-word aligned
+  uint32_t private_1;
+  uint32_t private_2;
+}
+#if defined(__clang__) && defined(__mips__)
+// FIXME: It seems that mipsel-linux-android-gcc will use 24 as the object size
+// with or without the aligned attribute.  However, clang (mipsel) will align
+// the object size to 32 when we specify the aligned attribute, which may
+// result in some sort of incompatibility.  As a workaround, let's remove this
+// attribute when we are compiling this file for MIPS architecture with clang.
+// Add the attribute back when clang can have same behavior as gcc.
+#else
+__attribute__((__aligned__)) // must be double-word aligned
+#endif
+;
 
 _Unwind_Reason_Code _Unwind_RaiseException(struct _Unwind_Exception*);
 void _Unwind_Resume(struct _Unwind_Exception*);
