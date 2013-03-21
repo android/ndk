@@ -311,6 +311,7 @@ builder_static_library ()
         _BUILD_AR=${AR:-ar}
     fi
     builder_log "${_BUILD_PREFIX}Archive: $libname"
+    rm -f "$lib"
     builder_command ${_BUILD_AR} crs "$lib" "$_BUILD_OBJECTS"
     fail_panic "Could not archive ${_BUILD_PREFIX}$libname objects!"
 }
@@ -332,6 +333,7 @@ builder_host_static_library ()
         _BUILD_AR=${AR:-ar}
     fi
     builder_log "${_BUILD_PREFIX}Archive: $libname"
+    rm -f "$lib"
     builder_command ${_BUILD_AR} crs "$lib" "$_BUILD_OBJECTS"
     fail_panic "Could not archive ${_BUILD_PREFIX}$libname objects!"
 }
