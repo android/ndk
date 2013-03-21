@@ -134,7 +134,7 @@ build_libportable_libs_for_abi ()
     if [ -z "$VISIBLE_LIBLIBPORTABLE_STATIC" ]; then
         # No -fvisibility-inlines-hidden because it is for C++, and there is
         # no C++ code in libportable
-        builder_cflags "$LIBPORTABLE_CFLAGS -fvisibility=hidden"
+        builder_cflags "$LIBPORTABLE_CFLAGS" # ToDo: -fvisibility=hidden
     else
         builder_cflags "$LIBPORTABLE_CFLAGS"
     fi
