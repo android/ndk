@@ -46,7 +46,7 @@ ifneq ($(LOCAL_BUILT_MODULE_NOT_COPIED),true)
 $(cleantarget): PRIVATE_CLEAN_FILES := $(LOCAL_BUILT_MODULE) \
                                        $($(my)OBJS)
 else
-$(cleantarget): PRIVATE_CLEAN_FILES := ($(my)OBJS)
+$(cleantarget): PRIVATE_CLEAN_FILES := $($(my)OBJS)
 endif
 $(cleantarget)::
 	@$(HOST_ECHO) "Clean: $(PRIVATE_MODULE) $(PRIVATE_TEXT)"
