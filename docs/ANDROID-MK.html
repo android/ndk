@@ -229,12 +229,19 @@ TARGET_PLATFORM
 
 TARGET_ARCH_ABI
     Name of the target CPU+ABI when this Android.mk is parsed.
-    Two values are supported at the moment:
+    Four values are supported at the moment:
 
        armeabi
             For ARMv5TE
 
        armeabi-v7a
+            For ARMv7
+
+       x86
+            For i686
+
+       mips
+            For mips-r1
 
     NOTE: Up to Android NDK 1.6_r1, this variable was simply defined
           as 'arm'. However, the value has been redefined to better
