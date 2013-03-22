@@ -317,7 +317,7 @@ if [ "$NDK_ANALYZE" = 1 ]; then
             --use-analyzer $PROGDIR/toolchains/llvm-${DEFAULT_LLVM_VERSION}/prebuilt/$HOST_TAG/bin/${ABI}/analyzer \
             --use-cc ${TOOLCHAIN_PREFIX}gcc \
             --use-c++ ${TOOLCHAIN_PREFIX}g++ \
-            --status-bugs -v -v \
+            --status-bugs \
             $GNUMAKE -f $PROGDIR/build/core/build-local.mk "$@" APP_ABI=$ABI
     done
 else
