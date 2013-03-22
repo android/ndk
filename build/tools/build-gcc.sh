@@ -395,7 +395,10 @@ if [ "$PACKAGE_DIR" ]; then
     ARCHIVE="$TOOLCHAIN-$HOST_TAG.tar.bz2"
     SUBDIR=$(get_toolchain_install_subdir $TOOLCHAIN $HOST_TAG)
     dump "Packaging $ARCHIVE"
-    pack_archive "$PACKAGE_DIR/$ARCHIVE" "$NDK_DIR" "$SUBDIR"
+  # exlude ld.mcld
+    pack_archive "$PACKAGE_DIR/$ARCHIVE" "$NDK_DIR" "$SUBDIR" \
+        --exclude=$SUBDIR/bin/$ABI_CONFIGURE_TARGET-ld.mcld${HOST_EXE} \
+        --exclude=$SUBDIR/$ABI_CONFIGURE_TARGET/bin/ld.mcld${HOST_EXE}
 fi
 
 dump "Done."
