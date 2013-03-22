@@ -30,6 +30,7 @@
 #define __GABIXX_CXXABI_H__
 
 #include <exception>
+#include <stdint.h>
 #include <typeinfo>
 #include <unwind.h>
 
