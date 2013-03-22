@@ -56,7 +56,7 @@ typedef struct _Unwind_Control_Block _Unwind_Control_Block;
 typedef struct _Unwind_Context _Unwind_Context;
 typedef uint32_t _Unwind_EHT_Header;
 
-typedef struct _Unwind_Control_Block {
+struct _Unwind_Control_Block {
   uint64_t exception_class; // Compatible with Itanium ABI
   void (*exception_cleanup)(_Unwind_Reason_Code, _Unwind_Control_Block*);
 
@@ -85,7 +85,7 @@ typedef struct _Unwind_Control_Block {
   } pr_cache;
 
   long long int : 0;  // Force alignment of next item to 8-byte boundary
-} _Unwind_Control_Block;
+};
 
 // This makes our code more simple
 typedef _Unwind_Control_Block _Unwind_Exception;
