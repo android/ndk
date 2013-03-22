@@ -519,6 +519,8 @@ for SYSTEM in $SYSTEMS; do
     ARCHIVE=$BIN_RELEASE
     if [ "$TRY64" = "yes" ]; then
         ARCHIVE=`name64 $ARCHIVE`
+    elif [ "$SYSTEM" = "windows" ]; then
+        ARCHIVE=$ARCHIVE-x86
     fi
     case "$SYSTEM" in
         windows)
