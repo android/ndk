@@ -17,6 +17,11 @@ if [ -z "$NDK_BUILDTOOLS_PATH" ]; then
     fi
 fi
 
+# Warn about /bin/sh ins't bash.
+if [ -z "$BASH_VERSION" ] ; then
+    echo "WARNING: The shell running this script isn't bash.  Although we try to avoid bashism in scripts, things can happen."
+fi
+
 NDK_BUILDTOOLS_ABSPATH=$(cd $NDK_BUILDTOOLS_PATH && pwd)
 
 . $NDK_BUILDTOOLS_PATH/../core/ndk-common.sh
