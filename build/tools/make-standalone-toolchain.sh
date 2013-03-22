@@ -31,6 +31,9 @@ register_var_option "--toolchain=<name>" TOOLCHAIN_NAME "Specify toolchain name"
 LLVM_VERSION=
 register_var_option "--llvm-version=<ver>" LLVM_VERSION "Specify LLVM version"
 
+STL=gnustl
+register_var_option "--stl=<name>" STL "Specify C++ STL"
+
 ARCH=
 register_option "--arch=<name>" do_arch "Specify target architecture" "arm"
 do_arch () { ARCH=$1; }
@@ -292,50 +295,96 @@ dump "Copying libstdc++ headers and libraries..."
 GNUSTL_DIR=$NDK_DIR/$GNUSTL_SUBDIR/$GCC_VERSION
 GNUSTL_LIBS=$GNUSTL_DIR/libs
 
+STLPORT_DIR=$NDK_DIR/$STLPORT_SUBDIR
+STLPORT_LIBS=$STLPORT_DIR/libs
+
+case $STL in
+  gnustl|gnu)
+    STL=gnustl
+    STL_DIR=$GNUSTL_DIR
+    STL_LIBS=$GNUSTL_LIBS
+    ;;
+  stlport)
+    STL=stlport
+    STL_DIR=$STLPORT_DIR
+    STL_LIBS=$STLPORT_LIBS
+    ;;
+  *)
+    echo "Error: Invalid --stl name '$STL', use 'gnustl' or 'stlport'."
+    exit 1
+esac
+
 ABI_STL="$TMPDIR/$ABI_CONFIGURE_TARGET"
 ABI_STL_INCLUDE="$TMPDIR/include/c++/$GCC_BASE_VERSION"
-
-copy_directory "$GNUSTL_DIR/include" "$ABI_STL_INCLUDE"
 ABI_STL_INCLUDE_TARGET="$ABI_STL_INCLUDE/$ABI_CONFIGURE_TARGET"
+
 mkdir -p "$ABI_STL_INCLUDE_TARGET"
 fail_panic "Can't create directory: $ABI_STL_INCLUDE_TARGET"
-case "$ARCH" in
-    arm)
-        copy_directory "$GNUSTL_LIBS/armeabi/include/bits" "$ABI_STL_INCLUDE_TARGET/bits"
-        copy_file_list "$GNUSTL_LIBS/armeabi" "$ABI_STL/lib" "libgnustl_shared.so"
-        copy_file_list "$GNUSTL_LIBS/armeabi" "$ABI_STL/lib" "libsupc++.a"
-        cp -p "$GNUSTL_LIBS/armeabi/libgnustl_static.a" "$ABI_STL/lib/libstdc++.a"
+case "$STL" in
+    gnustl)
+        copy_directory "$GNUSTL_DIR/include" "$ABI_STL_INCLUDE"
+        case "$ARCH" in
+            arm)
+                copy_directory "$GNUSTL_LIBS/armeabi/include/bits" "$ABI_STL_INCLUDE_TARGET/bits"
+                copy_file_list "$GNUSTL_LIBS/armeabi" "$ABI_STL/lib" "libgnustl_shared.so"
+                copy_file_list "$GNUSTL_LIBS/armeabi" "$ABI_STL/lib" "libsupc++.a"
+                cp -p "$GNUSTL_LIBS/armeabi/libgnustl_static.a" "$ABI_STL/lib/libstdc++.a"
 
-        copy_directory "$GNUSTL_LIBS/armeabi/include/bits" "$ABI_STL_INCLUDE_TARGET/thumb/bits"
-        copy_file_list "$GNUSTL_LIBS/armeabi/thumb" "$ABI_STL/lib/thumb" "libgnustl_shared.so"
-        copy_file_list "$GNUSTL_LIBS/armeabi/thumb" "$ABI_STL/lib/thumb" "libsupc++.a"
-        cp -p "$GNUSTL_LIBS/armeabi/thumb/libgnustl_static.a" "$ABI_STL/lib/thumb/libstdc++.a"
+                copy_directory "$GNUSTL_LIBS/armeabi/include/bits" "$ABI_STL_INCLUDE_TARGET/thumb/bits"
+                copy_file_list "$GNUSTL_LIBS/armeabi/thumb" "$ABI_STL/lib/thumb" "libgnustl_shared.so"
+                copy_file_list "$GNUSTL_LIBS/armeabi/thumb" "$ABI_STL/lib/thumb" "libsupc++.a"
+                cp -p "$GNUSTL_LIBS/armeabi/thumb/libgnustl_static.a" "$ABI_STL/lib/thumb/libstdc++.a"
 
-        copy_directory "$GNUSTL_LIBS/armeabi-v7a/include/bits" "$ABI_STL_INCLUDE_TARGET/armv7-a/bits"
-        copy_file_list "$GNUSTL_LIBS/armeabi-v7a" "$ABI_STL/lib/armv7-a" "libgnustl_shared.so"
-        copy_file_list "$GNUSTL_LIBS/armeabi-v7a" "$ABI_STL/lib/armv7-a" "libsupc++.a"
-        cp -p "$GNUSTL_LIBS/armeabi-v7a/libgnustl_static.a" "$ABI_STL/lib/armv7-a/libstdc++.a"
+                copy_directory "$GNUSTL_LIBS/armeabi-v7a/include/bits" "$ABI_STL_INCLUDE_TARGET/armv7-a/bits"
+                copy_file_list "$GNUSTL_LIBS/armeabi-v7a" "$ABI_STL/lib/armv7-a" "libgnustl_shared.so"
+                copy_file_list "$GNUSTL_LIBS/armeabi-v7a" "$ABI_STL/lib/armv7-a" "libsupc++.a"
+                cp -p "$GNUSTL_LIBS/armeabi-v7a/libgnustl_static.a" "$ABI_STL/lib/armv7-a/libstdc++.a"
 
-        copy_directory "$GNUSTL_LIBS/armeabi-v7a/include/bits" "$ABI_STL_INCLUDE_TARGET/armv7-a/thumb/bits"
-        copy_file_list "$GNUSTL_LIBS/armeabi-v7a/thumb" "$ABI_STL/lib/armv7-a/thumb/" "libgnustl_shared.so"
-        copy_file_list "$GNUSTL_LIBS/armeabi-v7a/thumb" "$ABI_STL/lib/armv7-a/thumb/" "libsupc++.a"
-        cp -p "$GNUSTL_LIBS/armeabi-v7a/thumb/libgnustl_static.a" "$ABI_STL/lib/armv7-a//thumb/libstdc++.a"
+                copy_directory "$GNUSTL_LIBS/armeabi-v7a/include/bits" "$ABI_STL_INCLUDE_TARGET/armv7-a/thumb/bits"
+                copy_file_list "$GNUSTL_LIBS/armeabi-v7a/thumb" "$ABI_STL/lib/armv7-a/thumb/" "libgnustl_shared.so"
+                copy_file_list "$GNUSTL_LIBS/armeabi-v7a/thumb" "$ABI_STL/lib/armv7-a/thumb/" "libsupc++.a"
+                cp -p "$GNUSTL_LIBS/armeabi-v7a/thumb/libgnustl_static.a" "$ABI_STL/lib/armv7-a//thumb/libstdc++.a"
+                ;;
+            x86|mips)
+                copy_directory "$GNUSTL_LIBS/$ARCH/include/bits" "$ABI_STL_INCLUDE_TARGET/bits"
+                copy_file_list "$GNUSTL_LIBS/$ARCH" "$ABI_STL/lib" "libgnustl_shared.so"
+                copy_file_list "$GNUSTL_LIBS/$ARCH" "$ABI_STL/lib" "libsupc++.a"
+                cp -p "$GNUSTL_LIBS/$ARCH/libgnustl_static.a" "$ABI_STL/lib/libstdc++.a"
+                ;;
+            *)
+                dump "ERROR: Unsupported NDK architecture!"
+                exit 1
+                ;;
+        esac  # case $ARCH
         ;;
-    x86)
-        copy_directory "$GNUSTL_LIBS/x86/include/bits" "$ABI_STL_INCLUDE_TARGET/bits"
-        copy_file_list "$GNUSTL_LIBS/x86" "$ABI_STL/lib" "libgnustl_shared.so"
-        copy_file_list "$GNUSTL_LIBS/x86" "$ABI_STL/lib" "libsupc++.a"
-        cp -p "$GNUSTL_LIBS/x86/libgnustl_static.a" "$ABI_STL/lib/libstdc++.a"
+    stlport)
+        copy_directory "$STLPORT_DIR/stlport" "$ABI_STL_INCLUDE"
+        copy_directory "$STLPORT_DIR/../gabi++/include" "$ABI_STL_INCLUDE/../../gabi++/include"
+        case $ARCH in
+            arm)
+                copy_file_list "$STLPORT_LIBS/armeabi-v7a" "$ABI_STL/lib" "libstlport_shared.so"
+                cp -p "$STLPORT_LIBS/armeabi-v7a/libstlport_static.a" "$ABI_STL/lib/libstdc++.a"
+
+                copy_file_list "$STLPORT_LIBS/armeabi-v7a" "$ABI_STL/lib/thumb" "libstlport_shared.so"
+                cp -p "$STLPORT_LIBS/armeabi-v7a/libstlport_static.a" "$ABI_STL/lib/thumb/libstdc++.a"
+
+                copy_file_list "$STLPORT_LIBS/armeabi-v7a" "$ABI_STL/lib/armv7-a" "libstlport_shared.so"
+                cp -p "$STLPORT_LIBS/armeabi-v7a/libstlport_static.a" "$ABI_STL/lib/armv7-a/libstdc++.a"
+
+                copy_file_list "$STLPORT_LIBS/armeabi-v7a" "$ABI_STL/lib/armv7-a/thumb" "libstlport_shared.so"
+                cp -p "$STLPORT_LIBS/armeabi-v7a/libstlport_static.a" "$ABI_STL/lib/armv7-a/thumb/libstdc++.a"
+                ;;
+            x86|mips)
+                copy_file_list "$STLPORT_LIBS/$ARCH" "$ABI_STL/lib" "libstlport_shared.so"
+                cp -p "$STLPORT_LIBS/$ARCH/libstlport_static.a" "$ABI_STL/lib/libstdc++.a"
+                ;;
+            *)
+                dump "ERROR: Unsupported NDK architecture!"
+                exit 1
+                ;;
+        esac  # case $ARCH
         ;;
-    mips)
-        copy_directory "$GNUSTL_LIBS/mips/include/bits" "$ABI_STL_INCLUDE_TARGET/bits"
-        copy_file_list "$GNUSTL_LIBS/mips" "$ABI_STL/lib" "libgnustl_shared.so"
-        copy_file_list "$GNUSTL_LIBS/mips" "$ABI_STL/lib" "libsupc++.a"
-        cp -p "$GNUSTL_LIBS/mips/libgnustl_static.a" "$ABI_STL/lib/libstdc++.a"
-        ;;
-    *)
-        dump "ERROR: Unsupported NDK architecture!"
-esac
+esac  # case $STL
 
 # Install or Package
 if [ -n "$INSTALL_DIR" ] ; then
