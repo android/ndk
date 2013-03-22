@@ -40,12 +40,6 @@ IMPORTANT CHANGES:
   This feature is experimental now but welcome to try and report issues.
   Please find project page: https://code.google.com/p/mclinker/
 
-- Enabled OpenMP for GCC 4.4.3/4.6/4.7:  Add the following flags
-     LOCAL_CFLAGS += -fopenmp
-     LOCAL_LDFLAGS += -fopenmp
-
-  Please find examples in tests/device/test-openmp
-
 - ndk-build now uses topological sort for module dependencies, ie.
   it automatically sorts out the order of libraries specified in
   LOCAL_STATIC_LIBRARIES, LOCAL_WHOLE_STATIC_LIBRARIES and
@@ -67,6 +61,7 @@ IMPORTANT BUG FIXES:
   See http://b.android.com/52732
 
 - Fixed GCC/ARM 4.6/4.7 fails to link code using 64-bit atomic built-in
+  functions
   See http://b.android.com/41297
 
 - Fixed GCC 4.7 linker error reads like
@@ -218,7 +213,7 @@ OTHER CHANGES:
 - Gabi++ and STLport static libraries are now built with hidden
   visibility except for EH helpers
 
-- STLport in ARM is now built with thumb
+- STLport in ARM is now built in thumb mode
 
 - Added support for std::set_new_handler in Gabi++
   See http://b.android.com/52805
@@ -232,7 +227,7 @@ OTHER CHANGES:
 - Removed __ARM_ARCH_5*__ from ARM toolchains/*/setup.mk
   See http://b.android.com/21132
 
-- Built additional GNU libstdc++ libaries in thumb for ARM
+- Built additional GNU libstdc++ libaries in thumb mode for ARM
 
 - Enabled MIPS floating-point madd/msub/nmadd/nmsub/recip/rsqrt
   instructions with 32-bit FPU
