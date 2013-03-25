@@ -93,6 +93,9 @@ endef
 # when applied to static libraries or object files.
 cmd-strip = $(PRIVATE_STRIP) --strip-unneeded $(call host-path,$1)
 
+# The command objcopy --add-gnu-debuglink= will be needed for Valgrind
+cmd-add-gnu-debuglink = $(PRIVATE_OBJCOPY) --add-gnu-debuglink=$(strip $(call host-path,$2)) $(call host-path,$1)
+
 TARGET_LIBGCC = -lgcc
 TARGET_LDLIBS := -lc -lm
 
@@ -123,6 +126,8 @@ TARGET_AR       = $(TOOLCHAIN_PREFIX)ar
 TARGET_ARFLAGS := crs
 
 TARGET_STRIP    = $(TOOLCHAIN_PREFIX)strip
+
+TARGET_OBJCOPY  = $(TOOLCHAIN_PREFIX)objcopy
 
 TARGET_OBJ_EXTENSION := .o
 TARGET_LIB_EXTENSION := .a
