@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#include <elf.h>
-
-Elf32_auxv_t auxv32;
-Elf64_auxv_t auxv64;
+#include <errno.h>
 
 int main()
 {
+   __set_errno(0);
+
+   return 0;
 }
