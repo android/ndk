@@ -81,6 +81,9 @@
  * on EDG have to define it. */
 #if defined (__EDG_VERSION__)
 #  if (__EDG_VERSION__ >= 244) && !defined (_STLP_HAS_INCLUDE_NEXT)
+#   if defined(__ANDROID__)
+#      warning Attempt to define _STLP_HAS_INCLUDE_NEXT.  May not work well in NDK build system
+#    endif
 #    define _STLP_HAS_INCLUDE_NEXT
 #  endif
 #  if (__EDG_VERSION__ <= 240) && !defined (_STLP_DONT_RETURN_VOID)
