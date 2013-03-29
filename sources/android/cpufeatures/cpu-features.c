@@ -73,6 +73,10 @@ static  AndroidCpuFamily   g_cpuFamily;
 static  uint64_t           g_cpuFeatures;
 static  int                g_cpuCount;
 
+#ifdef __arm__
+static  uint32_t           g_cpuIdArm;
+#endif
+
 static const int  android_cpufeatures_debug = 0;
 
 #ifdef __arm__
@@ -268,7 +272,7 @@ has_list_item(const char* list, const char* item)
     return 0;
 }
 
-/* Parse an decimal integer starting from 'input', but not going further
+/* Parse a number starting from 'input', but not going further
  * than 'limit'. Return the value into '*result'.
  *
  * NOTE: Does not skip over leading spaces, or deal with sign characters.
@@ -279,15 +283,23 @@ has_list_item(const char* list, const char* item)
  * be <= 'limit').
  */
 static const char*
-parse_decimal(const char* input, const char* limit, int* result)
+parse_number(const char* input, const char* limit, int base, int* result)
 {
     const char* p = input;
     int val = 0;
     while (p < limit) {
         int d = (*p - '0');
-        if ((unsigned)d >= 10U)
-            break;
-        val = val*10 + d;
+        if ((unsigned)d >= 10U) {
+            d = (*p - 'a');
+            if ((unsigned)d >= 6U)
+              d = (*p - 'A');
+            if ((unsigned)d >= 6U)
+              break;
+            d += 10;
+        }
+        if (d >= base)
+          break;
+        val = val*base + d;
         p++;
     }
     if (p == input)
@@ -295,6 +307,18 @@ parse_decimal(const char* input, const char* limit, int* result)
 
     *result = val;
     return p;
+}
+
+static const char*
+parse_decimal(const char* input, const char* limit, int* result)
+{
+    return parse_number(input, limit, 10, result);
+}
+
+static const char*
+parse_hexadecimal(const char* input, const char* limit, int* result)
+{
+    return parse_number(input, limit, 16, result);
 }
 
 /* This small data type is used to represent a CPU list / mask, as read
@@ -708,6 +732,53 @@ android_cpuInit(void)
             if (has_iwmmxt)
                 g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_iWMMXt;
         }
+
+        /* Extract the cpuid value from various fields */
+        // The CPUID value is broken up in several entries in /proc/cpuinfo.
+        // This table is used to rebuild it from the entries.
+        const struct CpuIdEntry {
+            const char* field;
+            char        format;
+            char        bit_lshift;
+            char        bit_length;
+        } cpu_id_entries[] = {
+            { "CPU implementer", 'x', 24, 8 },
+            { "CPU variant", 'x', 20, 4 },
+            { "CPU part", 'x', 4, 12 },
+            { "CPU revision", 'd', 0, 4 },
+        };
+        size_t i;
+        for (i = 0;
+             i < sizeof(cpu_id_entries)/sizeof(cpu_id_entries[0]);
+             ++i) {
+            const struct CpuIdEntry* entry = &cpu_id_entries[i];
+            char* value = extract_cpuinfo_field(cpuinfo,
+                                                cpuinfo_len,
+                                                entry->field);
+            if (value == NULL)
+                continue;
+
+            printf("field=%s value='%s'\n", entry->field, value);
+            char* value_end = value + strlen(value);
+            int val = 0;
+            const char* start = value;
+            const char* p;
+            if (value[0] == '0' && (value[1] == 'x' || value[1] == 'X')) {
+              start += 2;
+              p = parse_hexadecimal(start, value_end, &val);
+            } else if (entry->format == 'x')
+              p = parse_hexadecimal(value, value_end, &val);
+            else
+              p = parse_decimal(value, value_end, &val);
+
+            if (p > (const char*)start) {
+              val &= ((1 << entry->bit_length)-1);
+              val <<= entry->bit_lshift;
+              g_cpuIdArm |= (uint32_t) val;
+            }
+
+            free(value);
+        }
     }
 #endif /* __ARM_ARCH__ */
 
@@ -783,6 +854,25 @@ android_setCpu(int cpu_count, uint64_t cpu_features)
 
     return 1;
 }
+
+#ifdef __arm__
+uint32_t
+android_getCpuIdArm(void)
+{
+    pthread_once(&g_once, android_cpuInit);
+    return g_cpuIdArm;
+}
+
+int
+android_setCpuArm(int cpu_count, uint64_t cpu_features, uint32_t cpu_id)
+{
+    if (!android_setCpu(cpu_count, cpu_features))
+        return 0;
+
+    g_cpuIdArm = cpu_id;
+    return 1;
+}
+#endif  /* __arm__ */
 
 /*
  * Technical note: Making sense of ARM's FPU architecture versions.
