@@ -482,6 +482,18 @@ is_broken_build ()
                     fi
                     return 0
                 fi
+                # skip incompatible forced platform
+                if [ "$PLATFORM" != "" ] ; then
+                    grep -q -e "$PLATFORM" "$PROJECT/BROKEN_BUILD" || grep -q -e "android-forced" "$PROJECT/BROKEN_BUILD"
+                    if [ $? = 0 ] ; then
+                        if [ -z "$ERRMSG" ] ; then
+                            echo "Skipping `basename $PROJECT`: (no build for $PLATFORM)"
+                        else
+                            echo "Skipping $ERRMSG: `basename $PROJECT` (no build for $PLATFORM)"
+                        fi
+                        return 0
+                    fi
+                fi
             fi
         fi
     fi
