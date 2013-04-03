@@ -31,6 +31,9 @@ register_var_option "--toolchain=<name>" TOOLCHAIN_NAME "Specify toolchain name"
 LLVM_VERSION=
 register_var_option "--llvm-version=<ver>" LLVM_VERSION "Specify LLVM version"
 
+STL=gnustl
+register_var_option "--stl=<name>" STL "Specify C++ STL"
+
 ARCH=
 register_option "--arch=<name>" do_arch "Specify target architecture" "arm"
 do_arch () { ARCH=$1; }
@@ -292,49 +295,67 @@ dump "Copying libstdc++ headers and libraries..."
 GNUSTL_DIR=$NDK_DIR/$GNUSTL_SUBDIR/$GCC_VERSION
 GNUSTL_LIBS=$GNUSTL_DIR/libs
 
+STLPORT_DIR=$NDK_DIR/$STLPORT_SUBDIR
+STLPORT_LIBS=$STLPORT_DIR/libs
+
 ABI_STL="$TMPDIR/$ABI_CONFIGURE_TARGET"
 ABI_STL_INCLUDE="$TMPDIR/include/c++/$GCC_BASE_VERSION"
-
-copy_directory "$GNUSTL_DIR/include" "$ABI_STL_INCLUDE"
 ABI_STL_INCLUDE_TARGET="$ABI_STL_INCLUDE/$ABI_CONFIGURE_TARGET"
+
+# Copy common STL headers (i.e. the non-arch-specific ones)
+copy_stl_common_headers () {
+    case $STL in
+        gnustl)
+            copy_directory "$GNUSTL_DIR/include" "$ABI_STL_INCLUDE"
+            ;;
+        stlport)
+            copy_directory "$STLPORT_DIR/stlport" "$ABI_STL_INCLUDE"
+            copy_directory "$STLPORT_DIR/../gabi++/include" "$ABI_STL_INCLUDE/../../gabi++/include"
+            (cd $ABI_STL_INCLUDE && ln -s ../../gabi++/include/cxxabi.h cxxabi.h)
+            ;;
+    esac
+}
+
+# $1: Source ABI (e.g. 'armeabi')
+# $2: Optional extra ABI variant, or empty (e.g. "", "thumb", "armv7-a/thumb")
+copy_stl_libs () {
+    local ABI=$1
+    local ABI2=$2
+    case $STL in
+        gnustl)
+            copy_directory "$GNUSTL_LIBS/$ABI/include/bits" "$ABI_STL_INCLUDE_TARGET/$ABI2/bits"
+            copy_file_list "$GNUSTL_LIBS/$ABI" "$ABI_STL/lib/$ABI2" "libgnustl_shared.so"
+            copy_file_list "$GNUSTL_LIBS/$ABI" "$ABI_STL/lib/$ABI2" "libsupc++.a"
+            cp -p "$GNUSTL_LIBS/$ABI/libgnustl_static.a" "$ABI_STL/lib/$ABI2/libstdc++.a"
+            ;;
+        stlport)
+            copy_file_list "$STLPORT_LIBS/$ABI" "$ABI_STL/lib/$ABI2" "libstlport_shared.so"
+            cp -p "$STLPORT_LIBS/$ABI/libstlport_static.a" "$ABI_STL/lib/$ABI2/libstdc++.a"
+            ;;
+        *)
+            dump "ERROR: Unsupported STL: $STL"
+            exit 1
+            ;;
+    esac
+}
+
 mkdir -p "$ABI_STL_INCLUDE_TARGET"
 fail_panic "Can't create directory: $ABI_STL_INCLUDE_TARGET"
-case "$ARCH" in
+copy_stl_common_headers
+case $ARCH in
     arm)
-        copy_directory "$GNUSTL_LIBS/armeabi/include/bits" "$ABI_STL_INCLUDE_TARGET/bits"
-        copy_file_list "$GNUSTL_LIBS/armeabi" "$ABI_STL/lib" "libgnustl_shared.so"
-        copy_file_list "$GNUSTL_LIBS/armeabi" "$ABI_STL/lib" "libsupc++.a"
-        cp -p "$GNUSTL_LIBS/armeabi/libgnustl_static.a" "$ABI_STL/lib/libstdc++.a"
-
-        copy_directory "$GNUSTL_LIBS/armeabi/include/bits" "$ABI_STL_INCLUDE_TARGET/thumb/bits"
-        copy_file_list "$GNUSTL_LIBS/armeabi/thumb" "$ABI_STL/lib/thumb" "libgnustl_shared.so"
-        copy_file_list "$GNUSTL_LIBS/armeabi/thumb" "$ABI_STL/lib/thumb" "libsupc++.a"
-        cp -p "$GNUSTL_LIBS/armeabi/thumb/libgnustl_static.a" "$ABI_STL/lib/thumb/libstdc++.a"
-
-        copy_directory "$GNUSTL_LIBS/armeabi-v7a/include/bits" "$ABI_STL_INCLUDE_TARGET/armv7-a/bits"
-        copy_file_list "$GNUSTL_LIBS/armeabi-v7a" "$ABI_STL/lib/armv7-a" "libgnustl_shared.so"
-        copy_file_list "$GNUSTL_LIBS/armeabi-v7a" "$ABI_STL/lib/armv7-a" "libsupc++.a"
-        cp -p "$GNUSTL_LIBS/armeabi-v7a/libgnustl_static.a" "$ABI_STL/lib/armv7-a/libstdc++.a"
-
-        copy_directory "$GNUSTL_LIBS/armeabi-v7a/include/bits" "$ABI_STL_INCLUDE_TARGET/armv7-a/thumb/bits"
-        copy_file_list "$GNUSTL_LIBS/armeabi-v7a/thumb" "$ABI_STL/lib/armv7-a/thumb/" "libgnustl_shared.so"
-        copy_file_list "$GNUSTL_LIBS/armeabi-v7a/thumb" "$ABI_STL/lib/armv7-a/thumb/" "libsupc++.a"
-        cp -p "$GNUSTL_LIBS/armeabi-v7a/thumb/libgnustl_static.a" "$ABI_STL/lib/armv7-a//thumb/libstdc++.a"
+        copy_stl_libs armeabi ""
+        copy_stl_libs armeabi "thumb"
+        copy_stl_libs armeabi-v7a "armv7-a"
+        copy_stl_libs armeabi-v7a "armv7-a/thumb"
         ;;
-    x86)
-        copy_directory "$GNUSTL_LIBS/x86/include/bits" "$ABI_STL_INCLUDE_TARGET/bits"
-        copy_file_list "$GNUSTL_LIBS/x86" "$ABI_STL/lib" "libgnustl_shared.so"
-        copy_file_list "$GNUSTL_LIBS/x86" "$ABI_STL/lib" "libsupc++.a"
-        cp -p "$GNUSTL_LIBS/x86/libgnustl_static.a" "$ABI_STL/lib/libstdc++.a"
-        ;;
-    mips)
-        copy_directory "$GNUSTL_LIBS/mips/include/bits" "$ABI_STL_INCLUDE_TARGET/bits"
-        copy_file_list "$GNUSTL_LIBS/mips" "$ABI_STL/lib" "libgnustl_shared.so"
-        copy_file_list "$GNUSTL_LIBS/mips" "$ABI_STL/lib" "libsupc++.a"
-        cp -p "$GNUSTL_LIBS/mips/libgnustl_static.a" "$ABI_STL/lib/libstdc++.a"
+    x86|mips)
+        copy_stl_libs "$ARCH" ""
         ;;
     *)
-        dump "ERROR: Unsupported NDK architecture!"
+        dump "ERROR: Unsupported NDK architecture: $ARCH"
+        exit 1
+        ;;
 esac
 
 # Install or Package
