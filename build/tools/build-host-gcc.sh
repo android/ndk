@@ -1412,7 +1412,7 @@ build_host_gcc_core ()
     # In fact, enable-plugins is broken all Canadian Cross GCC.
     #  see http://gcc.gnu.org/bugzilla/show_bug.cgi?id=50229
     case "$GCC_VERSION" in
-     4.4.3|4.6|4.7)
+     4.4.3|4.6|4.7|4.8)
        ARGS=$ARGS" --disable-plugins --disable-plugin"
        ;;
     # Doesn't even work on 4.8

@@ -263,18 +263,21 @@ fi
 # Enable OpenMP
 EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-libgomp"
 
+# Disable libsanitizer (which depends on libstdc++ built separately) for now
+EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --disable-libsanitizer"
+
 # Enable Gold as default
 case "$TOOLCHAIN" in
     # Note that only ARM and X86 are supported
-    x86-4.6|arm-linux-androideabi-4.6|x86-4.7|arm-linux-androideabi-4.7)
+    x86-4.6|arm-linux-androideabi-4.6|x86-4.7|arm-linux-androideabi-4.7|x86-4.8|arm-linux-androideabi-4.8)
         EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-gold=default"
     ;;
 esac
 
 # Enable Graphite
 case "$TOOLCHAIN" in
-    # Only for 4.6 and 4.7 for now
-    *-4.6|*-4.7)
+    # Only for 4.6+ for now
+    *-4.6|*-4.7|*-4.8)
         EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-graphite=yes --with-cloog-version=$CLOOG_VERSION --with-ppl-version=$PPL_VERSION"
     ;;
 esac

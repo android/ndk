@@ -83,6 +83,29 @@ index b10d853..3669b06 100644
  mostlyclean-compile:
  	-rm -f *.$(OBJEXT)
  
+diff --git a/gcc-4.8/libstdc++-v3/src/Makefile.in b/gcc-4.8/libstdc++-v3/src/Makefile.in
+index 69001b4..e875539 100644
+--- a/gcc-4.8/libstdc++-v3/src/Makefile.in
++++ b/gcc-4.8/libstdc++-v3/src/Makefile.in
+@@ -336,7 +336,7 @@ AM_CPPFLAGS = $(GLIBCXX_INCLUDES)
+ SUBDIRS = c++98 c++11
+ 
+ # Cross compiler support.
+-toolexeclib_LTLIBRARIES = libstdc++.la
++toolexeclib_LTLIBRARIES = libgnustl_shared.la
+ @GLIBCXX_LDBL_COMPAT_FALSE@ldbl_compat_sources = 
+ @GLIBCXX_LDBL_COMPAT_TRUE@ldbl_compat_sources = compatibility-ldbl.cc
+ parallel_compat_sources = \
+@@ -543,6 +543,9 @@ clean-toolexeclibLTLIBRARIES:
+ libstdc++.la: $(libstdc___la_OBJECTS) $(libstdc___la_DEPENDENCIES) 
+ 	$(libstdc___la_LINK) -rpath $(toolexeclibdir) $(libstdc___la_OBJECTS) $(libstdc___la_LIBADD) $(LIBS)
+ 
++libgnustl_shared.la: $(libstdc___la_OBJECTS) $(libstdc___la_DEPENDENCIES)
++	$(libstdc___la_LINK) -rpath $(toolexeclibdir) $(libstdc___la_OBJECTS) $(libstdc___la_LIBADD) $(LIBS)
++
+ mostlyclean-compile:
+ 	-rm -f *.$(OBJEXT)
+ 
 -- 
 1.7.6.rc0
 
