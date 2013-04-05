@@ -207,8 +207,14 @@ $(foreach __pass2_module,$(__ndk_modules),\
 #
 ifeq ($(strip $(NDK_APP_MODULES)),)
     WANTED_MODULES := $(call modules-get-all-installable,$(modules-get-top-list))
+    ifeq (,$(strip $(WANTED_MODULES)))
+        WANTED_MODULES := $(modules-get-top-list)
+        $(call ndk_log,[$(TARGET_ARCH_ABI)] No installable modules in project - forcing static library build)
+    endif
 else
     WANTED_MODULES := $(call module-get-all-dependencies,$(NDK_APP_MODULES))
 endif
+
+$(call ndk_log,[$(TARGET_ARCH_ABI)] Modules to build: $(WANTED_MODULES))
 
 WANTED_INSTALLED_MODULES += $(call map,module-get-installed,$(WANTED_MODULES))

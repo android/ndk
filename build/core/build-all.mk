@@ -82,6 +82,14 @@ $(foreach _app,$(NDK_APPS),\
   $(eval include $(BUILD_SYSTEM)/setup-app.mk)\
 )
 
+ifeq (,$(strip $(WANTED_INSTALLED_MODULES)))
+    ifneq (,$(strip $(NDK_APP_MODULES)))
+        $(call __ndk_warning,WARNING: No modules to build, your APP_MODULES definition is probably incorrect!)
+    else
+        $(call __ndk_warning,WARNING: There are no modules to build in this project!)
+    endif
+endif
+
 # On Cygwin, we generate a temporary shell script that is capable of
 # process GCC-generated dependency files to convert all path references
 # in them from the Windows to the corresponding Cygwin convention.

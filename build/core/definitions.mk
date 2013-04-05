@@ -486,7 +486,8 @@ module-add = \
     $(eval __ndk_top_modules := $(call set_insert,$(__ndk_top_modules),$1))\
   )\
   $(if $(call module-class-is-installable,$(LOCAL_MODULE_CLASS)),\
-    $(eval LOCAL_INSTALLED := $(NDK_APP_DST_DIR)/$(notdir $(LOCAL_BUILT_MODULE)))\
+    $(eval LOCAL_INSTALLED := $(NDK_APP_DST_DIR)/$(notdir $(LOCAL_BUILT_MODULE))),\
+    $(eval LOCAL_INSTALLED := $(LOCAL_BUILT_MODULE))\
   )\
   $(foreach __field,STATIC_LIBRARIES WHOLE_STATIC_LIBRARIES SHARED_LIBRARIES,\
     $(eval LOCAL_$(__field) := $(call strip-lib-prefix,$(LOCAL_$(__field)))))\
@@ -569,6 +570,7 @@ modules-dump-database = \
             )\
         )\
     )\
+    $(info Top modules: $(__ndk_top_modules))\
     $(info --- end of modules list)
 
 

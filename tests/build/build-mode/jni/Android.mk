@@ -120,3 +120,13 @@ include $(BUILD_EXECUTABLE)
 
 endif # TARGET_ARCH == x86
 
+ifeq ($(TARGET_ARCH),mips)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := test_build_mode_mips
+LOCAL_CFLAGS += -DCHECK_MIPS
+LOCAL_SRC_FILES := main.c
+include $(BUILD_EXECUTABLE)
+
+endif # TARGET_ARCH == mips
+
