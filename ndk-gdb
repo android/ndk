@@ -517,13 +517,13 @@ adb_var_shell CPU_ABI2 getprop ro.product.cpu.abi2
 # Both CPU_ABI1 and CPU_ABI2 may contain multiple comma-delimited abis.
 # Concatanate CPU_ABI1 and CPU_ABI2 and replace all ',' with space.
 # Add trailing space to ease whole-word matching of APP_ABI.
-CPU_ABIS="$CPU_ABI1,$CPU_ABI2,"
+CPU_ABIS="$CPU_ABI1,$CPU_ABI2"
 CPU_ABIS=$(echo $CPU_ABIS | tr ',' ' ')
 log "Device CPU ABIs: $CPU_ABIS"
 
-for APP_ABI in $APP_ABIS; do
-    if [ "$CPU_ABIS" != "${CPU_ABIS%$APP_ABI *}" ] ; then
-        COMPAT_ABI=$APP_ABI
+for CPU_ABI in $CPU_ABIS; do
+    if [ "$APP_ABIS" != "${APP_ABIS%$CPU_ABI*}" ] ; then
+        COMPAT_ABI=$CPU_ABI
         break
     fi
 done
