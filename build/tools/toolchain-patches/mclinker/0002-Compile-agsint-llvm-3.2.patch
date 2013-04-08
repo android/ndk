@@ -1,13 +1,13 @@
-From 21b4a36988a3cd59fb40615eaec6d468d5045a1f Mon Sep 17 00:00:00 2001
+From 587a66242211f48469fcc8c8ab745c0b210ad89e Mon Sep 17 00:00:00 2001
 From: Andrew Hsieh <andrewhsieh@google.com>
-Date: Tue, 19 Mar 2013 10:35:10 -0700
+Date: Mon, 8 Apr 2013 13:36:22 +0800
 Subject: [PATCH 2/5] Compile agsint llvm 3.2
 
 Current mclinker needs LLVM -r 173175 which contains re-org of
 some headers from since LLVM 3.2.  This patch is to roll back
 so we can build from LLVM 3.2
 
-Change-Id: Iea929ae893269a6f7d5293e20b9641c917ec920b
+Change-Id: I7e25e5c28459346ce992654c66f33f4f6e0ef29d
 ---
  configure.ac                      | 2 +-
  lib/CodeGen/MCLDTargetMachine.cpp | 2 +-
@@ -85,7 +85,7 @@ index 87c1192..4001170 100644
      m_RelaEntrySize = 12;
      if (arch == Triple::x86)
 diff --git a/tools/llvm-mcld/llvm-mcld.cpp b/tools/llvm-mcld/llvm-mcld.cpp
-index 7a3a0c4..98bdcad 100644
+index c7aa97c..0c1786a 100644
 --- a/tools/llvm-mcld/llvm-mcld.cpp
 +++ b/tools/llvm-mcld/llvm-mcld.cpp
 @@ -25,9 +25,9 @@

@@ -1,9 +1,9 @@
-From 3157e53522e3fa5232c56fdbba378ebdf2f3ef4f Mon Sep 17 00:00:00 2001
+From d891e6c05ca7be757c829660c6cba687a2c863f7 Mon Sep 17 00:00:00 2001
 From: Andrew Hsieh <andrewhsieh@google.com>
-Date: Tue, 19 Mar 2013 10:38:57 -0700
+Date: Mon, 8 Apr 2013 13:37:43 +0800
 Subject: [PATCH 3/5] Fix mingw build
 
-Change-Id: I8d1669bf1d89cad60e8b49a946feee52734c4a23
+Change-Id: If8d107ae1b09ed8a76986517e043609c34441ba4
 ---
  include/mcld/Support/Path.h        |  6 ++++--
  lib/Support/Directory.cpp          |  2 +-
@@ -211,7 +211,7 @@ index 8b64c40..ba91105 100644
  {
    return MCLD_DEFAULT_TARGET_TRIPLE;
 diff --git a/lib/Support/raw_ostream.cpp b/lib/Support/raw_ostream.cpp
-index 57213ed..4797245 100644
+index 4811df1..57ba2f3 100644
 --- a/lib/Support/raw_ostream.cpp
 +++ b/lib/Support/raw_ostream.cpp
 @@ -17,7 +17,7 @@
@@ -224,7 +224,7 @@ index 57213ed..4797245 100644
  #ifndef STDIN_FILENO
  # define STDIN_FILENO 0
 diff --git a/lib/Target/GNULDBackend.cpp b/lib/Target/GNULDBackend.cpp
-index 12a2100..3e00c12 100644
+index 3bf21af..2d29dd6 100644
 --- a/lib/Target/GNULDBackend.cpp
 +++ b/lib/Target/GNULDBackend.cpp
 @@ -37,6 +37,10 @@
@@ -239,7 +239,7 @@ index 12a2100..3e00c12 100644
  
  //===--------------------------------------------------------------------===//
 diff --git a/lib/Target/Mips/MipsLDBackend.cpp b/lib/Target/Mips/MipsLDBackend.cpp
-index 3db1c47..ae34f50 100644
+index b1115a1..59718b0 100644
 --- a/lib/Target/Mips/MipsLDBackend.cpp
 +++ b/lib/Target/Mips/MipsLDBackend.cpp
 @@ -27,6 +27,10 @@
@@ -254,7 +254,7 @@ index 3db1c47..ae34f50 100644
  
  //===----------------------------------------------------------------------===//
 diff --git a/tools/llvm-mcld/llvm-mcld.cpp b/tools/llvm-mcld/llvm-mcld.cpp
-index 98bdcad..81a7f55 100644
+index 0c1786a..d84fcc6 100644
 --- a/tools/llvm-mcld/llvm-mcld.cpp
 +++ b/tools/llvm-mcld/llvm-mcld.cpp
 @@ -47,6 +47,19 @@
