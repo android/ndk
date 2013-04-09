@@ -1,6 +1,6 @@
-From 695734ad55d58ac27b2e0e53ab039834a07b7432 Mon Sep 17 00:00:00 2001
+From 7e4f1581b135dd64196c129cdb9603b4c3bdff9d Mon Sep 17 00:00:00 2001
 From: Andrew Hsieh <andrewhsieh@google.com>
-Date: Tue, 19 Mar 2013 10:39:35 -0700
+Date: Mon, 8 Apr 2013 13:38:08 +0800
 Subject: [PATCH 4/5] Fix --build-id to not accept next arg
 
 Only the following two forms are allowed
@@ -10,16 +10,16 @@ Only the following two forms are allowed
 Neither swallow next arg, which happen to be "-m" when ld.mcld is invoked
 from clang, and cause GNU linker emulation fail
 
-Change-Id: Ib7ea2da8fdca2cb028d3c6be0204fdfe5fa4ccc6
+Change-Id: I57f99c0adc112dcc89dd23a778e3932c03f7d413
 ---
  tools/llvm-mcld/llvm-mcld.cpp | 6 +++++-
  1 file changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/tools/llvm-mcld/llvm-mcld.cpp b/tools/llvm-mcld/llvm-mcld.cpp
-index 81a7f55..207f4bb 100644
+index d84fcc6..b5152e6 100644
 --- a/tools/llvm-mcld/llvm-mcld.cpp
 +++ b/tools/llvm-mcld/llvm-mcld.cpp
-@@ -590,8 +590,12 @@ ArgExcludeLIBS("exclude-libs",
+@@ -591,8 +591,12 @@ ArgExcludeLIBS("exclude-libs",
                 cl::desc("Exclude libraries from automatic export"),
                 cl::value_desc("lib1,lib2,..."));
  
