@@ -1009,6 +1009,16 @@ parse_toolchain_name ()
         ABI_CONFIGURE_TARGET="arm-eabi"
         ABI_CONFIGURE_EXTRA_FLAGS="--with-arch=armv5te --disable-gold"
         ;;
+    aarch64-linux-androideabi-*)
+        ARCH="arm"
+        ABI="aarch64"
+        ABI_CONFIGURE_TARGET="aarch64-linux-androideabi"
+        # Note:
+        # --disable-libgomp because libgomp/configure tries to link when we don't have crt*.o for aarch64 yet.
+        # --disable-gold because gold doesn't support aarch64 yet
+        #
+        ABI_CONFIGURE_EXTRA_FLAGS="--disable-gold --disable-libgomp"
+        ;;
     x86-*)
         ARCH="x86"
         ABI=$ARCH

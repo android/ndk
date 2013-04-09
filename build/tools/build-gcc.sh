@@ -43,7 +43,12 @@ OPTION_SYSROOT=
 register_var_option "--sysroot=<path>"   OPTION_SYSROOT   "Specify sysroot directory directly"
 
 GDB_VERSION=$DEFAULT_GDB_VERSION
-register_var_option "--gdb-version=<version>"  GDB_VERSION "Specify gdb version"
+EXPLICIT_GDB_VERSION=
+register_option "--gdb-version=<version>"  do_gdb_version "Specify gdb version" "$GDB_VERSION"
+do_gdb_version () {
+    GDB_VERSION=$1
+    EXPLICIT_GDB_VERSION=true
+}
 
 BINUTILS_VERSION=$DEFAULT_BINUTILS_VERSION
 EXPLICIT_BINUTILS_VERSION=
@@ -151,6 +156,17 @@ fi
 if [ ! -d $SRC_DIR/binutils/binutils-$BINUTILS_VERSION ] ; then
     echo "ERROR: Missing binutils sources: $SRC_DIR/binutils/binutils-$BINUTILS_VERSION"
     echo "       Use --binutils-version=<version> to specify alternative."
+    exit 1
+fi
+
+if [ -z "$EXPLICIT_GDB_VERSION" ]; then
+    GDB_VERSION=$(get_default_gdb_version_for_gcc $TOOLCHAIN)
+    dump "Auto-config: --gdb-version=$GDB_VERSION"
+fi
+
+if [ ! -d $SRC_DIR/gdb/gdb-$GDB_VERSION ] ; then
+    echo "ERROR: Missing gdb sources: $SRC_DIR/gdb/gdb-$GDB_VERSION"
+    echo "       Use --gdb-version=<version> to specify alternative."
     exit 1
 fi
 
@@ -268,8 +284,10 @@ EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --disable-libsanitizer"
 
 # Enable Gold as default
 case "$TOOLCHAIN" in
-    # Note that only ARM and X86 are supported
-    x86-4.6|arm-linux-androideabi-4.6|x86-4.7|arm-linux-androideabi-4.7|x86-4.8|arm-linux-androideabi-4.8)
+    # Note that only ARM and X86 >= GCC 4.6 are supported
+    mips*)
+    ;;
+    *-4.6|*-4.7|*-4.8)
         EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-gold=default"
     ;;
 esac
