@@ -120,7 +120,7 @@ namespace {
     }
     info->globals.uncaughtExceptions += 1;
 
-    _Unwind_Reason_Code ret = _Unwind_RaiseException(&header->unwindHeader);
+    _Unwind_RaiseException(&header->unwindHeader);
 
     // Should not be here
     call_terminate(&header->unwindHeader);

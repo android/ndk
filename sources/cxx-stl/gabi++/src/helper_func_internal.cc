@@ -392,11 +392,9 @@ namespace __cxxabiv1 {
     const uint8_t* lsda = (const uint8_t*)_Unwind_GetLanguageSpecificData(ctx);
     const uint8_t* classInfo = NULL;
     uint8_t lpStartEncoding = *lsda++;
+    __attribute__((unused))
     const uint8_t* lpStart = (const uint8_t*)readEncodedPointer(&lsda, lpStartEncoding);
     uintptr_t funcStart = _Unwind_GetRegionStart(ctx);
-    if (lpStart == 0) {
-      lpStart = (const uint8_t*)funcStart;
-    }
     uint8_t ttypeEncoding = *lsda++;
     if (ttypeEncoding != DW_EH_PE_omit) {
       uintptr_t classInfoOffset = readULEB128(&lsda);
