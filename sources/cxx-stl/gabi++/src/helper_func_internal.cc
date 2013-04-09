@@ -395,7 +395,7 @@ namespace __cxxabiv1 {
     const uint8_t* lpStart = (const uint8_t*)readEncodedPointer(&lsda, lpStartEncoding);
     uintptr_t funcStart = _Unwind_GetRegionStart(ctx);
     if (lpStart == 0) {
-      lpStart = (const uint8_t*)funcStart;
+      lpStart = (const uint8_t*)funcStart __attribute__((unused));
     }
     uint8_t ttypeEncoding = *lsda++;
     if (ttypeEncoding != DW_EH_PE_omit) {
