@@ -459,6 +459,7 @@ __register_frame_info_bases
 __register_frame_info_table
 __register_frame_info_table_bases
 __register_frame_table
+__sfp_handle_exceptions
 __splitstack_block_signals
 __splitstack_block_signals_context
 __splitstack_find

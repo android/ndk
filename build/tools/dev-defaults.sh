@@ -41,7 +41,8 @@ DEFAULT_GDB_VERSION=7.3.x
 DEFAULT_MPFR_VERSION=3.1.1
 DEFAULT_GMP_VERSION=5.0.5
 DEFAULT_MPC_VERSION=1.0.1
-DEFAULT_CLOOG_VERSION=0.17.0
+DEFAULT_CLOOG_VERSION=0.18.0
+DEFAULT_ISL_VERSION=0.11.1
 DEFAULT_PPL_VERSION=1.0
 DEFAULT_PYTHON_VERSION=2.7.3
 DEFAULT_PERL_VERSION=5.16.2
@@ -198,7 +199,7 @@ get_default_binutils_version_for_gcc ()
     case $1 in
         arm-*-4.4.3|x86-4.4.3|x86-*-4.4.3) echo "2.19";;
         arm-*-4.7|x86-4.7|x86-*-4.7|mipsel-*-4.7) echo "2.22";;
-        arm-*-4.8|x86-4.8|x86-*-4.8|mipsel-*-4.8) echo "2.22";;  # change to 2.23+ later
+        arm-*-4.8|x86-4.8|x86-*-4.8|mipsel-*-4.8) echo "2.23";;
         *) echo "$DEFAULT_BINUTILS_VERSION";;
     esac
 }

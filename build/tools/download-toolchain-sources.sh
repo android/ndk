@@ -193,6 +193,7 @@ toolchain_clone gmp
 toolchain_clone mpfr
 toolchain_clone mpc
 toolchain_clone cloog
+toolchain_clone isl
 toolchain_clone ppl
 toolchain_clone expat
 toolchain_clone binutils
@@ -209,6 +210,7 @@ toolchain_checkout "" $BRANCH gmp .
 toolchain_checkout "" $BRANCH mpfr .
 toolchain_checkout "" $BRANCH mpc .
 toolchain_checkout "" $BRANCH cloog .
+toolchain_checkout "" $BRANCH isl .
 toolchain_checkout "" $BRANCH ppl .
 toolchain_checkout "" $BRANCH expat .
 toolchain_checkout "" $BRANCH binutils binutils-2.19 binutils-2.21 binutils-2.22
