@@ -588,7 +588,7 @@ After one of these, re-install to the device!''' % (PACKAGE_NAME))
             error('''It seems that your Application does not have any launchable activity!
        Please fix your manifest file and rebuild/re-install your application.''')
 
-    if len(OPTION_LAUNCH):
+    if OPTION_LAUNCH:
         log('Launching activity: %s/%s' % (PACKAGE_NAME,OPTION_LAUNCH[0]))
         retcode,LAUNCH_OUTPUT=adb_cmd(True,
                                       ['shell', 'am', 'start', '-n', '%s/%s' % (PACKAGE_NAME,OPTION_LAUNCH[0])],
@@ -606,7 +606,7 @@ After one of these, re-install to the device!''' % (PACKAGE_NAME))
     retcode,PID = get_pid_of(PACKAGE_NAME)
     log('Found running PID: %d' % (PID))
     if retcode or PID == 0:
-        if len(OPTION_LAUNCH):
+        if OPTION_LAUNCH:
             error('''Could not extract PID of application on device/emulator.
        Weird, this probably means one of these:
 
