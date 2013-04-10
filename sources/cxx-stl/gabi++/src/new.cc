@@ -77,7 +77,7 @@ void* operator new(std::size_t size) throw(std::bad_alloc) {
 __attribute__ ((weak))
 void* operator new(std::size_t size, const std::nothrow_t& no) throw() {
   try {
-    ::operator new(size);
+    return ::operator new(size);
   } catch (const std::bad_alloc&) {
     return 0;
   }
