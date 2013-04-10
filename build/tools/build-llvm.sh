@@ -275,6 +275,9 @@ dump "Install  : llvm toolchain binaries"
 cd $LLVM_BUILD_OUT && run make install $MAKE_FLAGS
 fail_panic "Couldn't install llvm toolchain to $TOOLCHAIN_BUILD_PREFIX"
 
+# install script
+cp -p "$SRC_DIR/$TOOLCHAIN/llvm/tools/ndk-bc2native/ndk-bc2native.py" "$TOOLCHAIN_BUILD_PREFIX/bin/"
+
 # create llvm-config wrapper if needed.
 # llvm-config is invoked by other llvm projects (eg. mclinker/configure)
 # to figure out flags and libs dependencies.  Unfortunately in canadian-build
