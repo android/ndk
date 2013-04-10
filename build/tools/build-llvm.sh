@@ -69,8 +69,8 @@ setup_default_log_file $BUILD_OUT/config.log
 
 set_parameters ()
 {
-    SRC_DIR=`cd $1; pwd`
-    NDK_DIR=`cd $2; pwd`
+    SRC_DIR="$1"
+    NDK_DIR="$2"
     TOOLCHAIN="$3"
 
     # Check source directory
@@ -95,7 +95,7 @@ set_parameters ()
         echo "ERROR: Source directory does not contain gmp: $GMP_SOURCE"
         exit 1
     fi
-
+    SRC_DIR=`cd $SRC_DIR; pwd`
     log "Using source directory: $SRC_DIR"
 
     # Check NDK installation directory
@@ -112,7 +112,7 @@ set_parameters ()
             exit 1
         fi
     fi
-
+    NDK_DIR=`cd $NDK_DIR; pwd`
     log "Using NDK directory: $NDK_DIR"
 
     # Check toolchain name
