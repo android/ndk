@@ -66,7 +66,8 @@ BUILD_DIR=
 register_var_option "--build-dir=<path>" BUILD_DIR "Build Python into directory"
 
 bh_register_options
-
+register_try64_option
+register_canadian_option
 register_jobs_option
 
 extract_parameters "$@"
@@ -80,16 +81,50 @@ if [ -z "$TOOLCHAIN_SRC_DIR" ]; then
 fi
 
 BH_HOST_SYSTEMS=$(commas_to_spaces $BH_HOST_SYSTEMS)
+AUTO_BUILD="no"
+
+if [ "$MINGW" = "yes" ]; then
+    BH_HOST_SYSTEMS="windows-x86"
+    log "Auto-config: --systems=windows-x86"
+fi
+
+if [ "$DARWIN" = "yes" ]; then
+    BH_HOST_SYSTEMS="darwin-x86"
+    log "Auto-config: --systems=darwin-x86"
+fi
+
+determine_systems ()
+{
+    local IN_SYSTEMS="$1"
+    local OUT_SYSTEMS
+
+    for SYSTEM in $IN_SYSTEMS; do
+        if [ "$TRY64" = "yes" ]; then
+            case $SYSTEM in
+                darwin-x86|linux-x86|windows-x86)
+                    SYSTEM=${SYSTEM%%x86}x86_64
+                    ;;
+                windows)
+                    SYSTEM=windows-x86_64
+                    ;;
+            esac
+        fi
+        OUT_SYSTEMS="$OUT_SYSTEMS $SYSTEM"
+    done
+    echo $OUT_SYSTEMS
+}
+
+BH_HOST_SYSTEMS=$(determine_systems "$BH_HOST_SYSTEMS")
+
+# Build python for build machine automatically
+if [ "$(bh_list_contains $BH_BUILD_TAG $BH_HOST_SYSTEMS)" = "no" ]; then
+    BH_HOST_SYSTEMS="$BH_BUILD_TAG $BH_HOST_SYSTEMS"
+    AUTO_BUILD="yes"
+fi
 
 # Python needs to execute itself during its build process, so must build the build
 # Python first. It should also be an error if not asked to build for build machine.
 BH_HOST_SYSTEMS=$(bh_sort_systems_build_first "$BH_HOST_SYSTEMS")
-
-# Make sure that the the user asked for the build OS's Python to be built.
-#  and that the above sort command worked correctly.
-if [ ! "$(bh_list_contains $BH_BUILD_TAG $BH_HOST_SYSTEMS)" = "first" ] ; then
-    panic "Cross building Python requires building for the build OS!"
-fi
 
 download_package ()
 {
@@ -178,14 +213,6 @@ python_build_install_dir ()
 {
     echo "$BH_BUILD_DIR/install/prebuilt/$1"
 }
-
-# $1: host system tag
-# $2: python version
-python_ndk_package_name ()
-{
-    echo "python-$2"
-}
-
 
 # Same as python_build_install_dir, but for the final NDK installation
 # directory. Relative to $NDK_DIR.
@@ -319,11 +346,13 @@ install_host_python ()
 
     need_build_host_python $1 $2
 
-    dump "$(bh_host_text) python-$BH_HOST_ARCH-$2: Installing"
-    run copy_directory "$SRCDIR/bin"     "$DSTDIR/bin"
-    run copy_directory "$SRCDIR/lib"     "$DSTDIR/lib"
-    run copy_directory "$SRCDIR/share"   "$DSTDIR/share"
-    run copy_directory "$SRCDIR/include" "$DSTDIR/include"
+    if [ $AUTO_BUILD != "yes" -o $1 != $BH_BUILD_TAG ]; then
+        dump "$(bh_host_text) python-$BH_HOST_ARCH-$2: Installing"
+        run copy_directory "$SRCDIR/bin"     "$DSTDIR/bin"
+        run copy_directory "$SRCDIR/lib"     "$DSTDIR/lib"
+        run copy_directory "$SRCDIR/share"   "$DSTDIR/share"
+        run copy_directory "$SRCDIR/include" "$DSTDIR/include"
+    fi
 }
 
 need_install_host_python ()
@@ -348,7 +377,7 @@ package_host_python ()
     local SRCDIR="$(python_ndk_install_dir $1 $2)"
     # This is similar to BLDDIR=${BLDDIR%%$SRCDIR}
     BLDDIR=$(echo "$BLDDIR" | sed "s/$(echo "$SRCDIR" | sed -e 's/\\/\\\\/g' -e 's/\//\\\//g' -e 's/&/\\\&/g')//g")
-    local PACKAGENAME=$(python_ndk_package_name $1 $2)-$1.tar.bz2
+    local PACKAGENAME=ndk-python-$1.tar.bz2
     local PACKAGE="$PACKAGE_DIR/$PACKAGENAME"
 
     need_install_host_python $1 $2
@@ -371,8 +400,10 @@ done
 if [ "$PACKAGE_DIR" ]; then
     for SYSTEM in $BH_HOST_SYSTEMS; do
         bh_setup_build_for_host $SYSTEM
-        for VERSION in $PYTHON_VERSION; do
-            package_host_python $SYSTEM $VERSION
-        done
+        if [ $AUTO_BUILD != "yes" -o $SYSTEM != $BH_BUILD_TAG ]; then
+            for VERSION in $PYTHON_VERSION; do
+                package_host_python $SYSTEM $VERSION
+            done
+        fi
     done
 fi
