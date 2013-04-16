@@ -123,9 +123,11 @@ endif
 APP_MANIFEST := $(strip $(wildcard $(APP_PROJECT_PATH)/AndroidManifest.xml))
 APP_PLATFORM_LEVEL := $(strip $(subst android-,,$(APP_PLATFORM)))
 ifdef APP_MANIFEST
-  APP_MIN_PLATFORM_LEVEL := $(shell $(HOST_AWK) -f $(BUILD_AWK)/extract-minsdkversion.awk $(call host-path,$(APP_MANIFEST)))
-  ifneq (,$(call gt,$(APP_PLATFORM_LEVEL),$(APP_MIN_PLATFORM_LEVEL)))
-    $(call __ndk_warning,WARNING: APP_PLATFORM $(APP_PLATFORM) is larger than android:minSdkVersion $(APP_MIN_PLATFORM_LEVEL) in $(APP_MANIFEST))
+  APP_MIN_PLATFORM_LEVEL := $(strip $(shell $(HOST_AWK) -f $(BUILD_AWK)/extract-minsdkversion.awk $(call host-path,$(APP_MANIFEST))))
+  ifdef APP_MIN_PLATFORM_LEVEL
+    ifneq (,$(call gt,$(APP_PLATFORM_LEVEL),$(APP_MIN_PLATFORM_LEVEL)))
+      $(call __ndk_info,WARNING: APP_PLATFORM $(APP_PLATFORM) is larger than android:minSdkVersion $(APP_MIN_PLATFORM_LEVEL) in $(APP_MANIFEST))
+    endif
   endif
 endif
 
