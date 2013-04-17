@@ -47,6 +47,7 @@ done
 rm -rf $DIR/$LIBPORTABLE_SUBDIR
 
 rm -f $DIR/ndk-stack*
+rm -f $DIR/ndk-depends*
 
 clean_dir ()
 {

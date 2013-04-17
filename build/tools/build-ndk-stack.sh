@@ -41,6 +41,9 @@ register_var_option "--make=<path>" GNUMAKE "Specify GNU Make program"
 DEBUG=
 register_var_option "--debug" DEBUG "Build debug version"
 
+PROGNAME=ndk-stack
+register_var_option "--program-name=<name>" PROGNAME "Alternate NDK tool program name"
+
 PACKAGE_DIR=
 register_var_option "--package-dir=<path>" PACKAGE_DIR "Archive binary into specific directory"
 
@@ -53,12 +56,12 @@ prepare_host_build
 
 # Choose a build directory if not specified by --build-dir
 if [ -z "$BUILD_DIR" ]; then
-    BUILD_DIR=$NDK_TMPDIR/build-ndk-stack
+    BUILD_DIR=$NDK_TMPDIR/build-$PROGNAME
     log "Auto-config: --build-dir=$BUILD_DIR"
 fi
 prepare_canadian_toolchain $BUILD_DIR
 
-OUT=$NDK_DIR/$(get_host_exec_name ndk-stack)
+OUT=$NDK_DIR/$(get_host_exec_name $PROGNAME)
 
 # GNU Make
 if [ -z "$GNUMAKE" ]; then
@@ -71,11 +74,6 @@ if [ "$PACKAGE_DIR" ]; then
     fail_panic "Could not create package directory: $PACKAGE_DIR"
 fi
 
-PROGNAME=ndk-stack
-if [ "$MINGW" = "yes" ]; then
-    PROGNAME=$PROGNAME.exe
-fi
-
 # Create output directory
 mkdir -p $(dirname $OUT)
 if [ $? != 0 ]; then
@@ -83,12 +81,12 @@ if [ $? != 0 ]; then
     exit 1
 fi
 
-SRCDIR=$ANDROID_NDK_ROOT/sources/host-tools/ndk-stack
+SRCDIR=$ANDROID_NDK_ROOT/sources/host-tools/$PROGNAME
 
 # Let's roll
 export CFLAGS=$HOST_CFLAGS" -O2 -s"
 export LDFLAGS=$HOST_LDFLAGS
-run $GNUMAKE -C $SRCDIR -f $SRCDIR/GNUMakefile \
+run $GNUMAKE -C $SRCDIR -f $SRCDIR/GNUmakefile \
     -B -j$NUM_JOBS \
     PROGNAME="$OUT" \
     BUILD_DIR="$BUILD_DIR" \
@@ -102,8 +100,8 @@ if [ $? != 0 ]; then
 fi
 
 if [ "$PACKAGE_DIR" ]; then
-    ARCHIVE=ndk-stack-$HOST_TAG.tar.bz2
-    SUBDIR=$(get_host_exec_name ndk-stack $HOST_TAG)
+    ARCHIVE=$PROGNAME-$HOST_TAG.tar.bz2
+    SUBDIR=$(get_host_exec_name $PROGNAME $HOST_TAG)
     dump "Packaging: $ARCHIVE"
     pack_archive "$PACKAGE_DIR/$ARCHIVE" "$NDK_DIR" "$SUBDIR"
     fail_panic "Could not create package: $PACKAGE_DIR/$ARCHIVE from $OUT"
