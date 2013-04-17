@@ -430,6 +430,10 @@ To build it, just do:
 
   $NDK/build/tools/build-ndk-stack.sh
 
+IV.2.: Building 'ndk-depends':
+- - - - - - - - - - - - - - -
+
+Similar to 'ndk-stack', see the 'build-ndk-depends.sh' script.
 
 
 V. Packaging all prebuilts:
