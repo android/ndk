@@ -278,6 +278,10 @@ for SYSTEM in $SYSTEMS; do
         fail_panic "perl build failure!"
     fi
 
+    echo "Building $SYSNAME ndk-python"
+    run $BUILDTOOLS/build-host-python.sh $TOOLCHAIN_FLAGS "--toolchain-src-dir=$SRC_DIR" "--systems=$SYSTEM"
+    fail_panic "python build failure!"
+
     if [ "$SYSTEM" = "windows" ]; then
         echo "Building $SYSNAME toolbox"
         run $BUILDTOOLS/build-host-toolbox.sh $FLAGS

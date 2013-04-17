@@ -290,6 +290,7 @@ HOST_PREBUILT := $(strip $(wildcard $(HOST_PREBUILT_ROOT)/bin))
 HOST_AWK := $(strip $(NDK_HOST_AWK))
 HOST_SED  := $(strip $(NDK_HOST_SED))
 HOST_MAKE := $(strip $(NDK_HOST_MAKE))
+HOST_PYTHON := $(strip $(NDK_HOST_PYTHON))
 ifdef HOST_PREBUILT
     $(call ndk_log,Host tools prebuilt directory: $(HOST_PREBUILT))
     # The windows prebuilt binaries are for ndk-build.cmd
@@ -303,6 +304,9 @@ ifdef HOST_PREBUILT
         endif
         ifndef HOST_MAKE
             HOST_MAKE := $(wildcard $(HOST_PREBUILT)/make$(HOST_EXEEXT))
+        endif
+       ifndef HOST_PYTHON
+            HOST_PYTHON := $(wildcard $(HOST_PREBUILT)/python$(HOST_EXEEXT))
         endif
     endif
 else
