@@ -218,7 +218,14 @@ python_build_install_dir ()
 # directory. Relative to $NDK_DIR.
 python_ndk_install_dir ()
 {
-    echo "prebuilt/$1"
+    case $1 in
+        windows-x86)
+            echo "prebuilt/windows"
+            ;;
+	*)
+            echo "prebuilt/$1"
+            ;;
+    esac
 }
 
 arch_to_qemu_arch ()
@@ -315,6 +322,10 @@ build_host_python ()
                panic "Installed qemu(s) ($(which qemu-$QEMU_HOST_ARCH 2>/dev/null) $(which qemu-$QEMU_HOST_ARCH-static 2>/dev/null))" \
                       "will prevent this build from working."
             fi
+        fi
+    else
+        if [ $1 = darwin-x86 -o $1 = darwin-x86_64 ]; then
+            export LDSHARED="$CC -bundle -undefined dynamic_lookup"
         fi
     fi
 
