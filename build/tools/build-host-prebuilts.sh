@@ -279,7 +279,7 @@ for SYSTEM in $SYSTEMS; do
     fi
 
     echo "Building $SYSNAME ndk-python"
-    run $BUILDTOOLS/build-host-python.sh $TOOLCHAIN_FLAGS "--toolchain-src-dir=$SRC_DIR" "--systems=$SYSTEM"
+    run $BUILDTOOLS/build-host-python.sh $TOOLCHAIN_FLAGS "--toolchain-src-dir=$SRC_DIR" "--systems=$SYSTEM" "--force"
     fail_panic "python build failure!"
 
     if [ "$SYSTEM" = "windows" ]; then
