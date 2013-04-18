@@ -197,10 +197,10 @@ get_toolchain_name_list_for_arch ()
 get_default_binutils_version_for_gcc ()
 {
     case $1 in
-        arm-*-4.4.3|x86-4.4.3|x86-*-4.4.3) echo "2.19";;
-        arm-*-4.7|x86-4.7|x86-*-4.7|mipsel-*-4.7) echo "2.22";;
-        arm-*-4.8|aarch64-*|x86-4.8|x86-*-4.8|mipsel-*-4.8) echo "2.23";;
-        *) echo "$DEFAULT_BINUTILS_VERSION";;
+        *-4.4.3) echo "2.19";;
+        *-4.6) echo "$DEFAULT_BINUTILS_VERSION";;
+        *-4.7) echo "2.22";;
+        *) echo "2.23";;
     esac
 }
 

@@ -290,18 +290,20 @@ case "$TOOLCHAIN" in
     # Note that only ARM and X86 >= GCC 4.6 are supported
     mips*)
     ;;
-    *-4.6|*-4.7|*-4.8)
+    *-4.4.3)
+    ;;
+    *)
         EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-gold=default"
     ;;
 esac
 
 # Enable Graphite
 case "$TOOLCHAIN" in
-    # Only for 4.6+ for now
+    *-4.4.3) ;;
     *-4.6|*-4.7)
         EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-graphite=yes --with-cloog-version=$CLOOG_VERSION --with-ppl-version=$PPL_VERSION"
     ;;
-    *-4.8)
+    *)
         EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-graphite=yes --with-cloog-version=$CLOOG_VERSION --with-isl-version=$ISL_VERSION"
     ;;
 esac
