@@ -219,7 +219,8 @@ ifndef HOST_ARCH
         ifeq ($(HOST_ARCH),AMD64)
             HOST_ARCH := x86
         endif
-        ifneq ("",$(shell echo "%ProgramW6432%"))
+	# windows is 64-bit if either ProgramW6432 or ProgramFiles(x86) is set
+        ifneq ("/",$(shell echo "%ProgramW6432%/%ProgramFiles(x86)%"))
             HOST_ARCH64 := x86_64
         endif
     else # HOST_OS_BASE != windows
