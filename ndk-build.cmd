@@ -18,7 +18,7 @@ rem Check if NDK_HOST_32BIT is not set to 1/true, Windows is 64-bit, and 64-bit 
 if "%NDK_HOST_32BIT%"=="1" set NDK_MAKE=
 if "%NDK_HOST_32BIT%"=="true" set NDK_MAKE=
 if not exist "%NDK_MAKE%" set NDK_MAKE=
-if "%ProgramW6432%"=="" set NDK_MAKE=
+if "%ProgramW6432%"=="" if "%ProgramFiles(x86)%"=="" set NDK_MAKE=
 
 rem Otherwise fall back to 32-bit make
 if "%NDK_MAKE%"=="" set NDK_MAKE=%NDK_ROOT%\prebuilt\windows\bin\make.exe
