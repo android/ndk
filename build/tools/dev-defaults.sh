@@ -197,8 +197,8 @@ get_toolchain_name_list_for_arch ()
 get_default_binutils_version_for_gcc ()
 {
     case $1 in
+        mipsel-*-4.4.3|*-4.6) echo "$DEFAULT_BINUTILS_VERSION";;
         *-4.4.3) echo "2.19";;
-        *-4.6) echo "$DEFAULT_BINUTILS_VERSION";;
         *-4.7) echo "2.22";;
         *) echo "2.23";;
     esac

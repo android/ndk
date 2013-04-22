@@ -251,14 +251,10 @@ for SYSTEM in $SYSTEMS; do
     fi
 
     # First, ndk-stack
-    if [ "$TRY64" != "yes" ]; then
-        # Don't build ndk-stack in 64-bit because unlike other host toolchains
-        # ndk-stack doesn't have separate directories for 32-bit and 64-bit.
-        # 64-bit one will overwrite the 32-bit one
-        echo "Building $SYSNAME ndk-stack"
-        run $BUILDTOOLS/build-ndk-stack.sh $TOOLCHAIN_FLAGS
-        fail_panic "ndk-stack build failure!"
-    fi
+    echo "Building $SYSNAME ndk-stack"
+    run $BUILDTOOLS/build-ndk-stack.sh $TOOLCHAIN_FLAGS
+    fail_panic "ndk-stack build failure!"
+
     echo "Building $SYSNAME ndk-make"
     run $BUILDTOOLS/build-host-make.sh $TOOLCHAIN_FLAGS
     fail_panic "make build failure!"
