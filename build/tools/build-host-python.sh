@@ -211,7 +211,14 @@ done
 #  python_build_install_dir () in build-host-gdb.sh
 python_build_install_dir ()
 {
-    echo "$BH_BUILD_DIR/install/prebuilt/$1"
+    case $1 in
+        windows-x86)
+            echo "$BH_BUILD_DIR/install/prebuilt/windows"
+            ;;
+        *)
+            echo "$BH_BUILD_DIR/install/prebuilt/$1"
+            ;;
+    esac
 }
 
 # Same as python_build_install_dir, but for the final NDK installation
