@@ -1,4 +1,4 @@
- #!/bin/sh
+#!/bin/sh
 #
 # Copyright (C) 2012 The Android Open Source Project
 #
@@ -123,7 +123,7 @@ mingw_has_dlfcn_h ()
        return 1
    fi
 
-   "$CC" -xc -c /dev/null -include dlfcn.h > /dev/null 2>&1
+   "$CC" -xc -c /dev/null -include dlfcn.h -o /dev/null > /dev/null 2>&1
 }
 
 # Generate a small wrapper program
