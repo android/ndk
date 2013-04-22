@@ -200,6 +200,21 @@ for VERSION in $(commas_to_spaces $PYTHON_VERSION); do
     fi
 done
 
+
+# Return host tag with only translation that windows-x86 -> windows
+# $1: host system tag
+python_host_tag ()
+{
+    case $1 in
+        windows-x86)
+            echo "windows"
+            ;;
+        *)
+            echo "$1"
+            ;;
+    esac
+}
+
 # Return the build install directory of a given Python version
 # $1: host system tag
 # $2: python version
@@ -211,21 +226,14 @@ done
 #  python_build_install_dir () in build-host-gdb.sh
 python_build_install_dir ()
 {
-    echo "$BH_BUILD_DIR/install/prebuilt/$1"
+    echo "$BH_BUILD_DIR/install/prebuilt/$(python_host_tag $1)"
 }
 
 # Same as python_build_install_dir, but for the final NDK installation
 # directory. Relative to $NDK_DIR.
 python_ndk_install_dir ()
 {
-    case $1 in
-        windows-x86)
-            echo "prebuilt/windows"
-            ;;
-        *)
-            echo "prebuilt/$1"
-            ;;
-    esac
+    echo "prebuilt/$(python_host_tag $1)"
 }
 
 arch_to_qemu_arch ()
@@ -388,7 +396,7 @@ package_host_python ()
     local SRCDIR="$(python_ndk_install_dir $1 $2)"
     # This is similar to BLDDIR=${BLDDIR%%$SRCDIR}
     BLDDIR=$(echo "$BLDDIR" | sed "s/$(echo "$SRCDIR" | sed -e 's/\\/\\\\/g' -e 's/\//\\\//g' -e 's/&/\\\&/g')//g")
-    local PACKAGENAME=ndk-python-$1.tar.bz2
+    local PACKAGENAME=ndk-python-$(python_host_tag $1).tar.bz2
     local PACKAGE="$PACKAGE_DIR/$PACKAGENAME"
 
     need_install_host_python $1 $2
