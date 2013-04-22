@@ -2,9 +2,31 @@
 #include <chrono>
 #include <ratio>
 
-#if !(__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7))
-// In GCC 4.6 and below, "steady_clock" is called "monotonic_clock",
-// and "is_steady" is called "is_monotonic"
+// In NDK GCC 4.6 and below, "steady_clock" is called "monotonic_clock",
+// and "is_steady" is called "is_monotonic".  One may be tempted to use
+// __GLIBCXX__ to detect it by doing
+//
+//   # if __GLIBCXX__ < 20120920  /* 20120920 is the date of gcc-4.7 in NDK */
+//
+// But __GLIBCXX__ get date from gcc/DATESTAMP.  Although it never changes
+// (so far) once deposit in toolchain/gcc.git, it gets daily bump in upstream.
+// Thus, this approach may not work in other gcc release.
+//
+// We can detect it by
+//
+//     #if !(__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7))
+//
+// But unfortunately clang uses gcc libstdc++ w/o defining __GNUC__ at all.
+// Since clang now sides with gcc-4.7, we need the following intead
+//
+//     #if !(__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7) || defined(__clang__))
+//
+// This approach won't be valid if clang sides with gcc4.6 (in standalone mode, for
+// example).
+//
+// ToDo: better approach
+
+#if !(__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7) || defined(__clang__))
 namespace std {
 namespace chrono {
     typedef monotonic_clock steady_clock;
