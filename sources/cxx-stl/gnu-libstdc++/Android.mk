@@ -16,15 +16,15 @@ gnustl_exported_c_includes := \
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := gnustl_static
-LOCAL_SRC_FILES := $(TOOLCHAIN_VERSION)/libs/$(TARGET_ARCH_ABI)/libgnustl_static.a
+LOCAL_SRC_FILES := $(TOOLCHAIN_VERSION)/libs/$(TARGET_ARCH_ABI)/libgnustl_static$(TARGET_LIB_EXTENSION)
 LOCAL_EXPORT_CPPFLAGS := $(gnustl_exported_cppflags)
 LOCAL_EXPORT_C_INCLUDES := $(gnustl_exported_c_includes)
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := gnustl_shared
-LOCAL_SRC_FILES := $(TOOLCHAIN_VERSION)/libs/$(TARGET_ARCH_ABI)/libgnustl_shared.so
+LOCAL_SRC_FILES := $(TOOLCHAIN_VERSION)/libs/$(TARGET_ARCH_ABI)/libgnustl_shared$(TARGET_SONAME_EXTENSION)
 LOCAL_EXPORT_CPPFLAGS := $(gnustl_exported_cppflags)
 LOCAL_EXPORT_C_INCLUDES := $(gnustl_exported_c_includes)
-LOCAL_EXPORT_LDLIBS := $(call host-path,$(LOCAL_PATH)/$(TOOLCHAIN_VERSION)/libs/$(TARGET_ARCH_ABI)/libsupc++.a)
+LOCAL_EXPORT_LDLIBS := $(call host-path,$(LOCAL_PATH)/$(TOOLCHAIN_VERSION)/libs/$(TARGET_ARCH_ABI)/libsupc++$(TARGET_LIB_EXTENSION))
 include $(PREBUILT_SHARED_LIBRARY)
