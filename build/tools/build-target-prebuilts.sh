@@ -45,6 +45,7 @@ extract_parameters "$@"
 # Check toolchain source path
 SRC_DIR="$PARAMETERS"
 check_toolchain_src_dir "$SRC_DIR"
+SRC_DIR=`cd $PARAMETERS; pwd`
 
 # Now we can do the build
 BUILDTOOLS=$ANDROID_NDK_ROOT/build/tools
