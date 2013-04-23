@@ -79,6 +79,8 @@ fi
 if [ -z "$TOOLCHAIN_SRC_DIR" ]; then
     panic "Please use --toolchain-src-dir=<path> to select toolchain source directory."
 fi
+check_toolchain_src_dir "$TOOLCHAIN_SRC_DIR"
+TOOLCHAIN_SRC_DIR=`cd $TOOLCHAIN_SRC_DIR; pwd`
 
 BH_HOST_SYSTEMS=$(commas_to_spaces $BH_HOST_SYSTEMS)
 AUTO_BUILD="no"
