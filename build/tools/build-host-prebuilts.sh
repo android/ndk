@@ -259,6 +259,11 @@ for SYSTEM in $SYSTEMS; do
         run $BUILDTOOLS/build-ndk-stack.sh $TOOLCHAIN_FLAGS
         fail_panic "ndk-stack build failure!"
     fi
+
+    echo "Building $SYSNAME ndk-depends"
+    run $BUILDTOOLS/build-ndk-depends.sh $TOOLCHAIN_FLAGS
+    fail_panic "ndk-depends build failure!"
+
     echo "Building $SYSNAME ndk-make"
     run $BUILDTOOLS/build-host-make.sh $TOOLCHAIN_FLAGS
     fail_panic "make build failure!"
