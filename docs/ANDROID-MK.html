@@ -546,21 +546,28 @@ LOCAL_WHOLE_STATIC_LIBRARIES
 
 LOCAL_LDLIBS
     The list of additional linker flags to be used when building your
-    module. This is useful to pass the name of specific system libraries
-    with the "-l" prefix. For example, the following will tell the linker
-    to generate a module that links to /system/lib/libz.so at load time:
+    shared library or executable. This is useful to pass the name of
+    specific system libraries with the "-l" prefix. For example, the
+    following will tell the linker to generate a module that links to
+    /system/lib/libz.so at load time:
 
       LOCAL_LDLIBS := -lz
 
     See docs/STABLE-APIS.html for the list of exposed system libraries you
     can linked against with this NDK release.
 
+    NOTE: This is ignored for static libraries, and ndk-build will print
+          a warning if you define it in such a module.
+
 LOCAL_LDFLAGS
-    The list of other linker flags to be used when building your module.
-    For example, the following will use linker ld.bfd on ARM/X86 GCC 4.6/4.7
-    where ld.gold is the default
+    The list of other linker flags to be used when building your shared
+    library or executable. For example, the following will use the ld.bfd
+    linker on ARM/X86 GCC 4.6/4.7 where ld.gold is the default
 
       LOCAL_LDFLAGS += -fuse-ld=bfd
+
+    NOTE: This is ignored for static libraries, and ndk-build will print
+          a warning if you define it in such a module.
 
 LOCAL_ALLOW_UNDEFINED_SYMBOLS
     By default, any undefined reference encountered when trying to build
@@ -570,6 +577,9 @@ LOCAL_ALLOW_UNDEFINED_SYMBOLS
     However, if for some reason you need to disable this check, set this
     variable to 'true'. Note that the corresponding shared library may fail
     to load at runtime.
+
+    NOTE: This is ignored for static libraries, and ndk-build will print
+          a warning if you define it in such a module.
 
 LOCAL_ARM_MODE
     By default, ARM target binaries will be generated in 'thumb' mode, where

@@ -28,6 +28,55 @@ my := TARGET_
 #
 $(call assert-defined,LOCAL_MAKEFILE LOCAL_BUILD_SCRIPT LOCAL_BUILT_MODULE)
 
+# A list of LOCAL_XXX variables that are ignored for static libraries.
+# Print a warning if they are present inside a module definition to let
+# the user know this won't do what he/she expects.
+not_in_static_libs := \
+    LOCAL_LDFLAGS \
+    LOCAL_LDLIBS \
+    LOCAL_ALLOW_UNDEFINED_SYMBOLS
+
+ifeq ($(call module-get-class,$(LOCAL_MODULE)),STATIC_LIBRARY)
+$(foreach _notvar,$(not_in_static_libs),\
+    $(if $(strip $($(_notvar))),\
+        $(call __ndk_info,WARNING:$(LOCAL_MAKEFILE):$(LOCAL_MODULE): $(_notvar) is always ignored for static libraries)\
+    )\
+)
+endif
+
+# Some developers like to add library names (e.g. -lfoo) to LOCAL_LDLIBS
+# and LOCAL_LDFLAGS directly. This is very fragile and can lead to broken
+# builds and other nasty surprises, because it doesn't tell ndk-build
+# that the corresponding module depends on these files. Emit a warning
+# when we detect this case.
+libs_in_ldflags := $(filter -l% %.so %.a,$(LOCAL_LDLIBS) $(LOCAL_LDFLAGS))
+
+# Remove the system libraries we know about from the warning, it's ok
+# (and actually expected) to link them with -l<name>.
+system_libs := \
+    android \
+    c \
+    dl \
+    jnigraphics \
+    log \
+    m \
+    stdc++ \
+    z \
+    EGL \
+    GLESv1_CM \
+    GLESv2 \
+    OpenSLES \
+    OpenMAXAL
+
+libs_in_ldflags := $(filter-out $(addprefix -l,$(system_libs)), $(libs_in_ldflags))
+
+ifneq (,$(strip $(libs_in_ldflags)))
+  $(call __ndk_info,WARNING:$(LOCAL_MAKEFILE):$(LOCAL_MODULE): non-system libraries in linker flags: $(libs_in_ldflags))
+  $(call __ndk_info,    This is likely to result in incorrect builds. Try using LOCAL_STATIC_LIBRARIES)
+  $(call __ndk_info,    or LOCAL_SHARED_LIBRARIES instead to list the library dependencies of the)
+  $(call __ndk_info,    current module)
+endif
+
 include $(BUILD_SYSTEM)/import-locals.mk
 
 #

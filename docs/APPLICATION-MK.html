@@ -45,13 +45,24 @@ APP_PROJECT_PATH
     *mandatory* for $NDK/apps/&lt;myapp&gt;/Application.mk
 
 APP_MODULES
-    This variable is optional. If not defined, the NDK will build by
-    default _all_ the modules declared by your Android.mk, and any
-    sub-makefile it may include.
+    If this variable is defined, it tells ndk-build to only list the
+    corresponding modules and those that they depend on. It must be a
+    space-separated list of module names as they appear in the
+    LOCAL_MODULE definition of Android.mk files.
 
-    If APP_MODULES is defined, it must be a space-separated list of module
-    names as they appear in the LOCAL_MODULE definitions of Android.mk
-    files. Note that the NDK will compute module dependencies automatically.
+    It the variable is undefined, ndk-build looks for the list of all
+    _installable_ top-level modules, i.e. those listed by your Android.mk
+    and any file it includes directly. Imported modules are _not_ top-level
+    though.
+
+    An installable module is either a shared library or executable, which
+    will generate a file in libs/$ABI/.
+
+    If the variable is undefined, and there are no installable top-level
+    modules in your project, then ndk-build will build all top-level
+    static libraries and their dependencies instead. However, these
+    libraries will be placed at the usual location under obj/ or
+    obj-debug/.
 
     NOTE: This variable's behaviour changed in NDK r4. Before that:
 
@@ -122,7 +133,9 @@ APP_CPPFLAGS
           C++ sources.
 
 APP_LDFLAGS
-    A set of linker flags passed when linking application.
+    A set of linker flags passed when linking application. This only
+    applies when building shared libraries and executables, these
+    flags are ignored when building static libraries.
 
 APP_BUILD_SCRIPT
     By default, the NDK build system will look for a file named Android.mk
