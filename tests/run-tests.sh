@@ -34,7 +34,7 @@ NDK_BUILDTOOLS_PATH=$ROOTDIR/build/tools
 
 # The list of tests that are too long to be part of a normal run of
 # run-tests.sh. Most of these do not run properly at the moment.
-LONG_TESTS="prebuild-stlport test-stlport test-gnustl-full test-stlport_shared-exception test-stlport_static-exception"
+LONG_TESTS="prebuild-stlport test-stlport test-gnustl-full test-stlport_shared-exception test-stlport_static-exception test-googletest-full"
 
 #
 # Parse options
