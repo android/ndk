@@ -211,6 +211,13 @@ else
     $(call ndk_log, Host operating system detected: $(HOST_OS))
 endif
 
+# Always use /usr/bin/file on Darwin to avoid relying on broken Ports
+# version. See http://b.android.com/53769 .
+HOST_FILE_PROGRAM := file
+ifeq ($(HOST_OS),darwin)
+HOST_FILE_PROGRAM := /usr/bin/file
+endif
+
 HOST_ARCH := $(strip $(HOST_ARCH))
 HOST_ARCH64 :=
 ifndef HOST_ARCH
@@ -227,7 +234,7 @@ ifndef HOST_ARCH
         UNAME := $(shell uname -m)
         ifneq (,$(findstring 86,$(UNAME)))
             HOST_ARCH := x86
-            ifneq (,$(shell file -L $(SHELL) | grep 'x86[_-]64'))
+            ifneq (,$(shell $(HOST_FILE_PROGRAM) -L $(SHELL) | grep 'x86[_-]64'))
                 HOST_ARCH64 := x86_64
             endif
         endif
