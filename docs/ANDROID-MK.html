@@ -424,11 +424,22 @@ LOCAL_SRC_FILES
     Only list the files that will be passed to a compiler, since the
     build system automatically computes dependencies for you.
 
-    Note that source files names are all relative to LOCAL_PATH and
+    Note that source files names are relative to LOCAL_PATH and
     you can use path components, e.g.:
 
       LOCAL_SRC_FILES := foo.c \
                          toto/bar.c
+
+    Absolute file paths are also supported:
+
+      LOCAL_SRC_FILES := /home/user/mysources/foo.c
+
+    or on Windows:
+
+      LOCAL_SRC_FILES := c:/Users/user/sources/foo.c
+
+    Avoiding absolute file paths is recommended, this this makes your
+    Android.mk easy to reuse on a different machine / system.
 
     NOTE: Always use Unix-style forward slashes (/) in build files.
           Windows-style back-slashes will not be handled properly.

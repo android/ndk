@@ -126,12 +126,12 @@ filter-out-by = $(strip \
 # -----------------------------------------------------------------------------
 find-first = $(firstword $(call filter-by,$1,$2))
 
--testfind-first.empty = \
+-test-find-first.empty = \
     $(eval -local-pred = $$(call seq,foo,$$1))\
     $(call test-expect,,$(call find-first,,-local-pred))\
     $(call test-expect,,$(call find-first,bar,-local-pred))
 
--testfind-first.simple = \
+-test-find-first.simple = \
     $(eval -local-pred = $$(call seq,foo,$$1))\
     $(call test-expect,foo,$(call find-first,foo,-local-pred))\
     $(call test-expect,foo,$(call find-first,aaa foo bar,-local-pred))\

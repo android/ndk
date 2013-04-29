@@ -134,3 +134,61 @@ else
 host-copy-if-differ = $(HOST_CMP) -s $1 $2 > /dev/null 2>&1 || cp -f $1 $2
 endif
 
+
+# -----------------------------------------------------------------------------
+# Function : host-path-is-absolute
+# Arguments: 1: file path
+# Usage    : $(call host-path-is-absolute,<path>)
+# Rationale: This function returns a non-empty result if the input path is
+#            absolute on the host filesystem.
+# -----------------------------------------------------------------------------
+
+# On Windows, we need to take care drive prefix in file paths, e.g.:
+#    /foo       -> top-level 'foo' directory on current drive.
+#    //bar/foo  -> top-level 'foo' on network share 'bar'
+#    c:/foo     -> top-level 'foo' directory on C drive.
+#    c:foo      -> 'foo' subdirectory on C drive's current directory.
+#
+# Treat all of them as absolute. Filtering the first two cases is easy
+# by simply looking at the first character. The other ones are more
+# complicated and the simplest way is still to try all alphabet letters
+# directly. Anything else involves very complicated GNU Make parsing
+# voodoo.
+ndk-windows-drive-letters := a b c d e f g h i j k l m n o p q r s t u v w x y z \
+                             A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+
+ndk-windows-drive-patterns := $(foreach _drive,$(ndk-windows-drive-letters),$(_drive):%)
+
+windows-path-is-absolute = $(if $(filter /% $(ndk-windows-drive-patterns),$(subst \,/,$1)),true)
+
+ifeq ($(HOST_OS),windows)
+host-path-is-absolute = $(call windows-path-is-absolute,$1)
+else
+host-path-is-absolute = $(if $(filter /%,$1),true)
+endif
+
+-test-host-path-is-absolute.relative-paths = \
+  $(call test-expect,,$(call host-path-is-absolute,foo))\
+  $(call test-expect,,$(call host-path-is-absolute,foo/bar))\
+  $(call test-expect,,$(call host-path-is-absolute,.))\
+  $(call test-expect,,$(call host-path-is-absolute,..))
+
+-test-host-path-is-absolute.absolute-paths = \
+  $(call test-expect,true,$(call host-path-is-absolute,/))\
+  $(call test-expect,true,$(call host-path-is-absolute,/foo))\
+  $(call test-expect,true,$(call host-path-is-absolute,/foo/bar))\
+  $(call test-expect,true,$(call host-path-is-absolute,//foo))\
+  $(call test-expect,true,$(call host-path-is-absolute,/.))
+
+-test-host-path-is-asbolute.windows-relative-paths = \
+  $(call test-expect,$(call windows-path-is-absolute,foo))\
+  $(call test-expect,$(call windows-path-is-absolute,foo/bar))\
+  $(call test-expect,$(call windows-path-is-absolute,.))\
+  $(call test-expect,$(call windows-path-is-absolute,..))
+
+-test-host-path-is-asbolute.windows-absolute-paths = \
+  $(call test-expect,true,$(call windows-path-is-absolute,c:/))\
+  $(call test-expect,true,$(call windows-path-is-absolute,x:))\
+  $(call test-expect,true,$(call windows-path-is-absolute,K:foo))\
+  $(call test-expect,true,$(call windows-path-is-absolute,C:\Foo\Bar))\
+  $(call test-expect,true,$(call windows-path-is-absolute,\Foo))
