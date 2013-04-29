@@ -1,0 +1,19 @@
+LOCAL_PATH := $(call my-dir)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := foo
+LOCAL_SRC_FILES := foo.c
+include $(BUILD_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := bar
+LOCAL_THIN_ARCHIVE := false
+LOCAL_SRC_FILES := bar.c
+LOCAL_STATIC_LIBRARIES := foo
+include $(BUILD_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := test_thin_archive
+LOCAL_SRC_FILES := main.c
+LOCAL_STATIC_LIBRARIES := bar
+include $(BUILD_EXECUTABLE)

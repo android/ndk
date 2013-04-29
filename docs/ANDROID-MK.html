@@ -749,6 +749,22 @@ LOCAL_SHORT_COMMANDS
     NOTE: We do not recommend enabling this feature by default, since it
           makes the build slower.
 
+LOCAL_THIN_ARCHIVE
+    Set this variable to 'true' when building static libraries. This will
+    generate a 'thin archive', i.e. a library file (e.g. libfoo.a) which
+    doesn't contain object files, but simply file paths to the actual
+    objects that it should normally contain.
+
+    This is useful to reduce the size of your build output. The drawback
+    is that such libraries _cannot_ be moved to a different location
+    (all paths inside them are relative).
+
+    Valid values are 'true', 'false' or empty. A default value can be
+    set in your Application.mk through APP_THIN_ARCHIVE.
+
+    NOTE: This is ignored for non-static library modules, or prebuilt
+    static library ones.
+
 LOCAL_FILTER_ASM
     Define this variable to a shell command that will be used to filter
     the assembly files from, or generated from, your LOCAL_SRC_FILES.
