@@ -60,7 +60,7 @@ diff --git a/lib/Target/X86/X86Emulation.cpp b/lib/Target/X86/X86Emulation.cpp
 index 753d7cc..1e17b03 100644
 --- a/lib/Target/X86/X86Emulation.cpp
 +++ b/lib/Target/X86/X86Emulation.cpp
-@@ -23,8 +23,7 @@ static bool MCLDEmulateX86ELF(LinkerConfig& pConfig)
+@@ -24,8 +24,7 @@ static bool MCLDEmulateX86ELF(LinkerConfig& pConfig)
    unsigned int bitclass;
    Triple::ArchType arch = pConfig.targets().triple().getArch();
    assert (arch == Triple::x86 || arch == Triple::x86_64);
@@ -88,7 +88,7 @@ diff --git a/tools/llvm-mcld/llvm-mcld.cpp b/tools/llvm-mcld/llvm-mcld.cpp
 index c7aa97c..0c1786a 100644
 --- a/tools/llvm-mcld/llvm-mcld.cpp
 +++ b/tools/llvm-mcld/llvm-mcld.cpp
-@@ -25,9 +25,9 @@
+@@ -26,9 +26,9 @@
  
  #include <llvm/PassManager.h>
  #include <llvm/Pass.h>
