@@ -79,6 +79,24 @@ endif
 
 include $(BUILD_SYSTEM)/import-locals.mk
 
+# Check for LOCAL_THIN_ARCHIVE / APP_THIN_ARCHIVE and print a warning if
+# it is defined for non-static library modules.
+thin_archive := $(strip $(LOCAL_THIN_ARCHIVE))
+ifdef thin_archive
+ifneq (STATIC_LIBRARY,$(call module-get-class,$(LOCAL_MODULE)))
+    $(call __ndk_info,WARNING:$(LOCAL_MAKEFILE):$(LOCAL_MODULE): LOCAL_THIN_ARCHIVE is for building static libraries)
+endif
+endif
+
+ifndef thin_archive
+    thin_archive := $(strip $(NDK_APP_THIN_ARCHIVE))
+endif
+# Print a warning if the value is not 'true', 'false' or empty.
+ifneq (,$(filter-out true false,$(thin_archive)))
+    $(call __ndk_info,WARNING:$(LOCAL_MAKEFILE):$(LOCAL_MODULE): Invalid LOCAL_THIN_ARCHIVE value '$(thin_archive)' ignored!)
+    thin_archive :=
+endif
+
 #
 # Ensure that 'make <module>' and 'make clean-<module>' work
 #
@@ -393,7 +411,14 @@ ifeq ($(LOCAL_SHORT_COMMANDS),true)
     $(LOCAL_BUILT_MODULE): $(ar_list_file)
 endif
 
-$(LOCAL_BUILT_MODULE): PRIVATE_AR := $(TARGET_AR) $(TARGET_ARFLAGS)
+# Compute 'ar' flags. Thin archives simply require 'T' here.
+ar_flags := $(TARGET_ARFLAGS)
+ifeq (true,$(thin_archive))
+    $(call ndk_log,$(TARGET_ARCH_ABI):Building static library '$(LOCAL_MODULE)' as thin archive)
+    ar_flags := $(ar_flags)T
+endif
+
+$(LOCAL_BUILT_MODULE): PRIVATE_AR := $(TARGET_AR) $(ar_flags)
 $(LOCAL_BUILT_MODULE): PRIVATE_AR_OBJECTS := $(ar_objects)
 $(LOCAL_BUILT_MODULE): PRIVATE_BUILD_STATIC_LIB := $(cmd-build-static-library)
 
