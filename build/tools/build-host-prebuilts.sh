@@ -298,7 +298,8 @@ for SYSTEM in $SYSTEMS; do
 
         for TOOLCHAIN_NAME in $TOOLCHAIN_NAMES; do
             echo "Building $SYSNAME toolchain for $ARCH architecture: $TOOLCHAIN_NAME"
-            run $BUILDTOOLS/build-gcc.sh "$SRC_DIR" "$NDK_DIR" $TOOLCHAIN_NAME $TOOLCHAIN_FLAGS
+            run $BUILDTOOLS/build-gcc.sh "$SRC_DIR" "$NDK_DIR" $TOOLCHAIN_NAME $TOOLCHAIN_FLAGS \
+                --with-python=$ANDROID_NDK_ROOT/prebuilt/$SYSNAME/bin/python-config.sh
             fail_panic "Could not build $TOOLCHAIN_NAME-$SYSNAME!"
         done
     done

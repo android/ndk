@@ -43,11 +43,11 @@ following:
    darwin-x86
    darwin-x86_64
 
-For example, here's how to rebuild Python 2.7.3 on Linux
+For example, here's how to rebuild Python 2.7.4 on Linux
 for six different systems:
 
-  $PROGNAME --build-dir=/path/to/toolchain/src \
-    --python-version=2.7.3 \
+  $PROGNAME --build-dir=/path/to/toolchain/src \n \
+    --python-version=2.7.4 \n \
     --systems=linux-x86,linux-x86_64,windows,windows-x86_64,darwin-x86,darwin-x86_64"
 
 TOOLCHAIN_SRC_DIR=
@@ -84,8 +84,8 @@ BH_HOST_SYSTEMS=$(commas_to_spaces $BH_HOST_SYSTEMS)
 AUTO_BUILD="no"
 
 if [ "$MINGW" = "yes" ]; then
-    BH_HOST_SYSTEMS="windows-x86"
-    log "Auto-config: --systems=windows-x86"
+    BH_HOST_SYSTEMS="windows"
+    log "Auto-config: --systems=windows"
 fi
 
 if [ "$DARWIN" = "yes" ]; then
@@ -106,6 +106,14 @@ determine_systems ()
                     ;;
                 windows)
                     SYSTEM=windows-x86_64
+                    ;;
+            esac
+        else
+            # 'windows-x86' causes substitution
+            # failure at the packing stage.
+            case $SYSTEM in
+                windows-x86)
+                    SYSTEM=windows
                     ;;
             esac
         fi
@@ -220,9 +228,9 @@ python_host_tag ()
 # $2: python version
 # The suffix of this has to match python_ndk_install_dir
 #  as I package them from the build folder, substituting
-#  the end part of python_build_install_dir matching python_ndk_install_dir
-#  with nothing.
-# Needs to match with
+#  the end part of python_build_install_dir matching
+#  python_ndk_install_dir with nothing.
+# Needs to match with:
 #  python_build_install_dir () in build-host-gdb.sh
 python_build_install_dir ()
 {
@@ -261,14 +269,17 @@ build_host_python ()
         panic "Missing configure script in $SRCDIR"
     fi
 
+    # Currently, 2.7.4 and 3.3.0 builds generate $SRCDIR/Lib/_sysconfigdata.py, unless it
+	# already exists (in which case it ends up wrong anyway!)... this should really be in
+    # the build directory instead.
+    if [ ! -f "$SRCDIR/Lib/_sysconfigdata.py" ]; then
+        log "Removing old $SRCDIR/Lib/_sysconfigdata.py"
+        rm -f $SRCDIR/Lib/_sysconfigdata.py
+    fi
+
     ARGS=" --prefix=$INSTALLDIR"
 
-    # Python considers it cross compiling if --host is passed
-    #  and that then requires that a CONFIG_SITE file is used.
-    # This is not necessary if it's only the arch that differs.
-    if [ ! $BH_HOST_CONFIG = $BH_BUILD_CONFIG ] ; then
-        ARGS=$ARGS" --build=$BH_BUILD_CONFIG"
-    fi
+    ARGS=$ARGS" --build=$BH_BUILD_CONFIG"
     ARGS=$ARGS" --host=$BH_HOST_CONFIG"
     ARGS=$ARGS" $PYDEBUG"
     ARGS=$ARGS" --disable-ipv6"
@@ -337,17 +348,39 @@ build_host_python ()
         fi
     fi
 
-    TEXT="$(bh_host_text) python-$BH_HOST_CONFIG:"
+    TEXT="$(bh_host_text) python-$BH_HOST_CONFIG-$2:"
 
     touch $SRCDIR/Include/graminit.h
     touch $SRCDIR/Python/graminit.c
     echo "" > $SRCDIR/Parser/pgen.stamp
+    touch $SRCDIR/Parser/Python.asdl
+    touch $SRCDIR/Parser/asdl.py
+    touch $SRCDIR/Parser/asdl_c.py
+    touch $SRCDIR/Include/Python-ast.h
+    touch $SRCDIR/Python/Python-ast.c
 
     dump "$TEXT Building"
     export CONFIG_SITE=$CFG_SITE &&
     run2 "$SRCDIR"/configure $ARGS &&
+    #
+    # Note 1:
+    # sharedmods is a phony target, but it's a dependency of both "make all" and also
+    # "make install", this causes it to fail on Windows as it tries to rename pydoc3
+    # to pydoc3.3 twice, and the second time aroud the file exists. So instead, we
+    # just do make install.
+    #
+    # Note 2:
+    # Can't run make install with -j as from the Makefile:
+    # install:	 altinstall bininstall maninstall
+    #  meaning altinstall and bininstall are kicked off at the same time
+    #  but actually, bininstall depends on altinstall being run first
+    #  due to libainstall: doing
+    #  $(INSTALL_SCRIPT) python-config $(DESTDIR)$(BINDIR)/python$(VERSION)-config
+    #  and bininstall: doing
+    #  (cd $(DESTDIR)$(BINDIR); $(LN) -s python$(VERSION)-config python2-config)
+    #  Though the real fix is to make bininstall depend on libainstall.
     run2 make -j$NUM_JOBS &&
-    run2 make -j$NUM_JOBS install
+    run2 make install
 }
 
 need_build_host_python ()
@@ -394,7 +427,7 @@ package_host_python ()
 {
     local BLDDIR="$(python_build_install_dir $1 $2)"
     local SRCDIR="$(python_ndk_install_dir $1 $2)"
-    # This is similar to BLDDIR=${BLDDIR%%$SRCDIR}
+    # This is similar to BLDDIR=${BLDDIR%%$SRCDIR} (and requires we use windows and not windows-x86)
     BLDDIR=$(echo "$BLDDIR" | sed "s/$(echo "$SRCDIR" | sed -e 's/\\/\\\\/g' -e 's/\//\\\//g' -e 's/&/\\\&/g')//g")
     local PACKAGENAME=ndk-python-$(python_host_tag $1).tar.bz2
     local PACKAGE="$PACKAGE_DIR/$PACKAGENAME"
