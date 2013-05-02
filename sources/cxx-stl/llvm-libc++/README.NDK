@@ -1,0 +1,94 @@
+This is a copy of LLVM's libc++ project, slightly modified to build
+with this NDK. *EXPERIMENTAL* *BROKEN* *DO* *NOT* *USE*.
+
+Upstream: See 'upstream.config' file in this directory.
+Patches: see patches.android/
+Tracking: 36496
+
+This is a version of LLVM's libc++ that was modified to be built
+with GAbi++. At the moment, only linking a small test executable is
+supported, and it will very likely crash as soon as you start it.
+
+It also includes Android-specific support code, providing missing C
+library functionality, under android/support. Most of the code there
+consists in stubs waiting for a real implementation.
+
+All patches are under patches.android/ to make it easier to update
+the upstream revision of the library while working on this.
+
+You need a recent NDK release, one which provides a version
+of the GAbi++ C++ runtime that supports rtti _and_ exceptions.
+
+Build instructions:
+
+  1/ Set NDK to the path of a recent Android NDK install path
+     (Use Android NDK r8e or above), e.g.:
+
+      NDK=$HOME/android/ndk-r8e
+
+  2/ From the top-level directory, do:
+
+      $NDK/ndk-build -C android/test
+
+     This is actually equivalent to:
+
+      cd android/test
+      $NDK/ndk-build
+
+  3/ To see build commands, use V=1, as in:
+
+      $NDK/ndk-build -C android/test V=1
+
+
+Android support files:
+
+  android/support/include:
+     Android system header wrappers, to add missing declarations
+
+  android/support/src:
+     Put the implementation of the missing system functions here.
+
+  Android.mk:
+     Main build file for the library. This builds one static and
+     one shared version of the library.
+
+     If modifications are not obvious, read $NDK/docs/ANDROID-MK.html
+     for a description of the Android.mk format.
+
+  android/test/jni:
+     NDK build project for two test programs that link against the
+     static and shared versions of the library.
+
+     See the Android.mk and Application.mk files in this directory
+     if you want to add new test files.
+
+
+Toolchain selection:
+  By default, ndk-build tries to build with GCC 4.6, however, experimental
+  versions of GCC 4.7 and Clang 3.1 are available with recent NDK releases.
+
+  Use the NDK_TOOLCHAIN_VERSION environment variable to switch to a
+  different one, valid examples:
+
+
+    export NDK_TOOLCHAIN_VERSION=4.6    # this is the default
+    $NDK/ndk-build -C android/test
+
+    # This is equivalent, but for GCC 4.7
+    $NDK/ndk-build -C android/test NDK_TOOLCHAIN_VERSION=4.7
+
+    # Also equivalent, but for Clang 3.1
+    NDK_TOOLCHAIN_VERSION=Clang3.1 $NDK/ndk-build -C android/test
+
+
+Updating the sources to a newer revision:
+
+  You can use the tools/update-upstream.sh script to automatically try
+  to update to a more recent version of the upstream sources.
+
+  In case of success, this adds all relevant changes to the current git
+  index so you can review them before committing them.
+
+  In case of problem, try using the --verbose and --no-cleanup options
+  to see the details of the failure. This may require manually updating
+  the patch files.
