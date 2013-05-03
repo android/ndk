@@ -16,4 +16,4 @@ LOCAL_SRC_FILES := test_1.cc
 LOCAL_STATIC_LIBRARIES := llvm_libc++_static
 include $(BUILD_EXECUTABLE)
 
-include $(LOCAL_PATH)/../../llvm-libc++/Android.mk
+include $(LOCAL_PATH)/../../../Android.mk
