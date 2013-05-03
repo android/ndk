@@ -6,7 +6,7 @@ LOCAL_PATH := $(call my-dir)
 
 STLPORT_FORCE_REBUILD := $(strip $(STLPORT_FORCE_REBUILD))
 ifndef STLPORT_FORCE_REBUILD
-  ifeq (,$(strip $(wildcard $(LOCAL_PATH)/libs/$(TARGET_ARCH_ABI)/libstlport_static.a)))
+  ifeq (,$(strip $(wildcard $(LOCAL_PATH)/libs/$(TARGET_ARCH_ABI)/libstlport_static$(TARGET_LIB_EXTENSION))))
     $(call __ndk_info,WARNING: Rebuilding STLport libraries from sources!)
     $(call __ndk_info,You might want to use $$NDK/build/tools/build-stlport.sh)
     $(call __ndk_info,in order to build prebuilt versions to speed up your builds!)
@@ -72,14 +72,14 @@ $(call ndk_log,Using prebuilt STLport libraries)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := stlport_static
-LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).a
+LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE)$(TARGET_LIB_EXTENSION)
 LOCAL_EXPORT_C_INCLUDES := $(libstlport_c_includes)
 LOCAL_CPP_FEATURES := rtti
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := stlport_shared
-LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).so
+LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE)$(TARGET_SONAME_EXTENSION)
 LOCAL_EXPORT_C_INCLUDES := $(libstlport_c_includes)
 LOCAL_CPP_FEATURES := rtti
 include $(PREBUILT_SHARED_LIBRARY)

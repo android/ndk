@@ -6,14 +6,14 @@ ifeq (,$(GABIXX_FORCE_REBUILD))
 
   include $(CLEAR_VARS)
   LOCAL_MODULE:= gabi++_shared
-  LOCAL_SRC_FILES:= libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).so
+  LOCAL_SRC_FILES:= libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE)$(TARGET_SONAME_EXTENSION)
   LOCAL_EXPORT_C_INCLUDES := $(libgabi++_c_includes)
   LOCAL_CPP_FEATURES := rtti exceptions
   include $(PREBUILT_SHARED_LIBRARY)
 
   include $(CLEAR_VARS)
   LOCAL_MODULE:= gabi++_static
-  LOCAL_SRC_FILES:= libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).a
+  LOCAL_SRC_FILES:= libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE)$(TARGET_LIB_EXTENSION)
   LOCAL_EXPORT_C_INCLUDES := $(libgabi++_c_includes)
   LOCAL_CPP_FEATURES := rtti exceptions
   include $(PREBUILT_STATIC_LIBRARY)
