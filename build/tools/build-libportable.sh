@@ -150,7 +150,7 @@ build_libportable_libs_for_abi ()
   #
   #    g++ -Wl,@/path/to/libportable.wrap
   #
-    nm -a $DSTDIR/libportable.a | grep -r __wrap_ | awk '{print $3}' | sed '/^$/d' | \
+    nm -a $DSTDIR/libportable.a | grep __wrap_ | awk '{print $3}' | sed '/^$/d' | \
         sed 's/_wrap_/|/' | awk -F'|' '{print $2}' | sort | uniq | \
         awk '{printf "--wrap=%s\n",$1}' > "$DSTDIR/libportable.wrap"
 }
