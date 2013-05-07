@@ -60,6 +60,7 @@ fi
 log "Using sources from: $GNUMAKE_SRCDIR"
 
 prepare_host_build
+prepare_abi_configure_build
 
 TMP_SRCDIR=$NDK_TMPDIR/src
 
@@ -89,7 +90,7 @@ prepare_canadian_toolchain $BUILD_DIR
 cd $BUILD_DIR &&
 CFLAGS=$HOST_CFLAGS" -O2 -s" &&
 export CC CFLAGS &&
-run $TMP_SRCDIR/configure $CONFIGURE_FLAGS
+run $TMP_SRCDIR/configure $CONFIGURE_FLAGS --build=$ABI_CONFIGURE_BUILD
 fail_panic "Failed to configure the make-$GNUMAKE_VERSION build!"
 
 log "Building make"
