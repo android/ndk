@@ -795,7 +795,7 @@ bh_setup_host_env ()
     esac
     export CFLAGS CXXFLAGS LDFLAGS
 
-    PATH=$BH_WRAPPERS_DIR:$PATH
+    export PATH=$BH_WRAPPERS_DIR:$PATH
 }
 
 _bh_option_no_color ()

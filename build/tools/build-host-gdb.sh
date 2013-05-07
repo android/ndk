@@ -196,7 +196,7 @@ build_host_gdb ()
     ARGS=$ARGS" --disable-docs"
     ARGS=$ARGS" --with-expat"
     ARGS=$ARGS" --with-libexpat-prefix=$EXPATPREFIX"
-    if [ "$PYTHON_VERSION" ]; then
+    if [ -n "$PYTHON_VERSION" ]; then
         ARGS=$ARGS" --with-python=$(python_build_install_dir $BH_HOST_TAG)/bin/python-config.sh"
         if [ $1 = windows-x86 -o $1 = windows-x86_64 ]; then
             # This is necessary for the Python integration to build.
