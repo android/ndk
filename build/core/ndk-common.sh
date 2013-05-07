@@ -290,6 +290,7 @@ case "$HOST_ARCH" in
     ;;
 esac
 
+HOST_FILE_PROGRAM="file"
 case "$HOST_OS-$HOST_ARCH" in
   linux-x86_64|darwin-x86_64)
     ## On Linux or Darwin, a 64-bit kernel doesn't mean that the user-land
@@ -300,7 +301,13 @@ case "$HOST_OS-$HOST_ARCH" in
     ## x86_64 machine code, so just look for x86_64 (darwin) or x86-64 (Linux)
     ## in the output.
     ##
-    file -L "$SHELL" | grep -q "x86[_-]64"
+    ## Also note that some versions of 'file' in MacPort may report erroneous
+    ## result.  See http://b.android.com/53769.  Use /usr/bin/file if exists.
+    if [ "$HOST_OS" = "darwin" ]; then
+        SYSTEM_FILE_PROGRAM="/usr/bin/file"
+        test -x "$SYSTEM_FILE_PROGRAM" && HOST_FILE_PROGRAM="$SYSTEM_FILE_PROGRAM"
+    fi
+    "$HOST_FILE_PROGRAM" -L "$SHELL" | grep -q "x86[_-]64"
     if [ $? != 0 ]; then
       # $SHELL is not a 64-bit executable, so assume our userland is too.
       log2 "Detected 32-bit userland on 64-bit kernel system!"
