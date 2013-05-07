@@ -85,6 +85,25 @@ if [ -z "$ARCH" ]; then
     log "Auto-config: --arch=$ARCH"
 fi
 
+ARCH_INC=$ARCH
+case $ARCH in
+    *arm)
+        ARCH=arm
+        ;;
+    *x86)
+        ARCH=x86
+        ;;
+    *mips)
+        ARCH=mips
+        ;;
+    *)
+        echo "Unknown arch: $ARCH"
+        echo "Please use --arch=<name> to specify known arch in one of $DEFAULT_ARCHS"
+        exit 1
+esac
+test "$ARCH_INC" != "$ARCH" && ARCH_INC=$(find_ndk_unknown_archs)
+test -z "$ARCH_INC" && ARCH_INC="$ARCH"
+
 # Check toolchain name
 if [ -z "$TOOLCHAIN_NAME" ]; then
     TOOLCHAIN_NAME=$(get_default_toolchain_name_for_arch $ARCH)
@@ -136,7 +155,7 @@ fi
 parse_toolchain_name $TOOLCHAIN_NAME
 
 # Check that there are any platform files for it!
-(cd $NDK_DIR/platforms && ls -d */arch-${ARCH} >/dev/null 2>&1 )
+(cd $NDK_DIR/platforms && ls -d */arch-$ARCH >/dev/null 2>&1 )
 if [ $? != 0 ] ; then
     echo "Platform $PLATFORM doesn't have any files for this architecture: $ARCH"
     echo "Either use --platform=<name> or --toolchain=<name> to select a different"
@@ -145,8 +164,9 @@ if [ $? != 0 ] ; then
 fi
 
 # Compute source sysroot
-SRC_SYSROOT="$NDK_DIR/platforms/$PLATFORM/arch-$ARCH"
-if [ ! -d "$SRC_SYSROOT" ] ; then
+SRC_SYSROOT_INC="$NDK_DIR/platforms/$PLATFORM/arch-$ARCH_INC/usr/include"
+SRC_SYSROOT_LIB="$NDK_DIR/platforms/$PLATFORM/arch-$ARCH/usr/lib"
+if [ ! -d "$SRC_SYSROOT_INC" -o ! -d "$SRC_SYSROOT_LIB" ] ; then
     echo "No platform files ($PLATFORM) for this architecture: $ARCH"
     exit 1
 fi
@@ -212,16 +232,20 @@ if [ -n "$LLVM_VERSION" ]; then
   # Note that the file name of "clang" isn't important, and the trailing
   # "++" tells clang to compile in C++ mode
   LLVM_TARGET=
+  TOOLCHAIN_PREFIX=
   case "$ARCH" in
       arm) # NOte: -target may change by clang based on the
            #        presence of subsequent -march=armv7-a and/or -mthumb
           LLVM_TARGET=armv5te-none-linux-androideabi
+          TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_arm
           ;;
       x86)
           LLVM_TARGET=i686-none-linux-android
+          TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_x86
           ;;
       mips)
           LLVM_TARGET=mipsel-none-linux-android
+          TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_mips
           ;;
       *)
         dump "ERROR: Unsupported NDK architecture!"
@@ -239,56 +263,71 @@ if [ -n "$LLVM_VERSION" ]; then
     mv "$TMPDIR/bin/clang++${HOST_EXE}" "$TMPDIR/bin/clang$LLVM_VERSION_WITHOUT_DOT++${HOST_EXE}"
   fi
 
+  EXTRA_CLANG_FLAGS=
+  test "$ARCH_INC" != "$ARCH" && EXTRA_CLANG_FLAGS="-Wl,@\`dirname \$0\`/../sysroot/usr/lib/libportable.wrap -lportable"
+
   cat > "$TMPDIR/bin/clang" <<EOF
 if [ "\$1" != "-cc1" ]; then
-    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT -target $LLVM_TARGET "\$@"
+    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT -target $LLVM_TARGET "\$@" $EXTRA_CLANG_FLAGS
 else
     # target/triple already spelled out.
-    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT "\$@"
+    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT "\$@" $EXTRA_CLANG_FLAGS
 fi
 EOF
   cat > "$TMPDIR/bin/clang++" <<EOF
 if [ "\$1" != "-cc1" ]; then
-    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT++ -target $LLVM_TARGET "\$@"
+    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT++ -target $LLVM_TARGET "\$@" $EXTRA_CLANG_FLAGS
 else
     # target/triple already spelled out.
-    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT++ "\$@"
+    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT++ "\$@" $EXTRA_CLANG_FLAGS
 fi
 EOF
   chmod 0755 "$TMPDIR/bin/clang" "$TMPDIR/bin/clang++"
+  cp -a "$TMPDIR/bin/clang" "$TMPDIR/bin/$TOOLCHAIN_PREFIX-clang"
+  cp -a "$TMPDIR/bin/clang++" "$TMPDIR/bin/$TOOLCHAIN_PREFIX-clang++"
 
   if [ -n "$HOST_EXE" ] ; then
+    EXTRA_CLANG_FLAGS=
+    test "$ARCH_INC" != "$ARCH" && EXTRA_CLANG_FLAGS="-Wl,@%~dp0\\..\\sysroot\\usr\\lib\\libportable.wrap -lportable"
     cat > "$TMPDIR/bin/clang.cmd" <<EOF
 @echo off
 if "%1" == "-cc1" goto :L
-%~dp0\\clang${LLVM_VERSION_WITHOUT_DOT}${HOST_EXE} -target $LLVM_TARGET %*
+%~dp0\\clang${LLVM_VERSION_WITHOUT_DOT}${HOST_EXE} -target $LLVM_TARGET %* $EXTRA_CLANG_FLAGS
 if ERRORLEVEL 1 exit /b 1
 goto :done
 :L
 rem target/triple already spelled out.
-%~dp0\\clang${LLVM_VERSION_WITHOUT_DOT}${HOST_EXE} %*
+%~dp0\\clang${LLVM_VERSION_WITHOUT_DOT}${HOST_EXE} %* $EXTRA_CLANG_FLAGS
 if ERRORLEVEL 1 exit /b 1
 :done
 EOF
     cat > "$TMPDIR/bin/clang++.cmd" <<EOF
 @echo off
 if "%1" == "-cc1" goto :L
-%~dp0\\clang${LLVM_VERSION_WITHOUT_DOT}++${HOST_EXE} -target $LLVM_TARGET %*
+%~dp0\\clang${LLVM_VERSION_WITHOUT_DOT}++${HOST_EXE} -target $LLVM_TARGET %* $EXTRA_CLANG_FLAGS
 if ERRORLEVEL 1 exit /b 1
 goto :done
 :L
 rem target/triple already spelled out.
-%~dp0\\clang${LLVM_VERSION_WITHOUT_DOT}++${HOST_EXE} %*
+%~dp0\\clang${LLVM_VERSION_WITHOUT_DOT}++${HOST_EXE} %* $EXTRA_CLANG_FLAGS
 if ERRORLEVEL 1 exit /b 1
 :done
 EOF
+    cp -a "$TMPDIR/bin/clang.cmd" "$TMPDIR/bin/$TOOLCHAIN_PREFIX-clang.cmd"
+    cp -a "$TMPDIR/bin/clang++.cmd" "$TMPDIR/bin/$TOOLCHAIN_PREFIX-clang++.cmd"
   fi
 fi
 
 dump "Copying sysroot headers and libraries..."
 # Copy the sysroot under $TMPDIR/sysroot. The toolchain was built to
 # expect the sysroot files to be placed there!
-run copy_directory_nolinks "$SRC_SYSROOT" "$TMPDIR/sysroot"
+run copy_directory_nolinks "$SRC_SYSROOT_INC" "$TMPDIR/sysroot/usr/include"
+run copy_directory_nolinks "$SRC_SYSROOT_LIB" "$TMPDIR/sysroot/usr/lib"
+if [ "$ARCH_INC" != "$ARCH" ]; then
+    ABI=$(convert_arch_to_abi $ARCH | tr ',' '\n' | head -n 1)
+    cp -a $NDK_DIR/$LIBPORTABLE_SUBDIR/libs/$ABI/* $TMPDIR/sysroot/usr/lib
+    EXTRA_CLANG_FLAGS="-Wl,@dirname $0/../sysroot/usr/lib/libportable.wrap -lportable"
+fi
 
 dump "Copying libstdc++ headers and libraries..."
 
