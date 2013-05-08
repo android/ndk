@@ -431,15 +431,14 @@ fi
 if [ ! -d $MINGW_W64_SRC ]; then
     echo "Checking out https://mingw-w64.svn.sourceforge.net/svnroot/mingw-w64/trunk$MINGW_W64_REVISION $MINGW_W64_SRC"
     run svn co https://mingw-w64.svn.sourceforge.net/svnroot/mingw-w64/trunk$MINGW_W64_REVISION $MINGW_W64_SRC
-fi
-
-PATCHES_DIR="$PROGDIR/toolchain-patches-host/mingw-w64"
-if [ -d "$PATCHES_DIR" ] ; then
-    PATCHES=$(find "$PATCHES_DIR" -name "*.patch" | sort)
-    for PATCH in $PATCHES; do
-        echo "Patching mingw-w64-$MINGW_W64_REVISION with $PATCH"
-        (cd $MINGW_W64_SRC && run patch -p0 < $PATCH)
-    done
+    PATCHES_DIR="$PROGDIR/toolchain-patches-host/mingw-w64"
+    if [ -d "$PATCHES_DIR" -a "$FRESHLY_CHECKED_OUT" = "yes" ] ; then
+        PATCHES=$(find "$PATCHES_DIR" -name "*.patch" | sort)
+        for PATCH in $PATCHES; do
+            echo "Patching mingw-w64-$MINGW_W64_REVISION with $PATCH"
+            (cd $MINGW_W64_SRC && run patch -p0 < $PATCH)
+        done
+    fi
 fi
 
 # Let's generate the licenses/ directory
