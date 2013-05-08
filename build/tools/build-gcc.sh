@@ -77,7 +77,7 @@ PPL_VERSION=$DEFAULT_PPL_VERSION
 register_var_option "--ppl-version=<version>" PPL_VERSION "Specify ppl version"
 
 WITH_PYTHON=
-register_var_option "--with-python=<path/to/python-config.sh>" WITH_PYTHON "Specify python config script"
+register_var_option "--with-python=<path/to/python-config.sh>" WITH_PYTHON "Specify python config script, or prebuilt"
 
 PACKAGE_DIR=
 register_var_option "--package-dir=<path>" PACKAGE_DIR "Create archive tarball in specific directory"
@@ -177,6 +177,9 @@ if [ ! -d $SRC_DIR/gdb/gdb-$GDB_VERSION ] ; then
 fi
 
 if [ ! -z "$WITH_PYTHON" ] ; then
+    if [ "$WITH_PYTHON" = "prebuilt" ] ; then
+        WITH_PYTHON="$ANDROID_NDK_ROOT/prebuilt/$HOST_TAG/bin/python-config.sh"
+    fi
     if [ ! -f "$WITH_PYTHON" ] ; then
         echo "ERROR: --with-python ($WITH_PYTHON)"
         echo "       Does not exist!"
