@@ -428,13 +428,15 @@ if [ -z "$MINGW_W64_REVISION" ] ; then
     fail_panic "Building MinGW-w64 toolchain requires specifying an svn version"
 fi
 
+FRESHLY_CHECKED_OUT=
 if [ ! -d $MINGW_W64_SRC ]; then
     echo "Checking out https://mingw-w64.svn.sourceforge.net/svnroot/mingw-w64/trunk$MINGW_W64_REVISION $MINGW_W64_SRC"
     run svn co https://mingw-w64.svn.sourceforge.net/svnroot/mingw-w64/trunk$MINGW_W64_REVISION $MINGW_W64_SRC
+    FRESHLY_CHECKED_OUT=yes
 fi
 
 PATCHES_DIR="$PROGDIR/toolchain-patches-host/mingw-w64"
-if [ -d "$PATCHES_DIR" ] ; then
+if [ -d "$PATCHES_DIR" -a "$FRESHLY_CHECKED_OUT" = "yes" ] ; then
     PATCHES=$(find "$PATCHES_DIR" -name "*.patch" | sort)
     for PATCH in $PATCHES; do
         echo "Patching mingw-w64-$MINGW_W64_REVISION with $PATCH"
