@@ -219,7 +219,8 @@ ARMv7-a compatible machine code instead:
 
    APP_ABI := armeabi-v7a
 
-It is also possible to build machine code for *two* distinct ABIs by using:
+It is also possible to build machine code for two or more distinct ABIs,
+for example:
 
    APP_ABI := armeabi armeabi-v7a
 
@@ -232,6 +233,14 @@ machine code for more than one CPU architecture. At installation time, the
 package manager will only unpack the most appropriate machine code for the
 target device. See below for details.
 
+Also you can use:
+
+   APP_ABI := all
+
+which will generate machine code for all supported ABIs with this NDK. Doing so
+will ensure that your application package contains libraries for all target ABIs.
+Note that this has an impact on package size, since each ABI will correspond to
+its own set of native libraries built from the same sources.
 
 
 III. ABI Management on the Android platform:
@@ -288,6 +297,9 @@ native code in application packages.
     - an optional 'secondary' ABI, corresponding to another ABI that
       is also supported by the system image.
 
+    To achieve the best performance for your NDK component, you should compile
+    directly for the primary ABI.
+
     For example, a typical ARMv5TE-based device would only define
     the primary ABI as 'armeabi' and not define a secondary one.
 
@@ -296,7 +308,9 @@ native code in application packages.
     since it can run application native binaries generated for both
     of them.
 
-    A typical x86-based device only defines a primary abi named 'x86'.
+    Many x86-based devices can also run armeabi-v7a and armeabi NDK
+    binaries and define the primary ABI to 'x86' and the secondary
+    one to 'armeabi-v7a'.
 
     A typical MIPS-based device only defines a primary abi named 'mips'.
 
