@@ -25,9 +25,7 @@ TARGET_LD := $(TOOLCHAIN_PREFIX)clang++$(HOST_EXEEXT)
 TARGET_AR := $(TOOLCHAIN_PREFIX)llvm-ar$(HOST_EXEEXT)
 TARGET_STRIP := $(TOOLCHAIN_PREFIX)$(LLVM_TRIPLE)-strip$(HOST_EXEEXT)
 
-TARGET_OBJ_EXTENSION := .bc
-TARGET_LIB_EXTENSION := .a #.bc
-TARGET_SONAME_EXTENSION := .bc
+BC2NATIVE := $(HOST_PYTHON) $(TOOLCHAIN_PREBUILT_ROOT)/bin/ndk-bc2native.py
 
 TARGET_CFLAGS := \
     -target $(LLVM_TRIPLE) \
@@ -74,3 +72,38 @@ $(call set-src-files-target-cflags, $(__debug_sources), $(TARGET_debug_CFLAGS)) 
 $(call set-src-files-target-cflags, $(__release_sources),$(TARGET_release_CFLAGS)) \
 $(call set-src-files-text,$(LOCAL_SRC_FILES),plus$(space)$(space)) \
 
+ifeq ($(strip $(filter-out $(NDK_KNOWN_ABIS),$(TARGET_ARCH_ABI))),)
+
+define cmd-build-shared-library
+$(PRIVATE_CXX) \
+    -Wl,-soname,$(notdir $(LOCAL_BUILT_MODULE)) \
+    -shared \
+    --sysroot=$(call host-path,$(PRIVATE_SYSROOT_LINK)) \
+    $(PRIVATE_LINKER_OBJECTS_AND_LIBRARIES) \
+    $(PRIVATE_LDFLAGS) \
+    $(PRIVATE_LDLIBS) \
+    -o $(call host-path,$(LOCAL_BUILT_MODULE)) && \
+    $(BC2NATIVE) \
+    --ndk-dir=$(NDK_ROOT) \
+    --abi=$(TARGET_ARCH_ABI) \
+    --platform=$(TARGET_PLATFORM) \
+    --file $(call host-path, $(LOCAL_BUILT_MODULE)) $(patsubst %.bc,%.so,$(call host-path,$(LOCAL_BUILT_MODULE)))
+endef
+
+define cmd-build-executable
+$(PRIVATE_CXX) \
+    -Wl,--gc-sections \
+    -Wl,-z,nocopyreloc \
+    --sysroot=$(call host-path,$(PRIVATE_SYSROOT_LINK)) \
+    $(PRIVATE_LINKER_OBJECTS_AND_LIBRARIES) \
+    $(PRIVATE_LDFLAGS) \
+    $(PRIVATE_LDLIBS) \
+    -o $(call host-path,$(LOCAL_BUILT_MODULE)) && \
+    $(BC2NATIVE) \
+    --ndk-dir=$(NDK_ROOT) \
+    --abi=$(TARGET_ARCH_ABI) \
+    --platform=$(TARGET_PLATFORM) \
+    --file $(call host-path,$(LOCAL_BUILT_MODULE)) $(call host-path,$(LOCAL_BUILT_MODULE))
+endef
+
+endif

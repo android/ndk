@@ -23,20 +23,17 @@
 # revisions of the NDK.
 #
 
-TOOLCHAIN_NAME := clang-3.2
-BC2NATIVE := $(HOST_PYTHON) $(TOOLCHAIN_PREBUILT_ROOT)/bin/ndk-bc2native.py
+TOOLCHAIN_VERSION := 4.7
 
 ifneq ($(filter %bcarmeabi-v7a,$(TARGET_ARCH_ABI)),)
 SYSROOT_LINK     := $(NDK_PLATFORMS_ROOT)/$(TARGET_PLATFORM)/arch-arm
 TARGET_GDBSERVER := $(NDK_ROOT)/prebuilt/android-arm/gdbserver/gdbserver
 TARGET_ARCH_ABI  := armeabi-v7a
 NDK_APP_DST_DIR  := $(NDK_APP_PROJECT_PATH)/libs/$(TARGET_ARCH_ABI)
-cmd-strip = $(PRIVATE_STRIP) --strip-unneeded $(call host-path,$1) && \
-            $(BC2NATIVE) \
-            --ndk-dir=$(NDK_ROOT) \
-            --abi=$(TARGET_ARCH_ABI) \
-            --platform=$(TARGET_PLATFORM) \
-            --file $(call host-path,$1) $(patsubst %.bc,%.so,$(call host-path,$1))
+
+TARGET_PREBUILT_ROOT = $(call host-prebuilt-tag,$(NDK_ROOT)/toolchains/arm-linux-androideabi-$(TOOLCHAIN_VERSION))
+cmd-strip = $(TARGET_PREBUILT_ROOT)/bin/arm-linux-androideabi-strip$(HOST_EXEEXT) --strip-unneeded $(call host-path,$1)
+
 include $(NDK_ROOT)/toolchains/llvm-3.2/setup-common.mk
 
 else
@@ -45,12 +42,10 @@ SYSROOT_LINK     := $(NDK_PLATFORMS_ROOT)/$(TARGET_PLATFORM)/arch-arm
 TARGET_GDBSERVER := $(NDK_ROOT)/prebuilt/android-arm/gdbserver/gdbserver
 TARGET_ARCH_ABI  := armeabi
 NDK_APP_DST_DIR  := $(NDK_APP_PROJECT_PATH)/libs/$(TARGET_ARCH_ABI)
-cmd-strip = $(PRIVATE_STRIP) --strip-unneeded $(call host-path,$1) && \
-            $(BC2NATIVE) \
-            --ndk-dir=$(NDK_ROOT) \
-            --abi=$(TARGET_ARCH_ABI) \
-            --platform=$(TARGET_PLATFORM) \
-            --file $(call host-path,$1) $(patsubst %.bc,%.so,$(call host-path,$1))
+
+TARGET_PREBUILT_ROOT = $(call host-prebuilt-tag,$(NDK_ROOT)/toolchains/arm-linux-androideabi-$(TOOLCHAIN_VERSION))
+cmd-strip = $(TARGET_PREBUILT_ROOT)/bin/arm-linux-androideabi-strip$(HOST_EXEEXT) --strip-unneeded $(call host-path,$1)
+
 include $(NDK_ROOT)/toolchains/llvm-3.2/setup-common.mk
 
 else
@@ -59,12 +54,10 @@ SYSROOT_LINK     := $(NDK_PLATFORMS_ROOT)/$(TARGET_PLATFORM)/arch-x86
 TARGET_GDBSERVER := $(NDK_ROOT)/prebuilt/android-x86/gdbserver/gdbserver
 TARGET_ARCH_ABI  := x86
 NDK_APP_DST_DIR  := $(NDK_APP_PROJECT_PATH)/libs/$(TARGET_ARCH_ABI)
-cmd-strip = $(PRIVATE_STRIP) --strip-unneeded $(call host-path,$1) && \
-            $(BC2NATIVE) \
-            --ndk-dir=$(NDK_ROOT) \
-            --abi=$(TARGET_ARCH_ABI) \
-            --platform=$(TARGET_PLATFORM) \
-            --file $(call host-path,$1) $(patsubst %.bc,%.so,$(call host-path,$1))
+
+TARGET_PREBUILT_ROOT = $(call host-prebuilt-tag,$(NDK_ROOT)/toolchains/x86-$(TOOLCHAIN_VERSION))
+cmd-strip = $(TARGET_PREBUILT_ROOT)/bin/i686-linux-android-strip$(HOST_EXEEXT) --strip-unneeded $(call host-path,$1)
+
 include $(NDK_ROOT)/toolchains/llvm-3.2/setup-common.mk
 
 else
@@ -73,12 +66,10 @@ SYSROOT_LINK     := $(NDK_PLATFORMS_ROOT)/$(TARGET_PLATFORM)/arch-mips
 TARGET_GDBSERVER := $(NDK_ROOT)/prebuilt/android-mips/gdbserver/gdbserver
 TARGET_ARCH_ABI  := mips
 NDK_APP_DST_DIR  := $(NDK_APP_PROJECT_PATH)/libs/$(TARGET_ARCH_ABI)
-cmd-strip = $(PRIVATE_STRIP) --strip-unneeded $(call host-path,$1) && \
-            $(BC2NATIVE) \
-            --ndk-dir=$(NDK_ROOT) \
-            --abi=$(TARGET_ARCH_ABI) \
-            --platform=$(TARGET_PLATFORM) \
-            --file $(call host-path,$1) $(patsubst %.bc,%.so,$(call host-path,$1))
+
+TARGET_PREBUILT_ROOT = $(call host-prebuilt-tag,$(NDK_ROOT)/toolchains/mipsel-linux-android-$(TOOLCHAIN_VERSION))
+cmd-strip = $(TARGET_PREBUILT_ROOT)/bin/mipsel-linux-android-strip$(HOST_EXEEXT) --strip-unneeded $(call host-path,$1)
+
 include $(NDK_ROOT)/toolchains/llvm-3.2/setup-common.mk
 
 else
@@ -127,6 +118,11 @@ TARGET_LDFLAGS   += -Wl,@$(NDK_ROOT)/sources/android/libportable/libs/mips/libpo
 include $(NDK_ROOT)/toolchains/mipsel-linux-android-clang3.2/setup.mk
 
 else
+
+TARGET_OBJ_EXTENSION := .bc
+TARGET_LIB_EXTENSION := .a
+TARGET_SONAME_EXTENSION := .bc
+
 include $(NDK_ROOT)/toolchains/llvm-3.2/setup-common.mk
 
 endif
