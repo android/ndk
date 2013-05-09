@@ -281,6 +281,7 @@ build_host_python ()
 
     ARGS=$ARGS" --build=$BH_BUILD_CONFIG"
     ARGS=$ARGS" --host=$BH_HOST_CONFIG"
+    ARGS=$ARGS" --with-build-sysroot"
     ARGS=$ARGS" $PYDEBUG"
     ARGS=$ARGS" --disable-ipv6"
 
@@ -329,7 +330,7 @@ build_host_python ()
             echo "ac_cv_little_endian_double=yes"      >> $CFG_SITE
         fi
 
-        if [ $BH_HOST_OS = $BH_BUILD_OS ]; then
+        if [ "$BH_HOST_OS" = "$BH_BUILD_OS" ]; then
             # Only cross compiling from arch perspective.
             # qemu causes failures as cross-compilation is not detected
             # if a test executable can be run successfully, so we test
