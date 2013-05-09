@@ -50,8 +50,8 @@ int main(int argc, char *argv[]) {
 
    if (cpid == 0) {		/* This is the child operation */
       printf("Child Created\n");
-      printf("Child = %ld\n", getpid());
-      printf("Parent = %ld\n", getppid());
+      printf("Child = %d\n", getpid());
+      printf("Parent = %d\n", getppid());
       sleep(2);
       exit(3);
 
@@ -77,13 +77,13 @@ int main(int argc, char *argv[]) {
 
    if (cpid == 0) {               /* This is the child operation */
       printf("Child Created\n");
-      printf("Child = %ld\n", getpid());
-      printf("Parent = %ld\n", getppid());
+      printf("Child = %d\n", getpid());
+      printf("Parent = %d\n", getppid());
       sleep(2);
       exit(3);
 
    } else {                       /* This is the parent operation */
-      printf("Waiting for child\n", cpid);
+      printf("Waiting for child %d\n", cpid);
       waitpid(cpid, NULL, 0);
       printf("Waiting Complete\n");
       printf("Child Exit Code: %d\n", WEXITSTATUS(status));
@@ -103,8 +103,8 @@ int main(int argc, char *argv[]) {
 
    if (cpid == 0) {             /* This is the child operation */
       printf("Child Created\n");
-      printf("Child = %ld\n", getpid());
-      printf("Parent = %ld\n", getppid());
+      printf("Child = %d\n", getpid());
+      printf("Parent = %d\n", getppid());
       sleep(2);
       exit(3);
 
@@ -130,8 +130,8 @@ int main(int argc, char *argv[]) {
 
    if (cpid == 0) {             /* This is the child operation */
       printf("Child Created\n");
-      printf("Child = %ld\n", getpid());
-      printf("Parent = %ld\n", getppid());
+      printf("Child = %d\n", getpid());
+      printf("Parent = %d\n", getppid());
       sleep(2);
       exit(3);
 
