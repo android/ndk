@@ -934,8 +934,7 @@ prepare_host_build ()
     setup_ccache
 }
 
-
-prepare_target_build ()
+prepare_abi_configure_build ()
 {
     # detect build tag
     case $HOST_TAG in
@@ -959,6 +958,11 @@ prepare_target_build ()
             echo "Please update 'prepare_host_flags' in build/tools/prebuilt-common.sh"
             ;;
     esac
+}
+
+prepare_target_build ()
+{
+    prepare_abi_configure_build
 
     # By default, assume host == build
     ABI_CONFIGURE_HOST="$ABI_CONFIGURE_BUILD"
