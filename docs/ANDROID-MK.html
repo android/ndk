@@ -241,7 +241,7 @@ TARGET_ARCH_ABI
             For i686
 
        mips
-            For mips-r1
+            For mips32 (r1)
 
     NOTE: Up to Android NDK 1.6_r1, this variable was simply defined
           as 'arm'. However, the value has been redefined to better
@@ -573,7 +573,7 @@ LOCAL_LDLIBS
 LOCAL_LDFLAGS
     The list of other linker flags to be used when building your shared
     library or executable. For example, the following will use the ld.bfd
-    linker on ARM/X86 GCC 4.6/4.7 where ld.gold is the default
+    linker on ARM/X86 GCC 4.6+ where ld.gold is the default
 
       LOCAL_LDFLAGS += -fuse-ld=bfd
 

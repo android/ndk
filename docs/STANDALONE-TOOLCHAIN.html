@@ -89,14 +89,19 @@ to specify the MIPS GCC 4.6, or alternatively
   --toolchain=arm-linux-androideabi-4.7  # select ARM GCC 4.7 compiler
   --toolchain=mipsel-linux-android-4.6   # select MIPS GCC 4.6 compiler, same as --arch=mips
 
-If you wish, add '--llvm-version=3.1' to also copy clang/llvm 3.1, or
-use --toolchain with '-clang3.1' suffix.  For example:
+If you wish, add '--llvm-version=3.2' to also copy clang/llvm 3.2, or
+use --toolchain with '-clang3.2' suffix.  For example:
 
-  --toolchain=arm-linux-androideabi-clang3.1  # same as --arch=arm --llvm-version=3.1
+  --toolchain=arm-linux-androideabi-clang3.2  # same as --arch=arm --llvm-version=3.2
 
 You may specify --system=linux-x86_64 on 64-bit Linux or --system=darwin-x86_64 on 64-bit
 MacOSX to make 64-bit host toolchain instead of the 32-bit one (default).
 See IV of NDK-BUILD.html
+
+You may specify --stl=stlport to copy libstlport instead of libgnustl. Note that
+to link against the shared library, you will have to explicitely use -lstlport_shared
+in this case, just like you need to use -lgnustl_shared for the GNU libstdc++ case.
+Static linking doesn't require anything special.
 
 You can later use it directly with something like:
 

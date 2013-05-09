@@ -253,10 +253,10 @@ OTHER CHANGES:
 
 - GNU libstdc++ is now configured with _GLIBCXX_USE_C99_MATH which will undef
   isinf, etc (*1), in bionic header.  If you have code which does the following
-     #include <math.h>
+     #include &lt;math.h&gt;
        ... use isinf
-     #include <cmath>
-     #include <math.h>
+     #include &lt;cmath&gt;
+     #include &lt;math.h&gt;
        ... use isinf // fails
   The 2nd use of isinf may fail because cmath undefined isinf
 
