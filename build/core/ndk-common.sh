@@ -687,6 +687,38 @@ download_file ()
     fi
 }
 
+# Form the relative path between from one abs path to another
+#
+# $1 : start path
+# $2 : end path
+#
+# From:
+# http://stackoverflow.com/questions/2564634/bash-convert-absolute-path-into-relative-path-given-a-current-directory
+relpath ()
+{
+    [ $# -ge 1 ] && [ $# -le 2 ] || return 1
+    current="${2:+"$1"}"
+    target="${2:-"$1"}"
+    [ "$target" != . ] || target=/
+    target="/${target##/}"
+    [ "$current" != . ] || current=/
+    current="${current:="/"}"
+    current="/${current##/}"
+    appendix="${target##/}"
+    relative=''
+    while appendix="${target#"$current"/}"
+        [ "$current" != '/' ] && [ "$appendix" = "$target" ]; do
+        if [ "$current" = "$appendix" ]; then
+            relative="${relative:-.}"
+            echo "${relative#/}"
+            return 0
+        fi
+        current="${current%/*}"
+        relative="$relative${relative:+/}.."
+    done
+    relative="$relative${relative:+${appendix:+/}}${appendix#/}"
+    echo "$relative"
+}
 
 # Unpack a given archive
 #

@@ -212,6 +212,7 @@ build_host_gdb ()
     run2 "$SRCDIR"/configure $ARGS &&
     run2 make -j$NUM_JOBS &&
     run2 make -j$NUM_JOBS install
+    fail_panic "Failed to configure/make/install gdb"
 }
 
 need_build_host_gdb ()
@@ -227,6 +228,7 @@ install_host_gdb ()
 {
     local SRCDIR="$(gdb_build_install_dir $1 $2 $3)"
     local DSTDIR="$NDK_DIR/$(gdb_ndk_install_dir $1 $2 $3)"
+    local PYDIR="$NDK_DIR/$(python_ndk_install_dir $1)"
 
     need_build_host_gdb $1 $2 $3
 
@@ -237,6 +239,19 @@ install_host_gdb ()
     if [ -d "$SRCDIR/share/gdb" ]; then
         run copy_directory "$SRCDIR/share/gdb" "$DSTDIR/share/gdb"
     fi
+
+    # build the gdb stub and replace gdb with it. This is done post-install
+    # so files are in the correct place when determining the relative path.
+    case "$1" in
+        windows*)
+            dump "$TEXT Building gdb-stub"
+            run $BUILDTOOLS/build-gdb-stub.sh --gdb-executable-path=${DSTDIR}/$(bh_tag_to_config_triplet $2)-gdb.exe \
+                                              --python-prefix-dir=${PYDIR} \
+                                              --mingw-w64-gcc-path=${BH_HOST_CONFIG}-gcc
+            ;;
+        *)
+            ;;
+    esac
 }
 
 need_install_host_gdb ()
