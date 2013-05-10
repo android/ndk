@@ -178,14 +178,14 @@ fi
 
 if [ ! -z "$WITH_PYTHON" ] ; then
     if [ "$WITH_PYTHON" = "prebuilt" ] ; then
-        WITH_PYTHON="$ANDROID_NDK_ROOT/prebuilt/$HOST_TAG/bin/python-config.sh"
+        WITH_PYTHON_SCRIPT="$ANDROID_NDK_ROOT/prebuilt/$HOST_TAG/bin/python-config.sh"
     fi
-    if [ ! -f "$WITH_PYTHON" ] ; then
-        echo "ERROR: --with-python ($WITH_PYTHON)"
+    if [ ! -f "$WITH_PYTHON_SCRIPT" ] ; then
+        echo "ERROR: --with-python ($WITH_PYTHON_SCRIPT)"
         echo "       Does not exist!"
         exit 1
     else
-        WITH_PYTHON="--with-python=$WITH_PYTHON"
+        WITH_PYTHON="--with-python=$WITH_PYTHON_SCRIPT"
     fi
 fi
 
@@ -351,6 +351,7 @@ if [ $? != 0 ] ; then
     dump "Error while trying to configure toolchain build. See $TMPLOG"
     exit 1
 fi
+
 ABI="$OLD_ABI"
 # build the toolchain
 dump "Building : $TOOLCHAIN toolchain [this can take a long time]."
@@ -403,6 +404,16 @@ if [ "$MINGW" = "yes" -o "$DARWIN" = "yes" ] ; then
     TOOLCHAIN_TARGET_LIB_PATH="$TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/lib"
     (cd "$INSTALL_TARGET_LIB_PATH" &&
         find . \( -name "*.a" -o -name "*.la" -o -name "*.spec" \) -exec install -D "{}" "$TOOLCHAIN_TARGET_LIB_PATH/{}" \;)
+fi
+
+# build the gdb stub and replace gdb with it. This is done post-install
+# so files are in the correct place when determining the relative path.
+if [ "$MINGW" = "yes" ] ; then
+    WITH_PYTHON_PREFIX=$(dirname $(dirname "$WITH_PYTHON_SCRIPT"))
+    dump "Building : $TOOLCHAIN GDB stub. "$TOOLCHAIN_PATH/bin/${ABI_CONFIGURE_TARGET}-gdb.exe", "$WITH_PYTHON_PREFIX", $ABI_CONFIGURE_HOST-gcc"
+    run $NDK_DIR/build/tools/build-gdb-stub.sh --gdb-executable-path="$TOOLCHAIN_PATH/bin/${ABI_CONFIGURE_TARGET}-gdb.exe" \
+                                               --python-prefix-dir=${WITH_PYTHON_PREFIX} \
+                                               --mingw-w64-gcc=$ABI_CONFIGURE_HOST-gcc
 fi
 
 # don't forget to copy the GPL and LGPL license files
