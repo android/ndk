@@ -90,7 +90,7 @@ for SYSTEM in $SYSTEMS; do
     test -f "$MCLD" || fail_panic "Could not find $MCLD"
 
     # find all GNU ld with the same SYSTEM
-    ALL_LDS=`find toolchains \( -name "*-ld" -o -name "ld" -o -name "*-ld.exe" -o -name "ld.exe" \) | grep $SYSTEM/`
+    ALL_LDS=`find toolchains \( -name "*-ld" -o -name "ld" -o -name "*-ld.exe" -o -name "ld.exe" \) | egrep "/arm|/x86|/mips" | grep $SYSTEM/`
 
     ALL_LD_MCLDS=
     for LD in $ALL_LDS; do
