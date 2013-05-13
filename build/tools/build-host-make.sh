@@ -59,8 +59,8 @@ fi
 
 log "Using sources from: $GNUMAKE_SRCDIR"
 
-prepare_host_build
 prepare_abi_configure_build
+prepare_host_build
 
 TMP_SRCDIR=$NDK_TMPDIR/src
 

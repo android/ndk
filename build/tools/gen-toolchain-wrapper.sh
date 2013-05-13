@@ -143,7 +143,7 @@ gen_wrapper_program ()
     local LDFLAGS=""
 
     case $PROG in
-      cc|gcc)
+      cc|gcc|cpp)
           FLAGS=$FLAGS" $EXTRA_CFLAGS"
           if mingw_has_dlfcn_h ${DST_PREFIX}$PROG; then
               LDFLAGS="-ldl"
