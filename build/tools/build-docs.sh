@@ -45,7 +45,7 @@ do_in_dir () {
   IN_DIR=$1
 }
 
-register_var_option "--out-dir=<path>" OUT "Specify output directory"
+register_var_option "--out-dir=<path>" OUT_DIR "Specify output directory"
 
 MARKDOWN=markdown_py
 register_var_option "--markdown=<executable>" MARKDOWN "Specify markdown executable to use"

@@ -385,8 +385,8 @@ rm -rf $REFERENCE/sources/cxx-stl/llvm-libc++
 
 # Regenerate HTML documentation, place the files under .../docs/
 $NDK_ROOT_DIR/build/tools/build-docs.sh \
-    --intput-dir=$NDK_ROOT_DIR/docs/text \
-    --output-dir=$REFERENCE/docs
+    --in-dir=$NDK_ROOT_DIR/docs/text \
+    --out-dir=$REFERENCE/docs
 
 # copy sources files
 if [ -d $DEVELOPMENT_ROOT/sources ] ; then

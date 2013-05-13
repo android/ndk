@@ -1,5 +1,5 @@
-<html><body><pre>NDK Prebuilt library support:
------------------------------
+NDK Prebuilt library support:
+===
 
 Android NDK r5 introduced support for prebuilt libraries (shared and
 static), i.e. the ability to include and use, in your applications,
@@ -7,10 +7,10 @@ prebuilt version of libraries.
 
 This feature can be useful for two things:
 
-1/ You want to distribute your own libraries to third-party NDK developers
+1. You want to distribute your own libraries to third-party NDK developers
    without distributing your sources.
 
-2/ You want to use a prebuilt version of your own libraries to speed up
+2. You want to use a prebuilt version of your own libraries to speed up
    your build.
 
 This document explains how this support works.
@@ -23,16 +23,16 @@ Each prebuilt library must be declared as a *single* independent module to
 the build system. Here is a trivial example where we assume that the file
 "libfoo.so" is located in the same directory than the Android.mk below:
 
-   LOCAL_PATH := $(call my-dir)
+        LOCAL_PATH := $(call my-dir)
 
-   include $(CLEAR_VARS)
-   LOCAL_MODULE := foo-prebuilt
-   LOCAL_SRC_FILES := libfoo.so
-   include $(PREBUILT_SHARED_LIBRARY)
+        include $(CLEAR_VARS)
+        LOCAL_MODULE := foo-prebuilt
+        LOCAL_SRC_FILES := libfoo.so
+        include $(PREBUILT_SHARED_LIBRARY)
 
 Notice that, to declare such a module, you really only need the following:
 
-1. Give the module a name (here 'foo-prebuilt'). This does not need to
+1. Give the module a name (here '`foo-prebuilt`'). This does not need to
    correspond to the name of the prebuilt library itself.
 
 2. Assign to LOCAL_SRC_FILES the path to the prebuilt library you are
@@ -47,7 +47,7 @@ Notice that, to declare such a module, you really only need the following:
 
 A prebuilt module does not build anything. However, a copy of your prebuilt
 shared library will be copied into $PROJECT/obj/local, and another will be
-copied and stripped into $PROJECT/libs/&lt;abi&gt;.
+copied and stripped into `$PROJECT/libs/<abi>`.
 
 II. Referencing the prebuilt library in other modules:
 ------------------------------------------------------
@@ -58,11 +58,11 @@ depends on them.
 
 For example, a naive example of a module using libfoo.so would be:
 
-    include $(CLEAR_VARS)
-    LOCAL_MODULE := foo-user
-    LOCAL_SRC_FILES := foo-user.c
-    LOCAL_SHARED_LIBRARIES := foo-prebuilt
-    include $(BUILD_SHARED_LIBRARY)
+        include $(CLEAR_VARS)
+        LOCAL_MODULE := foo-user
+        LOCAL_SRC_FILES := foo-user.c
+        LOCAL_SHARED_LIBRARIES := foo-prebuilt
+        include $(BUILD_SHARED_LIBRARY)
 
 
 III. Exporting headers for prebuilt libraries:
@@ -74,7 +74,7 @@ found in a header file distributed with the prebuilt library (e.g. "foo.h").
 
 In other words, foo-user.c is going to have a line like:
 
-  #include &lt;foo.h&gt;
+      #include <foo.h>
 
 And you need to provide the header and its include path to the compiler
 when building the foo-user module.
@@ -83,11 +83,11 @@ A simple way to deal with that is to use exports in the prebuilt module
 definition. For example, assuming that a file "foo.h" is located under
 the 'include' directory relative to the prebuilt module, we can write:
 
-   include $(CLEAR_VARS)
-   LOCAL_MODULE := foo-prebuilt
-   LOCAL_SRC_FILES := libfoo.so
-   LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/include
-   include $(PREBUILT_SHARED_LIBRARY)
+        include $(CLEAR_VARS)
+        LOCAL_MODULE := foo-prebuilt
+        LOCAL_SRC_FILES := libfoo.so
+        LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/include
+        include $(PREBUILT_SHARED_LIBRARY)
 
 The LOCAL_EXPORT_C_INCLUDES definition here ensures that any module that
 depends on the prebuilt one will have its LOCAL_C_INCLUDES automatically
@@ -99,7 +99,7 @@ IV. Debugging prebuilt binaries:
 --------------------------------
 
 We recommend you to provide prebuilt shared libraries that contain debug
-symbols. The version that is installed into $PROJECT/libs/&lt;abi&gt;/ is always
+symbols. The version that is installed into `$PROJECT/libs/<abi>/` is always
 stripped by the NDK build system, but the debug version will be used for
 debugging purposes with ndk-gdb.
 
@@ -111,31 +111,31 @@ As said previously, it is crucial to provide a prebuilt shared library
 that is compatible with the targeted ABI during the build. To do that,
 check for the value of TARGET_ARCH_ABI, its value will be:
 
-   armeabi     =&gt; when targeting ARMv5TE or higher CPUs
-   armeabi-v7a =&gt; when targeting ARMv7 or higher CPUs
-   x86         =&gt; when targeting x86 CPUs
-   mips        =&gt; when targeting MIPS CPUs
+      armeabi     => when targeting ARMv5TE or higher CPUs
+      armeabi-v7a => when targeting ARMv7 or higher CPUs
+      x86         => when targeting x86 CPUs
+      mips        => when targeting MIPS CPUs
 
 Note that armeabi-v7a systems can run armeabi binaries just fine.
 
 Here's an example where we provide two versions of a prebuilt library
 and select which one to copy based on the target ABI:
 
-    include $(CLEAR_VARS)
-    LOCAL_MODULE := foo-prebuilt
-    LOCAL_SRC_FILES := $(TARGET_ARCH_ABI)/libfoo.so
-    LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/include
-    include $(PREBUILT_SHARED_LIBRARY)
+        include $(CLEAR_VARS)
+        LOCAL_MODULE := foo-prebuilt
+        LOCAL_SRC_FILES := $(TARGET_ARCH_ABI)/libfoo.so
+        LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/include
+        include $(PREBUILT_SHARED_LIBRARY)
 
 Here. we assume that the prebuilt libraries to copy are under the
 following directory hierarchy:
 
-    Android.mk            --&gt; the file above
-    armeabi/libfoo.so     --&gt; the armeabi prebuilt shared library
-    armeabi-v7a/libfoo.so --&gt; the armeabi-v7a prebuilt shared library
-    include/foo.h         --&gt; the exported header file
+        Android.mk            --> the file above
+        armeabi/libfoo.so     --> the armeabi prebuilt shared library
+        armeabi-v7a/libfoo.so --> the armeabi-v7a prebuilt shared library
+        include/foo.h         --> the exported header file
 
 NOTE: Remember that you don't need to provide an armeabi-v7a prebuilt
       library, since an armeabi one can easily run on the corresponding
       devices.
-</pre></body></html>
+
