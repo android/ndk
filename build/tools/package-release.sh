@@ -383,6 +383,11 @@ rm -rf $REFERENCE/tests/device/*/{obj,libs}
 # http://b.android.com/36496
 rm -rf $REFERENCE/sources/cxx-stl/llvm-libc++
 
+# Regenerate HTML documentation, place the files under .../docs/
+$NDK_ROOT_DIR/build/tools/build-docs.sh \
+    --in-dir=$NDK_ROOT_DIR/docs/text \
+    --out-dir=$REFERENCE/docs
+
 # copy sources files
 if [ -d $DEVELOPMENT_ROOT/sources ] ; then
     echo "Copying NDK sources files"
