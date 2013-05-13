@@ -1,10 +1,10 @@
-<html><body><pre>Android NDK x86 (a.k.a. IA-32) instruction set support
-------------------------------------------------------
+Android NDK x86 (a.k.a. IA-32) instruction set support
+===
 
 Introduction:
 -------------
 
-Android NDK r6 added support for the 'x86' ABI, that allows native code to
+Android NDK r6 added support for the '`x86`' ABI, that allows native code to
 run on Android-based devices running on CPUs supporting the IA-32 instruction
 set.
 
@@ -16,25 +16,25 @@ Overview:
 Generating x86 machine code is simple: just add 'x86' to your APP_ABI
 definition in your Application.mk file, for example:
 
-   APP_ABI := armeabi armeabi-v7a x86
+        APP_ABI := armeabi armeabi-v7a x86
 
 Alternatively, since NDK r7, you can use:
 
-   APP_ABI := all
+        APP_ABI := all
 
 will generate machine code for all supported ABIs with this NDK. Doing so
 will ensure that your application package contains libraries for all target
 ABIs. Note that this has an impact on package size, since each ABI will
 correspond to its own set of native libraries built from the same sources.
 
-The default ABI is still 'armeabi', if unspecified in your project.
+The default ABI is still '`armeabi`', if unspecified in your project.
 
-As you would expect, generated libraries will go into $PROJECT/libs/x86/, and
-will be embedded into your .apk under /lib/x86/.
+As you would expect, generated libraries will go into `$PROJECT/libs/x86/`, and
+will be embedded into your .apk under `/lib/x86/`.
 
 And just like other ABIs, the Android package manager will extract these
 libraries on a *compatible* x86-based device automatically at install time,
-to put them under &lt;dataPath&gt;/lib, where &lt;dataPath&gt; is the
+to put them under <dataPath>/lib, where <dataPath> is the
 application's private data directory.
 
 Similarly, the Google Play server is capable of filtering applications
@@ -49,9 +49,9 @@ It is possible to use the x86 toolchain with NDK r6 in stand-alone mode.
 See docs/STANDALONE-TOOLCHAIN.html for more details. Briefly speaking,
 it is now possible to run:
 
-  $NDK/build/tools/make-standalone-toolchain.sh --arch=x86 --install-dir=<path>
+      $NDK/build/tools/make-standalone-toolchain.sh --arch=x86 --install-dir=<path>
 
-The toolchain binaries have the i686-linux-android- prefix.
+The toolchain binaries have the `i686-linux-android- prefix`.
 
 
 Compatibility:
@@ -64,4 +64,3 @@ Gingerbread (note also that no new native APIs were introduced by Honeycomb).
 You won't have to change anything to your project files if you target an older
 API level: the NDK build script will automatically select the right set of
 native platform headers/libraries for you.
-</pre></body></html>

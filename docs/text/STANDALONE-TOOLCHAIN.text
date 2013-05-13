@@ -1,4 +1,4 @@
-<html><body><pre>USING THE ANDROID TOOLCHAIN AS A STANDALONE COMPILER
+USING THE ANDROID TOOLCHAIN AS A STANDALONE COMPILER
 ======================================================
 
 It is now possible to use the toolchains provided with the Android NDK as
@@ -35,13 +35,13 @@ This allows you to define the path to your 'sysroot', a GCC term for a
 directory containing the system headers and libraries of your target.
 Usually, this will be something like:
 
-   SYSROOT=$NDK/platforms/android-&lt;level&gt;/arch-&lt;arch&gt;/
+        SYSROOT=$NDK/platforms/android-<level>/arch-<arch>/
 
-Where &lt;level&gt; is the API level number, and &lt;arch&gt; is the architecture
+Where <level> is the API level number, and <arch> is the architecture
 ("arm", "x86", and "mips" are the supported values). For example, if you're
 targeting Android 2.2 (a.k.a. Froyo), you would use:
 
-   SYSROOT=$NDK/platforms/android-8/arch-arm
+        SYSROOT=$NDK/platforms/android-8/arch-arm
 
 IMPORTANT: Note that X86 and MIPS architectures are only supported at android-9 and later.
 
@@ -51,22 +51,22 @@ IMPORTANT: Note that X86 and MIPS architectures are only supported at android-9 
 Invoke the compiler using the --sysroot option to indicate where the system
 files for the platform you're targeting are located. For example, do:
 
-    export CC="$NDK/toolchains/&lt;name&gt;/prebuilt/&lt;system&gt;/bin/&lt;prefix&gt;gcc --sysroot=$SYSROOT"
-    $CC -o foo.o -c foo.c
+        export CC="$NDK/toolchains/<name>/prebuilt/<system>/bin/<prefix>gcc --sysroot=$SYSROOT"
+        $CC -o foo.o -c foo.c
 
-Where &lt;name&gt; is the toolchain's name, &lt;system&gt; is the host tag for your system,
-and &lt;prefix&gt; is a toolchain-specific prefix. For example, if you are on Linux
+Where <name> is the toolchain's name, <system> is the host tag for your system,
+and <prefix> is a toolchain-specific prefix. For example, if you are on Linux
 using the NDK r5 toolchain, you would use:
 
-    export CC="$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc --sysroot=$SYSROOT"
+        export CC="$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc --sysroot=$SYSROOT"
 
 As you can see, this is rather verbose, but it works!
 
 IMPORTANT NOTE:
 
-    Using the NDK toolchain directly has a serious limitation:
-    You won't be able to use any C++ STL (either STLport or
-    the GNU libstdc++) with it. Also no exceptions and no RTTI.
+> Using the NDK toolchain directly has a serious limitation:
+  You won't be able to use any C++ STL (either STLport or
+  the GNU libstdc++) with it. Also no exceptions and no RTTI.
 
 
 4/ Invoking the compiler (the easy way):
@@ -75,7 +75,7 @@ IMPORTANT NOTE:
 The NDK allows you to create a "customized" toolchain installation to make
 life easier. For example, consider the following command:
 
-  $NDK/build/tools/make-standalone-toolchain.sh --platform=android-5 --install-dir=/tmp/my-android-toolchain
+        $NDK/build/tools/make-standalone-toolchain.sh --platform=android-5 --install-dir=/tmp/my-android-toolchain
 
 This will create a directory named /tmp/my-android-toolchain containing a
 copy of the android-5/arch-arm sysroot, and of the toolchain binaries.
@@ -83,16 +83,16 @@ copy of the android-5/arch-arm sysroot, and of the toolchain binaries.
 Note that by default, the 32-bit ARM-based GCC 4.6 toolchain will be selected by the script.
 Use the '--arch=x86' option to specify the x86 GCC 4.6, or add '--arch=mips' option
 to specify the MIPS GCC 4.6, or alternatively
-'--toolchain=&lt;name&gt;'.  For example:
+'--toolchain=<name>'.  For example:
 
-  --toolchain=x86-4.4.3                  # select x86 GCC 4.4.3 compiler
-  --toolchain=arm-linux-androideabi-4.7  # select ARM GCC 4.7 compiler
-  --toolchain=mipsel-linux-android-4.6   # select MIPS GCC 4.6 compiler, same as --arch=mips
+        --toolchain=x86-4.4.3                  # select x86 GCC 4.4.3 compiler
+        --toolchain=arm-linux-androideabi-4.7  # select ARM GCC 4.7 compiler
+        --toolchain=mipsel-linux-android-4.6   # select MIPS GCC 4.6 compiler, same as --arch=mips
 
 If you wish, add '--llvm-version=3.2' to also copy clang/llvm 3.2, or
 use --toolchain with '-clang3.2' suffix.  For example:
 
-  --toolchain=arm-linux-androideabi-clang3.2  # same as --arch=arm --llvm-version=3.2
+        --toolchain=arm-linux-androideabi-clang3.2  # same as --arch=arm --llvm-version=3.2
 
 You may specify --system=linux-x86_64 on 64-bit Linux or --system=darwin-x86_64 on 64-bit
 MacOSX to make 64-bit host toolchain instead of the 32-bit one (default).
@@ -105,12 +105,12 @@ Static linking doesn't require anything special.
 
 You can later use it directly with something like:
 
-   export PATH=/tmp/my-android-toolchain/bin:$PATH
-   export CC=arm-linux-androideabi-gcc   # or export CC=clang
-   export CXX=arm-linux-androideabi-g++  # or export CXX=clang++
+        export PATH=/tmp/my-android-toolchain/bin:$PATH
+        export CC=arm-linux-androideabi-gcc   # or export CC=clang
+        export CXX=arm-linux-androideabi-g++  # or export CXX=clang++
 
 Note that without the --install-dir option, make-standalone-toolchain.sh will
-create a tarball in /tmp/ndk/&lt;toolchain-name&gt;.tar.bz2. This allows you to
+create a tarball in /tmp/ndk/<toolchain-name>.tar.bz2. This allows you to
 archive and redistribute the binaries easily.
 
 Another important benefit is that this standalone toolchain will contain a
@@ -119,11 +119,11 @@ working copy of the GNU libstdc++, with working exceptions and RTTI support
 
 Use --help for more options and details.
 
-IMPORTANT: The toolchain binaries do not depend or contain host-specific paths,
+> IMPORTANT: The toolchain binaries do not depend or contain host-specific paths,
            in other words, they can be installed in any location, or even
            moved if you need to.
 
-NOTE: You can still use the --sysroot option with the new toolchain, but it
+> NOTE: You can still use the --sysroot option with the new toolchain, but it
       is now simply optional!
 
 
@@ -135,18 +135,18 @@ libstdc++ in the same standalone package.  Clang/clang++ are actually scripts
 with "-target" set to the specified architecture at creation.  For example, in
 ARM standalone package, clang is a one-liner:
 
-   `dirname $0`/clang31 -target armv5te-none-linux-androideabi "$@"
+      `dirname $0`/clang31 -target armv5te-none-linux-androideabi "$@"
 
 clang++ is another:
 
-   `dirname $0`/clang++31 -target armv5te-none-linux-androideabi "$@"
+      `dirname $0`/clang++31 -target armv5te-none-linux-androideabi "$@"
 
 Note that for arm, clang will change target based on the presence of
 subsequent option "-march=armv7-a" and/or "-mthumb".  ie.
 
-  1/ With "-march=armv7-a", -target becomes armv7-none-linux-androideabi
-  2/ With "-mthumb", -target becomes thumb-none-linux-androideabi
-  3/ With both, -target becomes thumbv7-none-linux-androideabi
+  1. With "-march=armv7-a", -target becomes armv7-none-linux-androideabi
+  2. With "-mthumb", -target becomes thumb-none-linux-androideabi
+  3. With both, -target becomes thumbv7-none-linux-androideabi
 
 You may override with your own -target if you wish.
 
@@ -154,11 +154,11 @@ Extra efforts have been made to make clang/clang++ easier drop-in
 replacements for gcc/g++ in Makefile.  When in doubt, use the following
 common techniques to check:
 
-  1/ Add option "-v" to dump commands compiler driver issues
-  2/ Add option "-###" to dump command line options, including those
+  1. Add option "-v" to dump commands compiler driver issues
+  2. Add option "-###" to dump command line options, including those
      implicitly predefined.
-  3/ Use "-x c /dev/null -dM -E" to dump predefined preprocessor definitions
-  4/ Add option "-save-temps" and compare the preprocessed files *.i or *.ii
+  3. Use "-x c /dev/null -dM -E" to dump predefined preprocessor definitions
+  4. Add option "-save-temps" and compare the preprocessed files *.i or *.ii
 
 See http://clang.llvm.org/, especially the GCC compatibility section.
 
@@ -175,7 +175,7 @@ of 16-bit Thumb-1 instructions (the default being 32-bit ARM ones).
 If you want to target the 'armeabi-v7a' ABI, you will need ensure that the
 following flags are being used:
 
-  CFLAGS='-march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16'
+        CFLAGS='-march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16'
 
 Note: The first flag enables Thumb-2 instructions, and the second one
       enables H/W FPU instructions while ensuring that floating-point
@@ -185,13 +185,13 @@ Note: The first flag enables Thumb-2 instructions, and the second one
 If you want to use Neon instructions, you will need to change the -mfpu
 compiler flag:
 
-  CFLAGS='-march=armv7-a -mfloat-abi=softfp -mfpu=neon'
+        CFLAGS='-march=armv7-a -mfloat-abi=softfp -mfpu=neon'
 
 Note that this forces the use of VFPv3-D32, as per the ARM specification.
 
 Also, make sure the following two flags are provided to linker:
 
-  LDFLAGS='-march=armv7-a -Wl,--fix-cortex-a8'
+        LDFLAGS='-march=armv7-a -Wl,--fix-cortex-a8'
 
 Note: The first flag instructs linker to pick libgcc.a, libgcov.a and
       crt*.o tailored for armv7-a.  The 2nd flag is *required* to route
@@ -207,8 +207,7 @@ or the MIPS ABI.
 7/ Warnings and Limitations:
 --------------------------
 
-7.1/ Windows support:
-- - - - - - - - - - -
+### 7.1/ Windows support:
 
 The Windows binaries do *not* depend on Cygwin. The good news is that they
 are thus faster, the bad news is that they do not understand the Cygwin
@@ -222,8 +221,7 @@ NOTE: There is no plan to support Cygwin / MSys at the moment, but
       contributions are welcome. Contact the android-ndk forum for details.
 
 
-7.2/ wchar_t support:
-- - - - - - - - - - -
+### 7.2/ wchar_t support:
 
 As documented, the Android platform did not really support wchar_t until
 Android 2.3. What this means in practical terms is that:
@@ -241,8 +239,7 @@ and switch to better representations. The support provided in Android is only
 there to help you migrate existing code.
 
 
-7.3/ Exceptions, RTTI and STL:
-- - - - - - - - - - - - - - -
+### 7.3/ Exceptions, RTTI and STL:
 
 The toolchain binaries *do* support C++ exceptions and RTTI by default.
 They are enabled by default, so use -fno-exceptions and -fno-rtti if you
@@ -252,11 +249,10 @@ smaller machine code).
 NOTE: You will need to explicitly link with libsupc++ if you use these
       features. To do this, use -lsupc++ when linking binaries, as in:
 
-    arm-linux-androideabi-g++ .... -lsupc++
+        arm-linux-androideabi-g++ .... -lsupc++
 
 
-7.4/ C++ STL support:
-- - - - - - - - - - -
+### 7.4/ C++ STL support:
 
 The standalone toolchain also comes with a copy of the GNU libstdc++
 library, which provides an implementation of the C++ Standard Template
@@ -278,22 +274,21 @@ Library. To use it, you however need to link with the proper library:
     also copied to your device for your code to load properly. The file is
     at:
 
-      $TOOLCHAIN/arm-linux-androideabi/lib/  for ARM toolchains.
-      $TOOLCHAIN/i686-linux-android/lib/     for x86 ones.
-      $TOOLCHAIN/mipsel-linux-android/lib/   for MIPS toolchains.
+        $TOOLCHAIN/arm-linux-androideabi/lib/  for ARM toolchains.
+        $TOOLCHAIN/i686-linux-android/lib/     for x86 ones.
+        $TOOLCHAIN/mipsel-linux-android/lib/   for MIPS toolchains.
 
 
     IMPORTANT: The GNU libstdc++ is licensed under the GPLv3 with a
                linking exception. See the following URL for details:
 
-          http://gcc.gnu.org/onlinedocs/libstdc++/manual/bk01pt01ch01s02.html
+> http://gcc.gnu.org/onlinedocs/libstdc++/manual/bk01pt01ch01s02.html
 
-    If you cannot comply with its requirements, i.e. you cannot redistribute
-    the shared library, do not use it in your project.
+> If you cannot comply with its requirements, i.e. you cannot redistribute
+  the shared library, do not use it in your project.
 
 The reason the shared version of GNU libstdc++ is not called libstdc++.so is
 because this would conflict at runtime with the system's own minimal C++
-runtime, which is /system/lib/libstdc++.so. This enforces a new name for the
+runtime, which is `/system/lib/libstdc++.so`. This enforces a new name for the
 GNU ELF library. This is not a problem for the static library.
 
-</pre></body></html>

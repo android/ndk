@@ -1,4 +1,4 @@
-<html><body><pre>Android NDK Installation
+Android NDK Installation
 
 Introduction:
 -------------
@@ -21,11 +21,11 @@ files that can go into them.
 
 
 IMPORTANT:
-    The Android NDK can only be used to target system images using
-    the Cupcake (1.5) or later releases of the platform.
+  The Android NDK can only be used to target system images using
+  the Cupcake (1.5) or later releases of the platform.
 
-    This is due to subtle toolchain and ABI related changed that make
-    it incompatible with 1.0 and 1.1 system images.
+  This is due to subtle toolchain and ABI related changed that make
+  it incompatible with 1.0 and 1.1 system images.
 
 The NDK requires GNU Make 3.81 or later being available on your development
 system. Earlier versions of GNU Make might work but have not been tested.
@@ -33,9 +33,9 @@ system. Earlier versions of GNU Make might work but have not been tested.
 You can check this by running 'make -v' from the command-line. The output
 should look like:
 
-    GNU Make 3.81
-    Copyright (C) 2006  Free Software Foundation, Inc.
-    ...
+          GNU Make 3.81
+          Copyright (C) 2006  Free Software Foundation, Inc.
+          ...
 
 On certain systems, GNU Make might be available through a different command like
 'gmake' or 'gnumake'. For these systems, replace 'make' by the appropriate command
@@ -56,4 +56,3 @@ configure the NDK. However, this step has been removed in release 4 (a.k.a. r4).
 The auto-detection and sanity checks that were performed by the script have
 been moved into the NDK makefiles (and are now performed each time you invoke
 GNU Make).
-</pre></body></html>

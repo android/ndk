@@ -1,5 +1,5 @@
-<html><body><pre>Android NDK MIPS32 instruction set support
-------------------------------------------------------
+Android NDK MIPS32 instruction set support
+===
 
 Introduction:
 -------------
@@ -8,7 +8,7 @@ Android NDK r8 added support for the 'mips' ABI, that allows native code to
 run on Android-based devices running on CPUs supporting the MIPS32 instruction
 set.
 
-The Android 'mips' ABI itself is fully specified in docs/CPU-ARCH-ABIS.html.
+The Android 'mips' ABI itself is fully specified in d/CPU-ARCH-ABIS.
 
 Overview:
 ---------
@@ -16,11 +16,11 @@ Overview:
 Generating mips machine code is simple: just add 'mips' to your APP_ABI
 definition in your Application.mk file, for example:
 
-    APP_ABI := armeabi armeabi-v7a mips
+        APP_ABI := armeabi armeabi-v7a mips
 
 Alternatively, since NDK r7, you can use:
 
-    APP_ABI := all
+        APP_ABI := all
 
 will generate machine code for all supported ABIs with this NDK. Doing so
 will ensure that your application package contains libraries for all target
@@ -32,7 +32,7 @@ will be embedded into your .apk under /lib/mips/.
 
 And just like other ABIs, the Android package manager will extract these
 libraries on a *compatible* mips-based device automatically at install time,
-to put them under &lt;dataPath&gt;/lib, where &lt;dataPath&gt; is the
+to put them under `<dataPath>/lib`, where `<dataPath>` is the
 application's private data directory.
 
 Similarly, the Android Market server is capable of filtering applications
@@ -47,7 +47,7 @@ It is possible to use the mips toolchain with NDK r8 in stand-alone mode.
 See docs/STANDALONE-TOOLCHAIN.html for more details. Briefly speaking,
 it is now possible to run:
 
-  $NDK/build/tools/make-standalone-toolchain.sh --arch=mips --install-dir=<path>
+        $NDK/build/tools/make-standalone-toolchain.sh --arch=mips --install-dir=<path>
 
 The toolchain binaries have the mipsel-linux-android- prefix.
 
@@ -62,6 +62,4 @@ You won't have to change anything to your project files if you target an older
 API level: the NDK build script will automatically select the right set of
 native platform headers/libraries for you. For mips, this still corresponds
 to API level 9 and higher.
-
-</pre></body></html>
 

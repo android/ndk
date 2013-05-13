@@ -1,4 +1,4 @@
-<html><body><pre>Android module paths (sharing code made easy):
+Android module paths (sharing code made easy):
 ==============================================
 
 Starting from r5, the Android NDK comes with a cool feature that allows
@@ -24,9 +24,9 @@ In practice, here's how this works:
   2. To import a module, place a line like the following to, preferably at
      the *end* of, your Android.mk:
 
-          $(call import-module,&lt;tag&gt;)
+          $(call import-module,<tag>)
 
-     This will look for &lt;tag&gt;/Android.mk under any of the directories
+     This will look for <tag>/Android.mk under any of the directories
      listed in your NDK_MODULE_PATH.
 
      (The reason why it must be at the end is to avoid messing with
@@ -38,7 +38,7 @@ In practice, here's how this works:
      listing them in either your LOCAL_STATIC_LIBRARIES or
      LOCAL_SHARED_LIBRARIES. For example:
 
-          LOCAL_STATIC_LIBRARIES += &lt;tag&gt;
+          LOCAL_STATIC_LIBRARIES += <tag>
 
 
   4. Rebuild!
@@ -66,7 +66,7 @@ The NDK_MODULE_PATH variable must contain a list of directories.
   * On Windows, use '/' as the directory separator.
 
 The directories of NDK_MODULE_PATH will be searched in order. The first
-&lt;path&gt;/&lt;tag&gt;/Android.mk file that is found during the lookup will be
+<path>/<tag>/Android.mk file that is found during the lookup will be
 included automatically.
 
 
@@ -82,25 +82,25 @@ II. Writing an import module:
 Writing an import module is trivial and very similar to what you do when
 writing project modules:
 
-   1. Create a sub-directory from one of your NDK_MODULE_PATH directories.
+  1. Create a sub-directory from one of your NDK_MODULE_PATH directories.
 
-     For example, if NDK_MODULE_PATH is defined to /home/user/ndk-modules,
-     then create the directory /home/user/ndk-modules/my-module/
-
-
-   2. Place an Android.mk and eventual source code there.
-
-     Just like you would for a project module, where these files normally
-     go to $PROJECT_PATH/Android.mk. In the example above, this would go
-     to /home/user/ndk-modules/my-module/Android.mk
-
-     NOTE: Any Application.mk file here will be ignored.
+    For example, if NDK_MODULE_PATH is defined to /home/user/ndk-modules,
+    then create the directory /home/user/ndk-modules/my-module/
 
 
-   3. Any module that depends on your new module, would import by calling
-      the import-module function. For example:
+  2. Place an Android.mk and eventual source code there.
 
-        $(call import-module,my-first-module)
+    Just like you would for a project module, where these files normally
+    go to $PROJECT_PATH/Android.mk. In the example above, this would go
+    to /home/user/ndk-modules/my-module/Android.mk
+
+    NOTE: Any Application.mk file here will be ignored.
+
+
+  3. Any module that depends on your new module, would import by calling
+    the import-module function. For example:
+
+          $(call import-module,my-first-module)
 
 
 Import modules *can* import other modules, but circular dependencies are
@@ -131,11 +131,11 @@ your import module:
 
     Your imported Android.mk can define any number of modules, with
     any name. As a consequence, there is no direct relationship between
-    &lt;name&gt; in the following line:
+    <name> in the following line:
 
-          $(call import-module,&lt;tag&gt;/&lt;name&gt;)
+          $(call import-module,<tag>/<name>)
 
-    And the names of the modules defined under &lt;tag&gt;/&lt;name&gt;/Android.mk.
+    And the names of the modules defined under <tag>/<name>/Android.mk.
 
     IN CASE OF DOUBT, KEEP IT SIMPLE!
 
@@ -154,7 +154,7 @@ your import module:
            include $(CLEAR_VARS)
            LOCAL_MODULE := bar_static
            LOCAL_SRC_FILES := bar.c
-           # Ensure our dependees can include &lt;bar.h&gt; too
+           # Ensure our dependees can include <bar.h> too
            LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)
            include $(BUILD_STATIC_LIBRARY)
 
@@ -213,7 +213,7 @@ your import module:
             }
 
 
-IV. Tips &amp; Recommendations:
+IV. Tips & Recommendations:
 ---------------------------
 
 * You don't need to import a module before you can reference it!
@@ -225,13 +225,12 @@ IV. Tips &amp; Recommendations:
 * It is *strongly* suggested to use a subdirectory for your import tags,
   that describes its origin, as in:
 
-     $(call import-module,gtk/glib)
+        $(call import-module,gtk/glib)
 
-  or something like:
+> or something like:
 
-     $(call import-module,com.example/awesomelib)
+          $(call import-module,com.example/awesomelib)
 
   IMPORTANT: THE 'android' IMPORT DIRECTORY, AND ANY OF ITS SUB-DIRECTORIES
              IS *RESERVED* FOR NDK USAGE. FEEL FREE TO ORGANIZE YOUR OTHER
              IMPORT MODULES AS YOU WANT OTHERWISE.
-</pre></body></html>
