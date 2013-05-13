@@ -1,4 +1,4 @@
-<html><body><pre>Android System Image Issues
+Android System Image Issues
 ===========================
 
 This document contains a list of known issues in existing Android
@@ -55,21 +55,21 @@ should not depend on the wrong behaviour in the future. Avoid using this
 function if possible; if this is not possible, try to use a small wrapper
 like the following one:
 
-static struct servent*
-my_getservbyname(const char*  name, const char*  proto)
-{
-    static int       has_bug = -1;
-    struct servent*  ret;
+        static struct servent*
+        my_getservbyname(const char*  name, const char*  proto)
+        {
+            static int       has_bug = -1;
+            struct servent*  ret;
 
-    if (has_bug &lt; 0) {
-        ret = getservbyname("http",NULL);
-        has_bug = (ret == NULL || ret-&gt;s_port == 80);
-    }
+            if (has_bug &lt; 0) {
+                ret = getservbyname("http",NULL);
+                has_bug = (ret == NULL || ret-&gt;s_port == 80);
+            }
 
-    ret = getservbyname(name, proto);
-    if (has_bug)
-        ret-&gt;s_port = htons(ret-&gt;s_port);
-}
+            ret = getservbyname(name, proto);
+            if (has_bug)
+                ret-&gt;s_port = htons(ret-&gt;s_port);
+        }
 
 (the returned struct servent is thread-local and can be modified by the
  caller. It will be over-written on the next call to the function though).
@@ -100,5 +100,3 @@ The Android dynamic linker in 1.5 has many important limitations:
   bar/Android.mk (with LOCAL_SHARED_LIBRARIES := foo), then loading
   libbar.so will always fail, even if you have already loaded libfoo.so
   in your process.
-
-</pre></body></html>
