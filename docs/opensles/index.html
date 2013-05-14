@@ -942,6 +942,22 @@ entered JNI is allowed to directly call OpenSL ES APIs, including
 those which block. However, blocking calls are not recommended from
 the main thread, as they may result in the dreaded "Application Not
 Responding" (ANR).
+<p>
+The choice of which thread calls a callback handler is largely left up
+to the implementation.  The reason for this flexibility is to permit
+future optimizations, especially on multi-core devices.
+<p>
+The thread on which the callback handler runs is not guaranteed to have
+the same identity across different calls.  Therefore do not rely on the
+<code>pthread_t</code> returned by <code>pthread_self()</code>, or the
+<code>pid_t</code> returned by <code>gettid()</code>, to be consistent
+across calls.  Don't use the thread local storage (TLS) APIs such as
+<code>pthread_setspecific()</code> and <code>pthread_getspecific()</code>
+from a callback, for the same reason.
+<p>
+The implementation guarantees that concurrent callbacks of the same kind,
+for the same object, will not occur.  However, concurrent callbacks of
+<i>different</i> kinds for the same object are possible, on different threads.
 
 <h3>Performance</h3>
 
