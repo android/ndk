@@ -411,9 +411,19 @@ fi
 if [ "$MINGW" = "yes" ] ; then
     WITH_PYTHON_PREFIX=$(dirname $(dirname "$WITH_PYTHON_SCRIPT"))
     dump "Building : $TOOLCHAIN GDB stub. "$TOOLCHAIN_PATH/bin/${ABI_CONFIGURE_TARGET}-gdb.exe", "$WITH_PYTHON_PREFIX", $ABI_CONFIGURE_HOST-gcc"
+    GCC_FOR_STUB=$ABI_CONFIGURE_HOST-gcc
+    if [ "$TRY64" != "yes" ]; then
+        # The i586-mingw32msvc-gcc is missing CreateJobObject, SetInformationJobObject, and
+        # AssignProcessToJobObject needed for gdb-stub.c.  Hack to use i686-w64-mingw32-gcc.  ToDo:
+        GCC_FOR_STUB_TARGET=`$GCC_FOR_STUB -dumpmachine`
+        if [ "$GCC_FOR_STUB_TARGET" = "i586-mingw32msvc" ]; then
+            GCC_FOR_STUB=i686-w64-mingw32-gcc
+            dump "Override compiler for gdb-stub: $GCC_FOR_STUB"
+	fi
+    fi
     run $NDK_DIR/build/tools/build-gdb-stub.sh --gdb-executable-path="$TOOLCHAIN_PATH/bin/${ABI_CONFIGURE_TARGET}-gdb.exe" \
                                                --python-prefix-dir=${WITH_PYTHON_PREFIX} \
-                                               --mingw-w64-gcc=$ABI_CONFIGURE_HOST-gcc
+                                               --mingw-w64-gcc=$GCC_FOR_STUB
 fi
 
 # don't forget to copy the GPL and LGPL license files
@@ -421,6 +431,7 @@ run cp -f $TOOLCHAIN_LICENSES/COPYING $TOOLCHAIN_LICENSES/COPYING.LIB $TOOLCHAIN
 
 # remove some unneeded files
 run rm -f $TOOLCHAIN_PATH/bin/*-gccbug
+run rm -f $TOOLCHAIN_PATH/bin/*gdbtui$HOST_EXE
 run rm -rf $TOOLCHAIN_PATH/info
 run rm -rf $TOOLCHAIN_PATH/man
 run rm -rf $TOOLCHAIN_PATH/share

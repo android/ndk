@@ -85,10 +85,10 @@ int main(int argc, char** argv) {
 	PROCESS_INFORMATION pi;
 
 	DIE_IF_FALSE(
-		(envbuf = malloc(envbufsize))
+		(envbuf = (char *)malloc(envbufsize))
 	);
 	DIE_IF_FALSE(
-		(cmdbuf = malloc(cmdbufsize))
+		(cmdbuf = (char *)malloc(cmdbufsize))
 	);
 	*cmdbuf = 0;
 
@@ -114,7 +114,7 @@ int main(int argc, char** argv) {
 		+1; /* for zero-terminator */
 
 	DIE_IF_FALSE(
-		(resbuf = malloc(len))
+		(resbuf = (char *)malloc(len))
 	);
 
 	DIE_IF_FALSE(
