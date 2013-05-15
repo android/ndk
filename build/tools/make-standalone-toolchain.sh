@@ -202,6 +202,14 @@ dump "Copying prebuilt binaries..."
 # Now copy the GCC toolchain prebuilt binaries
 run copy_directory "$TOOLCHAIN_PATH" "$TMPDIR"
 
+if [ "$HOST_TAG32" = "windows" ]; then
+  # Copy python-related to for gdb.exe
+  PYTHON_VERSION_TWO_DIGIT=python$(echo "$DEFAULT_PYTHON_VERSION" | cut -d . -f 1).$(echo "$DEFAULT_PYTHON_VERSION" | cut -d . -f 2)
+  copy_file_list "$NDK_DIR/prebuilt/$SYSTEM/bin" "$TMPDIR/bin" python.exe lib$PYTHON_VERSION_TWO_DIGIT.dll
+  copy_directory "$NDK_DIR/prebuilt/$SYSTEM/include/$PYTHON_VERSION_TWO_DIGIT" "$TMPDIR/include/$PYTHON_VERSION_TWO_DIGIT"
+  copy_directory "$NDK_DIR/prebuilt/$SYSTEM/lib/$PYTHON_VERSION_TWO_DIGIT" "$TMPDIR/lib/$PYTHON_VERSION_TWO_DIGIT"
+fi
+
 if [ -n "$LLVM_VERSION" ]; then
   # Copy the clang/llvm toolchain prebuilt binaries
   run copy_directory "$LLVM_TOOLCHAIN_PATH" "$TMPDIR"
