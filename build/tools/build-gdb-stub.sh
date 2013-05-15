@@ -70,7 +70,7 @@ cp "$GDB_EXECUTABLE_PATH" "$GDB_EXECUTABLE_ORIG"
 GDB_EXECUTABLE_ORIG_FILENAME=$(basename "$GDB_EXECUTABLE_ORIG")
 
 # Build the stub in-place of the real gdb.
-$MINGW_W64_GCC $STUB_CFLAGS "$NDK_DIR/sources/gdb-stub/gdb-stub.c" \
+$MINGW_W64_GCC $STUB_CFLAGS "$NDK_DIR/sources/host-tools/gdb-stub/gdb-stub.c" \
                     -o "$GDB_EXECUTABLE_PATH" \
                     -DGDB_TO_PYTHON_REL_DIR=\"$GDB_TO_PYTHON_REL_DIR\" \
                     -DPYTHONHOME_REL_DIR=\"$PYTHONHOME_REL_DIR\" \
