@@ -147,7 +147,7 @@ GCC_VERSION=4.7.2
 # Need at least revision 5166
 # For reference, I've built a working NDK with 5445
 # (latest as of Sun Feb 3 2013 is 5578)
-MINGW_W64_VERSION=svn@5166
+MINGW_W64_VERSION=svn@5861
 
 JOBS=$(( $NUM_CORES * 2 ))
 
