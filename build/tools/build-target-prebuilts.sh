@@ -97,11 +97,11 @@ run $BUILDTOOLS/build-stlport.sh $FLAGS
 fail_panic "Could not build stlport!"
 
 if [ ! -z $VISIBLE_LIBGNUSTL_STATIC ]; then
-    FLAGS=$FLAGS" --visible-libgnustl-static"
+    GNUSTL_STATIC_VIS_FLAG=--visible-libgnustl-static
 fi
 
 dump "Building $ABIS gnustl binaries..."
-run $BUILDTOOLS/build-gnu-libstdc++.sh $FLAGS "$SRC_DIR"
+run $BUILDTOOLS/build-gnu-libstdc++.sh $FLAGS $GNUSTL_STATIC_VIS_FLAG "$SRC_DIR"
 fail_panic "Could not build gnustl!"
 
 dump "Building $ABIS libportable binaries..."
