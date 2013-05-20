@@ -163,10 +163,9 @@ build_stlport_libs_for_abi ()
     local DSTDIR="$4"
     local DEFAULT_CFLAGS DEFAULT_CXXLAGS
     local SRC OBJ OBJECTS CFLAGS CXXFLAGS
-    local UNKNOWN_ARCH=$(find_ndk_unknown_archs | grep $ABI)
 
     # Don't build gabi++ for unknown archs
-    if [ ! -z "$UNKNOWN_ARCH" ]; then
+    if [ "$(arch_in_unknown_archs $ABI)" = "yes" ]; then
         GABIXX_SOURCES=
     fi
 

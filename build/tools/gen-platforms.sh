@@ -350,18 +350,46 @@ remove_unwanted_variable_symbols ()
   remove_unwanted_symbols_from $SYMBOL_FILE "$@"
 }
 
+# $1: Architecture
+# Out: compiler command
+get_default_compiler_for_arch()
+{
+    local ARCH=$1
+    local TOOLCHAIN_PREFIX EXTRA_CFLAGS CC
+
+    if [ "$(arch_in_unknown_archs $ARCH)" = "yes" ]; then
+        TOOLCHAIN_PREFIX="$NDK_DIR/$(get_llvm_toolchain_binprefix $DEFAULT_LLVM_VERSION)"
+        CC="$TOOLCHAIN_PREFIX/clang"
+        EXTRA_CFLAGS="-emit-llvm -target le32-none-ndk"
+    else
+        TOOLCHAIN_PREFIX="$NDK_DIR/$(get_default_toolchain_binprefix_for_arch $1)"
+        TOOLCHAIN_PREFIX=${TOOLCHAIN_PREFIX%-}
+        CC="$TOOLCHAIN_PREFIX-gcc"
+        EXTRA_CFLAGS=
+    fi
+
+    if [ ! -f "$CC" ]; then
+        dump "ERROR: $ARCH toolchain not installed: $CC"
+        dump "Important: Use the --minimal flag to use this script without generated system shared libraries."
+        dump "This is generally useful when you want to generate the host cross-toolchain programs."
+        exit 1
+    fi
+    echo "$CC $EXTRA_CFLAGS"
+}
+
 # $1: library name
 # $2: functions list
 # $3: variables list
 # $4: destination file
-# $5: toolchain binprefix
+# $5: compiler command
 gen_shared_lib ()
 {
     local LIBRARY=$1
     local FUNCS="$2"
     local VARS="$3"
     local DSTFILE="$4"
-    local BINPREFIX="$5"
+    local CC="$5"
+
     # Now generate a small C source file that contains similarly-named stubs
     echo "/* Auto-generated file, do not edit */" > $TMPC
     local func var
@@ -374,7 +402,7 @@ gen_shared_lib ()
 
     # Build it with our cross-compiler. It will complain about conflicting
     # types for built-in functions, so just shut it up.
-    COMMAND="$BINPREFIX-gcc -Wl,-shared,-Bsymbolic -nostdlib -o $TMPO $TMPC"
+    COMMAND="$CC -Wl,-shared,-Bsymbolic -Wl,-soname,$LIBRARY -nostdlib -o $TMPO $TMPC"
     echo "## COMMAND: $COMMAND" > $TMPL
     $COMMAND 1>>$TMPL 2>&1
     if [ $? != 0 ] ; then
@@ -409,17 +437,10 @@ gen_shared_libraries ()
     local SYMDIR="$SRCDIR/$2"
     local SYSROOT="$3"
     local DSTDIR="$DSTDIR/$SYSROOT/usr/lib"
-    local TOOLCHAIN_PREFIX funcs vars numfuncs numvars
+    local CC funcs vars numfuncs numvars
 
     # Let's locate the toolchain we're going to use
-    local TOOLCHAIN_PREFIX="$NDK_DIR/$(get_default_toolchain_binprefix_for_arch $1)"
-    TOOLCHAIN_PREFIX=${TOOLCHAIN_PREFIX%-}
-    if [ ! -f "$TOOLCHAIN_PREFIX-gcc" ]; then
-        dump "ERROR: $ARCH toolchain not installed: $TOOLCHAIN_PREFIX-gcc"
-        dump "Important: Use the --minimal flag to use this script without generated system shared libraries."
-        dump "This is generally useful when you want to generate the host cross-toolchain programs."
-        exit 1
-    fi
+    CC=$(get_default_compiler_for_arch $ARCH)
 
     # In certain cases, the symbols directory doesn't exist,
     # e.g. on x86 for PLATFORM < 9
@@ -440,7 +461,7 @@ gen_shared_libraries ()
         numvars=$(echo $vars | wc -w)
         log "Generating $ARCH shared library for $LIB ($numfuncs functions + $numvars variables)"
 
-        gen_shared_lib $LIB "$funcs" "$vars" "$DSTDIR/$LIB" "$TOOLCHAIN_PREFIX"
+        gen_shared_lib $LIB "$funcs" "$vars" "$DSTDIR/$LIB" "$CC"
     done
 }
 
@@ -457,25 +478,18 @@ gen_crt_objects ()
     local SRC_DIR="$SRCDIR/$4"
     local DST_DIR="$DSTDIR/$5"
     local SRC_FILE DST_FILE
-    local TOOLCHAIN_PREFIX
+    local CC
 
     if [ ! -d "$SRC_DIR" ]; then
         return
     fi
 
     # Let's locate the toolchain we're going to use
-    local TOOLCHAIN_PREFIX="$NDK_DIR/$(get_default_toolchain_binprefix_for_arch $ARCH)"
-    TOOLCHAIN_PREFIX=${TOOLCHAIN_PREFIX%-}
-    if [ ! -f "$TOOLCHAIN_PREFIX-gcc" ]; then
-        dump "ERROR: $ARCH toolchain not installed: $TOOLCHAIN_PREFIX-gcc"
-        dump "Important: Use the --minimal flag to use this script without generating object files."
-        dump "This is generally useful when you want to generate the host cross-toolchain programs."
-        exit 1
-    fi
+    CC=$(get_default_compiler_for_arch $ARCH)
 
     CRTBRAND_S=$DST_DIR/crtbrand.s
     log "Generating platform $API crtbrand assembly code: $CRTBRAND_S"
-    (cd "$COMMON_SRC_DIR" && $TOOLCHAIN_PREFIX-gcc -DPLATFORM_SDK_VERSION=$API -fpic -S -o - crtbrand.c | \
+    (cd "$COMMON_SRC_DIR" && $CC -DPLATFORM_SDK_VERSION=$API -fpic -S -o - crtbrand.c | \
         sed -e '/\.note\.ABI-tag/s/progbits/note/' > "$CRTBRAND_S") 1>>$TMPL 2>&1
     if [ $? != 0 ]; then
         dump "ERROR: Could not generate $CRTBRAND_S from $COMMON_SRC_DIR/crtbrand.c"
@@ -503,7 +517,7 @@ gen_crt_objects ()
         esac
 
         log "Generating $ARCH C runtime object: $DST_FILE"
-        (cd "$SRC_DIR" && $TOOLCHAIN_PREFIX-gcc -O2 -fpic -Wl,-r -nostdlib -o "$DST_DIR/$DST_FILE" $SRC_FILE) 1>>$TMPL 2>&1
+        (cd "$SRC_DIR" && $CC -O2 -fpic -Wl,-r -nostdlib -o "$DST_DIR/$DST_FILE" $SRC_FILE) 1>>$TMPL 2>&1
         if [ $? != 0 ]; then
             dump "ERROR: Could not generate $DST_FILE from $SRC_DIR/$SRC_FILE"
             dump "Please see the content of $TMPL for details!"
@@ -635,7 +649,11 @@ for ARCH in $ARCHS; do
             else
                 PREV_PLATFORM_SRC_ARCH=$PLATFORM_SRC_ARCH
             fi
-            gen_crt_objects $PLATFORM $ARCH platforms/common/src $PLATFORM_SRC_ARCH $SYSROOT_DST/lib
+
+            # Genreate crt objects for known archs
+            if [ "$(arch_in_unknown_archs $ARCH)" != "yes" ]; then
+                gen_crt_objects $PLATFORM $ARCH platforms/common/src $PLATFORM_SRC_ARCH $SYSROOT_DST/lib
+            fi
 
             # Generate shared libraries from symbol files
             gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $PLATFORM_DST/arch-$ARCH

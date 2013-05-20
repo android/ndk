@@ -1144,8 +1144,21 @@ find_ndk_archs ()
 # Return: arch names not in ndk default archs
 find_ndk_unknown_archs()
 {
-  local FOUND_ARCHS=$(find_ndk_archs)
-  echo "$(filter_out "$DEFAULT_ARCHS" "$FOUND_ARCHS")"
+    local FOUND_ARCHS=$(find_ndk_archs)
+    echo "$(filter_out "$DEFAULT_ARCHS" "$FOUND_ARCHS")"
+}
+
+# Determine whether given arch is in unknown archs list
+# $1: arch
+# Return: yes or no
+arch_in_unknown_archs()
+{
+    local UNKNOWN_ARCH=$(find_ndk_unknown_archs | grep $1)
+    if [ -z $UNKNOWN_ARCH ]; then
+        echo "no"
+    else
+        echo "yes"
+    fi
 }
 
 # Convert an ABI name into an Architecture name
@@ -1155,7 +1168,6 @@ convert_abi_to_arch ()
 {
     local RET
     local ABI=$1
-    local FOUND_ARCH
     case $ABI in
         armeabi|armeabi-v7a)
             RET=arm
@@ -1167,8 +1179,7 @@ convert_abi_to_arch ()
             RET=mips
             ;;
         *)
-            FOUND_ARCH=$(echo $(find_ndk_unknown_archs) | grep $ABI)
-            if [ ! -z $FOUND_ARCH ]; then
+            if [ "$(arch_in_unknown_archs $ABI)" = "yes" ]; then
                 RET=$ABI
             else
                 >&2 echo "ERROR: Unsupported ABI name: $ABI, use one of: armeabi, armeabi-v7a or x86 or mips"
@@ -1187,7 +1198,6 @@ convert_arch_to_abi ()
 {
     local RET
     local ARCH=$1
-    local FOUND_ARCH
     case $ARCH in
         arm)
             RET=armeabi,armeabi-v7a
@@ -1199,8 +1209,7 @@ convert_arch_to_abi ()
             RET=mips
             ;;
         *)
-            FOUND_ARCH=$(echo $(find_ndk_unknown_archs) | grep $ARCH)
-            if [ ! -z $FOUND_ARCH ]; then
+            if [ "$(arch_in_unknown_archs $ARCH)" = "yes" ]; then
                 RET=$ARCH
             else
                 >&2 echo "ERROR: Unsupported ARCH name: $ARCH, use one of: arm, x86, mips"

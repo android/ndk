@@ -449,7 +449,7 @@ builder_end ()
 builder_begin_android ()
 {
     local ABI BUILDDIR LLVM_VERSION MAKEFILE
-    local ARCH UNKNOWN_ARCH PLATFORM SYSROOT FLAGS
+    local ARCH PLATFORM SYSROOT FLAGS
     local CRTBEGIN_SO_O CRTEND_SO_O CRTBEGIN_EXE_SO CRTEND_SO_O
     local BINPREFIX GCC_TOOLCHAIN LLVM_TRIPLE
     if [ -z "$NDK_DIR" ]; then
@@ -462,11 +462,10 @@ builder_begin_android ()
     LLVM_VERSION=$3
     MAKEFILE=$4
     ARCH=$(convert_abi_to_arch $ABI)
-    UNKNOWN_ARCH=$(find_ndk_unknown_archs | grep $ARCH)
     PLATFORM=${2##android-}
     SYSROOT=$NDK_DIR/platforms/android-$PLATFORM/arch-$ARCH
 
-    if [ ! -z "$UNKNOWN_ARCH" ]; then
+    if [ "$(arch_in_unknown_archs $ARCH)" = "yes" ]; then
         LLVM_VERSION=$DEFAULT_LLVM_VERSION
     fi
 
