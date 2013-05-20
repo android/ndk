@@ -204,22 +204,6 @@ if [ -n "$PREBUILT_DIR" ] ; then
         echo "ERROR: Your systems list is empty, use --systems=LIST to specify a different one."
         exit 1
     fi
-    # Check the toolchain prebuilts
-    #
-    for TC in $TOOLCHAINS; do
-        for SYS in $SYSTEMS; do
-            if [ ! -f "$PREBUILT_DIR/$TC-$SYS.tar.bz2" ] ; then
-                echo "ERROR: Missing prebuilt file $TC-$SYS.tar.bz2 in: $PREBUILT_DIR"
-                exit 1
-            fi
-        done
-    done
-    for ARCH in $ARCHS; do
-        if [ ! -f "$PREBUILT_DIR/$ARCH-gdbserver.tar.bz2" ] ; then
-            echo "ERROR: Missing prebuilt file $ARCH-gdbserver.tar.bz2 in: $PREBUILT_DIR"
-            exit 1
-        fi
-    done
 else
     if [ ! -f "$PREBUILT_NDK" ] ; then
         echo "ERROR: the --prebuilt-ndk argument is not a file: $PREBUILT_NDK"
