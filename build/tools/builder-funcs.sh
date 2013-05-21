@@ -368,6 +368,32 @@ builder_shared_library ()
     fail_panic "Could not create ${_BUILD_PREFIX}shared library $libname"
 }
 
+# Same as builder_shared_library, but do not link the default libs
+builder_nostdlib_shared_library ()
+{
+    local lib libname
+    libname=$1
+    lib=$_BUILD_DSTDIR/$libname
+    lib=${lib%%.so}.so
+    if [ "$_BUILD_MK" ]; then
+        _BUILD_TARGETS=$_BUILD_TARGETS" $lib"
+        echo "$lib: $_BUILD_OBJECTS" >> $_BUILD_MK
+    fi
+    builder_log "${_BUILD_PREFIX}SharedLibrary: $libname"
+
+    builder_command ${_BUILD_CXX} \
+        -Wl,-soname,$(basename $lib) \
+        -Wl,-shared,-Bsymbolic \
+        $_BUILD_LDFLAGS_BEGIN_SO \
+        $_BUILD_OBJECTS \
+        $_BUILD_STATIC_LIBRARIES \
+        $_BUILD_SHARED_LIBRARIES \
+        $_BUILD_LDFLAGS \
+        $_BUILD_LDFLAGS_END_SO \
+        -o $lib
+    fail_panic "Could not create ${_BUILD_PREFIX}shared library $libname"
+}
+
 builder_host_shared_library ()
 {
     local lib libname
