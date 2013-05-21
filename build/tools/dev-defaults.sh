@@ -24,6 +24,9 @@ GNUSTL_SUBDIR=sources/cxx-stl/gnu-libstdc++
 # Location of the libportable sources, relative to the NDK root directory
 LIBPORTABLE_SUBDIR=sources/android/libportable
 
+# Location of the compiler-rt sources, relative to the NDK root directory
+COMPILER_RT_SUBDIR=sources/android/compiler-rt
+
 # The date to use when downloading toolchain sources from AOSP servers
 # Leave it empty for tip of tree.
 TOOLCHAIN_GIT_DATE=now
