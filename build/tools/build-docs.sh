@@ -104,7 +104,7 @@ for SRC_FILE in $SRC_FILES; do
   fi
 done
 
-run rm -rf "$NDK_TMPDIR"
+run rm -rf "$TEMP_DIR"
 
 if [ "$OUT_DIR" != "$DEFAULT_OUT_DIR" ]; then
   dump "Done!"
