@@ -1,0 +1,67 @@
+This directory contains the following documentation-related tools:
+
+ndk-markdown-substitutions.py:
+  A filter that takes Markdown text as input, and produces Markdown
+  test as output, but applies a few useful substitution.
+
+  Use with --run-checks to run the unit test suite.
+
+  For full list of substitutions, see the script, here's a quick summary:
+
+ * Links to documentation:
+     d/ANDROID-MK    -> [ANDROID-MK](ANDROID-MK.html)
+
+  To minimize changes to existing documentation, this also detects the
+  following in the input text and produces the same output:
+
+    ANDROID-MK.html
+    docs/ANDROID-MK.html
+    $NDK/docs/ANDROID-MK.html
+
+ * Links to bug entries:
+
+     b/<number>     ->  [b/<number>](http://b.android.com/<number>)
+
+   To minimize changes, also detects and rewrites:
+
+      http://b.android.com/<number>
+      http://http://code.google.com/p/android/issues/detail?id=<number>
+
+ * Links to gerrit patches:
+
+     r/<number>    -> [r/<number>](https://https://android-review.googlesource.com/#/c/<number>)
+
+   To minimize changes, also detects and rewrites:
+
+      https://android-review.googlesource.com/#/c/<number>
+
+ * Auto-formatting of various things to <code> format, e.g.:
+
+     LOCAL_XXX         ->  `LOCAL_XXX`
+     APP_XXX           ->  `APP_XXX`
+     script-name.sh    -> `script-name.sh`
+     -Option           -> `-Option`
+     -Option=value     -> `-Option=value`
+     __ANDROID__       -> `__ANDROID__`
+     __cxa_xxxx        -> `__cxa_xxxx`
+
+  * Automatic linkification:
+
+     http://example.com  ->   <http://example.com>
+
+
+Important note:
+  The script does not apply these subtitutions to line that begin with 8
+  spaces. This is to avoid modifying what will end up into code blocks in
+  the final
+
+  In other words, use 8, not 4 spaces to begin code blocks. This will
+  also shift them 4 spaces to the right in the HTML output, but this
+  is a good thing for readability anyway.
+
+
+Apart from that, the input format of NDK .text file is regular Markdown
+for now. In the future, using the Python Markdown Extensions API might
+result in a completely different script that could allow for more custom
+markup and/or better HTML output, but the current state is pretty good
+and lends itself to CSS-ification.
