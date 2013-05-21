@@ -1,8 +1,7 @@
-<html><body><pre>Android NDK &amp; ARM NEON instruction set extension support
---------------------------------------------------------
+Android NDK & ARM NEON instruction set extension support
 
 Introduction:
--------------
+====
 
 Android NDK r3 added support for the new 'armeabi-v7a' ARM-based ABI
 that allows native code to use two useful instruction set extensions:
@@ -37,11 +36,11 @@ files with support for NEON. What this means is that a specific compiler
 flag will be used to enable the use of GCC ARM Neon intrinsics and
 VFPv3-D32 at the same time. The intrinsics are described here:
 
-    http://gcc.gnu.org/onlinedocs/gcc/ARM-NEON-Intrinsics.html
+> http://gcc.gnu.org/onlinedocs/gcc/ARM-NEON-Intrinsics.html
 
 
-LOCAL_ARM_NEON:
----------------
+Using LOCAL_ARM_NEON:
+---------------------
 
 Define LOCAL_ARM_NEON to 'true' in your module definition, and the NDK
 will build all its source files with NEON support. This can be useful if
@@ -56,7 +55,7 @@ When listing sources files in your LOCAL_SRC_FILES variable, you now have
 the option of using the .neon suffix to indicate that you want to
 corresponding source(s) to be built with Neon support. For example:
 
-  LOCAL_SRC_FILES := foo.c.neon bar.c
+        LOCAL_SRC_FILES := foo.c.neon bar.c
 
 Will only build 'foo.c' with NEON support.
 
@@ -74,14 +73,14 @@ Neon support only works when targeting the 'armeabi-v7a' ABI, otherwise the
 NDK build scripts will complain and abort. It is important to use checks like
 the following in your Android.mk:
 
-   # define a static library containing our NEON code
-   ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
-      include $(CLEAR_VARS)
-      LOCAL_MODULE    := mylib-neon
-      LOCAL_SRC_FILES := mylib-neon.c
-      LOCAL_ARM_NEON  := true
-      include $(BUILD_STATIC_LIBRARY)
-   endif # TARGET_ARCH_ABI == armeabi-v7a
+        # define a static library containing our NEON code
+        ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
+            include $(CLEAR_VARS)
+            LOCAL_MODULE    := mylib-neon
+            LOCAL_SRC_FILES := mylib-neon.c
+            LOCAL_ARM_NEON  := true
+            include $(BUILD_STATIC_LIBRARY)
+        endif # TARGET_ARCH_ABI == armeabi-v7a
 
 
 Runtime Detection:
@@ -98,24 +97,24 @@ You should explicitly check that android_getCpuFamily() returns
 ANDROID_CPU_FAMILY_ARM, and that android_getCpuFeatures() returns a value
 that has the ANDROID_CPU_ARM_FEATURE_NEON flag set, as  in:
 
-    #include &lt;cpu-features.h&gt;
+          #include <cpu-features.h>
 
-    ...
-    ...
+          ...
+          ...
 
-    if (android_getCpuFamily() == ANDROID_CPU_FAMILY_ARM &amp;&amp;
-        (android_getCpuFeatures() &amp; ANDROID_CPU_ARM_FEATURE_NEON) != 0)
-    {
-        // use NEON-optimized routines
-        ...
-    }
-    else
-    {
-        // use non-NEON fallback routines instead
-        ...
-    }
+          if (android_getCpuFamily() == ANDROID_CPU_FAMILY_ARM &&
+              (android_getCpuFeatures() & ANDROID_CPU_ARM_FEATURE_NEON) != 0)
+          {
+              // use NEON-optimized routines
+              ...
+          }
+          else
+          {
+              // use non-NEON fallback routines instead
+              ...
+          }
 
-    ...
+          ...
 
 Sample code:
 ------------
@@ -125,4 +124,3 @@ on how to use the 'cpufeatures' library and Neon intrinsics at the same time.
 
 This implements a tiny benchmark for a FIR filter loop using a C version, and
 a NEON-optimized one for devices that support it.
-</pre></body></html>
