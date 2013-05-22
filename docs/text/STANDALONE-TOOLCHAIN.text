@@ -114,8 +114,7 @@ create a tarball in /tmp/ndk/<toolchain-name>.tar.bz2. This allows you to
 archive and redistribute the binaries easily.
 
 Another important benefit is that this standalone toolchain will contain a
-working copy of the GNU libstdc++, with working exceptions and RTTI support
-(as long as you link against libstdc++ or libsupc++)
+working copy of a C++ STL library, with working exceptions and RTTI support.
 
 Use --help for more options and details.
 
@@ -130,23 +129,41 @@ Use --help for more options and details.
 5/ About Clang
 ---------------------
 
-Clang/clang++ uses the same assembler, linker, headers, libraries and GNU
-libstdc++ in the same standalone package.  Clang/clang++ are actually scripts
-with "-target" set to the specified architecture at creation.  For example, in
-ARM standalone package, clang is a one-liner:
+It is possible to also install Clang binaries in the standalone
+installation by using the --llvm-version=<version> option, where
+<version> is a LLVM/Clang version number (e.g. `3.1` or `3.2`). E.g.:
 
-      `dirname $0`/clang31 -target armv5te-none-linux-androideabi "$@"
+        build/tools/make-standalone-toolchain.sh \
+            --install-dir=/tmp/mydir \
+            --toolchain=arm-linux-androideabi-4.7 \
+            --llvm-version=3.1
 
-clang++ is another:
+Note that Clang binaries are copied in addition to the GCC ones, because
+they rely on the same assembler, linker, headers, libraries and C++
+STL implementation.
 
-      `dirname $0`/clang++31 -target armv5te-none-linux-androideabi "$@"
+This also installs two scripts under <install-dir>/bin/ named '`clang`'
+and '`clang++`' which invoke the real clang binary with default
+target architecture flags. In other words, they should "just work" and
+you should be able to use them in your own builds by setting CC and CXX
+environment variables to point to them.
 
-Note that for arm, clang will change target based on the presence of
-subsequent option "-march=armv7-a" and/or "-mthumb".  ie.
+The rest of this section gives more detail about how these work, in case
+you encounter some unexpected problems.
 
-  1. With "-march=armv7-a", -target becomes armv7-none-linux-androideabi
-  2. With "-mthumb", -target becomes thumb-none-linux-androideabi
-  3. With both, -target becomes thumbv7-none-linux-androideabi
+For example, in an ARM standalone installation built with
+`--llvm-version=3.1`, `clang` is a one-liner that looks like this on Unix:
+
+        `dirname $0`/clang31 -target armv5te-none-linux-androideabi "$@"
+
+And `clang++` invokes `clang++31` in the same way.
+
+Note that for ARM, `clang` will change target based on the presence of
+subsequent option "`-march=armv7-a`" and/or "`-mthumb`".  ie.
+
+  1. With "`-march=armv7-a`", -target becomes `armv7-none-linux-androideabi`.
+  2. With "`-mthumb`", -target becomes `thumb-none-linux-androideabi`.
+  3. With both, -target becomes `thumbv7-none-linux-androideabi`.
 
 You may override with your own -target if you wish.
 
@@ -154,13 +171,13 @@ Extra efforts have been made to make clang/clang++ easier drop-in
 replacements for gcc/g++ in Makefile.  When in doubt, use the following
 common techniques to check:
 
-  1. Add option "-v" to dump commands compiler driver issues
-  2. Add option "-###" to dump command line options, including those
+  1. Add option "`-v`" to dump commands compiler driver issues
+  2. Add option "`-###`" to dump command line options, including those
      implicitly predefined.
-  3. Use "-x c /dev/null -dM -E" to dump predefined preprocessor definitions
-  4. Add option "-save-temps" and compare the preprocessed files *.i or *.ii
+  3. Use "`-x c` `/dev/null` `-dM` `-E`" to dump predefined preprocessor definitions
+  4. Add option "`-save-temps`" and compare the preprocessed files `*.i` or `*.ii`
 
-See http://clang.llvm.org/, especially the GCC compatibility section.
+See http://clang.llvm.org/ , especially the GCC compatibility section.
 
 
 6/ ABI Compatibility:
@@ -211,7 +228,7 @@ or the MIPS ABI.
 
 The Windows binaries do *not* depend on Cygwin. The good news is that they
 are thus faster, the bad news is that they do not understand the Cygwin
-path specification like /cygdrive/c/foo/bar (instead of C:/foo/bar).
+path specification like `/cygdrive/c/foo/bar` (instead of `C:/foo/bar`).
 
 The NDK build system ensures that all paths passed to the compiler from Cygwin
 are automatically translated, and deals with other horrors for you. If you have
@@ -246,40 +263,40 @@ They are enabled by default, so use -fno-exceptions and -fno-rtti if you
 want to disable them when building sources with them (e.g. to generate
 smaller machine code).
 
-NOTE: You will need to explicitly link with libsupc++ if you use these
-      features. To do this, use -lsupc++ when linking binaries, as in:
+NOTE: If you use the GNU libstdc++, you will need to explicitly link with
+libsupc++ if you use these features. To do this, use -lsupc++ when
+linking binaries, as in:
 
-        arm-linux-androideabi-g++ .... -lsupc++
+          arm-linux-androideabi-g++ .... -lsupc++
+
+This is not needed when using the STLport library.
 
 
 ### 7.4/ C++ STL support:
 
-The standalone toolchain also comes with a copy of the GNU libstdc++
-library, which provides an implementation of the C++ Standard Template
-Library. To use it, you however need to link with the proper library:
+The standalone toolchain includes a copy of a C++ Standard Template Library
+implementation, either the GNU libstdc++, or STLport, determined by your
+use of the --stl=<name> option described previously. To use this STL
+implementation, you however need to link your project with the proper
+library:
 
-  * Use -lstdc++ to link against the _static_ library version. This ensures
-    that all required C++ STL code is included into your final binary. This
-    is ideal if you are only generating a single shared library or executable.
+  * Use -lstdc++ to link against the _static_ library version of any
+    implementation. This ensures that all required C++ STL code is
+    included into your final binary. This is ideal if you are only
+    generating a **single** shared library or executable.
 
     This is the recommended way to do it.
 
-  * Use -lgnustl_shared to link against the _shared_ library version. This
-    is required if you have several related shared libraries or executables
-    that need to run in the same address space at runtime (some global variables
-    need to be defined uniquely, which is not possible if you link the static
-    libstdc++ against each one of your executables).
-
-    If you use this option, you need to ensure that libgnustl_shared.so is
-    also copied to your device for your code to load properly. The file is
-    at:
+  * Use -lgnustl_shared to link against the _shared_ library version of
+    GNU libstdc++. If you use this option, you need to ensure that
+    `libgnustl_shared.so` is also copied to your device for your code to
+    load properly. The file is at:
 
         $TOOLCHAIN/arm-linux-androideabi/lib/  for ARM toolchains.
         $TOOLCHAIN/i686-linux-android/lib/     for x86 ones.
         $TOOLCHAIN/mipsel-linux-android/lib/   for MIPS toolchains.
 
-
-    IMPORTANT: The GNU libstdc++ is licensed under the GPLv3 with a
+    IMPORTANT: The GNU libstdc++ is licensed under the **GPLv3** with a
                linking exception. See the following URL for details:
 
 > http://gcc.gnu.org/onlinedocs/libstdc++/manual/bk01pt01ch01s02.html
@@ -287,8 +304,21 @@ Library. To use it, you however need to link with the proper library:
 > If you cannot comply with its requirements, i.e. you cannot redistribute
   the shared library, do not use it in your project.
 
-The reason the shared version of GNU libstdc++ is not called libstdc++.so is
-because this would conflict at runtime with the system's own minimal C++
-runtime, which is `/system/lib/libstdc++.so`. This enforces a new name for the
-GNU ELF library. This is not a problem for the static library.
+  * Use -stlport_shared to link against the _shared_ library version of
+    STLport. If you use this option, you need to ensure that
+    `libstlport_shared.so` is also copied to your device for your code
+    to load properly. They are found at the same locations than those
+    for `gnustl_shared`.
 
+**VERY** **IMPORTANT** **NOTE**:
+If your project contains _multiple_ shared libraries or
+executables, you **must** link against a shared library STL implementation.
+Otherwise, some global variables won't be defined uniquely, which can
+result in all kind of weird behaviour at runtime, like crashes, exceptions
+not being caught properly, and more surprises.
+
+The reason the shared version of the libraries is not simply called
+`libstdc++.so` is not called libstdc++.so is because this would conflict
+at runtime with the system's own minimal C++ runtime, which is
+`/system/lib/libstdc++.so`. This enforces a new name for the GNU ELF
+library. This is not a problem for the static library.
