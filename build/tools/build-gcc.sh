@@ -140,6 +140,16 @@ set_parameters ()
 
 set_parameters $PARAMETERS
 
+# Disable x86_64 build for toolchains older 4.7
+# x86_64-* targets are available on 64-bit host only
+case "$TOOLCHAIN" in
+  x86_64-4.4.3|x86_64-4.6)
+    echo "ERROR: x86_64 toolchain is enabled in 4.7+. Please try to build newer version."
+    exit 1
+    ;;
+  x86_64-*) do_try64_option ;;
+esac
+
 prepare_target_build
 
 parse_toolchain_name $TOOLCHAIN
@@ -300,7 +310,12 @@ else
 fi
 
 # Enable OpenMP
-EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-libgomp"
+case "$TOOLCHAIN" in
+    # TODO: Need x86_64 platforms first to have libgomp and libatomic build.
+    # Disable for now until platforms are ready.
+    x86_64-*) EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --disable-libatomic" ;;
+    *) EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-libgomp" ;;
+esac
 
 # Disable libsanitizer (which depends on libstdc++ built separately) for now
 EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --disable-libsanitizer"
@@ -311,6 +326,8 @@ case "$TOOLCHAIN" in
     mips*)
     ;;
     *-4.4.3)
+    ;;
+    x86_64-4.7) # x32 support is included into gold 2.23, but 4.7 is based on 2.22, so stick it to bsd.
     ;;
     *)
         EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-gold=default"
