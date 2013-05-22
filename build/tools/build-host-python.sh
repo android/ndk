@@ -43,11 +43,11 @@ following:
    darwin-x86
    darwin-x86_64
 
-For example, here's how to rebuild Python 2.7.4 on Linux
+For example, here's how to rebuild Python 2.7.5 on Linux
 for six different systems:
 
   $PROGNAME --build-dir=/path/to/toolchain/src \n \
-    --python-version=2.7.4 \n \
+    --python-version=2.7.5 \n \
     --systems=linux-x86,linux-x86_64,windows,windows-x86_64,darwin-x86,darwin-x86_64"
 
 TOOLCHAIN_SRC_DIR=
@@ -233,7 +233,7 @@ build_host_python ()
         panic "Missing configure script in $SRCDIR"
     fi
 
-    # Currently, 2.7.4 and 3.3.0 builds generate $SRCDIR/Lib/_sysconfigdata.py, unless it
+    # Currently, 2.7.5 and 3.3.0 builds generate $SRCDIR/Lib/_sysconfigdata.py, unless it
 	# already exists (in which case it ends up wrong anyway!)... this should really be in
     # the build directory instead.
     if [ ! -f "$SRCDIR/Lib/_sysconfigdata.py" ]; then
