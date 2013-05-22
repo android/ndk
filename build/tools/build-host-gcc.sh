@@ -1045,7 +1045,7 @@ setup_build_for_toolchain ()
         -finline-limit=300 -fmessage-length=0 -fno-inline-functions-called-once \
         -fno-strict-aliasing -frtti \
         -fstrict-aliasing -funswitch-loops -funwind-tables \
-        -march=atom -mtune=atom -mbionic -mfpmath=sse -mstackrealign -DUSE_SSE2"
+        -march=x86-64 -mtune=atom -mbionic -mfpmath=sse -mstackrealign -DUSE_SSE2"
 
         TARGET_LDFLAGS=$TARGET_LDFLAGS" \
         -O2 -g -fPIC \
@@ -1055,7 +1055,7 @@ setup_build_for_toolchain ()
         -finline-limit=300 -fno-inline-functions-called-once \
         -funswitch-loops -funwind-tables -mstackrealign \
         -ffunction-sections -funwind-tables -fmessage-length=0 \
-        -march=atom -mstackrealign -mfpmath=sse -mbionic \
+        -march=x86-64 -mstackrealign -mfpmath=sse -mbionic \
         -Wno-multichar -Wl,-z,noexecstack -Werror=format-security -Wstrict-aliasing=2 \
         -W -Wall -Wno-unused -Winit-self -Wpointer-arith -Werror=return-type -Werror=non-virtual-dtor \
         -Werror=address -Werror=sequence-point \
@@ -1476,7 +1476,7 @@ build_host_gcc_core ()
             ARGS=$ARGS" --with-arch=i686 --with-tune=atom --with-fpmath=sse"
             ;;
         x86_64)
-            ARGS=$ARGS" --with-arch=atom --with-tune=atom --with-fpmath=sse --with-multilib-list=m32,m64,mx32"
+            ARGS=$ARGS" --with-arch=x86-64 --with-tune=atom --with-fpmath=sse --with-multilib-list=m32,m64,mx32"
             ;;
         mips)
             # Add --disable-fixed-point to disable fixed-point support
