@@ -313,6 +313,13 @@ ABI_STL="$TMPDIR/$ABI_CONFIGURE_TARGET"
 ABI_STL_INCLUDE="$TMPDIR/include/c++/$GCC_BASE_VERSION"
 ABI_STL_INCLUDE_TARGET="$ABI_STL_INCLUDE/$ABI_CONFIGURE_TARGET"
 
+# $1: filenames of headers
+copy_gabixx_headers () {
+  for header in $@; do
+    (cd $ABI_STL_INCLUDE && ln -s ../../gabi++/include/$header $header)
+  done
+}
+
 # Copy common STL headers (i.e. the non-arch-specific ones)
 copy_stl_common_headers () {
     case $STL in
@@ -322,7 +329,7 @@ copy_stl_common_headers () {
         stlport)
             copy_directory "$STLPORT_DIR/stlport" "$ABI_STL_INCLUDE"
             copy_directory "$STLPORT_DIR/../gabi++/include" "$ABI_STL_INCLUDE/../../gabi++/include"
-            (cd $ABI_STL_INCLUDE && ln -s ../../gabi++/include/cxxabi.h cxxabi.h)
+            copy_gabixx_headers cxxabi.h unwind.h unwind-arm.h unwind-itanium.h
             ;;
     esac
 }
