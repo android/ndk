@@ -124,7 +124,7 @@ TOOLCHAIN_PREFIX := $(TOOLCHAIN_PREBUILT_ROOT)/bin/$(TOOLCHAIN_PREFIX)
 TARGET_GDBSERVER := $(NDK_ROOT)/prebuilt/android-$(TARGET_ARCH)/gdbserver/gdbserver
 
 # compute NDK_APP_DST_DIR as the destination directory for the generated files
-NDK_APP_DST_DIR := $(NDK_APP_PROJECT_PATH)/libs/$(TARGET_ARCH_ABI)
+NDK_APP_DST_DIR := $(NDK_APP_LIBS_OUT)/$(TARGET_ARCH_ABI)
 
 # Default build commands, can be overriden by the toolchain's setup script
 include $(BUILD_SYSTEM)/default-build-commands.mk

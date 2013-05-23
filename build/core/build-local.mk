@@ -144,12 +144,18 @@ endif
 
 $(call ndk_log,Found project path: $(NDK_PROJECT_PATH))
 
-# Place all generated files here
+# Place all generated intermediate files here
 NDK_APP_OUT := $(strip $(NDK_OUT))
 ifndef NDK_APP_OUT
   NDK_APP_OUT := $(NDK_PROJECT_PATH)/obj
 endif
 $(call ndk_log,Ouput path: $(NDK_APP_OUT))
+
+# Place all generated library files here.  This is rarely changed since aapt expects the default libs/
+NDK_APP_LIBS_OUT := $(strip $(NDK_LIBS_OUT))
+ifndef NDK_APP_LIBS_OUT
+  NDK_APP_LIBS_OUT := $(NDK_PROJECT_PATH)/libs
+endif
 
 # Fake an application named 'local'
 _app            := local
