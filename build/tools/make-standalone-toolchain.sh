@@ -43,8 +43,11 @@ NDK_DIR=`dirname $NDK_DIR`
 NDK_DIR=`dirname $NDK_DIR`
 register_var_option "--ndk-dir=<path>" NDK_DIR "Take source files from NDK at <path>"
 
-# Create 32-bit host toolchain by default
-SYSTEM=$HOST_TAG32
+if [ -d "$NDK_DIR/prebuilt/$HOST_TAG" ]; then
+  SYSTEM=$HOST_TAG
+else
+  SYSTEM=$HOST_TAG32
+fi
 register_var_option "--system=<name>" SYSTEM "Specify host system"
 
 PACKAGE_DIR=/tmp/ndk-$USER
