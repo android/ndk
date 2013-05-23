@@ -177,7 +177,7 @@ toolchain_checkout ()
     else
         BRANCH="($BRANCH)"
     fi
-    (printf "%-32s " "toolchain/$NAME.git $BRANCH"; $GITCMD $GITOPTS log -1 --format=oneline $REVISION) >> $SOURCES_LIST
+    (printf "%-38s " "toolchain/$NAME.git $BRANCH"; $GITCMD $GITOPTS log -1 --format=oneline $REVISION) >> $SOURCES_LIST
 }
 
 cd $TMPDIR
@@ -203,6 +203,7 @@ toolchain_clone python
 toolchain_clone perl
 toolchain_clone clang
 toolchain_clone llvm
+toolchain_clone compiler-rt
 toolchain_clone mclinker
 
 toolchain_checkout "" $BRANCH build .
@@ -215,23 +216,30 @@ toolchain_checkout "" $BRANCH ppl .
 toolchain_checkout "" $BRANCH expat .
 toolchain_checkout "" $BRANCH binutils binutils-2.19 binutils-2.21 binutils-2.22 binutils-2.23
 toolchain_checkout "" $BRANCH gcc gcc-4.4.3 gcc-4.6 gcc-4.7 gcc-4.8
-toolchain_checkout "" $BRANCH gdb gdb-6.6 gdb-7.3.x
+toolchain_checkout "" $BRANCH gdb gdb-7.3.x gdb-7.6
 toolchain_checkout "" $BRANCH python Python-2.7.5
 toolchain_checkout "" $BRANCH perl perl-5.16.2
 toolchain_checkout "" $BRANCH mclinker .
 
 for LLVM_VERSION in $LLVM_VERSION_LIST; do
+    # Check-out and Adjust directory structure a bit
+    # 1. Create symbolic link for clang which is always built
+    # 2. Create symbolic link for compiler-rt too
+    # 3. Move tools/polly up to be a sibling of llvm and clang.  Script build-llvm.sh
+    #    will only create symbolic link when --with-polly is specified.
     LLVM_VERSION_NO_DOT=$(echo $LLVM_VERSION | sed -e 's!\.!!g')
     LLVM_BRANCH="release_$LLVM_VERSION_NO_DOT"
     toolchain_checkout "llvm-$LLVM_VERSION" $LLVM_BRANCH clang .
     toolchain_checkout "llvm-$LLVM_VERSION" $LLVM_BRANCH llvm .
-    # Adjust directory structure a bit
-    # 1. Create symbolic link for clang which is always built
-    # 2. Move tools/polly up to be a sibling of llvm and clang.  Script build-llvm.sh
-    #    will only create symbolic link when --with-polly is specified.
     (cd "$TMPDIR/llvm-$LLVM_VERSION/llvm" && \
         ln -s ../../clang tools && \
         test -d tools/polly && mv tools/polly ..)
+    if [ "$LLVM_VERSION" != "3.1" ]; then
+        # compiler-rt only exists on and after 3.2
+        toolchain_checkout "llvm-$LLVM_VERSION" $LLVM_BRANCH compiler-rt .
+        (cd "$TMPDIR/llvm-$LLVM_VERSION/llvm" && \
+            test -d ../compiler-rt && ln -s ../../compiler-rt projects)
+    fi
     # In polly/utils/cloog_src, touch Makefile.in, aclocal.m4, and configure to
     # make sure they are not regenerated.
     (test -d "$TMPDIR/llvm-$LLVM_VERSION/polly" && \
