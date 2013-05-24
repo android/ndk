@@ -101,7 +101,7 @@ run ./Configure \
     -Dcc="$CC" \
     -Dcc_as_ld \
     -Dccflags="$CFLAGS" \
-    -A prepend:libpth="$LIBS_SEARCH" \
+    -A prepend:libpth="$LIBS_SEARCH"
 fail_panic "Failed to configure the perl-$PERL_VERSION build!"
 
 log "Building perl"
