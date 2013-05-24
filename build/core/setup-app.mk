@@ -100,9 +100,9 @@ endif
 ifeq ($(NDK_APP.$(_app).cleaned_binaries),)
     NDK_APP.$(_app).cleaned_binaries := true
     clean-installed-binaries::
-	$(hide) $(call host-rm,$(NDK_ALL_ABIS:%=$(NDK_APP_PROJECT_PATH)/libs/%/lib*$(TARGET_SONAME_EXTENSION)))
-	$(hide) $(call host-rm,$(NDK_ALL_ABIS:%=$(NDK_APP_PROJECT_PATH)/libs/%/gdbserver))
-	$(hide) $(call host-rm,$(NDK_ALL_ABIS:%=$(NDK_APP_PROJECT_PATH)/libs/%/gdb.setup))
+	$(hide) $(call host-rm,$(NDK_ALL_ABIS:%=$(NDK_APP_LIBS_OUT)/%/lib*$(TARGET_SONAME_EXTENSION)))
+	$(hide) $(call host-rm,$(NDK_ALL_ABIS:%=$(NDK_APP_LIBS_OUT)/%/gdbserver))
+	$(hide) $(call host-rm,$(NDK_ALL_ABIS:%=$(NDK_APP_LIBS_OUT)/%/gdb.setup))
 endif
 
 $(foreach _abi,$(NDK_APP_ABI),\
