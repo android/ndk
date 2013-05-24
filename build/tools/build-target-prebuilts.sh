@@ -108,6 +108,10 @@ dump "Building $ABIS libportable binaries..."
 run $BUILDTOOLS/build-libportable.sh $FLAGS
 fail_panic "Could not build libportable!"
 
+dump "Building $ABIS compiler-rt binaries..."
+run $BUILDTOOLS/build-compiler-rt.sh $FLAGS --src-dir="$SRC_DIR/llvm-$DEFAULT_LLVM_VERSION/compiler-rt"
+fail_panic "Could not build compiler-rt!"
+
 if [ "$PACKAGE_DIR" ]; then
     dump "Done, see $PACKAGE_DIR"
 else

@@ -396,6 +396,7 @@ if [ -z "$PREBUILT_NDK" ]; then
             unpack_prebuilt gnu-libstdc++-libs-$VERSION-$ABI "$REFERENCE"
         done
         unpack_prebuilt libportable-libs-$ABI "$REFERENCE"
+        unpack_prebuilt compiler-rt-libs-$ABI "$REFERENCE"
     done
 fi
 
@@ -465,6 +466,15 @@ for SYSTEM in $SYSTEMS; do
             done
         else
             echo "WARNING: Could not find libportable source tree!"
+        fi
+
+        if [ -d "$DSTDIR/$COMPILER_RT_SUBDIR" ]; then
+            COMPILER_RT_ABIS=$PREBUILT_ABIS
+            for COMPILER_RT_ABI in $COMPILER_RT_ABIS; do
+                copy_prebuilt "$COMPILER_RT_SUBDIR/libs/$COMPILER_RT_ABI" "$COMPILER_RT_SUBDIR/libs"
+            done
+        else
+            echo "WARNING: Could not find compiler-rt source tree!"
         fi
     else
         # Unpack toolchains
