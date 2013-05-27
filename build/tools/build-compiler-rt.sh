@@ -226,8 +226,8 @@ build_compiler_rt_libs_for_abi ()
 }
 
 for ABI in $ABIS; do
-    build_compiler_rt_libs_for_abi $ABI "$BUILD_DIR/$ABI/shared" "shared"
-    build_compiler_rt_libs_for_abi $ABI "$BUILD_DIR/$ABI/static" "static"
+    build_compiler_rt_libs_for_abi $ABI "$BUILD_DIR/$ABI/shared" "shared" "$OUT_DIR"
+    build_compiler_rt_libs_for_abi $ABI "$BUILD_DIR/$ABI/static" "static" "$OUT_DIR"
 done
 
 # If needed, package files into tarballs

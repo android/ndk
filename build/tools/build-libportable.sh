@@ -160,7 +160,7 @@ for ABI in $ABIS; do
     ARCH=$(convert_abi_to_arch $ABI)
     LIBPORTABLE_SRCDIR=$LIBPORTABLE_SRCDIR_BASE/arch-$ARCH
     LIBPORTABLE_SOURCES=$(cd $LIBPORTABLE_SRCDIR && ls *.[cS])
-    build_libportable_libs_for_abi $ABI "$BUILD_DIR/$ABI"
+    build_libportable_libs_for_abi $ABI "$BUILD_DIR/$ABI" "$OUT_DIR"
 done
 
 # If needed, package files into tarballs
