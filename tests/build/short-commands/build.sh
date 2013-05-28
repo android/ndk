@@ -149,6 +149,15 @@ fi
 $NDK/ndk-build -C "$PROGDIR" "$@"
 RET=$?
 
+# check if linker.list is empty
+ALL_LINKER_LIST=`find obj -name linker.list`
+for LINKER_LIST in $ALL_LINKER_LIST; do
+    if [ ! -s $LINKER_LIST ]; then
+        echo "ERROR: linker list file isn't generated!"
+        exit 1
+    fi
+done
+
 # Clean everything we generated
 rm -f $CLEAN_FILES
 rm -rf "$PROGDIR/obj" "$PROGDIR/libs"

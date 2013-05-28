@@ -488,15 +488,6 @@ $(call -ndk-mod-debug,.  built_shared_libs='$(shared_libs)')
 $(call -ndk-mod-debug,.  built_static_libs='$(static_libs)')
 $(call -ndk-mod-debug,.  built_whole_static_libs='$(whole_static_libs)')
 
-ifeq ($(LOCAL_SHORT_COMMANDS),true)
-    $(call ndk_log,Building ELF binary module '$(LOCAL_MODULE)' with linker list file)
-    linker_options   := $(linker_objects_and_libraries)
-    linker_list_file := $(LOCAL_OBJS_DIR)/linker.list
-    linker_objects_and_libraries := @$(call host-path,$(linker_list_file))
-    $(call generate-list-file,$(linker_options),$(linker_list_file))
-    $(LOCAL_BUILT_MODULE): $(linker_list_file)
-endif
-
 # The list of object/static/shared libraries passed to the linker when
 # building shared libraries and executables. order is important.
 #
@@ -506,6 +497,15 @@ linker_objects_and_libraries = $(strip $(call TARGET-get-linker-objects-and-libr
     $(static_libs), \
     $(whole_static_libs), \
     $(shared_libs)))
+
+ifeq ($(LOCAL_SHORT_COMMANDS),true)
+    $(call ndk_log,Building ELF binary module '$(LOCAL_MODULE)' with linker list file)
+    linker_options   := $(linker_objects_and_libraries)
+    linker_list_file := $(LOCAL_OBJS_DIR)/linker.list
+    linker_objects_and_libraries := @$(call host-path,$(linker_list_file))
+    $(call generate-list-file,$(linker_options),$(linker_list_file))
+    $(LOCAL_BUILT_MODULE): $(linker_list_file)
+endif
 
 $(LOCAL_BUILT_MODULE): $(shared_libs) $(static_libs) $(whole_static_libs)
 $(LOCAL_BUILT_MODULE): PRIVATE_LINKER_OBJECTS_AND_LIBRARIES := $(linker_objects_and_libraries)
