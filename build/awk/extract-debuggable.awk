@@ -71,7 +71,7 @@ function xml_event () {
             $0 = substr($0, 2);
         }
         XML_TAG = $0
-        sub("[ \n\t/].*$", "", XML_TAG);  # extract tag name
+        sub("[ \r\n\t/].*$", "", XML_TAG);  # extract tag name
         XML_TAG = toupper(XML_TAG);       # uppercase it
         if ( XML_TAG !~ /^[A-Z][-+_.:0-9A-Z]*$/ )  # validate it
             _xml_panic("Invalid tag name: " XML_TAG);
@@ -80,7 +80,7 @@ function xml_event () {
         } else {
             _xml_exit(XML_TAG);
         }
-        sub("[^ \n\t]*[ \n\t]*", "", $0); # get rid of tag and spaces
+        sub("[^ \r\n\t]*[ \r\n\t]*", "", $0); # get rid of tag and spaces
         while ($0) { # process attributes
             if ($0 == "/") {  # deal with direct closing tag, e.g. </foo>
                 _xml_closing = XML_TAG; # record delayed tag closure.
@@ -104,7 +104,7 @@ function xml_event () {
                 _xml_panic("Invalid attribute value syntax for " _xml_attrib ": " $0);
             }
             XML_ATTR[_xml_attrib] = _xml_value;  # store attribute name/value
-            sub(/^[ \t\n]*/,"",$0); # get rid of remaining leading spaces
+            sub(/^[ \t\r\n]*/,"",$0); # get rid of remaining leading spaces
         }
         return 1; # now return, XML_TYPE/TAG/ATTR/RPATH are set
     }
