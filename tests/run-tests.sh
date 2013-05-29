@@ -454,7 +454,7 @@ is_broken_build ()
     local PROJECT="$1"
     local ERRMSG="$2"
 
-    if [ -z $RUN_TESTS ] ; then
+    if [ -z "$RUN_TESTS" ] ; then
         if [ -f "$PROJECT/BROKEN_BUILD" ] ; then
             if [ ! -s "$PROJECT/BROKEN_BUILD" ] ; then
                 # skip all
