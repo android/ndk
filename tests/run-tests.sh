@@ -792,7 +792,6 @@ if is_testable device; then
         else
             ADB_DEVICES="$ADB_DEVICES "
             if [ -n "$ANDROID_SERIAL" ] ; then
-                ADB_SERIAL=$(echo "$ANDROID_SERIAL" | tr ' ' '.')  # turn ' ' into '.'
                 if [ "$ADB_DEVICES" = "${ADB_DEVICES%$ADB_SERIAL *}" ] ; then
                     dump "WARNING: Device $ANDROID_SERIAL cannot be found or offline!"
                     SKIP_TESTS=yes
@@ -807,8 +806,6 @@ if is_testable device; then
     else
         AT_LEAST_CPU_ABI_MATCH=
         for DEVICE in $ADB_DEVICES; do
-            # undo earlier ' '-to-'.' translation
-            DEVICE=$(echo $DEVICE | tr '.' ' ')
             # get device CPU_ABI and CPU_ABI2, each may contain list of abi, comma-delimited.
             adb_var_shell_cmd "$DEVICE" CPU_ABI1 getprop ro.product.cpu.abi
             adb_var_shell_cmd "$DEVICE" CPU_ABI2 getprop ro.product.cpu.abi2
