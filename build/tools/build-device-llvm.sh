@@ -120,7 +120,6 @@ if [ "$VERBOSE" = "yes" ]; then
     MAKE_FLAGS="VERBOSE=1"
 fi
 
-
 dump "Copy     : mclinker source"
 MCLINKER_SRC_DIR=$BUILD_OUT/mclinker
 mkdir -p $MCLINKER_SRC_DIR
@@ -132,6 +131,12 @@ fail_panic "Couldn't copy mclinker source: $MCLINKER_SRC_DIR"
 cd $MCLINKER_SRC_DIR && run ./autogen.sh
 fail_panic "Couldn't run autogen.sh in $MCLINKER_SRC_DIR"
 
+# Remove aosp stuff away from PATH to prevent configure error.
+aosp="${ANDROID_NDK_ROOT%/}"
+aosp="${aosp%/ndk}"
+aosp_regex="${aosp}/[^:]*:"
+PATH="`echo $PATH | sed -e \"s#$aosp_regex##g\"`"
+export PATH
 
 for arch in $ARCHS; do
   dump "Rebuild for architecture $arch"
