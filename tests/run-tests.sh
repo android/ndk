@@ -781,8 +781,8 @@ if is_testable device; then
         dump "WARNING: No 'adb' in your path!"
         SKIP_TESTS=yes
     else
-        # Get list of online devices, turn ' ' in device into '.'
-        ADB_DEVICES=`$ADB_CMD devices | grep -v offline | awk 'NR>1 {gsub(/[ \t]+device$/,""); print;}' | sed '/^$/d' | sort | tr ' ' '.'`
+        # Get list of online devices, turn ' ' in device into '#'
+        ADB_DEVICES=`$ADB_CMD devices | grep -v offline | awk 'NR>1 {gsub(/[ \t]+device$/,""); print;}' | sed '/^$/d' | sort | tr ' ' '#'`
         ADB_DEVICES=$(echo $ADB_DEVICES | tr '\n' ' ')
         log2 "ADB online devices (sorted): $ADB_DEVICES"
         ADB_DEVCOUNT=`echo "$ADB_DEVICES" | wc -w`
@@ -792,7 +792,7 @@ if is_testable device; then
         else
             ADB_DEVICES="$ADB_DEVICES "
             if [ -n "$ANDROID_SERIAL" ] ; then
-                ADB_SERIAL=$(echo "$ANDROID_SERIAL" | tr ' ' '.')  # turn ' ' into '.'
+                ADB_SERIAL=$(echo "$ANDROID_SERIAL" | tr ' ' '#')  # turn ' ' into '#'
                 if [ "$ADB_DEVICES" = "${ADB_DEVICES%$ADB_SERIAL *}" ] ; then
                     dump "WARNING: Device $ANDROID_SERIAL cannot be found or offline!"
                     SKIP_TESTS=yes
@@ -807,8 +807,8 @@ if is_testable device; then
     else
         AT_LEAST_CPU_ABI_MATCH=
         for DEVICE in $ADB_DEVICES; do
-            # undo earlier ' '-to-'.' translation
-            DEVICE=$(echo $DEVICE | tr '.' ' ')
+            # undo earlier ' '-to-'#' translation
+            DEVICE=$(echo "$DEVICE" | tr '#' ' ')
             # get device CPU_ABI and CPU_ABI2, each may contain list of abi, comma-delimited.
             adb_var_shell_cmd "$DEVICE" CPU_ABI1 getprop ro.product.cpu.abi
             adb_var_shell_cmd "$DEVICE" CPU_ABI2 getprop ro.product.cpu.abi2
