@@ -13,11 +13,11 @@ DEVICE_x86=
 
 ADB_CMD=`which adb`
 if [ -n $ADB_CMD ] ; then
-    # Get list of online devices, turn ' ' in device into '.'
-    DEVICES=`$ADB_CMD devices | grep -v offline | awk 'NR>1 {gsub(/[ \t]+device$/,""); print;}' | sed '/^$/d' | tr ' ' '.'`
+    # Get list of online devices, turn ' ' in device into '#'
+    DEVICES=`$ADB_CMD devices | grep -v offline | awk 'NR>1 {gsub(/[ \t]+device$/,""); print;}' | sed '/^$/d' | tr ' ' '#'`
     for DEVICE in $DEVICES; do
-        # undo previous ' '-to-'.' translation
-        DEVICE=$(echo $DEVICE | tr '.' ' ')
+        # undo previous ' '-to-'#' translation
+        DEVICE=$(echo "$DEVICE" | tr '#' ' ')
         # get arch
         ARCH=`$ADB_CMD -s "$DEVICE" shell getprop ro.product.cpu.abi | tr -dc '[:print:]'`
         case "$ARCH" in
