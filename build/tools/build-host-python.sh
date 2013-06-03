@@ -16,6 +16,10 @@
 # limitations under the License.
 #
 # Rebuild the host Python binaries from sources.
+# Also copies any gnu libstdc++ pretty-printers
+# found in $TOOLCHAIN_SRC_DIR/gcc/gcc-*
+# and Joachim Reichel's stlport pretty printers
+# found in sources/third_party/pretty-printers/stlport
 #
 
 # include common function and variable definitions
@@ -348,6 +352,24 @@ build_host_python ()
     #  Though the real fix is to make bininstall depend on libainstall.
     run2 make -j$NUM_JOBS &&
     run2 make install
+
+    # Pretty printers.
+    PYPPDIR="$INSTALLDIR/share/pretty-printers/"
+
+    # .. for gnu stdlibc++
+    GCC_DIRS=$(find $TOOLCHAIN_SRC_DIR/gcc/ -maxdepth 1 -name "gcc-*" -type d)
+    for GCC_DIR in $GCC_DIRS; do
+        (
+        if [ -d "$GCC_DIR/libstdc++-v3/python" ]; then
+            cd "$GCC_DIR/libstdc++-v3/python"
+            [ -d "$PYPPDIR/libstdcxx/$(basename $GCC_DIR)" ] || mkdir -p "$PYPPDIR/libstdcxx/$(basename $GCC_DIR)"
+            run2 find . -path "*.py" -exec cp {} "$PYPPDIR/libstdcxx/$(basename $GCC_DIR)/" \;
+        fi
+        )
+    done
+
+    # .. for STLPort
+    run2 cp -rf $NDK_DIR/sources/third_party/pretty-printers/stlport/gppfs-0.2 $PYPPDIR/stlport
 }
 
 need_build_host_python ()
