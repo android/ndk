@@ -63,9 +63,11 @@ def ndk_bin_path(ndk):
 
 VERBOSE = False
 PROJECT = None
-PYTHON_CMD = None
 ADB_CMD = None
 GNUMAKE_CMD = None
+# Extra arguments passed to the NDK build system when
+# querying it.
+GNUMAKE_FLAGS = []
 
 OPTION_FORCE = None
 OPTION_EXEC = None
@@ -100,7 +102,8 @@ def error(string, errcode=1):
 
 def handle_args():
     global VERBOSE, DEBUG_PORT, DELAY, DEVICE_SERIAL
-    global PYTHON_CMD, GNUMAKE_CMD, ADB_CMD, ADB_FLAGS
+    global GNUMAKE_CMD, GNUMAKE_FLAGS
+    global ADB_CMD, ADB_FLAGS
     global PROJECT, NDK
     global OPTION_START, OPTION_LAUNCH, OPTION_LAUNCH_LIST
     global OPTION_FORCE, OPTION_EXEC, OPTION_TUI
@@ -170,12 +173,15 @@ def handle_args():
                          help='Use tui mode',
                          action='store_true', dest='tui')
 
+    parser.add_argument( '--gnumake-flag',
+                         help='Flag to pass to gnumake, e.g. NDK_TOOLCHAIN_VERSION=4.8',
+                         action='append', dest='gnumake_flags')
+
     args = parser.parse_args()
 
     VERBOSE = args.verbose
 
     ndk_bin = ndk_bin_path(NDK)
-    (found_python,  PYTHON_CMD)  = find_program('python', [ndk_bin])
     (found_adb,     ADB_CMD)     = find_program('adb',    [ndk_bin])
     (found_gnumake, GNUMAKE_CMD) = find_program('make',   [ndk_bin])
 
@@ -231,15 +237,18 @@ def handle_args():
     if args.delay != None:
         DELAY = args.delay
 
+    if args.gnumake_flags != None:
+        GNUMAKE_FLAGS = args.gnumake_flags
+
 def get_build_var(var):
-    global GNUMAKE_CMD, NDK, PROJECT
+    global GNUMAKE_CMD, GNUMAKE_FLAGS, NDK, PROJECT
     text = subprocess.check_output([GNUMAKE_CMD,
                                   '--no-print-dir',
                                   '-f',
                                   NDK+'/build/core/build-local.mk',
                                   '-C',
                                   PROJECT,
-                                  'DUMP_'+var]
+                                  'DUMP_'+var] + GNUMAKE_FLAGS
                                   )
     # replace('\r', '') due to Windows crlf (\r\n)
     #  ...universal_newlines=True causes bytes to be returned
@@ -247,7 +256,7 @@ def get_build_var(var):
     return text.decode('ascii').replace('\r', '').splitlines()[0]
 
 def get_build_var_for_abi(var, abi):
-    global GNUMAKE_CMD, NDK, PROJECT
+    global GNUMAKE_CMD, GNUMAKE_FLAGS, NDK, PROJECT
     text = subprocess.check_output([GNUMAKE_CMD,
                                    '--no-print-dir',
                                    '-f',
@@ -255,7 +264,7 @@ def get_build_var_for_abi(var, abi):
                                    '-C',
                                    PROJECT,
                                    'DUMP_'+var,
-                                   'APP_ABI='+abi],
+                                   'APP_ABI='+abi] + GNUMAKE_FLAGS,
                                    )
     return text.decode('ascii').replace('\r', '').splitlines()[0]
 
