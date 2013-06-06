@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-TOOLCHAIN_NAME   := clang-3.1
+TOOLCHAIN_NAME   := clang-3.3
 TOOLCHAIN_PREFIX := $(TOOLCHAIN_PREBUILT_ROOT)/bin/
 LLVM_TRIPLE := le32-none-ndk
 
