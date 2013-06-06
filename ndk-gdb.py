@@ -30,7 +30,7 @@ r'''
 
 import sys, os, argparse, subprocess, types
 import xml.etree.cElementTree as ElementTree
-import shutil
+import shutil, time
 from threading import Thread
 try:
     from Queue import Queue, Empty
@@ -63,9 +63,12 @@ def ndk_bin_path(ndk):
 
 VERBOSE = False
 PROJECT = None
-PYTHON_CMD = None
 ADB_CMD = None
 GNUMAKE_CMD = None
+JDB_CMD = None
+# Extra arguments passed to the NDK build system when
+# querying it.
+GNUMAKE_FLAGS = []
 
 OPTION_FORCE = None
 OPTION_EXEC = None
@@ -73,9 +76,10 @@ OPTION_START = None
 OPTION_LAUNCH = None
 OPTION_LAUNCH_LIST = None
 OPTION_TUI = None
-
+OPTION_WAIT = ['-D']
 
 DEBUG_PORT = 5039
+JDB_PORT = 65534
 
 # Name of the manifest file
 MANIFEST = 'AndroidManifest.xml'
@@ -100,10 +104,12 @@ def error(string, errcode=1):
 
 def handle_args():
     global VERBOSE, DEBUG_PORT, DELAY, DEVICE_SERIAL
-    global PYTHON_CMD, GNUMAKE_CMD, ADB_CMD, ADB_FLAGS
+    global GNUMAKE_CMD, GNUMAKE_FLAGS
+    global ADB_CMD, ADB_FLAGS
+    global JDB_CMD
     global PROJECT, NDK
     global OPTION_START, OPTION_LAUNCH, OPTION_LAUNCH_LIST
-    global OPTION_FORCE, OPTION_EXEC, OPTION_TUI
+    global OPTION_FORCE, OPTION_EXEC, OPTION_TUI, OPTION_WAIT
 
     parser = argparse.ArgumentParser(description='''
     Setup a gdb debugging session for your Android NDK application.
@@ -170,14 +176,22 @@ def handle_args():
                          help='Use tui mode',
                          action='store_true', dest='tui')
 
+    parser.add_argument( '--gnumake-flag',
+                         help='Flag to pass to gnumake, e.g. NDK_TOOLCHAIN_VERSION=4.8',
+                         action='append', dest='gnumake_flags')
+
+    parser.add_argument( '--nowait',
+                         help='Do not wait for debugger to attach (may miss early JNI breakpoints)',
+                         action='store_true', dest='nowait')
+
     args = parser.parse_args()
 
     VERBOSE = args.verbose
 
     ndk_bin = ndk_bin_path(NDK)
-    (found_python,  PYTHON_CMD)  = find_program('python', [ndk_bin])
     (found_adb,     ADB_CMD)     = find_program('adb',    [ndk_bin])
     (found_gnumake, GNUMAKE_CMD) = find_program('make',   [ndk_bin])
+    (found_jdb,     JDB_CMD)     = find_program('jdb',    [])
 
     if not found_gnumake:
         error('Failed to find GNU make')
@@ -231,15 +245,23 @@ def handle_args():
     if args.delay != None:
         DELAY = args.delay
 
+    if args.gnumake_flags != None:
+        GNUMAKE_FLAGS = args.gnumake_flags
+
+    if args.nowait == True:
+        OPTION_WAIT = []
+    elif not found_jdb:
+        error('Failed to find jdb.\n..you can use --nowait to disable jdb\n..but may miss early breakpoints.')
+
 def get_build_var(var):
-    global GNUMAKE_CMD, NDK, PROJECT
+    global GNUMAKE_CMD, GNUMAKE_FLAGS, NDK, PROJECT
     text = subprocess.check_output([GNUMAKE_CMD,
                                   '--no-print-dir',
                                   '-f',
                                   NDK+'/build/core/build-local.mk',
                                   '-C',
                                   PROJECT,
-                                  'DUMP_'+var]
+                                  'DUMP_'+var] + GNUMAKE_FLAGS
                                   )
     # replace('\r', '') due to Windows crlf (\r\n)
     #  ...universal_newlines=True causes bytes to be returned
@@ -247,7 +269,7 @@ def get_build_var(var):
     return text.decode('ascii').replace('\r', '').splitlines()[0]
 
 def get_build_var_for_abi(var, abi):
-    global GNUMAKE_CMD, NDK, PROJECT
+    global GNUMAKE_CMD, GNUMAKE_FLAGS, NDK, PROJECT
     text = subprocess.check_output([GNUMAKE_CMD,
                                    '--no-print-dir',
                                    '-f',
@@ -255,7 +277,7 @@ def get_build_var_for_abi(var, abi):
                                    '-C',
                                    PROJECT,
                                    'DUMP_'+var,
-                                   'APP_ABI='+abi],
+                                   'APP_ABI='+abi] + GNUMAKE_FLAGS,
                                    )
     return text.decode('ascii').replace('\r', '').splitlines()[0]
 
@@ -264,23 +286,41 @@ def output_gdbserver(text):
     if not OPTION_TUI or OPTION_TUI != 'running':
         print(text)
 
-def background_spawn(args, redirect_stderr, output_fn):
+# Likewise, silent in tui mode (also prepends 'JDB :: ')
+def output_jdb(text):
+    if not OPTION_TUI or OPTION_TUI != 'running':
+        print('JDB :: %s' % text)
 
-    def async_stdout(out, queue, output_fn):
-        for line in iter(out.readline, b''):
-            output_fn(line.replace('\r', '').replace('\n', ''))
-        out.close()
+def input_jdb(inhandle):
+    while True:
+        inhandle.write('\n')
+        time.sleep(1.0)
 
-    def async_stderr(out, queue, output_fn):
-        for line in iter(out.readline, b''):
+def background_spawn(args, redirect_stderr, output_fn, redirect_stdin = None, input_fn = None):
+
+    def async_stdout(outhandle, queue, output_fn):
+        for line in iter(outhandle.readline, b''):
             output_fn(line.replace('\r', '').replace('\n', ''))
-        out.close()
+        outhandle.close()
+
+    def async_stderr(outhandle, queue, output_fn):
+        for line in iter(outhandle.readline, b''):
+            output_fn(line.replace('\r', '').replace('\n', ''))
+        outhandle.close()
+
+    def async_stdin(inhandle, queue, input_fn):
+        input_fn(inhandle)
+        inhandle.close()
 
     if redirect_stderr:
         used_stderr = subprocess.PIPE
     else:
         used_stderr = subprocess.STDOUT
-    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=used_stderr,
+    if redirect_stdin:
+        used_stdin = subprocess.PIPE
+    else:
+        used_stdin = None
+    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=used_stderr, stdin=used_stdin,
                          bufsize=1, close_fds='posix' in sys.builtin_module_names)
     qo = Queue()
     to = Thread(target=async_stdout, args=(p.stdout, qo, output_fn))
@@ -290,6 +330,10 @@ def background_spawn(args, redirect_stderr, output_fn):
         te = Thread(target=async_stderr, args=(p.stderr, qo, output_fn))
         te.daemon = True
         te.start()
+    if redirect_stdin:
+        ti = Thread(target=async_stdin, args=(p.stdin, qo, input_fn))
+        ti.daemon = True
+        ti.start()
 
 def adb_cmd(redirect_stderr, args, log_command=False, adb_trace=False, background=False):
     global ADB_CMD, ADB_FLAGS, DEVICE_SERIAL
@@ -435,8 +479,9 @@ def extract_launchable(xmlfile):
 
 def main():
     global ADB_CMD, NDK, PROJECT
+    global JDB_CMD
     global OPTION_START, OPTION_LAUNCH, OPTION_LAUNCH_LIST
-    global OPTION_FORCE, OPTION_EXEC, OPTION_TUI
+    global OPTION_FORCE, OPTION_EXEC, OPTION_TUI, OPTION_WAIT
 
     if NDK.find(' ')!=-1:
         error('NDK path cannot contain space')
@@ -451,7 +496,6 @@ def main():
         log('Using ADB flags: %s' % (ADB_FLAGS))
     else:
         log('Using ADB flags: %s "%s"' % (ADB_FLAGS,DEVICE_SERIAL))
-
     if PROJECT != None:
         log('Using specified project path: %s' % (PROJECT))
         if not os.path.isdir(PROJECT):
@@ -591,7 +635,7 @@ After one of these, re-install to the device!''' % (PACKAGE_NAME))
     if OPTION_LAUNCH:
         log('Launching activity: %s/%s' % (PACKAGE_NAME,OPTION_LAUNCH[0]))
         retcode,LAUNCH_OUTPUT=adb_cmd(True,
-                                      ['shell', 'am', 'start', '-n', '%s/%s' % (PACKAGE_NAME,OPTION_LAUNCH[0])],
+                                      ['shell', 'am', 'start'] + OPTION_WAIT + ['-n', '%s/%s' % (PACKAGE_NAME,OPTION_LAUNCH[0])],
                                       log_command=True)
         if retcode:
             error('''Could not launch specified activity: %s
@@ -632,7 +676,7 @@ After one of these, re-install to the device!''' % (PACKAGE_NAME))
     adb_cmd(False,
             ['shell', 'run-as', PACKAGE_NAME, 'lib/gdbserver', '+%s' % (DEBUG_SOCKET), '--attach', str(PID)],
             log_command=True, adb_trace=True, background=True)
-    log('Launched gdbserver succesfully')
+    log('Launched gdbserver succesfully.')
 
 # Make sure gdbserver was launched - debug check.
 #    adb_var_shell(['sleep', '0.1'], log_command=False)
@@ -661,6 +705,18 @@ After one of these, re-install to the device!''' % (PACKAGE_NAME))
     adb_cmd(False, ['pull', '/system/lib/libc.so', '%s/libc.so' % (APP_OUT)], log_command=True)
     log('Pulled libc.so from device/emulator.')
 
+    # Setup JDB connection, for --start or --launch
+    if (OPTION_START != None or OPTION_LAUNCH != None) and len(OPTION_WAIT):
+        log('Set up JDB connection, using jdb command: %s' % JDB_CMD)
+        retcode,_ = adb_cmd(False,
+                            ['forward', 'tcp:%d' % (JDB_PORT), 'jdwp:%d' % (PID)],
+                            log_command=True)
+        time.sleep(1.0)
+        if retcode:
+            error('Could not forward JDB port')
+        background_spawn([JDB_CMD,'-connect','com.sun.jdi.SocketAttach:hostname=localhost,port=%d' % (JDB_PORT)], True, output_jdb, True, input_jdb)
+        time.sleep(1.0)
+
     # Now launch the appropriate gdb client with the right init commands
     #
     GDBCLIENT = '%sgdb' % (TOOLCHAIN_PREFIX)
@@ -668,12 +724,13 @@ After one of these, re-install to the device!''' % (PACKAGE_NAME))
     shutil.copyfile(GDBSETUP_INIT, GDBSETUP)
     with open(GDBSETUP, "a") as gdbsetup:
         #uncomment the following to debug the remote connection only
-        #echo "set debug remote 1" >> $GDBSETUP
+        #gdbsetup.write('set debug remote 1\n')
         gdbsetup.write('file '+APP_PROCESS+'\n')
         gdbsetup.write('target remote :%d\n' % (DEBUG_PORT))
+        gdbsetup.write('set breakpoint pending on\n')
         if OPTION_EXEC:
             with open(OPTION_EXEC, 'r') as execfile:
-                for line in execfile.readline():
+                for line in execfile:
                     gdbsetup.write(line)
     gdbsetup.close()
 
@@ -686,7 +743,13 @@ After one of these, re-install to the device!''' % (PACKAGE_NAME))
             OPTION_TUI = 'running'
         except:
             print('Warning: Disabled tui mode as %s does not support it' % (os.path.basename(GDBCLIENT)))
-    subprocess.call(gdbargs)
+    gdbp = subprocess.Popen(gdbargs)
+    while gdbp.returncode is None:
+        try:
+            gdbp.communicate()
+        except KeyboardInterrupt:
+            pass
+    log("Exited gdb, returncode %d" % gdbp.returncode)
 
 if __name__ == '__main__':
     main()
