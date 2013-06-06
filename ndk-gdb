@@ -72,9 +72,12 @@ ADB_CMD=${ADB_CMD:-$(find_program adb)}
 ADB_FLAGS=${ADB_FLAGS:-}
 DEVICE_SERIAL=
 
+JDB_CMD=${JDB_CMD:-$(find_program jdb)}
+
 AWK_CMD=${AWK_CMD:-$(find_program awk)}
 
 DEBUG_PORT=5039
+JDB_PORT=65534
 
 # Delay in seconds between launching the activity and attaching gdbserver on it.
 # This is needed because there is no way to know when the activity has really
@@ -91,6 +94,7 @@ OPTION_START=no
 OPTION_LAUNCH=
 OPTION_LAUNCH_LIST=no
 OPTION_DELAY=
+OPTION_WAIT="-D"
 
 check_parameter ()
 {
@@ -250,6 +254,10 @@ while [ -n "$1" ]; do
         --delay=*)
             OPTION_DELAY="$optarg"
             ;;
+        --nowait)
+            JDB_PORT=
+            OPTION_WAIT=
+            ;;
         -*) # unknown options
             echo "ERROR: Unknown option '$opt', use --help for list of valid ones."
             exit 1
@@ -265,6 +273,15 @@ while [ -n "$1" ]; do
     shift
 done
 
+if [ -z "$JDB_CMD" ] && [ -n "$OPTION_WAIT" ]; then
+    echo "ERROR: 'jdb' not found; you must either install the JDK, or specify --nowait"
+    exit 1
+fi
+if [ -n "$JDB_PORT" ] && [ "$JDB_PORT" = "$DEBUG_PORT" ]; then
+    echo "ERROR: --port specified cannot be $JDB_PORT without --nowait"
+    exit 1
+fi
+
 if [ "$OPTION_HELP" = "yes" ] ; then
     echo "Usage: $PROGNAME [options]"
     echo ""
@@ -276,6 +293,8 @@ if [ "$OPTION_HELP" = "yes" ] ; then
     echo "    --help|-h|-?      Print this help"
     echo "    --verbose         Enable verbose mode"
     echo "    --force           Kill existing debug session if it exists"
+    echo "    --nowait          Don't have application wait for debugger to attach"
+    echo "                         (This might cause you to miss some early JNI breakpoints)"
     echo "    --start           Launch application instead of attaching to existing one"
     echo "    --launch=<name>   Same as --start, but specify activity name (see below)"
     echo "    --launch-list     List all launchable activity names from manifest"
@@ -334,6 +353,9 @@ if [ "x$DEVICE_SERIAL" = "x" ]; then
 else
     log "Using ADB flags: $ADB_FLAGS" \"$DEVICE_SERIAL\"
 fi
+
+JDB_CMD=$(quote_spaces $JDB_CMD)
+log "Using JDB command: $JDB_CMD"
 
 # Run an ADB command with the right ADB flags
 # $1+: adb command parameter
@@ -624,7 +646,7 @@ fi
 
 if [ -n "$OPTION_LAUNCH" ] ; then
     log "Launching activity: $PACKAGE_NAME/$OPTION_LAUNCH"
-    run adb_cmd shell am start -n $PACKAGE_NAME/$OPTION_LAUNCH
+    run adb_cmd shell am start $OPTION_WAIT -n $PACKAGE_NAME/$OPTION_LAUNCH
     if [ $? != 0 ] ; then
         echo "ERROR: Could not launch specified activity: $OPTION_LAUNCH"
         echo "       Use --launch-list to dump a list of valid values."
@@ -693,6 +715,17 @@ log "Pulled linker from device/emulator."
 
 run adb_cmd pull /system/lib/libc.so `native_path $APP_OUT/libc.so`
 log "Pulled libc.so from device/emulator."
+
+# Setup JDB connection, for --start or --launch
+if [ "$OPTION_START" = "yes" ] || [ -n "$OPTION_LAUNCH" ] ; then
+    if [ -n "$JDB_PORT" ]; then
+        log "Setup JDB connection"
+        run adb_cmd forward tcp:$JDB_PORT jdwp:$PID
+        sleep 1
+        $JDB_CMD -connect com.sun.jdi.SocketAttach:hostname=localhost,port=$JDB_PORT &
+        sleep 1
+    fi
+fi
 
 # Now launch the appropriate gdb client with the right init commands
 #
