@@ -1,0 +1,61 @@
+From ce82103a6112d4195b1a92a4ee10b9d3d43fcbed Mon Sep 17 00:00:00 2001
+From: Akira Hatanaka <ahatanaka@mips.com>
+Date: Mon, 13 May 2013 17:57:42 +0000
+Subject: [PATCH 17/22] [mips] Define a helper function which creates an
+ instruction with the same operands as the prototype instruction but with a
+ different opcode.
+
+git-svn-id: https://llvm.org/svn/llvm-project/llvm/trunk@181714 91177308-0d34-0410-b5e6-96231b3b80d8
+---
+ lib/Target/Mips/MipsInstrInfo.cpp | 13 +++++++++++++
+ lib/Target/Mips/MipsInstrInfo.h   |  6 ++++++
+ 2 files changed, 19 insertions(+)
+
+diff --git a/lib/Target/Mips/MipsInstrInfo.cpp b/lib/Target/Mips/MipsInstrInfo.cpp
+index 336b62d..3144dae 100644
+--- a/lib/Target/Mips/MipsInstrInfo.cpp
++++ b/lib/Target/Mips/MipsInstrInfo.cpp
+@@ -282,3 +282,16 @@ unsigned MipsInstrInfo::GetInstSizeInBytes(const MachineInstr *MI) const {
+   }
+   }
+ }
++
++MachineInstrBuilder
++MipsInstrInfo::genInstrWithNewOpc(unsigned NewOpc,
++                                  MachineBasicBlock::iterator I) const {
++  MachineInstrBuilder MIB;
++  MIB = BuildMI(*I->getParent(), I, I->getDebugLoc(), get(NewOpc));
++
++  for (unsigned J = 0, E = I->getDesc().getNumOperands(); J < E; ++J)
++    MIB.addOperand(I->getOperand(J));
++
++  MIB.setMemRefs(I->memoperands_begin(), I->memoperands_end());
++  return MIB;
++}
+diff --git a/lib/Target/Mips/MipsInstrInfo.h b/lib/Target/Mips/MipsInstrInfo.h
+index 6a57736..0f075ec 100644
+--- a/lib/Target/Mips/MipsInstrInfo.h
++++ b/lib/Target/Mips/MipsInstrInfo.h
+@@ -17,6 +17,7 @@
+ #include "Mips.h"
+ #include "MipsAnalyzeImmediate.h"
+ #include "MipsRegisterInfo.h"
++#include "llvm/CodeGen/MachineInstrBuilder.h"
+ #include "llvm/Support/ErrorHandling.h"
+ #include "llvm/Target/TargetInstrInfo.h"
+ 
+@@ -116,6 +117,11 @@ public:
+                                 const TargetRegisterInfo *TRI,
+                                 int64_t Offset) const = 0;
+ 
++  /// Create an instruction which has the same operands and memory operands
++  /// as MI but has a new opcode.
++  MachineInstrBuilder genInstrWithNewOpc(unsigned NewOpc,
++                                         MachineBasicBlock::iterator I) const;
++
+ protected:
+   bool isZeroImm(const MachineOperand &op) const;
+ 
+-- 
+1.8.3
+

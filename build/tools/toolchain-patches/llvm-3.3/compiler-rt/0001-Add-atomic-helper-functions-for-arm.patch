@@ -1,0 +1,417 @@
+From e300bb1b6fd259c8b545639bdf4dd86aac1bb4f8 Mon Sep 17 00:00:00 2001
+From: Lai Wei-Chih <Robert.Lai@mediatek.com>
+Date: Wed, 29 May 2013 13:29:14 +0800
+Subject: [PATCH] Add atomic helper functions for arm.
+
+1. Implement some gcc __sync_* builtins for compatibility
+
+See http://gcc.gnu.org/onlinedocs/gcc-4.8.0/gcc/_005f_005fsync-Builtins.html
+Note that only 4 bytes operation is supported now.
+The reference implementation: AOSP/system/core/include/cutils/atomic-arm.h
+
+2. Alias __aeabi_fcmpun to __unordsf2.
+
+Change-Id: Id44293824b9011876e22dfdefc7b241dfb47e89d
+---
+ lib/arm/atomic-arm.c | 376 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ lib/arm/comparesf2.S |   1 +
+ 2 files changed, 377 insertions(+)
+ create mode 100644 lib/arm/atomic-arm.c
+
+diff --git a/lib/arm/atomic-arm.c b/lib/arm/atomic-arm.c
+new file mode 100644
+index 0000000..c80c4ba
+--- /dev/null
++++ b/lib/arm/atomic-arm.c
+@@ -0,0 +1,376 @@
++/*
++ * Copyright (C) 2013 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#include <stdint.h>
++#include <stdio.h>
++
++#define ANDROID_ATOMIC_INLINE inline __attribute__((always_inline))
++
++ANDROID_ATOMIC_INLINE void android_compiler_barrier()
++{
++    __asm__ __volatile__ ("" : : : "memory");
++}
++
++ANDROID_ATOMIC_INLINE void android_memory_barrier()
++{
++#ifdef __ARM_ARCH_7A__
++    __asm__ __volatile__ ("dmb" : : : "memory");
++#else
++    android_compiler_barrier();
++#endif
++}
++
++ANDROID_ATOMIC_INLINE void android_memory_store_barrier()
++{
++#ifdef __ARM_ARCH_7A__
++    __asm__ __volatile__ ("dmb st" : : : "memory");
++#else
++    android_compiler_barrier();
++#endif
++}
++
++#ifdef __ARM_ARCH_7A__
++ANDROID_ATOMIC_INLINE
++int android_atomic_cas_bool(int32_t old_value, int32_t new_value,
++                            volatile int32_t *ptr)
++{
++    int32_t prev, status;
++    do {
++        __asm__ __volatile__ ("ldrex %0, [%3]\n"
++                              "mov %1, #0\n"
++                              "teq %0, %4\n"
++#ifdef __thumb2__
++                              "it eq\n"
++#endif
++                              "strexeq %1, %5, [%3]"
++                              : "=&r" (prev), "=&r" (status), "+m"(*ptr)
++                              : "r" (ptr), "Ir" (old_value), "r" (new_value)
++                              : "cc");
++    } while (__builtin_expect(status != 0, 0));
++    return prev != old_value;
++}
++#else
++ANDROID_ATOMIC_INLINE
++int android_atomic_cas_bool(int32_t old_value, int32_t new_value, volatile int32_t *ptr)
++{
++    typedef int (kuser_cmpxchg)(int32_t, int32_t, volatile int32_t *);
++    int32_t prev, status;
++    prev = *ptr;
++    do {
++        status = (*(kuser_cmpxchg *)0xffff0fc0)(old_value, new_value, ptr);
++        if (__builtin_expect(status == 0, 1))
++            return 0;
++        prev = *ptr;
++    } while (prev == old_value);
++    return 1;
++}
++#endif
++
++#ifdef __ARM_ARCH_7A__
++ANDROID_ATOMIC_INLINE
++int android_atomic_cas_val(int32_t old_value, int32_t new_value,
++                            volatile int32_t *ptr)
++{
++    int32_t prev, status;
++    do {
++        __asm__ __volatile__ ("ldrex %0, [%3]\n"
++                              "mov %1, #0\n"
++                              "teq %0, %4\n"
++#ifdef __thumb2__
++                              "it eq\n"
++#endif
++                              "strexeq %1, %5, [%3]"
++                              : "=&r" (prev), "=&r" (status), "+m"(*ptr)
++                              : "r" (ptr), "Ir" (old_value), "r" (new_value)
++                              : "cc");
++    } while (__builtin_expect(status != 0, 0));
++    return prev;
++}
++#else
++ANDROID_ATOMIC_INLINE
++int android_atomic_cas_val(int32_t old_value, int32_t new_value, volatile int32_t *ptr)
++{
++    typedef int (kuser_cmpxchg)(int32_t, int32_t, volatile int32_t *);
++    int32_t prev, status;
++    prev = *ptr;
++    do {
++        status = (*(kuser_cmpxchg *)0xffff0fc0)(old_value, new_value, ptr);
++        if (__builtin_expect(status == 0, 1))
++            return 0;
++        prev = *ptr;
++    } while (prev == old_value);
++    return prev;
++}
++#endif
++
++ANDROID_ATOMIC_INLINE
++int android_atomic_acquire_cas(int32_t old_value, int32_t new_value,
++                               volatile int32_t *ptr)
++{
++    int status = android_atomic_cas_bool(old_value, new_value, ptr);
++    android_memory_barrier();
++    return status;
++}
++
++ANDROID_ATOMIC_INLINE
++int android_atomic_release_cas(int32_t old_value, int32_t new_value,
++                               volatile int32_t *ptr)
++{
++    android_memory_barrier();
++    return android_atomic_cas_bool(old_value, new_value, ptr);
++}
++
++#ifdef __ARM_ARCH_7A__
++#define ANDROID_ATOMIC_FETCH_AND_OP(OP, OPCODE)                                   \
++int32_t android_atomic_fetch_and_##OP (volatile int32_t *ptr, int32_t val)        \
++{                                                                                 \
++    int32_t prev, tmp, status;                                                    \
++    android_memory_barrier();                                                     \
++    do {                                                                          \
++        __asm__ __volatile__ ("ldrex %0, [%4]\n"                                  \
++                              #OPCODE" %1, %0, %5\n"                              \
++                              "strex %2, %1, [%4]"                                \
++                              : "=&r" (prev), "=&r" (tmp),                        \
++                                "=&r" (status), "+m" (*ptr)                       \
++                              : "r" (ptr), "Ir" (val)                             \
++                              : "cc");                                            \
++    } while (__builtin_expect(status != 0, 0));                                   \
++    return prev;                                                                  \
++}
++
++ANDROID_ATOMIC_FETCH_AND_OP(add, add)
++ANDROID_ATOMIC_FETCH_AND_OP(sub, sub)
++ANDROID_ATOMIC_FETCH_AND_OP(and, and)
++ANDROID_ATOMIC_FETCH_AND_OP(or,  orr)
++ANDROID_ATOMIC_FETCH_AND_OP(xor, eor)
++
++#else
++
++#define ANDROID_ATOMIC_FETCH_AND_OP(OP, OPCODE)                                   \
++int32_t android_atomic_fetch_and_##OP (volatile int32_t *ptr, int32_t val)        \
++{                                                                                 \
++    int32_t prev, status;                                                         \
++    android_memory_barrier();                                                     \
++    do {                                                                          \
++        prev = *ptr;                                                              \
++        status = android_atomic_cas_bool(prev, prev OPCODE val, ptr);             \
++    } while (__builtin_expect(status != 0, 0));                                   \
++    return prev;                                                                  \
++}
++
++ANDROID_ATOMIC_FETCH_AND_OP(add, +)
++ANDROID_ATOMIC_FETCH_AND_OP(sub, -)
++ANDROID_ATOMIC_FETCH_AND_OP(and, &)
++ANDROID_ATOMIC_FETCH_AND_OP(or,  |)
++ANDROID_ATOMIC_FETCH_AND_OP(xor, ^)
++
++#endif
++
++#ifdef __ARM_ARCH_7A__
++int32_t android_atomic_fetch_and_nand (volatile int32_t *ptr, int32_t val)
++{
++    int32_t prev, tmp, status;
++    android_memory_barrier();
++    do {
++        __asm__ __volatile__ ("ldrex %0, [%4]\n"
++                              "and %1, %0, %5\n"
++                              "mvn %1, %1\n"
++                              "strex %2, %1, [%4]"
++                              : "=&r" (prev), "=&r" (tmp),
++                                "=&r" (status), "+m" (*ptr)
++                              : "r" (ptr), "Ir" (val)
++                              : "cc");
++    } while (__builtin_expect(status != 0, 0));
++    return prev;
++}
++#else
++int32_t android_atomic_fetch_and_nand (volatile int32_t *ptr, int32_t val)
++{
++    int32_t prev, status;
++    android_memory_barrier();
++    do {
++        prev = *ptr;
++        status = android_atomic_cas_bool(prev, ~(prev & val), ptr);
++    } while (__builtin_expect(status != 0, 0));
++    return prev;
++}
++#endif
++
++#ifdef __ARM_ARCH_7A__
++#define ANDROID_ATOMIC_OP_AND_FETCH(OP, OPCODE)                                   \
++int32_t android_atomic_##OP##_and_fetch (volatile int32_t *ptr, int32_t val)      \
++{                                                                                 \
++    int32_t prev, tmp, status;                                                    \
++    android_memory_barrier();                                                     \
++    do {                                                                          \
++        __asm__ __volatile__ ("ldrex %0, [%4]\n"                                  \
++                              #OPCODE" %1, %0, %5\n"                              \
++                              "strex %2, %1, [%4]"                                \
++                              : "=&r" (prev), "=&r" (tmp),                        \
++                                "=&r" (status), "+m" (*ptr)                       \
++                              : "r" (ptr), "Ir" (val)                             \
++                              : "cc");                                            \
++    } while (__builtin_expect(status != 0, 0));                                   \
++    return tmp;                                                                   \
++}
++
++
++ANDROID_ATOMIC_OP_AND_FETCH(add, add)
++ANDROID_ATOMIC_OP_AND_FETCH(sub, sub)
++ANDROID_ATOMIC_OP_AND_FETCH(and, and)
++ANDROID_ATOMIC_OP_AND_FETCH(or,  orr)
++ANDROID_ATOMIC_OP_AND_FETCH(xor, eor)
++
++#else
++
++#define ANDROID_ATOMIC_OP_AND_FETCH(OP, OPCODE)                                   \
++int32_t android_atomic_##OP##_and_fetch (volatile int32_t *ptr, int32_t val)      \
++{                                                                                 \
++    int32_t prev, status;                                                         \
++    android_memory_barrier();                                                     \
++    do {                                                                          \
++        prev = *ptr;                                                              \
++        status = android_atomic_cas_bool(prev, (prev OPCODE val), ptr);           \
++    } while (__builtin_expect(status != 0, 0));                                   \
++    return (prev OPCODE val);                                                     \
++}
++
++ANDROID_ATOMIC_OP_AND_FETCH(add, +)
++ANDROID_ATOMIC_OP_AND_FETCH(sub, -)
++ANDROID_ATOMIC_OP_AND_FETCH(and, &)
++ANDROID_ATOMIC_OP_AND_FETCH(or,  |)
++ANDROID_ATOMIC_OP_AND_FETCH(xor, ^)
++
++#endif
++
++#ifdef __ARM_ARCH_7A__
++int32_t android_atomic_nand_and_fetch (volatile int32_t *ptr, int32_t val)
++{
++    int32_t prev, tmp, status;
++    android_memory_barrier();
++    do {
++        __asm__ __volatile__ ("ldrex %0, [%4]\n"
++                              "and %1, %0, %5\n"
++                              "mvn %1, %1\n"
++                              "strex %2, %1, [%4]"
++                              : "=&r" (prev), "=&r" (tmp),
++                                "=&r" (status), "+m" (*ptr)
++                              : "r" (ptr), "Ir" (val)
++                              : "cc");
++    } while (__builtin_expect(status != 0, 0));
++    return tmp;
++}
++#else
++int32_t android_atomic_nand_and_fetch (volatile int32_t *ptr, int32_t val)
++{
++    int32_t prev, status;
++    android_memory_barrier();
++    do {
++        prev = *ptr;
++        status = android_atomic_cas_bool(prev, ~(prev & val), ptr);
++    } while (__builtin_expect(status != 0, 0));
++    return ~(prev & val);
++}
++#endif
++
++
++// gcc compatible interface
++// http://gcc.gnu.org/onlinedocs/gcc-4.8.0/gcc/_005f_005fsync-Builtins.html
++// TODO: support other data width
++
++void __sync_synchronize()
++{
++    android_memory_barrier();
++}
++
++int __sync_bool_compare_and_swap_4 (volatile int32_t *ptr, int32_t oldval, int32_t newval)
++{
++    android_memory_barrier();
++    return android_atomic_cas_bool(oldval, newval, ptr);
++}
++
++uint32_t __sync_val_compare_and_swap_4 (volatile int32_t *ptr, int32_t oldval, int32_t newval)
++{
++    android_memory_barrier();
++    return android_atomic_cas_val(oldval, newval, ptr);
++}
++
++/* __sync_op_and_fetch functions */
++
++int32_t __sync_add_and_fetch_4(volatile int32_t *ptr, int32_t val)
++{
++    return android_atomic_add_and_fetch(ptr, val);
++}
++
++int32_t __sync_sub_and_fetch_4(volatile int32_t *ptr, int32_t val)
++{
++    return android_atomic_sub_and_fetch(ptr, val);
++}
++
++int32_t __sync_and_and_fetch_4(volatile int32_t *ptr, int32_t val)
++{
++    return android_atomic_and_and_fetch(ptr, val);
++}
++
++int32_t __sync_or_and_fetch_4(volatile int32_t *ptr, int32_t val)
++{
++    return android_atomic_or_and_fetch(ptr, val);
++}
++
++
++int32_t __sync_xor_and_fetch_4(volatile int32_t *ptr, int32_t val)
++{
++    return android_atomic_xor_and_fetch(ptr, val);
++}
++
++int32_t __sync_nand_and_fetch_4(volatile int32_t *ptr, int32_t val)
++{
++    return android_atomic_nand_and_fetch(ptr, val);
++}
++
++
++/* __sync_fetch_and_op functions */
++
++int32_t __sync_fetch_and_add_4(volatile int32_t *ptr, int32_t val)
++{
++    return android_atomic_fetch_and_add(ptr, val);
++}
++
++int32_t __sync_fetch_and_sub_4(volatile int32_t *ptr, int32_t val)
++{
++    return android_atomic_fetch_and_sub(ptr, val);
++}
++
++int32_t __sync_fetch_and_and_4(volatile int32_t *ptr, int32_t val)
++{
++    return android_atomic_fetch_and_and(ptr, val);
++}
++
++int32_t __sync_fetch_and_or_4(volatile int32_t *ptr, int32_t val)
++{
++    return android_atomic_fetch_and_or(ptr, val);
++}
++
++int32_t __sync_fetch_and_xor_4(volatile int32_t *ptr, int32_t val)
++{
++    return android_atomic_fetch_and_xor(ptr, val);
++}
++
++int32_t __sync_fetch_and_nand_4(volatile int32_t *ptr, int32_t val)
++{
++    return android_atomic_fetch_and_nand(ptr, val);
++}
++
+diff --git a/lib/arm/comparesf2.S b/lib/arm/comparesf2.S
+index ee18203..8130d5f 100644
+--- a/lib/arm/comparesf2.S
++++ b/lib/arm/comparesf2.S
+@@ -119,6 +119,7 @@ DEFINE_COMPILERRT_FUNCTION(__gtsf2)
+     bx      lr
+     
+ .align 2
++DEFINE_AEABI_FUNCTION_ALIAS(__aeabi_fcmpun, __unordsf2)
+ DEFINE_COMPILERRT_FUNCTION(__unordsf2)
+     // Return 1 for NaN values, 0 otherwise.
+     mov     r2,         r0, lsl #1
+-- 
+1.8.3
+

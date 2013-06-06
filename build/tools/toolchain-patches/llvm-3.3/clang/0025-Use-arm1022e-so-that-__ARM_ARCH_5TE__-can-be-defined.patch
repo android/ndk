@@ -1,0 +1,25 @@
+From a486900d09df9fb81830471c5bd266cad4281658 Mon Sep 17 00:00:00 2001
+From: Logan Chien <tzuhsiang.chien@gmail.com>
+Date: Wed, 29 May 2013 19:23:21 +0800
+Subject: [PATCH 25/29] Use arm1022e so that __ARM_ARCH_5TE__ can be defined.
+
+---
+ lib/Driver/ToolChain.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/Driver/ToolChain.cpp b/lib/Driver/ToolChain.cpp
+index 71f5393..e022270 100644
+--- a/lib/Driver/ToolChain.cpp
++++ b/lib/Driver/ToolChain.cpp
+@@ -179,7 +179,7 @@ static const char *getARMTargetCPU(const ArgList &Args,
+     .Case("armv3m", "arm7m")
+     .Cases("armv4", "armv4t", "arm7tdmi")
+     .Cases("armv5", "armv5t", "arm10tdmi")
+-    .Cases("armv5e", "armv5te", "arm1026ejs")
++    .Cases("armv5e", "armv5te", "arm1022e")
+     .Case("armv5tej", "arm926ej-s")
+     .Cases("armv6", "armv6k", "arm1136jf-s")
+     .Case("armv6j", "arm1136j-s")
+-- 
+1.8.3
+

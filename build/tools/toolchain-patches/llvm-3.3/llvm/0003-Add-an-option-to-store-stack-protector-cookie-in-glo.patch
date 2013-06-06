@@ -1,0 +1,78 @@
+From 270a3738bd912f727c25507b20232cfd830ec507 Mon Sep 17 00:00:00 2001
+From: Logan Chien <loganchien@google.com>
+Date: Wed, 22 May 2013 17:11:13 +0800
+Subject: [PATCH 03/22] Add an option to store stack protector cookie in global
+ variable.
+
+---
+ lib/Target/X86/X86ISelLowering.cpp           | 10 ++++++++++
+ test/CodeGen/X86/stack-protector-force-gv.ll | 22 ++++++++++++++++++++++
+ 2 files changed, 32 insertions(+)
+ create mode 100644 test/CodeGen/X86/stack-protector-force-gv.ll
+
+diff --git a/lib/Target/X86/X86ISelLowering.cpp b/lib/Target/X86/X86ISelLowering.cpp
+index f69f5d8..3893fa8 100644
+--- a/lib/Target/X86/X86ISelLowering.cpp
++++ b/lib/Target/X86/X86ISelLowering.cpp
+@@ -44,6 +44,7 @@
+ #include "llvm/MC/MCExpr.h"
+ #include "llvm/MC/MCSymbol.h"
+ #include "llvm/Support/CallSite.h"
++#include "llvm/Support/CommandLine.h"
+ #include "llvm/Support/Debug.h"
+ #include "llvm/Support/ErrorHandling.h"
+ #include "llvm/Support/MathExtras.h"
+@@ -54,6 +55,12 @@ using namespace llvm;
+ 
+ STATISTIC(NumTailCalls, "Number of tail calls");
+ 
++// Force to save stack protector cookie in global variable
++static cl::opt<bool> ForceGlobalVarStackProtectorCookie(
++  "x86-force-gv-stack-cookie",
++  cl::init(false),
++  cl::desc("Store stack protector cookie in global variable"));
++
+ // Forward declarations.
+ static SDValue getMOVL(SelectionDAG &DAG, DebugLoc dl, EVT VT, SDValue V1,
+                        SDValue V2);
+@@ -1556,6 +1563,9 @@ bool X86TargetLowering::getStackCookieLocation(unsigned &AddressSpace,
+   if (!Subtarget->isTargetLinux())
+     return false;
+ 
++  if (ForceGlobalVarStackProtectorCookie)
++    return false;
++
+   if (Subtarget->is64Bit()) {
+     // %fs:0x28, unless we're using a Kernel code model, in which case it's %gs:
+     Offset = 0x28;
+diff --git a/test/CodeGen/X86/stack-protector-force-gv.ll b/test/CodeGen/X86/stack-protector-force-gv.ll
+new file mode 100644
+index 0000000..2e7554b
+--- /dev/null
++++ b/test/CodeGen/X86/stack-protector-force-gv.ll
+@@ -0,0 +1,22 @@
++; RUN: llc -mtriple=i386-pc-linux-gnu -x86-force-gv-stack-cookie < %s -o - \
++; RUN:   | FileCheck %s
++
++@.str = private unnamed_addr constant [4 x i8] c"%s\0A\00", align 1
++declare i8* @strcpy(i8*, i8*)
++declare i32 @printf(i8*, ...)
++
++define void @test(i8* %a) nounwind uwtable ssp {
++entry:
++; CHECK: test:
++; CHECK: movl __stack_chk_guard
++; CHECK: calll __stack_chk_fail
++  %a.addr = alloca i8*, align 8
++  %buf = alloca [16 x i8], align 16
++  store i8* %a, i8** %a.addr, align 8
++  %arraydecay = getelementptr inbounds [16 x i8]* %buf, i32 0, i32 0
++  %0 = load i8** %a.addr, align 8
++  %call = call i8* @strcpy(i8* %arraydecay, i8* %0)
++  %arraydecay1 = getelementptr inbounds [16 x i8]* %buf, i32 0, i32 0
++  %call2 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([4 x i8]* @.str, i32 0, i32 0), i8* %arraydecay1)
++  ret void
++}
+-- 
+1.8.3
+

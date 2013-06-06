@@ -1,0 +1,191 @@
+From 56c1152d22290e76ddb19400fe7437c1203fc374 Mon Sep 17 00:00:00 2001
+From: Logan Chien <tzuhsiang.chien@gmail.com>
+Date: Wed, 29 May 2013 10:47:00 +0800
+Subject: [PATCH 08/29] Add -fuse-ld option.
+
+---
+ include/clang/Driver/Options.td |  1 +
+ lib/Driver/ToolChains.cpp       |  2 +-
+ lib/Driver/Tools.cpp            | 33 ++++++++++++++++++++++++---------
+ lib/Driver/Tools.h              |  4 +++-
+ test/Driver/fuse-ld.c           | 21 +++++++++++++++++++++
+ 5 files changed, 50 insertions(+), 11 deletions(-)
+ create mode 100644 test/Driver/fuse-ld.c
+
+diff --git a/include/clang/Driver/Options.td b/include/clang/Driver/Options.td
+index 3a5358a..39369cd 100644
+--- a/include/clang/Driver/Options.td
++++ b/include/clang/Driver/Options.td
+@@ -302,6 +302,7 @@ def fno_address_sanitizer : Flag<["-"], "fno-address-sanitizer">, Group<f_Group>
+ def fthread_sanitizer : Flag<["-"], "fthread-sanitizer">, Group<f_Group>;
+ def fno_thread_sanitizer : Flag<["-"], "fno-thread-sanitizer">, Group<f_Group>;
+ def fasm : Flag<["-"], "fasm">, Group<f_Group>;
++def fuse_ld_EQ : Joined<["-"], "fuse-ld=">, Group<f_Group>;
+ 
+ def fasm_blocks : Flag<["-"], "fasm-blocks">, Group<f_Group>, Flags<[CC1Option]>;
+ def fno_asm_blocks : Flag<["-"], "fno-asm-blocks">, Group<f_Group>;
+diff --git a/lib/Driver/ToolChains.cpp b/lib/Driver/ToolChains.cpp
+index 08e661a..6b93590 100644
+--- a/lib/Driver/ToolChains.cpp
++++ b/lib/Driver/ToolChains.cpp
+@@ -2221,7 +2221,7 @@ Linux::Linux(const Driver &D, const llvm::Triple &Triple, const ArgList &Args)
+   PPaths.push_back(Twine(GCCInstallation.getParentLibPath() + "/../" +
+                          GCCInstallation.getTriple().str() + "/bin").str());
+ 
+-  Linker = GetProgramPath("ld");
++  Linker = GetProgramPath(tools::GetLinkerName(Args));
+ 
+   Distro Distro = DetectDistro(Arch);
+ 
+diff --git a/lib/Driver/Tools.cpp b/lib/Driver/Tools.cpp
+index 3bf7202..811dac2 100644
+--- a/lib/Driver/Tools.cpp
++++ b/lib/Driver/Tools.cpp
+@@ -228,6 +228,19 @@ static bool forwardToGCC(const Option &O) {
+          !O.hasFlag(options::LinkerInput);
+ }
+ 
++const char *clang::driver::tools::GetLinkerName(const ArgList &Args) {
++  if (Arg *A = Args.getLastArg(options::OPT_fuse_ld_EQ)) {
++    StringRef LDSuffix(A->getValue(0));
++    if (LDSuffix == "bfd")
++      return "ld.bfd";
++    if (LDSuffix == "gold")
++      return "ld.gold";
++    if (LDSuffix == "mcld")
++      return "ld.mcld";
++  }
++  return "ld";
++}
++
+ void Clang::AddPreprocessingOptions(Compilation &C,
+                                     const JobAction &JA,
+                                     const Driver &D,
+@@ -4752,7 +4765,7 @@ void darwin::Link::ConstructJob(Compilation &C, const JobAction &JA,
+   Args.AddAllArgs(CmdArgs, options::OPT_F);
+ 
+   const char *Exec =
+-    Args.MakeArgString(getToolChain().GetProgramPath("ld"));
++    Args.MakeArgString(getToolChain().GetProgramPath(GetLinkerName(Args)));
+   C.addCommand(new Command(JA, *this, Exec, CmdArgs));
+ }
+ 
+@@ -4950,7 +4963,7 @@ void solaris::Link::ConstructJob(Compilation &C, const JobAction &JA,
+   addProfileRT(getToolChain(), Args, CmdArgs, getToolChain().getTriple());
+ 
+   const char *Exec =
+-    Args.MakeArgString(getToolChain().GetProgramPath("ld"));
++    Args.MakeArgString(getToolChain().GetProgramPath(GetLinkerName(Args)));
+   C.addCommand(new Command(JA, *this, Exec, CmdArgs));
+ }
+ 
+@@ -5062,7 +5075,7 @@ void auroraux::Link::ConstructJob(Compilation &C, const JobAction &JA,
+   addProfileRT(getToolChain(), Args, CmdArgs, getToolChain().getTriple());
+ 
+   const char *Exec =
+-    Args.MakeArgString(getToolChain().GetProgramPath("ld"));
++    Args.MakeArgString(getToolChain().GetProgramPath(GetLinkerName(Args)));
+   C.addCommand(new Command(JA, *this, Exec, CmdArgs));
+ }
+ 
+@@ -5210,7 +5223,7 @@ void openbsd::Link::ConstructJob(Compilation &C, const JobAction &JA,
+   }
+ 
+   const char *Exec =
+-    Args.MakeArgString(getToolChain().GetProgramPath("ld"));
++    Args.MakeArgString(getToolChain().GetProgramPath(GetLinkerName(Args)));
+   C.addCommand(new Command(JA, *this, Exec, CmdArgs));
+ }
+ 
+@@ -5352,7 +5365,7 @@ void bitrig::Link::ConstructJob(Compilation &C, const JobAction &JA,
+   }
+ 
+   const char *Exec =
+-    Args.MakeArgString(getToolChain().GetProgramPath("ld"));
++    Args.MakeArgString(getToolChain().GetProgramPath(GetLinkerName(Args)));
+   C.addCommand(new Command(JA, *this, Exec, CmdArgs));
+ }
+ 
+@@ -5603,7 +5616,7 @@ void freebsd::Link::ConstructJob(Compilation &C, const JobAction &JA,
+   addProfileRT(ToolChain, Args, CmdArgs, ToolChain.getTriple());
+ 
+   const char *Exec =
+-    Args.MakeArgString(ToolChain.GetProgramPath("ld"));
++    Args.MakeArgString(ToolChain.GetProgramPath(GetLinkerName(Args)));
+   C.addCommand(new Command(JA, *this, Exec, CmdArgs));
+ }
+ 
+@@ -5752,7 +5765,8 @@ void netbsd::Link::ConstructJob(Compilation &C, const JobAction &JA,
+ 
+   addProfileRT(getToolChain(), Args, CmdArgs, getToolChain().getTriple());
+ 
+-  const char *Exec = Args.MakeArgString(getToolChain().GetProgramPath("ld"));
++  const char *Exec =
++    Args.MakeArgString(getToolChain().GetProgramPath(GetLinkerName(Args)));
+   C.addCommand(new Command(JA, *this, Exec, CmdArgs));
+ }
+ 
+@@ -6237,7 +6251,8 @@ void minix::Link::ConstructJob(Compilation &C, const JobAction &JA,
+          Args.MakeArgString(getToolChain().GetFilePath("crtend.o")));
+   }
+ 
+-  const char *Exec = Args.MakeArgString(getToolChain().GetProgramPath("ld"));
++  const char *Exec =
++    Args.MakeArgString(getToolChain().GetProgramPath(GetLinkerName(Args)));
+   C.addCommand(new Command(JA, *this, Exec, CmdArgs));
+ }
+ 
+@@ -6421,7 +6436,7 @@ void dragonfly::Link::ConstructJob(Compilation &C, const JobAction &JA,
+   addProfileRT(getToolChain(), Args, CmdArgs, getToolChain().getTriple());
+ 
+   const char *Exec =
+-    Args.MakeArgString(getToolChain().GetProgramPath("ld"));
++    Args.MakeArgString(getToolChain().GetProgramPath(GetLinkerName(Args)));
+   C.addCommand(new Command(JA, *this, Exec, CmdArgs));
+ }
+ 
+diff --git a/lib/Driver/Tools.h b/lib/Driver/Tools.h
+index d647171..e7de46f 100644
+--- a/lib/Driver/Tools.h
++++ b/lib/Driver/Tools.h
+@@ -593,7 +593,9 @@ namespace visualstudio {
+   };
+ } // end namespace visualstudio
+ 
+-} // end namespace toolchains
++extern const char *GetLinkerName(const ArgList &Args);
++
++} // end namespace tools
+ } // end namespace driver
+ } // end namespace clang
+ 
+diff --git a/test/Driver/fuse-ld.c b/test/Driver/fuse-ld.c
+new file mode 100644
+index 0000000..dd101a1
+--- /dev/null
++++ b/test/Driver/fuse-ld.c
+@@ -0,0 +1,21 @@
++// Test the -fuse-ld options.
++//
++// RUN: %clang -no-canonical-prefixes %s -### -o %t.o 2>&1 \
++// RUN:     --sysroot=%S/Inputs/basic_linux_tree \
++// RUN:   | FileCheck --check-prefix=CHECK-LD %s
++// CHECK-LD: "{{.*}}ld{{(.exe)?}}"
++//
++// RUN: %clang -no-canonical-prefixes %s -### -o %t.o -fuse-ld=bfd 2>&1 \
++// RUN:     --sysroot=%S/Inputs/basic_linux_tree \
++// RUN:   | FileCheck --check-prefix=CHECK-LD-BFD %s
++// CHECK-LD-BFD: "{{.*}}ld.bfd{{(.exe)?}}"
++//
++// RUN: %clang -no-canonical-prefixes %s -### -o %t.o -fuse-ld=gold 2>&1 \
++// RUN:     --sysroot=%S/Inputs/basic_linux_tree \
++// RUN:   | FileCheck --check-prefix=CHECK-LD-GOLD %s
++// CHECK-LD-GOLD: "{{.*}}ld.gold{{(.exe)?}}"
++//
++// RUN: %clang -no-canonical-prefixes %s -### -o %t.o -fuse-ld=mcld 2>&1 \
++// RUN:     --sysroot=%S/Inputs/basic_linux_tree \
++// RUN:   | FileCheck --check-prefix=CHECK-LD-MCLD %s
++// CHECK-LD-MCLD: "{{.*}}ld.mcld{{(.exe)?}}"
+-- 
+1.8.3
+

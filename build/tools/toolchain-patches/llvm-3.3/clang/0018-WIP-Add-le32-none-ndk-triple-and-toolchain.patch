@@ -1,0 +1,484 @@
+From ab90220d5d81dacd57dd8aac5a550b55b45cd1c8 Mon Sep 17 00:00:00 2001
+From: Logan Chien <tzuhsiang.chien@gmail.com>
+Date: Wed, 29 May 2013 18:18:19 +0800
+Subject: [PATCH 18/29] [WIP] Add le32-none-ndk triple and toolchain.
+
+[WORK IN PROGRESS]  Non-trivial API changes:
+
+* isRecordWithNonTrivialDestructorOrCopyConstructor() ->
+  getRecordArgABI()
+
+* CXXABI -> TheCXXABI.set(TargetCXXABI::GenericARM)
+
+* New override isPIEDefault()
+---
+ lib/Basic/Targets.cpp      | 109 +++++++++++++++++++++++++++++++++++++++++++++
+ lib/CodeGen/TargetInfo.cpp | 101 ++++++++++++++++++++++++++++++++++++++++-
+ lib/Driver/Driver.cpp      |   5 +++
+ lib/Driver/ToolChains.cpp  |  71 +++++++++++++++++++++++++++++
+ lib/Driver/ToolChains.h    |  20 +++++++++
+ lib/Driver/Tools.cpp       |  36 +++++++++++++++
+ lib/Driver/Tools.h         |  18 ++++++++
+ 7 files changed, 359 insertions(+), 1 deletion(-)
+
+diff --git a/lib/Basic/Targets.cpp b/lib/Basic/Targets.cpp
+index a622a11..0b613cd 100644
+--- a/lib/Basic/Targets.cpp
++++ b/lib/Basic/Targets.cpp
+@@ -632,6 +632,41 @@ class NaClTargetInfo : public OSTargetInfo<Target> {
+         Target::checkCallingConvention(CC);
+   }
+ };
++
++template <typename Target>
++class AndroidTargetInfo : public OSTargetInfo<Target> {
++ protected:
++  virtual void getOSDefines(const LangOptions &Opts, const llvm::Triple &Triple,
++                            MacroBuilder &Builder) const {
++    Builder.defineMacro("__ANDROID__");
++    Builder.defineMacro("__ELF__");
++  }
++ public:
++  AndroidTargetInfo(const std::string &triple)
++    : OSTargetInfo<Target>(triple) {
++    this->NoAsmVariants = true;
++
++    this->DoubleAlign = 64;
++    this->LongLongAlign = 64;
++    this->LongDoubleAlign = 64;
++    this->SuitableAlign = 64;
++
++    this->SizeType = TargetInfo::UnsignedInt;
++    this->PtrDiffType = TargetInfo::SignedInt;
++    this->IntPtrType = TargetInfo::SignedInt;
++
++    this->MaxAtomicPromoteWidth = 64;
++    this->MaxAtomicInlineWidth = 64;
++    this->RegParmMax = 3;
++    this->UseZeroLengthBitfieldAlignment = true;
++
++    this->TheCXXABI.set(TargetCXXABI::GenericARM);
++
++    this->DescriptionString = "e-p:32:32:32-i1:8:8-i8:8:8-i16:16:16-i32:32:32-"
++                              "i64:32:64-f32:32:32-f64:32:64-v64:64:64-"
++                              "v128:64:128-a0:0:64-n32-S64";
++  }
++};
+ } // end anonymous namespace.
+ 
+ //===----------------------------------------------------------------------===//
+@@ -5113,6 +5148,78 @@ void PNaClTargetInfo::getGCCRegAliases(const GCCRegAlias *&Aliases,
+ }
+ } // end anonymous namespace.
+ 
++
++namespace {
++class AndroidNDKTargetInfo : public TargetInfo {
++public:
++  AndroidNDKTargetInfo(const std::string& TripleStr);
++
++  virtual void getTargetDefines(const LangOptions& Opts,
++                                MacroBuilder& Builder) const;
++
++  virtual BuiltinVaListKind getBuiltinVaListKind() const {
++    return TargetInfo::CharPtrBuiltinVaList;
++  }
++
++  virtual void getTargetBuiltins(const Builtin::Info*& Records,
++                                 unsigned& NumRecords) const {
++  }
++
++  virtual const char* getClobbers() const {
++    return "";
++  }
++
++  virtual void getGCCRegNames(const char* const*& Names,
++                              unsigned& NumNames) const {
++    Names = NULL;
++    NumNames = 0;
++  }
++
++  virtual void getGCCRegAliases(const TargetInfo::GCCRegAlias*& Aliases,
++                                unsigned& NumAliases) const {
++    Aliases = NULL;
++    NumAliases = 0;
++  }
++
++  virtual bool validateAsmConstraint(const char*& Name,
++                                     TargetInfo::ConstraintInfo& Info) const {
++    return false;
++  }
++};
++
++AndroidNDKTargetInfo::AndroidNDKTargetInfo(const std::string& Triple)
++    : TargetInfo(Triple) {
++  BigEndian = false;
++  NoAsmVariants = true;
++
++  DoubleAlign = 64;
++  LongLongAlign = 64;
++  LongDoubleAlign = 64;
++  SuitableAlign = 64;
++
++  SizeType = UnsignedInt;
++  PtrDiffType = SignedInt;
++  IntPtrType = SignedInt;
++
++  MaxAtomicPromoteWidth = 64;
++  MaxAtomicInlineWidth = 64;
++  RegParmMax = 3;
++  UseZeroLengthBitfieldAlignment = true;
++
++  TheCXXABI.set(TargetCXXABI::GenericARM);
++
++  DescriptionString = "e-p:32:32:32-i1:8:8-i8:8:8-i16:16:16-i32:32:32-"
++                      "i64:32:64-f32:32:32-f64:32:64-v64:64:64-"
++                      "v128:64:128-a0:0:64-n32-S64";
++}
++
++void AndroidNDKTargetInfo::getTargetDefines(const LangOptions& Opts,
++                                         MacroBuilder& Builder) const {
++  Builder.defineMacro("__ANDROID__");
++  Builder.defineMacro("__ELF__");
++}
++} // end anonymous namespace
++
+ namespace {
+   static const unsigned SPIRAddrSpaceMap[] = {
+     1,    // opencl_global
+@@ -5319,6 +5426,8 @@ static TargetInfo *AllocateTarget(const std::string &T) {
+     switch (os) {
+       case llvm::Triple::NaCl:
+         return new NaClTargetInfo<PNaClTargetInfo>(T);
++      case llvm::Triple::NDK:
++        return new AndroidTargetInfo<AndroidNDKTargetInfo>(T);
+       default:
+         return NULL;
+     }
+diff --git a/lib/CodeGen/TargetInfo.cpp b/lib/CodeGen/TargetInfo.cpp
+index 32b27b3..b81487b 100644
+--- a/lib/CodeGen/TargetInfo.cpp
++++ b/lib/CodeGen/TargetInfo.cpp
+@@ -5085,6 +5085,102 @@ llvm::Value *HexagonABIInfo::EmitVAArg(llvm::Value *VAListAddr, QualType Ty,
+   return AddrTyped;
+ }
+ 
++//===----------------------------------------------------------------------===//
++// Android ABI Implementation
++//===----------------------------------------------------------------------===//
++namespace {
++
++class AndroidABIInfo : public ABIInfo {
++public:
++  AndroidABIInfo(CodeGenTypes &CGT) : ABIInfo(CGT) {}
++
++private:
++  ABIArgInfo classifyReturnType(QualType RetTy) const;
++  ABIArgInfo classifyArgumentType(QualType RetTy) const;
++
++  virtual void computeInfo(CGFunctionInfo &FI) const;
++
++  virtual llvm::Value *EmitVAArg(llvm::Value *VAListAddr, QualType Ty,
++                                 CodeGenFunction &CGF) const;
++};
++
++class AndroidTargetCodeGenInfo : public TargetCodeGenInfo {
++public:
++  AndroidTargetCodeGenInfo(CodeGenTypes &CGT)
++    : TargetCodeGenInfo(new AndroidABIInfo(CGT)) {}
++};
++
++}
++
++ABIArgInfo AndroidABIInfo::classifyArgumentType(QualType Ty) const {
++  if (!isAggregateTypeForABI(Ty)) {
++    // Treat an enum type as its underlying type.
++    if (const EnumType *EnumTy = Ty->getAs<EnumType>())
++      Ty = EnumTy->getDecl()->getIntegerType();
++
++    return (Ty->isPromotableIntegerType() ?
++            ABIArgInfo::getExtend() : ABIArgInfo::getDirect());
++  }
++
++  // Ignore empty records.
++  if (isEmptyRecord(getContext(), Ty, true))
++    return ABIArgInfo::getIgnore();
++
++  // Structures with either a non-trivial destructor or a non-trivial
++  // copy constructor are always indirect.
++  if (CGCXXABI::RecordArgABI RAA = getRecordArgABI(Ty, CGT))
++    return ABIArgInfo::getIndirect(0, RAA == CGCXXABI::RAA_DirectInMemory);
++
++  // Otherwise, pass by coercing to a structure of the appropriate size.
++  llvm::Type* ElemTy;
++  unsigned SizeRegs;
++  if (getContext().getTypeAlign(Ty) > 32) {
++    ElemTy = llvm::Type::getInt64Ty(getVMContext());
++    SizeRegs = (getContext().getTypeSize(Ty) + 63) / 64;
++  } else {
++    ElemTy = llvm::Type::getInt32Ty(getVMContext());
++    SizeRegs = (getContext().getTypeSize(Ty) + 31) / 32;
++  }
++
++  llvm::Type *STy =
++    llvm::StructType::get(llvm::ArrayType::get(ElemTy, SizeRegs), NULL);
++  return ABIArgInfo::getDirect(STy);
++}
++
++ABIArgInfo AndroidABIInfo::classifyReturnType(QualType RetTy) const {
++  if (RetTy->isVoidType())
++    return ABIArgInfo::getIgnore();
++
++  if (isAggregateTypeForABI(RetTy))
++    return ABIArgInfo::getIndirect(0);
++
++  // Treat an enum type as its underlying type.
++  if (const EnumType *EnumTy = RetTy->getAs<EnumType>())
++    RetTy = EnumTy->getDecl()->getIntegerType();
++
++  return (RetTy->isPromotableIntegerType() ?
++          ABIArgInfo::getExtend() : ABIArgInfo::getDirect());
++}
++
++void AndroidABIInfo::computeInfo(CGFunctionInfo &FI) const {
++    FI.getReturnInfo() = classifyReturnType(FI.getReturnType());
++    for (CGFunctionInfo::arg_iterator it = FI.arg_begin(), ie = FI.arg_end();
++         it != ie; ++it)
++      it->info = classifyArgumentType(it->type);
++}
++
++llvm::Value *AndroidABIInfo::EmitVAArg(llvm::Value *VAListAddr, QualType Ty,
++                                       CodeGenFunction &CGF) const {
++  CGBuilderTy &Builder = CGF.Builder;
++  llvm::Type *PTy =
++    llvm::PointerType::getUnqual(CGF.ConvertType(Ty));
++
++  // Since ABIInfo::EmitVAArg should return a pointer of Ty,
++  // We emit va_arg i8** va_list, Ty* for Ty
++  llvm::Value *v = Builder.CreateVAArg(VAListAddr, PTy);
++  return v;
++}
++
+ 
+ const TargetCodeGenInfo &CodeGenModule::getTargetCodeGenInfo() {
+   if (TheTargetCodeGenInfo)
+@@ -5096,7 +5192,10 @@ const TargetCodeGenInfo &CodeGenModule::getTargetCodeGenInfo() {
+     return *(TheTargetCodeGenInfo = new DefaultTargetCodeGenInfo(Types));
+ 
+   case llvm::Triple::le32:
+-    return *(TheTargetCodeGenInfo = new PNaClTargetCodeGenInfo(Types));
++    if (Triple.getOS() == llvm::Triple::NDK)
++      return *(TheTargetCodeGenInfo = new AndroidTargetCodeGenInfo(Types));
++    else
++      return *(TheTargetCodeGenInfo = new PNaClTargetCodeGenInfo(Types));
+   case llvm::Triple::mips:
+   case llvm::Triple::mipsel:
+     return *(TheTargetCodeGenInfo = new MIPSTargetCodeGenInfo(Types, true));
+diff --git a/lib/Driver/Driver.cpp b/lib/Driver/Driver.cpp
+index 3acbcc0..e50ce28 100644
+--- a/lib/Driver/Driver.cpp
++++ b/lib/Driver/Driver.cpp
+@@ -1772,6 +1772,11 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
+       else
+         TC = new toolchains::Linux(*this, Target, Args);
+       break;
++    case llvm::Triple::NDK:
++      if (Target.getArch() == llvm::Triple::le32)
++        TC = new toolchains::NDKClang(*this, Target, Args);
++      assert(TC && "Unexpected target arch for NDK toolchain");
++      break;
+     case llvm::Triple::Solaris:
+       TC = new toolchains::Solaris(*this, Target, Args);
+       break;
+diff --git a/lib/Driver/ToolChains.cpp b/lib/Driver/ToolChains.cpp
+index 6b93590..8c9ea1c 100644
+--- a/lib/Driver/ToolChains.cpp
++++ b/lib/Driver/ToolChains.cpp
+@@ -40,6 +40,77 @@ using namespace clang::driver;
+ using namespace clang::driver::toolchains;
+ using namespace clang;
+ 
++/// NDKClang - Toolchain to generate bitcode
++
++NDKClang::NDKClang(const Driver &D,
++                   const llvm::Triple& Triple,
++                   const ArgList &Args)
++  : ToolChain(D, Triple, Args) {
++  getProgramPaths().push_back(getDriver().getInstalledDir());
++  if (getDriver().getInstalledDir() != getDriver().Dir)
++    getProgramPaths().push_back(getDriver().Dir);
++}
++
++NDKClang::~NDKClang() {
++}
++
++bool NDKClang::IsUnwindTablesDefault() const {
++  return true;
++}
++
++bool NDKClang::UseSjLjExceptions() const {
++  return false;
++}
++
++bool NDKClang::HasNativeLLVMSupport() const {
++  return true;
++}
++
++bool NDKClang::isPICDefault() const {
++  return true;
++}
++
++bool NDKClang::isPIEDefault() const {
++  return false;
++}
++
++bool NDKClang::isPICDefaultForced() const {
++  return false;
++}
++
++Tool &NDKClang::SelectTool(const Compilation &C,
++                           const JobAction &JA,
++                           const ActionList &Inputs) const {
++  Action::ActionClass Key;
++  if (getDriver().ShouldUseClangCompiler(JA))
++    Key = Action::AnalyzeJobClass;
++  else
++    Key = JA.getKind();
++
++  Tool *&T = Tools[Key];
++
++  if (!T) {
++    switch (Key) {
++    default:
++      llvm_unreachable("Invalid tool kind.");
++    case Action::PreprocessJobClass:
++      T = new tools::gcc::Preprocess(*this); break;
++    case Action::AnalyzeJobClass:
++    case Action::MigrateJobClass:
++      T = new tools::Clang(*this); break;
++    case Action::PrecompileJobClass:
++    case Action::CompileJobClass:
++      T = new tools::gcc::Compile(*this); break;
++    case Action::AssembleJobClass:
++      T = new tools::ClangAs(*this); break;
++    case Action::LinkJobClass:
++      T = new tools::ndktools::Link(*this); break;
++    }
++  }
++
++  return *T;
++}
++
+ /// Darwin - Darwin tool chain for i386 and x86_64.
+ 
+ Darwin::Darwin(const Driver &D, const llvm::Triple& Triple, const ArgList &Args)
+diff --git a/lib/Driver/ToolChains.h b/lib/Driver/ToolChains.h
+index 3afd8dd..f6de326 100644
+--- a/lib/Driver/ToolChains.h
++++ b/lib/Driver/ToolChains.h
+@@ -148,6 +148,26 @@ private:
+   mutable OwningPtr<tools::gcc::Compile> Compile;
+ };
+ 
++class LLVM_LIBRARY_VISIBILITY NDKClang : public ToolChain {
++protected:
++  mutable llvm::DenseMap<unsigned, Tool*> Tools;
++
++public:
++  NDKClang(const Driver &D, const llvm::Triple& Triple, const ArgList &Args);
++  ~NDKClang();
++
++  virtual Tool &SelectTool(const Compilation &C, const JobAction &JA,
++                           const ActionList &Inputs) const;
++
++  virtual bool IsUnwindTablesDefault() const;
++  virtual bool UseSjLjExceptions() const;
++  virtual bool HasNativeLLVMSupport() const;
++  virtual bool isPICDefault() const;
++  virtual bool isPIEDefault() const;
++  virtual bool isPICDefaultForced() const;
++
++};
++
+   /// Darwin - The base Darwin tool chain.
+ class LLVM_LIBRARY_VISIBILITY Darwin : public ToolChain {
+ public:
+diff --git a/lib/Driver/Tools.cpp b/lib/Driver/Tools.cpp
+index e9bdfa8..89ca95a 100644
+--- a/lib/Driver/Tools.cpp
++++ b/lib/Driver/Tools.cpp
+@@ -5960,6 +5960,42 @@ static bool hasMipsN32ABIArg(const ArgList &Args) {
+   return A && (A->getValue() == StringRef("n32"));
+ }
+ 
++void ndktools::Link::ConstructJob(Compilation &C, const JobAction &JA,
++                                  const InputInfo &Output,
++                                  const InputInfoList &Inputs,
++                                  const ArgList &Args,
++                                  const char *LinkingOutput) const {
++  const toolchains::NDKClang& ToolChain =
++    static_cast<const toolchains::NDKClang&>(getToolChain());
++
++  ArgStringList CmdArgs;
++
++  // Silence warning for -emit-llvm
++  Args.ClaimAllArgs(options::OPT_emit_llvm);
++
++  if (Args.hasArg(options::OPT_shared)) {
++    CmdArgs.push_back("-shared");
++  }
++
++  CmdArgs.push_back("-o");
++  CmdArgs.push_back(Output.getFilename());
++
++  Args.AddAllArgs(CmdArgs, options::OPT_L);
++
++  const ToolChain::path_list Paths = ToolChain.getFilePaths();
++
++  for (ToolChain::path_list::const_iterator i = Paths.begin(), e = Paths.end();
++       i != e; ++i)
++    CmdArgs.push_back(Args.MakeArgString(StringRef("-L") + *i));
++
++  AddLinkerInputs(ToolChain, Inputs, Args, CmdArgs);
++
++  const char *Exec =
++    Args.MakeArgString(getToolChain().GetProgramPath("link"));
++
++  C.addCommand(new Command(JA, *this, Exec, CmdArgs));
++}
++
+ void gnutools::Link::ConstructJob(Compilation &C, const JobAction &JA,
+                                   const InputInfo &Output,
+                                   const InputInfoList &Inputs,
+diff --git a/lib/Driver/Tools.h b/lib/Driver/Tools.h
+index e7de46f..2f5fc96 100644
+--- a/lib/Driver/Tools.h
++++ b/lib/Driver/Tools.h
+@@ -456,6 +456,24 @@ namespace gnutools {
+                               const char *LinkingOutput) const;
+   };
+ }
++
++  /// ndktools -- Delegate the work to NDK linker.
++namespace ndktools {
++  class LLVM_LIBRARY_VISIBILITY Link : public Tool  {
++  public:
++    Link(const ToolChain &TC) : Tool("ndk::Link", "linker", TC) {}
++
++    virtual bool hasIntegratedCPP() const { return false; }
++    virtual bool isLinkJob() const { return true; }
++
++    virtual void ConstructJob(Compilation &C, const JobAction &JA,
++                              const InputInfo &Output,
++                              const InputInfoList &Inputs,
++                              const ArgList &TCArgs,
++                              const char *LinkingOutput) const;
++  };
++}
++
+   /// minix -- Directly call GNU Binutils assembler and linker
+ namespace minix {
+   class LLVM_LIBRARY_VISIBILITY Assemble : public Tool  {
+-- 
+1.8.3
+

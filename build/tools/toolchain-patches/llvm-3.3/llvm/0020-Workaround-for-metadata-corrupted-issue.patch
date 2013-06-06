@@ -1,0 +1,66 @@
+From 8d17b76fdf038d7c9a182afadc6daa74bdbf12ad Mon Sep 17 00:00:00 2001
+From: Logan Chien <loganchien@google.com>
+Date: Thu, 23 May 2013 15:14:07 +0800
+Subject: [PATCH 20/22] Workaround for metadata corrupted issue.
+
+When building ndk tests issue52819-STLPORT_FORCE_REBUILD and
+test-googletest-full, An assertion happend in llvm_shutdown:
+
+  While deleting: metadata %
+  An asserting value handle still pointed to this value!
+
+Use the patch below to workaround.
+https://codereview.chromium.org/10442019/
+
+Cherry picked from release_32 branch.
+Patch by Lai Wei-Chih <Robert.Lai@mediatek.com>
+Patch by WenHan Gu <Wenhan.gu@mediatek.com>
+---
+ include/llvm/CodeGen/LexicalScopes.h | 4 ++++
+ include/llvm/Support/ValueHandle.h   | 8 ++++++++
+ 2 files changed, 12 insertions(+)
+
+diff --git a/include/llvm/CodeGen/LexicalScopes.h b/include/llvm/CodeGen/LexicalScopes.h
+index ff65db4..041111b 100644
+--- a/include/llvm/CodeGen/LexicalScopes.h
++++ b/include/llvm/CodeGen/LexicalScopes.h
+@@ -159,6 +159,10 @@ public:
+   LexicalScope(LexicalScope *P, const MDNode *D, const MDNode *I, bool A)
+     : Parent(P), Desc(D), InlinedAtLocation(I), AbstractScope(A),
+       LastInsn(0), FirstInsn(0), DFSIn(0), DFSOut(0) {
++#ifndef NDEBUG
++    Desc.make_weak();
++    InlinedAtLocation.make_weak();
++#endif
+     if (Parent)
+       Parent->addChild(this);
+   }
+diff --git a/include/llvm/Support/ValueHandle.h b/include/llvm/Support/ValueHandle.h
+index b49341c..98c3883 100644
+--- a/include/llvm/Support/ValueHandle.h
++++ b/include/llvm/Support/ValueHandle.h
+@@ -105,6 +105,8 @@ protected:
+   void setValPtrInt(unsigned K) { VP.setInt(K); }
+   unsigned getValPtrInt() const { return VP.getInt(); }
+ 
++  void setKind(HandleBaseKind K) { PrevPair.setInt(K); }
++
+   static bool isValid(Value *V) {
+     return V &&
+            V != DenseMapInfo<Value *>::getEmptyKey() &&
+@@ -222,6 +224,12 @@ public:
+     return getValPtr();
+   }
+ 
++#ifndef NDEBUG
++  void make_weak() {
++    setKind(Weak);
++  }
++#endif
++
+   ValueTy *operator=(ValueTy *RHS) {
+     setValPtr(RHS);
+     return getValPtr();
+-- 
+1.8.3
+

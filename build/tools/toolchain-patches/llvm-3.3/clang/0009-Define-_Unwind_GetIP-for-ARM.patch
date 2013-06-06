@@ -1,0 +1,67 @@
+From beef9a86b08393f389dc0df8c662a7a0c9f22970 Mon Sep 17 00:00:00 2001
+From: Logan Chien <tzuhsiang.chien@gmail.com>
+Date: Wed, 29 May 2013 11:05:12 +0800
+Subject: [PATCH 09/29] Define _Unwind_GetIP() for ARM.
+
+---
+ lib/Headers/unwind.h  |  7 +++++++
+ test/Headers/unwind.c | 20 ++++++++++++--------
+ 2 files changed, 19 insertions(+), 8 deletions(-)
+
+diff --git a/lib/Headers/unwind.h b/lib/Headers/unwind.h
+index e94fd70..21fd413 100644
+--- a/lib/Headers/unwind.h
++++ b/lib/Headers/unwind.h
+@@ -111,6 +111,13 @@ _Unwind_VRS_Result _Unwind_VRS_Get(struct _Unwind_Context *__context,
+   _Unwind_VRS_DataRepresentation __representation,
+   void *__valuep);
+ 
++static inline uintptr_t _Unwind_GetIP(struct _Unwind_Context *context) {
++  uintptr_t ip = 0;
++  _Unwind_VRS_Get(context, _UVRSC_CORE, 15, _UVRSD_UINT32, &ip);
++  ip &= ~(uintptr_t)0x1; /* remove thumb mode bit */
++  return ip;
++}
++
+ #else
+ 
+ uintptr_t _Unwind_GetIP(struct _Unwind_Context* __context);
+diff --git a/test/Headers/unwind.c b/test/Headers/unwind.c
+index 68100a8..41fe469 100644
+--- a/test/Headers/unwind.c
++++ b/test/Headers/unwind.c
+@@ -1,19 +1,23 @@
+-// RUN: %clang_cc1 -triple arm-unknown-linux-gnueabi \
++// RUN: %clang_cc1 -triple arm-unknown-linux-gnueabi -Wall -Werror \
+ // RUN:   -isystem %S/Inputs/include -ffreestanding -fsyntax-only %s
+-// RUN: %clang_cc1 -triple mips-unknown-linux \
++// RUN: %clang_cc1 -triple mips-unknown-linux -Wall -Werror \
+ // RUN:   -isystem %S/Inputs/include -ffreestanding -fsyntax-only %s
+-// RUN: %clang_cc1 -triple i686-unknown-linux \
++// RUN: %clang_cc1 -triple i686-unknown-linux -Wall -Werror \
+ // RUN:   -isystem %S/Inputs/include -ffreestanding -fsyntax-only %s
+-// RUN: %clang_cc1 -triple x86_64-unknown-linux \
++// RUN: %clang_cc1 -triple x86_64-unknown-linux -Wall -Werror \
+ // RUN:   -isystem %S/Inputs/include -ffreestanding -fsyntax-only %s
+ 
+-// RUN: %clang_cc1 -triple arm-unknown-linux-gnueabi \
++// RUN: %clang_cc1 -triple arm-unknown-linux-gnueabi -Wall -Werror \
+ // RUN:   -isystem %S/Inputs/include -ffreestanding -fsyntax-only -x c++ %s
+-// RUN: %clang_cc1 -triple mips-unknown-linux \
++// RUN: %clang_cc1 -triple mips-unknown-linux -Wall -Werror \
+ // RUN:   -isystem %S/Inputs/include -ffreestanding -fsyntax-only -x c++ %s
+-// RUN: %clang_cc1 -triple i686-unknown-linux \
++// RUN: %clang_cc1 -triple i686-unknown-linux -Wall -Werror \
+ // RUN:   -isystem %S/Inputs/include -ffreestanding -fsyntax-only -x c++ %s
+-// RUN: %clang_cc1 -triple x86_64-unknown-linux \
++// RUN: %clang_cc1 -triple x86_64-unknown-linux -Wall -Werror \
+ // RUN:   -isystem %S/Inputs/include -ffreestanding -fsyntax-only -x c++ %s
+ 
+ #include "unwind.h"
++
++uintptr_t test_unwind_get_ip(struct _Unwind_Context *context) {
++  return _Unwind_GetIP(context);
++}
+-- 
+1.8.3
+

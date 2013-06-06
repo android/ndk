@@ -1,0 +1,26 @@
+From 8ef0a1d43cdbe6517d16d31ec39ee86daaf1a959 Mon Sep 17 00:00:00 2001
+From: Lai Wei-Chih <Robert.Lai@mediatek.com>
+Date: Thu, 16 May 2013 11:54:00 +0800
+Subject: [PATCH 19/22] Fix LLVMWrap could not read string correctly.
+
+Change-Id: I8d6fca33e7b91a6f1781b4e109b1cc027cca755e
+---
+ lib/Wrap/bitcode_wrapperer.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/Wrap/bitcode_wrapperer.cpp b/lib/Wrap/bitcode_wrapperer.cpp
+index 5479dde..f1f163a 100644
+--- a/lib/Wrap/bitcode_wrapperer.cpp
++++ b/lib/Wrap/bitcode_wrapperer.cpp
+@@ -235,7 +235,7 @@ bool BitcodeWrapperer::ParseWrapperHeader() {
+         BCHeaderField::FixedSubfield len;
+         union {
+           uint32_t int32;
+-          uint8_t* char8;
++          uint8_t char8[kMaxVariableFieldSize];
+         }val;
+       };
+       FieldHelper tempField;
+-- 
+1.8.3
+

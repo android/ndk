@@ -1,0 +1,44 @@
+From 1c0a443f7ab6ed09cd057b9aa6b50bc759fe003a Mon Sep 17 00:00:00 2001
+From: Logan Chien <tzuhsiang.chien@gmail.com>
+Date: Wed, 29 May 2013 12:00:06 +0800
+Subject: [PATCH 11/29] Enable ARM EHABI exception handling table for Android.
+
+---
+ lib/Driver/Tools.cpp    | 9 +++++++++
+ test/Driver/arm-ehabi.c | 4 ++++
+ 2 files changed, 13 insertions(+)
+ create mode 100644 test/Driver/arm-ehabi.c
+
+diff --git a/lib/Driver/Tools.cpp b/lib/Driver/Tools.cpp
+index 2cee1f4..418d1de 100644
+--- a/lib/Driver/Tools.cpp
++++ b/lib/Driver/Tools.cpp
+@@ -838,6 +838,15 @@ void Clang::AddARMTargetArgs(const ArgList &Args,
+                     options::OPT_mno_implicit_float,
+                     true))
+     CmdArgs.push_back("-no-implicit-float");
++
++  // Enable ARM EHABI exception handling table generation for Android
++  if (Triple.getEnvironment() == llvm::Triple::Android) {
++    CmdArgs.push_back("-backend-option");
++    CmdArgs.push_back("-arm-enable-ehabi");
++
++    CmdArgs.push_back("-backend-option");
++    CmdArgs.push_back("-arm-enable-ehabi-descriptors");
++  }
+ }
+ 
+ // Translate MIPS CPU name alias option to CPU name.
+diff --git a/test/Driver/arm-ehabi.c b/test/Driver/arm-ehabi.c
+new file mode 100644
+index 0000000..638a6da
+--- /dev/null
++++ b/test/Driver/arm-ehabi.c
+@@ -0,0 +1,4 @@
++// RUN: %clang -target arm-linux-androideabi -### -c %s 2>&1 | FileCheck %s
++
++// CHECK: "-arm-enable-ehabi"
++// CHECK: "-arm-enable-ehabi-descriptors"
+-- 
+1.8.3
+

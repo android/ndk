@@ -1,0 +1,55 @@
+From a90e62c8d37af70db584b3cb8829074776dec387 Mon Sep 17 00:00:00 2001
+From: Logan Chien <loganchien@google.com>
+Date: Wed, 22 May 2013 19:40:25 +0800
+Subject: [PATCH 12/22] Add -disable-global-ctor-const-promotion flag.
+
+Add a flag to disable the promotion of the global constant
+with constructors.
+---
+ lib/Transforms/IPO/GlobalOpt.cpp | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/lib/Transforms/IPO/GlobalOpt.cpp b/lib/Transforms/IPO/GlobalOpt.cpp
+index 0ef900e..98948d1 100644
+--- a/lib/Transforms/IPO/GlobalOpt.cpp
++++ b/lib/Transforms/IPO/GlobalOpt.cpp
+@@ -32,6 +32,7 @@
+ #include "llvm/IR/Operator.h"
+ #include "llvm/Pass.h"
+ #include "llvm/Support/CallSite.h"
++#include "llvm/Support/CommandLine.h"
+ #include "llvm/Support/Debug.h"
+ #include "llvm/Support/ErrorHandling.h"
+ #include "llvm/Support/GetElementPtrTypeIterator.h"
+@@ -58,6 +59,12 @@ STATISTIC(NumAliasesResolved, "Number of global aliases resolved");
+ STATISTIC(NumAliasesRemoved, "Number of global aliases eliminated");
+ STATISTIC(NumCXXDtorsRemoved, "Number of global C++ destructors removed");
+ 
++static cl::opt<bool> DisableGlobalCtorConstPromotion(
++  "disable-global-ctor-const-promotion",
++  cl::desc("Disable constant promotion of global constants with constructors."),
++  cl::init(false),
++  cl::Hidden);
++
+ namespace {
+   struct GlobalStatus;
+   struct GlobalOpt : public ModulePass {
+@@ -2992,10 +2999,11 @@ static bool EvaluateStaticConstructor(Function *F, const DataLayout *TD,
+            Eval.getMutatedMemory().begin(), E = Eval.getMutatedMemory().end();
+          I != E; ++I)
+       CommitValueTo(I->second, I->first);
+-    for (SmallPtrSet<GlobalVariable*, 8>::const_iterator I =
+-           Eval.getInvariants().begin(), E = Eval.getInvariants().end();
+-         I != E; ++I)
+-      (*I)->setConstant(true);
++    if (!DisableGlobalCtorConstPromotion)
++      for (SmallPtrSet<GlobalVariable*, 8>::const_iterator I =
++             Eval.getInvariants().begin(), E = Eval.getInvariants().end();
++           I != E; ++I)
++        (*I)->setConstant(true);
+   }
+ 
+   return EvalSuccess;
+-- 
+1.8.3
+

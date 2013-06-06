@@ -1,0 +1,70 @@
+From 89ecce3d14be5e0572dddb04801ac38b4d7f7297 Mon Sep 17 00:00:00 2001
+From: Logan Chien <loganchien@google.com>
+Date: Wed, 22 May 2013 20:15:43 +0800
+Subject: [PATCH 15/22] Patch for canadian cross build via NDK standalone.
+
+---
+ lib/ExecutionEngine/JIT/JITMemoryManager.cpp                  | 2 ++
+ lib/Support/Unix/Memory.inc                                   | 2 +-
+ lib/Support/Unix/Path.inc                                     | 4 ++++
+ utils/unittest/googletest/include/gtest/internal/gtest-port.h | 2 +-
+ 4 files changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/lib/ExecutionEngine/JIT/JITMemoryManager.cpp b/lib/ExecutionEngine/JIT/JITMemoryManager.cpp
+index 66aeb77..686dd06 100644
+--- a/lib/ExecutionEngine/JIT/JITMemoryManager.cpp
++++ b/lib/ExecutionEngine/JIT/JITMemoryManager.cpp
+@@ -828,7 +828,9 @@ public:
+     sys::DynamicLibrary::AddSymbol("lstat", (void*)(intptr_t)lstat);
+     sys::DynamicLibrary::AddSymbol("stat64", (void*)(intptr_t)stat64);
+     sys::DynamicLibrary::AddSymbol("\x1stat64", (void*)(intptr_t)stat64);
++#ifndef __ANDROID__
+     sys::DynamicLibrary::AddSymbol("\x1open64", (void*)(intptr_t)open64);
++#endif
+     sys::DynamicLibrary::AddSymbol("\x1lseek64", (void*)(intptr_t)lseek64);
+     sys::DynamicLibrary::AddSymbol("fstat64", (void*)(intptr_t)fstat64);
+     sys::DynamicLibrary::AddSymbol("lstat64", (void*)(intptr_t)lstat64);
+diff --git a/lib/Support/Unix/Memory.inc b/lib/Support/Unix/Memory.inc
+index 72a8af6..c354141 100644
+--- a/lib/Support/Unix/Memory.inc
++++ b/lib/Support/Unix/Memory.inc
+@@ -330,7 +330,7 @@ void Memory::InvalidateInstructionCache(const void *Addr,
+   const char *Start = static_cast<const char *>(Addr);
+   const char *End = Start + Len;
+   __clear_cache(const_cast<char *>(Start), const_cast<char *>(End));
+-#  elif defined(__mips__)
++#  elif defined(__mips__) && !defined(__ANDROID__)
+   const char *Start = static_cast<const char *>(Addr);
+ #    if defined(ANDROID)
+   // The declaration of "cacheflush" in Android bionic:
+diff --git a/lib/Support/Unix/Path.inc b/lib/Support/Unix/Path.inc
+index 6a5ebb8..02f6a09 100644
+--- a/lib/Support/Unix/Path.inc
++++ b/lib/Support/Unix/Path.inc
+@@ -71,6 +71,10 @@
+ # undef HAVE_MKDTEMP
+ #endif
+ 
++#if defined(__ANDROID__) && defined(HAVE_MKDTEMP)
++extern "C" char *mkdtemp(const char *);
++#endif
++
+ namespace {
+ inline bool lastIsSlash(const std::string& path) {
+   return !path.empty() && path[path.length() - 1] == '/';
+diff --git a/utils/unittest/googletest/include/gtest/internal/gtest-port.h b/utils/unittest/googletest/include/gtest/internal/gtest-port.h
+index 58f6caf..2107fdc 100644
+--- a/utils/unittest/googletest/include/gtest/internal/gtest-port.h
++++ b/utils/unittest/googletest/include/gtest/internal/gtest-port.h
+@@ -519,7 +519,7 @@
+ #ifndef GTEST_HAS_CLONE
+ // The user didn't tell us, so we need to figure it out.
+ 
+-# if GTEST_OS_LINUX && !defined(__ia64__)
++# if GTEST_OS_LINUX && !defined(__ia64__) && !defined(__ANDROID__)
+ #  define GTEST_HAS_CLONE 1
+ # else
+ #  define GTEST_HAS_CLONE 0
+-- 
+1.8.3
+

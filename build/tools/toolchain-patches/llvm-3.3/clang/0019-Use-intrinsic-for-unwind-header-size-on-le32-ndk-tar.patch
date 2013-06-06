@@ -1,0 +1,43 @@
+From f3bb7f1cb274646ea04d1e9384d5b1dba2f5a3db Mon Sep 17 00:00:00 2001
+From: WenHan Gu <Wenhan.gu@mediatek.com>
+Date: Mon, 11 Mar 2013 12:53:43 +0800
+Subject: [PATCH 19/29] Use intrinsic for unwind header size on le32 ndk
+ target.
+
+Change-Id: I9ef08e305d40927c079e4296d004f0976a0a0d3f
+Signed-off-by: WenHan Gu <Wenhan.gu@mediatek.com>
+---
+ lib/CodeGen/CGException.cpp | 17 ++++++++++++++---
+ 1 file changed, 14 insertions(+), 3 deletions(-)
+
+diff --git a/lib/CodeGen/CGException.cpp b/lib/CodeGen/CGException.cpp
+index a088d78..1c56809 100644
+--- a/lib/CodeGen/CGException.cpp
++++ b/lib/CodeGen/CGException.cpp
+@@ -967,9 +967,20 @@ static void InitCatchParam(CodeGenFunction &CGF,
+ 
+         // Exn points to the struct _Unwind_Exception header, which
+         // we have to skip past in order to reach the exception data.
+-        unsigned HeaderSize =
+-          CGF.CGM.getTargetCodeGenInfo().getSizeOfUnwindException();
+-        AdjustedExn = CGF.Builder.CreateConstGEP1_32(Exn, HeaderSize);
++        if (CGF.Target.getTriple().getArch() == llvm::Triple::le32 &&
++            CGF.Target.getTriple().getOS() == llvm::Triple::NDK) {
++          // le32-none-ndk uses intrinsic to solve different unwind header size
++          llvm::FunctionType *FTy =
++            llvm::FunctionType::get(CGF.SizeTy, /*IsVarArgs=*/false);
++          llvm::Constant *Fn =
++            CGF.CGM.CreateRuntimeFunction(FTy, "__ndk_le32_getUnwindHeaderSize");
++          llvm::CallInst *Ptr = CGF.Builder.CreateCall(Fn);
++          AdjustedExn = CGF.Builder.CreateInBoundsGEP(Exn, Ptr);
++        } else {
++          unsigned HeaderSize =
++            CGF.CGM.getTargetCodeGenInfo().getSizeOfUnwindException();
++          AdjustedExn = CGF.Builder.CreateConstGEP1_32(Exn, HeaderSize);
++        }
+ 
+       // However, if we're catching a pointer-to-record type that won't
+       // work, because the personality function might have adjusted
+-- 
+1.8.3
+

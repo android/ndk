@@ -1,0 +1,26 @@
+From 745481b9c5eb0d65fea5945f9786af716edfe51c Mon Sep 17 00:00:00 2001
+From: Logan Chien <tzuhsiang.chien@gmail.com>
+Date: Wed, 29 May 2013 13:57:10 +0800
+Subject: [PATCH 14/29] Remove redundant -lgcc for linker.
+
+---
+ lib/Driver/Tools.cpp | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/lib/Driver/Tools.cpp b/lib/Driver/Tools.cpp
+index cd4759e..b5f7d0b 100644
+--- a/lib/Driver/Tools.cpp
++++ b/lib/Driver/Tools.cpp
+@@ -5913,7 +5913,8 @@ static void AddLibgcc(llvm::Triple Triple, const Driver &D,
+ 
+   if (StaticLibgcc && !isAndroid)
+     CmdArgs.push_back("-lgcc_eh");
+-  else if (!Args.hasArg(options::OPT_shared) && D.CCCIsCXX)
++  else if (!Args.hasArg(options::OPT_shared) && D.CCCIsCXX &&
++           !StaticLibgcc && !isAndroid)
+     CmdArgs.push_back("-lgcc");
+ 
+   // According to Android ABI, we have to link with libdl if we are
+-- 
+1.8.3
+

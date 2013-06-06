@@ -1,0 +1,262 @@
+From 127155a587cfbc3025b36400cd423b79188bab07 Mon Sep 17 00:00:00 2001
+From: Akira Hatanaka <ahatanaka@mips.com>
+Date: Mon, 13 May 2013 17:43:19 +0000
+Subject: [PATCH 16/22] [mips] Rename functions. No functionality changes.
+
+git-svn-id: https://llvm.org/svn/llvm-project/llvm/trunk@181713 91177308-0d34-0410-b5e6-96231b3b80d8
+---
+ lib/Target/Mips/Mips16InstrInfo.cpp |  4 ++--
+ lib/Target/Mips/Mips16InstrInfo.h   |  4 ++--
+ lib/Target/Mips/MipsInstrInfo.cpp   | 10 +++++-----
+ lib/Target/Mips/MipsInstrInfo.h     |  4 ++--
+ lib/Target/Mips/MipsLongBranch.cpp  |  2 +-
+ lib/Target/Mips/MipsSEInstrInfo.cpp | 22 +++++++++++-----------
+ lib/Target/Mips/MipsSEInstrInfo.h   | 12 ++++++------
+ 7 files changed, 29 insertions(+), 29 deletions(-)
+
+diff --git a/lib/Target/Mips/Mips16InstrInfo.cpp b/lib/Target/Mips/Mips16InstrInfo.cpp
+index 17dd2c0..ab9e627 100644
+--- a/lib/Target/Mips/Mips16InstrInfo.cpp
++++ b/lib/Target/Mips/Mips16InstrInfo.cpp
+@@ -145,7 +145,7 @@ bool Mips16InstrInfo::expandPostRAPseudo(MachineBasicBlock::iterator MI) const {
+ 
+ /// GetOppositeBranchOpc - Return the inverse of the specified
+ /// opcode, e.g. turning BEQ to BNE.
+-unsigned Mips16InstrInfo::GetOppositeBranchOpc(unsigned Opc) const {
++unsigned Mips16InstrInfo::getOppositeBranchOpc(unsigned Opc) const {
+   switch (Opc) {
+   default:  llvm_unreachable("Illegal opcode!");
+   case Mips::BeqzRxImmX16: return Mips::BnezRxImmX16;
+@@ -380,7 +380,7 @@ Mips16InstrInfo::loadImmediate(unsigned FrameReg,
+   return Reg;
+ }
+ 
+-unsigned Mips16InstrInfo::GetAnalyzableBrOpc(unsigned Opc) const {
++unsigned Mips16InstrInfo::getAnalyzableBrOpc(unsigned Opc) const {
+   return (Opc == Mips::BeqzRxImmX16   || Opc == Mips::BimmX16  ||
+           Opc == Mips::BnezRxImmX16   || Opc == Mips::BteqzX16 ||
+           Opc == Mips::BteqzT8CmpX16  || Opc == Mips::BteqzT8CmpiX16 ||
+diff --git a/lib/Target/Mips/Mips16InstrInfo.h b/lib/Target/Mips/Mips16InstrInfo.h
+index a77a904..a3bd31e 100644
+--- a/lib/Target/Mips/Mips16InstrInfo.h
++++ b/lib/Target/Mips/Mips16InstrInfo.h
+@@ -64,7 +64,7 @@ public:
+ 
+   virtual bool expandPostRAPseudo(MachineBasicBlock::iterator MI) const;
+ 
+-  virtual unsigned GetOppositeBranchOpc(unsigned Opc) const;
++  virtual unsigned getOppositeBranchOpc(unsigned Opc) const;
+ 
+   // Adjust SP by FrameSize bytes. Save RA, S0, S1
+   void makeFrame(unsigned SP, int64_t FrameSize, MachineBasicBlock &MBB,
+@@ -102,7 +102,7 @@ public:
+     (MachineBasicBlock &MBB, MachineBasicBlock::iterator I, int64_t Imm) const;
+ 
+ private:
+-  virtual unsigned GetAnalyzableBrOpc(unsigned Opc) const;
++  virtual unsigned getAnalyzableBrOpc(unsigned Opc) const;
+ 
+   void ExpandRetRA16(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
+                    unsigned Opc) const;
+diff --git a/lib/Target/Mips/MipsInstrInfo.cpp b/lib/Target/Mips/MipsInstrInfo.cpp
+index ad92d41..336b62d 100644
+--- a/lib/Target/Mips/MipsInstrInfo.cpp
++++ b/lib/Target/Mips/MipsInstrInfo.cpp
+@@ -77,7 +77,7 @@ MipsInstrInfo::emitFrameIndexDebugValue(MachineFunction &MF, int FrameIx,
+ void MipsInstrInfo::AnalyzeCondBr(const MachineInstr *Inst, unsigned Opc,
+                                   MachineBasicBlock *&BB,
+                                   SmallVectorImpl<MachineOperand> &Cond) const {
+-  assert(GetAnalyzableBrOpc(Opc) && "Not an analyzable branch");
++  assert(getAnalyzableBrOpc(Opc) && "Not an analyzable branch");
+   int NumOp = Inst->getNumExplicitOperands();
+ 
+   // for both int and fp branches, the last explicit operand is the
+@@ -167,7 +167,7 @@ RemoveBranch(MachineBasicBlock &MBB) const
+   // Up to 2 branches are removed.
+   // Note that indirect branches are not removed.
+   for(removed = 0; I != REnd && removed < 2; ++I, ++removed)
+-    if (!GetAnalyzableBrOpc(I->getOpcode()))
++    if (!getAnalyzableBrOpc(I->getOpcode()))
+       break;
+ 
+   MBB.erase(I.base(), FirstBr.base());
+@@ -182,7 +182,7 @@ ReverseBranchCondition(SmallVectorImpl<MachineOperand> &Cond) const
+ {
+   assert( (Cond.size() && Cond.size() <= 3) &&
+           "Invalid Mips branch condition!");
+-  Cond[0].setImm(GetOppositeBranchOpc(Cond[0].getImm()));
++  Cond[0].setImm(getOppositeBranchOpc(Cond[0].getImm()));
+   return false;
+ }
+ 
+@@ -210,7 +210,7 @@ AnalyzeBranch(MachineBasicBlock &MBB, MachineBasicBlock *&TBB,
+   BranchInstrs.push_back(LastInst);
+ 
+   // Not an analyzable branch (e.g., indirect jump).
+-  if (!GetAnalyzableBrOpc(LastOpc))
++  if (!getAnalyzableBrOpc(LastOpc))
+     return LastInst->isIndirectBranch() ? BT_Indirect : BT_None;
+ 
+   // Get the second to last instruction in the block.
+@@ -219,7 +219,7 @@ AnalyzeBranch(MachineBasicBlock &MBB, MachineBasicBlock *&TBB,
+ 
+   if (++I != REnd) {
+     SecondLastInst = &*I;
+-    SecondLastOpc = GetAnalyzableBrOpc(SecondLastInst->getOpcode());
++    SecondLastOpc = getAnalyzableBrOpc(SecondLastInst->getOpcode());
+ 
+     // Not an analyzable branch (must be an indirect jump).
+     if (isUnpredicatedTerminator(SecondLastInst) && !SecondLastOpc)
+diff --git a/lib/Target/Mips/MipsInstrInfo.h b/lib/Target/Mips/MipsInstrInfo.h
+index 8c05d97..6a57736 100644
+--- a/lib/Target/Mips/MipsInstrInfo.h
++++ b/lib/Target/Mips/MipsInstrInfo.h
+@@ -81,7 +81,7 @@ public:
+   ///
+   virtual const MipsRegisterInfo &getRegisterInfo() const = 0;
+ 
+-  virtual unsigned GetOppositeBranchOpc(unsigned Opc) const = 0;
++  virtual unsigned getOppositeBranchOpc(unsigned Opc) const = 0;
+ 
+   /// Return the number of bytes of code the specified instruction may be.
+   unsigned GetInstSizeInBytes(const MachineInstr *MI) const;
+@@ -123,7 +123,7 @@ protected:
+                                    unsigned Flag) const;
+ 
+ private:
+-  virtual unsigned GetAnalyzableBrOpc(unsigned Opc) const = 0;
++  virtual unsigned getAnalyzableBrOpc(unsigned Opc) const = 0;
+ 
+   void AnalyzeCondBr(const MachineInstr *Inst, unsigned Opc,
+                      MachineBasicBlock *&BB,
+diff --git a/lib/Target/Mips/MipsLongBranch.cpp b/lib/Target/Mips/MipsLongBranch.cpp
+index bf5ad37..daabf3d 100644
+--- a/lib/Target/Mips/MipsLongBranch.cpp
++++ b/lib/Target/Mips/MipsLongBranch.cpp
+@@ -217,7 +217,7 @@ int64_t MipsLongBranch::computeOffset(const MachineInstr *Br) {
+ // MachineBasicBlock operand MBBOpnd.
+ void MipsLongBranch::replaceBranch(MachineBasicBlock &MBB, Iter Br,
+                                    DebugLoc DL, MachineBasicBlock *MBBOpnd) {
+-  unsigned NewOpc = TII->GetOppositeBranchOpc(Br->getOpcode());
++  unsigned NewOpc = TII->getOppositeBranchOpc(Br->getOpcode());
+   const MCInstrDesc &NewDesc = TII->get(NewOpc);
+ 
+   MachineInstrBuilder MIB = BuildMI(MBB, Br, DL, NewDesc);
+diff --git a/lib/Target/Mips/MipsSEInstrInfo.cpp b/lib/Target/Mips/MipsSEInstrInfo.cpp
+index a0768e5..4183a72 100644
+--- a/lib/Target/Mips/MipsSEInstrInfo.cpp
++++ b/lib/Target/Mips/MipsSEInstrInfo.cpp
+@@ -245,17 +245,17 @@ bool MipsSEInstrInfo::expandPostRAPseudo(MachineBasicBlock::iterator MI) const {
+   default:
+     return false;
+   case Mips::RetRA:
+-    ExpandRetRA(MBB, MI, Mips::RET);
++    expandRetRA(MBB, MI, Mips::RET);
+     break;
+   case Mips::BuildPairF64:
+-    ExpandBuildPairF64(MBB, MI);
++    expandBuildPairF64(MBB, MI);
+     break;
+   case Mips::ExtractElementF64:
+-    ExpandExtractElementF64(MBB, MI);
++    expandExtractElementF64(MBB, MI);
+     break;
+   case Mips::MIPSeh_return32:
+   case Mips::MIPSeh_return64:
+-    ExpandEhReturn(MBB, MI);
++    expandEhReturn(MBB, MI);
+     break;
+   }
+ 
+@@ -263,9 +263,9 @@ bool MipsSEInstrInfo::expandPostRAPseudo(MachineBasicBlock::iterator MI) const {
+   return true;
+ }
+ 
+-/// GetOppositeBranchOpc - Return the inverse of the specified
++/// getOppositeBranchOpc - Return the inverse of the specified
+ /// opcode, e.g. turning BEQ to BNE.
+-unsigned MipsSEInstrInfo::GetOppositeBranchOpc(unsigned Opc) const {
++unsigned MipsSEInstrInfo::getOppositeBranchOpc(unsigned Opc) const {
+   switch (Opc) {
+   default:           llvm_unreachable("Illegal opcode!");
+   case Mips::BEQ:    return Mips::BNE;
+@@ -346,7 +346,7 @@ MipsSEInstrInfo::loadImmediate(int64_t Imm, MachineBasicBlock &MBB,
+   return Reg;
+ }
+ 
+-unsigned MipsSEInstrInfo::GetAnalyzableBrOpc(unsigned Opc) const {
++unsigned MipsSEInstrInfo::getAnalyzableBrOpc(unsigned Opc) const {
+   return (Opc == Mips::BEQ    || Opc == Mips::BNE    || Opc == Mips::BGTZ   ||
+           Opc == Mips::BGEZ   || Opc == Mips::BLTZ   || Opc == Mips::BLEZ   ||
+           Opc == Mips::BEQ64  || Opc == Mips::BNE64  || Opc == Mips::BGTZ64 ||
+@@ -356,13 +356,13 @@ unsigned MipsSEInstrInfo::GetAnalyzableBrOpc(unsigned Opc) const {
+          Opc : 0;
+ }
+ 
+-void MipsSEInstrInfo::ExpandRetRA(MachineBasicBlock &MBB,
++void MipsSEInstrInfo::expandRetRA(MachineBasicBlock &MBB,
+                                 MachineBasicBlock::iterator I,
+                                 unsigned Opc) const {
+   BuildMI(MBB, I, I->getDebugLoc(), get(Opc)).addReg(Mips::RA);
+ }
+ 
+-void MipsSEInstrInfo::ExpandExtractElementF64(MachineBasicBlock &MBB,
++void MipsSEInstrInfo::expandExtractElementF64(MachineBasicBlock &MBB,
+                                           MachineBasicBlock::iterator I) const {
+   unsigned DstReg = I->getOperand(0).getReg();
+   unsigned SrcReg = I->getOperand(1).getReg();
+@@ -377,7 +377,7 @@ void MipsSEInstrInfo::ExpandExtractElementF64(MachineBasicBlock &MBB,
+   BuildMI(MBB, I, dl, Mfc1Tdd, DstReg).addReg(SubReg);
+ }
+ 
+-void MipsSEInstrInfo::ExpandBuildPairF64(MachineBasicBlock &MBB,
++void MipsSEInstrInfo::expandBuildPairF64(MachineBasicBlock &MBB,
+                                        MachineBasicBlock::iterator I) const {
+   unsigned DstReg = I->getOperand(0).getReg();
+   unsigned LoReg = I->getOperand(1).getReg(), HiReg = I->getOperand(2).getReg();
+@@ -393,7 +393,7 @@ void MipsSEInstrInfo::ExpandBuildPairF64(MachineBasicBlock &MBB,
+     .addReg(HiReg);
+ }
+ 
+-void MipsSEInstrInfo::ExpandEhReturn(MachineBasicBlock &MBB,
++void MipsSEInstrInfo::expandEhReturn(MachineBasicBlock &MBB,
+                                      MachineBasicBlock::iterator I) const {
+   // This pseudo instruction is generated as part of the lowering of
+   // ISD::EH_RETURN. We convert it to a stack increment by OffsetReg, and
+diff --git a/lib/Target/Mips/MipsSEInstrInfo.h b/lib/Target/Mips/MipsSEInstrInfo.h
+index 0bf7876..821d751 100644
+--- a/lib/Target/Mips/MipsSEInstrInfo.h
++++ b/lib/Target/Mips/MipsSEInstrInfo.h
+@@ -65,7 +65,7 @@ public:
+ 
+   virtual bool expandPostRAPseudo(MachineBasicBlock::iterator MI) const;
+ 
+-  virtual unsigned GetOppositeBranchOpc(unsigned Opc) const;
++  virtual unsigned getOppositeBranchOpc(unsigned Opc) const;
+ 
+   /// Adjust SP by Amount bytes.
+   void adjustStackPtr(unsigned SP, int64_t Amount, MachineBasicBlock &MBB,
+@@ -79,15 +79,15 @@ public:
+                          unsigned *NewImm) const;
+ 
+ private:
+-  virtual unsigned GetAnalyzableBrOpc(unsigned Opc) const;
++  virtual unsigned getAnalyzableBrOpc(unsigned Opc) const;
+ 
+-  void ExpandRetRA(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
++  void expandRetRA(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
+                    unsigned Opc) const;
+-  void ExpandExtractElementF64(MachineBasicBlock &MBB,
++  void expandExtractElementF64(MachineBasicBlock &MBB,
+                                MachineBasicBlock::iterator I) const;
+-  void ExpandBuildPairF64(MachineBasicBlock &MBB,
++  void expandBuildPairF64(MachineBasicBlock &MBB,
+                           MachineBasicBlock::iterator I) const;
+-  void ExpandEhReturn(MachineBasicBlock &MBB,
++  void expandEhReturn(MachineBasicBlock &MBB,
+                       MachineBasicBlock::iterator I) const;
+ };
+ 
+-- 
+1.8.3
+

@@ -1,0 +1,253 @@
+From fe3f494030bc74d98958996a71dc25fe5075aa5b Mon Sep 17 00:00:00 2001
+From: Logan Chien <loganchien@google.com>
+Date: Wed, 22 May 2013 19:59:25 +0800
+Subject: [PATCH 14/22] Read ldflags from info file.
+
+bc2native script will read *.info generated from le32-none-ndk-link.
+And generate the ldflags from it.
+
+Also fix ARMEH test fails:
+
+1. Add default flags for llc arm:
+
+-arm-enable-ehabi
+-arm-enable-ehabi-descriptors
+
+2. For ARM, generate assembly first and
+   call the assembler to produce relocatables.
+
+Cherry picked from release_32 branch.
+Patch by Lai Wei-Chih <Robert.Lai@mediatek.com>
+
+Changes from original patch:
+
+1. -arm-ignore-has-ras is no longer needed.
+---
+ tools/ndk-bc2native/ndk-bc2native.py | 101 +++++++++++++++++++++++++++--------
+ 1 file changed, 78 insertions(+), 23 deletions(-)
+
+diff --git a/tools/ndk-bc2native/ndk-bc2native.py b/tools/ndk-bc2native/ndk-bc2native.py
+index 7e7d778..6687f11 100755
+--- a/tools/ndk-bc2native/ndk-bc2native.py
++++ b/tools/ndk-bc2native/ndk-bc2native.py
+@@ -17,7 +17,7 @@ r'''
+ '''
+ 
+ import sys, os, argparse, subprocess, types
+-import tempfile, struct
++import tempfile, struct, shutil
+ 
+ VERBOSE = False
+ KEEP = False
+@@ -29,10 +29,12 @@ ABI = None
+ LD = None
+ BITCODE = None
+ OUTPUT = None
++INFO = None
+ 
+ TRANSLATE_CMD = None
+ LLC_CMD = None
+ LD_CMD = None
++AS_CMD = None
+ 
+ SHARED = True
+ SONAME = None
+@@ -130,6 +132,15 @@ def get_ld_name_for_arch(arch, ld_suffix):
+             return 'mipsel-linux-android-ld.'+ld_suffix
+     return ''
+ 
++def get_as_name_for_arch(arch):
++    if arch == 'arm':
++        return 'arm-linux-androideabi-as'
++    elif arch == 'x86':
++        return 'i686-linux-android-as'
++    elif arch == 'mips':
++        return 'mipsel-linux-android-as'
++    return ''
++
+ def libgcc_dir_for_abi(abi):
+     global NDK, HOST_TAG
+     arch = get_arch_for_abi(abi)
+@@ -145,7 +156,7 @@ def libgcc_dir_for_abi(abi):
+     return ''
+ 
+ def handle_args():
+-    global BITCODE, OUTPUT
++    global BITCODE, OUTPUT, INFO
+     global PLATFORM, LLVM_VERSION, ABI, NDK, LD
+     global VERBOSE, KEEP
+ 
+@@ -192,10 +203,14 @@ def handle_args():
+     # TODO: Support multiple input
+     BITCODE = args.file[0][0]
+     OUTPUT = args.file[0][1]
++    INFO = BITCODE + '.info'
+ 
+     if os.path.isfile(BITCODE) != True:
+         error('Input bitcode %s not found!' % (BITCODE))
+ 
++    if os.path.isfile(INFO) != True:
++        error('Info file %s not found!' % (INFO))
++
+     VERBOSE = args.verbose
+     KEEP = args.keep
+     PLATFORM = args.platform
+@@ -208,7 +223,7 @@ def handle_args():
+ 
+ def locate_tools():
+     global HOST_TAG, NDK, LLVM_VERSION, ABI, LD
+-    global TRANSLATE_CMD, LLC_CMD, LD_CMD
++    global TRANSLATE_CMD, LLC_CMD, LD_CMD, AS_CMD
+ 
+     if sys.platform.startswith('linux'):
+         HOST_TAG='linux-x86'
+@@ -237,6 +252,11 @@ def locate_tools():
+     if found_ld != True:
+         error('Cannot find %s' %(ld_name))
+ 
++    as_name = get_as_name_for_arch(arch)
++    (found_as, AS_CMD) = find_program(as_name, [pwd, gcc_bin])
++    if found_as != True:
++        error('Cannot find %s' %(as_name))
++
+ def parse_bitcode_type(data):
+     type = struct.unpack('<i',data)[0]
+     if type != 1:
+@@ -341,6 +361,7 @@ def parse_ldflags(data):
+ '''
+ def read_bitcode_wrapper(bitcode):
+     global SHARED, SONAME, DEPEND_LIBS, LDFLAGS
++    global OUTPUT
+     f = open(bitcode, 'rb')
+     fixed_field = struct.unpack('<iiiiiii',f.read(4*7))
+     magic_number = fixed_field[0]
+@@ -385,12 +406,34 @@ def do_translate(bitcode, output):
+ 
+     return run_cmd(args)
+ 
++def do_as(asm, relocatable):
++    global AS_CMD
++    global ABI
++
++    args = [AS_CMD]
++    args += ['-mfloat-abi=soft']
++    if ABI == 'armeabi':
++        args += ['-march=armv5te']
++    elif ABI == 'armeabi-v7a':
++        args += ['-march=armv7-a']
++        args += ['-mfpu=vfpv3-d16']
++
++    args += ['--noexecstack']
++    args += ['-o']
++    args += [relocatable]
++    args += [asm]
++
++    return run_cmd(args)
++
+ def get_llc_flags_for_abi(abi):
+     extra_args = []
+     if abi == 'x86':
+         extra_args += ['-disable-fp-elim']
+         # Not all Android x86 devices have these features
+         extra_args += ['-mattr="-ssse3,-sse41,-sse42,-sse4a,-popcnt"']
++    elif abi == 'armeabi' or abi == 'armeabi-v7a':
++        extra_args += ['-arm-enable-ehabi']
++        extra_args += ['-arm-enable-ehabi-descriptors']
+     return extra_args
+ 
+ def do_llc(bitcode, output):
+@@ -400,7 +443,12 @@ def do_llc(bitcode, output):
+     triple = get_default_triple_for_abi(ABI)
+     args = [LLC_CMD]
+     args += ['-mtriple='+triple]
+-    args += ['-filetype=obj']
++
++    if ABI == 'armeabi' or ABI == 'armeabi-v7a':
++        args += ['-filetype=asm']
++    else:
++        args += ['-filetype=obj']
++
+     args += ['-relocation-model=pic']
+     args += ['-code-model=small']
+     args += ['-use-init-array']
+@@ -411,51 +459,58 @@ def do_llc(bitcode, output):
+     args += [bitcode]
+     args += ['-o']
+     args += [output]
++    ret,text = run_cmd(args)
+ 
+-    return run_cmd(args)
++    if ABI == 'armeabi' or ABI == 'armeabi-v7a':
++        o_file = tempfile.NamedTemporaryFile(delete=False)
++        ret,text = do_as(output, o_file.name)
++        if ret != 0:
++            error('Exit status: %d, %s' %(ret, text))
++        o_file.close()
++        os.rename(o_file.name,output)
++
++    return ret,text
+ 
+ def do_ld(relocatable, output, shared=True):
+     global LD_CMD
+     global ABI, PLATFORM
+     global SHARED, SONAME, DEPEND_LIBS, LDFLAGS
++    global INFO
+ 
+     arch = get_arch_for_abi(ABI)
+-    triple = get_default_triple_for_abi(ABI)
+-    sysroot = sysroot_for_arch(arch)
+-    # TODO: Change to compiler-rt
+     libgcc_dir = libgcc_dir_for_abi(ABI)
++    sysroot = sysroot_for_arch(arch)
++
++    f = open(INFO,'r')
++    ldflags = f.readline()
++    f.close()
+ 
+     args = [LD_CMD]
+-    args += ['--sysroot='+sysroot]
++    args += ['-m']
++    args += [get_default_emulation_for_arch(arch)]
++    args += ['-Bsymbolic']
+     args += ['--eh-frame-hdr']
+-    if SHARED:
+-        args += ['-shared']
+     args += ['-dynamic-linker']
+     args += ['/system/bin/linker']
+     args += ['-X']
+-    args += ['-m']
+-    args += [get_default_emulation_for_arch(arch)]
+-    args += ['-Bsymbolic']
+-    args += LDFLAGS
+-    args += ['-o']
+-    args += [output]
++    args += ['-L'+libgcc_dir]
++
+     if SHARED:
+         args += [sysroot+'/usr/lib/crtbegin_so.o']
+     else:
+         args += [sysroot+'/usr/lib/crtbegin_dynamic.o']
+-    args += ['-L'+sysroot+'/usr/lib']
+-    args += ['-L'+libgcc_dir]
+-    if SHARED:
+-        args += ['-soname']
+-        args += [SONAME]
+     args += [relocatable]
++    args += ldflags.split()
+     args += ['@' + NDK + '/sources/android/libportable/libs/'+ABI+'/libportable.wrap']
+     args += [NDK+'/sources/android/libportable/libs/'+ABI+'/libportable.a']
+-    args += DEPEND_LIBS
++    args += ['-lgcc']
++    args += ['-ldl']
++
+     if SHARED:
+         args += [sysroot+'/usr/lib/crtend_so.o']
+     else:
+         args += [sysroot+'/usr/lib/crtend_android.o']
++
+     return run_cmd(args)
+ 
+ def do_compilation():
+-- 
+1.8.3
+
