@@ -1,0 +1,31 @@
+From e843e840b581778c55f567650e87ad6267408201 Mon Sep 17 00:00:00 2001
+From: ras46 <Robert.Lai@mediatek.com>
+Date: Tue, 30 Oct 2012 22:02:05 +0800
+Subject: [PATCH 07/29] Silence "treating c input as c++" warning.
+
+Change-Id: I222ba9810dfa6fd93beb5068a33f8757dae6b514
+---
+ lib/Driver/Driver.cpp | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/lib/Driver/Driver.cpp b/lib/Driver/Driver.cpp
+index 4713e76..3acbcc0 100644
+--- a/lib/Driver/Driver.cpp
++++ b/lib/Driver/Driver.cpp
+@@ -944,10 +944,12 @@ void Driver::BuildInputs(const ToolChain &TC, const DerivedArgList &Args,
+           // If the driver is invoked as C++ compiler (like clang++ or c++) it
+           // should autodetect some input files as C++ for g++ compatibility.
+           if (CCCIsCXX) {
++            const bool isAndroid = TC.getTriple().getEnvironment()
++              == llvm::Triple::Android;
+             types::ID OldTy = Ty;
+             Ty = types::lookupCXXTypeForCType(Ty);
+ 
+-            if (Ty != OldTy)
++            if (Ty != OldTy && !isAndroid)
+               Diag(clang::diag::warn_drv_treating_input_as_cxx)
+                 << getTypeName(OldTy) << getTypeName(Ty);
+           }
+-- 
+1.8.3
+

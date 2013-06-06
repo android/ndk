@@ -1,0 +1,30 @@
+From 193a8fdccdde3f194135d14b849d3e30faf2ed61 Mon Sep 17 00:00:00 2001
+From: Logan Chien <tzuhsiang.chien@gmail.com>
+Date: Wed, 29 May 2013 19:27:30 +0800
+Subject: [PATCH 28/29] Enable stackrealign for Android x86 by default.
+
+---
+ lib/Driver/Tools.cpp | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/lib/Driver/Tools.cpp b/lib/Driver/Tools.cpp
+index bd833c0..dbd467b 100644
+--- a/lib/Driver/Tools.cpp
++++ b/lib/Driver/Tools.cpp
+@@ -2942,8 +2942,12 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
+   }
+ 
+   // Translate -mstackrealign
++  bool DefaultStackRealign =
++    ((getToolChain().getTriple().getEnvironment() == llvm::Triple::Android) &&
++     (getToolChain().getTriple().getArch() == llvm::Triple::x86 ||
++      getToolChain().getTriple().getArch() == llvm::Triple::x86_64));
+   if (Args.hasFlag(options::OPT_mstackrealign, options::OPT_mno_stackrealign,
+-                   false)) {
++                   DefaultStackRealign)) {
+     CmdArgs.push_back("-backend-option");
+     CmdArgs.push_back("-force-align-stack");
+   }
+-- 
+1.8.3
+

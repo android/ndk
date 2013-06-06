@@ -1,0 +1,140 @@
+From 7b9fb1e9b4b08584d5ab498d2000fbcb190f5bce Mon Sep 17 00:00:00 2001
+From: Logan Chien <tzuhsiang.chien@gmail.com>
+Date: Wed, 29 May 2013 17:00:14 +0800
+Subject: [PATCH 15/29] Add a flag to disable C++ missing return semantics.
+
+---
+ include/clang/Basic/LangOptions.def        |  1 +
+ include/clang/Driver/Options.td            |  2 ++
+ lib/CodeGen/CodeGenFunction.cpp            |  3 ++-
+ lib/Driver/Tools.cpp                       | 13 +++++++++++++
+ lib/Frontend/CompilerInvocation.cpp        |  4 ++++
+ test/CodeGenCXX/android-missing-return.cpp |  9 +++++++++
+ test/Driver/android-options.cpp            | 21 +++++++++++++++++++++
+ 7 files changed, 52 insertions(+), 1 deletion(-)
+ create mode 100644 test/CodeGenCXX/android-missing-return.cpp
+ create mode 100644 test/Driver/android-options.cpp
+
+diff --git a/include/clang/Basic/LangOptions.def b/include/clang/Basic/LangOptions.def
+index b17dfbc..c770382 100644
+--- a/include/clang/Basic/LangOptions.def
++++ b/include/clang/Basic/LangOptions.def
+@@ -80,6 +80,7 @@ LANGOPT(Exceptions        , 1, 0, "exception handling")
+ LANGOPT(ObjCExceptions    , 1, 0, "Objective-C exceptions")
+ LANGOPT(CXXExceptions     , 1, 0, "C++ exceptions")
+ LANGOPT(SjLjExceptions    , 1, 0, "setjmp-longjump exception handling")
++LANGOPT(CXXMissingReturnSemantics, 1, 1, "C++ missing return semantics")
+ LANGOPT(TraditionalCPP    , 1, 0, "traditional CPP emulation")
+ LANGOPT(RTTI              , 1, 1, "run-time type information")
+ LANGOPT(MSBitfields       , 1, 0, "Microsoft-compatible structure layout")
+diff --git a/include/clang/Driver/Options.td b/include/clang/Driver/Options.td
+index 6369bc2..525242e 100644
+--- a/include/clang/Driver/Options.td
++++ b/include/clang/Driver/Options.td
+@@ -352,6 +352,8 @@ def fcreate_profile : Flag<["-"], "fcreate-profile">, Group<f_Group>;
+ def fcxx_exceptions: Flag<["-"], "fcxx-exceptions">, Group<f_Group>,
+   HelpText<"Enable C++ exceptions">, Flags<[CC1Option]>;
+ def fcxx_modules : Flag <["-"], "fcxx-modules">, Group<f_Group>, Flags<[NoForward]>;
++def fcxx_missing_return_semantics: Flag<["-"], "fcxx-missing-return-semantics">, Group<f_Group>, Flags<[CC1Option]>;
++def fno_cxx_missing_return_semantics: Flag<["-"], "fno-cxx-missing-return-semantics">, Group<f_Group>, Flags<[CC1Option]>;
+ def fdebug_pass_arguments : Flag<["-"], "fdebug-pass-arguments">, Group<f_Group>;
+ def fdebug_pass_structure : Flag<["-"], "fdebug-pass-structure">, Group<f_Group>;
+ def fdiagnostics_fixit_info : Flag<["-"], "fdiagnostics-fixit-info">, Group<f_clang_Group>;
+diff --git a/lib/CodeGen/CodeGenFunction.cpp b/lib/CodeGen/CodeGenFunction.cpp
+index 75c60ed..e7eba2b 100644
+--- a/lib/CodeGen/CodeGenFunction.cpp
++++ b/lib/CodeGen/CodeGenFunction.cpp
+@@ -708,7 +708,8 @@ void CodeGenFunction::GenerateCode(GlobalDecl GD, llvm::Function *Fn,
+   //   If the '}' that terminates a function is reached, and the value of the
+   //   function call is used by the caller, the behavior is undefined.
+   if (getLangOpts().CPlusPlus && !FD->hasImplicitReturnZero() &&
+-      !FD->getResultType()->isVoidType() && Builder.GetInsertBlock()) {
++      !FD->getResultType()->isVoidType() && Builder.GetInsertBlock() &&
++      getLangOpts().CXXMissingReturnSemantics) {
+     if (SanOpts->Return)
+       EmitCheck(Builder.getFalse(), "missing_return",
+                 EmitCheckSourceLocation(FD->getLocation()),
+diff --git a/lib/Driver/Tools.cpp b/lib/Driver/Tools.cpp
+index b5f7d0b..1992e5d 100644
+--- a/lib/Driver/Tools.cpp
++++ b/lib/Driver/Tools.cpp
+@@ -3421,6 +3421,19 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
+       D.Diag(diag::err_drv_clang_unsupported) << A->getAsString(Args);
+   }
+ 
++  if (Arg *A = Args.getLastArg(options::OPT_fcxx_missing_return_semantics,
++                               options::OPT_fno_cxx_missing_return_semantics)) {
++    if (A->getOption().matches(options::OPT_fcxx_missing_return_semantics))
++      CmdArgs.push_back("-fcxx-missing-return-semantics");
++    else
++      CmdArgs.push_back("-fno-cxx-missing-return-semantics");
++  } else if (getToolChain().getTriple().getEnvironment() ==
++             llvm::Triple::Android) {
++    // For Android, we prefer to disable C++ missing return semantics when
++    // the user didn't specify the option.
++    CmdArgs.push_back("-fno-cxx-missing-return-semantics");
++  }
++
+   Args.AddLastArg(CmdArgs, options::OPT_dM);
+   Args.AddLastArg(CmdArgs, options::OPT_dD);
+   
+diff --git a/lib/Frontend/CompilerInvocation.cpp b/lib/Frontend/CompilerInvocation.cpp
+index 42ea96f..ee94a60 100644
+--- a/lib/Frontend/CompilerInvocation.cpp
++++ b/lib/Frontend/CompilerInvocation.cpp
+@@ -1231,6 +1231,10 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
+   Opts.CXXExceptions = Args.hasArg(OPT_fcxx_exceptions);
+   Opts.SjLjExceptions = Args.hasArg(OPT_fsjlj_exceptions);
+   Opts.TraditionalCPP = Args.hasArg(OPT_traditional_cpp);
++  Opts.CXXMissingReturnSemantics =
++    Args.hasFlag(OPT_fcxx_missing_return_semantics,
++                 OPT_fno_cxx_missing_return_semantics,
++                 Opts.CXXMissingReturnSemantics);
+ 
+   Opts.RTTI = !Args.hasArg(OPT_fno_rtti);
+   Opts.Blocks = Args.hasArg(OPT_fblocks);
+diff --git a/test/CodeGenCXX/android-missing-return.cpp b/test/CodeGenCXX/android-missing-return.cpp
+new file mode 100644
+index 0000000..6a4e122
+--- /dev/null
++++ b/test/CodeGenCXX/android-missing-return.cpp
+@@ -0,0 +1,9 @@
++// RUN: %clang_cc1 -fno-cxx-missing-return-semantics \
++// RUN:     -emit-llvm -O2 -o - %s \
++// RUN:   | FileCheck %s
++
++// CHECK: @_Z9no_return
++int no_return() {
++  // CHECK-NOT: call void @llvm.trap
++  // CHECK: ret i32 undef
++}
+diff --git a/test/Driver/android-options.cpp b/test/Driver/android-options.cpp
+new file mode 100644
+index 0000000..fae1647
+--- /dev/null
++++ b/test/Driver/android-options.cpp
+@@ -0,0 +1,21 @@
++// This file checks Android-specific toolchain options.
++
++// RUN: %clang -no-canonical-prefixes %s -### -o %t.o 2>&1 \
++// RUN:     -target arm-linux-androideabi \
++// RUN:   | FileCheck %s --check-prefix=CHECK-DEFAULT-MISSING-RETURN
++// CHECK-DEFAULT-MISSING-RETURN: {{.*}}clang{{.*}}" "-cc1"
++// CHECK-DEFAULT-MISSING-RETURN: "-fno-cxx-missing-return-semantics"
++
++// RUN: %clang -no-canonical-prefixes %s -### -o %t.o 2>&1 \
++// RUN:     -fno-cxx-missing-return-semantics \
++// RUN:     -target arm-linux-androideabi \
++// RUN:   | FileCheck %s --check-prefix=CHECK-DISABLE-MISSING-RETURN
++// CHECK-DISABLE-MISSING-RETURN: {{.*}}clang{{.*}}" "-cc1"
++// CHECK-DISABLE-MISSING-RETURN: "-fno-cxx-missing-return-semantics"
++
++// RUN: %clang -no-canonical-prefixes %s -### -o %t.o 2>&1 \
++// RUN:     -fcxx-missing-return-semantics \
++// RUN:     -target arm-linux-androideabi \
++// RUN:   | FileCheck %s --check-prefix=CHECK-ENABLE-MISSING-RETURN
++// CHECK-ENABLE-MISSING-RETURN: {{.*}}clang{{.*}}" "-cc1"
++// CHECK-ENABLE-MISSING-RETURN: "-fcxx-missing-return-semantics"
+-- 
+1.8.3
+

@@ -1,0 +1,38 @@
+From c9a7896a4aae6f3b1befa4229d9cc7e35fe6c1a7 Mon Sep 17 00:00:00 2001
+From: Logan Chien <tzuhsiang.chien@gmail.com>
+Date: Wed, 29 May 2013 13:44:17 +0800
+Subject: [PATCH 13/29] Use memalign for Android.
+
+Android Bionic does not have posix_memalign(), thus
+we have to use memalign() instead.  Otherwise, the
+code which includes <mmintrin.h> or <mm_malloc.h> can't
+be linked.
+---
+ lib/Headers/mm_malloc.h | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/lib/Headers/mm_malloc.h b/lib/Headers/mm_malloc.h
+index 305afd3..01430fc 100644
+--- a/lib/Headers/mm_malloc.h
++++ b/lib/Headers/mm_malloc.h
+@@ -26,7 +26,7 @@
+ 
+ #include <stdlib.h>
+ 
+-#ifdef _WIN32
++#if defined(_WIN32) || defined(__ANDROID__)
+ #include <malloc.h>
+ #else
+ #ifndef __cplusplus
+@@ -57,6 +57,8 @@ _mm_malloc(size_t __size, size_t __align)
+   __mallocedMemory = __mingw_aligned_malloc(__size, __align);
+ #elif defined(_WIN32)
+   __mallocedMemory = _aligned_malloc(__size, __align);
++#elif defined(__ANDROID__)
++  __mallocedMemory = memalign(align, size);
+ #else
+   if (posix_memalign(&__mallocedMemory, __align, __size))
+     return 0;
+-- 
+1.8.3
+

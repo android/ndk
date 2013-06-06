@@ -1,0 +1,96 @@
+From 9f335e98c89c8a4f0e2c67ab9a471f7e3df3bba4 Mon Sep 17 00:00:00 2001
+From: Logan Chien <tzuhsiang.chien@gmail.com>
+Date: Wed, 29 May 2013 11:34:24 +0800
+Subject: [PATCH 10/29] Add mstack-protector-guard option for x86.
+
+Because the old x86 bionic did not put the
+stack protector cookie at %gs:20, the program
+with stack protector is likely to crash.
+
+As the result, we should give an option to the
+programmer to decide whether they opt for backward
+compatibility or performance.
+---
+ include/clang/Driver/Options.td      |  2 ++
+ lib/Driver/Tools.cpp                 | 21 +++++++++++++++++++++
+ test/Driver/mstack-protector-guard.c | 23 +++++++++++++++++++++++
+ 3 files changed, 46 insertions(+)
+ create mode 100644 test/Driver/mstack-protector-guard.c
+
+diff --git a/include/clang/Driver/Options.td b/include/clang/Driver/Options.td
+index 39369cd..6369bc2 100644
+--- a/include/clang/Driver/Options.td
++++ b/include/clang/Driver/Options.td
+@@ -893,6 +893,8 @@ def mno_relax_all : Flag<["-"], "mno-relax-all">, Group<m_Group>;
+ def mno_rtd: Flag<["-"], "mno-rtd">, Group<m_Group>;
+ def mno_soft_float : Flag<["-"], "mno-soft-float">, Group<m_Group>;
+ def mno_stackrealign : Flag<["-"], "mno-stackrealign">, Group<m_Group>;
++def mstack_protector_guard_EQ : Joined<["-"], "mstack-protector-guard=">,
++  Group<m_Group>;
+ def mno_sse2 : Flag<["-"], "mno-sse2">, Group<m_x86_Features_Group>;
+ def mno_sse3 : Flag<["-"], "mno-sse3">, Group<m_x86_Features_Group>;
+ def mno_sse4a : Flag<["-"], "mno-sse4a">, Group<m_x86_Features_Group>;
+diff --git a/lib/Driver/Tools.cpp b/lib/Driver/Tools.cpp
+index 811dac2..2cee1f4 100644
+--- a/lib/Driver/Tools.cpp
++++ b/lib/Driver/Tools.cpp
+@@ -1290,6 +1290,27 @@ void Clang::AddX86TargetArgs(const ArgList &Args,
+   if (NoImplicitFloat)
+     CmdArgs.push_back("-no-implicit-float");
+ 
++  // Setting -mstack-protector-guard=[global|tls] for different stack protector
++  // cookie implementation.
++  bool ForceGVStackCookie = false;
++  if (getToolChain().getTriple().getEnvironment() == llvm::Triple::Android) {
++    // For Android, we have to default to global variable implementation;
++    // otherwise, the Android x86 devices with old bionic will be unable
++    // to run the applications with stack protectors.
++    ForceGVStackCookie = true;
++  }
++  if (Arg *A = Args.getLastArg(options::OPT_mstack_protector_guard_EQ)) {
++    if (StringRef(A->getValue()) == "tls") {
++      ForceGVStackCookie = false;
++    } else if (StringRef(A->getValue()) == "global") {
++      ForceGVStackCookie = true;
++    }
++  }
++  if (ForceGVStackCookie) {
++    CmdArgs.push_back("-backend-option");
++    CmdArgs.push_back("-x86-force-gv-stack-cookie");
++  }
++
+   if (const char *CPUName = getX86TargetCPU(Args, getToolChain().getTriple())) {
+     CmdArgs.push_back("-target-cpu");
+     CmdArgs.push_back(CPUName);
+diff --git a/test/Driver/mstack-protector-guard.c b/test/Driver/mstack-protector-guard.c
+new file mode 100644
+index 0000000..219f702
+--- /dev/null
++++ b/test/Driver/mstack-protector-guard.c
+@@ -0,0 +1,23 @@
++// Test the -mstack-protector-guard=[global|tls] option
++
++// RUN: %clang -target i686-unknown-linux-gnu \
++// RUN:        -fstack-protector -mstack-protector-guard=tls -### %s 2>&1 \
++// RUN:   | FileCheck %s -check-prefix=CHECK-TLS
++
++// RUN: %clang -target i686-unknown-linux-gnu \
++// RUN:        -fstack-protector -mstack-protector-guard=global -### %s 2>&1 \
++// RUN:   | FileCheck %s -check-prefix=CHECK-GLOBAL
++
++// "i686-unknown-linux-gnu": the default value is "tls"
++// RUN: %clang -target i686-unkknown-linux-gnu \
++// RUN:        -fstack-protector -### %s 2>&1 \
++// RUN:   | FileCheck %s -check-prefix=CHECK-TLS
++
++// "i686-unknown-linux-android": the default value is "global"
++// RUN: %clang -target i686-unkknown-linux-android \
++// RUN:        -fstack-protector -### %s 2>&1 \
++// RUN:   | FileCheck %s -check-prefix=CHECK-GLOBAL
++
++// CHECK-TLS-NOT: "-x86-force-gv-stack-cookie"
++
++// CHECK-GLOBAL: "-x86-force-gv-stack-cookie"
+-- 
+1.8.3
+

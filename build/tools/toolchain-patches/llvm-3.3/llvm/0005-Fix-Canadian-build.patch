@@ -1,0 +1,143 @@
+From c147d098e0a8b4b9a38ab2d2d0b8d1e1ffe13526 Mon Sep 17 00:00:00 2001
+From: Logan Chien <loganchien@google.com>
+Date: Wed, 22 May 2013 17:11:20 +0800
+Subject: [PATCH 05/22] Fix Canadian build.
+
+1. Add new two new flags: CFLAGS_FOR_BUILD and LDFLAGS_FOR_BUILD
+   and use them in $BUILD_CC test.
+
+2. Unset $LDFLAGS in cross-compile-build-tools.
+
+3. $ARCH can be overrided by environment variable.
+
+Cherry-picked from release_32 branch.
+Patch by Andrew Hsieh <andrewhsieh@google.com>
+---
+ Makefile                                    |  1 +
+ autoconf/configure.ac                       |  4 +++-
+ autoconf/m4/build_exeext.m4                 |  4 +++-
+ configure                                   | 10 +++++++---
+ projects/sample/autoconf/m4/build_exeext.m4 |  4 +++-
+ projects/sample/configure                   |  6 ++++--
+ 6 files changed, 21 insertions(+), 8 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 7a1b190..27febfe 100644
+--- a/Makefile
++++ b/Makefile
+@@ -112,6 +112,7 @@ cross-compile-build-tools:
+ 	  cd BuildTools ; \
+ 	  unset CFLAGS ; \
+ 	  unset CXXFLAGS ; \
++	  unset LDFLAGS ; \
+ 	  unset SDKROOT ; \
+ 	  unset UNIVERSAL_SDK_PATH ; \
+ 	  $(PROJ_SRC_DIR)/configure --build=$(BUILD_TRIPLE) \
+diff --git a/autoconf/configure.ac b/autoconf/configure.ac
+index a5caac9..ed4806c 100644
+--- a/autoconf/configure.ac
++++ b/autoconf/configure.ac
+@@ -418,7 +418,9 @@ case "$llvm_cv_target_arch" in
+ esac
+ 
+ dnl Define a substitution, ARCH, for the target architecture
+-AC_SUBST(ARCH,$llvm_cv_target_arch)
++if test -z "$ARCH" ; then
++  AC_SUBST(ARCH,$llvm_cv_target_arch)
++fi
+ 
+ dnl Determine what our host architecture.
+ dnl This will allow MCJIT regress tests runs only for supported
+diff --git a/autoconf/m4/build_exeext.m4 b/autoconf/m4/build_exeext.m4
+index 1bdecc1..571106d 100644
+--- a/autoconf/m4/build_exeext.m4
++++ b/autoconf/m4/build_exeext.m4
+@@ -18,7 +18,9 @@ else
+      fi
+   fi
+   test -z "$BUILD_CC" && AC_MSG_ERROR([no acceptable cc found in \$PATH])
+-  ac_build_link='${BUILD_CC-cc} -o conftest $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&AS_MESSAGE_LOG_FD'
++  test -z "$CFLAGS_FOR_BUILD" && CFLAGS_FOR_BUILD="$CFLAGS $CPPFLAGS"
++  test -z "$LDFLAGS_FOR_BUILD" && LDFLAGS_FOR_BUILD="$LDFLAGS"
++  ac_build_link='${BUILD_CC-cc} -o conftest $CFLAGS_FOR_BUILD $LDFLAGS_FOR_BUILD conftest.$ac_ext $LIBS 1>&AS_MESSAGE_LOG_FD'
+   rm -f conftest*
+   echo 'int main () { return 0; }' > conftest.$ac_ext
+   ac_cv_build_exeext=
+diff --git a/configure b/configure
+index decbc40..f815938 100755
+--- a/configure
++++ b/configure
+@@ -4044,8 +4044,10 @@ case "$llvm_cv_target_arch" in
+     *)       LLVM_NATIVE_ARCH="$llvm_cv_target_arch" ;;
+ esac
+ 
+-ARCH=$llvm_cv_target_arch
++if test -z "$ARCH" ; then
++  ARCH=$llvm_cv_target_arch
+ 
++fi
+ 
+ case $host in
+   i?86-*)                 host_arch="x86" ;;
+@@ -4947,7 +4949,9 @@ fi
+   test -z "$BUILD_CC" && { { echo "$as_me:$LINENO: error: no acceptable cc found in \$PATH" >&5
+ echo "$as_me: error: no acceptable cc found in \$PATH" >&2;}
+    { (exit 1); exit 1; }; }
+-  ac_build_link='${BUILD_CC-cc} -o conftest $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&5'
++  test -z "$CFLAGS_FOR_BUILD" && CFLAGS_FOR_BUILD="$CFLAGS $CPPFLAGS"
++  test -z "$LDFLAGS_FOR_BUILD" && LDFLAGS_FOR_BUILD="$LDFLAGS"
++  ac_build_link='${BUILD_CC-cc} -o conftest $CFLAGS_FOR_BUILD $LDFLAGS_FOR_BUILD conftest.$ac_ext $LIBS 1>&5'
+   rm -f conftest*
+   echo 'int main () { return 0; }' > conftest.$ac_ext
+   ac_cv_build_exeext=
+@@ -10535,7 +10539,7 @@ else
+   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
+   lt_status=$lt_dlunknown
+   cat > conftest.$ac_ext <<EOF
+-#line 10538 "configure"
++#line 10542 "configure"
+ #include "confdefs.h"
+ 
+ #if HAVE_DLFCN_H
+diff --git a/projects/sample/autoconf/m4/build_exeext.m4 b/projects/sample/autoconf/m4/build_exeext.m4
+index 1bdecc1..571106d 100644
+--- a/projects/sample/autoconf/m4/build_exeext.m4
++++ b/projects/sample/autoconf/m4/build_exeext.m4
+@@ -18,7 +18,9 @@ else
+      fi
+   fi
+   test -z "$BUILD_CC" && AC_MSG_ERROR([no acceptable cc found in \$PATH])
+-  ac_build_link='${BUILD_CC-cc} -o conftest $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&AS_MESSAGE_LOG_FD'
++  test -z "$CFLAGS_FOR_BUILD" && CFLAGS_FOR_BUILD="$CFLAGS $CPPFLAGS"
++  test -z "$LDFLAGS_FOR_BUILD" && LDFLAGS_FOR_BUILD="$LDFLAGS"
++  ac_build_link='${BUILD_CC-cc} -o conftest $CFLAGS_FOR_BUILD $LDFLAGS_FOR_BUILD conftest.$ac_ext $LIBS 1>&AS_MESSAGE_LOG_FD'
+   rm -f conftest*
+   echo 'int main () { return 0; }' > conftest.$ac_ext
+   ac_cv_build_exeext=
+diff --git a/projects/sample/configure b/projects/sample/configure
+index a2c70c6..1aaf07e 100755
+--- a/projects/sample/configure
++++ b/projects/sample/configure
+@@ -4749,7 +4749,9 @@ fi
+   test -z "$BUILD_CC" && { { echo "$as_me:$LINENO: error: no acceptable cc found in \$PATH" >&5
+ echo "$as_me: error: no acceptable cc found in \$PATH" >&2;}
+    { (exit 1); exit 1; }; }
+-  ac_build_link='${BUILD_CC-cc} -o conftest $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&5'
++  test -z "$CFLAGS_FOR_BUILD" && CFLAGS_FOR_BUILD="$CFLAGS $CPPFLAGS"
++  test -z "$LDFLAGS_FOR_BUILD" && LDFLAGS_FOR_BUILD="$LDFLAGS"
++  ac_build_link='${BUILD_CC-cc} -o conftest $CFLAGS_FOR_BUILD $LDFLAGS_FOR_BUILD conftest.$ac_ext $LIBS 1>&5'
+   rm -f conftest*
+   echo 'int main () { return 0; }' > conftest.$ac_ext
+   ac_cv_build_exeext=
+@@ -10358,7 +10360,7 @@ else
+   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
+   lt_status=$lt_dlunknown
+   cat > conftest.$ac_ext <<EOF
+-#line 10361 "configure"
++#line 10363 "configure"
+ #include "confdefs.h"
+ 
+ #if HAVE_DLFCN_H
+-- 
+1.8.3
+

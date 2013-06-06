@@ -1,0 +1,1153 @@
+From e3dcd5436c679721a6d04ee582bbc3028aea40bc Mon Sep 17 00:00:00 2001
+From: Logan Chien <loganchien@google.com>
+Date: Wed, 22 May 2013 18:33:24 +0800
+Subject: [PATCH 08/22] Bitcode link tool for le32-none-ndk triple.
+
+Cherry-picked from release_32 branch with modifications.
+Patch by Lai Wei-Chih <Robert.Lai@mediatek.com>
+Patch by WenHan Gu <Wenhan.gu@mediatek.com>
+
+Changes compared with the original patch:
+
+1. llvm::Linker API changes:
+   - Arguments of llvm::Linker() are changed
+   - Rename LinkInModule() to linkInModule()
+   - releaseModule() has been removed.  Use getModule() instead.
+   - Several headers are moved to llvm/IR/*
+
+2. Define the ControlFlags in LinkerConfig.
+
+3. Link with "archive" component.
+---
+ tools/Makefile                                    |   7 +-
+ tools/le32-none-ndk-link/AndroidBitcodeLinker.cpp | 434 ++++++++++++++++++++++
+ tools/le32-none-ndk-link/AndroidBitcodeLinker.h   | 178 +++++++++
+ tools/le32-none-ndk-link/CMakeLists.txt           |  16 +
+ tools/le32-none-ndk-link/Makefile                 |  14 +
+ tools/le32-none-ndk-link/le32-none-ndk-link.cpp   | 426 +++++++++++++++++++++
+ 6 files changed, 1072 insertions(+), 3 deletions(-)
+ create mode 100644 tools/le32-none-ndk-link/AndroidBitcodeLinker.cpp
+ create mode 100644 tools/le32-none-ndk-link/AndroidBitcodeLinker.h
+ create mode 100644 tools/le32-none-ndk-link/CMakeLists.txt
+ create mode 100644 tools/le32-none-ndk-link/Makefile
+ create mode 100644 tools/le32-none-ndk-link/le32-none-ndk-link.cpp
+
+diff --git a/tools/Makefile b/tools/Makefile
+index eaf9ed3..a6cad9b 100644
+--- a/tools/Makefile
++++ b/tools/Makefile
+@@ -33,9 +33,10 @@ PARALLEL_DIRS := opt llvm-as llvm-dis \
+                  lli llvm-extract llvm-mc \
+                  bugpoint llvm-bcanalyzer \
+                  llvm-diff macho-dump llvm-objdump llvm-readobj \
+-	         llvm-rtdyld llvm-dwarfdump llvm-cov \
+-	         llvm-size llvm-stress llvm-mcmarkup \
+-	         llvm-symbolizer obj2yaml yaml2obj
++                 llvm-rtdyld llvm-dwarfdump llvm-cov \
++                 llvm-size llvm-stress llvm-mcmarkup \
++                 llvm-symbolizer obj2yaml yaml2obj \
++                 le32-none-ndk-link
+ 
+ # If Intel JIT Events support is configured, build an extra tool to test it.
+ ifeq ($(USE_INTEL_JITEVENTS), 1)
+diff --git a/tools/le32-none-ndk-link/AndroidBitcodeLinker.cpp b/tools/le32-none-ndk-link/AndroidBitcodeLinker.cpp
+new file mode 100644
+index 0000000..077a7b7
+--- /dev/null
++++ b/tools/le32-none-ndk-link/AndroidBitcodeLinker.cpp
+@@ -0,0 +1,434 @@
++/*
++ * Copyright 2013, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++
++#include "AndroidBitcodeLinker.h"
++
++#include "llvm/ADT/SetOperations.h"
++#include "llvm/ADT/Triple.h"
++#include "llvm/Analysis/Verifier.h"
++#include "llvm/Bitcode/Archive.h"
++#include "llvm/Bitcode/ReaderWriter.h"
++#include "llvm/IR/DataLayout.h"
++#include "llvm/IR/Module.h"
++#include "llvm/Linker.h"
++#include "llvm/PassManager.h"
++#include "llvm/Support/ErrorHandling.h"
++#include "llvm/Support/MemoryBuffer.h"
++#include "llvm/Support/Path.h"
++#include "llvm/Support/system_error.h"
++#include "llvm/Transforms/IPO.h"
++#include "llvm/Transforms/IPO/PassManagerBuilder.h"
++#include "llvm/Transforms/Scalar.h"
++#include "llvm/Wrap/BitcodeWrapper.h"
++
++#include <memory>
++#include <set>
++#include <vector>
++
++using namespace llvm;
++
++// Generate current module to std::string
++std::string* AndroidBitcodeLinker::GenerateBitcode() {
++  std::string *BCString = new std::string;
++  Module *M = linker->getModule();
++
++  PassManager PM;
++  raw_string_ostream Bitcode(*BCString);
++
++  PM.add(createVerifierPass());
++  PM.add(new DataLayout(M));
++
++  if (!Config.isDisableOpt())
++    PassManagerBuilder().populateLTOPassManager(PM,
++                                                false /*Internalize*/,
++                                                true /*RunInliner*/);
++  // Doing clean up passes
++  if (!Config.isDisableOpt())
++  {
++    PM.add(createInstructionCombiningPass());
++    PM.add(createCFGSimplificationPass());
++    PM.add(createAggressiveDCEPass());
++    PM.add(createGlobalDCEPass());
++  }
++
++  // Make sure everything is still good
++  PM.add(createVerifierPass());
++
++  // Strip debug info and symbols.
++  if (Config.isStripAll() || Config.isStripDebug())
++    PM.add(createStripSymbolsPass(Config.isStripDebug() && !Config.isStripAll()));
++
++  PM.add(createBitcodeWriterPass(Bitcode));
++  PM.run(*M);
++  Bitcode.flush();
++
++  // Re-compute defined and undefined symbols
++  UpdateSymbolList(M);
++
++  delete M;
++  delete linker;
++  linker = 0;
++
++  return BCString;
++}
++
++Module *
++AndroidBitcodeLinker::LoadAndroidBitcode(AndroidBitcodeItem &Item) {
++  std::string ParseErrorMessage;
++  const sys::PathWithStatus &FN = Item.getFile();
++  Module *Result = 0;
++
++  OwningPtr<MemoryBuffer> Buffer;
++  if (error_code ec = MemoryBuffer::getFileOrSTDIN(FN.c_str(), Buffer)) {
++    Error = "Error reading file '" + FN.str() + "'" + ": " + ec.message();
++    return Result;
++  }
++
++  MemoryBuffer *buffer = Buffer.get();
++  BitcodeWrapper *wrapper = new BitcodeWrapper(buffer->getBufferStart(), buffer->getBufferSize());
++  Item.setWrapper(wrapper);
++  assert(Item.getWrapper() != 0);
++  if (wrapper->getBCFileType() == BC_RAW) {
++    std::string ParseErrorMessage;
++    Result = ParseBitcodeFile(buffer, Config.getContext(), &ParseErrorMessage);
++    if (Result == 0) {
++      Error = "Bitcode file '" + FN.str() + "' could not be loaded."
++                + ParseErrorMessage;
++    }
++  }
++
++  return Result;
++}
++
++void
++AndroidBitcodeLinker::UpdateSymbolList(Module *M) {
++  std::set<std::string> UndefinedSymbols;
++  std::set<std::string> DefinedSymbols;
++  GetAllSymbols(M, UndefinedSymbols, DefinedSymbols);
++
++  // Update global undefined/defined symbols
++  set_union(GlobalDefinedSymbols, DefinedSymbols);
++  set_union(GlobalUndefinedSymbols, UndefinedSymbols);
++  set_subtract(GlobalUndefinedSymbols, GlobalDefinedSymbols);
++
++  verbose("Dump global defined symbols:");
++    for (std::set<std::string>::iterator I = DefinedSymbols.begin();
++       I != DefinedSymbols.end(); ++I)
++    verbose("D:" + *I);
++
++  verbose("Dump global undefined symbols:");
++  for (std::set<std::string>::iterator I = GlobalUndefinedSymbols.begin();
++       I != GlobalUndefinedSymbols.end(); ++I)
++    verbose("U:" + *I);
++}
++
++bool
++AndroidBitcodeLinker::LinkInAndroidBitcodes(ABCItemList& Items,
++                                            std::vector<std::string*> &BCStrings) {
++  // Create llvm::Linker
++  linker = new Linker(new Module(Config.getModuleName(), Config.getContext()));
++
++  for (ABCItemList::iterator I = Items.begin(), E = Items.end();
++         I != E; ++I) {
++    if (LinkInAndroidBitcode(*I))
++      return true;
++  }
++
++  if (linker != 0)
++    BCStrings.push_back(GenerateBitcode());
++
++  return false;
++}
++
++//
++// Link in bitcode relocatables and bitcode archive
++//
++bool
++AndroidBitcodeLinker::LinkInAndroidBitcode(AndroidBitcodeItem &Item) {
++  const sys::PathWithStatus &File = Item.getFile();
++
++  if (File.str() == "-") {
++    return error("Not supported!");
++  }
++
++  // Determine what variety of file it is.
++  std::string Magic;
++  if (!File.getMagicNumber(Magic, 8))
++    return error("Cannot find linker input '" + File.str() + "'");
++
++  switch (sys::IdentifyFileType(Magic.c_str(), 8)) {
++    case sys::Archive_FileType: {
++      if (Item.isWholeArchive()) {
++        verbose("Link whole archive" + File.str());
++        if (LinkInWholeArchive(Item))
++          return true;
++      }
++      else {
++        verbose("Link no-whole archive" + File.str());
++        if (LinkInArchive(Item))
++          return true;
++      }
++      break;
++    }
++
++    case sys::Bitcode_FileType: {
++
++      verbose("Linking bitcode file '" + File.str() + "'");
++
++      std::auto_ptr<Module> M(LoadAndroidBitcode(Item));
++
++      int BCFileType = Item.getWrapper()->getBCFileType();
++      int BitcodeType = -1;
++
++      if (BCFileType == BC_RAW)
++        BitcodeType = BCHeaderField::BC_Relocatable;
++      else if (BCFileType == BC_WRAPPER)
++        BitcodeType = Item.getWrapper()->getBitcodeType();
++      else
++        return error("Invalid bitcode file type" + File.str());
++
++      if (M.get() == 0 && BitcodeType == BCHeaderField::BC_Relocatable)
++        return error("Cannot load file '" + File.str() + "': " + Error);
++
++      Triple triple(M.get()->getTargetTriple());
++
++      if (triple.getArch() != Triple::le32 || triple.getOS() != Triple::NDK) {
++        Item.setNative(true);
++        return error("Cannot link '" + File.str() + "', triple:" +  M.get()->getTargetTriple());
++      }
++
++      switch (BitcodeType) {
++        default:
++          return error("Unknown android bitcode type");
++
++        case BCHeaderField::BC_Relocatable:
++          assert(linker != 0);
++          if (linker->linkInModule(M.get(), &Error))
++            return error("Cannot link file '" + File.str() + "': " + Error);
++          break;
++
++        case BCHeaderField::BC_SharedObject:
++          break;
++
++        case BCHeaderField::BC_Executable:
++          return error("Cannot link bitcode executable: " + File.str());
++      }
++      break;
++    }
++
++    default: {
++      return error("Ignoring file '" + File.str() +
++                   "' because does not contain bitcode.");
++    }
++  }
++  return false;
++}
++
++bool
++AndroidBitcodeLinker::LinkInWholeArchive(AndroidBitcodeItem &Item) {
++
++const sys::PathWithStatus &Filename = Item.getFile();
++
++  // Make sure this is an archive file we're dealing with
++  if (!Filename.isArchive())
++    return error("File '" + Filename.str() + "' is not an archive.");
++
++  // Open the archive file
++  verbose("Linking archive file '" + Filename.str() + "'");
++
++  std::string ErrMsg;
++  std::auto_ptr<Archive> AutoArch (
++    Archive::OpenAndLoad(Filename, Config.getContext(), &ErrMsg));
++  Archive* arch = AutoArch.get();
++
++  // possible empty archive?
++  if (!arch) {
++    return false;
++  }
++
++  if (!arch->isBitcodeArchive()) {
++    Item.setNative(true);
++    return error("File '" + Filename.str() + "' is not a bitcode archive.");
++  }
++
++  std::vector<Module*> Modules;
++
++  if (arch->getAllModules(Modules, &ErrMsg))
++    return error("Cannot read modules in '" + Filename.str() + "': " + ErrMsg);
++
++  if (Modules.empty()) {
++    return false;
++  }
++
++  // Loop over all the Modules
++  for (std::vector<Module*>::iterator I=Modules.begin(), E=Modules.end();
++       I != E; ++I) {
++    // Get the module we must link in.
++    std::string moduleErrorMsg;
++    Module* aModule = *I;
++    if (aModule != NULL) {
++      if (aModule->MaterializeAll(&moduleErrorMsg))
++        return error("Could not load a module: " + moduleErrorMsg);
++
++      verbose("  Linking in module: " + aModule->getModuleIdentifier());
++
++      assert(linker != 0);
++      // Link it in
++      if (linker->linkInModule(aModule, &moduleErrorMsg))
++        return error("Cannot link in module '" +
++                     aModule->getModuleIdentifier() + "': " + moduleErrorMsg);
++      delete aModule;
++    }
++  }
++
++  /* Success! */
++  return false;
++}
++
++void
++AndroidBitcodeLinker::GetAllSymbols(Module *M,
++  std::set<std::string> &UndefinedSymbols,
++  std::set<std::string> &DefinedSymbols) {
++
++  UndefinedSymbols.clear();
++  DefinedSymbols.clear();
++
++  Function *Main = M->getFunction("main");
++  if (Main == 0 || Main->isDeclaration())
++    UndefinedSymbols.insert("main");
++
++  for (Module::iterator I = M->begin(), E = M->end(); I != E; ++I)
++    if (I->hasName()) {
++      if (I->isDeclaration())
++        UndefinedSymbols.insert(I->getName());
++      else if (!I->hasLocalLinkage()) {
++        assert(!I->hasDLLImportLinkage()
++               && "Found dllimported non-external symbol!");
++        DefinedSymbols.insert(I->getName());
++      }
++    }
++
++  for (Module::global_iterator I = M->global_begin(), E = M->global_end();
++       I != E; ++I)
++    if (I->hasName()) {
++      if (I->isDeclaration())
++        UndefinedSymbols.insert(I->getName());
++      else if (!I->hasLocalLinkage()) {
++        assert(!I->hasDLLImportLinkage()
++               && "Found dllimported non-external symbol!");
++        DefinedSymbols.insert(I->getName());
++      }
++    }
++
++  for (Module::alias_iterator I = M->alias_begin(), E = M->alias_end();
++       I != E; ++I)
++    if (I->hasName())
++      DefinedSymbols.insert(I->getName());
++
++  for (std::set<std::string>::iterator I = UndefinedSymbols.begin();
++       I != UndefinedSymbols.end(); )
++    if (DefinedSymbols.count(*I))
++      UndefinedSymbols.erase(I++);
++    else
++      ++I;
++}
++
++bool
++AndroidBitcodeLinker::LinkInArchive(AndroidBitcodeItem &Item) {
++const sys::PathWithStatus &Filename = Item.getFile();
++
++  if (!Filename.isArchive())
++    return error("File '" + Filename.str() + "' is not an archive.");
++
++  verbose("Linking archive file '" + Filename.str() + "'");
++
++  std::set<std::string> UndefinedSymbols;
++  std::set<std::string> DefinedSymbols;
++  GetAllSymbols(linker->getModule(), UndefinedSymbols, DefinedSymbols);
++
++  // Update list
++  set_union(UndefinedSymbols, GlobalUndefinedSymbols);
++  set_union(DefinedSymbols, GlobalDefinedSymbols);
++  set_subtract(UndefinedSymbols, DefinedSymbols);
++
++  if (UndefinedSymbols.empty()) {
++    verbose("No symbols undefined, skipping library '" + Filename.str() + "'");
++    return false;  // No need to link anything in!
++  }
++
++  std::string ErrMsg;
++  std::auto_ptr<Archive> AutoArch (
++    Archive::OpenAndLoadSymbols(Filename, Config.getContext(), &ErrMsg));
++
++  Archive* arch = AutoArch.get();
++
++  // possible empty archive?
++  if (!arch) {
++    return false;
++  }
++
++  if (!arch->isBitcodeArchive()) {
++    Item.setNative(true);
++    return error("File '" + Filename.str() + "' is not a bitcode archive.");
++  }
++
++  std::set<std::string> NotDefinedByArchive;
++
++  std::set<std::string> CurrentlyUndefinedSymbols;
++
++  do {
++    CurrentlyUndefinedSymbols = UndefinedSymbols;
++
++    SmallVector<Module*, 16> Modules;
++    if (!arch->findModulesDefiningSymbols(UndefinedSymbols, Modules, &ErrMsg))
++      return error("Cannot find symbols in '" + Filename.str() +
++                   "': " + ErrMsg);
++
++    if (Modules.empty())
++      break;
++
++    NotDefinedByArchive.insert(UndefinedSymbols.begin(),
++        UndefinedSymbols.end());
++
++    for (SmallVectorImpl<Module*>::iterator I=Modules.begin(), E=Modules.end();
++         I != E; ++I) {
++
++      std::string moduleErrorMsg;
++      Module* aModule = *I;
++      if (aModule != NULL) {
++        if (aModule->MaterializeAll(&moduleErrorMsg))
++          return error("Could not load a module: " + moduleErrorMsg);
++
++        verbose("  Linking in module: " + aModule->getModuleIdentifier());
++
++        // Link it in
++        if (linker->linkInModule(aModule, &moduleErrorMsg))
++          return error("Cannot link in module '" +
++                       aModule->getModuleIdentifier() + "': " + moduleErrorMsg);
++      }
++    }
++
++    GetAllSymbols(linker->getModule(), UndefinedSymbols, DefinedSymbols);
++
++    set_subtract(UndefinedSymbols, NotDefinedByArchive);
++
++    if (UndefinedSymbols.empty())
++      break;
++  } while (CurrentlyUndefinedSymbols != UndefinedSymbols);
++
++  return false;
++}
+diff --git a/tools/le32-none-ndk-link/AndroidBitcodeLinker.h b/tools/le32-none-ndk-link/AndroidBitcodeLinker.h
+new file mode 100644
+index 0000000..3c7fb72
+--- /dev/null
++++ b/tools/le32-none-ndk-link/AndroidBitcodeLinker.h
+@@ -0,0 +1,178 @@
++/*
++ * Copyright 2013, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#ifndef ANDROID_BITCODE_LINKER_H
++#define ANDROID_BITCODE_LINKER_H
++
++#include <string>
++#include <set>
++#include <vector>
++#include "llvm/ADT/StringRef.h"
++#include "llvm/IR/LLVMContext.h"
++#include "llvm/IR/Module.h"
++#include "llvm/Linker.h"
++#include "llvm/Support/Path.h"
++#include "llvm/Support/raw_ostream.h"
++#include "llvm/Support/system_error.h"
++#include "llvm/Wrap/BitcodeWrapper.h"
++
++namespace llvm {
++
++class AndroidBitcodeItem {
++
++  public:
++    AndroidBitcodeItem(std::string FileName, bool isWhole = false) :
++      File(FileName), WholeArchive(isWhole), NativeBinary(false),
++      Wrapper(0) {
++    }
++
++    ~AndroidBitcodeItem() {
++      if (Wrapper != 0)
++        delete Wrapper;
++    }
++
++    void setWholeArchive(bool whole) { WholeArchive = whole; }
++
++    void setNative(bool native) { NativeBinary = native; }
++
++    void setWrapper(BitcodeWrapper *wrapper) {
++      if (Wrapper != 0)
++        delete Wrapper;
++
++      Wrapper = wrapper;
++    }
++
++    bool isWholeArchive() { return WholeArchive; }
++
++    bool isNative() { return NativeBinary; }
++
++    BitcodeWrapper* getWrapper() { return Wrapper; }
++
++   const sys::PathWithStatus& getFile() { return File; }
++
++  private:
++    sys::PathWithStatus File;
++    bool WholeArchive;
++    bool NativeBinary;
++    BitcodeWrapper *Wrapper;
++};
++
++class LinkerConfig {
++  public:
++    /// This enumeration is used to control various optional features of the
++    /// linker.
++    enum ControlFlags {
++      Verbose       = 1, ///< Print to stderr what steps the linker is taking
++      QuietWarnings = 2, ///< Don't print warnings to stderr.
++      QuietErrors   = 4  ///< Don't print errors to stderr.
++    };
++
++  public:
++    LinkerConfig(LLVMContext& context, StringRef progname,
++                 StringRef modulename, unsigned flags,
++                 bool disableopt, bool stripall, bool stripdebug) :
++                 C(context), ProgName(progname), ModuleName(modulename),
++                 Flags(flags), DisableOpt(disableopt), StripAll(stripall),
++                 StripDebug(stripdebug) {
++    }
++
++    StringRef& getProgName() { return ProgName; }
++
++    StringRef& getModuleName() { return ModuleName; }
++
++    LLVMContext& getContext() { return C; }
++
++    unsigned getFlags() { return Flags; }
++
++    bool isDisableOpt() { return DisableOpt; }
++
++    bool isStripAll() { return StripAll; }
++
++    bool isStripDebug() { return StripDebug; }
++
++  private:
++    LLVMContext &C;
++    StringRef ProgName;
++    StringRef ModuleName;
++    unsigned Flags;
++    bool DisableOpt;
++    bool StripAll;
++    bool StripDebug;
++};
++
++class AndroidBitcodeLinker {
++  public:
++    typedef std::vector<AndroidBitcodeItem> ABCItemList;
++
++    AndroidBitcodeLinker(LinkerConfig &config) :
++      Config(config), linker(0) {
++    }
++
++    ~AndroidBitcodeLinker() {
++      if (linker != 0)
++        delete linker;
++    }
++
++    // main procedure to link bitcodes
++    bool LinkInAndroidBitcodes(ABCItemList& Item, std::vector<std::string*> &BCStrings);
++
++  private:
++
++    bool LinkInAndroidBitcode(AndroidBitcodeItem& Item);
++
++    bool LinkInArchive(AndroidBitcodeItem &Item);
++
++    bool LinkInWholeArchive(AndroidBitcodeItem &Item);
++
++    Module* LoadAndroidBitcode(AndroidBitcodeItem &Item);
++
++    std::string* GenerateBitcode();
++
++    void UpdateSymbolList(Module* M);
++
++    void GetAllSymbols(Module *M, std::set<std::string> &UndefinedSymbols,
++                       std::set<std::string> &DefinedSymbols);
++
++    bool warning(StringRef message) {
++      Error = message;
++      if (!(Config.getFlags() & LinkerConfig::QuietWarnings))
++        errs() << Config.getProgName() << ": warning: " << message << "\n";
++      return false;
++    }
++
++    bool error(StringRef message) {
++      Error = message;
++      if (!(Config.getFlags() & LinkerConfig::QuietErrors))
++        errs() << Config.getProgName() << ": error: " << message << "\n";
++      return true;
++    }
++
++    void verbose(StringRef message) {
++      if (Config.getFlags() & LinkerConfig::Verbose)
++        errs() << "  " << message << "\n";
++    }
++
++  private:
++    std::set<std::string> GlobalUndefinedSymbols;
++    std::set<std::string> GlobalDefinedSymbols;
++    LinkerConfig& Config;
++    Linker* linker;
++    std::string Error;
++};
++
++} // end namespace llvm
++
++#endif
+diff --git a/tools/le32-none-ndk-link/CMakeLists.txt b/tools/le32-none-ndk-link/CMakeLists.txt
+new file mode 100644
+index 0000000..0c58a08
+--- /dev/null
++++ b/tools/le32-none-ndk-link/CMakeLists.txt
+@@ -0,0 +1,16 @@
++set(LLVM_LINK_COMPONENTS
++  asmparser
++  archive
++  bitreader
++  bitwriter
++  codegen
++  instrumentation
++  ipo
++  linker
++  selectiondag
++  )
++
++add_llvm_tool(le32-none-ndk-link
++  AndroidBitcodeLinker.cpp
++  le32-none-ndk-link.cpp
++  )
+diff --git a/tools/le32-none-ndk-link/Makefile b/tools/le32-none-ndk-link/Makefile
+new file mode 100644
+index 0000000..717d0f2
+--- /dev/null
++++ b/tools/le32-none-ndk-link/Makefile
+@@ -0,0 +1,14 @@
++LEVEL := ../..
++
++TOOLNAME = le32-none-ndk-link
++
++LINK_COMPONENTS := asmparser archive bitreader bitwriter codegen \
++                   instrumentation ipo linker selectiondag
++
++USEDLIBS := LLVMWrap.a
++
++# This tool has no plugins, optimize startup time.
++TOOL_NO_EXPORTS := 1
++
++include $(LEVEL)/Makefile.common
++
+diff --git a/tools/le32-none-ndk-link/le32-none-ndk-link.cpp b/tools/le32-none-ndk-link/le32-none-ndk-link.cpp
+new file mode 100644
+index 0000000..8a82ce8
+--- /dev/null
++++ b/tools/le32-none-ndk-link/le32-none-ndk-link.cpp
+@@ -0,0 +1,426 @@
++/*
++ * Copyright 2013, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#include <list>
++#include <cstring>
++
++#include "AndroidBitcodeLinker.h"
++
++#include "llvm/Bitcode/ReaderWriter.h"
++#include "llvm/IR/LLVMContext.h"
++#include "llvm/IR/Module.h"
++#include "llvm/Support/CommandLine.h"
++#include "llvm/Support/FileUtilities.h"
++#include "llvm/Support/ManagedStatic.h"
++#include "llvm/Support/PrettyStackTrace.h"
++#include "llvm/Support/Signals.h"
++#include "llvm/Support/ToolOutputFile.h"
++#include "llvm/Wrap/BitcodeWrapper.h"
++
++using namespace llvm;
++
++static cl::list<std::string>
++InputFilenames(cl::Positional, cl::OneOrMore,
++               cl::desc("<input bitcode files>"));
++
++static cl::opt<bool>
++Shared("shared", cl::ZeroOrMore, cl::desc("Generate shared bitcode library"));
++
++static cl::opt<std::string>
++OutputFilename("o", cl::desc("Override output filename"),
++                cl::value_desc("output bitcode file"));
++
++static cl::list<std::string>
++LibPaths("L", cl::Prefix,
++         cl::desc("Specify a library search path"),
++         cl::value_desc("directory"));
++
++static cl::list<std::string>
++Libraries("l", cl::Prefix,
++          cl::desc("Specify libraries to link to"),
++          cl::value_desc("library name"));
++
++static cl::opt<bool>
++Verbose("v", cl::desc("Print verbose information"));
++
++static cl::opt<bool>
++DisableOptimizations("disable-opt",
++                     cl::desc("Do not run any optimization passes"));
++
++static cl::opt<std::string>
++SOName("soname", cl::desc("Set the DT_SONAME field to the specified name"));
++
++static cl::list<bool> WholeArchive("whole-archive",
++  cl::desc("include every bitcode in the archive after --whole-archive"));
++
++static cl::list<bool> NoWholeArchive("no-whole-archive",
++  cl::desc("Turn off of the --whole-archive option for for subsequent archive files"));
++
++// Strip options
++static cl::opt<bool>
++Strip("strip-all", cl::desc("Strip all symbol info"));
++
++static cl::opt<bool>
++StripDebug("strip-debug", cl::desc("Strip debugger symbol info"));
++
++static cl::alias A0("s", cl::desc("Alias for --strip-all"),
++  cl::aliasopt(Strip));
++
++static cl::alias A1("S", cl::desc("Alias for --strip-debug"),
++  cl::aliasopt(StripDebug));
++
++static cl::opt<bool>
++NoUndefined("no-undefined", cl::desc("-z defs"));
++
++static cl::list<std::string>
++ZOptions("z", cl::desc("-z keyword"), cl::value_desc("keyword"));
++
++static cl::list<std::string> CO1("Wl", cl::Prefix,
++  cl::desc("Compatibility option: ignored"));
++
++static cl::opt<std::string> CO2("sysroot",
++  cl::desc("Compatibility option: ignored"));
++
++static cl::opt<std::string> CO3("exclude-libs",
++  cl::desc("Compatibility option: ignored"));
++
++static cl::opt<std::string> CO4("icf",
++  cl::desc("Compatibility option: ignored"));
++
++static cl::opt<std::string> CO5("dynamic-linker",
++  cl::desc("Compatibility option: ignored"));
++
++static cl::opt<bool> CO6("gc-sections",
++  cl::desc("Compatibility option: ignored"));
++
++static cl::list<std::string> CO7("B", cl::Prefix,
++ cl::desc("Compatibility option: ignored"));
++
++// TODO: Support --start-group and --end-group
++
++static cl::list<bool> CO8("start-group",
++  cl::desc("Compatibility option: ignored"));
++
++static cl::list<bool> CO9("end-group",
++  cl::desc("Compatibility option: ignored"));
++
++static std::string progname;
++
++// FileRemover objects to clean up output files on the event of an error.
++static FileRemover OutputRemover;
++
++static void PrintAndExit(const std::string &Message, int errcode = 1)
++{
++  errs() << progname << ": " << Message << "\n";
++  llvm_shutdown();
++  exit(errcode);
++}
++
++enum ZOptionEnum {
++    kCombReloc     = 1 << 0,  ///< [on] -z combreloc, [off] -z nocombreloc
++    kDefs          = 1 << 1,  ///< -z defs
++    kExecStack     = 1 << 2,  ///< [on] -z execstack, [off] -z noexecstack
++    kInitFirst     = 1 << 3,  ///< -z initfirst
++    kInterPose     = 1 << 4,  ///< -z interpose
++    kLoadFltr      = 1 << 5,  ///< -z loadfltr
++    kMulDefs       = 1 << 6,  ///< -z muldefs
++    kNoCopyReloc   = 1 << 7,  ///< -z nocopyreloc
++    kNoDefaultLib  = 1 << 8,  ///< -z nodefaultlib
++    kNoDelete      = 1 << 9,  ///< -z nodelete
++    kNoDLOpen      = 1 << 10, ///< -z nodlopen
++    kNoDump        = 1 << 11, ///< -z nodump
++    kRelro         = 1 << 12, ///< [on] -z relro, [off] -z norelro
++    kLazy          = 1 << 13, ///< [on] -z lazy, [off] -z now
++    kOrigin        = 1 << 14, ///< -z origin
++    kZOptionMask   = 0xFFFF
++};
++
++static uint32_t EncodeZOptions() {
++  uint32_t zflag = 0;
++  cl::list<std::string>::const_iterator I = ZOptions.begin(),
++                                        E = ZOptions.end();
++  while (I != E) {
++    if (*I == "combreloc")
++      zflag |= kCombReloc;
++
++    if (*I == "defs")
++      zflag |= kDefs;
++
++    if (*I == "execstack")
++      zflag |= kExecStack;
++
++    if (*I == "initfirst")
++      zflag |= kInitFirst;
++
++    if (*I == "interpose")
++      zflag |= kInterPose;
++
++    if (*I == "loadfltr")
++      zflag |= kLoadFltr;
++
++    if (*I == "muldefs")
++      zflag |= kMulDefs;
++
++    if (*I == "nocopyreloc")
++      zflag |= kNoCopyReloc;
++
++    if (*I == "nodefaultlib")
++      zflag |= kNoDefaultLib;
++
++    if (*I == "nodelete")
++      zflag |= kNoDelete;
++
++    if (*I == "nodlopen")
++      zflag |= kNoDLOpen;
++
++    if (*I == "nodump")
++      zflag |= kNoDump;
++
++    if (*I == "relro")
++      zflag |= kRelro;
++
++    if (*I == "lazy")
++      zflag |= kLazy;
++
++    if (*I == "origin")
++      zflag |= kOrigin;
++
++    ++I;
++  }
++
++  // -Wl,--no-undefined
++  if (NoUndefined)
++    zflag |= kDefs;
++  return zflag;
++}
++
++static void WriteInt32(uint8_t *mem, unsigned offset, uint32_t value) {
++  mem[offset  ] = value & 0x000000ff;
++  mem[offset+1] = (value & 0x0000ff00) >> 8;
++  mem[offset+2] = (value & 0x00ff0000) >> 16;
++  mem[offset+3] = (value & 0xff000000) >> 24;
++}
++
++static void WrapAndroidBitcode(std::vector<std::string*> &BCStrings, raw_ostream &Output) {
++  std::vector<BCHeaderField> header_fields;
++  std::vector<uint8_t *> field_data;
++  size_t variable_header_size = 0;
++
++  // shared object or executable
++  uint32_t BitcodeType = (Shared) ? BCHeaderField::BC_SharedObject : BCHeaderField::BC_Executable;
++  field_data.push_back(new uint8_t[sizeof(uint32_t)]);
++  WriteInt32(field_data.back(), 0, BitcodeType);
++  BCHeaderField BitcodeTypeField(BCHeaderField::kAndroidBitcodeType,
++                                 sizeof(uint32_t), field_data.back());
++  header_fields.push_back(BitcodeTypeField);
++  variable_header_size += BitcodeTypeField.GetTotalSize();
++
++  // Encode -z options
++  uint32_t LDFlags = EncodeZOptions();
++  field_data.push_back(new uint8_t[sizeof(uint32_t)]);
++  WriteInt32(field_data.back(), 0, LDFlags);
++  BCHeaderField LDFlagsField(BCHeaderField::kAndroidLDFlags,
++                             sizeof(uint32_t), field_data.back());
++  header_fields.push_back(LDFlagsField);
++  variable_header_size += LDFlagsField.GetTotalSize();
++
++  // SOName
++  if (Shared) {
++    std::string soname;
++
++    // default to output filename ; must end with .so
++    if (SOName.empty()) {
++       soname = sys::path::stem(OutputFilename);
++    }
++    else {
++       soname = sys::path::stem(SOName);
++    }
++    soname += ".so";
++    field_data.push_back(new uint8_t[soname.size()+1]);
++    strcpy((char *) field_data.back(), soname.c_str());
++    BCHeaderField SONameField(BCHeaderField::kAndroidSOName,
++                              soname.size()+1, field_data.back());
++    header_fields.push_back(SONameField);
++    variable_header_size += SONameField.GetTotalSize();
++  }
++
++  // Add dependent library
++  for (cl::list<std::string>::const_iterator lib_iter = Libraries.begin(),
++       lib_end = Libraries.end(); lib_iter != lib_end; ++lib_iter) {
++    const char *depend_lib = lib_iter->c_str();
++    BCHeaderField DependLibField(BCHeaderField::kAndroidDependLibrary,
++                                 lib_iter->size()+1, (uint8_t *) depend_lib);
++    header_fields.push_back(DependLibField);
++    variable_header_size += DependLibField.GetTotalSize();
++  }
++
++  // Compute bitcode size
++  uint32_t totalBCSize = 0;
++  for (unsigned i = 0; i < BCStrings.size(); ++i) {
++    uint32_t BCSize = BCStrings[i]->size();
++    totalBCSize += BCSize;
++  }
++
++  AndroidBitcodeWrapper wrapper;
++  size_t actualWrapperLen = writeAndroidBitcodeWrapper(&wrapper,
++                                                       totalBCSize,
++                                                       14,   /* FIXME: TargetAPI     */
++                                                       3200, /* llvm-3.2             */
++                                                       0);   /* OptimizationLevel    */
++  wrapper.BitcodeOffset += variable_header_size;
++
++  // Write fixed fields
++  Output.write(reinterpret_cast<char*>(&wrapper), actualWrapperLen);
++
++  // Write variable fields
++  for (unsigned i = 0 ; i < header_fields.size(); ++i) {
++    const uint32_t buffer_size = 1024;
++    uint8_t buffer[buffer_size];
++    header_fields[i].Write(buffer, buffer_size);
++    Output.write(reinterpret_cast<char*>(buffer), header_fields[i].GetTotalSize());
++  }
++
++  // Delete field data
++  for (unsigned i = 0 ; i < field_data.size(); ++i) {
++    delete [] field_data[i];
++  }
++
++  for (unsigned i = 0 ; i < BCStrings.size(); ++i) {
++    Output.write(BCStrings[i]->c_str(), BCStrings[i]->size());
++    delete BCStrings[i];
++  }
++}
++
++void GenerateBitcode(std::vector<std::string*> &BCStrings, const std::string& FileName) {
++
++  if (Verbose)
++    errs() << "Generating Bitcode To " << FileName << '\n';
++
++  // Create the output file.
++  std::string ErrorInfo;
++  tool_output_file Out(FileName.c_str(), ErrorInfo,
++                       raw_fd_ostream::F_Binary);
++  if (!ErrorInfo.empty()) {
++    PrintAndExit(ErrorInfo);
++    return;
++  }
++
++  WrapAndroidBitcode(BCStrings, Out.os());
++  Out.keep();
++}
++
++static void BuildLinkItems(
++  AndroidBitcodeLinker::ABCItemList& Items,
++  const cl::list<std::string>& Files) {
++  cl::list<bool>::const_iterator wholeIt = WholeArchive.begin();
++  cl::list<bool>::const_iterator noWholeIt = NoWholeArchive.begin();
++  int wholePos = -1, noWholePos = -1;
++  std::vector<std::pair<int,int> > wholeRange;
++
++  while (wholeIt != WholeArchive.end()) {
++    wholePos =  WholeArchive.getPosition(wholeIt - WholeArchive.begin());
++    if (noWholeIt != NoWholeArchive.end())
++      noWholePos = NoWholeArchive.getPosition(noWholeIt - NoWholeArchive.begin());
++    else
++      noWholePos = -1;
++
++    if (wholePos < noWholePos) {
++      wholeRange.push_back(std::make_pair(wholePos, noWholePos));
++      ++wholeIt;
++      ++noWholeIt;
++    }
++    else if (noWholePos <= 0) {
++      wholeRange.push_back(std::make_pair(wholePos, -1));
++      break;
++    }
++    else {
++      noWholeIt++;
++    }
++  }
++
++  cl::list<std::string>::const_iterator fileIt = Files.begin();
++  while ( fileIt != Files.end() ) {
++      bool isWhole = false;
++      int filePos = Files.getPosition(fileIt - Files.begin());
++      for(unsigned i = 0 ; i < wholeRange.size() ; ++i) {
++        if (filePos > wholeRange[i].first &&
++           (filePos < wholeRange[i].second || wholeRange[i].second == -1)) {
++          isWhole = true;
++          break;
++        }
++      }
++      if (Verbose)
++        errs() << *fileIt << ":" << isWhole << '\n';
++      Items.push_back(AndroidBitcodeItem(*fileIt++, isWhole));
++  }
++}
++
++int main(int argc, char** argv) {
++  sys::PrintStackTraceOnErrorSignal();
++  PrettyStackTraceProgram X(argc, argv);
++
++  llvm_shutdown_obj _ShutdownObj;
++  LLVMContext& Ctx = llvm::getGlobalContext();
++
++  progname = sys::path::stem(argv[0]);
++
++  cl::ParseCommandLineOptions(argc, argv, "Bitcode link tool\n");
++
++  // Arrange for the output file to be delete on any errors.
++  OutputRemover.setFile(OutputFilename);
++  sys::RemoveFileOnSignal(sys::Path(OutputFilename));
++
++  // Build a list of the items from our command line
++  AndroidBitcodeLinker::ABCItemList Items;
++  BuildLinkItems(Items, InputFilenames);
++
++  // Save each bitcode in strings
++  std::vector<std::string*> BCStrings;
++
++  LinkerConfig Config(Ctx, progname, OutputFilename,
++                      Verbose, DisableOptimizations,
++                      Strip, StripDebug);
++
++  AndroidBitcodeLinker linker(Config);
++
++  // TODO: Add library path to the linker
++  // linker.addPaths(LibPaths);
++
++  if (linker.LinkInAndroidBitcodes(Items, BCStrings))
++    return 1;
++
++  // Add bitcode libraries dependents
++  for (unsigned i = 0; i < Items.size(); ++i) {
++    BitcodeWrapper *wrapper = Items[i].getWrapper();
++    if (wrapper != 0 && wrapper->getBitcodeType() == BCHeaderField::BC_SharedObject) {
++      std::string soname = wrapper->getSOName();
++      if (soname.substr(0,3) == "lib") {
++        // Extract the library name
++        Libraries.push_back(soname.substr(3,soname.length()-3));
++      }
++    }
++  }
++
++  // Remove any consecutive duplication of the same library
++  Libraries.erase(std::unique(Libraries.begin(), Libraries.end()), Libraries.end());
++
++  // Write linked bitcode
++  GenerateBitcode(BCStrings, OutputFilename);
++
++  // Operation complete
++  OutputRemover.releaseFile();
++  return 0;
++}
+-- 
+1.8.3
+

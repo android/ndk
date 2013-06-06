@@ -1,0 +1,223 @@
+From 54f50c67ad5cbe034a9d1b01608eb27443f65d9c Mon Sep 17 00:00:00 2001
+From: Akira Hatanaka <ahatanaka@mips.com>
+Date: Mon, 13 May 2013 18:23:35 +0000
+Subject: [PATCH 18/22] [mips] Add option -mno-ldc1-sdc1.
+
+This option is used when the user wants to avoid emitting double precision FP
+loads and stores. Double precision FP loads and stores are expanded to single
+precision instructions after register allocation.
+
+git-svn-id: https://llvm.org/svn/llvm-project/llvm/trunk@181718 91177308-0d34-0410-b5e6-96231b3b80d8
+---
+ lib/Target/Mips/MipsInstrFPU.td     | 14 ++++++---
+ lib/Target/Mips/MipsSEInstrInfo.cpp | 62 +++++++++++++++++++++++++++++++++++++
+ lib/Target/Mips/MipsSEInstrInfo.h   |  3 ++
+ test/CodeGen/Mips/mno-ldc1-sdc1.ll  | 45 +++++++++++++++++++++++++++
+ 4 files changed, 120 insertions(+), 4 deletions(-)
+ create mode 100644 test/CodeGen/Mips/mno-ldc1-sdc1.ll
+
+diff --git a/lib/Target/Mips/MipsInstrFPU.td b/lib/Target/Mips/MipsInstrFPU.td
+index 6b23057..5fa79cb 100644
+--- a/lib/Target/Mips/MipsInstrFPU.td
++++ b/lib/Target/Mips/MipsInstrFPU.td
+@@ -154,6 +154,7 @@ class LW_FT<string opstr, RegisterClass RC, InstrItinClass Itin,
+   InstSE<(outs RC:$rt), (ins MemOpnd:$addr), !strconcat(opstr, "\t$rt, $addr"),
+          [(set RC:$rt, (OpNode addrDefault:$addr))], Itin, FrmFI> {
+   let DecoderMethod = "DecodeFMem";
++  let mayLoad = 1;
+ }
+ 
+ class SW_FT<string opstr, RegisterClass RC, InstrItinClass Itin,
+@@ -161,6 +162,7 @@ class SW_FT<string opstr, RegisterClass RC, InstrItinClass Itin,
+   InstSE<(outs), (ins RC:$rt, MemOpnd:$addr), !strconcat(opstr, "\t$rt, $addr"),
+          [(OpNode RC:$rt, addrDefault:$addr)], Itin, FrmFI> {
+   let DecoderMethod = "DecodeFMem";
++  let mayStore = 1;
+ }
+ 
+ class MADDS_FT<string opstr, RegisterClass RC, InstrItinClass Itin,
+@@ -314,8 +316,12 @@ let Predicates = [NotN64, HasMips64, HasStdEnc],
+ }
+ 
+ let Predicates = [NotN64, NotMips64, HasStdEnc] in {
+-  def LDC1 : LW_FT<"ldc1", AFGR64, IILoad, mem, load>, LW_FM<0x35>;
+-  def SDC1 : SW_FT<"sdc1", AFGR64, IIStore, mem, store>, LW_FM<0x3d>;
++  let isPseudo = 1, isCodeGenOnly = 1 in {
++    def PseudoLDC1 : LW_FT<"", AFGR64, IILoad, mem, load>;
++    def PseudoSDC1 : SW_FT<"", AFGR64, IIStore, mem, store>;
++  }
++  def LDC1 : LW_FT<"ldc1", AFGR64, IILoad, mem>, LW_FM<0x35>;
++  def SDC1 : SW_FT<"sdc1", AFGR64, IIStore, mem>, LW_FM<0x3d>;
+ }
+ 
+ // Indexed loads and stores.
+@@ -523,7 +529,7 @@ let AddedComplexity = 40 in {
+   }
+ 
+   let Predicates = [NotN64, NotMips64, HasStdEnc] in {
+-    def : LoadRegImmPat<LDC1, f64, load>;
+-    def : StoreRegImmPat<SDC1, f64>;
++    def : LoadRegImmPat<PseudoLDC1, f64, load>;
++    def : StoreRegImmPat<PseudoSDC1, f64>;
+   }
+ }
+diff --git a/lib/Target/Mips/MipsSEInstrInfo.cpp b/lib/Target/Mips/MipsSEInstrInfo.cpp
+index 4183a72..12ed1bc 100644
+--- a/lib/Target/Mips/MipsSEInstrInfo.cpp
++++ b/lib/Target/Mips/MipsSEInstrInfo.cpp
+@@ -18,11 +18,17 @@
+ #include "llvm/ADT/STLExtras.h"
+ #include "llvm/CodeGen/MachineInstrBuilder.h"
+ #include "llvm/CodeGen/MachineRegisterInfo.h"
++#include "llvm/Support/CommandLine.h"
+ #include "llvm/Support/ErrorHandling.h"
+ #include "llvm/Support/TargetRegistry.h"
+ 
+ using namespace llvm;
+ 
++static cl::opt<bool> NoDPLoadStore("mno-ldc1-sdc1", cl::init(false),
++                                   cl::desc("Expand double precision loads and "
++                                            "stores to their single precision "
++                                            "counterparts."));
++
+ MipsSEInstrInfo::MipsSEInstrInfo(MipsTargetMachine &tm)
+   : MipsInstrInfo(tm,
+                   tm.getRelocationModel() == Reloc::PIC_ ? Mips::B : Mips::J),
+@@ -253,6 +259,12 @@ bool MipsSEInstrInfo::expandPostRAPseudo(MachineBasicBlock::iterator MI) const {
+   case Mips::ExtractElementF64:
+     expandExtractElementF64(MBB, MI);
+     break;
++  case Mips::PseudoLDC1:
++    expandDPLoadStore(MBB, MI, Mips::LDC1, Mips::LWC1);
++    break;
++  case Mips::PseudoSDC1:
++    expandDPLoadStore(MBB, MI, Mips::SDC1, Mips::SWC1);
++    break;
+   case Mips::MIPSeh_return32:
+   case Mips::MIPSeh_return64:
+     expandEhReturn(MBB, MI);
+@@ -393,6 +405,56 @@ void MipsSEInstrInfo::expandBuildPairF64(MachineBasicBlock &MBB,
+     .addReg(HiReg);
+ }
+ 
++/// Add 4 to the displacement of operand MO.
++static void fixDisp(MachineOperand &MO) {
++  switch (MO.getType()) {
++  default:
++    llvm_unreachable("Unhandled operand type.");
++  case MachineOperand::MO_Immediate:
++    MO.setImm(MO.getImm() + 4);
++    break;
++  case MachineOperand::MO_GlobalAddress:
++  case MachineOperand::MO_ConstantPoolIndex:
++  case MachineOperand::MO_BlockAddress:
++  case MachineOperand::MO_TargetIndex:
++  case MachineOperand::MO_ExternalSymbol:
++    MO.setOffset(MO.getOffset() + 4);
++    break;
++  }
++}
++
++void MipsSEInstrInfo::expandDPLoadStore(MachineBasicBlock &MBB,
++                                        MachineBasicBlock::iterator I,
++                                        unsigned OpcD, unsigned OpcS) const {
++  // If NoDPLoadStore is false, just change the opcode.
++  if (!NoDPLoadStore) {
++    genInstrWithNewOpc(OpcD, I);
++    return;
++  }
++
++  // Expand a double precision FP load or store to two single precision
++  // instructions.
++
++  const TargetRegisterInfo &TRI = getRegisterInfo();
++  const MachineOperand &ValReg = I->getOperand(0);
++  unsigned LoReg = TRI.getSubReg(ValReg.getReg(), Mips::sub_fpeven);
++  unsigned HiReg = TRI.getSubReg(ValReg.getReg(), Mips::sub_fpodd);
++
++  if (!TM.getSubtarget<MipsSubtarget>().isLittle())
++    std::swap(LoReg, HiReg);
++
++  // Create an instruction which loads from or stores to the lower memory
++  // address.
++  MachineInstrBuilder MIB = genInstrWithNewOpc(OpcS, I);
++  MIB->getOperand(0).setReg(LoReg);
++
++  // Create an instruction which loads from or stores to the higher memory
++  // address.
++  MIB = genInstrWithNewOpc(OpcS, I);
++  MIB->getOperand(0).setReg(HiReg);
++  fixDisp(MIB->getOperand(2));
++}
++
+ void MipsSEInstrInfo::expandEhReturn(MachineBasicBlock &MBB,
+                                      MachineBasicBlock::iterator I) const {
+   // This pseudo instruction is generated as part of the lowering of
+diff --git a/lib/Target/Mips/MipsSEInstrInfo.h b/lib/Target/Mips/MipsSEInstrInfo.h
+index 821d751..416fff8 100644
+--- a/lib/Target/Mips/MipsSEInstrInfo.h
++++ b/lib/Target/Mips/MipsSEInstrInfo.h
+@@ -87,6 +87,9 @@ private:
+                                MachineBasicBlock::iterator I) const;
+   void expandBuildPairF64(MachineBasicBlock &MBB,
+                           MachineBasicBlock::iterator I) const;
++  void expandDPLoadStore(MachineBasicBlock &MBB,
++                         MachineBasicBlock::iterator I, unsigned OpcD,
++                         unsigned OpcS) const;
+   void expandEhReturn(MachineBasicBlock &MBB,
+                       MachineBasicBlock::iterator I) const;
+ };
+diff --git a/test/CodeGen/Mips/mno-ldc1-sdc1.ll b/test/CodeGen/Mips/mno-ldc1-sdc1.ll
+new file mode 100644
+index 0000000..eae9a22
+--- /dev/null
++++ b/test/CodeGen/Mips/mno-ldc1-sdc1.ll
+@@ -0,0 +1,45 @@
++; RUN: llc -march=mipsel -relocation-model=pic -mno-ldc1-sdc1 < %s | \
++; RUN: FileCheck %s -check-prefix=LE-PIC
++; RUN: llc -march=mipsel -relocation-model=static -mno-ldc1-sdc1 < %s | \
++; RUN: FileCheck %s -check-prefix=LE-STATIC
++; RUN: llc -march=mips -relocation-model=pic -mno-ldc1-sdc1 < %s | \
++; RUN: FileCheck %s -check-prefix=BE-PIC
++; RUN: llc -march=mipsel < %s | FileCheck %s -check-prefix=CHECK-LDC1-SDC1
++
++@g0 = common global double 0.000000e+00, align 8
++
++; LE-PIC: test_ldc1:
++; LE-PIC: lwc1 $f0, 0(${{[0-9]+}})
++; LE-PIC: lwc1 $f1, 4(${{[0-9]+}})
++; LE-STATIC: test_ldc1:
++; LE-STATIC: lwc1 $f0, %lo(g0)(${{[0-9]+}})
++; LE-STATIC: lwc1 $f1, %lo(g0+4)(${{[0-9]+}})
++; BE-PIC: test_ldc1:
++; BE-PIC: lwc1 $f1, 0(${{[0-9]+}})
++; BE-PIC: lwc1 $f0, 4(${{[0-9]+}})
++; CHECK-LDC1-SDC1: test_ldc1:
++; CHECK-LDC1-SDC1: ldc1 $f{{[0-9]+}}
++
++define double @test_ldc1() {
++entry:
++  %0 = load double* @g0, align 8
++  ret double %0
++}
++
++; LE-PIC: test_sdc1:
++; LE-PIC: swc1 $f12, 0(${{[0-9]+}})
++; LE-PIC: swc1 $f13, 4(${{[0-9]+}})
++; LE-STATIC: test_sdc1:
++; LE-STATIC: swc1 $f12, %lo(g0)(${{[0-9]+}})
++; LE-STATIC: swc1 $f13, %lo(g0+4)(${{[0-9]+}})
++; BE-PIC: test_sdc1:
++; BE-PIC: swc1 $f13, 0(${{[0-9]+}})
++; BE-PIC: swc1 $f12, 4(${{[0-9]+}})
++; CHECK-LDC1-SDC1: test_sdc1:
++; CHECK-LDC1-SDC1: sdc1 $f{{[0-9]+}}
++
++define void @test_sdc1(double %a) {
++entry:
++  store double %a, double* @g0, align 8
++  ret void
++}
+-- 
+1.8.3
+

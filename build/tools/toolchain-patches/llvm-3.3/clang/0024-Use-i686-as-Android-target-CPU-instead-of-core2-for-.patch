@@ -1,0 +1,37 @@
+From 3435108e0b7703519f51dd9d75c436c071210b89 Mon Sep 17 00:00:00 2001
+From: Logan Chien <tzuhsiang.chien@gmail.com>
+Date: Wed, 29 May 2013 19:22:33 +0800
+Subject: [PATCH 24/29] Use i686 as Android target CPU instead of core2 for gcc
+ compatibility.
+
+---
+ lib/Driver/Tools.cpp            | 2 +-
+ test/Driver/clang-translation.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/lib/Driver/Tools.cpp b/lib/Driver/Tools.cpp
+index 1d7444d..c3506e1 100644
+--- a/lib/Driver/Tools.cpp
++++ b/lib/Driver/Tools.cpp
+@@ -1277,7 +1277,7 @@ static const char *getX86TargetCPU(const ArgList &Args,
+   // All x86 devices running Android have core2 as their common
+   // denominator. This makes a better choice than pentium4.
+   if (Triple.getEnvironment() == llvm::Triple::Android)
+-    return "core2";
++    return "i686";
+ 
+   // Fallback to p4.
+   return "pentium4";
+diff --git a/test/Driver/clang-translation.c b/test/Driver/clang-translation.c
+index 735a5dd..8f523e8 100644
+--- a/test/Driver/clang-translation.c
++++ b/test/Driver/clang-translation.c
+@@ -206,4 +206,4 @@
+ // RUN:        --sysroot=%S/Inputs/basic_android_tree/sysroot \
+ // RUN:   | FileCheck --check-prefix=ANDROID-X86 %s
+ // ANDROID-X86: clang
+-// ANDROID-X86: "-target-cpu" "core2"
++// ANDROID-X86: "-target-cpu" "i686"
+-- 
+1.8.3
+

@@ -1,0 +1,71 @@
+From c49d7d84f7c291f17505d2f2ef1923ee7ecb9e12 Mon Sep 17 00:00:00 2001
+From: Simon Atanasyan <simon@atanasyan.com>
+Date: Sat, 11 May 2013 06:33:44 +0000
+Subject: [PATCH 17/29] [Mips] Add -mldc1-sdc1 / -mno-ldc1-sdc1 command line
+ options.
+
+git-svn-id: https://llvm.org/svn/llvm-project/cfe/trunk@181660 91177308-0d34-0410-b5e6-96231b3b80d8
+---
+ include/clang/Driver/Options.td |  2 ++
+ lib/Driver/Tools.cpp            |  8 ++++++++
+ test/Driver/mips-features.c     | 12 ++++++++++++
+ 3 files changed, 22 insertions(+)
+
+diff --git a/include/clang/Driver/Options.td b/include/clang/Driver/Options.td
+index 1475045..a81e183 100644
+--- a/include/clang/Driver/Options.td
++++ b/include/clang/Driver/Options.td
+@@ -973,6 +973,8 @@ def mmicromips : Flag<["-"], "mmicromips">, Group<m_Group>;
+ def mno_micromips : Flag<["-"], "mno-micromips">, Group<m_Group>;
+ def mxgot : Flag<["-"], "mxgot">, Group<m_Group>;
+ def mno_xgot : Flag<["-"], "mno-xgot">, Group<m_Group>;
++def mldc1_sdc1 : Flag<["-"], "mldc1-sdc1">, Group<m_Group>;
++def mno_ldc1_sdc1 : Flag<["-"], "mno-ldc1-sdc1">, Group<m_Group>;
+ def mdsp : Flag<["-"], "mdsp">, Group<m_Group>;
+ def mno_dsp : Flag<["-"], "mno-dsp">, Group<m_Group>;
+ def mdspr2 : Flag<["-"], "mdspr2">, Group<m_Group>;
+diff --git a/lib/Driver/Tools.cpp b/lib/Driver/Tools.cpp
+index f56a840..e9bdfa8 100644
+--- a/lib/Driver/Tools.cpp
++++ b/lib/Driver/Tools.cpp
+@@ -1042,6 +1042,14 @@ void Clang::AddMIPSTargetArgs(const ArgList &Args,
+     }
+   }
+ 
++  if (Arg *A = Args.getLastArg(options::OPT_mldc1_sdc1,
++                               options::OPT_mno_ldc1_sdc1)) {
++    if (A->getOption().matches(options::OPT_mno_ldc1_sdc1)) {
++      CmdArgs.push_back("-mllvm");
++      CmdArgs.push_back("-mno-ldc1-sdc1");
++    }
++  }
++
+   if (Arg *A = Args.getLastArg(options::OPT_G)) {
+     StringRef v = A->getValue();
+     CmdArgs.push_back("-mllvm");
+diff --git a/test/Driver/mips-features.c b/test/Driver/mips-features.c
+index 31bf193..3c1cea5 100644
+--- a/test/Driver/mips-features.c
++++ b/test/Driver/mips-features.c
+@@ -60,6 +60,18 @@
+ // RUN:   | FileCheck --check-prefix=CHECK-NOXGOT %s
+ // CHECK-NOXGOT-NOT: "-mllvm" "-mxgot"
+ //
++// -mldc1-sdc1
++// RUN: %clang -target mips-linux-gnu -### -c %s \
++// RUN:     -mno-ldc1-sdc1 -mldc1-sdc1 2>&1 \
++// RUN:   | FileCheck --check-prefix=CHECK-LDC1SDC1 %s
++// CHECK-LDC1SDC1-NOT: "-mllvm" "-mno-ldc1-sdc1"
++//
++// -mno-ldc1-sdc1
++// RUN: %clang -target mips-linux-gnu -### -c %s \
++// RUN:     -mldc1-sdc1 -mno-ldc1-sdc1 2>&1 \
++// RUN:   | FileCheck --check-prefix=CHECK-NOLDC1SDC1 %s
++// CHECK-NOLDC1SDC1: "-mllvm" "-mno-ldc1-sdc1"
++//
+ // -G
+ // RUN: %clang -target mips-linux-gnu -### -c %s \
+ // RUN:     -G 16 2>&1 \
+-- 
+1.8.3
+

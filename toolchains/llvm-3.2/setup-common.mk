@@ -73,7 +73,7 @@ $(eval __debug_sources := $(call get-src-files-with-tag,debug)) \
 $(eval __release_sources := $(call get-src-files-without-tag,debug)) \
 $(call set-src-files-target-cflags, $(__debug_sources), $(TARGET_debug_CFLAGS)) \
 $(call set-src-files-target-cflags, $(__release_sources),$(TARGET_release_CFLAGS)) \
-$(call set-src-files-text,$(LOCAL_SRC_FILES),plus$(space)$(space)) \
+$(call set-src-files-text,$(LOCAL_SRC_FILES),bc$(space)$(space)) \
 
 ifeq ($(strip $(filter-out $(NDK_KNOWN_ABIS),$(TARGET_ARCH_ABI))),)
 

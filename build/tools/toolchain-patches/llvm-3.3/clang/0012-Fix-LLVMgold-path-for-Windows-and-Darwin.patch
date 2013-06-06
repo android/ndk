@@ -1,0 +1,30 @@
+From f4debff7d2cd7b93eb15ab812cba0a04d668653a Mon Sep 17 00:00:00 2001
+From: Logan Chien <tzuhsiang.chien@gmail.com>
+Date: Wed, 29 May 2013 13:28:32 +0800
+Subject: [PATCH 12/29] Fix LLVMgold path for Windows and Darwin.
+
+---
+ lib/Driver/Tools.cpp | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/lib/Driver/Tools.cpp b/lib/Driver/Tools.cpp
+index 418d1de..cd4759e 100644
+--- a/lib/Driver/Tools.cpp
++++ b/lib/Driver/Tools.cpp
+@@ -6106,7 +6106,13 @@ void gnutools::Link::ConstructJob(Compilation &C, const JobAction &JA,
+   // forward.
+   if (D.IsUsingLTO(Args) || Args.hasArg(options::OPT_use_gold_plugin)) {
+     CmdArgs.push_back("-plugin");
++#if defined(_WIN32)
++    std::string Plugin = ToolChain.getDriver().Dir + "/LLVMgold.dll";
++#elif defined(__APPLE__)
++    std::string Plugin = ToolChain.getDriver().Dir + "/../lib/LLVMgold.dylib";
++#else
+     std::string Plugin = ToolChain.getDriver().Dir + "/../lib/LLVMgold.so";
++#endif
+     CmdArgs.push_back(Args.MakeArgString(Plugin));
+ 
+     // Try to pass driver level flags relevant to LTO code generation down to
+-- 
+1.8.3
+

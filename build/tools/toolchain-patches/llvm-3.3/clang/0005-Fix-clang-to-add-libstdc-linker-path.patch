@@ -1,0 +1,34 @@
+From 22d09d535d2359a0ac780d617374e8e46588844d Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Thu, 27 Sep 2012 18:12:00 +0800
+Subject: [PATCH 05/29] Fix clang to add libstdc++ linker path
+
+Conflicts:
+
+	lib/Driver/ToolChains.cpp
+
+Change-Id: Id60556895727fa391e0bbbac314ef5f265a7d23a
+---
+ lib/Driver/ToolChains.cpp | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/lib/Driver/ToolChains.cpp b/lib/Driver/ToolChains.cpp
+index ad741c4..08e661a 100644
+--- a/lib/Driver/ToolChains.cpp
++++ b/lib/Driver/ToolChains.cpp
+@@ -2290,6 +2290,12 @@ Linux::Linux(const Driver &D, const llvm::Triple &Triple, const ArgList &Args)
+       addPathIfExists((GCCInstallation.getInstallPath() +
+                        GCCInstallation.getMultiarchSuffix()),
+                       Paths);
++    if (IsAndroid) {
++      // Add libstdc++ path
++      const std::string LibstdcppPath = getDriver().Dir + "/../" + GCCTriple.str() +
++                "/lib" + GCCInstallation.getMultiarchSuffix().str();
++      addPathIfExists(LibstdcppPath, Paths);
++    }
+ 
+     // If the GCC installation we found is inside of the sysroot, we want to
+     // prefer libraries installed in the parent prefix of the GCC installation.
+-- 
+1.8.3
+
