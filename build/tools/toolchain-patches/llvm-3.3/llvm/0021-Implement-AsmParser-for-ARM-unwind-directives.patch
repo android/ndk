@@ -1,0 +1,2903 @@
+From 7b550dceafa98a67f6566df771f3fefd478adf7d Mon Sep 17 00:00:00 2001
+From: Logan Chien <tzuhsiang.chien@gmail.com>
+Date: Fri, 10 May 2013 16:17:24 +0000
+Subject: [PATCH 21/22] Implement AsmParser for ARM unwind directives.
+
+This commit implements the AsmParser for fnstart, fnend,
+cantunwind, personality, handlerdata, pad, setfp, save, and
+vsave directives.
+
+This commit fixes some minor issue in the ARMELFStreamer:
+
+* The switch back to corresponding section after the .fnend
+  directive.
+
+* Emit the unwind opcode while processing .fnend directive
+  if there is no .handlerdata directive.
+
+* Emit the unwind opcode to .ARM.extab while processing
+  .handlerdata even if .personality directive does not exist.
+
+git-svn-id: https://llvm.org/svn/llvm-project/llvm/trunk@181603 91177308-0d34-0410-b5e6-96231b3b80d8
+---
+ lib/Target/ARM/AsmParser/ARMAsmParser.cpp          | 255 +++++++++++++++++-
+ lib/Target/ARM/MCTargetDesc/ARMELFStreamer.cpp     |  56 ++--
+ test/MC/ARM/eh-compact-pr0.s                       | 104 +++++++
+ test/MC/ARM/eh-compact-pr1.s                       |  74 +++++
+ test/MC/ARM/eh-directive-cantunwind-diagnostics.s  | 106 ++++++++
+ test/MC/ARM/eh-directive-cantunwind.s              |  51 ++++
+ test/MC/ARM/eh-directive-fnend-diagnostics.s       |  17 ++
+ test/MC/ARM/eh-directive-fnstart-diagnostics.s     |  31 +++
+ test/MC/ARM/eh-directive-handlerdata.s             | 108 ++++++++
+ test/MC/ARM/eh-directive-pad-diagnostics.s         |  39 +++
+ test/MC/ARM/eh-directive-pad.s                     | 226 ++++++++++++++++
+ test/MC/ARM/eh-directive-personality-diagnostics.s |  39 +++
+ test/MC/ARM/eh-directive-personality.s             |  90 +++++++
+ test/MC/ARM/eh-directive-save-diagnoatics.s        |  41 +++
+ test/MC/ARM/eh-directive-save.s                    | 298 +++++++++++++++++++++
+ test/MC/ARM/eh-directive-section-comdat.s          | 126 +++++++++
+ test/MC/ARM/eh-directive-section-multiple-func.s   | 129 +++++++++
+ test/MC/ARM/eh-directive-section.s                 | 164 ++++++++++++
+ test/MC/ARM/eh-directive-setfp-diagnostics.s       |  87 ++++++
+ test/MC/ARM/eh-directive-setfp.s                   | 239 +++++++++++++++++
+ .../ARM/eh-directive-text-section-multiple-func.s  |  81 ++++++
+ test/MC/ARM/eh-directive-text-section.s            |  82 ++++++
+ test/MC/ARM/eh-directive-vsave-diagnostics.s       |  41 +++
+ test/MC/ARM/eh-directive-vsave.s                   | 130 +++++++++
+ 24 files changed, 2587 insertions(+), 27 deletions(-)
+ create mode 100644 test/MC/ARM/eh-compact-pr0.s
+ create mode 100644 test/MC/ARM/eh-compact-pr1.s
+ create mode 100644 test/MC/ARM/eh-directive-cantunwind-diagnostics.s
+ create mode 100644 test/MC/ARM/eh-directive-cantunwind.s
+ create mode 100644 test/MC/ARM/eh-directive-fnend-diagnostics.s
+ create mode 100644 test/MC/ARM/eh-directive-fnstart-diagnostics.s
+ create mode 100644 test/MC/ARM/eh-directive-handlerdata.s
+ create mode 100644 test/MC/ARM/eh-directive-pad-diagnostics.s
+ create mode 100644 test/MC/ARM/eh-directive-pad.s
+ create mode 100644 test/MC/ARM/eh-directive-personality-diagnostics.s
+ create mode 100644 test/MC/ARM/eh-directive-personality.s
+ create mode 100644 test/MC/ARM/eh-directive-save-diagnoatics.s
+ create mode 100644 test/MC/ARM/eh-directive-save.s
+ create mode 100644 test/MC/ARM/eh-directive-section-comdat.s
+ create mode 100644 test/MC/ARM/eh-directive-section-multiple-func.s
+ create mode 100644 test/MC/ARM/eh-directive-section.s
+ create mode 100644 test/MC/ARM/eh-directive-setfp-diagnostics.s
+ create mode 100644 test/MC/ARM/eh-directive-setfp.s
+ create mode 100644 test/MC/ARM/eh-directive-text-section-multiple-func.s
+ create mode 100644 test/MC/ARM/eh-directive-text-section.s
+ create mode 100644 test/MC/ARM/eh-directive-vsave-diagnostics.s
+ create mode 100644 test/MC/ARM/eh-directive-vsave.s
+
+diff --git a/lib/Target/ARM/AsmParser/ARMAsmParser.cpp b/lib/Target/ARM/AsmParser/ARMAsmParser.cpp
+index 1dd2953..4d3bf34 100644
+--- a/lib/Target/ARM/AsmParser/ARMAsmParser.cpp
++++ b/lib/Target/ARM/AsmParser/ARMAsmParser.cpp
+@@ -49,6 +49,20 @@ class ARMAsmParser : public MCTargetAsmParser {
+   MCAsmParser &Parser;
+   const MCRegisterInfo *MRI;
+ 
++  // Unwind directives state
++  SMLoc FnStartLoc;
++  SMLoc CantUnwindLoc;
++  SMLoc PersonalityLoc;
++  SMLoc HandlerDataLoc;
++  int FPReg;
++  void resetUnwindDirectiveParserState() {
++    FnStartLoc = SMLoc();
++    CantUnwindLoc = SMLoc();
++    PersonalityLoc = SMLoc();
++    HandlerDataLoc = SMLoc();
++    FPReg = -1;
++  }
++
+   // Map of register aliases registers via the .req directive.
+   StringMap<unsigned> RegisterReqs;
+ 
+@@ -113,6 +127,14 @@ class ARMAsmParser : public MCTargetAsmParser {
+   bool parseDirectiveUnreq(SMLoc L);
+   bool parseDirectiveArch(SMLoc L);
+   bool parseDirectiveEabiAttr(SMLoc L);
++  bool parseDirectiveFnStart(SMLoc L);
++  bool parseDirectiveFnEnd(SMLoc L);
++  bool parseDirectiveCantUnwind(SMLoc L);
++  bool parseDirectivePersonality(SMLoc L);
++  bool parseDirectiveHandlerData(SMLoc L);
++  bool parseDirectiveSetFP(SMLoc L);
++  bool parseDirectivePad(SMLoc L);
++  bool parseDirectiveRegSave(SMLoc L, bool IsVector);
+ 
+   StringRef splitMnemonic(StringRef Mnemonic, unsigned &PredicationCode,
+                           bool &CarrySetting, unsigned &ProcessorIMod,
+@@ -242,7 +264,7 @@ public:
+   };
+ 
+   ARMAsmParser(MCSubtargetInfo &_STI, MCAsmParser &_Parser)
+-    : MCTargetAsmParser(), STI(_STI), Parser(_Parser) {
++    : MCTargetAsmParser(), STI(_STI), Parser(_Parser), FPReg(-1) {
+     MCAsmParserExtension::Initialize(_Parser);
+ 
+     // Cache the MCRegisterInfo.
+@@ -7658,6 +7680,24 @@ bool ARMAsmParser::ParseDirective(AsmToken DirectiveID) {
+     return parseDirectiveArch(DirectiveID.getLoc());
+   else if (IDVal == ".eabi_attribute")
+     return parseDirectiveEabiAttr(DirectiveID.getLoc());
++  else if (IDVal == ".fnstart")
++    return parseDirectiveFnStart(DirectiveID.getLoc());
++  else if (IDVal == ".fnend")
++    return parseDirectiveFnEnd(DirectiveID.getLoc());
++  else if (IDVal == ".cantunwind")
++    return parseDirectiveCantUnwind(DirectiveID.getLoc());
++  else if (IDVal == ".personality")
++    return parseDirectivePersonality(DirectiveID.getLoc());
++  else if (IDVal == ".handlerdata")
++    return parseDirectiveHandlerData(DirectiveID.getLoc());
++  else if (IDVal == ".setfp")
++    return parseDirectiveSetFP(DirectiveID.getLoc());
++  else if (IDVal == ".pad")
++    return parseDirectivePad(DirectiveID.getLoc());
++  else if (IDVal == ".save")
++    return parseDirectiveRegSave(DirectiveID.getLoc(), false);
++  else if (IDVal == ".vsave")
++    return parseDirectiveRegSave(DirectiveID.getLoc(), true);
+   return true;
+ }
+ 
+@@ -7858,6 +7898,219 @@ bool ARMAsmParser::parseDirectiveEabiAttr(SMLoc L) {
+   return true;
+ }
+ 
++/// parseDirectiveFnStart
++///  ::= .fnstart
++bool ARMAsmParser::parseDirectiveFnStart(SMLoc L) {
++  if (FnStartLoc.isValid()) {
++    Error(L, ".fnstart starts before the end of previous one");
++    Error(FnStartLoc, "previous .fnstart starts here");
++    return true;
++  }
++
++  FnStartLoc = L;
++  getParser().getStreamer().EmitFnStart();
++  return false;
++}
++
++/// parseDirectiveFnEnd
++///  ::= .fnend
++bool ARMAsmParser::parseDirectiveFnEnd(SMLoc L) {
++  // Check the ordering of unwind directives
++  if (!FnStartLoc.isValid())
++    return Error(L, ".fnstart must precede .fnend directive");
++
++  // Reset the unwind directives parser state
++  resetUnwindDirectiveParserState();
++
++  getParser().getStreamer().EmitFnEnd();
++  return false;
++}
++
++/// parseDirectiveCantUnwind
++///  ::= .cantunwind
++bool ARMAsmParser::parseDirectiveCantUnwind(SMLoc L) {
++  // Check the ordering of unwind directives
++  CantUnwindLoc = L;
++  if (!FnStartLoc.isValid())
++    return Error(L, ".fnstart must precede .cantunwind directive");
++  if (HandlerDataLoc.isValid()) {
++    Error(L, ".cantunwind can't be used with .handlerdata directive");
++    Error(HandlerDataLoc, ".handlerdata was specified here");
++    return true;
++  }
++  if (PersonalityLoc.isValid()) {
++    Error(L, ".cantunwind can't be used with .personality directive");
++    Error(PersonalityLoc, ".personality was specified here");
++    return true;
++  }
++
++  getParser().getStreamer().EmitCantUnwind();
++  return false;
++}
++
++/// parseDirectivePersonality
++///  ::= .personality name
++bool ARMAsmParser::parseDirectivePersonality(SMLoc L) {
++  // Check the ordering of unwind directives
++  PersonalityLoc = L;
++  if (!FnStartLoc.isValid())
++    return Error(L, ".fnstart must precede .personality directive");
++  if (CantUnwindLoc.isValid()) {
++    Error(L, ".personality can't be used with .cantunwind directive");
++    Error(CantUnwindLoc, ".cantunwind was specified here");
++    return true;
++  }
++  if (HandlerDataLoc.isValid()) {
++    Error(L, ".personality must precede .handlerdata directive");
++    Error(HandlerDataLoc, ".handlerdata was specified here");
++    return true;
++  }
++
++  // Parse the name of the personality routine
++  if (Parser.getTok().isNot(AsmToken::Identifier)) {
++    Parser.eatToEndOfStatement();
++    return Error(L, "unexpected input in .personality directive.");
++  }
++  StringRef Name(Parser.getTok().getIdentifier());
++  Parser.Lex();
++
++  MCSymbol *PR = getParser().getContext().GetOrCreateSymbol(Name);
++  getParser().getStreamer().EmitPersonality(PR);
++  return false;
++}
++
++/// parseDirectiveHandlerData
++///  ::= .handlerdata
++bool ARMAsmParser::parseDirectiveHandlerData(SMLoc L) {
++  // Check the ordering of unwind directives
++  HandlerDataLoc = L;
++  if (!FnStartLoc.isValid())
++    return Error(L, ".fnstart must precede .personality directive");
++  if (CantUnwindLoc.isValid()) {
++    Error(L, ".handlerdata can't be used with .cantunwind directive");
++    Error(CantUnwindLoc, ".cantunwind was specified here");
++    return true;
++  }
++
++  getParser().getStreamer().EmitHandlerData();
++  return false;
++}
++
++/// parseDirectiveSetFP
++///  ::= .setfp fpreg, spreg [, offset]
++bool ARMAsmParser::parseDirectiveSetFP(SMLoc L) {
++  // Check the ordering of unwind directives
++  if (!FnStartLoc.isValid())
++    return Error(L, ".fnstart must precede .setfp directive");
++  if (HandlerDataLoc.isValid())
++    return Error(L, ".setfp must precede .handlerdata directive");
++
++  // Parse fpreg
++  SMLoc NewFPRegLoc = Parser.getTok().getLoc();
++  int NewFPReg = tryParseRegister();
++  if (NewFPReg == -1)
++    return Error(NewFPRegLoc, "frame pointer register expected");
++
++  // Consume comma
++  if (!Parser.getTok().is(AsmToken::Comma))
++    return Error(Parser.getTok().getLoc(), "comma expected");
++  Parser.Lex(); // skip comma
++
++  // Parse spreg
++  SMLoc NewSPRegLoc = Parser.getTok().getLoc();
++  int NewSPReg = tryParseRegister();
++  if (NewSPReg == -1)
++    return Error(NewSPRegLoc, "stack pointer register expected");
++
++  if (NewSPReg != ARM::SP && NewSPReg != FPReg)
++    return Error(NewSPRegLoc,
++                 "register should be either $sp or the latest fp register");
++
++  // Update the frame pointer register
++  FPReg = NewFPReg;
++
++  // Parse offset
++  int64_t Offset = 0;
++  if (Parser.getTok().is(AsmToken::Comma)) {
++    Parser.Lex(); // skip comma
++
++    if (Parser.getTok().isNot(AsmToken::Hash) &&
++        Parser.getTok().isNot(AsmToken::Dollar)) {
++      return Error(Parser.getTok().getLoc(), "'#' expected");
++    }
++    Parser.Lex(); // skip hash token.
++
++    const MCExpr *OffsetExpr;
++    SMLoc ExLoc = Parser.getTok().getLoc();
++    SMLoc EndLoc;
++    if (getParser().parseExpression(OffsetExpr, EndLoc))
++      return Error(ExLoc, "malformed setfp offset");
++    const MCConstantExpr *CE = dyn_cast<MCConstantExpr>(OffsetExpr);
++    if (!CE)
++      return Error(ExLoc, "setfp offset must be an immediate");
++
++    Offset = CE->getValue();
++  }
++
++  getParser().getStreamer().EmitSetFP(static_cast<unsigned>(NewFPReg),
++                                      static_cast<unsigned>(NewSPReg),
++                                      Offset);
++  return false;
++}
++
++/// parseDirective
++///  ::= .pad offset
++bool ARMAsmParser::parseDirectivePad(SMLoc L) {
++  // Check the ordering of unwind directives
++  if (!FnStartLoc.isValid())
++    return Error(L, ".fnstart must precede .pad directive");
++  if (HandlerDataLoc.isValid())
++    return Error(L, ".pad must precede .handlerdata directive");
++
++  // Parse the offset
++  if (Parser.getTok().isNot(AsmToken::Hash) &&
++      Parser.getTok().isNot(AsmToken::Dollar)) {
++    return Error(Parser.getTok().getLoc(), "'#' expected");
++  }
++  Parser.Lex(); // skip hash token.
++
++  const MCExpr *OffsetExpr;
++  SMLoc ExLoc = Parser.getTok().getLoc();
++  SMLoc EndLoc;
++  if (getParser().parseExpression(OffsetExpr, EndLoc))
++    return Error(ExLoc, "malformed pad offset");
++  const MCConstantExpr *CE = dyn_cast<MCConstantExpr>(OffsetExpr);
++  if (!CE)
++    return Error(ExLoc, "pad offset must be an immediate");
++
++  getParser().getStreamer().EmitPad(CE->getValue());
++  return false;
++}
++
++/// parseDirectiveRegSave
++///  ::= .save  { registers }
++///  ::= .vsave { registers }
++bool ARMAsmParser::parseDirectiveRegSave(SMLoc L, bool IsVector) {
++  // Check the ordering of unwind directives
++  if (!FnStartLoc.isValid())
++    return Error(L, ".fnstart must precede .save or .vsave directives");
++  if (HandlerDataLoc.isValid())
++    return Error(L, ".save or .vsave must precede .handlerdata directive");
++
++  // Parse the register list
++  SmallVector<MCParsedAsmOperand*, 1> Operands;
++  if (parseRegisterList(Operands))
++    return true;
++  ARMOperand *Op = (ARMOperand*)Operands[0];
++  if (!IsVector && !Op->isRegList())
++    return Error(L, ".save expects GPR registers");
++  if (IsVector && !Op->isDPRRegList())
++    return Error(L, ".vsave expects DPR registers");
++
++  getParser().getStreamer().EmitRegSave(Op->getRegList(), IsVector);
++  return false;
++}
++
+ /// Force static initialization.
+ extern "C" void LLVMInitializeARMAsmParser() {
+   RegisterMCAsmParser<ARMAsmParser> X(TheARMTarget);
+diff --git a/lib/Target/ARM/MCTargetDesc/ARMELFStreamer.cpp b/lib/Target/ARM/MCTargetDesc/ARMELFStreamer.cpp
+index 6c3d247..82d296f 100644
+--- a/lib/Target/ARM/MCTargetDesc/ARMELFStreamer.cpp
++++ b/lib/Target/ARM/MCTargetDesc/ARMELFStreamer.cpp
+@@ -204,6 +204,7 @@ private:
+ 
+   void EmitPersonalityFixup(StringRef Name);
+   void CollectUnwindOpcodes();
++  void FlushUnwindOpcodes(bool AllowCompactModel0);
+ 
+   void SwitchToEHSection(const char *Prefix, unsigned Type, unsigned Flags,
+                          SectionKind Kind, const MCSymbol &Fn);
+@@ -333,22 +334,8 @@ void ARMELFStreamer::EmitFnEnd() {
+   assert(FnStart && ".fnstart must preceeds .fnend");
+ 
+   // Emit unwind opcodes if there is no .handlerdata directive
+-  if (!ExTab && !CantUnwind) {
+-    CollectUnwindOpcodes();
+-
+-    unsigned PersonalityIndex = UnwindOpAsm.getPersonalityIndex();
+-    if (PersonalityIndex == AEABI_UNWIND_CPP_PR1 ||
+-        PersonalityIndex == AEABI_UNWIND_CPP_PR2) {
+-      // For the __aeabi_unwind_cpp_pr1 and __aeabi_unwind_cpp_pr2, we have to
+-      // emit the unwind opcodes in the corresponding ".ARM.extab" section, and
+-      // then emit a reference to these unwind opcodes in the second word of
+-      // the exception index table entry.
+-      SwitchToExTabSection(*FnStart);
+-      ExTab = getContext().CreateTempSymbol();
+-      EmitLabel(ExTab);
+-      EmitBytes(UnwindOpAsm.data(), 0);
+-    }
+-  }
++  if (!ExTab && !CantUnwind)
++    FlushUnwindOpcodes(true);
+ 
+   // Emit the exception index table entry
+   SwitchToExIdxSection(*FnStart);
+@@ -384,6 +371,9 @@ void ARMELFStreamer::EmitFnEnd() {
+     EmitBytes(UnwindOpAsm.data(), 0);
+   }
+ 
++  // Switch to the section containing FnStart
++  SwitchSection(&FnStart->getSection());
++
+   // Clean exception handling frame information
+   Reset();
+ }
+@@ -392,7 +382,18 @@ void ARMELFStreamer::EmitCantUnwind() {
+   CantUnwind = true;
+ }
+ 
+-void ARMELFStreamer::EmitHandlerData() {
++void ARMELFStreamer::FlushUnwindOpcodes(bool AllowCompactModel0) {
++  // Collect and finalize the unwind opcodes
++  CollectUnwindOpcodes();
++
++  // For compact model 0, we have to emit the unwind opcodes in the .ARM.exidx
++  // section.  Thus, we don't have to create an entry in the .ARM.extab
++  // section.
++  if (AllowCompactModel0 &&
++      UnwindOpAsm.getPersonalityIndex() == AEABI_UNWIND_CPP_PR0)
++    return;
++
++  // Switch to .ARM.extab section.
+   SwitchToExTabSection(*FnStart);
+ 
+   // Create .ARM.extab label for offset in .ARM.exidx
+@@ -400,21 +401,24 @@ void ARMELFStreamer::EmitHandlerData() {
+   ExTab = getContext().CreateTempSymbol();
+   EmitLabel(ExTab);
+ 
+-  // Emit Personality
+-  assert(Personality && ".personality directive must preceed .handlerdata");
+-
+-  const MCSymbolRefExpr *PersonalityRef =
+-    MCSymbolRefExpr::Create(Personality,
+-                            MCSymbolRefExpr::VK_ARM_PREL31,
+-                            getContext());
++  // Emit personality
++  if (Personality) {
++    const MCSymbolRefExpr *PersonalityRef =
++      MCSymbolRefExpr::Create(Personality,
++                              MCSymbolRefExpr::VK_ARM_PREL31,
++                              getContext());
+ 
+-  EmitValue(PersonalityRef, 4, 0);
++    EmitValue(PersonalityRef, 4, 0);
++  }
+ 
+   // Emit unwind opcodes
+-  CollectUnwindOpcodes();
+   EmitBytes(UnwindOpAsm.data(), 0);
+ }
+ 
++void ARMELFStreamer::EmitHandlerData() {
++  FlushUnwindOpcodes(false);
++}
++
+ void ARMELFStreamer::EmitPersonality(const MCSymbol *Per) {
+   Personality = Per;
+   UnwindOpAsm.setPersonality(Per);
+diff --git a/test/MC/ARM/eh-compact-pr0.s b/test/MC/ARM/eh-compact-pr0.s
+new file mode 100644
+index 0000000..6b866d5
+--- /dev/null
++++ b/test/MC/ARM/eh-compact-pr0.s
+@@ -0,0 +1,104 @@
++@ RUN: llvm-mc %s -triple=armv7-unknown-linux-gnueabi -filetype=obj -o - \
++@ RUN:   | llvm-readobj -s -sd -sr | FileCheck %s
++
++@ Check the compact pr0 model
++
++	.syntax unified
++
++	.section	.TEST1
++	.globl	func1
++	.align	2
++	.type	func1,%function
++func1:
++	.fnstart
++	.save	{r11, lr}
++	push	{r11, lr}
++	.setfp	r11, sp
++	mov	r11, sp
++	pop	{r11, lr}
++	mov	pc, lr
++	.fnend
++
++	.section	.TEST2
++	.globl	func2
++	.align	2
++	.type	func2,%function
++func2:
++	.fnstart
++	.save	{r11, lr}
++	push	{r11, lr}
++	pop	{r11, pc}
++	.fnend
++
++
++
++@-------------------------------------------------------------------------------
++@ Check .TEST1 section
++@-------------------------------------------------------------------------------
++@ CHECK: Sections [
++@ CHECK:   Section {
++@ CHECK:     Name: .TEST1
++@ CHECK:     SectionData (
++@ CHECK:       0000: 00482DE9 0DB0A0E1 0048BDE8 0EF0A0E1  |.H-......H......|
++@ CHECK:     )
++@ CHECK:   }
++
++
++@-------------------------------------------------------------------------------
++@ Check .ARM.exidx.TEST1 section
++@-------------------------------------------------------------------------------
++@ CHECK:   Section {
++@ CHECK:     Name: .ARM.exidx.TEST1
++@-------------------------------------------------------------------------------
++@ The first word should be relocated to .TEST1 section.  Besides, there is
++@ another relocation entry for __aeabi_unwind_cpp_pr0, so that the linker
++@ will keep __aeabi_unwind_cpp_pr0.
++@-------------------------------------------------------------------------------
++@ CHECK:     Relocations [
++@ CHECK:       0x0 R_ARM_PREL31 .TEST1 0x0
++@ CHECK:       0x0 R_ARM_NONE __aeabi_unwind_cpp_pr0 0x0
++@ CHECK:     ]
++@-------------------------------------------------------------------------------
++@ 0x80   = Compact model 0, personality routine: __aeabi_unwind_cpp_pr0
++@ 0x9B   = $sp can be found in $r11
++@ 0x8480 = pop {r11, r14}
++@-------------------------------------------------------------------------------
++@ CHECK:     SectionData (
++@ CHECK:       0000: 00000000 80849B80                    |........|
++@ CHECK:     )
++@ CHECK:   }
++
++
++@-------------------------------------------------------------------------------
++@ Check .TEST2 section
++@-------------------------------------------------------------------------------
++@ CHECK:   Section {
++@ CHECK:     Name: .TEST2
++@ CHECK:     SectionData (
++@ CHECK:       0000: 00482DE9 0088BDE8                    |.H-.....|
++@ CHECK:     )
++@ CHECK:   }
++@-------------------------------------------------------------------------------
++@ Check .ARM.exidx.TEST1 section
++@-------------------------------------------------------------------------------
++@ CHECK:   Section {
++@ CHECK:     Name: .ARM.exidx.TEST2
++@-------------------------------------------------------------------------------
++@ The first word should be relocated to .TEST2 section.  Besides, there is
++@ another relocation entry for __aeabi_unwind_cpp_pr0, so that the linker
++@ will keep __aeabi_unwind_cpp_pr0.
++@-------------------------------------------------------------------------------
++@ CHECK:     Relocations [
++@ CHECK:       0x0 R_ARM_PREL31 .TEST2 0x0
++@ CHECK:       0x0 R_ARM_NONE __aeabi_unwind_cpp_pr0 0x0
++@ CHECK:     ]
++@-------------------------------------------------------------------------------
++@ 0x80   = Compact model 0, personality routine: __aeabi_unwind_cpp_pr0
++@ 0x8480 = pop {r11, r14}
++@ 0xB0   = finish
++@-------------------------------------------------------------------------------
++@ CHECK:     SectionData (
++@ CHECK:       0000: 00000000 B0808480                    |........|
++@ CHECK:     )
++@ CHECK:   }
++@ CHECK: ]
+diff --git a/test/MC/ARM/eh-compact-pr1.s b/test/MC/ARM/eh-compact-pr1.s
+new file mode 100644
+index 0000000..0fac3e2
+--- /dev/null
++++ b/test/MC/ARM/eh-compact-pr1.s
+@@ -0,0 +1,74 @@
++@ RUN: llvm-mc %s -triple=armv7-unknown-linux-gnueabi -filetype=obj -o - \
++@ RUN:   | llvm-readobj -s -sd -sr | FileCheck %s
++
++@ Check the compact pr1 model
++
++	.syntax unified
++
++	.section .TEST1
++	.globl	func1
++	.align	2
++	.type	func1,%function
++func1:
++	.fnstart
++	.save	{r4, r5, r11, lr}
++	push	{r4, r5, r11, lr}
++	add	r0, r1, r0
++	.setfp	r11, sp, #8
++	add	r11, sp, #8
++	pop	{r4, r5, r11, pc}
++	.fnend
++
++
++
++@-------------------------------------------------------------------------------
++@ Check .TEST1 section
++@-------------------------------------------------------------------------------
++@ CHECK: Sections [
++@ CHECK:   Section {
++@ CHECK:     Name: .TEST1
++@ CHECK:     SectionData (
++@ CHECK:       0000: 30482DE9 000081E0 08B08DE2 3088BDE8  |0H-.........0...|
++@ CHECK:     )
++@ CHECK:   }
++
++
++@-------------------------------------------------------------------------------
++@ Check .ARM.extab.TEST1 section
++@-------------------------------------------------------------------------------
++@ CHECK:   Section {
++@ CHECK:     Name: .ARM.extab.TEST1
++@-------------------------------------------------------------------------------
++@ 0x81   = Compact model 1, personality routine: __aeabi_unwind_cpp_pr1
++@ 0x9B   = $sp can be found in $r11
++@ 0x41   = $sp = $sp - 8
++@ 0x8483 = pop {r4, r5, r11, r14}
++@ 0xB0   = finish
++@-------------------------------------------------------------------------------
++@ CHECK:     SectionData (
++@ CHECK:       0000: 419B0181 B0B08384                    |A.......|
++@ CHECK:     )
++@ CHECK:   }
++
++
++@-------------------------------------------------------------------------------
++@ Check .ARM.exidx.TEST1 section
++@-------------------------------------------------------------------------------
++@ CHECK:   Section {
++@ CHECK:     Name: .ARM.exidx.TEST1
++@-------------------------------------------------------------------------------
++@ The first word should be relocated to .TEST1 section, and the second word
++@ should be relocated to .ARM.extab.TEST1 section.  Besides, there is
++@ another relocation entry for __aeabi_unwind_cpp_pr1, so that the linker
++@ will keep __aeabi_unwind_cpp_pr1.
++@-------------------------------------------------------------------------------
++@ CHECK:     Relocations [
++@ CHECK:       0x0 R_ARM_PREL31 .TEST1 0x0
++@ CHECK:       0x0 R_ARM_NONE __aeabi_unwind_cpp_pr1 0x0
++@ CHECK:       0x4 R_ARM_PREL31 .ARM.extab.TEST1 0x0
++@ CHECK:     ]
++@ CHECK:     SectionData (
++@ CHECK:       0000: 00000000 00000000                    |........|
++@ CHECK:     )
++@ CHECK:   }
++@ CHECK: ]
+diff --git a/test/MC/ARM/eh-directive-cantunwind-diagnostics.s b/test/MC/ARM/eh-directive-cantunwind-diagnostics.s
+new file mode 100644
+index 0000000..5a6a46c
+--- /dev/null
++++ b/test/MC/ARM/eh-directive-cantunwind-diagnostics.s
+@@ -0,0 +1,106 @@
++@ RUN: not llvm-mc -triple=armv7-unknown-linux-gnueabi < %s 2> %t
++@ RUN: FileCheck < %t %s
++
++@ Check the diagnostics for .cantunwind, .handlerdata, and .personality
++
++@ .cantunwind directive can't be used with .handlerdata directive nor
++@ .personality directive.  This test case check for the diagnostics for
++@ the conflicts.
++
++
++	.syntax unified
++	.text
++
++@-------------------------------------------------------------------------------
++@ TEST1: cantunwind + personality
++@-------------------------------------------------------------------------------
++	.globl	func1
++	.align	2
++	.type	func1,%function
++	.fnstart
++func1:
++	.cantunwind
++	.personality	__gxx_personality_v0
++@ CHECK: error: .personality can't be used with .cantunwind directive
++@ CEHCK:        .personality __gxx_personality_v0
++@ CHECK:        ^
++@ CHECK: error: .cantunwind was specified here
++@ CHECK:        .cantunwind
++@ CHECK:        ^
++	.fnend
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST2: cantunwind + handlerdata
++@-------------------------------------------------------------------------------
++	.globl	func2
++	.align	2
++	.type	func2,%function
++	.fnstart
++func2:
++	.cantunwind
++	.handlerdata
++@ CHECK: error: .handlerdata can't be used with .cantunwind directive
++@ CEHCK:        .handlerdata
++@ CHECK:        ^
++@ CHECK: error: .cantunwind was specified here
++@ CHECK:        .cantunwind
++@ CHECK:        ^
++	.fnend
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST3: personality + cantunwind
++@-------------------------------------------------------------------------------
++	.globl	func3
++	.align	2
++	.type	func3,%function
++	.fnstart
++func3:
++	.personality	__gxx_personality_v0
++	.cantunwind
++@ CHECK: error: .cantunwind can't be used with .personality directive
++@ CEHCK:        .cantunwind
++@ CHECK:        ^
++@ CHECK: error: .personality was specified here
++@ CHECK:        .personality __gxx_personality_v0
++@ CHECK:        ^
++	.fnend
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST4: handlerdata + cantunwind
++@-------------------------------------------------------------------------------
++	.globl	func4
++	.align	2
++	.type	func4,%function
++	.fnstart
++func4:
++	.handlerdata
++	.cantunwind
++@ CHECK: error: .cantunwind can't be used with .handlerdata directive
++@ CEHCK:        .cantunwind
++@ CHECK:        ^
++@ CHECK: error: .handlerdata was specified here
++@ CHECK:        .handlerdata
++@ CHECK:        ^
++	.fnend
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST5: cantunwind + fnstart
++@-------------------------------------------------------------------------------
++	.globl	func5
++	.align	2
++	.type	func5,%function
++	.cantunwind
++@ CHECK: error: .fnstart must precede .cantunwind directive
++@ CHECK:        .cantunwind
++@ CHECK:        ^
++	.fnstart
++func5:
++	.fnend
+diff --git a/test/MC/ARM/eh-directive-cantunwind.s b/test/MC/ARM/eh-directive-cantunwind.s
+new file mode 100644
+index 0000000..0545f6d
+--- /dev/null
++++ b/test/MC/ARM/eh-directive-cantunwind.s
+@@ -0,0 +1,51 @@
++@ RUN: llvm-mc %s -triple=armv7-unknown-linux-gnueabi -filetype=obj -o - \
++@ RUN:   | llvm-readobj -s -sd -sr | FileCheck %s
++
++@ Check the .cantunwind directive
++
++@ When a function contains a .cantunwind directive, we should create an entry
++@ in corresponding .ARM.exidx, and its second word should be EXIDX_CANTUNWIND.
++
++	.syntax	unified
++
++	.text
++	.globl	func1
++	.align	2
++	.type	func1,%function
++	.fnstart
++func1:
++	bx	lr
++	.cantunwind
++	.fnend
++
++
++
++@-------------------------------------------------------------------------------
++@ Check .text section
++@-------------------------------------------------------------------------------
++@ CHECK: Sections [
++@ CHECK:   Section {
++@ CHECK:     Name: .text
++@ CHECK:     SectionData (
++@ CHECK:       0000: 1EFF2FE1                             |../.|
++@ CHECK:     )
++@ CHECK:   }
++
++
++@-------------------------------------------------------------------------------
++@ Check .ARM.exidx section
++@-------------------------------------------------------------------------------
++@ CHECK:   Section {
++@ CHECK:     Name: .ARM.exidx
++@ CHECK:     Relocations [
++@ CHECK:       0x0 R_ARM_PREL31 .text 0x0
++@ CHECK:     ]
++@-------------------------------------------------------------------------------
++@ The first word should be the offset to .text.
++@ The second word should be EXIDX_CANTUNWIND (01000000).
++@-------------------------------------------------------------------------------
++@ CHECK:     SectionData (
++@ CHECK:       0000: 00000000 01000000                    |........|
++@ CHECK:     )
++@ CHECK:   }
++@ CHECK: ]
+diff --git a/test/MC/ARM/eh-directive-fnend-diagnostics.s b/test/MC/ARM/eh-directive-fnend-diagnostics.s
+new file mode 100644
+index 0000000..a5e4d3b
+--- /dev/null
++++ b/test/MC/ARM/eh-directive-fnend-diagnostics.s
+@@ -0,0 +1,17 @@
++@ RUN: llvm-mc %s -triple=armv7-unknown-linux-gnueabi \
++@ RUN:   -filetype=obj -o /dev/null 2>&1 | FileCheck %s
++
++@ Check the diagnostics for mismatched .fnend directive
++
++
++	.syntax unified
++	.text
++
++	.globl	func1
++	.align	2
++	.type	func1,%function
++func1:
++	.fnend
++@ CHECK: error: .fnstart must precede .fnend directive
++@ CHECK:        .fnend
++@ CHECK:        ^
+diff --git a/test/MC/ARM/eh-directive-fnstart-diagnostics.s b/test/MC/ARM/eh-directive-fnstart-diagnostics.s
+new file mode 100644
+index 0000000..29bcb0d
+--- /dev/null
++++ b/test/MC/ARM/eh-directive-fnstart-diagnostics.s
+@@ -0,0 +1,31 @@
++@ RUN: llvm-mc %s -triple=armv7-unknown-linux-gnueabi \
++@ RUN:   -filetype=obj -o /dev/null 2>&1 | FileCheck %s
++
++@ Check the diagnostics for the mismatched .fnstart directives.
++
++@ There should be some diagnostics when the previous .fnstart is not closed
++@ by the .fnend directive.
++
++
++	.syntax unified
++	.text
++
++	.globl	func1
++	.align	2
++	.type	func1,%function
++	.fnstart
++func1:
++	@ Intentionally miss the .fnend directive
++
++	.globl	func2
++	.align	2
++	.type	func2,%function
++	.fnstart
++@ CHECK: error: .fnstart starts before the end of previous one
++@ CHECK:        .fnstart
++@ CHECK:        ^
++@ CHECK: error: previous .fnstart starts here
++@ CHECK:        .fnstart
++@ CHECK:        ^
++func2:
++	.fnend
+diff --git a/test/MC/ARM/eh-directive-handlerdata.s b/test/MC/ARM/eh-directive-handlerdata.s
+new file mode 100644
+index 0000000..45f22dd
+--- /dev/null
++++ b/test/MC/ARM/eh-directive-handlerdata.s
+@@ -0,0 +1,108 @@
++@ RUN: llvm-mc %s -triple=armv7-unknown-linux-gnueabi -filetype=obj -o - \
++@ RUN:   | llvm-readobj -s -sd -sr | FileCheck %s
++
++@ Check the .handlerdata directive (without .personality directive)
++
++	.syntax unified
++
++@-------------------------------------------------------------------------------
++@ TEST1
++@-------------------------------------------------------------------------------
++	.section	.TEST1
++	.globl	func1
++	.align	2
++	.type	func1,%function
++	.fnstart
++func1:
++	bx	lr
++	.handlerdata
++	.fnend
++
++
++@ CHECK:Section {
++@ CHECK:  Name: .TEST1
++@ CHECK:  SectionData (
++@ CHECK:    0000: 1EFF2FE1                             |../.|
++@ CHECK:  )
++@ CHECK:}
++
++@ CHECK:Section {
++@ CHECK:  Name: .ARM.extab.TEST1
++@ CHECK:  SectionData (
++@ CHECK:    0000: B0B0B080                             |....|
++@ CHECK:  )
++@ CHECK:}
++
++@ CHECK:Section {
++@ CHECK:  Name: .ARM.exidx.TEST1
++@-------------------------------------------------------------------------------
++@ We should see a relocation entry to __aeabi_unwind_cpp_pr0, so that the
++@ linker can keep __aeabi_unwind_cpp_pr0.
++@-------------------------------------------------------------------------------
++@ CHECK:  Relocations [
++@ CHECK:    0x0 R_ARM_PREL31 .TEST1 0x0
++@ CHECK:    0x0 R_ARM_NONE __aeabi_unwind_cpp_pr0 0x0
++@ CHECK:    0x4 R_ARM_PREL31 .ARM.extab.TEST1 0x0
++@ CHECK:  ]
++@ CHECK:  SectionData (
++@ CHECK:    0000: 00000000 00000000                    |........|
++@ CHECK:  )
++@ CHECK:}
++
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST2
++@-------------------------------------------------------------------------------
++	.section	.TEST2
++	.globl	func2
++	.align	2
++	.type	func2,%function
++	.fnstart
++func2:
++@-------------------------------------------------------------------------------
++@ Use a lot of unwind opcdes to get __aeabi_unwind_cpp_pr1.
++@-------------------------------------------------------------------------------
++	.save	{r4, r5, r6, r7, r8, r9, r10, r11, r12}
++	push	{r4, r5, r6, r7, r8, r9, r10, r11, r12}
++	pop	{r4, r5, r6, r7, r8, r9, r10, r11, r12}
++	.pad	#0x240
++	sub	sp, sp, #0x240
++	add	sp, sp, #0x240
++	bx	lr
++	.handlerdata
++	.fnend
++
++
++
++@ CHECK:Section {
++@ CHECK:  Name: .TEST2
++@ CHECK:  SectionData (
++@ CHECK:    0000: F01F2DE9 F01FBDE8 09DD4DE2 09DD8DE2  |..-.......M.....|
++@ CHECK:    0010: 1EFF2FE1                             |../.|
++@ CHECK:  )
++@ CHECK:}
++
++@ CHECK:Section {
++@ CHECK:  Name: .ARM.extab.TEST2
++@ CHECK:  SectionData (
++@ CHECK:    0000: 0FB20181 B0B0FF81                    |........|
++@ CHECK:  )
++@ CHECK:}
++
++@ CHECK:Section {
++@ CHECK:  Name: .ARM.exidx.TEST2
++@-------------------------------------------------------------------------------
++@ We should see a relocation entry to __aeabi_unwind_cpp_pr0, so that the
++@ linker can keep __aeabi_unwind_cpp_pr0.
++@-------------------------------------------------------------------------------
++@ CHECK:  Relocations [
++@ CHECK:    0x0 R_ARM_PREL31 .TEST2 0x0
++@ CHECK:    0x0 R_ARM_NONE __aeabi_unwind_cpp_pr1 0x0
++@ CHECK:    0x4 R_ARM_PREL31 .ARM.extab.TEST2 0x0
++@ CHECK:  ]
++@ CHECK:  SectionData (
++@ CHECK:    0000: 00000000 00000000                    |........|
++@ CHECK:  )
++@ CHECK:}
+diff --git a/test/MC/ARM/eh-directive-pad-diagnostics.s b/test/MC/ARM/eh-directive-pad-diagnostics.s
+new file mode 100644
+index 0000000..7072159
+--- /dev/null
++++ b/test/MC/ARM/eh-directive-pad-diagnostics.s
+@@ -0,0 +1,39 @@
++@ RUN: not llvm-mc -triple=armv7-unknown-linux-gnueabi < %s 2> %t
++@ RUN: FileCheck --check-prefix=CHECK < %t %s
++
++@ Check the diagnostics for .pad directive.
++
++
++	.syntax unified
++	.text
++
++@-------------------------------------------------------------------------------
++@ TEST1: .pad before .fnstart
++@-------------------------------------------------------------------------------
++	.globl	func1
++	.align	2
++	.type	func1,%function
++	.pad	#0
++@ CHECK: error: .fnstart must precede .pad directive
++@ CHECK:        .pad #0
++@ CHECK:        ^
++	.fnstart
++func1:
++	.fnend
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST2: .pad after .handlerdata
++@-------------------------------------------------------------------------------
++	.globl	func2
++	.align	2
++	.type	func2,%function
++	.fnstart
++func2:
++	.handlerdata
++	.pad	#0
++@ CHECK: error: .pad must precede .handlerdata directive
++@ CHECK:        .pad #0
++@ CHECK:        ^
++	.fnend
+diff --git a/test/MC/ARM/eh-directive-pad.s b/test/MC/ARM/eh-directive-pad.s
+new file mode 100644
+index 0000000..ba850ff
+--- /dev/null
++++ b/test/MC/ARM/eh-directive-pad.s
+@@ -0,0 +1,226 @@
++@ RUN: llvm-mc %s -triple=armv7-unknown-linux-gnueabi -filetype=obj -o - \
++@ RUN:   | llvm-readobj -s -sd | FileCheck %s
++
++@ Check for different stack pointer offsets.
++
++@ The .pad directive will track the stack pointer offsets.  There are several
++@ ways to encode the stack offsets.  We have to test:
++@
++@              offset <  0x00
++@              offset == 0x00
++@     0x04  <= offset <= 0x100
++@     0x104 <= offset <= 0x200
++@     0x204 <= offset
++
++
++	.syntax unified
++
++@-------------------------------------------------------------------------------
++@ TEST1
++@-------------------------------------------------------------------------------
++	.section	.TEST1
++	.globl	func1
++	.align	2
++	.type	func1,%function
++	.fnstart
++func1:
++	.pad	#0
++	sub	sp, sp, #0
++	add	sp, sp, #0
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++@-------------------------------------------------------------------------------
++@ The assembler should emit nothing (will be filled up with finish opcode).
++@-------------------------------------------------------------------------------
++@ CHECK: Section {
++@ CHECK:   Name: .ARM.extab.TEST1
++@ CHECK:   SectionData (
++@ CHECK:     0000: 00000000 B0B0B000                    |........|
++@ CHECK:   )
++@ CHECK: }
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST2
++@-------------------------------------------------------------------------------
++	.section	.TEST2
++	.globl	func2a
++	.align	2
++	.type	func2a,%function
++	.fnstart
++func2a:
++	.pad	#0x4
++	sub	sp, sp, #0x4
++	add	sp, sp, #0x4
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func2b
++	.align	2
++	.type	func2b,%function
++	.fnstart
++func2b:
++	.pad	#0x100
++	sub	sp, sp, #0x100
++	add	sp, sp, #0x100
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++@-------------------------------------------------------------------------------
++@ The assembler should emit ((offset - 4) >> 2).
++@-------------------------------------------------------------------------------
++@ CHECK: Section {
++@ CHECK:   Name: .ARM.extab.TEST2
++@ CHECK:   SectionData (
++@ CHECK:     0000: 00000000 B0B00000 00000000 B0B03F00  |..............?.|
++@ CHECK:   )
++@ CHECK: }
++
++
++@-------------------------------------------------------------------------------
++@ TEST3
++@-------------------------------------------------------------------------------
++	.section	.TEST3
++	.globl	func3a
++	.align	2
++	.type	func3a,%function
++	.fnstart
++func3a:
++	.pad	#0x104
++	sub	sp, sp, #0x104
++	add	sp, sp, #0x104
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func3b
++	.align	2
++	.type	func3b,%function
++	.fnstart
++func3b:
++	.pad	#0x200
++	sub	sp, sp, #0x200
++	add	sp, sp, #0x200
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++@-------------------------------------------------------------------------------
++@ The assembler should emit 0x3F and ((offset - 0x104) >> 2).
++@-------------------------------------------------------------------------------
++@ CHECK: Section {
++@ CHECK:   Name: .ARM.extab.TEST3
++@ CHECK:   SectionData (
++@ CHECK:     0000: 00000000 B0003F00 00000000 B03F3F00  |......?......??.|
++@ CHECK:   )
++@ CHECK: }
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST4
++@-------------------------------------------------------------------------------
++	.section	.TEST4
++	.globl	func4a
++	.align	2
++	.type	func4a,%function
++	.fnstart
++func4a:
++	.pad	#0x204
++	sub	sp, sp, #0x204
++	add	sp, sp, #0x204
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func4b
++	.align	2
++	.type	func4b,%function
++	.fnstart
++func4b:
++	.pad	#0x580
++	sub	sp, sp, #0x580
++	add	sp, sp, #0x580
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++@-------------------------------------------------------------------------------
++@ The assembler should emit 0xB2 and the ULEB128 encoding of
++@ ((offset - 0x204) >> 2).
++@-------------------------------------------------------------------------------
++@ CHECK: Section {
++@ CHECK:   Name: .ARM.extab.TEST4
++@ CHECK:   SectionData (
++@ CHECK:     0000: 00000000 B000B200 00000000 01DFB200  |................|
++@ CHECK:   )
++@ CHECK: }
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST5
++@-------------------------------------------------------------------------------
++	.section	.TEST5
++	.globl	func4a
++	.align	2
++	.type	func4a,%function
++	.fnstart
++func5a:
++	.pad	#-0x4
++	add	sp, sp, #0x4
++	sub	sp, sp, #0x4
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func5b
++	.align	2
++	.type	func5b,%function
++	.fnstart
++func5b:
++	.pad	#-0x104
++	add	sp, sp, #0x104
++	sub	sp, sp, #0x4
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func5c
++	.align	2
++	.type	func5c,%function
++	.fnstart
++func5c:
++	.pad	#-0x204
++	add	sp, sp, #0x204
++	sub	sp, sp, #0x4
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++@-------------------------------------------------------------------------------
++@ The assembler should emit (0x40 | (-offset - 4)) >> 2.  When (-offset - 4)
++@ is greater than 0x3f, then multiple 0x7f should be emitted.
++@-------------------------------------------------------------------------------
++@ CHECK: Section {
++@ CHECK:   Name: .ARM.extab.TEST5
++@ CHECK:   SectionData (
++@ CHECK:     0000: 00000000 B0B04000 00000000 B0407F00  |......@......@..|
++@ CHECK:     0010: 00000000 407F7F00                    |....@...|
++@ CHECK:   )
++@ CHECK: }
+diff --git a/test/MC/ARM/eh-directive-personality-diagnostics.s b/test/MC/ARM/eh-directive-personality-diagnostics.s
+new file mode 100644
+index 0000000..83e9c25
+--- /dev/null
++++ b/test/MC/ARM/eh-directive-personality-diagnostics.s
+@@ -0,0 +1,39 @@
++@ RUN: not llvm-mc -triple=armv7-unknown-linux-gnueabi < %s 2> %t
++@ RUN: FileCheck --check-prefix=CHECK < %t %s
++
++@ Check the diagnostics for .personality directive.
++
++
++	.syntax unified
++	.text
++
++@-------------------------------------------------------------------------------
++@ TEST1: .personality before .fnstart
++@-------------------------------------------------------------------------------
++	.globl	func1
++	.align	2
++	.type	func1,%function
++	.personality	__gxx_personality_v0
++@ CHECK: error: .fnstart must precede .personality directive
++@ CHECK:        .personality __gxx_personality_v0
++@ CHECK:        ^
++	.fnstart
++func1:
++	.fnend
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST2: .personality after .handlerdata
++@-------------------------------------------------------------------------------
++	.globl	func2
++	.align	2
++	.type	func2,%function
++	.fnstart
++func2:
++	.handlerdata
++	.personality	__gxx_personality_v0
++@ CHECK: error: .personality must precede .handlerdata directive
++@ CHECK:        .personality __gxx_personality_v0
++@ CHECK:        ^
++	.fnend
+diff --git a/test/MC/ARM/eh-directive-personality.s b/test/MC/ARM/eh-directive-personality.s
+new file mode 100644
+index 0000000..2267108
+--- /dev/null
++++ b/test/MC/ARM/eh-directive-personality.s
+@@ -0,0 +1,90 @@
++@ RUN: llvm-mc %s -triple=armv7-unknown-linux-gnueabi -filetype=obj -o - \
++@ RUN:   | llvm-readobj -s -sd -sr | FileCheck %s
++
++@ Check the .personality directive.
++
++	.syntax unified
++
++@-------------------------------------------------------------------------------
++@ TEST1
++@-------------------------------------------------------------------------------
++	.section	.TEST1
++	.globl	func1
++	.align	2
++	.type	func1,%function
++	.fnstart
++func1:
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++
++@ CHECK: Section {
++@ CHECK:   Name: .TEST1
++@ CHECK:   SectionData (
++@ CHECK:     0000: 1EFF2FE1                             |../.|
++@ CHECK:   )
++@ CHECK: }
++@ CHECK: Section {
++@ CHECK:   Name: .ARM.extab.TEST1
++@ CHECK:   Relocations [
++@ CHECK:     0x0 R_ARM_PREL31 __gxx_personality_v0 0x0
++@ CHECK:   ]
++@ CHECK:   SectionData (
++@ CHECK:     0000: 00000000 B0B0B000                    |........|
++@ CHECK:   )
++@ CHECK: }
++@ CHECK: Section {
++@ CHECK:   Name: .ARM.exidx.TEST1
++@ CHECK:   Relocations [
++@ CHECK:     0x0 R_ARM_PREL31 .TEST1 0x0
++@ CHECK:     0x4 R_ARM_PREL31 .ARM.extab.TEST1 0x0
++@ CHECK:   ]
++@ CHECK:   SectionData (
++@ CHECK:     0000: 00000000 00000000                    |........|
++@ CHECK:   )
++@ CHECK: }
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST2
++@-------------------------------------------------------------------------------
++	.section	.TEST2
++	.globl	func2
++	.align	2
++	.type	func2,%function
++	.fnstart
++func2:
++	bx	lr
++	.personality __gxx_personality_v0
++	@ The .handlerdata directive is intentionally ignored.  The .fnend		@ directive should create the EXTAB entry and flush the unwind opcodes.
++	.fnend
++
++
++@ CHECK: Section {
++@ CHECK:   Name: .TEST2
++@ CHECK:   SectionData (
++@ CHECK:     0000: 1EFF2FE1                             |../.|
++@ CHECK:   )
++@ CHECK: }
++@ CHECK: Section {
++@ CHECK:   Name: .ARM.extab.TEST2
++@ CHECK:   Relocations [
++@ CHECK:     0x0 R_ARM_PREL31 __gxx_personality_v0 0x0
++@ CHECK:   ]
++@ CHECK:   SectionData (
++@ CHECK:     0000: 00000000 B0B0B000                    |........|
++@ CHECK:   )
++@ CHECK: }
++@ CHECK: Section {
++@ CHECK:   Name: .ARM.exidx.TEST2
++@ CHECK:   Relocations [
++@ CHECK:     0x0 R_ARM_PREL31 .TEST2 0x0
++@ CHECK:     0x4 R_ARM_PREL31 .ARM.extab.TEST2 0x0
++@ CHECK:   ]
++@ CHECK:   SectionData (
++@ CHECK:     0000: 00000000 00000000                    |........|
++@ CHECK:   )
++@ CHECK: }
+diff --git a/test/MC/ARM/eh-directive-save-diagnoatics.s b/test/MC/ARM/eh-directive-save-diagnoatics.s
+new file mode 100644
+index 0000000..0e6d740
+--- /dev/null
++++ b/test/MC/ARM/eh-directive-save-diagnoatics.s
+@@ -0,0 +1,41 @@
++@ RUN: not llvm-mc -triple=armv7-unknown-linux-gnueabi < %s 2> %t
++@ RUN: FileCheck --check-prefix=CHECK < %t %s
++
++@ Check the diagnostics for .save directive
++
++@ .save directive should always come after .fnstart directive and
++@ before .handlerdata directive.
++
++	.syntax unified
++	.text
++
++@-------------------------------------------------------------------------------
++@ TEST1: .save before .fnstart
++@-------------------------------------------------------------------------------
++	.globl	func1
++	.align	2
++	.type	func1,%function
++	.save	{r4, r5, r6, r7}
++@ CHECK: error: .fnstart must precede .save or .vsave directives
++@ CHECK:        .save {r4, r5, r6, r7}
++@ CHECK:        ^
++	.fnstart
++func1:
++	.fnend
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST2: .save after .handlerdata
++@-------------------------------------------------------------------------------
++	.globl	func2
++	.align	2
++	.type	func2,%function
++	.fnstart
++func2:
++	.handlerdata
++	.save	{r4, r5, r6, r7}
++@ CHECK: error: .save or .vsave must precede .handlerdata directive
++@ CHECK:        .save {r4, r5, r6, r7}
++@ CHECK:        ^
++	.fnend
+diff --git a/test/MC/ARM/eh-directive-save.s b/test/MC/ARM/eh-directive-save.s
+new file mode 100644
+index 0000000..f9c8c5f
+--- /dev/null
++++ b/test/MC/ARM/eh-directive-save.s
+@@ -0,0 +1,298 @@
++@ RUN: llvm-mc %s -triple=armv7-unknown-linux-gnueabi -filetype=obj -o - \
++@ RUN:   | llvm-readobj -s -sd | FileCheck %s
++
++@ Check the .save directive
++
++@ The .save directive records the GPR registers which are pushed to the
++@ stack.  There are 4 different unwind opcodes:
++@
++@     0xB100: pop r[3:0]
++@     0xA0:   pop r[(4+x):4]		@ r[4+x]-r[4] must be consecutive.
++@     0xA8:   pop r14, r[(4+x):4]	@ r[4+x]-r[4] must be consecutive.
++@     0x8000: pop r[15:4]
++@
++@ If register list specifed by .save directive is possible to be encoded
++@ by 0xA0 or 0xA8, then the assembler should prefer them over 0x8000.
++
++
++	.syntax unified
++
++@-------------------------------------------------------------------------------
++@ TEST1
++@-------------------------------------------------------------------------------
++	.section	.TEST1
++	.globl	func1a
++	.align	2
++	.type	func1a,%function
++	.fnstart
++func1a:
++	.save	{r0}
++	push	{r0}
++	pop	{r0}
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func1b
++	.align	2
++	.type	func1b,%function
++	.fnstart
++func1b:
++	.save	{r0, r1}
++	push	{r0, r1}
++	pop	{r0, r1}
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func1c
++	.align	2
++	.type	func1c,%function
++	.fnstart
++func1c:
++	.save	{r0, r2}
++	push	{r0, r2}
++	pop	{r0, r2}
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func1d
++	.align	2
++	.type	func1d,%function
++	.fnstart
++func1d:
++	.save	{r1, r2}
++	push	{r1, r2}
++	pop	{r1, r2}
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func1e
++	.align	2
++	.type	func1e,%function
++	.fnstart
++func1e:
++	.save	{r0, r1, r2, r3}
++	push	{r0, r1, r2, r3}
++	pop	{r0, r1, r2, r3}
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++@-------------------------------------------------------------------------------
++@ The assembler should emit 0xB000 unwind opcode.
++@-------------------------------------------------------------------------------
++@ CHECK: Section {
++@ CHECK:   Name: .ARM.extab.TEST1
++@ CHECK:   SectionData (
++@ CHECK:     0000: 00000000 B001B100 00000000 B003B100  |................|
++@ CHECK:     0010: 00000000 B005B100 00000000 B006B100  |................|
++@ CHECK:     0020: 00000000 B00FB100                    |........|
++@ CHECK:   )
++@ CHECK: }
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST2
++@-------------------------------------------------------------------------------
++	.section	.TEST2
++	.globl	func2a
++	.align	2
++	.type	func2a,%function
++	.fnstart
++func2a:
++	.save	{r4}
++	push	{r4}
++	pop	{r4}
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func2b
++	.align	2
++	.type	func2b,%function
++	.fnstart
++func2b:
++	.save	{r4, r5}
++	push	{r4, r5}
++	pop	{r4, r5}
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func2c
++	.align	2
++	.type	func2c,%function
++	.fnstart
++func2c:
++	.save	{r4, r5, r6, r7, r8, r9, r10, r11}
++	push	{r4, r5, r6, r7, r8, r9, r10, r11}
++	pop	{r4, r5, r6, r7, r8, r9, r10, r11}
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++@-------------------------------------------------------------------------------
++@ The assembler should emit 0xA0 unwind opcode.
++@-------------------------------------------------------------------------------
++@ CHECK: Section {
++@ CHECK:   Name: .ARM.extab.TEST2
++@ CHECK:   SectionData (
++@ CHECK:     0000: 00000000 B0B0A000 00000000 B0B0A100  |................|
++@ CHECK:     0010: 00000000 B0B0A700                    |........|
++@ CHECK:   )
++@ CHECK: }
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST3
++@-------------------------------------------------------------------------------
++	.section	.TEST3
++	.globl	func3a
++	.align	2
++	.type	func3a,%function
++	.fnstart
++func3a:
++	.save	{r4, r14}
++	push	{r4, r14}
++	pop	{r4, r14}
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func3b
++	.align	2
++	.type	func3b,%function
++	.fnstart
++func3b:
++	.save	{r4, r5, r14}
++	push	{r4, r5, r14}
++	pop	{r4, r5, r14}
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func3c
++	.align	2
++	.type	func3c,%function
++	.fnstart
++func3c:
++	.save	{r4, r5, r6, r7, r8, r9, r10, r11, r14}
++	push	{r4, r5, r6, r7, r8, r9, r10, r11, r14}
++	pop	{r4, r5, r6, r7, r8, r9, r10, r11, r14}
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++@-------------------------------------------------------------------------------
++@ The assembler should emit 0xA8 unwind opcode.
++@-------------------------------------------------------------------------------
++@ CHECK: Section {
++@ CHECK:   Name: .ARM.extab.TEST3
++@ CHECK:   SectionData (
++@ CHECK:     0000: 00000000 B0B0A800 00000000 B0B0A900  |................|
++@ CHECK:     0010: 00000000 B0B0AF00                    |........|
++@ CHECK:   )
++@ CHECK: }
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST4
++@-------------------------------------------------------------------------------
++	.section	.TEST4
++	.globl	func4a
++	.align	2
++	.type	func4a,%function
++	.fnstart
++func4a:
++	.save	{r4, r5, r6, r7, r8, r9, r10, r11, r12, r14}
++	push	{r4, r5, r6, r7, r8, r9, r10, r11, r12, r14}
++	pop	{r4, r5, r6, r7, r8, r9, r10, r11, r12, r14}
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func4b
++	.align	2
++	.type	func4b,%function
++	.fnstart
++func4b:
++	@ Note: r7 is missing intentionally.
++	.save	{r4, r5, r6, r8, r9, r10, r11}
++	push	{r4, r5, r6, r8, r9, r10, r11}
++	pop	{r4, r5, r6, r8, r9, r10, r11}
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func4c
++	.align	2
++	.type	func4c,%function
++	.fnstart
++func4c:
++	@ Note: r7 is missing intentionally.
++	.save	{r4, r5, r6, r8, r9, r10, r11, r14}
++	push	{r4, r5, r6, r8, r9, r10, r11, r14}
++	pop	{r4, r5, r6, r8, r9, r10, r11, r14}
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func4d
++	.align	2
++	.type	func4d,%function
++	.fnstart
++func4d:
++	@ Note: The register list is not start with r4.
++	.save	{r5, r6, r7}
++	push	{r5, r6, r7}
++	pop	{r5, r6, r7}
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func4e
++	.align	2
++	.type	func4e,%function
++	.fnstart
++func4e:
++	@ Note: The register list is not start with r4.
++	.save	{r5, r6, r7, r14}
++	push	{r5, r6, r7, r14}
++	pop	{r5, r6, r7, r14}
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++@-------------------------------------------------------------------------------
++@ The assembler should emit 0x8000 unwind opcode.
++@-------------------------------------------------------------------------------
++@ CHECK: Section {
++@ CHECK:   Name: .ARM.extab.TEST4
++@ CHECK:   SectionData (
++@ CHECK:     0000: 00000000 B0FF8500 00000000 B0F78000  |................|
++@ CHECK:     0010: 00000000 B0F78400 00000000 B00E8000  |................|
++@ CHECK:     0020: 00000000 B00E8400                    |........|
++@ CHECK:   )
++@ CHECK: }
+diff --git a/test/MC/ARM/eh-directive-section-comdat.s b/test/MC/ARM/eh-directive-section-comdat.s
+new file mode 100644
+index 0000000..296718f
+--- /dev/null
++++ b/test/MC/ARM/eh-directive-section-comdat.s
+@@ -0,0 +1,126 @@
++@ RUN: llvm-mc %s -triple=armv7-unknown-linux-gnueabi -filetype=obj -o - \
++@ RUN:   | llvm-readobj -s -sd -sr -t | FileCheck %s
++
++@ Check the .group section for the function in comdat section.
++
++@ In C++, the instantiation of the template will come with linkonce (or
++@ linkonce_odr) linkage, so that the linker can remove the duplicated
++@ instantiation.  When the exception handling is enabled on those function,
++@ we have to group the corresponding .ARM.extab and .ARM.exidx with the
++@ text section together.
++@
++@ This test case will check the content of .group section.  The section index
++@ of the grouped sections should be recorded in .group section.
++
++	.syntax unified
++	.section	.TEST1,"axG",%progbits,func1,comdat
++	.weak	func1
++	.align	2
++	.type	func1,%function
++func1:
++	.fnstart
++	.save	{r4, lr}
++	push	{r4, lr}
++	.vsave	{d8, d9, d10, d11, d12}
++	vpush	{d8, d9, d10, d11, d12}
++	.pad	#24
++	sub	sp, sp, #24
++
++	add	sp, sp, #24
++	vpop	{d8, d9, d10, d11, d12}
++	pop	{r4, pc}
++
++	.globl	__gxx_personality_v0
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++
++
++@-------------------------------------------------------------------------------
++@ Check the .group section
++@-------------------------------------------------------------------------------
++@ CHECK: Sections [
++@ CHECK:   Section {
++@ CHECK:     Index: 1
++@ CHECK:     Name: .group
++@ CHECK:     Type: SHT_GROUP (0x11)
++@ CHECK:     Flags [ (0x0)
++@ CHECK:     ]
++@ CHECK:     SectionData (
++@-------------------------------------------------------------------------------
++@ The second, third, and fourth word should correspond to the section index
++@ of .TEST1, .ARM.extab.TEST1, and .ARM.exidx.TEST1.
++@-------------------------------------------------------------------------------
++@ CHECK:       0000: 01000000 05000000 06000000 08000000  |................|
++@ CHECK:     )
++@ CHECK:   }
++
++
++@-------------------------------------------------------------------------------
++@ Check the .TEST1 section
++@-------------------------------------------------------------------------------
++@ CHECK:   Section {
++@ CHECK:     Index: 5
++@ CHECK:     Name: .TEST1
++@ CHECK:     Type: SHT_PROGBITS (0x1)
++@-------------------------------------------------------------------------------
++@ The flags should contain SHF_GROUP.
++@-------------------------------------------------------------------------------
++@ CHECK:     Flags [ (0x206)
++@ CHECK:       SHF_ALLOC (0x2)
++@ CHECK:       SHF_EXECINSTR (0x4)
++@ CHECK:       SHF_GROUP (0x200)
++@ CHECK:     ]
++@ CHECK:   }
++
++
++@-------------------------------------------------------------------------------
++@ Check the .ARM.extab.TEST1 section
++@-------------------------------------------------------------------------------
++@ CHECK:   Section {
++@ CHECK:     Index: 6
++@ CHECK:     Name: .ARM.extab.TEST1
++@ CHECK:     Type: SHT_PROGBITS (0x1)
++@-------------------------------------------------------------------------------
++@ The flags should contain SHF_GROUP.
++@-------------------------------------------------------------------------------
++@ CHECK:     Flags [ (0x202)
++@ CHECK:       SHF_ALLOC (0x2)
++@ CHECK:       SHF_GROUP (0x200)
++@ CHECK:     ]
++@ CHECK:   }
++
++
++@-------------------------------------------------------------------------------
++@ Check the .ARM.exidx.TEST1 section
++@-------------------------------------------------------------------------------
++@ CHECK:   Section {
++@ CHECK:     Index: 8
++@ CHECK:     Name: .ARM.exidx.TEST1
++@ CHECK:     Type: SHT_ARM_EXIDX (0x70000001)
++@-------------------------------------------------------------------------------
++@ The flags should contain SHF_GROUP.
++@-------------------------------------------------------------------------------
++@ CHECK:     Flags [ (0x282)
++@ CHECK:       SHF_ALLOC (0x2)
++@ CHECK:       SHF_GROUP (0x200)
++@ CHECK:       SHF_LINK_ORDER (0x80)
++@ CHECK:     ]
++@ CHECK:     Link: 5
++@ CHECK:   }
++@ CHECK: ]
++
++
++
++@-------------------------------------------------------------------------------
++@ Check symbol func1.  It should be weak binding, and belong to .TEST1 section.
++@-------------------------------------------------------------------------------
++@ CHECK: Symbols [
++@ CHECK:   Symbol {
++@ CHECK:     Name: func1
++@ CHECK:     Binding: Weak (0x2)
++@ CHECK:     Type: Function (0x2)
++@ CHECK:     Section: .TEST1 (0x5)
++@ CHECK:   }
++@ CHECK: ]
+diff --git a/test/MC/ARM/eh-directive-section-multiple-func.s b/test/MC/ARM/eh-directive-section-multiple-func.s
+new file mode 100644
+index 0000000..444099f8
+--- /dev/null
++++ b/test/MC/ARM/eh-directive-section-multiple-func.s
+@@ -0,0 +1,129 @@
++@ RUN: llvm-mc %s -triple=armv7-unknown-linux-gnueabi -filetype=obj -o - \
++@ RUN:   | llvm-readobj -s -sd -sr -t | FileCheck %s
++
++@ Check whether the section is switched back properly.
++
++@ The assembler should switch the section back to the corresponding section
++@ after it have emitted the exception handling indices and tables.  In this
++@ test case, we are checking whether the section is correct when .section
++@ directives is used.
++
++@ In this example, func1 and func2 should be defined in .TEST1 section.
++@ It is incorrect if the func2 is in .text, .ARM.extab.TEST1, or
++@ .ARM.exidx.TEST1 sections.
++
++	.syntax	unified
++
++	.section	.TEST1
++
++	.globl	func1
++	.align	2
++	.type	func1,%function
++	.fnstart
++func1:
++	bx	lr
++	.personality	__gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func2
++	.align	2
++	.type	func2,%function
++	.fnstart
++func2:
++	bx	lr
++	.personality	__gxx_personality_v0
++	.handlerdata
++	.fnend
++
++
++@-------------------------------------------------------------------------------
++@ Check the .text section.  This should be empty.
++@-------------------------------------------------------------------------------
++@ CHECK: Sections [
++@ CHECK:   Section {
++@ CHECK:     Name: .text
++@ CHECK:     SectionData (
++@ CHECK:     )
++@ CHECK:   }
++
++
++@-------------------------------------------------------------------------------
++@ Check the .TEST1 section.  There should be two "bx lr" instructions.
++@-------------------------------------------------------------------------------
++@ CHECK:   Section {
++@ CHECK:     Name: .TEST1
++@ CHECK:     SectionData (
++@ CHECK:       0000: 1EFF2FE1 1EFF2FE1                    |../.../.|
++@ CHECK:     )
++@ CHECK:   }
++
++
++
++@-------------------------------------------------------------------------------
++@ Check the .ARM.extab.TEST1 section.
++@-------------------------------------------------------------------------------
++@ CHECK:   Section {
++@ CHECK:     Name: .ARM.extab.TEST1
++@ CHECK:     Relocations [
++@ CHECK:       0x0 R_ARM_PREL31 __gxx_personality_v0 0x0
++@ CHECK:       0x8 R_ARM_PREL31 __gxx_personality_v0 0x0
++@ CHECK:     ]
++@ CHECK:     SectionData (
++@ CHECK:       0000: 00000000 B0B0B000 00000000 B0B0B000  |................|
++@ CHECK:     )
++@ CHECK:   }
++
++
++@-------------------------------------------------------------------------------
++@ Check the .ARM.exidx.TEST1 section.
++@-------------------------------------------------------------------------------
++@ CHECK:   Section {
++@ CHECK:     Name: .ARM.exidx.TEST1
++@ CHECK:     Link: 4
++@-------------------------------------------------------------------------------
++@ The first word of each entry should be relocated to .TEST1 section.
++@ The second word of each entry should be relocated to
++@ .ARM.extab.TESET1 section.
++@-------------------------------------------------------------------------------
++@ CHECK:     Relocations [
++@ CHECK:       0x0 R_ARM_PREL31 .TEST1 0x0
++@ CHECK:       0x4 R_ARM_PREL31 .ARM.extab.TEST1 0x0
++@ CHECK:       0x8 R_ARM_PREL31 .TEST1 0x0
++@ CHECK:       0xC R_ARM_PREL31 .ARM.extab.TEST1 0x0
++@ CHECK:     ]
++@-------------------------------------------------------------------------------
++@ The first word should be the offset to .TEST1.
++@ The second word should be the offset to .ARM.extab.TEST1
++@-------------------------------------------------------------------------------
++@ CHECK:     SectionData (
++@ CHECK:       0000: 00000000 00000000 04000000 08000000  |................|
++@ CHECK:     )
++@ CHECK:   }
++@ CHECK: ]
++
++
++
++@-------------------------------------------------------------------------------
++@ Check the symbols "func1" and "func2".  They should belong to .TEST1 section.
++@-------------------------------------------------------------------------------
++@ CHECK: Symbols [
++@ CHECK:   Symbol {
++@ CHECK:     Name: func1
++@ CHECK:     Value: 0x0
++@ CHECK:     Size: 0
++@ CHECK:     Binding: Global (0x1)
++@ CHECK:     Type: Function (0x2)
++@ CHECK:     Other: 0
++@ CHECK:     Section: .TEST1 (0x4)
++@ CHECK:   }
++@ CHECK:   Symbol {
++@ CHECK:     Name: func2
++@ CHECK:     Value: 0x4
++@ CHECK:     Size: 0
++@ CHECK:     Binding: Global (0x1)
++@ CHECK:     Type: Function (0x2)
++@ CHECK:     Other: 0
++@ CHECK:     Section: .TEST1 (0x4)
++@ CHECK:   }
++@ CHECK: ]
+diff --git a/test/MC/ARM/eh-directive-section.s b/test/MC/ARM/eh-directive-section.s
+new file mode 100644
+index 0000000..5f5d125
+--- /dev/null
++++ b/test/MC/ARM/eh-directive-section.s
+@@ -0,0 +1,164 @@
++@ RUN: llvm-mc %s -triple=armv7-unknown-linux-gnueabi -filetype=obj -o - \
++@ RUN:   | llvm-readobj -s -sd -sr -t | FileCheck %s
++
++@ Check the combination of .section, .fnstart, and .fnend directives.
++
++@ For the functions in .text section, the exception handling index (EXIDX)
++@ should be generated in .ARM.exidx, and the exception handling table (EXTAB)
++@ should be generated in .ARM.extab.
++
++@ For the functions in custom section specified by .section directives,
++@ the EXIDX should be generated in ".ARM.exidx[[SECTION_NAME]]", and the EXTAB
++@ should be generated in ".ARM.extab[[SECTION_NAME]]".
++
++	.syntax	unified
++
++@-------------------------------------------------------------------------------
++@ .TEST1 section
++@-------------------------------------------------------------------------------
++	.section	.TEST1
++	.globl	func1
++	.align	2
++	.type	func1,%function
++	.fnstart
++func1:
++	bx	lr
++	.personality	__gxx_personality_v0
++	.handlerdata
++	.fnend
++
++
++@-------------------------------------------------------------------------------
++@ TEST2 section (without the dot in the beginning)
++@-------------------------------------------------------------------------------
++	.section	TEST2
++	.globl	func2
++	.align	2
++	.type	func2,%function
++	.fnstart
++func2:
++	bx	lr
++	.personality	__gxx_personality_v0
++	.handlerdata
++	.fnend
++
++
++@-------------------------------------------------------------------------------
++@ Check the .TEST1 section.
++@-------------------------------------------------------------------------------
++@ CHECK: Sections [
++@ CHECK:   Section {
++@ CHECK:     Index: 4
++@ CHECK:     Name: .TEST1
++@ CHECK:     SectionData (
++@ CHECK:       0000: 1EFF2FE1                             |../.|
++@ CHECK:     )
++@ CHECK:   }
++
++@-------------------------------------------------------------------------------
++@ Check the .ARM.extab.TEST1 section, the EXTAB of .TEST1 section.
++@-------------------------------------------------------------------------------
++@ CHECK:   Section {
++@ CHECK:     Name: .ARM.extab.TEST1
++@ CHECK:     Relocations [
++@ CHECK:       0x0 R_ARM_PREL31 __gxx_personality_v0 0x0
++@ CHECK:     ]
++@ CHECK:     SectionData (
++@ CHECK:       0000: 00000000 B0B0B000                    |........|
++@ CHECK:     )
++@ CHECK:   }
++
++
++@-------------------------------------------------------------------------------
++@ Check the.ARM.exidx.TEST1 section, the EXIDX of .TEST1 section.
++@-------------------------------------------------------------------------------
++@ CHECK:   Section {
++@ CHECK:     Name: .ARM.exidx.TEST1
++
++@-------------------------------------------------------------------------------
++@ This section should linked with .TEST1 section.
++@-------------------------------------------------------------------------------
++@ CHECK:     Link: 4
++
++@-------------------------------------------------------------------------------
++@ The first word should be relocated to the code address in .TEST1 section.
++@ The second word should be relocated to the EHTAB entry in .ARM.extab.TEST1
++@ section.
++@-------------------------------------------------------------------------------
++@ CHECK:     Relocations [
++@ CHECK:       0x0 R_ARM_PREL31 .TEST1 0x0
++@ CHECK:       0x4 R_ARM_PREL31 .ARM.extab.TEST1 0x0
++@ CHECK:     ]
++@ CHECK:     SectionData (
++@ CHECK:       0000: 00000000 00000000                    |........|
++@ CHECK:     )
++@ CHECK:   }
++
++
++
++@-------------------------------------------------------------------------------
++@ Check the TEST2 section (without the dot in the beginning)
++@-------------------------------------------------------------------------------
++@ CHECK:   Section {
++@ CHECK:     Index: 9
++@ CHECK:     Name: TEST2
++@ CHECK:     SectionData (
++@ CHECK:       0000: 1EFF2FE1                             |../.|
++@ CHECK:     )
++@ CHECK:   }
++
++@-------------------------------------------------------------------------------
++@ Check the .ARM.extabTEST2 section, the EXTAB of TEST2 section.
++@-------------------------------------------------------------------------------
++@ CHECK:   Section {
++@ CHECK:     Name: .ARM.extabTEST2
++@ CHECK:     Relocations [
++@ CHECK:       0x0 R_ARM_PREL31 __gxx_personality_v0 0x0
++@ CHECK:     ]
++@ CHECK:     SectionData (
++@ CHECK:       0000: 00000000 B0B0B000                    |........|
++@ CHECK:     )
++@ CHECK:   }
++
++
++@-------------------------------------------------------------------------------
++@ Check the .ARM.exidxTEST2 section, the EXIDX of TEST2 section.
++@-------------------------------------------------------------------------------
++@ CHECK:   Section {
++@ CHECK:     Name: .ARM.exidxTEST2
++
++@-------------------------------------------------------------------------------
++@ This section should linked with TEST2 section.
++@-------------------------------------------------------------------------------
++@ CHECK:     Link: 9
++
++@-------------------------------------------------------------------------------
++@ The first word should be relocated to the code address in TEST2 section.
++@ The second word should be relocated to the EHTAB entry in .ARM.extabTEST2
++@ section.
++@-------------------------------------------------------------------------------
++@ CHECK:     Relocations [
++@ CHECK:       0x0 R_ARM_PREL31 TEST2 0x0
++@ CHECK:       0x4 R_ARM_PREL31 .ARM.extabTEST2 0x0
++@ CHECK:     ]
++@ CHECK:     SectionData (
++@ CHECK:       0000: 00000000 00000000                    |........|
++@ CHECK:     )
++@ CHECK:   }
++@ CHECK: ]
++
++
++
++@-------------------------------------------------------------------------------
++@ Check the symbols and the sections they belong to
++@-------------------------------------------------------------------------------
++@ CHECK: Symbols [
++@ CHECK:   Symbol {
++@ CHECK:     Name: func1
++@ CHECK:     Section: .TEST1 (0x4)
++@ CHECK:   }
++@ CHECK:   Symbol {
++@ CHECK:     Name: func2
++@ CHECK:     Section: TEST2 (0x9)
++@ CHECK:   }
++@ CHECK: ]
+diff --git a/test/MC/ARM/eh-directive-setfp-diagnostics.s b/test/MC/ARM/eh-directive-setfp-diagnostics.s
+new file mode 100644
+index 0000000..a5b8aa2
+--- /dev/null
++++ b/test/MC/ARM/eh-directive-setfp-diagnostics.s
+@@ -0,0 +1,87 @@
++@ RUN: not llvm-mc -triple=armv7-unknown-linux-gnueabi < %s 2> %t
++@ RUN: FileCheck --check-prefix=CHECK < %t %s
++
++@ Check the diagnostics for .setfp directive.
++
++
++	.syntax unified
++	.text
++
++@-------------------------------------------------------------------------------
++@ TEST1: .setfp before .fnstart
++@-------------------------------------------------------------------------------
++	.globl	func1
++	.align	2
++	.type	func1,%function
++	.setfp	fp, sp, #0
++@ CHECK: error: .fnstart must precede .setfp directive
++@ CHECK:        .setfp fp, sp, #0
++@ CHECK:        ^
++	.fnstart
++func1:
++	.fnend
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST2: .setfp after .handlerdata
++@-------------------------------------------------------------------------------
++	.globl	func2
++	.align	2
++	.type	func2,%function
++	.fnstart
++func2:
++	.handlerdata
++	.setfp	fp, sp, #0
++@ CHECK: error: .setfp must precede .handlerdata directive
++@ CHECK:        .setfp fp, sp, #0
++@ CHECK:        ^
++	.fnend
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST3: .setfp with bad fp register
++@-------------------------------------------------------------------------------
++	.globl	func3
++	.align	2
++	.type	func3,%function
++	.fnstart
++func3:
++	.setfp	0, r0, #0
++@ CHECK: error: frame pointer register expected
++@ CHECK:        .setfp 0, r0, #0
++@ CHECK:               ^
++	.fnend
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST4: .setfp with bad sp register
++@-------------------------------------------------------------------------------
++	.globl	func4
++	.align	2
++	.type	func4,%function
++	.fnstart
++func4:
++	.setfp	fp, 0, #0
++@ CHECK: error: stack pointer register expected
++@ CHECK:        .setfp fp, 0, #0
++@ CHECK:                   ^
++	.fnend
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST5: .setfp with non-sp register as second operand
++@-------------------------------------------------------------------------------
++	.globl	func5
++	.align	2
++	.type	func5,%function
++	.fnstart
++func5:
++	.setfp	fp, r0, #0
++@ CHECK: error: register should be either $sp or the latest fp register
++@ CHECK:        .setfp fp, r0, #0
++@ CHECK:                   ^
++	.fnend
+diff --git a/test/MC/ARM/eh-directive-setfp.s b/test/MC/ARM/eh-directive-setfp.s
+new file mode 100644
+index 0000000..3fbab5a
+--- /dev/null
++++ b/test/MC/ARM/eh-directive-setfp.s
+@@ -0,0 +1,239 @@
++@ RUN: llvm-mc %s -triple=armv7-unknown-linux-gnueabi -filetype=obj -o - \
++@ RUN:   | llvm-readobj -s -sd | FileCheck %s
++
++@ Check for .setfp directive.
++
++@ The .setfp directive will track the offset between the frame pointer and
++@ the stack pointer.  This is required for the function that will change
++@ the stack pointer out of the function prologue.  If the exception is thrown,
++@ then libunwind will reconstruct the stack pointer from the frame pointer.
++@ The reconstruction code is implemented by two different unwind opcode:
++@ (i) the unwind opcode to copy stack offset from the other register, and
++@ (ii) the unwind opcode to add or substract the stack offset.
++@
++@ This file includes several cases separated by different range of -offset
++@
++@              (-offset) <  0x00
++@              (-offset) == 0x00
++@     0x04  <= (-offset) <= 0x100
++@     0x104 <= (-offset) <= 0x200
++@     0x204 <= (-offset)
++
++
++	.syntax unified
++
++@-------------------------------------------------------------------------------
++@ TEST1
++@-------------------------------------------------------------------------------
++	.section	.TEST1
++	.globl	func1
++	.align	2
++	.type	func1,%function
++	.fnstart
++func1:
++	.setfp	fp, sp, #0
++	add	fp, sp, #0
++	sub	sp, fp, #0
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++@-------------------------------------------------------------------------------
++@ The assembler should emit 0x9B to copy stack pointer from r11.
++@-------------------------------------------------------------------------------
++@ CHECK: Section {
++@ CHECK:   Name: .ARM.extab.TEST1
++@ CHECK:   SectionData (
++@ CHECK:     0000: 00000000 B0B09B00                    |........|
++@ CHECK:   )
++@ CHECK: }
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST2
++@-------------------------------------------------------------------------------
++	.section	.TEST2
++	.globl	func2a
++	.align	2
++	.type	func2a,%function
++	.fnstart
++func2a:
++	.setfp	fp, sp, #-4
++	add	fp, sp, #4
++	sub	sp, fp, #4
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func2b
++	.align	2
++	.type	func2b,%function
++	.fnstart
++func2b:
++	.setfp	fp, sp, #-0x100
++	add	fp, sp, #0x100
++	sub	sp, fp, #0x100
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++@-------------------------------------------------------------------------------
++@ The assembler should emit 0x9B to copy stack pointer from r11.
++@ The assembler should emit ((-offset - 4) >> 2) for offset.
++@-------------------------------------------------------------------------------
++@ CHECK: Section {
++@ CHECK:   Name: .ARM.extab.TEST2
++@ CHECK:   SectionData (
++@ CHECK:     0000: 00000000 B0009B00 00000000 B03F9B00  |.............?..|
++@ CHECK:   )
++@ CHECK: }
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST3
++@-------------------------------------------------------------------------------
++	.section	.TEST3
++	.globl	func3a
++	.align	2
++	.type	func3a,%function
++	.fnstart
++func3a:
++	.setfp	fp, sp, #-0x104
++	sub	fp, sp, #0x104
++	add	sp, fp, #0x104
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func3b
++	.align	2
++	.type	func3b,%function
++	.fnstart
++func3b:
++	.setfp	fp, sp, #-0x200
++	sub	fp, sp, #0x200
++	add	sp, fp, #0x200
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++@-------------------------------------------------------------------------------
++@ The assembler should emit 0x9B to copy stack pointer from r11.
++@ The assembler should emit 0x3F and ((-offset - 0x104) >> 2) for offset.
++@-------------------------------------------------------------------------------
++@ CHECK: Section {
++@ CHECK:   Name: .ARM.extab.TEST3
++@ CHECK:   SectionData (
++@ CHECK:     0000: 00000000 003F9B00 00000000 3F3F9B00  |.....?......??..|
++@ CHECK:   )
++@ CHECK: }
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST4
++@-------------------------------------------------------------------------------
++	.section	.TEST4
++	.globl	func4a
++	.align	2
++	.type	func4a,%function
++	.fnstart
++func4a:
++	.setfp	fp, sp, #-0x204
++	sub	fp, sp, #0x204
++	add	sp, fp, #0x204
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func4b
++	.align	2
++	.type	func4b,%function
++	.fnstart
++func4b:
++	.setfp	fp, sp, #-0x580
++	sub	fp, sp, #0x580
++	add	sp, fp, #0x580
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++@-------------------------------------------------------------------------------
++@ The assembler should emit 0x9B to copy stack pointer from r11.
++@ The assembler should emit 0xB2 and the ULEB128 encoding of
++@ ((-offset - 0x204) >> 2) for offset.
++@-------------------------------------------------------------------------------
++@ CHECK: Section {
++@ CHECK:   Name: .ARM.extab.TEST4
++@ CHECK:   SectionData (
++@ CHECK:     0000: 00000000 00B29B00 00000000 DFB29B01  |................|
++@ CHECK:     0010: B0B0B001                             |....|
++@ CHECK:   )
++@ CHECK: }
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST5
++@-------------------------------------------------------------------------------
++	.section	.TEST5
++	.globl	func5a
++	.align	2
++	.type	func5a,%function
++	.fnstart
++func5a:
++	.setfp	fp, sp, #0x4
++	add	fp, sp, #0x4
++	sub	sp, fp, #0x4
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func5b
++	.align	2
++	.type	func5b,%function
++	.fnstart
++func5b:
++	.setfp	fp, sp, #0x104
++	add	fp, sp, #0x104
++	sub	sp, fp, #0x104
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func5c
++	.align	2
++	.type	func5c,%function
++	.fnstart
++func5c:
++	.setfp	fp, sp, #0x204
++	add	fp, sp, #0x204
++	sub	sp, fp, #0x204
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++@-------------------------------------------------------------------------------
++@ The assembler should emit 0x9B to copy stack pointer from r11.
++@ The assembler should emit (0x40 | (offset - 4)) >> 2 for offset.
++@ If (offset - 4) is greater than 0x3f, then multiple 0x7f should be emitted.
++@-------------------------------------------------------------------------------
++@ CHECK: Section {
++@ CHECK:   Name: .ARM.extab.TEST5
++@ CHECK:   SectionData (
++@ CHECK:     0000: 00000000 B0409B00 00000000 407F9B00  |.....@......@...|
++@ CHECK:     0010: 00000000 7F7F9B01 B0B0B040           |...........@|
++@ CHECK:   )
++@ CHECK: }
+diff --git a/test/MC/ARM/eh-directive-text-section-multiple-func.s b/test/MC/ARM/eh-directive-text-section-multiple-func.s
+new file mode 100644
+index 0000000..c941276
+--- /dev/null
++++ b/test/MC/ARM/eh-directive-text-section-multiple-func.s
+@@ -0,0 +1,81 @@
++@ RUN: llvm-mc %s -triple=armv7-unknown-linux-gnueabi -filetype=obj -o - \
++@ RUN:   | llvm-readobj -s -sd -sr -r -t | FileCheck %s
++
++@ Check whether the section is switched back or not.
++
++@ The assembler should emit the machine code of "func2" in .text section.
++@ It is incorrect if the machine code is emitted in .ARM.exidx or .ARM.extab.
++@ Besides, there should be two entries in .ARM.exidx section.
++
++	.syntax	unified
++
++	.text
++	.globl	func1
++	.align	2
++	.type	func1,%function
++	.fnstart
++func1:
++	bx	lr
++	.fnend
++
++	.globl	func2
++	.align	2
++	.type	func2,%function
++	.fnstart
++func2:
++	bx	lr
++	.fnend
++
++
++@-------------------------------------------------------------------------------
++@ Check the .text section.  There should be two "bx lr" instructions.
++@-------------------------------------------------------------------------------
++@ CHECK: Sections [
++@ CHECK:   Section {
++@ CHECK:     Name: .text
++@ CHECK:     SectionData (
++@ CHECK:       0000: 1EFF2FE1 1EFF2FE1                    |../.../.|
++@ CHECK:     )
++@ CHECK:   }
++
++
++@-------------------------------------------------------------------------------
++@ Check the .ARM.exidx section.
++@ There should be two entries (two words per entry.)
++@-------------------------------------------------------------------------------
++@ CHECK:   Section {
++@ CHECK:     Name: .ARM.exidx
++@-------------------------------------------------------------------------------
++@ The first word of each entry should be relocated to .text section.
++@-------------------------------------------------------------------------------
++@ CHECK:     Relocations [
++@ CHECK:       0x0 R_ARM_PREL31 .text 0x0
++@ CHECK:       0x0 R_ARM_NONE __aeabi_unwind_cpp_pr0 0x0
++@ CHECK:       0x8 R_ARM_PREL31 .text 0x0
++@ CHECK:     ]
++@ CHECK:     SectionData (
++@-------------------------------------------------------------------------------
++@ The first word should be the offset to .text.  The second word should be
++@ 0xB0B0B080, which means compact model 0 is used (0x80) and the rest of the
++@ word is filled with FINISH opcode (0xB0).
++@-------------------------------------------------------------------------------
++@ CHECK:       0000: 00000000 B0B0B080 04000000 B0B0B080 |................|
++@ CHECK:     )
++@ CHECK:   }
++@ CHECK: ]
++
++
++
++@-------------------------------------------------------------------------------
++@ Check the symbols "func1" and "func2".  They should belong to .text section.
++@-------------------------------------------------------------------------------
++@ CHECK: Symbols [
++@ CHECK:   Symbol {
++@ CHECK:     Name: func1
++@ CHECK:     Section: .text (0x1)
++@ CHECK:   }
++@ CHECK:   Symbol {
++@ CHECK:     Name: func2
++@ CHECK:     Section: .text (0x1)
++@ CHECK:   }
++@ CHECK: ]
+diff --git a/test/MC/ARM/eh-directive-text-section.s b/test/MC/ARM/eh-directive-text-section.s
+new file mode 100644
+index 0000000..5ab1baa
+--- /dev/null
++++ b/test/MC/ARM/eh-directive-text-section.s
+@@ -0,0 +1,82 @@
++@ RUN: llvm-mc %s -triple=armv7-unknown-linux-gnueabi -filetype=obj -o - \
++@ RUN:   | llvm-readobj -s -sd -sr | FileCheck %s
++
++@ Check the .fnstart directive and the .fnend directive.
++
++@ The .fnstart directive and .fnend directive should create an entry in
++@ exception handling table.  For example, if the function is defined in .text
++@ section, then there should be an entry in .ARM.exidx section.
++
++	.syntax	unified
++
++	.text
++	.globl	func1
++	.align	2
++	.type	func1,%function
++	.fnstart
++func1:
++	bx	lr
++	.fnend
++
++
++
++@-------------------------------------------------------------------------------
++@ Check the .text section.
++@-------------------------------------------------------------------------------
++@ CHECK: Sections [
++@ CHECK:   Section {
++
++@-------------------------------------------------------------------------------
++@ Check the index of .text section.  This will be used in .ARM.exidx.
++@-------------------------------------------------------------------------------
++@ CHECK:     Index: 1
++@ CHECK:     Name: .text
++@ CHECK:     Type: SHT_PROGBITS (0x1)
++@ CHECK:     Flags [ (0x6)
++@ CHECK:       SHF_ALLOC (0x2)
++@ CHECK:       SHF_EXECINSTR (0x4)
++@ CHECK:     ]
++@ CHECK:     SectionData (
++@ CHECK:       0000: 1EFF2FE1                             |../.|
++@ CHECK:     )
++@ CHECK:   }
++
++
++@-------------------------------------------------------------------------------
++@ Check the name of the EXIDX section.  For the function in the .text section,
++@ this should be .ARM.exidx.  It is incorrect to see .ARM.exidx.text here.
++@-------------------------------------------------------------------------------
++@ CHECK:   Section {
++@ CHECK:     Name: .ARM.exidx
++@ CHECK:     Type: SHT_ARM_EXIDX (0x70000001)
++@ CHECK:     Flags [ (0x82)
++@ CHECK:       SHF_ALLOC (0x2)
++@ CHECK:       SHF_LINK_ORDER (0x80)
++@ CHECK:     ]
++
++@-------------------------------------------------------------------------------
++@ Check the linked section of the EXIDX section.  This should be the index
++@ of the .text section.
++@-------------------------------------------------------------------------------
++@ CHECK:     Link: 1
++
++@-------------------------------------------------------------------------------
++@ The first word should be relocated to the code address in .text section.
++@ Besides, since this function is using compact model 0, thus we have to
++@ add an relocation to __aeabi_unwind_cpp_pr0.
++@-------------------------------------------------------------------------------
++@ CHECK:     Relocations [
++@ CHECK:       0x0 R_ARM_PREL31 .text 0x0
++@ CHECK:       0x0 R_ARM_NONE __aeabi_unwind_cpp_pr0 0x0
++@ CHECK:     ]
++
++@-------------------------------------------------------------------------------
++@ The first word should be the offset to .text.  The second word should be
++@ 0xB0B0B080, which means compact model 0 is used (0x80) and the rest of the
++@ word is filled with FINISH opcode (0xB0).
++@-------------------------------------------------------------------------------
++@ CHECK:     SectionData (
++@ CHECK:       0000: 00000000 B0B0B080                    |........|
++@ CHECK:     )
++@ CHECK:   }
++@ CHECK: ]
+diff --git a/test/MC/ARM/eh-directive-vsave-diagnostics.s b/test/MC/ARM/eh-directive-vsave-diagnostics.s
+new file mode 100644
+index 0000000..62787f3
+--- /dev/null
++++ b/test/MC/ARM/eh-directive-vsave-diagnostics.s
+@@ -0,0 +1,41 @@
++@ RUN: not llvm-mc -triple=armv7-unknown-linux-gnueabi < %s 2> %t
++@ RUN: FileCheck --check-prefix=CHECK < %t %s
++
++@ Check the diagnostics for .vsave directive
++
++@ .vsave directive should always come after .fnstart directive
++@ and before .handlerdata directive.
++
++	.syntax unified
++	.text
++
++@-------------------------------------------------------------------------------
++@ TEST1: .vsave before .fnstart
++@-------------------------------------------------------------------------------
++	.globl	func1
++	.align	2
++	.type	func1,%function
++	.vsave	{d0, d1, d2, d3}
++@ CHECK: error: .fnstart must precede .save or .vsave directives
++@ CHECK:        .vsave {d0, d1, d2, d3}
++@ CHECK:        ^
++	.fnstart
++func1:
++	.fnend
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST2: .vsave after .handlerdata
++@-------------------------------------------------------------------------------
++	.globl	func2
++	.align	2
++	.type	func2,%function
++	.fnstart
++func2:
++	.handlerdata
++	.vsave	{d0, d1, d2, d3}
++@ CHECK: error: .save or .vsave must precede .handlerdata directive
++@ CHECK:        .vsave {d0, d1, d2, d3}
++@ CHECK:        ^
++	.fnend
+diff --git a/test/MC/ARM/eh-directive-vsave.s b/test/MC/ARM/eh-directive-vsave.s
+new file mode 100644
+index 0000000..c9b78d7
+--- /dev/null
++++ b/test/MC/ARM/eh-directive-vsave.s
+@@ -0,0 +1,130 @@
++@ RUN: llvm-mc %s -triple=armv7-unknown-linux-gnueabi -filetype=obj -o - \
++@ RUN:   | llvm-readobj -s -sd -sr | FileCheck %s
++
++@ Check the .vsave directive
++
++@ The .vsave directive records the VFP registers which are pushed to the
++@ stack.  There are two different opcodes:
++@
++@     0xC800: pop d[(16+x+y):(16+x)]    @ d[16+x+y]-d[16+x] must be consecutive
++@     0xC900: pop d[(x+y):x]            @ d[x+y]-d[x] must be consecutive
++
++
++	.syntax unified
++
++@-------------------------------------------------------------------------------
++@ TEST1
++@-------------------------------------------------------------------------------
++	.section	.TEST1
++	.globl	func1a
++	.align	2
++	.type	func1a,%function
++	.fnstart
++func1a:
++	.vsave	{d0}
++	vpush	{d0}
++	vpop	{d0}
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func1b
++	.align	2
++	.type	func1b,%function
++	.fnstart
++func1b:
++	.vsave	{d0, d1, d2, d3}
++	vpush	{d0, d1, d2, d3}
++	vpop	{d0, d1, d2, d3}
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func1c
++	.align	2
++	.type	func1c,%function
++	.fnstart
++func1c:
++	.vsave	{d0, d1, d2, d3, d4, d5, d6, d7}
++	vpush	{d0, d1, d2, d3, d4, d5, d6, d7}
++	vpop	{d0, d1, d2, d3, d4, d5, d6, d7}
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func1d
++	.align	2
++	.type	func1d,%function
++	.fnstart
++func1d:
++	.vsave	{d2, d3, d4, d5, d6, d7}
++	vpush	{d2, d3, d4, d5, d6, d7}
++	vpop	{d2, d3, d4, d5, d6, d7}
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++@ CHECK: Section {
++@ CHECK:   Name: .ARM.extab.TEST1
++@ CHECK:   SectionData (
++@ CHECK:     0000: 00000000 B000C900 00000000 B003C900  |................|
++@ CHECK:     0010: 00000000 B007C900 00000000 B025C900  |.............%..|
++@ CHECK:   )
++@ CHECK: }
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST2
++@-------------------------------------------------------------------------------
++	.section	.TEST2
++	.globl	func2a
++	.align	2
++	.type	func2a,%function
++	.fnstart
++func2a:
++	.vsave	{d16}
++	vpush	{d16}
++	vpop	{d16}
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func2b
++	.align	2
++	.type	func2b,%function
++	.fnstart
++func2b:
++	.vsave	{d16, d17, d18, d19}
++	vpush	{d16, d17, d18, d19}
++	vpop	{d16, d17, d18, d19}
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func2c
++	.align	2
++	.type	func2c,%function
++	.fnstart
++func2c:
++	.vsave	{d16, d17, d18, d19, d20, d21, d22, d23, d24, d25, d26, d27, d28, d29, d30, d31}
++	vpush	{d16, d17, d18, d19, d20, d21, d22, d23, d24, d25, d26, d27, d28, d29, d30, d31}
++	vpop	{d16, d17, d18, d19, d20, d21, d22, d23, d24, d25, d26, d27, d28, d29, d30, d31}
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++@ CHECK: Section {
++@ CHECK:   Name: .ARM.extab.TEST2
++@ CHECK:   SectionData (
++@ CHECK:     0000: 00000000 B000C800 00000000 B003C800  |................|
++@ CHECK:     0010: 00000000 B00FC800                    |........|
++@ CHECK:   )
++@ CHECK: }
+-- 
+1.8.3
+

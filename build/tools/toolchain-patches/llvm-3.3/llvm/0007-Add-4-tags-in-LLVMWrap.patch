@@ -1,0 +1,258 @@
+From 41045f32f8debbdd60cecd381cdbb131b0fb55fe Mon Sep 17 00:00:00 2001
+From: Logan Chien <loganchien@google.com>
+Date: Wed, 22 May 2013 17:11:28 +0800
+Subject: [PATCH 07/22] Add 4 tags in LLVMWrap.
+
+* kAndroidBitcodeType
+  Generate this bitcode for shared object or executable.
+
+* kAndroidSOName
+  Store DT_SONAME for this bitcode.
+
+* kAndroidDependLibrary
+  Store list of dependent library for this bitcode.
+
+* kAndroidLDFlags
+  Store linker flags for this bitcode.
+
+Cherry-picked from release_32 branch.
+Patch by Lai Wei-Chih <Robert.Lai@mediatek.com>
+---
+ include/llvm/Wrap/BCHeaderField.h     | 12 ++++++++-
+ include/llvm/Wrap/BitcodeWrapper.h    | 32 ++++++++++++++++++++++
+ include/llvm/Wrap/bitcode_wrapperer.h | 21 +++++++++++++++
+ lib/Wrap/BitcodeWrapper.cpp           |  4 +++
+ lib/Wrap/bitcode_wrapperer.cpp        | 51 ++++++++++++++++++++++++++++-------
+ 5 files changed, 109 insertions(+), 11 deletions(-)
+
+diff --git a/include/llvm/Wrap/BCHeaderField.h b/include/llvm/Wrap/BCHeaderField.h
+index fd8d585..a5dbec1 100644
+--- a/include/llvm/Wrap/BCHeaderField.h
++++ b/include/llvm/Wrap/BCHeaderField.h
+@@ -34,10 +34,20 @@ class BCHeaderField {
+     kInvalid = 0,
+     kBitcodeHash = 1,
+     kAndroidCompilerVersion = 0x4001,
+-    kAndroidOptimizationLevel = 0x4002
++    kAndroidOptimizationLevel = 0x4002,
++    kAndroidBitcodeType = 0x5001,
++    kAndroidSOName = 0x5002,
++    kAndroidDependLibrary = 0x5003,
++    kAndroidLDFlags = 0x5004
+   } Tag;
+   typedef uint16_t FixedSubfield;
+ 
++  typedef enum {
++    BC_Relocatable  = 0x00000000,
++    BC_SharedObject = 0x00000001,
++    BC_Executable   = 0x00000002
++  } BitcodeType;
++
+   BCHeaderField(Tag ID, size_t len, uint8_t* data) :
+       ID_(ID), len_(len), data_(data) {}
+   size_t GetTotalSize() {
+diff --git a/include/llvm/Wrap/BitcodeWrapper.h b/include/llvm/Wrap/BitcodeWrapper.h
+index a5ce262..543efb6 100644
+--- a/include/llvm/Wrap/BitcodeWrapper.h
++++ b/include/llvm/Wrap/BitcodeWrapper.h
+@@ -21,6 +21,7 @@
+ 
+ #include <cstddef>
+ #include <stdint.h>
++#include <vector>
+ 
+ struct AndroidBitcodeWrapper {
+   uint32_t Magic;
+@@ -54,6 +55,10 @@ class BitcodeWrapper {
+   uint32_t mTargetAPI;
+   uint32_t mCompilerVersion;
+   uint32_t mOptimizationLevel;
++  uint32_t mBitcodeType;
++  uint32_t mLDFlags;
++  std::string mSOName;
++  std::vector<std::string> mDependentLibrary;
+ 
+  public:
+   /**
+@@ -108,6 +113,33 @@ class BitcodeWrapper {
+     return mOptimizationLevel;
+   }
+ 
++  /**
++   * \return bitcode type for this bitcode.
++   */
++  uint32_t getBitcodeType() const {
++    return mBitcodeType;
++  }
++
++  /**
++   * \return linker flags for this bitcode.
++   */
++  uint32_t getLDFlags() const {
++    return mLDFlags;
++  }
++
++  /**
++   * \return soname for this bitcode.
++   */
++  const std::string& getSOName() const {
++    return mSOName;
++  }
++
++  /**
++   * \return list of dependent library for this bitcode.
++   */
++  const std::vector<std::string>& getDependentLibrary() const {
++    return mDependentLibrary;
++  }
+ };
+ 
+ /**
+diff --git a/include/llvm/Wrap/bitcode_wrapperer.h b/include/llvm/Wrap/bitcode_wrapperer.h
+index 26b9664..062cc80 100644
+--- a/include/llvm/Wrap/bitcode_wrapperer.h
++++ b/include/llvm/Wrap/bitcode_wrapperer.h
+@@ -22,6 +22,7 @@
+ 
+ #include <stdint.h>
+ #include <stddef.h>
++#include <string>
+ #include <vector>
+ 
+ #include "llvm/Wrap/support_macros.h"
+@@ -91,6 +92,22 @@ class BitcodeWrapperer {
+     return android_optimization_level_;
+   }
+ 
++  uint32_t getAndroidBitcodeType() {
++    return android_bitcode_type_;
++  }
++
++  uint32_t getAndroidLDFlags() {
++    return android_ldflags_;
++  }
++
++  std::string getAndroidSOName() {
++    return android_soname_;
++  }
++
++  std::vector<std::string> getAndroidDependentLibrary() {
++    return android_dependent_library_;
++  }
++
+   ~BitcodeWrapperer();
+ 
+  private:
+@@ -204,6 +221,10 @@ class BitcodeWrapperer {
+   uint32_t android_target_api_;
+   uint32_t android_compiler_version_;
+   uint32_t android_optimization_level_;
++  uint32_t android_bitcode_type_;
++  uint32_t android_ldflags_;
++  std::string android_soname_;
++  std::vector<std::string> android_dependent_library_;
+ 
+   // PNaCl bitcode version
+   uint32_t pnacl_bc_version_;
+diff --git a/lib/Wrap/BitcodeWrapper.cpp b/lib/Wrap/BitcodeWrapper.cpp
+index d779d3a..21cba8e 100644
+--- a/lib/Wrap/BitcodeWrapper.cpp
++++ b/lib/Wrap/BitcodeWrapper.cpp
+@@ -35,6 +35,10 @@ BitcodeWrapper::BitcodeWrapper(const char *bitcode, size_t bitcodeSize)
+     mTargetAPI = wrapperer.getAndroidTargetAPI();
+     mCompilerVersion = wrapperer.getAndroidCompilerVersion();
+     mOptimizationLevel = wrapperer.getAndroidOptimizationLevel();
++    mBitcodeType = wrapperer.getAndroidBitcodeType();
++    mLDFlags = wrapperer.getAndroidLDFlags();
++    mSOName = wrapperer.getAndroidSOName();
++    mDependentLibrary = wrapperer.getAndroidDependentLibrary();
+   } else if (wrapperer.IsInputBitcodeFile()) {
+     mFileType = BC_RAW;
+   }
+diff --git a/lib/Wrap/bitcode_wrapperer.cpp b/lib/Wrap/bitcode_wrapperer.cpp
+index 65f94b7..5479dde 100644
+--- a/lib/Wrap/bitcode_wrapperer.cpp
++++ b/lib/Wrap/bitcode_wrapperer.cpp
+@@ -43,6 +43,8 @@ static const uint32_t kAndroidHeaderVersion = 0;
+ static const uint32_t kAndroidTargetAPI = 0;
+ static const uint32_t kAndroidDefaultCompilerVersion = 0;
+ static const uint32_t kAndroidDefaultOptimizationLevel = 3;
++static const uint32_t kAndroidBitcodeType = 0;
++static const uint32_t kAndroidLDFlags = 0;
+ 
+ // PNaCl bitcode version number.
+ static const uint32_t kPnaclBitcodeVersion = 0;
+@@ -64,6 +66,8 @@ BitcodeWrapperer::BitcodeWrapperer(WrapperInput* infile, WrapperOutput* outfile)
+       android_target_api_(kAndroidTargetAPI),
+       android_compiler_version_(kAndroidDefaultCompilerVersion),
+       android_optimization_level_(kAndroidDefaultOptimizationLevel),
++      android_bitcode_type_(kAndroidBitcodeType),
++      android_ldflags_(kAndroidLDFlags),
+       pnacl_bc_version_(0),
+       error_(false) {
+   buffer_.resize(kBitcodeWrappererBufferSize);
+@@ -226,24 +230,51 @@ bool BitcodeWrapperer::ParseWrapperHeader() {
+         return false;
+       }
+ 
+-      struct IntFieldHelper {
++      struct FieldHelper {
+         BCHeaderField::FixedSubfield tag;
+-        uint16_t len;
+-        uint32_t val;
++        BCHeaderField::FixedSubfield len;
++        union {
++          uint32_t int32;
++          uint8_t* char8;
++        }val;
+       };
+-      IntFieldHelper tempIntField;
++      FieldHelper tempField;
+ 
+       switch (field.getID()) {
+         case BCHeaderField::kAndroidCompilerVersion:
+-          if (field.Write((uint8_t*)&tempIntField,
+-                          sizeof(tempIntField))) {
+-            android_compiler_version_ = tempIntField.val;
++          if (field.Write((uint8_t*)&tempField,
++                          sizeof(tempField))) {
++            android_compiler_version_ = tempField.val.int32;
+           }
+           break;
+         case BCHeaderField::kAndroidOptimizationLevel:
+-          if (field.Write((uint8_t*)&tempIntField,
+-                          sizeof(tempIntField))) {
+-            android_optimization_level_ = tempIntField.val;
++          if (field.Write((uint8_t*)&tempField,
++                          sizeof(tempField))) {
++            android_optimization_level_ = tempField.val.int32;
++          }
++          break;
++        case BCHeaderField::kAndroidBitcodeType:
++          if (field.Write((uint8_t*)&tempField,
++                          sizeof(tempField))) {
++            android_bitcode_type_ = tempField.val.int32;
++          }
++          break;
++        case BCHeaderField::kAndroidLDFlags:
++          if (field.Write((uint8_t*)&tempField,
++                          sizeof(tempField))) {
++            android_ldflags_ = tempField.val.int32;
++          }
++          break;
++        case BCHeaderField::kAndroidSOName:
++          if (field.Write((uint8_t*)&tempField,
++                          sizeof(tempField))) {
++            android_soname_ = (char *) tempField.val.char8;
++          }
++          break;
++        case BCHeaderField::kAndroidDependLibrary:
++          if (field.Write((uint8_t*)&tempField,
++                          sizeof(tempField))) {
++            android_dependent_library_.push_back((char *)tempField.val.char8);
+           }
+           break;
+         default:
+-- 
+1.8.3
+

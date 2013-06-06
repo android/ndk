@@ -1,0 +1,52 @@
+From 7933072747e53afa008f6cfa19f559d2ed252e90 Mon Sep 17 00:00:00 2001
+From: Logan Chien <tzuhsiang.chien@gmail.com>
+Date: Wed, 29 May 2013 19:27:53 +0800
+Subject: [PATCH 29/29] Pass -KPIC for Android MIPS by default.
+
+---
+ lib/Driver/Tools.cpp | 22 ++++++++++++----------
+ 1 file changed, 12 insertions(+), 10 deletions(-)
+
+diff --git a/lib/Driver/Tools.cpp b/lib/Driver/Tools.cpp
+index dbd467b..0acf3b0 100644
+--- a/lib/Driver/Tools.cpp
++++ b/lib/Driver/Tools.cpp
+@@ -5498,11 +5498,12 @@ void freebsd::Assemble::ConstructJob(Compilation &C, const JobAction &JA,
+                                       options::OPT_fpic, options::OPT_fno_pic,
+                                       options::OPT_fPIE, options::OPT_fno_PIE,
+                                       options::OPT_fpie, options::OPT_fno_pie);
+-    if (LastPICArg &&
+-        (LastPICArg->getOption().matches(options::OPT_fPIC) ||
+-         LastPICArg->getOption().matches(options::OPT_fpic) ||
+-         LastPICArg->getOption().matches(options::OPT_fPIE) ||
+-         LastPICArg->getOption().matches(options::OPT_fpie))) {
++    if (getToolChain().getTriple().getEnvironment() == llvm::Triple::Android ||
++        (LastPICArg &&
++         (LastPICArg->getOption().matches(options::OPT_fPIC) ||
++          LastPICArg->getOption().matches(options::OPT_fpic) ||
++          LastPICArg->getOption().matches(options::OPT_fPIE) ||
++          LastPICArg->getOption().matches(options::OPT_fpie)))) {
+       CmdArgs.push_back("-KPIC");
+     }
+   } else if (getToolChain().getArch() == llvm::Triple::arm ||
+@@ -5925,11 +5926,12 @@ void gnutools::Assemble::ConstructJob(Compilation &C, const JobAction &JA,
+                                       options::OPT_fpic, options::OPT_fno_pic,
+                                       options::OPT_fPIE, options::OPT_fno_PIE,
+                                       options::OPT_fpie, options::OPT_fno_pie);
+-    if (LastPICArg &&
+-        (LastPICArg->getOption().matches(options::OPT_fPIC) ||
+-         LastPICArg->getOption().matches(options::OPT_fpic) ||
+-         LastPICArg->getOption().matches(options::OPT_fPIE) ||
+-         LastPICArg->getOption().matches(options::OPT_fpie))) {
++    if (getToolChain().getTriple().getEnvironment() == llvm::Triple::Android ||
++        (LastPICArg &&
++         (LastPICArg->getOption().matches(options::OPT_fPIC) ||
++          LastPICArg->getOption().matches(options::OPT_fpic) ||
++          LastPICArg->getOption().matches(options::OPT_fPIE) ||
++          LastPICArg->getOption().matches(options::OPT_fpie)))) {
+       CmdArgs.push_back("-KPIC");
+     }
+   } else if (getToolChain().getArch() == llvm::Triple::systemz) {
+-- 
+1.8.3
+

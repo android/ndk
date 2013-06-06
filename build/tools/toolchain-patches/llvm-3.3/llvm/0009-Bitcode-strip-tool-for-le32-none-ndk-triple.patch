@@ -1,0 +1,299 @@
+From 53fa4f4edf683585760f783862d47428b07a11f2 Mon Sep 17 00:00:00 2001
+From: Logan Chien <loganchien@google.com>
+Date: Wed, 22 May 2013 19:00:51 +0800
+Subject: [PATCH 09/22] Bitcode strip tool for le32-none-ndk triple.
+
+Cherry picked from release_32 branch.
+Patch by Lai Wei-Chih <Robert.Lai@mediatek.com>
+
+Change compared with original patch:
+
+1. llvm/Support/IRReader.h has been moved to llvm/IRReader/IRReader.h.
+
+2. Several headers have been moved to llvm/IR/*
+---
+ tools/Makefile                                    |   2 +-
+ tools/le32-none-ndk-strip/CMakeLists.txt          |  15 ++
+ tools/le32-none-ndk-strip/Makefile                |  14 ++
+ tools/le32-none-ndk-strip/le32-none-ndk-strip.cpp | 213 ++++++++++++++++++++++
+ 4 files changed, 243 insertions(+), 1 deletion(-)
+ create mode 100644 tools/le32-none-ndk-strip/CMakeLists.txt
+ create mode 100644 tools/le32-none-ndk-strip/Makefile
+ create mode 100644 tools/le32-none-ndk-strip/le32-none-ndk-strip.cpp
+
+diff --git a/tools/Makefile b/tools/Makefile
+index a6cad9b..e509d2b 100644
+--- a/tools/Makefile
++++ b/tools/Makefile
+@@ -36,7 +36,7 @@ PARALLEL_DIRS := opt llvm-as llvm-dis \
+                  llvm-rtdyld llvm-dwarfdump llvm-cov \
+                  llvm-size llvm-stress llvm-mcmarkup \
+                  llvm-symbolizer obj2yaml yaml2obj \
+-                 le32-none-ndk-link
++                 le32-none-ndk-link le32-none-ndk-strip
+ 
+ # If Intel JIT Events support is configured, build an extra tool to test it.
+ ifeq ($(USE_INTEL_JITEVENTS), 1)
+diff --git a/tools/le32-none-ndk-strip/CMakeLists.txt b/tools/le32-none-ndk-strip/CMakeLists.txt
+new file mode 100644
+index 0000000..0333d45
+--- /dev/null
++++ b/tools/le32-none-ndk-strip/CMakeLists.txt
+@@ -0,0 +1,15 @@
++set(LLVM_LINK_COMPONENTS
++  asmparser
++  bitreader
++  bitwriter
++  codegen
++  instrumentation
++  ipo
++  irreader
++  linker
++  selectiondag
++  )
++
++add_llvm_tool(le32-none-ndk-strip
++  le32-none-ndk-strip.cpp
++  )
+diff --git a/tools/le32-none-ndk-strip/Makefile b/tools/le32-none-ndk-strip/Makefile
+new file mode 100644
+index 0000000..f6b3c42
+--- /dev/null
++++ b/tools/le32-none-ndk-strip/Makefile
+@@ -0,0 +1,14 @@
++LEVEL := ../..
++
++TOOLNAME = le32-none-ndk-strip
++
++LINK_COMPONENTS := asmparser bitreader bitwriter codegen \
++                   instrumentation ipo irreader linker selectiondag
++
++USEDLIBS := LLVMWrap.a
++
++# This tool has no plugins, optimize startup time.
++TOOL_NO_EXPORTS := 1
++
++include $(LEVEL)/Makefile.common
++
+diff --git a/tools/le32-none-ndk-strip/le32-none-ndk-strip.cpp b/tools/le32-none-ndk-strip/le32-none-ndk-strip.cpp
+new file mode 100644
+index 0000000..a78cdc6
+--- /dev/null
++++ b/tools/le32-none-ndk-strip/le32-none-ndk-strip.cpp
+@@ -0,0 +1,213 @@
++/*
++ * Copyright 2013, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#include <fcntl.h>
++#include <unistd.h>
++#include <cstdlib>
++#include <vector>
++#include <utility>
++
++#include "llvm/Analysis/Verifier.h"
++#include "llvm/Bitcode/ReaderWriter.h"
++#include "llvm/IR/DataLayout.h"
++#include "llvm/IR/LLVMContext.h"
++#include "llvm/IR/Module.h"
++#include "llvm/IRReader/IRReader.h"
++#include "llvm/PassManager.h"
++#include "llvm/Support/CommandLine.h"
++#include "llvm/Support/Debug.h"
++#include "llvm/Support/FileUtilities.h"
++#include "llvm/Support/ManagedStatic.h"
++#include "llvm/Support/MemoryBuffer.h"
++#include "llvm/Support/PrettyStackTrace.h"
++#include "llvm/Support/Signals.h"
++#include "llvm/Support/SystemUtils.h"
++#include "llvm/Support/ToolOutputFile.h"
++#include "llvm/Transforms/IPO.h"
++#include "llvm/Transforms/IPO/PassManagerBuilder.h"
++#include "llvm/Transforms/Scalar.h"
++#include "llvm/Wrap/BitcodeWrapper.h"
++
++using namespace llvm;
++
++static cl::opt<std::string>
++InputFilename(cl::Positional, cl::desc("<input bitcode file>"),
++              cl::value_desc("filename"));
++
++static cl::opt<std::string>
++OutputFilename("o", cl::desc("Override output filename"),
++               cl::value_desc("filename"));
++
++static cl::opt<bool>
++Strip("strip-all", cl::desc("Strip all symbol info"));
++
++static cl::opt<bool>
++StripDebug("strip-debug", cl::desc("Strip debugger symbol info"));
++
++static cl::alias A0("s", cl::desc("Alias for --strip-all"),
++  cl::aliasopt(Strip));
++
++static cl::alias A1("S", cl::desc("Alias for --strip-debug"),
++  cl::aliasopt(StripDebug));
++
++static cl::alias A2("strip-unneeded", cl::desc("Alias for -strip-all"),
++  cl::aliasopt(Strip));
++
++
++static uint32_t ReadInt32(unsigned char *wrapper, size_t offset) {
++  uint32_t value = wrapper[offset]         |
++                   wrapper[offset+1] << 8  |
++                   wrapper[offset+2] << 16 |
++                   wrapper[offset+3] << 24;
++  return value;
++}
++
++static void WriteInt32(unsigned char *wrapper, unsigned offset, uint32_t value)
++{
++  wrapper[offset  ] = value & 0x000000ff;
++  wrapper[offset+1] = (value & 0x0000ff00) >> 8;
++  wrapper[offset+2] = (value & 0x00ff0000) >> 16;
++  wrapper[offset+3] = (value & 0xff000000) >> 24;
++}
++
++static size_t ReadBitcodeWrapper(int input_fd, unsigned char **wrapper, size_t& bitcode_size) {
++  size_t buffer_size = 1024;
++  size_t fixed_field_size = 7*4;
++
++  *wrapper = (unsigned char*) calloc(1, buffer_size);
++  size_t nread = read(input_fd, (void*) *wrapper, fixed_field_size);
++
++  if (nread != fixed_field_size) {
++    errs() << "Could not read bitcode header\n";
++    exit(1);
++  }
++
++  if (!isBitcodeWrapper((const unsigned char *) *wrapper,
++                        (const unsigned char *) *wrapper+fixed_field_size)) {
++    errs() << "Input file is not bitcode wrapper\n";
++    exit(0);
++  }
++
++  size_t offset_field = 2*4;
++  size_t size_field = 3*4;
++  size_t header_size = ReadInt32(*wrapper, offset_field);
++  bitcode_size = ReadInt32(*wrapper, size_field);
++
++  if (header_size > buffer_size) {
++    *wrapper = (unsigned char*) realloc((void *) *wrapper, header_size);
++  }
++
++  size_t variable_field_size = header_size-fixed_field_size;
++  if (variable_field_size > 0) {
++    nread = read(input_fd, (void*) ((*wrapper)+fixed_field_size), variable_field_size);
++    if (nread != (variable_field_size)) {
++      errs() << "Could not read bitcode header\n";
++      exit(1);
++    }
++  }
++
++  return header_size;
++}
++
++
++static void StripBitcode(const char *Bitcode, size_t BitcodeSize, std::string &BCString, LLVMContext &Context) {
++  StringRef input_data(Bitcode, BitcodeSize);
++  MemoryBuffer *buffer = MemoryBuffer::getMemBuffer(input_data, "", false);
++
++  std::string ParseErrorMessage;
++  Module *Result = ParseBitcodeFile(buffer, Context, &ParseErrorMessage);
++
++  if (!ParseErrorMessage.empty()) {
++    errs() << ParseErrorMessage << '\n';
++  }
++
++  std::auto_ptr<Module> M(Result);
++  raw_string_ostream BCStream(BCString);
++
++  PassManager PM;
++
++  PM.add(createVerifierPass());
++  PM.add(new DataLayout(M.get()));
++
++  // Strip debug info and symbols.
++  if (Strip || StripDebug)
++    PM.add(createStripSymbolsPass(StripDebug && !Strip));
++
++  PM.add(createBitcodeWriterPass(BCStream));
++  PM.run(*M.get());
++  BCStream.flush();
++}
++
++int main(int argc, char **argv) {
++
++  sys::PrintStackTraceOnErrorSignal();
++  llvm::PrettyStackTraceProgram X(argc, argv);
++
++  llvm_shutdown_obj Y;  // Call llvm_shutdown() on exit.
++  LLVMContext &Context = getGlobalContext();
++
++  cl::ParseCommandLineOptions(argc, argv, "Bitcode strip tool\n");
++
++  int input_fd = open(InputFilename.c_str(), O_RDONLY);
++
++  unsigned char *wrapper = NULL;
++  const char *bitcode = NULL;
++
++  // Read bitcode wrapper
++  size_t bitcode_size = 0;
++  size_t wrapper_size = ReadBitcodeWrapper(input_fd, &wrapper, bitcode_size);
++
++  // Read bitcode
++  bitcode = (const char*) calloc(1, bitcode_size);
++  size_t nread = read(input_fd, (void*) bitcode, bitcode_size);
++  if (nread != bitcode_size) {
++    errs() << "Could not read bitcode\n";
++    return 1;
++  }
++
++  // Strip bitcode
++  std::string BCString;
++  StripBitcode(bitcode, bitcode_size, BCString, Context);
++
++  // Update bitcode size
++  WriteInt32(wrapper, 12, BCString.length());
++
++  // Output stripped bitcode
++  OwningPtr<tool_output_file> Out;
++
++  // Default to input filename
++  if (OutputFilename.empty())
++    OutputFilename = InputFilename;
++
++  std::string ErrorInfo;
++  Out.reset(new tool_output_file(OutputFilename.c_str(), ErrorInfo,
++                                 raw_fd_ostream::F_Binary));
++  if (!ErrorInfo.empty()) {
++    errs() << ErrorInfo << '\n';
++    return 1;
++  }
++
++  Out->os().write((const char *) wrapper, wrapper_size);
++  Out->os().write(BCString.c_str(), BCString.length());
++  Out->keep();
++
++  // Clean up
++  free((void *) wrapper);
++  free((void *) bitcode);
++  close(input_fd);
++
++  return 0;
++}
+-- 
+1.8.3
+

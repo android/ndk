@@ -1,0 +1,25 @@
+From 70f2b884110a09c7852512bab09d3e1cbdb3fadc Mon Sep 17 00:00:00 2001
+From: Logan Chien <tzuhsiang.chien@gmail.com>
+Date: Thu, 23 May 2013 15:39:46 +0800
+Subject: [PATCH 01/29] Add triple to detect Android toolchain.
+
+Add i686-linux-android to detect the Android X86 toolchain.
+---
+ lib/Driver/ToolChains.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/lib/Driver/ToolChains.cpp b/lib/Driver/ToolChains.cpp
+index fffba0e..ad741c4 100644
+--- a/lib/Driver/ToolChains.cpp
++++ b/lib/Driver/ToolChains.cpp
+@@ -1107,6 +1107,7 @@ Generic_GCC::GCCInstallationDetector::GCCInstallationDetector(
+     "i686-pc-linux-gnu",
+     "i486-linux-gnu",
+     "i386-linux-gnu",
++    "i686-linux-android",
+     "i386-redhat-linux6E",
+     "i686-redhat-linux",
+     "i586-redhat-linux",
+-- 
+1.8.3
+

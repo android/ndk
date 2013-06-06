@@ -1,0 +1,64 @@
+From 94957f08c31a0bc877ee6e1e659693f93069c2ca Mon Sep 17 00:00:00 2001
+From: Logan Chien <tzuhsiang.chien@gmail.com>
+Date: Wed, 29 May 2013 18:23:17 +0800
+Subject: [PATCH 21/29] Define __le32__ for target le32-none-ndk
+
+Also define whatever LinuxTargetInfo define, because target
+le32-none-ndk implies Android which is based on Linux.
+---
+ lib/Basic/Targets.cpp | 21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
+
+diff --git a/lib/Basic/Targets.cpp b/lib/Basic/Targets.cpp
+index 0b613cd..cbbdf97 100644
+--- a/lib/Basic/Targets.cpp
++++ b/lib/Basic/Targets.cpp
+@@ -638,8 +638,15 @@ class AndroidTargetInfo : public OSTargetInfo<Target> {
+  protected:
+   virtual void getOSDefines(const LangOptions &Opts, const llvm::Triple &Triple,
+                             MacroBuilder &Builder) const {
+-    Builder.defineMacro("__ANDROID__");
++    DefineStd(Builder, "unix", Opts);
++    DefineStd(Builder, "linux", Opts);
++    Builder.defineMacro("__gnu_linux__");
+     Builder.defineMacro("__ELF__");
++    Builder.defineMacro("__ANDROID__", "1");
++    if (Opts.POSIXThreads)
++      Builder.defineMacro("_REENTRANT");
++    if (Opts.CPlusPlus)
++      Builder.defineMacro("_GNU_SOURCE");
+   }
+  public:
+   AndroidTargetInfo(const std::string &triple)
+@@ -5154,6 +5161,9 @@ class AndroidNDKTargetInfo : public TargetInfo {
+ public:
+   AndroidNDKTargetInfo(const std::string& TripleStr);
+ 
++  virtual void getArchDefines(const LangOptions &Opts,
++                              MacroBuilder &Builder) const;
++
+   virtual void getTargetDefines(const LangOptions& Opts,
+                                 MacroBuilder& Builder) const;
+ 
+@@ -5213,10 +5223,17 @@ AndroidNDKTargetInfo::AndroidNDKTargetInfo(const std::string& Triple)
+                       "v128:64:128-a0:0:64-n32-S64";
+ }
+ 
+-void AndroidNDKTargetInfo::getTargetDefines(const LangOptions& Opts,
++void AndroidNDKTargetInfo::getArchDefines(const LangOptions& Opts,
+                                          MacroBuilder& Builder) const {
++  Builder.defineMacro("__le32__");
+   Builder.defineMacro("__ANDROID__");
++}
++
++void AndroidNDKTargetInfo::getTargetDefines(const LangOptions& Opts,
++                                         MacroBuilder& Builder) const {
+   Builder.defineMacro("__ELF__");
++  Builder.defineMacro("__LITTLE_ENDIAN__");
++  getArchDefines(Opts, Builder);
+ }
+ } // end anonymous namespace
+ 
+-- 
+1.8.3
+

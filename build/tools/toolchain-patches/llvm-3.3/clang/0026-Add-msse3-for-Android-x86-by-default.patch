@@ -1,0 +1,28 @@
+From ca50e1b99cc3586930435d9460351ab715092d39 Mon Sep 17 00:00:00 2001
+From: Logan Chien <tzuhsiang.chien@gmail.com>
+Date: Wed, 29 May 2013 19:24:08 +0800
+Subject: [PATCH 26/29] Add msse3 for Android x86 by default.
+
+---
+ lib/Driver/Tools.cpp | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/lib/Driver/Tools.cpp b/lib/Driver/Tools.cpp
+index c3506e1..cb69485 100644
+--- a/lib/Driver/Tools.cpp
++++ b/lib/Driver/Tools.cpp
+@@ -1341,6 +1341,11 @@ void Clang::AddX86TargetArgs(const ArgList &Args,
+   // attributes here.
+   llvm::StringMap<unsigned> PrevFeature;
+   std::vector<const char*> Features;
++  if (getToolChain().getTriple().getEnvironment() == llvm::Triple::Android) {
++    // Add -msse3
++    PrevFeature["sse3"] = Features.size() + 1;
++    Features.push_back("+sse3");
++  }
+   for (arg_iterator it = Args.filtered_begin(options::OPT_m_x86_Features_Group),
+          ie = Args.filtered_end(); it != ie; ++it) {
+     StringRef Name = (*it)->getOption().getName();
+-- 
+1.8.3
+

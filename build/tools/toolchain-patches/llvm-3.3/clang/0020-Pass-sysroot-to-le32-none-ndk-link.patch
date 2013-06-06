@@ -1,0 +1,35 @@
+From f77a2e50b5175b4bd3dbfe11b62a41683370d77a Mon Sep 17 00:00:00 2001
+From: Lai Wei-Chih <Robert.Lai@mediatek.com>
+Date: Mon, 22 Apr 2013 13:21:18 +0800
+Subject: [PATCH 20/29] Pass --sysroot to le32-none-ndk-link.
+
+Change-Id: I5469f3806af7d508d776299d8cf14bfd3e513321
+---
+ lib/Driver/Tools.cpp | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/lib/Driver/Tools.cpp b/lib/Driver/Tools.cpp
+index 89ca95a..597f23d 100644
+--- a/lib/Driver/Tools.cpp
++++ b/lib/Driver/Tools.cpp
+@@ -5967,6 +5967,7 @@ void ndktools::Link::ConstructJob(Compilation &C, const JobAction &JA,
+                                   const char *LinkingOutput) const {
+   const toolchains::NDKClang& ToolChain =
+     static_cast<const toolchains::NDKClang&>(getToolChain());
++  const Driver &D = getToolChain().getDriver();
+ 
+   ArgStringList CmdArgs;
+ 
+@@ -5977,6 +5978,9 @@ void ndktools::Link::ConstructJob(Compilation &C, const JobAction &JA,
+     CmdArgs.push_back("-shared");
+   }
+ 
++  if (!D.SysRoot.empty())
++    CmdArgs.push_back(Args.MakeArgString("--sysroot=" + D.SysRoot));
++
+   CmdArgs.push_back("-o");
+   CmdArgs.push_back(Output.getFilename());
+ 
+-- 
+1.8.3
+

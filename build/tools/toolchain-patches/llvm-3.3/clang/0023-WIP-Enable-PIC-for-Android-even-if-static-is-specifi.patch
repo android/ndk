@@ -1,0 +1,32 @@
+From c034167e45caccd40a32903c0ffbb70de0cd96ce Mon Sep 17 00:00:00 2001
+From: Logan Chien <tzuhsiang.chien@gmail.com>
+Date: Wed, 29 May 2013 18:56:46 +0800
+Subject: [PATCH 23/29] [WIP] Enable PIC for Android even if "-static" is
+ specified.
+
+[WORK IN PROGRESS] XXX Missing test cases.
+
+Android only supports a limited subset of the relocation
+types on ARM and MIPS architecture.  Without this fix,
+the Android build system can't link the executable properly.
+---
+ lib/Driver/Tools.cpp | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/lib/Driver/Tools.cpp b/lib/Driver/Tools.cpp
+index 597f23d..1d7444d 100644
+--- a/lib/Driver/Tools.cpp
++++ b/lib/Driver/Tools.cpp
+@@ -2138,7 +2138,8 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
+       (Triple.getOS() != llvm::Triple::IOS ||
+        Triple.isOSVersionLT(6)))
+     PIC = PIE = false;
+-  if (Args.hasArg(options::OPT_static))
++  if (Args.hasArg(options::OPT_static) &&
++      getToolChain().getTriple().getEnvironment() != llvm::Triple::Android)
+     PIC = PIE = false;
+ 
+   if (Arg *A = Args.getLastArg(options::OPT_mdynamic_no_pic)) {
+-- 
+1.8.3
+

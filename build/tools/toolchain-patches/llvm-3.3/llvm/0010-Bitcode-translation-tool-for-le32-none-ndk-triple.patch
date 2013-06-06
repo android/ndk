@@ -1,0 +1,952 @@
+From 1f903996bffc541bb96a113baeb3cd96a310bf21 Mon Sep 17 00:00:00 2001
+From: Logan Chien <loganchien@google.com>
+Date: Wed, 22 May 2013 19:35:36 +0800
+Subject: [PATCH 10/22] Bitcode translation tool for le32-none-ndk triple.
+
+Translate le32-none-ndk bitcode to target bitcode.
+
+Cherry-picked from release_32 branch.
+Patch by Lai Wei-Chih <Robert.Lai@mediatek.com>
+
+Change compared with original patch:
+
+1. Several headers have been moved to llvm/IR/* or
+   llvm/IRReader/*
+---
+ tools/Makefile                                     |   2 +-
+ tools/le32-none-ndk-translate/ARMExpandVAArg.cpp   |  79 +++++++
+ .../ARMReplaceUnwindHeaderSize.cpp                 |  33 +++
+ tools/le32-none-ndk-translate/CMakeLists.txt       |  23 ++
+ tools/le32-none-ndk-translate/ExpandVAArgPass.cpp  |  44 ++++
+ tools/le32-none-ndk-translate/ExpandVAArgPass.h    |  59 +++++
+ tools/le32-none-ndk-translate/Makefile             |  13 ++
+ tools/le32-none-ndk-translate/MipsExpandVAArg.cpp  |  81 +++++++
+ .../MipsReplaceUnwindHeaderSize.cpp                |  33 +++
+ .../ReplaceUnwindHeaderSizePass.cpp                |  65 ++++++
+ .../ReplaceUnwindHeaderSizePass.h                  |  45 ++++
+ tools/le32-none-ndk-translate/X86ExpandVAArg.cpp   |  67 ++++++
+ .../X86ReplaceUnwindHeaderSize.cpp                 |  33 +++
+ .../le32-none-ndk-translate.cpp                    | 239 +++++++++++++++++++++
+ 14 files changed, 815 insertions(+), 1 deletion(-)
+ create mode 100644 tools/le32-none-ndk-translate/ARMExpandVAArg.cpp
+ create mode 100644 tools/le32-none-ndk-translate/ARMReplaceUnwindHeaderSize.cpp
+ create mode 100644 tools/le32-none-ndk-translate/CMakeLists.txt
+ create mode 100644 tools/le32-none-ndk-translate/ExpandVAArgPass.cpp
+ create mode 100644 tools/le32-none-ndk-translate/ExpandVAArgPass.h
+ create mode 100644 tools/le32-none-ndk-translate/Makefile
+ create mode 100644 tools/le32-none-ndk-translate/MipsExpandVAArg.cpp
+ create mode 100644 tools/le32-none-ndk-translate/MipsReplaceUnwindHeaderSize.cpp
+ create mode 100644 tools/le32-none-ndk-translate/ReplaceUnwindHeaderSizePass.cpp
+ create mode 100644 tools/le32-none-ndk-translate/ReplaceUnwindHeaderSizePass.h
+ create mode 100644 tools/le32-none-ndk-translate/X86ExpandVAArg.cpp
+ create mode 100644 tools/le32-none-ndk-translate/X86ReplaceUnwindHeaderSize.cpp
+ create mode 100644 tools/le32-none-ndk-translate/le32-none-ndk-translate.cpp
+
+diff --git a/tools/Makefile b/tools/Makefile
+index e509d2b..ab427339 100644
+--- a/tools/Makefile
++++ b/tools/Makefile
+@@ -36,7 +36,7 @@ PARALLEL_DIRS := opt llvm-as llvm-dis \
+                  llvm-rtdyld llvm-dwarfdump llvm-cov \
+                  llvm-size llvm-stress llvm-mcmarkup \
+                  llvm-symbolizer obj2yaml yaml2obj \
+-                 le32-none-ndk-link le32-none-ndk-strip
++                 le32-none-ndk-link le32-none-ndk-strip le32-none-ndk-translate
+ 
+ # If Intel JIT Events support is configured, build an extra tool to test it.
+ ifeq ($(USE_INTEL_JITEVENTS), 1)
+diff --git a/tools/le32-none-ndk-translate/ARMExpandVAArg.cpp b/tools/le32-none-ndk-translate/ARMExpandVAArg.cpp
+new file mode 100644
+index 0000000..395e0e2
+--- /dev/null
++++ b/tools/le32-none-ndk-translate/ARMExpandVAArg.cpp
+@@ -0,0 +1,79 @@
++/*
++ * Copyright 2013, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#include "ExpandVAArgPass.h"
++
++#include <llvm/ADT/Triple.h>
++#include <llvm/IR/DataLayout.h>
++#include <llvm/IR/DerivedTypes.h>
++#include <llvm/IR/Function.h>
++#include <llvm/IR/IRBuilder.h>
++#include <llvm/IR/Instructions.h>
++#include <llvm/IR/Module.h>
++#include <llvm/IR/Type.h>
++#include <llvm/Pass.h>
++
++class ARMExpandVAArg : public ExpandVAArgPass {
++public:
++  virtual const char *getPassName() const {
++    return "ARM LLVM va_arg Instruction Expansion Pass";
++  }
++
++private:
++  // Derivative work from clang/lib/CodeGen/TargetInfo.cpp.
++  llvm::Value *expandVAArg(llvm::Instruction *pInst) {
++    llvm::Type *pty = pInst->getType();
++    llvm::Type *ty = pty->getContainedType(0);
++    llvm::Value *va_list_addr = pInst->getOperand(0);
++    llvm::IRBuilder<> builder(pInst);
++    const llvm::DataLayout *dl = getAnalysisIfAvailable<llvm::DataLayout>();
++
++    llvm::Type *bp = llvm::Type::getInt8PtrTy(*mContext);
++    llvm::Type *bpp = bp->getPointerTo(0);
++
++    llvm::Value *va_list_addr_bpp =
++        builder.CreateBitCast(va_list_addr, bpp, "ap");
++    llvm::Value *addr = builder.CreateLoad(va_list_addr_bpp, "ap.cur");
++    // Handle address alignment for type alignment > 32 bits.
++    uint64_t ty_align = dl->getABITypeAlignment(ty);
++
++    if (ty_align > 4) {
++      assert((ty_align & (ty_align - 1)) == 0 &&
++        "Alignment is not power of 2!");
++      llvm::Value *addr_as_int =
++        builder.CreatePtrToInt(addr, llvm::Type::getInt32Ty(*mContext));
++      addr_as_int = builder.CreateAdd(addr_as_int,
++        builder.getInt32(ty_align-1));
++      addr_as_int = builder.CreateAnd(addr_as_int,
++        builder.getInt32(~(ty_align-1)));
++      addr = builder.CreateIntToPtr(addr_as_int, bp);
++    }
++    llvm::Value *addr_typed = builder.CreateBitCast(addr, pty);
++
++    uint64_t offset = llvm::RoundUpToAlignment(dl->getTypeSizeInBits(ty)/8, 4);
++    llvm::Value *next_addr = builder.CreateGEP(addr,
++      llvm::ConstantInt::get(llvm::Type::getInt32Ty(*mContext), offset),
++      "ap.next");
++    builder.CreateStore(next_addr, va_list_addr_bpp);
++    return addr_typed;
++  }
++
++};
++
++ExpandVAArgPass* createARMExpandVAArgPass() {
++  return new ARMExpandVAArg();
++}
++
+diff --git a/tools/le32-none-ndk-translate/ARMReplaceUnwindHeaderSize.cpp b/tools/le32-none-ndk-translate/ARMReplaceUnwindHeaderSize.cpp
+new file mode 100644
+index 0000000..0d87e45
+--- /dev/null
++++ b/tools/le32-none-ndk-translate/ARMReplaceUnwindHeaderSize.cpp
+@@ -0,0 +1,33 @@
++/*
++ * Copyright 2013, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#include "ReplaceUnwindHeaderSizePass.h"
++
++class ARMReplaceUnwindHeaderSize : public ReplaceUnwindHeaderSizePass {
++public:
++  virtual const char *getPassName() const {
++    return "ARM LLVM Unwind Header Size Replacement Pass";
++  }
++
++  virtual size_t getTargetUnwindHeaderSize() const {
++    return 88;  // ARM EABI
++  }
++};
++
++ReplaceUnwindHeaderSizePass* createARMReplaceUnwindHeaderSizePass() {
++  return new ARMReplaceUnwindHeaderSize();
++}
++
+diff --git a/tools/le32-none-ndk-translate/CMakeLists.txt b/tools/le32-none-ndk-translate/CMakeLists.txt
+new file mode 100644
+index 0000000..cd6d648
+--- /dev/null
++++ b/tools/le32-none-ndk-translate/CMakeLists.txt
+@@ -0,0 +1,23 @@
++set(LLVM_LINK_COMPONENTS
++  asmparser
++  bitreader
++  bitwriter
++  codegen
++  instrumentation
++  ipo
++  irreader
++  linker
++  selectiondag
++  )
++
++add_llvm_tool(le32-none-ndk-translate
++  ARMExpandVAArg.cpp
++  ARMReplaceUnwindHeaderSize.cpp
++  ExpandVAArgPass.cpp
++  MipsExpandVAArg.cpp
++  MipsReplaceUnwindHeaderSize.cpp
++  ReplaceUnwindHeaderSizePass.cpp
++  X86ExpandVAArg.cpp
++  X86ReplaceUnwindHeaderSize.cpp
++  le32-none-ndk-translate.cpp
++  )
+diff --git a/tools/le32-none-ndk-translate/ExpandVAArgPass.cpp b/tools/le32-none-ndk-translate/ExpandVAArgPass.cpp
+new file mode 100644
+index 0000000..586ec15
+--- /dev/null
++++ b/tools/le32-none-ndk-translate/ExpandVAArgPass.cpp
+@@ -0,0 +1,44 @@
++/*
++ * Copyright 2013, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#include "ExpandVAArgPass.h"
++
++#include <llvm/ADT/STLExtras.h>
++#include <llvm/IR/Instructions.h>
++#include <llvm/Support/InstIterator.h>
++
++char ExpandVAArgPass::ID = 0;
++
++bool ExpandVAArgPass::runOnFunction(llvm::Function &pFunc) {
++  bool changed = false;
++
++  mContext = &pFunc.getContext();
++
++  // process va_arg inst
++  for (llvm::inst_iterator inst = llvm::inst_begin(pFunc),
++          inst_end = llvm::inst_end(pFunc), next_inst = llvm::next(inst);
++       inst != inst_end; inst = next_inst++) {
++    if (inst->getOpcode() == llvm::Instruction::VAArg) {
++      llvm::Value *v = expandVAArg(&*inst);
++      inst->replaceAllUsesWith(v);
++      inst->eraseFromParent();
++      changed = true;
++      continue;
++    }
++  }
++  return changed;
++}
++
+diff --git a/tools/le32-none-ndk-translate/ExpandVAArgPass.h b/tools/le32-none-ndk-translate/ExpandVAArgPass.h
+new file mode 100644
+index 0000000..869d26a
+--- /dev/null
++++ b/tools/le32-none-ndk-translate/ExpandVAArgPass.h
+@@ -0,0 +1,59 @@
++/*
++ * Copyright 2013, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#ifndef EXPAND_VAARG_PASS_H
++#define EXPAND_VAARG_PASS_H
++
++#include <llvm/Pass.h>
++
++namespace llvm {
++  class Function;
++  class Instruction;
++  class LLVMContext;
++  class Value;
++} // end llvm namespace
++
++/*
++ * This pass expands va_arg LLVM instruction
++ *
++ * LLVM backend does not yet fully support va_arg on many targets. Also,
++ * it does not currently support va_arg with aggregate types on any target.
++ * Therefore, each target should implement its own verion of
++ * ExpandVAArg::expandVAArg to expand va_arg.
++ */
++
++class ExpandVAArgPass : public llvm::FunctionPass {
++private:
++  static char ID;
++
++protected:
++  llvm::LLVMContext *mContext;
++
++private:
++  virtual llvm::Value *expandVAArg(llvm::Instruction *pInst) = 0;
++
++public:
++  ExpandVAArgPass() : llvm::FunctionPass(ID), mContext(NULL) { }
++
++  virtual bool runOnFunction(llvm::Function &pFunc);
++};
++
++
++ExpandVAArgPass* createARMExpandVAArgPass();
++ExpandVAArgPass* createX86ExpandVAArgPass();
++ExpandVAArgPass* createMipsExpandVAArgPass();
++
++#endif // EXPAND_VAARG_PASS_H
+diff --git a/tools/le32-none-ndk-translate/Makefile b/tools/le32-none-ndk-translate/Makefile
+new file mode 100644
+index 0000000..90e1edd
+--- /dev/null
++++ b/tools/le32-none-ndk-translate/Makefile
+@@ -0,0 +1,13 @@
++LEVEL := ../..
++
++TOOLNAME = le32-none-ndk-translate
++
++LINK_COMPONENTS := asmparser bitreader bitwriter codegen \
++                   instrumentation ipo irreader linker selectiondag
++
++USEDLIBS := LLVMWrap.a
++
++# This tool has no plugins, optimize startup time.
++TOOL_NO_EXPORTS := 1
++
++include $(LEVEL)/Makefile.common
+diff --git a/tools/le32-none-ndk-translate/MipsExpandVAArg.cpp b/tools/le32-none-ndk-translate/MipsExpandVAArg.cpp
+new file mode 100644
+index 0000000..99dfb81
+--- /dev/null
++++ b/tools/le32-none-ndk-translate/MipsExpandVAArg.cpp
+@@ -0,0 +1,81 @@
++/*
++ * Copyright 2013, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#include "ExpandVAArgPass.h"
++
++#include <llvm/ADT/Triple.h>
++#include <llvm/IR/DataLayout.h>
++#include <llvm/IR/DerivedTypes.h>
++#include <llvm/IR/Function.h>
++#include <llvm/IR/IRBuilder.h>
++#include <llvm/IR/Instructions.h>
++#include <llvm/IR/Module.h>
++#include <llvm/IR/Type.h>
++#include <llvm/Pass.h>
++
++class MipsExpandVAArg : public ExpandVAArgPass {
++public:
++  virtual const char *getPassName() const {
++    return "Mips LLVM va_arg Instruction Expansion Pass";
++  }
++
++private:
++  // Derivative work from clang/lib/CodeGen/TargetInfo.cpp.
++  virtual llvm::Value *expandVAArg(llvm::Instruction *pInst) {
++    llvm::Type *pty = pInst->getType();
++    llvm::Type *ty = pty->getContainedType(0);
++    llvm::Value *va_list_addr = pInst->getOperand(0);
++    llvm::IRBuilder<> builder(pInst);
++    const llvm::DataLayout *dl = getAnalysisIfAvailable<llvm::DataLayout>();
++
++    llvm::Type *bp = llvm::Type::getInt8PtrTy(*mContext);
++    llvm::Type *bpp = bp->getPointerTo(0);
++    llvm::Value *va_list_addr_bpp = builder.CreateBitCast(va_list_addr,
++                                                          bpp, "ap");
++    llvm::Value *addr = builder.CreateLoad(va_list_addr_bpp, "ap.cur");
++    int64_t type_align = dl->getABITypeAlignment(ty);
++    llvm::Value *addr_typed;
++    llvm::IntegerType *int_ty = llvm::Type::getInt32Ty(*mContext);
++
++    if (type_align > 4) {
++      llvm::Value *addr_as_int = builder.CreatePtrToInt(addr, int_ty);
++      llvm::Value *inc = llvm::ConstantInt::get(int_ty, type_align - 1);
++      llvm::Value *mask = llvm::ConstantInt::get(int_ty, -type_align);
++      llvm::Value *add_v = builder.CreateAdd(addr_as_int, inc);
++      llvm::Value *and_v = builder.CreateAnd(add_v, mask);
++      addr_typed = builder.CreateIntToPtr(and_v, pty);
++    }
++    else {
++      addr_typed = builder.CreateBitCast(addr, pty);
++    }
++
++    llvm::Value *aligned_addr = builder.CreateBitCast(addr_typed, bp);
++    type_align = std::max((unsigned)type_align, (unsigned) 4);
++    uint64_t offset =
++      llvm::RoundUpToAlignment(dl->getTypeSizeInBits(ty) / 8, type_align);
++    llvm::Value *next_addr =
++      builder.CreateGEP(aligned_addr, llvm::ConstantInt::get(int_ty, offset),
++                        "ap.next");
++    builder.CreateStore(next_addr, va_list_addr_bpp);
++
++    return addr_typed;
++  }
++
++};
++
++ExpandVAArgPass* createMipsExpandVAArgPass() {
++  return new MipsExpandVAArg();
++}
+diff --git a/tools/le32-none-ndk-translate/MipsReplaceUnwindHeaderSize.cpp b/tools/le32-none-ndk-translate/MipsReplaceUnwindHeaderSize.cpp
+new file mode 100644
+index 0000000..51a19ca
+--- /dev/null
++++ b/tools/le32-none-ndk-translate/MipsReplaceUnwindHeaderSize.cpp
+@@ -0,0 +1,33 @@
++/*
++ * Copyright 2013, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#include "ReplaceUnwindHeaderSizePass.h"
++
++class MipsReplaceUnwindHeaderSize : public ReplaceUnwindHeaderSizePass {
++public:
++  virtual const char *getPassName() const {
++    return "Mips LLVM Unwind Header Size Replacement Pass";
++  }
++
++  virtual size_t getTargetUnwindHeaderSize() const {
++    return 24;  // sizeof(_Unwind_Exception) == 24 on MIPS
++  }
++};
++
++ReplaceUnwindHeaderSizePass* createMipsReplaceUnwindHeaderSizePass() {
++  return new MipsReplaceUnwindHeaderSize();
++}
++
+diff --git a/tools/le32-none-ndk-translate/ReplaceUnwindHeaderSizePass.cpp b/tools/le32-none-ndk-translate/ReplaceUnwindHeaderSizePass.cpp
+new file mode 100644
+index 0000000..c747929
+--- /dev/null
++++ b/tools/le32-none-ndk-translate/ReplaceUnwindHeaderSizePass.cpp
+@@ -0,0 +1,65 @@
++/*
++ * Copyright 2013, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#include "ReplaceUnwindHeaderSizePass.h"
++
++#include "llvm/ADT/APInt.h"
++#include "llvm/IR/Constants.h"
++#include "llvm/IR/Module.h"
++#include "llvm/Support/CallSite.h"
++
++char ReplaceUnwindHeaderSizePass::ID = 0;
++
++bool ReplaceUnwindHeaderSizePass::runOnModule(llvm::Module &M) {
++  bool changed = false;
++  llvm::LLVMContext &ctx = M.getContext();
++  llvm::APInt unwind_hdr_size(/*numBits=*/32, /*val=*/getTargetUnwindHeaderSize());
++  llvm::ConstantInt *size_value = llvm::ConstantInt::get(ctx, unwind_hdr_size);
++  const char *k_func_name = "__ndk_le32_getUnwindHeaderSize";
++
++  llvm::SmallVector<llvm::Instruction*, 8> Insts;
++  llvm::Function *Func = 0;
++
++  for (llvm::Module::iterator i = M.begin(), e = M.end(); i != e; ++i) {
++    if (i->getName() == k_func_name)
++      Func = &*i;
++
++    for (llvm::Function::iterator fi = i->begin(), fe = i->end(); fi != fe; ++fi) {
++      for (llvm::BasicBlock::iterator bi = fi->begin(), be = fi->end(); bi != be; ++bi) {
++        if (llvm::CallInst *call = llvm::dyn_cast<llvm::CallInst>(&*bi)) {
++          if (!call->getCalledFunction())
++            continue;
++          if (call->getCalledFunction()->getName() != k_func_name)
++            continue;
++
++          call->replaceAllUsesWith(size_value);
++          changed = true;
++          Insts.push_back(call);
++        }
++      }
++    }
++  }
++
++  for (llvm::SmallVector<llvm::Instruction*, 8>::iterator i = Insts.begin(), e = Insts.end();
++       i != e; ++i)
++    (*i)->eraseFromParent();
++
++  if (Func)
++    Func->eraseFromParent();
++
++  return changed;
++}
++
+diff --git a/tools/le32-none-ndk-translate/ReplaceUnwindHeaderSizePass.h b/tools/le32-none-ndk-translate/ReplaceUnwindHeaderSizePass.h
+new file mode 100644
+index 0000000..9f5dc89
+--- /dev/null
++++ b/tools/le32-none-ndk-translate/ReplaceUnwindHeaderSizePass.h
+@@ -0,0 +1,45 @@
++/*
++ * Copyright 2013, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#ifndef REPLACE_UNWIND_HEADER_SIZE_PASS_H
++#define REPLACE_UNWIND_HEADER_SIZE_PASS_H
++
++#include <llvm/Pass.h>
++
++/*  This pass expands intrinsic __ndk_le32_getUnwindHeaderSize.
++ *  
++ *  _Unwind_Exception has different size for each target.
++ *  
++ *  ARM: 88
++ *  Mips: 24
++ *  X86: 32
++ */
++class ReplaceUnwindHeaderSizePass : public llvm::ModulePass {
++private:
++  static char ID;
++
++public:
++  ReplaceUnwindHeaderSizePass()
++    : llvm::ModulePass(ID) {}
++  virtual bool runOnModule(llvm::Module &M);
++  virtual size_t getTargetUnwindHeaderSize() const = 0;
++};
++
++ReplaceUnwindHeaderSizePass* createARMReplaceUnwindHeaderSizePass();
++ReplaceUnwindHeaderSizePass* createX86ReplaceUnwindHeaderSizePass();
++ReplaceUnwindHeaderSizePass* createMipsReplaceUnwindHeaderSizePass();
++
++#endif // REPLACE_UNWIND_HEADER_SIZE_PASS_H
+diff --git a/tools/le32-none-ndk-translate/X86ExpandVAArg.cpp b/tools/le32-none-ndk-translate/X86ExpandVAArg.cpp
+new file mode 100644
+index 0000000..a4cf80b
+--- /dev/null
++++ b/tools/le32-none-ndk-translate/X86ExpandVAArg.cpp
+@@ -0,0 +1,67 @@
++/*
++ * Copyright 2012, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#include "ExpandVAArgPass.h"
++
++#include <llvm/ADT/Triple.h>
++#include <llvm/IR/DataLayout.h>
++#include <llvm/IR/DerivedTypes.h>
++#include <llvm/IR/Function.h>
++#include <llvm/IR/IRBuilder.h>
++#include <llvm/IR/Instructions.h>
++#include <llvm/IR/Module.h>
++#include <llvm/IR/Type.h>
++#include <llvm/Pass.h>
++
++class X86ExpandVAArg : public ExpandVAArgPass {
++public:
++  virtual const char *getPassName() const {
++    return "X86 LLVM va_arg Instruction Expansion Pass";
++  }
++
++private:
++  // Derivative work from clang/lib/CodeGen/TargetInfo.cpp.
++  virtual llvm::Value *expandVAArg(llvm::Instruction *pInst) {
++    llvm::Type *pty = pInst->getType();
++    llvm::Type *ty = pty->getContainedType(0);
++    llvm::Value *va_list_addr = pInst->getOperand(0);
++    llvm::IRBuilder<> builder(pInst);
++    const llvm::DataLayout *dl = getAnalysisIfAvailable<llvm::DataLayout>();
++
++    llvm::Type *bp = llvm::Type::getInt8PtrTy(*mContext);
++    llvm::Type *bpp = bp->getPointerTo(0);
++    llvm::Value *va_list_addr_bpp = builder.CreateBitCast(va_list_addr,
++                                                          bpp, "ap");
++    llvm::Value *addr = builder.CreateLoad(va_list_addr_bpp, "ap.cur");
++
++    llvm::Value *addr_typed = builder.CreateBitCast(addr, pty);
++
++    // X86-32 stack type alignment is always 4.
++    uint64_t offset = llvm::RoundUpToAlignment(dl->getTypeSizeInBits(ty)/8, 4);
++    llvm::Value *next_addr = builder.CreateGEP(addr,
++      llvm::ConstantInt::get(llvm::Type::getInt32Ty(*mContext), offset),
++      "ap.next");
++    builder.CreateStore(next_addr, va_list_addr_bpp);
++
++    return addr_typed;
++  }
++
++}; // end X86ExpandVAArg
++
++ExpandVAArgPass* createX86ExpandVAArgPass() {
++  return new X86ExpandVAArg();
++}
++
+diff --git a/tools/le32-none-ndk-translate/X86ReplaceUnwindHeaderSize.cpp b/tools/le32-none-ndk-translate/X86ReplaceUnwindHeaderSize.cpp
+new file mode 100644
+index 0000000..8ee4271
+--- /dev/null
++++ b/tools/le32-none-ndk-translate/X86ReplaceUnwindHeaderSize.cpp
+@@ -0,0 +1,33 @@
++/*
++ * Copyright 2013, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#include "ReplaceUnwindHeaderSizePass.h"
++
++class X86ReplaceUnwindHeaderSize : public ReplaceUnwindHeaderSizePass {
++public:
++  virtual const char *getPassName() const {
++    return "X86 LLVM Unwind Header Size Replacement Pass";
++  }
++
++  virtual size_t getTargetUnwindHeaderSize() const {
++    return 32;  // Itanium EABI
++  }
++};
++
++ReplaceUnwindHeaderSizePass* createX86ReplaceUnwindHeaderSizePass() {
++  return new X86ReplaceUnwindHeaderSize();
++}
++
+diff --git a/tools/le32-none-ndk-translate/le32-none-ndk-translate.cpp b/tools/le32-none-ndk-translate/le32-none-ndk-translate.cpp
+new file mode 100644
+index 0000000..27d1e0c
+--- /dev/null
++++ b/tools/le32-none-ndk-translate/le32-none-ndk-translate.cpp
+@@ -0,0 +1,239 @@
++/*
++ * Copyright 2013, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#include <fcntl.h>
++#include <unistd.h>
++#include <cstdlib>
++#include <utility>
++
++#include "ExpandVAArgPass.h"
++#include "ReplaceUnwindHeaderSizePass.h"
++
++#include "llvm/Analysis/Verifier.h"
++#include "llvm/Bitcode/ReaderWriter.h"
++#include "llvm/IR/DataLayout.h"
++#include "llvm/IR/LLVMContext.h"
++#include "llvm/IR/Module.h"
++#include "llvm/IRReader/IRReader.h"
++#include "llvm/Pass.h"
++#include "llvm/PassManager.h"
++#include "llvm/Support/CommandLine.h"
++#include "llvm/Support/Debug.h"
++#include "llvm/Support/FileUtilities.h"
++#include "llvm/Support/ManagedStatic.h"
++#include "llvm/Support/MemoryBuffer.h"
++#include "llvm/Support/PrettyStackTrace.h"
++#include "llvm/Support/Signals.h"
++#include "llvm/Support/SystemUtils.h"
++#include "llvm/Support/ToolOutputFile.h"
++#include "llvm/Transforms/IPO.h"
++#include "llvm/Transforms/IPO/PassManagerBuilder.h"
++#include "llvm/Transforms/Scalar.h"
++#include "llvm/Wrap/BitcodeWrapper.h"
++
++using namespace llvm;
++
++static cl::opt<std::string>
++InputFilename(cl::Positional, cl::desc("<input bitcode file>"),
++              cl::value_desc("filename"));
++
++
++static cl::opt<std::string>
++ArchName("arch", cl::desc("Specify the arch name to translate: arm, x86, mips"),
++         cl::value_desc("arch name"),
++         cl::Required);
++
++static cl::opt<std::string>
++OutputFilename("o", cl::desc("Override output filename"),
++               cl::value_desc("filename"));
++
++
++static uint32_t ReadInt32(unsigned char *wrapper, size_t offset) {
++  uint32_t value = wrapper[offset]         |
++                   wrapper[offset+1] << 8  |
++                   wrapper[offset+2] << 16 |
++                   wrapper[offset+3] << 24;
++  return value;
++}
++
++static void WriteInt32(unsigned char *wrapper, unsigned offset, uint32_t value)
++{
++  wrapper[offset  ] = value & 0x000000ff;
++  wrapper[offset+1] = (value & 0x0000ff00) >> 8;
++  wrapper[offset+2] = (value & 0x00ff0000) >> 16;
++  wrapper[offset+3] = (value & 0xff000000) >> 24;
++}
++
++static size_t ReadBitcodeWrapper(int input_fd, unsigned char **wrapper, size_t& bitcode_size) {
++  size_t buffer_size = 1024;
++  size_t fixed_field_size = 7*4;
++
++  *wrapper = (unsigned char*) calloc(1, buffer_size);
++  size_t nread = read(input_fd, (void*) *wrapper, fixed_field_size);
++
++  if (nread != fixed_field_size) {
++    errs() << "Could not read bitcode header\n";
++    exit(1);
++  }
++
++  if (!isBitcodeWrapper((const unsigned char *) *wrapper,
++                        (const unsigned char *) *wrapper+fixed_field_size)) {
++    errs() << "Input file is not bitcode wrapper\n";
++    exit(0);
++  }
++
++  size_t offset_field = 2*4;
++  size_t size_field = 3*4;
++  size_t header_size = ReadInt32(*wrapper, offset_field);
++  bitcode_size = ReadInt32(*wrapper, size_field);
++
++  if (header_size > buffer_size) {
++    *wrapper = (unsigned char*) realloc((void *) *wrapper, header_size);
++  }
++
++  size_t variable_field_size = header_size-fixed_field_size;
++  if (variable_field_size > 0) {
++    nread = read(input_fd, (void*) ((*wrapper)+fixed_field_size), variable_field_size);
++    if (nread != (variable_field_size)) {
++      errs() << "Could not read bitcode header\n";
++      exit(1);
++    }
++  }
++
++  return header_size;
++}
++
++static void AddTargetTranslationPass(PassManager &PM)
++{
++  StringRef LayoutDescription;
++  ExpandVAArgPass *VAArgPass = NULL;
++  ReplaceUnwindHeaderSizePass *UnwindPass = NULL;
++
++  if (ArchName == "arm") {
++    LayoutDescription = "e-p:32:32:32-i1:8:8-i8:8:8-i16:16:16-i32:32:32-"
++                        "i64:64:64-f32:32:32-f64:64:64-"
++                        "v64:64:64-v128:64:128-a0:0:64-n32-S64";
++    VAArgPass = createARMExpandVAArgPass();
++    UnwindPass = createARMReplaceUnwindHeaderSizePass();
++  }
++  else if (ArchName == "x86") {
++    LayoutDescription = "e-p:32:32:32-i1:8:8-i8:8:8-i16:16:16-i32:32:32-"
++                        "i64:32:64-f32:32:32-f64:32:64-v64:64:64-v128:128:128-"
++                        "a0:0:64-f80:32:32-n8:16:32-S128";
++    VAArgPass = createX86ExpandVAArgPass();
++    UnwindPass = createX86ReplaceUnwindHeaderSizePass();
++  }
++  else if (ArchName == "mips") {
++    LayoutDescription = "e-p:32:32:32-i1:8:8-i8:8:32-i16:16:32-i32:32:32-"
++                        "i64:64:64-f32:32:32-f64:64:64-v64:64:64-n32-S64";
++    VAArgPass = createMipsExpandVAArgPass();
++    UnwindPass = createMipsReplaceUnwindHeaderSizePass();
++  }
++  else {
++    errs() << "'" << ArchName << "' is not supported!\n";
++    exit(1);
++  }
++
++  // Add target specific pass
++  PM.add(new DataLayout(LayoutDescription));
++  PM.add(VAArgPass);
++  PM.add(UnwindPass);
++
++}
++
++static void TranslateBitcode(const char *Bitcode, size_t BitcodeSize, std::string &BCString, LLVMContext &Context) {
++  StringRef input_data(Bitcode, BitcodeSize);
++  MemoryBuffer *buffer = MemoryBuffer::getMemBuffer(input_data, "", false);
++
++  std::string ParseErrorMessage;
++  Module *Result = ParseBitcodeFile(buffer, Context, &ParseErrorMessage);
++
++  if (!ParseErrorMessage.empty()) {
++    errs() << ParseErrorMessage << '\n';
++  }
++
++  std::auto_ptr<Module> M(Result);
++  raw_string_ostream BCStream(BCString);
++
++  PassManager PM;
++
++  AddTargetTranslationPass(PM);
++  PM.add(createVerifierPass());
++  PM.add(createBitcodeWriterPass(BCStream));
++  PM.run(*M.get());
++  BCStream.flush();
++}
++
++int main(int argc, char **argv) {
++
++  sys::PrintStackTraceOnErrorSignal();
++  llvm::PrettyStackTraceProgram X(argc, argv);
++
++  llvm_shutdown_obj Y;  // Call llvm_shutdown() on exit.
++  LLVMContext &Context = getGlobalContext();
++
++  cl::ParseCommandLineOptions(argc, argv, "Bitcode translation tool\n");
++
++  int input_fd = open(InputFilename.c_str(), O_RDONLY);
++
++  unsigned char *wrapper = NULL;
++  const char *bitcode = NULL;
++
++  // Read bitcode wrapper
++  size_t bitcode_size = 0;
++  size_t wrapper_size = ReadBitcodeWrapper(input_fd, &wrapper, bitcode_size);
++
++  // Read bitcode
++  bitcode = (const char*) calloc(1, bitcode_size);
++  size_t nread = read(input_fd, (void*) bitcode, bitcode_size);
++  if (nread != bitcode_size) {
++    errs() << "Could not read bitcode\n";
++    return 1;
++  }
++
++  // Translate bitcode
++  std::string BCString;
++  TranslateBitcode(bitcode, bitcode_size, BCString, Context);
++
++  // Update bitcode size
++  WriteInt32(wrapper, 12, BCString.length());
++
++  // Output stripped bitcode
++  OwningPtr<tool_output_file> Out;
++
++  // Default to input filename
++  if (OutputFilename.empty())
++    OutputFilename = InputFilename;
++
++  std::string ErrorInfo;
++  Out.reset(new tool_output_file(OutputFilename.c_str(), ErrorInfo,
++                                 raw_fd_ostream::F_Binary));
++  if (!ErrorInfo.empty()) {
++    errs() << ErrorInfo << '\n';
++    return 1;
++  }
++
++  Out->os().write((const char *) wrapper, wrapper_size);
++  Out->os().write(BCString.c_str(), BCString.length());
++  Out->keep();
++
++  // Clean up
++  free((void *) wrapper);
++  free((void *) bitcode);
++  close(input_fd);
++
++  return 0;
++}
+-- 
+1.8.3
+

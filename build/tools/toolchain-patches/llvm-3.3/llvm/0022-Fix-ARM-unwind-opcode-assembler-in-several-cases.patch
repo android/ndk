@@ -1,0 +1,917 @@
+From 298c3acbefce64244ed0b11836f5bc82bc9ad5a5 Mon Sep 17 00:00:00 2001
+From: Logan Chien <tzuhsiang.chien@gmail.com>
+Date: Thu, 2 May 2013 14:39:38 +0800
+Subject: [PATCH 22/22] Fix ARM unwind opcode assembler in several cases.
+
+Summary:
+Changes to ARM unwind opcode assembler:
+
+* Fix multiple .save or .vsave directives.  Besides, the
+  order is preserved now.
+
+* For the directives which will generate multiple opcodes,
+  such as ".save {r0-r11}", the order of the unwind opcode
+  is fixed now, i.e. the registers with less encoding value
+  are popped first.
+
+* Fix the $sp offset calculation.  Now, we can use the
+  .setfp, .pad, .save, and .vsave directives at any order.
+
+Changes to test cases:
+
+* Add test case to check the order of multiple opcodes
+  for the .save directive.
+
+* Fix the incorrect $sp offset in the test case.  The
+  stack pointer offset specified in the test case was
+  incorrect.
+
+* The opcode to restore $sp are slightly reordered.  The
+  behavior are not changed, and the new output is same
+  as the output of GNU as.  (File: eh-directive-pad.s,
+  eh-directive-setfp.s)
+
+Reviewers: asl
+
+CC: grosbach, nowar100, ILyoan, llvm-commits
+
+Differential Revision: http://llvm-reviews.chandlerc.com/D739
+---
+ lib/Target/ARM/MCTargetDesc/ARMELFStreamer.cpp | 124 ++++++++++--------
+ lib/Target/ARM/MCTargetDesc/ARMUnwindOpAsm.cpp | 157 +++++++++++++----------
+ lib/Target/ARM/MCTargetDesc/ARMUnwindOpAsm.h   |  73 ++++-------
+ test/CodeGen/ARM/ehabi-mc-section.ll           |   2 +-
+ test/CodeGen/ARM/ehabi-mc.ll                   |   2 +-
+ test/MC/ARM/eh-directive-multiple-offsets.s    | 168 +++++++++++++++++++++++++
+ test/MC/ARM/eh-directive-pad.s                 |   6 +-
+ test/MC/ARM/eh-directive-save.s                |  45 +++++++
+ test/MC/ARM/eh-directive-setfp.s               |   6 +-
+ 9 files changed, 406 insertions(+), 177 deletions(-)
+ create mode 100644 test/MC/ARM/eh-directive-multiple-offsets.s
+
+diff --git a/lib/Target/ARM/MCTargetDesc/ARMELFStreamer.cpp b/lib/Target/ARM/MCTargetDesc/ARMELFStreamer.cpp
+index 82d296f..d83567c 100644
+--- a/lib/Target/ARM/MCTargetDesc/ARMELFStreamer.cpp
++++ b/lib/Target/ARM/MCTargetDesc/ARMELFStreamer.cpp
+@@ -203,7 +203,7 @@ private:
+   void Reset();
+ 
+   void EmitPersonalityFixup(StringRef Name);
+-  void CollectUnwindOpcodes();
++  void FlushPendingOffset();
+   void FlushUnwindOpcodes(bool AllowCompactModel0);
+ 
+   void SwitchToEHSection(const char *Prefix, unsigned Type, unsigned Flags,
+@@ -221,13 +221,14 @@ private:
+   MCSymbol *ExTab;
+   MCSymbol *FnStart;
+   const MCSymbol *Personality;
+-  uint32_t VFPRegSave; // Register mask for {d31-d0}
+-  uint32_t RegSave; // Register mask for {r15-r0}
+-  int64_t SPOffset;
+-  uint16_t FPReg;
+-  int64_t FPOffset;
++  unsigned PersonalityIndex;
++  unsigned FPReg; // Frame pointer register
++  int64_t FPOffset; // Offset: (final frame pointer) - (initial $sp)
++  int64_t SPOffset; // Offset: (final $sp) - (initial $sp)
++  int64_t PendingOffset; // Offset: (final $sp) - (emitted $sp)
+   bool UsedFP;
+   bool CantUnwind;
++  SmallVector<uint8_t, 64> Opcodes;
+   UnwindOpcodeAssembler UnwindOpAsm;
+ };
+ } // end anonymous namespace
+@@ -280,19 +281,18 @@ inline void ARMELFStreamer::SwitchToExIdxSection(const MCSymbol &FnStart) {
+ }
+ 
+ void ARMELFStreamer::Reset() {
+-  const MCRegisterInfo &MRI = getContext().getRegisterInfo();
+-
+   ExTab = NULL;
+   FnStart = NULL;
+   Personality = NULL;
+-  VFPRegSave = 0;
+-  RegSave = 0;
+-  FPReg = MRI.getEncodingValue(ARM::SP);
++  PersonalityIndex = NUM_PERSONALITY_INDEX;
++  FPReg = ARM::SP;
+   FPOffset = 0;
+   SPOffset = 0;
++  PendingOffset = 0;
+   UsedFP = false;
+   CantUnwind = false;
+ 
++  Opcodes.clear();
+   UnwindOpAsm.Reset();
+ }
+ 
+@@ -312,18 +312,6 @@ void ARMELFStreamer::EmitPersonalityFixup(StringRef Name) {
+                     MCFixup::getKindForSize(4, false)));
+ }
+ 
+-void ARMELFStreamer::CollectUnwindOpcodes() {
+-  if (UsedFP) {
+-    UnwindOpAsm.EmitSetFP(FPReg);
+-    UnwindOpAsm.EmitSPOffset(-FPOffset);
+-  } else {
+-    UnwindOpAsm.EmitSPOffset(SPOffset);
+-  }
+-  UnwindOpAsm.EmitVFPRegSave(VFPRegSave);
+-  UnwindOpAsm.EmitRegSave(RegSave);
+-  UnwindOpAsm.Finalize();
+-}
+-
+ void ARMELFStreamer::EmitFnStart() {
+   assert(FnStart == 0);
+   FnStart = getContext().CreateTempSymbol();
+@@ -340,7 +328,6 @@ void ARMELFStreamer::EmitFnEnd() {
+   // Emit the exception index table entry
+   SwitchToExIdxSection(*FnStart);
+ 
+-  unsigned PersonalityIndex = UnwindOpAsm.getPersonalityIndex();
+   if (PersonalityIndex < NUM_PERSONALITY_INDEX)
+     EmitPersonalityFixup(GetAEABIUnwindPersonalityName(PersonalityIndex));
+ 
+@@ -366,9 +353,10 @@ void ARMELFStreamer::EmitFnEnd() {
+     // opcodes should always be 4 bytes.
+     assert(PersonalityIndex == AEABI_UNWIND_CPP_PR0 &&
+            "Compact model must use __aeabi_cpp_unwind_pr0 as personality");
+-    assert(UnwindOpAsm.size() == 4u &&
++    assert(Opcodes.size() == 4u &&
+            "Unwind opcode size for __aeabi_cpp_unwind_pr0 must be equal to 4");
+-    EmitBytes(UnwindOpAsm.data(), 0);
++    EmitBytes(StringRef(reinterpret_cast<const char*>(Opcodes.data()),
++                        Opcodes.size()), 0);
+   }
+ 
+   // Switch to the section containing FnStart
+@@ -382,15 +370,31 @@ void ARMELFStreamer::EmitCantUnwind() {
+   CantUnwind = true;
+ }
+ 
++void ARMELFStreamer::FlushPendingOffset() {
++  if (PendingOffset != 0) {
++    UnwindOpAsm.EmitSPOffset(-PendingOffset);
++    PendingOffset = 0;
++  }
++}
++
+ void ARMELFStreamer::FlushUnwindOpcodes(bool AllowCompactModel0) {
+-  // Collect and finalize the unwind opcodes
+-  CollectUnwindOpcodes();
++  // Emit the unwind opcode to restore $sp.
++  if (UsedFP) {
++    const MCRegisterInfo &MRI = getContext().getRegisterInfo();
++    int64_t LastRegSaveSPOffset = SPOffset - PendingOffset;
++    UnwindOpAsm.EmitSPOffset(LastRegSaveSPOffset - FPOffset);
++    UnwindOpAsm.EmitSetSP(MRI.getEncodingValue(FPReg));
++  } else {
++    FlushPendingOffset();
++  }
++
++  // Finalize the unwind opcode sequence
++  UnwindOpAsm.Finalize(PersonalityIndex, Opcodes);
+ 
+   // For compact model 0, we have to emit the unwind opcodes in the .ARM.exidx
+   // section.  Thus, we don't have to create an entry in the .ARM.extab
+   // section.
+-  if (AllowCompactModel0 &&
+-      UnwindOpAsm.getPersonalityIndex() == AEABI_UNWIND_CPP_PR0)
++  if (AllowCompactModel0 && PersonalityIndex == AEABI_UNWIND_CPP_PR0)
+     return;
+ 
+   // Switch to .ARM.extab section.
+@@ -412,7 +416,8 @@ void ARMELFStreamer::FlushUnwindOpcodes(bool AllowCompactModel0) {
+   }
+ 
+   // Emit unwind opcodes
+-  EmitBytes(UnwindOpAsm.data(), 0);
++  EmitBytes(StringRef(reinterpret_cast<const char *>(Opcodes.data()),
++                      Opcodes.size()), 0);
+ }
+ 
+ void ARMELFStreamer::EmitHandlerData() {
+@@ -427,42 +432,55 @@ void ARMELFStreamer::EmitPersonality(const MCSymbol *Per) {
+ void ARMELFStreamer::EmitSetFP(unsigned NewFPReg,
+                                unsigned NewSPReg,
+                                int64_t Offset) {
+-  assert(SPOffset == 0 &&
+-         "Current implementation assumes .setfp precedes .pad");
+-
+-  const MCRegisterInfo &MRI = getContext().getRegisterInfo();
+-
+-  uint16_t NewFPRegEncVal = MRI.getEncodingValue(NewFPReg);
+-#ifndef NDEBUG
+-  uint16_t NewSPRegEncVal = MRI.getEncodingValue(NewSPReg);
+-#endif
+-
+-  assert((NewSPReg == ARM::SP || NewSPRegEncVal == FPReg) &&
++  assert((NewSPReg == ARM::SP || NewSPReg == FPReg) &&
+          "the operand of .setfp directive should be either $sp or $fp");
+ 
+   UsedFP = true;
+-  FPReg = NewFPRegEncVal;
+-  FPOffset = Offset;
++  FPReg = NewFPReg;
++
++  if (NewSPReg == ARM::SP)
++    FPOffset = SPOffset + Offset;
++  else
++    FPOffset += Offset;
+ }
+ 
+ void ARMELFStreamer::EmitPad(int64_t Offset) {
+-  SPOffset += Offset;
++  // Track the change of the $sp offset
++  SPOffset -= Offset;
++
++  // To squash multiple .pad directives, we should delay the unwind opcode
++  // until the .save, .vsave, .handlerdata, or .fnend directives.
++  PendingOffset -= Offset;
+ }
+ 
+ void ARMELFStreamer::EmitRegSave(const SmallVectorImpl<unsigned> &RegList,
+                                  bool IsVector) {
++  // Collect the registers in the register list
++  unsigned Count = 0;
++  uint32_t Mask = 0;
+   const MCRegisterInfo &MRI = getContext().getRegisterInfo();
+-
+-#ifndef NDEBUG
+-  unsigned Max = IsVector ? 32 : 16;
+-#endif
+-  uint32_t &RegMask = IsVector ? VFPRegSave : RegSave;
+-
+   for (size_t i = 0; i < RegList.size(); ++i) {
+     unsigned Reg = MRI.getEncodingValue(RegList[i]);
+-    assert(Reg < Max && "Register encoded value out of range");
+-    RegMask |= 1u << Reg;
++    assert(Reg < (IsVector ? 32 : 16) && "Register out of range");
++    unsigned Bit = (1u << Reg);
++    if ((Mask & Bit) == 0) {
++      Mask |= Bit;
++      ++Count;
++    }
+   }
++
++  // Track the change the $sp offset: For the .save directive, the
++  // corresponding push instruction will decrease the $sp by (4 * Count).
++  // For the .vsave directive, the corresponding vpush instruction will
++  // decrease $sp by (8 * Count).
++  SPOffset -= Count * (IsVector ? 8 : 4);
++
++  // Emit the opcode
++  FlushPendingOffset();
++  if (IsVector)
++    UnwindOpAsm.EmitVFPRegSave(Mask);
++  else
++    UnwindOpAsm.EmitRegSave(Mask);
+ }
+ 
+ namespace llvm {
+diff --git a/lib/Target/ARM/MCTargetDesc/ARMUnwindOpAsm.cpp b/lib/Target/ARM/MCTargetDesc/ARMUnwindOpAsm.cpp
+index 191db69..c943370 100644
+--- a/lib/Target/ARM/MCTargetDesc/ARMUnwindOpAsm.cpp
++++ b/lib/Target/ARM/MCTargetDesc/ARMUnwindOpAsm.cpp
+@@ -20,6 +20,48 @@
+ 
+ using namespace llvm;
+ 
++namespace {
++  /// UnwindOpcodeStreamer - The simple wrapper over SmallVector to emit bytes
++  /// with MSB to LSB per uint32_t ordering.  For example, the first byte will
++  /// be placed in Vec[3], and the following bytes will be placed in 2, 1, 0,
++  /// 7, 6, 5, 4, 11, 10, 9, 8, and so on.
++  class UnwindOpcodeStreamer {
++  private:
++    SmallVectorImpl<uint8_t> &Vec;
++    size_t Pos;
++
++  public:
++    UnwindOpcodeStreamer(SmallVectorImpl<uint8_t> &V) : Vec(V), Pos(3) {
++    }
++
++    /// Emit the byte in MSB to LSB per uint32_t order.
++    inline void EmitByte(uint8_t elem) {
++      Vec[Pos] = elem;
++      Pos = (((Pos ^ 0x3u) + 1) ^ 0x3u);
++    }
++
++    /// Emit the size prefix.
++    inline void EmitSize(size_t Size) {
++      size_t SizeInWords = (Size + 3) / 4;
++      assert(SizeInWords <= 0x100u &&
++             "Only 256 additional words are allowed for unwind opcodes");
++      EmitByte(static_cast<uint8_t>(SizeInWords - 1));
++    }
++
++    /// Emit the personality index prefix.
++    inline void EmitPersonalityIndex(unsigned PI) {
++      assert(PI < NUM_PERSONALITY_INDEX && "Invalid personality prefix");
++      EmitByte(EHT_COMPACT | PI);
++    }
++
++    /// Fill the rest of bytes with FINISH opcode.
++    inline void FillFinishOpcode() {
++      while (Pos < Vec.size())
++        EmitByte(UNWIND_OPCODE_FINISH);
++    }
++  };
++}
++
+ void UnwindOpcodeAssembler::EmitRegSave(uint32_t RegSave) {
+   if (RegSave == 0u)
+     return;
+@@ -43,28 +85,22 @@ void UnwindOpcodeAssembler::EmitRegSave(uint32_t RegSave) {
+     uint32_t UnmaskedReg = RegSave & 0xfff0u & (~Mask);
+     if (UnmaskedReg == 0u) {
+       // Pop r[4 : (4 + n)]
+-      Ops.push_back(UNWIND_OPCODE_POP_REG_RANGE_R4 | Range);
++      EmitInt8(UNWIND_OPCODE_POP_REG_RANGE_R4 | Range);
+       RegSave &= 0x000fu;
+     } else if (UnmaskedReg == (1u << 14)) {
+       // Pop r[14] + r[4 : (4 + n)]
+-      Ops.push_back(UNWIND_OPCODE_POP_REG_RANGE_R4_R14 | Range);
++      EmitInt8(UNWIND_OPCODE_POP_REG_RANGE_R4_R14 | Range);
+       RegSave &= 0x000fu;
+     }
+   }
+ 
+   // Two bytes opcode to save register r15-r4
+-  if ((RegSave & 0xfff0u) != 0) {
+-    uint32_t Op = UNWIND_OPCODE_POP_REG_MASK_R4 | (RegSave >> 4);
+-    Ops.push_back(static_cast<uint8_t>(Op >> 8));
+-    Ops.push_back(static_cast<uint8_t>(Op & 0xff));
+-  }
++  if ((RegSave & 0xfff0u) != 0)
++    EmitInt16(UNWIND_OPCODE_POP_REG_MASK_R4 | (RegSave >> 4));
+ 
+   // Opcode to save register r3-r0
+-  if ((RegSave & 0x000fu) != 0) {
+-    uint32_t Op = UNWIND_OPCODE_POP_REG_MASK | (RegSave & 0x000fu);
+-    Ops.push_back(static_cast<uint8_t>(Op >> 8));
+-    Ops.push_back(static_cast<uint8_t>(Op & 0xff));
+-  }
++  if ((RegSave & 0x000fu) != 0)
++    EmitInt16(UNWIND_OPCODE_POP_REG_MASK | (RegSave & 0x000fu));
+ }
+ 
+ /// Emit unwind opcodes for .vsave directives
+@@ -89,10 +125,8 @@ void UnwindOpcodeAssembler::EmitVFPRegSave(uint32_t VFPRegSave) {
+       Bit >>= 1;
+     }
+ 
+-    uint32_t Op =
+-        UNWIND_OPCODE_POP_VFP_REG_RANGE_FSTMFDD_D16 | ((i - 16) << 4) | Range;
+-    Ops.push_back(static_cast<uint8_t>(Op >> 8));
+-    Ops.push_back(static_cast<uint8_t>(Op & 0xff));
++    EmitInt16(UNWIND_OPCODE_POP_VFP_REG_RANGE_FSTMFDD_D16 |
++              ((i - 16) << 4) | Range);
+   }
+ 
+   while (i > 0) {
+@@ -113,86 +147,75 @@ void UnwindOpcodeAssembler::EmitVFPRegSave(uint32_t VFPRegSave) {
+       Bit >>= 1;
+     }
+ 
+-    uint32_t Op = UNWIND_OPCODE_POP_VFP_REG_RANGE_FSTMFDD | (i << 4) | Range;
+-    Ops.push_back(static_cast<uint8_t>(Op >> 8));
+-    Ops.push_back(static_cast<uint8_t>(Op & 0xff));
++    EmitInt16(UNWIND_OPCODE_POP_VFP_REG_RANGE_FSTMFDD | (i << 4) | Range);
+   }
+ }
+ 
+-/// Emit unwind opcodes for .setfp directives
+-void UnwindOpcodeAssembler::EmitSetFP(uint16_t FPReg) {
+-  Ops.push_back(UNWIND_OPCODE_SET_VSP | FPReg);
++/// Emit unwind opcodes to copy address from source register to $sp.
++void UnwindOpcodeAssembler::EmitSetSP(uint16_t Reg) {
++  EmitInt8(UNWIND_OPCODE_SET_VSP | Reg);
+ }
+ 
+-/// Emit unwind opcodes to update stack pointer
++/// Emit unwind opcodes to add $sp with an offset.
+ void UnwindOpcodeAssembler::EmitSPOffset(int64_t Offset) {
+   if (Offset > 0x200) {
+-    uint8_t Buff[10];
+-    size_t Size = encodeULEB128((Offset - 0x204) >> 2, Buff);
+-    Ops.push_back(UNWIND_OPCODE_INC_VSP_ULEB128);
+-    Ops.append(Buff, Buff + Size);
++    uint8_t Buff[16];
++    Buff[0] = UNWIND_OPCODE_INC_VSP_ULEB128;
++    size_t ULEBSize = encodeULEB128((Offset - 0x204) >> 2, Buff + 1);
++    EmitBytes(Buff, ULEBSize + 1);
+   } else if (Offset > 0) {
+     if (Offset > 0x100) {
+-      Ops.push_back(UNWIND_OPCODE_INC_VSP | 0x3fu);
++      EmitInt8(UNWIND_OPCODE_INC_VSP | 0x3fu);
+       Offset -= 0x100;
+     }
+-    Ops.push_back(UNWIND_OPCODE_INC_VSP |
+-                  static_cast<uint8_t>((Offset - 4) >> 2));
++    EmitInt8(UNWIND_OPCODE_INC_VSP | static_cast<uint8_t>((Offset - 4) >> 2));
+   } else if (Offset < 0) {
+     while (Offset < -0x100) {
+-      Ops.push_back(UNWIND_OPCODE_DEC_VSP | 0x3fu);
++      EmitInt8(UNWIND_OPCODE_DEC_VSP | 0x3fu);
+       Offset += 0x100;
+     }
+-    Ops.push_back(UNWIND_OPCODE_DEC_VSP |
+-                  static_cast<uint8_t>(((-Offset) - 4) >> 2));
++    EmitInt8(UNWIND_OPCODE_DEC_VSP |
++             static_cast<uint8_t>(((-Offset) - 4) >> 2));
+   }
+ }
+ 
+-void UnwindOpcodeAssembler::AddOpcodeSizePrefix(size_t Pos) {
+-  size_t SizeInWords = (size() + 3) / 4;
+-  assert(SizeInWords <= 0x100u &&
+-         "Only 256 additional words are allowed for unwind opcodes");
+-  Ops[Pos] = static_cast<uint8_t>(SizeInWords - 1);
+-}
++void UnwindOpcodeAssembler::Finalize(unsigned &PersonalityIndex,
++                                     SmallVectorImpl<uint8_t> &Result) {
+ 
+-void UnwindOpcodeAssembler::AddPersonalityIndexPrefix(size_t Pos, unsigned PI) {
+-  assert(PI < NUM_PERSONALITY_INDEX && "Invalid personality prefix");
+-  Ops[Pos] = EHT_COMPACT | PI;
+-}
++  UnwindOpcodeStreamer OpStreamer(Result);
+ 
+-void UnwindOpcodeAssembler::EmitFinishOpcodes() {
+-  for (size_t i = (0x4u - (size() & 0x3u)) & 0x3u; i > 0; --i)
+-    Ops.push_back(UNWIND_OPCODE_FINISH);
+-}
+-
+-void UnwindOpcodeAssembler::Finalize() {
+   if (HasPersonality) {
+-    // Personality specified by .personality directive
+-    Offset = 1;
+-    AddOpcodeSizePrefix(1);
++    // User-specifed personality routine: [ SIZE , OP1 , OP2 , ... ]
++    PersonalityIndex = NUM_PERSONALITY_INDEX;
++    size_t TotalSize = Ops.size() + 1;
++    size_t RoundUpSize = (TotalSize + 3) / 4 * 4;
++    Result.resize(RoundUpSize);
++    OpStreamer.EmitSize(RoundUpSize);
+   } else {
+-    if (getOpcodeSize() <= 3) {
++    if (Ops.size() <= 3) {
+       // __aeabi_unwind_cpp_pr0: [ 0x80 , OP1 , OP2 , OP3 ]
+-      Offset = 1;
+       PersonalityIndex = AEABI_UNWIND_CPP_PR0;
+-      AddPersonalityIndexPrefix(Offset, PersonalityIndex);
++      Result.resize(4);
++      OpStreamer.EmitPersonalityIndex(PersonalityIndex);
+     } else {
+       // __aeabi_unwind_cpp_pr1: [ 0x81 , SIZE , OP1 , OP2 , ... ]
+-      Offset = 0;
+       PersonalityIndex = AEABI_UNWIND_CPP_PR1;
+-      AddPersonalityIndexPrefix(Offset, PersonalityIndex);
+-      AddOpcodeSizePrefix(1);
++      size_t TotalSize = Ops.size() + 2;
++      size_t RoundUpSize = (TotalSize + 3) / 4 * 4;
++      Result.resize(RoundUpSize);
++      OpStreamer.EmitPersonalityIndex(PersonalityIndex);
++      OpStreamer.EmitSize(RoundUpSize);
+     }
+   }
+ 
+-  // Emit the padding finish opcodes if the size() is not multiple of 4.
+-  EmitFinishOpcodes();
++  // Copy the unwind opcodes
++  for (size_t i = OpBegins.size() - 1; i > 0; --i)
++    for (size_t j = OpBegins[i - 1], end = OpBegins[i]; j < end; ++j)
++      OpStreamer.EmitByte(Ops[j]);
+ 
+-  // Swap the byte order
+-  uint8_t *Ptr = Ops.begin() + Offset;
+-  assert(size() % 4 == 0 && "Final unwind opcodes should align to 4");
+-  for (size_t i = 0, n = size(); i < n; i += 4) {
+-    std::swap(Ptr[i], Ptr[i + 3]);
+-    std::swap(Ptr[i + 1], Ptr[i + 2]);
+-  }
++  // Emit the padding finish opcodes if the size is not multiple of 4.
++  OpStreamer.FillFinishOpcode();
++
++  // Reset the assembler state
++  Reset();
+ }
+diff --git a/lib/Target/ARM/MCTargetDesc/ARMUnwindOpAsm.h b/lib/Target/ARM/MCTargetDesc/ARMUnwindOpAsm.h
+index f6ecaeb..ac67c6e 100644
+--- a/lib/Target/ARM/MCTargetDesc/ARMUnwindOpAsm.h
++++ b/lib/Target/ARM/MCTargetDesc/ARMUnwindOpAsm.h
+@@ -27,86 +27,61 @@ class MCSymbol;
+ 
+ class UnwindOpcodeAssembler {
+ private:
+-  llvm::SmallVector<uint8_t, 8> Ops;
+-
+-  unsigned Offset;
+-  unsigned PersonalityIndex;
++  llvm::SmallVector<uint8_t, 32> Ops;
++  llvm::SmallVector<unsigned, 8> OpBegins;
+   bool HasPersonality;
+ 
+-  enum {
+-    // The number of bytes to be preserved for the size and personality index
+-    // prefix of unwind opcodes.
+-    NUM_PRESERVED_PREFIX_BUF = 2
+-  };
+-
+ public:
+   UnwindOpcodeAssembler()
+-      : Ops(NUM_PRESERVED_PREFIX_BUF), Offset(NUM_PRESERVED_PREFIX_BUF),
+-        PersonalityIndex(NUM_PERSONALITY_INDEX), HasPersonality(0) {
++      : HasPersonality(0) {
++    OpBegins.push_back(0);
+   }
+ 
+   /// Reset the unwind opcode assembler.
+   void Reset() {
+-    Ops.resize(NUM_PRESERVED_PREFIX_BUF);
+-    Offset = NUM_PRESERVED_PREFIX_BUF;
+-    PersonalityIndex = NUM_PERSONALITY_INDEX;
++    Ops.clear();
++    OpBegins.clear();
++    OpBegins.push_back(0);
+     HasPersonality = 0;
+   }
+ 
+-  /// Get the size of the payload (including the size byte)
+-  size_t size() const {
+-    return Ops.size() - Offset;
+-  }
+-
+-  /// Get the beginning of the payload
+-  const uint8_t *begin() const {
+-    return Ops.begin() + Offset;
+-  }
+-
+-  /// Get the payload
+-  StringRef data() const {
+-    return StringRef(reinterpret_cast<const char *>(begin()), size());
+-  }
+-
+   /// Set the personality index
+   void setPersonality(const MCSymbol *Per) {
+     HasPersonality = 1;
+   }
+ 
+-  /// Get the personality index
+-  unsigned getPersonalityIndex() const {
+-    return PersonalityIndex;
+-  }
+-
+   /// Emit unwind opcodes for .save directives
+   void EmitRegSave(uint32_t RegSave);
+ 
+   /// Emit unwind opcodes for .vsave directives
+   void EmitVFPRegSave(uint32_t VFPRegSave);
+ 
+-  /// Emit unwind opcodes for .setfp directives
+-  void EmitSetFP(uint16_t FPReg);
++  /// Emit unwind opcodes to copy address from source register to $sp.
++  void EmitSetSP(uint16_t Reg);
+ 
+-  /// Emit unwind opcodes to update stack pointer
++  /// Emit unwind opcodes to add $sp with an offset.
+   void EmitSPOffset(int64_t Offset);
+ 
+   /// Finalize the unwind opcode sequence for EmitBytes()
+-  void Finalize();
++  void Finalize(unsigned &PersonalityIndex,
++                SmallVectorImpl<uint8_t> &Result);
+ 
+ private:
+-  /// Get the size of the opcodes in bytes.
+-  size_t getOpcodeSize() const {
+-    return Ops.size() - NUM_PRESERVED_PREFIX_BUF;
++  void EmitInt8(unsigned Opcode) {
++    Ops.push_back(Opcode & 0xff);
++    OpBegins.push_back(OpBegins.back() + 1);
+   }
+ 
+-  /// Add the length prefix to the payload
+-  void AddOpcodeSizePrefix(size_t Pos);
+-
+-  /// Add personality index prefix in some compact format
+-  void AddPersonalityIndexPrefix(size_t Pos, unsigned PersonalityIndex);
++  void EmitInt16(unsigned Opcode) {
++    Ops.push_back((Opcode >> 8) & 0xff);
++    Ops.push_back(Opcode & 0xff);
++    OpBegins.push_back(OpBegins.back() + 2);
++  }
+ 
+-  /// Fill the words with finish opcode if it is not aligned
+-  void EmitFinishOpcodes();
++  void EmitBytes(const uint8_t *Opcode, size_t Size) {
++    Ops.insert(Ops.end(), Opcode, Opcode + Size);
++    OpBegins.push_back(OpBegins.back() + Size);
++  }
+ };
+ 
+ } // namespace llvm
+diff --git a/test/CodeGen/ARM/ehabi-mc-section.ll b/test/CodeGen/ARM/ehabi-mc-section.ll
+index 4e6e468..51ae25a 100644
+--- a/test/CodeGen/ARM/ehabi-mc-section.ll
++++ b/test/CodeGen/ARM/ehabi-mc-section.ll
+@@ -60,7 +60,7 @@ declare void @_ZSt9terminatev()
+ 
+ ; CHECK: section .test_section
+ ; CHECK: section .ARM.extab.test_section
+-; CHECK-NEXT: 0000 00000000 c9409b01 b0818484
++; CHECK-NEXT: 0000 00000000 c94a9b01 b0818484
+ ; CHECK: section .ARM.exidx.test_section
+ ; CHECK-NEXT: 0000 00000000 00000000
+ 
+diff --git a/test/CodeGen/ARM/ehabi-mc.ll b/test/CodeGen/ARM/ehabi-mc.ll
+index 83b8425..b0fc81e 100644
+--- a/test/CodeGen/ARM/ehabi-mc.ll
++++ b/test/CodeGen/ARM/ehabi-mc.ll
+@@ -60,7 +60,7 @@ declare void @_ZSt9terminatev()
+ 
+ ; CHECK: section .text
+ ; CHECK: section .ARM.extab
+-; CHECK-NEXT: 0000 00000000 c9409b01 b0818484
++; CHECK-NEXT: 0000 00000000 c94a9b01 b0818484
+ ; CHECK: section .ARM.exidx
+ ; CHECK-NEXT: 0000 00000000 00000000
+ 
+diff --git a/test/MC/ARM/eh-directive-multiple-offsets.s b/test/MC/ARM/eh-directive-multiple-offsets.s
+new file mode 100644
+index 0000000..6e81f41
+--- /dev/null
++++ b/test/MC/ARM/eh-directive-multiple-offsets.s
+@@ -0,0 +1,168 @@
++@ RUN: llvm-mc %s -triple=armv7-unknown-linux-gnueabi -filetype=obj -o - \
++@ RUN:   | llvm-readobj -s -sd | FileCheck %s
++
++@ Check for different combination of .setfp, .pad, .save and .vsave.
++
++	.syntax	unified
++
++@-------------------------------------------------------------------------------
++@ TEST1: Check .pad before .setfp directive.
++@-------------------------------------------------------------------------------
++	.section	.TEST1
++	.globl	func1
++	.type	func1,%function
++	.align	2
++	.fnstart
++func1:
++	.pad	#12
++	sub	sp, sp, #12
++	.setfp	fp, sp, #8
++	add	fp, sp, #8
++	sub	sp, fp, #8
++	add	sp, sp, #12
++	bx	lr
++	.personality	__gxx_personality_v0
++	.handlerdata
++	.fnend
++
++@ CHECK: Section {
++@ CHECK:   Name: .ARM.extab.TEST1
++@ CHECK:   SectionData (
++@ CHECK:     0000: 00000000 B0009B00                    |........|
++@ CHECK:   )
++@ CHECK: }
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST2: Check .pad after .setfp directive.
++@-------------------------------------------------------------------------------
++	.section	.TEST2
++	.globl	func2
++	.type	func2,%function
++	.align	2
++	.fnstart
++func2:
++	.setfp	fp, sp, #8
++	add	fp, sp, #8
++	.pad	#12
++	sub	sp, sp, #12
++	add	sp, sp, #12
++	sub	sp, fp, #8
++	bx	lr
++	.personality	__gxx_personality_v0
++	.handlerdata
++	.fnend
++
++@ CHECK: Section {
++@ CHECK:   Name: .ARM.extab.TEST2
++@ CHECK:   SectionData (
++@ CHECK:     0000: 00000000 B0419B00                    |.....A..|
++@ CHECK:   )
++@ CHECK: }
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST3: Check .setfp, .pad, .setfp directive.
++@-------------------------------------------------------------------------------
++	.section	.TEST3
++	.globl	func3
++	.type	func3,%function
++	.align	2
++	.fnstart
++func3:
++	@ prologue:
++	.setfp	fp, sp, #4
++	add	fp, sp, #4
++	.pad	#8
++	sub	sp, sp, #8
++	.setfp	fp, sp, #4
++	add	fp, sp, #4
++
++	@ epilogue:
++	add	sp, fp, #4
++	bx	lr
++	.personality	__gxx_personality_v0
++	.handlerdata
++	.fnend
++
++@ CHECK: Section {
++@ CHECK:   Name: .ARM.extab.TEST3
++@ CHECK:   SectionData (
++@ CHECK:     0000: 00000000 B0009B00                    |........|
++@ CHECK:   )
++@ CHECK: }
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST4: Check ".setfp fp, sp" and ".setfp fp, fp" directive.
++@-------------------------------------------------------------------------------
++	.section	.TEST4
++	.globl	func4
++	.type	func4,%function
++	.align	2
++	.fnstart
++func4:
++	@ prologue:
++	.setfp	fp, sp, #8
++	add	fp, sp, #8
++	.setfp	fp, fp, #8
++	add	fp, fp, #8
++
++	@ epilogue:
++	sub	sp, fp, #16
++	bx	lr
++	.personality	__gxx_personality_v0
++	.handlerdata
++	.fnend
++
++@ CHECK: Section {
++@ CHECK:   Name: .ARM.extab.TEST4
++@ CHECK:   SectionData (
++@ CHECK:     0000: 00000000 B0439B00                    |.....C..|
++@ CHECK:   )
++@ CHECK: }
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST5: Check .setfp, .save, .setfp directive.
++@-------------------------------------------------------------------------------
++	.section	.TEST5
++	.globl	func5
++	.type	func5,%function
++	.align	2
++	.fnstart
++func5:
++	@ prologue:
++	.setfp	fp, sp, #16
++	add	fp, sp, #16
++	.save	{r4, r5, r6, r7, r8}
++	push	{r4, r5, r6, r7, r8}
++	.pad	#8
++	add	sp, sp, #8
++	.pad	#8
++	sub	sp, sp, #8
++	.save	{r9, r10}
++	push	{r9, r10}
++	.setfp	fp, sp, #24
++	add	fp, sp, #24
++
++	@ epilogue:
++	sub	sp, fp, #24
++	pop	{r9, r10}
++	add	sp, sp, #16
++	pop	{r4, r5, r6, r7, r8}
++	bx	lr
++	.personality	__gxx_personality_v0
++	.handlerdata
++	.fnend
++
++@ CHECK: Section {
++@ CHECK:   Name: .ARM.extab.TEST5
++@ CHECK:   SectionData (
++@ CHECK:     0000: 00000000 80459B01 B0A40360           |.....E.....`|
++@ CHECK:   )
++@ CHECK: }
+diff --git a/test/MC/ARM/eh-directive-pad.s b/test/MC/ARM/eh-directive-pad.s
+index ba850ff..f8263e6 100644
+--- a/test/MC/ARM/eh-directive-pad.s
++++ b/test/MC/ARM/eh-directive-pad.s
+@@ -121,7 +121,7 @@ func3b:
+ @ CHECK: Section {
+ @ CHECK:   Name: .ARM.extab.TEST3
+ @ CHECK:   SectionData (
+-@ CHECK:     0000: 00000000 B0003F00 00000000 B03F3F00  |......?......??.|
++@ CHECK:     0000: 00000000 B03F0000 00000000 B03F3F00  |.....?.......??.|
+ @ CHECK:   )
+ @ CHECK: }
+ 
+@@ -220,7 +220,7 @@ func5c:
+ @ CHECK: Section {
+ @ CHECK:   Name: .ARM.extab.TEST5
+ @ CHECK:   SectionData (
+-@ CHECK:     0000: 00000000 B0B04000 00000000 B0407F00  |......@......@..|
+-@ CHECK:     0010: 00000000 407F7F00                    |....@...|
++@ CHECK:     0000: 00000000 B0B04000 00000000 B07F4000  |......@.......@.|
++@ CHECK:     0010: 00000000 7F7F4000                    |......@.|
+ @ CHECK:   )
+ @ CHECK: }
+diff --git a/test/MC/ARM/eh-directive-save.s b/test/MC/ARM/eh-directive-save.s
+index f9c8c5f..652a7bb 100644
+--- a/test/MC/ARM/eh-directive-save.s
++++ b/test/MC/ARM/eh-directive-save.s
+@@ -296,3 +296,48 @@ func4e:
+ @ CHECK:     0020: 00000000 B00E8400                    |........|
+ @ CHECK:   )
+ @ CHECK: }
++
++
++
++@-------------------------------------------------------------------------------
++@ TEST5
++@-------------------------------------------------------------------------------
++	.section	.TEST5
++	.globl	func5a
++	.align	2
++	.type	func5a,%function
++	.fnstart
++func5a:
++	.save	{r0, r1, r2, r3, r4, r5, r6}
++	push	{r0, r1, r2, r3, r4, r5, r6}
++	pop	{r0, r1, r2, r3, r4, r5, r6}
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++	.globl	func5b
++	.align	2
++	.type	func5b,%function
++	.fnstart
++func5b:
++	.save	{r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r14}
++	push	{r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r14}
++	pop	{r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r14}
++	bx	lr
++	.personality __gxx_personality_v0
++	.handlerdata
++	.fnend
++
++@-------------------------------------------------------------------------------
++@ Check the order of unwind opcode to pop registers.
++@ 0xB10F "pop {r0-r3}" should be emitted before 0xA2 "pop {r4-r6}".
++@ 0xB10F "pop {r0-r3}" should be emitted before 0x85FF "pop {r4-r12, r14}".
++@-------------------------------------------------------------------------------
++@ CHECK: Section {
++@ CHECK:   Name: .ARM.extab.TEST5
++@ CHECK:   SectionData (
++@ CHECK:     0000: 00000000 A20FB100 00000000 850FB101  |................|
++@ CHECK:     0010: B0B0B0FF                             |....|
++@ CHECK:   )
++@ CHECK: }
+diff --git a/test/MC/ARM/eh-directive-setfp.s b/test/MC/ARM/eh-directive-setfp.s
+index 3fbab5a..dfa79e6 100644
+--- a/test/MC/ARM/eh-directive-setfp.s
++++ b/test/MC/ARM/eh-directive-setfp.s
+@@ -131,7 +131,7 @@ func3b:
+ @ CHECK: Section {
+ @ CHECK:   Name: .ARM.extab.TEST3
+ @ CHECK:   SectionData (
+-@ CHECK:     0000: 00000000 003F9B00 00000000 3F3F9B00  |.....?......??..|
++@ CHECK:     0000: 00000000 3F009B00 00000000 3F3F9B00  |....?.......??..|
+ @ CHECK:   )
+ @ CHECK: }
+ 
+@@ -233,7 +233,7 @@ func5c:
+ @ CHECK: Section {
+ @ CHECK:   Name: .ARM.extab.TEST5
+ @ CHECK:   SectionData (
+-@ CHECK:     0000: 00000000 B0409B00 00000000 407F9B00  |.....@......@...|
+-@ CHECK:     0010: 00000000 7F7F9B01 B0B0B040           |...........@|
++@ CHECK:     0000: 00000000 B0409B00 00000000 7F409B00  |.....@.......@..|
++@ CHECK:     0010: 00000000 7F409B01 B0B0B07F           |.....@......|
+ @ CHECK:   )
+ @ CHECK: }
+-- 
+1.8.3
+

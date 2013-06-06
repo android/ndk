@@ -1,0 +1,47 @@
+From 9bc7d41983cdff4c3c3c60ff0fa6e3a1ab881673 Mon Sep 17 00:00:00 2001
+From: Logan Chien <loganchien@google.com>
+Date: Wed, 22 May 2013 17:11:08 +0800
+Subject: [PATCH 02/22] Add ndk triple for Android bitcode.
+
+Cherry-picked from release_32 branch.
+Patch by Lai Wei-Chih <Robert.Lai@mediatek.com>
+---
+ include/llvm/ADT/Triple.h | 1 +
+ lib/Support/Triple.cpp    | 2 ++
+ 2 files changed, 3 insertions(+)
+
+diff --git a/include/llvm/ADT/Triple.h b/include/llvm/ADT/Triple.h
+index 3a72e87..45c35bc 100644
+--- a/include/llvm/ADT/Triple.h
++++ b/include/llvm/ADT/Triple.h
+@@ -103,6 +103,7 @@ public:
+     Minix,
+     RTEMS,
+     NaCl,       // Native Client
++    NDK,        // Android NDK
+     CNK,        // BG/P Compute-Node Kernel
+     Bitrig,
+     AIX
+diff --git a/lib/Support/Triple.cpp b/lib/Support/Triple.cpp
+index 412e34c..b722d3a 100644
+--- a/lib/Support/Triple.cpp
++++ b/lib/Support/Triple.cpp
+@@ -132,6 +132,7 @@ const char *Triple::getOSTypeName(OSType Kind) {
+   case Minix: return "minix";
+   case RTEMS: return "rtems";
+   case NaCl: return "nacl";
++  case NDK: return "ndk";
+   case CNK: return "cnk";
+   case Bitrig: return "bitrig";
+   case AIX: return "aix";
+@@ -284,6 +285,7 @@ static Triple::OSType parseOS(StringRef OSName) {
+     .StartsWith("minix", Triple::Minix)
+     .StartsWith("rtems", Triple::RTEMS)
+     .StartsWith("nacl", Triple::NaCl)
++    .StartsWith("ndk", Triple::NDK)
+     .StartsWith("cnk", Triple::CNK)
+     .StartsWith("bitrig", Triple::Bitrig)
+     .StartsWith("aix", Triple::AIX)
+-- 
+1.8.3
+

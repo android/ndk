@@ -1,0 +1,215 @@
+From 53a5f5b66b5a914f501921c7aba6465ab36ea521 Mon Sep 17 00:00:00 2001
+From: Logan Chien <loganchien@google.com>
+Date: Wed, 22 May 2013 17:11:17 +0800
+Subject: [PATCH 04/22] Update live ranges after lowering tMOVCCr_pseudo.
+
+The Thumb1 backend is lowering tMOVCCr_pseudo by splitting
+the basic blocks and select different variables with phi
+instruction.  However, the physical registers can't be used
+across the machine basic blocks. Otherwise, there will be
+some compile-time fatal error and some run-time incorrect
+behavior.
+
+This CL implements a simple live variable analysis to
+analyze the usage of physical registers among the splitted
+machine basic blocks, so that we can promote them to virtual
+registers.
+---
+ lib/Target/ARM/ARMISelLowering.cpp        | 68 +++++++++++++++++++++
+ test/CodeGen/Thumb/movccr_pseudo-thumb.ll | 98 +++++++++++++++++++++++++++++++
+ 2 files changed, 166 insertions(+)
+ create mode 100644 test/CodeGen/Thumb/movccr_pseudo-thumb.ll
+
+diff --git a/lib/Target/ARM/ARMISelLowering.cpp b/lib/Target/ARM/ARMISelLowering.cpp
+index e49cfc4..854e98a 100644
+--- a/lib/Target/ARM/ARMISelLowering.cpp
++++ b/lib/Target/ARM/ARMISelLowering.cpp
+@@ -23,6 +23,7 @@
+ #include "ARMTargetMachine.h"
+ #include "ARMTargetObjectFile.h"
+ #include "MCTargetDesc/ARMAddressingModes.h"
++#include "llvm/ADT/DenseMap.h"
+ #include "llvm/ADT/Statistic.h"
+ #include "llvm/ADT/StringExtras.h"
+ #include "llvm/CodeGen/CallingConvLower.h"
+@@ -7369,6 +7370,73 @@ ARMTargetLowering::EmitInstrWithCustomInserter(MachineInstr *MI,
+     BB->addSuccessor(copy0MBB);
+     BB->addSuccessor(sinkMBB);
+ 
++    // Replace the physical register with virtual register, because
++    // physical register is not visible across the basic blocks.
++    MachineRegisterInfo &MRI = F->getRegInfo();
++    const TargetRegisterInfo &TRI = *getTargetMachine().getRegisterInfo();
++
++    // Live analysis of the physical registers
++    DenseMap<unsigned, unsigned> SplittedPRegs;
++    for (MachineBasicBlock::reverse_iterator MII = sinkMBB->instr_rbegin(),
++         MIE = sinkMBB->instr_rend(); MII != MIE; ++MII) {
++      // Transfer function of backward data-flow analysis:
++      // f_i(x) = use_i + (x - def_i)
++
++      // Remove the newly defined registers first
++      for (unsigned i = 0, e = MII->getNumOperands(); i != e; ++i) {
++        MachineOperand &MO = MII->getOperand(i);
++        if (MO.isReg() && MO.isDef() &&
++            TargetRegisterInfo::isPhysicalRegister(MO.getReg())) {
++          SplittedPRegs.erase(MO.getReg());
++        }
++      }
++
++      // Insert the newly use of registers
++      for (unsigned i = 0, e = MII->getNumOperands(); i != e; ++i) {
++        MachineOperand &MO = MII->getOperand(i);
++        if (MO.isReg() && MO.isUse() &&
++            TargetRegisterInfo::isPhysicalRegister(MO.getReg())) {
++          SplittedPRegs.insert(std::make_pair(MO.getReg(), 0u));
++        }
++      }
++    }
++
++    // Create virtual registers at the end of thisMBB
++    for (DenseMap<unsigned, unsigned>::iterator I = SplittedPRegs.begin(),
++         E = SplittedPRegs.end(); I != E; ++I) {
++      unsigned PReg = I->first;
++      unsigned VReg = MRI.createVirtualRegister(&ARM::GPRRegClass);
++      BuildMI(BB, dl, TII->get(TargetOpcode::COPY), VReg).addReg(PReg);
++      I->second = VReg;
++    }
++
++    // Replace the live physical registers across the machine basic blocks
++    for (MachineBasicBlock::iterator MII = sinkMBB->instr_begin(),
++         MIE = sinkMBB->instr_end(); MII != MIE; ++MII) {
++      // Replace the physical register use with the virtual register use.
++      for (unsigned i = 0, e = MII->getNumOperands(); i != e; ++i) {
++        MachineOperand &MO = MII->getOperand(i);
++        if (MO.isReg() && MO.isUse()) {
++          DenseMap<unsigned, unsigned>::iterator RI
++            = SplittedPRegs.find(MO.getReg());
++          if (RI != SplittedPRegs.end()) {
++            MO.substVirtReg(RI->second, MO.getSubReg(), TRI);
++          }
++        }
++      }
++
++      // If this machine instruction defines the physical register, then this
++      // physical register is no longer being defined across the machine basic
++      // blocks, and should not be replaced by the virtual register.
++      for (unsigned i = 0, e = MII->getNumOperands(); i != e; ++i) {
++        MachineOperand &MO = MII->getOperand(i);
++        if (MO.isReg() && MO.isDef() &&
++            TargetRegisterInfo::isPhysicalRegister(MO.getReg())) {
++          SplittedPRegs.erase(MO.getReg());
++        }
++      }
++    }
++
+     BuildMI(BB, dl, TII->get(ARM::tBcc)).addMBB(sinkMBB)
+       .addImm(MI->getOperand(3).getImm()).addReg(MI->getOperand(4).getReg());
+ 
+diff --git a/test/CodeGen/Thumb/movccr_pseudo-thumb.ll b/test/CodeGen/Thumb/movccr_pseudo-thumb.ll
+new file mode 100644
+index 0000000..951500f
+--- /dev/null
++++ b/test/CodeGen/Thumb/movccr_pseudo-thumb.ll
+@@ -0,0 +1,98 @@
++; RUN: llc %s -o /dev/null \
++; RUN:     -march thumb -mcpu=cortex-a8 -mattr=-thumb2 \
++; RUN:     -arm-enable-ehabi -arm-enable-ehabi-descriptors \
++; RUN:     -verify-machineinstrs
++
++target datalayout = "e-p:32:32:32-i1:8:32-i8:8:32-i16:16:32-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:64:128-a0:0:32-n32-S64"
++target triple = "thumb-none-linux-androideabi"
++
++%class.Stream = type { i8 }
++
++define zeroext i1 @_Z4testP6StreamS0_(%class.Stream* %f, %class.Stream* %t) {
++entry:
++  br label %for.cond
++
++for.cond:                                         ; preds = %invoke.cont9, %entry
++  %result.0 = phi i8 [ 0, %entry ], [ 1, %invoke.cont9 ]
++  %call3 = invoke i32 @_ZN6Stream4getcEv(%class.Stream* %f)
++          to label %invoke.cont2 unwind label %lpad1
++
++invoke.cont2:                                     ; preds = %for.cond
++  %cmp.i = icmp eq i32 %call3, -1
++  br i1 %cmp.i, label %for.end.thread, label %if.end
++
++lpad:                                             ; preds = %if.then.i.i
++  %0 = landingpad { i8*, i32 } personality i8* bitcast (i32 (...)* @__gxx_personality_v0 to i8*)
++          catch i8* null
++  %1 = extractvalue { i8*, i32 } %0, 0
++  br label %catch20
++
++lpad1:                                            ; preds = %for.cond
++  %2 = landingpad { i8*, i32 } personality i8* bitcast (i32 (...)* @__gxx_personality_v0 to i8*)
++          catch i8* null
++  %3 = extractvalue { i8*, i32 } %2, 0
++  %4 = tail call i8* @__cxa_begin_catch(i8* %3) nounwind
++  invoke void @__cxa_end_catch()
++          to label %for.end.thread unwind label %lpad4.thread
++
++lpad4.thread:                                     ; preds = %lpad1
++  %5 = landingpad { i8*, i32 } personality i8* bitcast (i32 (...)* @__gxx_personality_v0 to i8*)
++          catch i8* null
++  %6 = extractvalue { i8*, i32 } %5, 0
++  %extract.t2541 = icmp ne i8 %result.0, 0
++  br label %catch20
++
++if.then.i.i37:                                    ; preds = %if.end
++  %7 = landingpad { i8*, i32 } personality i8* bitcast (i32 (...)* @__gxx_personality_v0 to i8*)
++          catch i8* null
++  %8 = extractvalue { i8*, i32 } %7, 0
++  %extract.t2545 = icmp ne i8 %result.0, 0
++  %call.i.i39 = invoke i32 @_ZN6Stream4putcEi(%class.Stream* %f, i32 %call3)
++          to label %catch20 unwind label %terminate.lpad
++
++if.end:                                           ; preds = %invoke.cont2
++  %call10 = invoke i32 @_ZN6Stream4putcEi(%class.Stream* %t, i32 %call3)
++          to label %invoke.cont9 unwind label %if.then.i.i37
++
++invoke.cont9:                                     ; preds = %if.end
++  %cmp.i31 = icmp eq i32 %call10, -1
++  br i1 %cmp.i31, label %if.then.i.i, label %for.cond
++
++for.end.thread:                                   ; preds = %invoke.cont2, %lpad1
++  %extract.t48 = icmp ne i8 %result.0, 0
++  br label %try.cont22
++
++if.then.i.i:                                      ; preds = %invoke.cont9
++  %extract.t52 = icmp ne i8 %result.0, 0
++  %call.i.i30 = invoke i32 @_ZN6Stream4putcEi(%class.Stream* %f, i32 %call3)
++          to label %try.cont22 unwind label %lpad
++
++catch20:                                          ; preds = %lpad4.thread, %if.then.i.i37, %lpad
++  %result.2.off0 = phi i1 [ %extract.t52, %lpad ], [ %extract.t2541, %lpad4.thread ], [ %extract.t2545, %if.then.i.i37 ]
++  %exn.slot.0 = phi i8* [ %1, %lpad ], [ %6, %lpad4.thread ], [ %8, %if.then.i.i37 ]
++  %9 = tail call i8* @__cxa_begin_catch(i8* %exn.slot.0) nounwind
++  tail call void @__cxa_end_catch()
++  br label %try.cont22
++
++try.cont22:                                       ; preds = %for.end.thread, %if.then.i.i, %catch20
++  %result.3.off0 = phi i1 [ %result.2.off0, %catch20 ], [ %extract.t48, %for.end.thread ], [ %extract.t52, %if.then.i.i ]
++  ret i1 %result.3.off0
++
++terminate.lpad:                                   ; preds = %if.then.i.i37
++  %10 = landingpad { i8*, i32 } personality i8* bitcast (i32 (...)* @__gxx_personality_v0 to i8*)
++          catch i8* null
++  tail call void @_ZSt9terminatev() noreturn nounwind
++  unreachable
++}
++
++declare i32 @__gxx_personality_v0(...)
++
++declare i32 @_ZN6Stream4getcEv(%class.Stream*)
++
++declare i8* @__cxa_begin_catch(i8*)
++
++declare void @__cxa_end_catch()
++
++declare i32 @_ZN6Stream4putcEi(%class.Stream*, i32)
++
++declare void @_ZSt9terminatev()
+-- 
+1.8.3
+

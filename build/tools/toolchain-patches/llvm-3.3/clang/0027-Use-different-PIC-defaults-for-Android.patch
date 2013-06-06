@@ -1,0 +1,46 @@
+From 4c7f5ecf2ab493f7e6d7bf7072d83959cee3e438 Mon Sep 17 00:00:00 2001
+From: Logan Chien <tzuhsiang.chien@gmail.com>
+Date: Wed, 29 May 2013 19:24:48 +0800
+Subject: [PATCH 27/29] Use different PIC defaults for Android.
+
+---
+ lib/Driver/Tools.cpp | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+
+diff --git a/lib/Driver/Tools.cpp b/lib/Driver/Tools.cpp
+index cb69485..bd833c0 100644
+--- a/lib/Driver/Tools.cpp
++++ b/lib/Driver/Tools.cpp
+@@ -2099,6 +2099,29 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
+   bool PIC = PIE || getToolChain().isPICDefault();
+   bool IsPICLevelTwo = PIC;
+ 
++  // Android-specific defaults for PIC/PIE
++  if (getToolChain().getTriple().getEnvironment() == llvm::Triple::Android) {
++    switch (getToolChain().getTriple().getArch()) {
++    case llvm::Triple::arm:
++    case llvm::Triple::thumb:
++    case llvm::Triple::mips:
++    case llvm::Triple::mipsel:
++    case llvm::Triple::mips64:
++    case llvm::Triple::mips64el:
++      PIC = true; // "-fpic"
++      break;
++
++    case llvm::Triple::x86:
++    case llvm::Triple::x86_64:
++      PIC = true; // "-fPIC"
++      IsPICLevelTwo = true;
++      break;
++
++    default:
++      break;
++    }
++  }
++
+   // For the PIC and PIE flag options, this logic is different from the
+   // legacy logic in very old versions of GCC, as that logic was just
+   // a bug no one had ever fixed. This logic is both more rational and
+-- 
+1.8.3
+

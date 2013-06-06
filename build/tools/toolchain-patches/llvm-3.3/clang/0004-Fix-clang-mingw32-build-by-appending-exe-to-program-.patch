@@ -1,0 +1,75 @@
+From 21a82033b4de1a446d25d460c4efec3efeb0ce66 Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Thu, 27 Sep 2012 16:55:27 +0800
+Subject: [PATCH 04/29] Fix clang mingw32 build by appending exe to program for
+ GetProgramPath
+
+Conflicts:
+
+	lib/Driver/Driver.cpp
+
+Change-Id: I514fe83292d3f4c78feb8c3c561f7e2aef13c210
+---
+ lib/Driver/Driver.cpp | 19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
+
+diff --git a/lib/Driver/Driver.cpp b/lib/Driver/Driver.cpp
+index fe40cc3..4713e76 100644
+--- a/lib/Driver/Driver.cpp
++++ b/lib/Driver/Driver.cpp
+@@ -1573,8 +1573,16 @@ std::string Driver::GetFilePath(const char *Name, const ToolChain &TC) const {
+ 
+ std::string Driver::GetProgramPath(const char *Name,
+                                    const ToolChain &TC) const {
++  std::string N(Name);
++#ifdef __MINGW32__
++  // We expect callers never pass Name ends with uppercase ".EXE"
++  std::string Suffix(".exe");
++  if (N.length() < Suffix.length() ||
++      (N.compare(N.length() - Suffix.length(), Suffix.length(), Suffix)) != 0)
++    N += ".exe";
++#endif
+   // FIXME: Needs a better variable than DefaultTargetTriple
+-  std::string TargetSpecificExecutable(DefaultTargetTriple + "-" + Name);
++  std::string TargetSpecificExecutable(DefaultTargetTriple + "-" + N);
+   // Respect a limited subset of the '-Bprefix' functionality in GCC by
+   // attempting to use this prefix when looking for program paths.
+   for (Driver::prefix_list::const_iterator it = PrefixDirs.begin(),
+@@ -1585,10 +1593,10 @@ std::string Driver::GetProgramPath(const char *Name,
+       P.appendComponent(TargetSpecificExecutable);
+       if (P.canExecute()) return P.str();
+       P.eraseComponent();
+-      P.appendComponent(Name);
++      P.appendComponent(N);
+       if (P.canExecute()) return P.str();
+     } else {
+-      llvm::sys::Path P(*it + Name);
++      llvm::sys::Path P(*it + N);
+       if (P.canExecute()) return P.str();
+     }
+   }
+@@ -1600,7 +1608,7 @@ std::string Driver::GetProgramPath(const char *Name,
+     P.appendComponent(TargetSpecificExecutable);
+     if (P.canExecute()) return P.str();
+     P.eraseComponent();
+-    P.appendComponent(Name);
++    P.appendComponent(N);
+     if (P.canExecute()) return P.str();
+   }
+ 
+@@ -1610,10 +1618,11 @@ std::string Driver::GetProgramPath(const char *Name,
+   if (!P.empty())
+     return P.str();
+ 
+-  P = llvm::sys::Path(llvm::sys::Program::FindProgramByName(Name));
++  P = llvm::sys::Path(llvm::sys::Program::FindProgramByName(N));
+   if (!P.empty())
+     return P.str();
+ 
++  // Return the original Name, not N
+   return Name;
+ }
+ 
+-- 
+1.8.3
+

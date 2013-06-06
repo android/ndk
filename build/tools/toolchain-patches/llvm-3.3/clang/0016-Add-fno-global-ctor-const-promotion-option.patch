@@ -1,0 +1,115 @@
+From bf50eaf8fde9352a55b950f1a543711c930baba6 Mon Sep 17 00:00:00 2001
+From: Logan Chien <loganchien@google.com>
+Date: Wed, 24 Apr 2013 14:44:38 +0800
+Subject: [PATCH 16/29] Add -fno-global-ctor-const-promotion option.
+
+The global variable optimization pass of LLVM will try to
+evalutate the global variables with static constructors, and
+promote the global constants.  Although this optimization is
+correct, it may cause some incompatability between gcc in
+some incorrect code, which uses const_cast to cast the
+constant to mutable.  If you are compiling the legacy code,
+then you can try to add -fno-global-ctor-const-promotion
+to your CXXFLAGS.
+
+Change-Id: I96657c3ae0f06ef6302f295237bb5781691fbfaa
+---
+ include/clang/Driver/Options.td                   |  4 ++++
+ lib/Driver/Tools.cpp                              |  8 ++++++++
+ test/CodeGenCXX/android-global-ctor-promotion.cpp | 21 +++++++++++++++++++++
+ test/Driver/android-options.cpp                   | 22 ++++++++++++++++++++++
+ 4 files changed, 55 insertions(+)
+ create mode 100644 test/CodeGenCXX/android-global-ctor-promotion.cpp
+
+diff --git a/include/clang/Driver/Options.td b/include/clang/Driver/Options.td
+index 525242e..1475045 100644
+--- a/include/clang/Driver/Options.td
++++ b/include/clang/Driver/Options.td
+@@ -1261,4 +1261,8 @@ def Z_reserved_lib_stdcxx : Flag<["-"], "Z-reserved-lib-stdc++">,
+ def Z_reserved_lib_cckext : Flag<["-"], "Z-reserved-lib-cckext">,
+     Flags<[LinkerInput, NoArgumentUnused, Unsupported]>, Group<reserved_lib_Group>;
+ 
++// Promote global variables with constructor to constant
++def fglobal_ctor_const_promotion: Flag<["-"], "fglobal-ctor-const-promotion">, Group<f_Group>;
++def fno_global_ctor_const_promotion: Flag<["-"], "fno-global-ctor-const-promotion">, Group<f_Group>;
++
+ include "CC1Options.td"
+diff --git a/lib/Driver/Tools.cpp b/lib/Driver/Tools.cpp
+index 1992e5d..f56a840 100644
+--- a/lib/Driver/Tools.cpp
++++ b/lib/Driver/Tools.cpp
+@@ -2925,6 +2925,14 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
+     CmdArgs.push_back("-arm-strict-align");
+   }
+ 
++  if (!Args.hasFlag(options::OPT_fglobal_ctor_const_promotion,
++                    options::OPT_fno_global_ctor_const_promotion,
++                    getToolChain().getTriple().getEnvironment() !=
++                    llvm::Triple::Android)) {
++    CmdArgs.push_back("-mllvm");
++    CmdArgs.push_back("-disable-global-ctor-const-promotion");
++  }
++
+   // Forward -f options with positive and negative forms; we translate
+   // these by hand.
+ 
+diff --git a/test/CodeGenCXX/android-global-ctor-promotion.cpp b/test/CodeGenCXX/android-global-ctor-promotion.cpp
+new file mode 100644
+index 0000000..2a0fa0d
+--- /dev/null
++++ b/test/CodeGenCXX/android-global-ctor-promotion.cpp
+@@ -0,0 +1,21 @@
++// RUN: %clang_cc1 -mllvm -disable-global-ctor-const-promotion \
++// RUN:     -emit-llvm -O2 -o - %s \
++// RUN:   | FileCheck %s
++
++class Boolean {
++private:
++  bool val;
++public:
++  Boolean(bool b): val(b) { }
++};
++
++extern const Boolean TRUE;
++extern const Boolean FALSE;
++
++const Boolean TRUE(true);
++const Boolean FALSE(false);
++
++// CHECK:     @TRUE = global %class.Boolean { i8 1 }, align 1
++// CHECK-NOT: @TRUE = constant %class.Boolean { i8 1 }, align 1
++// CHECK:     @FALSE = global %class.Boolean zeroinitializer, align 1
++// CHECK-NOT: @FALSE = constant %class.Boolean zeroinitializer, align 1
+diff --git a/test/Driver/android-options.cpp b/test/Driver/android-options.cpp
+index fae1647..41cd089 100644
+--- a/test/Driver/android-options.cpp
++++ b/test/Driver/android-options.cpp
+@@ -19,3 +19,25 @@
+ // RUN:   | FileCheck %s --check-prefix=CHECK-ENABLE-MISSING-RETURN
+ // CHECK-ENABLE-MISSING-RETURN: {{.*}}clang{{.*}}" "-cc1"
+ // CHECK-ENABLE-MISSING-RETURN: "-fcxx-missing-return-semantics"
++
++// RUN: %clang -no-canonical-prefixes %s -### -o %t.o 2>&1 \
++// RUN:     -target arm-linux-androideabi \
++// RUN:   | FileCheck %s --check-prefix=CHECK-DEFAULT-GLOBAL-CTOR
++// CHECK-DEFAULT-GLOBAL-CTOR: {{.*}}clang{{.*}}" "-cc1"
++// CHECK-DEFAULT-GLOBAL-CTOR: "-mllvm"
++// CHECK-DEFAULT-GLOBAL-CTOR: "-disable-global-ctor-const-promotion"
++
++// RUN: %clang -no-canonical-prefixes %s -### -o %t.o 2>&1 \
++// RUN:     -fglobal-ctor-const-promotion \
++// RUN:     -target arm-linux-androideabi \
++// RUN:   | FileCheck %s --check-prefix=CHECK-ENABLE-GLOBAL-CTOR
++// CHECK-ENABLE-GLOBAL-CTOR: {{.*}}clang{{.*}}" "-cc1"
++// CHECK-ENABLE-GLOBAL-CTOR-NOT: "-disable-global-ctor-const-promotion"
++
++// RUN: %clang -no-canonical-prefixes %s -### -o %t.o 2>&1 \
++// RUN:     -fno-global-ctor-const-promotion \
++// RUN:     -target arm-linux-androideabi \
++// RUN:   | FileCheck %s --check-prefix=CHECK-DISABLE-GLOBAL-CTOR
++// CHECK-DISABLE-GLOBAL-CTOR: {{.*}}clang{{.*}}" "-cc1"
++// CHECK-DISABLE-GLOBAL-CTOR: "-mllvm"
++// CHECK-DISABLE-GLOBAL-CTOR: "-disable-global-ctor-const-promotion"
+-- 
+1.8.3
+

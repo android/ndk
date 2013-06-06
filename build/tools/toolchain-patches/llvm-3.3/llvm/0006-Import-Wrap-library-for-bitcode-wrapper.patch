@@ -1,0 +1,1618 @@
+From 948e72851c51bfa9f8ec6b344a31dbb363fa2c8f Mon Sep 17 00:00:00 2001
+From: Logan Chien <loganchien@google.com>
+Date: Wed, 22 May 2013 17:11:25 +0800
+Subject: [PATCH 06/22] Import Wrap library for bitcode wrapper.
+
+source:
+https://android.googlesource.com/platform/frameworks/compile/libbcc/
+commit: 25b7205e16e422469da74f88e74ad79e7c284ac7
+
+libbcc/bcinfo
+libbcc/include/bcinfo
+
+Cherry-picked from release_32 branch.
+Patch by Lai Wei-Chih <Robert.Lai@mediatek.com>
+---
+ include/llvm/Wrap/BCHeaderField.h           | 118 +++++++++
+ include/llvm/Wrap/BitcodeWrapper.h          | 149 +++++++++++
+ include/llvm/Wrap/bitcode_wrapperer.h       | 221 ++++++++++++++++
+ include/llvm/Wrap/file_wrapper_input.h      |  58 +++++
+ include/llvm/Wrap/file_wrapper_output.h     |  45 ++++
+ include/llvm/Wrap/in_memory_wrapper_input.h |  56 ++++
+ include/llvm/Wrap/support_macros.h          |  41 +++
+ include/llvm/Wrap/wrapper_input.h           |  49 ++++
+ include/llvm/Wrap/wrapper_output.h          |  45 ++++
+ lib/Makefile                                |   2 +-
+ lib/Wrap/BitcodeWrapper.cpp                 |  52 ++++
+ lib/Wrap/LLVMBuild.txt                      |  21 ++
+ lib/Wrap/Makefile                           |  14 +
+ lib/Wrap/bitcode_wrapperer.cpp              | 382 ++++++++++++++++++++++++++++
+ lib/Wrap/file_wrapper_input.cpp             |  64 +++++
+ lib/Wrap/file_wrapper_output.cpp            |  48 ++++
+ lib/Wrap/in_memory_wrapper_input.cpp        |  60 +++++
+ lib/Wrap/wrapper_output.cpp                 |  25 ++
+ 18 files changed, 1449 insertions(+), 1 deletion(-)
+ create mode 100644 include/llvm/Wrap/BCHeaderField.h
+ create mode 100644 include/llvm/Wrap/BitcodeWrapper.h
+ create mode 100644 include/llvm/Wrap/bitcode_wrapperer.h
+ create mode 100644 include/llvm/Wrap/file_wrapper_input.h
+ create mode 100644 include/llvm/Wrap/file_wrapper_output.h
+ create mode 100644 include/llvm/Wrap/in_memory_wrapper_input.h
+ create mode 100644 include/llvm/Wrap/support_macros.h
+ create mode 100644 include/llvm/Wrap/wrapper_input.h
+ create mode 100644 include/llvm/Wrap/wrapper_output.h
+ create mode 100644 lib/Wrap/BitcodeWrapper.cpp
+ create mode 100644 lib/Wrap/LLVMBuild.txt
+ create mode 100644 lib/Wrap/Makefile
+ create mode 100644 lib/Wrap/bitcode_wrapperer.cpp
+ create mode 100644 lib/Wrap/file_wrapper_input.cpp
+ create mode 100644 lib/Wrap/file_wrapper_output.cpp
+ create mode 100644 lib/Wrap/in_memory_wrapper_input.cpp
+ create mode 100644 lib/Wrap/wrapper_output.cpp
+
+diff --git a/include/llvm/Wrap/BCHeaderField.h b/include/llvm/Wrap/BCHeaderField.h
+new file mode 100644
+index 0000000..fd8d585
+--- /dev/null
++++ b/include/llvm/Wrap/BCHeaderField.h
+@@ -0,0 +1,118 @@
++/*
++ * Copyright 2012, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#ifndef LLVM_WRAP_BCHEADER_FIELD_H__
++#define LLVM_WRAP_BCHEADER_FIELD_H__
++
++#include <stdint.h>
++#include <stdio.h>
++#include <string.h>
++
++// Class representing a variable-size metadata field in the bitcode header.
++// Also contains the list of known Tag IDs.
++// Contains a pointer to the data but does not own the data, so it can be
++// copied with the trivial copy constructor/assignment operator.
++
++// The serialized format has 2 fixed subfields (ID and length) and the
++// variable-length data subfield
++class BCHeaderField {
++ public:
++  typedef enum {
++    kInvalid = 0,
++    kBitcodeHash = 1,
++    kAndroidCompilerVersion = 0x4001,
++    kAndroidOptimizationLevel = 0x4002
++  } Tag;
++  typedef uint16_t FixedSubfield;
++
++  BCHeaderField(Tag ID, size_t len, uint8_t* data) :
++      ID_(ID), len_(len), data_(data) {}
++  size_t GetTotalSize() {
++    // Round up to 4 byte alignment
++    return (kTagLenSize + len_ + 3) & ~3;
++  }
++
++  bool Write(uint8_t* buf, size_t buf_len) {
++    size_t fields_len = kTagLenSize + len_;
++    size_t pad_len = (4 - (fields_len & 3)) & 3;
++    // Ensure buffer is large enough and that length can be represented
++    // in 16 bits
++    const size_t max_uint16_t = 65535;
++    if (buf_len < fields_len + pad_len ||
++        len_ > max_uint16_t) return false;
++
++    WriteFixedSubfield(static_cast<FixedSubfield>(ID_), buf);
++    WriteFixedSubfield(static_cast<FixedSubfield>(len_),
++                       buf + sizeof(FixedSubfield));
++    memcpy(buf + kTagLenSize, data_, len_);
++    // Pad out to 4 byte alignment
++    if (pad_len) {
++      memset(buf + fields_len, 0, pad_len);
++    }
++    return true;
++  }
++
++  bool Read(const uint8_t* buf, size_t buf_len) {
++    if (buf_len < kTagLenSize) return false;
++    FixedSubfield field;
++    ReadFixedSubfield(&field, buf);
++    ID_ = static_cast<Tag>(field);
++    ReadFixedSubfield(&field, buf + sizeof(FixedSubfield));
++    len_ = static_cast<size_t>(field);
++    if (buf_len < kTagLenSize + len_) return false;
++    memcpy(data_, buf + kTagLenSize, len_);
++    return true;
++  }
++
++  void Print() {
++    fprintf(stderr, "Field ID: %d, data length %d, total length %d\n",
++            ID_, static_cast<int>(len_), static_cast<int>(GetTotalSize()));
++    fprintf(stderr, "Data:");
++    for (size_t i = 0; i < len_; i++) fprintf(stderr, "0x%x ", data_[i]);
++    fprintf(stderr, "\n");
++  }
++
++  // Get the data size from a serialized field to allow allocation
++  static size_t GetDataSizeFromSerialized(const uint8_t* buf) {
++    FixedSubfield len;
++    ReadFixedSubfield(&len, buf + sizeof(FixedSubfield));
++    return len;
++  }
++
++  Tag getID() const {
++    return ID_;
++  }
++
++  size_t getLen() const {
++    return len_;
++  }
++
++ private:
++ // Combined size of the fixed subfields
++ const static size_t kTagLenSize = 2 * sizeof(FixedSubfield);
++  static void WriteFixedSubfield(FixedSubfield value, uint8_t* buf) {
++    buf[0] = value & 0xFF;
++    buf[1] = (value >> 8) & 0xFF;
++  }
++  static void ReadFixedSubfield(FixedSubfield* value, const uint8_t* buf) {
++    *value = buf[0] | buf[1] << 8;
++  }
++  Tag ID_;
++  size_t len_;
++  uint8_t *data_;
++};
++
++#endif  // LLVM_WRAP_BCHEADER_FIELD_H__
+diff --git a/include/llvm/Wrap/BitcodeWrapper.h b/include/llvm/Wrap/BitcodeWrapper.h
+new file mode 100644
+index 0000000..a5ce262
+--- /dev/null
++++ b/include/llvm/Wrap/BitcodeWrapper.h
+@@ -0,0 +1,149 @@
++/*
++ * Copyright 2011-2012, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#ifndef __BITCODEWRAPPER_H__
++#define __BITCODEWRAPPER_H__
++
++#include "llvm/Wrap/BCHeaderField.h"
++
++#include <cstddef>
++#include <stdint.h>
++
++struct AndroidBitcodeWrapper {
++  uint32_t Magic;
++  uint32_t Version;
++  uint32_t BitcodeOffset;
++  uint32_t BitcodeSize;
++  uint32_t HeaderVersion;
++  uint32_t TargetAPI;
++  uint32_t PNaClVersion;
++  uint16_t CompilerVersionTag;
++  uint16_t CompilerVersionLen;
++  uint32_t CompilerVersion;
++  uint16_t OptimizationLevelTag;
++  uint16_t OptimizationLevelLen;
++  uint32_t OptimizationLevel;
++};
++
++enum BCFileType {
++  BC_NOT_BC = 0,
++  BC_WRAPPER = 1,
++  BC_RAW = 2
++};
++
++class BitcodeWrapper {
++ private:
++  enum BCFileType mFileType;
++  const char *mBitcode;
++  size_t mBitcodeSize;
++
++  uint32_t mHeaderVersion;
++  uint32_t mTargetAPI;
++  uint32_t mCompilerVersion;
++  uint32_t mOptimizationLevel;
++
++ public:
++  /**
++   * Reads wrapper information from \p bitcode.
++   *
++   * \param bitcode - input bitcode string.
++   * \param bitcodeSize - length of \p bitcode string (in bytes).
++   */
++  BitcodeWrapper(const char *bitcode, size_t bitcodeSize);
++
++  ~BitcodeWrapper();
++
++  /**
++   * Attempt to unwrap the target bitcode. This function is \deprecated.
++   *
++   * \return true on success and false if an error occurred.
++   */
++  bool unwrap();
++
++  /**
++   * \return type of bitcode file.
++   */
++  enum BCFileType getBCFileType() const {
++    return mFileType;
++  }
++
++  /**
++   * \return header version of bitcode wrapper.
++   */
++  uint32_t getHeaderVersion() const {
++    return mHeaderVersion;
++  }
++
++  /**
++   * \return target API version for this bitcode.
++   */
++  uint32_t getTargetAPI() const {
++    return mTargetAPI;
++  }
++
++  /**
++   * \return compiler version that generated this bitcode.
++   */
++  uint32_t getCompilerVersion() const {
++    return mCompilerVersion;
++  }
++
++  /**
++   * \return compiler optimization level for this bitcode.
++   */
++  uint32_t getOptimizationLevel() const {
++    return mOptimizationLevel;
++  }
++
++};
++
++/**
++ * Helper function to emit just the bitcode wrapper returning the number of
++ * bytes that were written.
++ *
++ * \param wrapper - where to write header information into.
++ * \param bitcodeSize - size of bitcode in bytes.
++ * \param targetAPI - target API version for this bitcode.
++ * \param compilerVersion - compiler version that generated this bitcode.
++ * \param optimizationLevel - compiler optimization level for this bitcode.
++ *
++ * \return number of wrapper bytes written into the \p buffer.
++ */
++static inline size_t writeAndroidBitcodeWrapper(AndroidBitcodeWrapper *wrapper,
++    size_t bitcodeSize, uint32_t targetAPI, uint32_t compilerVersion,
++    uint32_t optimizationLevel) {
++  if (!wrapper) {
++    return 0;
++  }
++
++  wrapper->Magic = 0x0B17C0DE;
++  wrapper->Version = 0;
++  wrapper->BitcodeOffset = sizeof(*wrapper);
++  wrapper->BitcodeSize = bitcodeSize;
++  wrapper->HeaderVersion = 0;
++  wrapper->TargetAPI = targetAPI;
++  wrapper->PNaClVersion = 0;
++  wrapper->CompilerVersionTag = BCHeaderField::kAndroidCompilerVersion;
++  wrapper->CompilerVersionLen = 4;
++  wrapper->CompilerVersion = compilerVersion;
++  wrapper->OptimizationLevelTag = BCHeaderField::kAndroidOptimizationLevel;
++  wrapper->OptimizationLevelLen = 4;
++  wrapper->OptimizationLevel = optimizationLevel;
++
++  return sizeof(*wrapper);
++}
++
++#endif  // __BITCODEWRAPPER_H__
+diff --git a/include/llvm/Wrap/bitcode_wrapperer.h b/include/llvm/Wrap/bitcode_wrapperer.h
+new file mode 100644
+index 0000000..26b9664
+--- /dev/null
++++ b/include/llvm/Wrap/bitcode_wrapperer.h
+@@ -0,0 +1,221 @@
++/*
++ * Copyright 2012, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++// Define utility class to wrap/unwrap bitcode files. Does wrapping/unwrapping
++// in such a way that the wrappered bitcode file is still a bitcode file.
++
++#ifndef LLVM_WRAP_BITCODE_WRAPPERER_H__
++#define LLVM_WRAP_BITCODE_WRAPPERER_H__
++
++#include <stdint.h>
++#include <stddef.h>
++#include <vector>
++
++#include "llvm/Wrap/support_macros.h"
++#include "llvm/Wrap/BCHeaderField.h"
++#include "llvm/Wrap/wrapper_input.h"
++#include "llvm/Wrap/wrapper_output.h"
++
++// The bitcode wrapper header is the following 7 fixed 4-byte fields:
++//      1) 0B17C0DE - The magic number expected by llvm for wrapped bitcodes
++//      2) Version # 0 - The current version of wrapped bitcode files
++//      3) (raw) bitcode offset
++//      4) (raw) bitcode size
++//      5) Android header version
++//      6) Android target API
++//      7) PNaCl Bitcode version
++//      plus 0 or more variable-length fields (consisting of ID, length, data)
++
++// Initial buffer size. It is expanded if needed to hold large variable-size
++// fields.
++static const size_t kBitcodeWrappererBufferSize = 1024;
++
++// Support class for outputting a wrapped bitcode file from a raw bitcode
++// file (and optionally additional header fields), or for outputting a raw
++// bitcode file from a wrapped one.
++class BitcodeWrapperer {
++ public:
++  // Create a bitcode wrapperer using the following
++  // input and output files.
++  BitcodeWrapperer(WrapperInput* infile, WrapperOutput* outfile);
++
++  // Returns true if the input file begins with a bitcode
++  // wrapper magic number. As a side effect, _wrapper_ fields are set.
++  bool IsInputBitcodeWrapper();
++
++  // Returns true if the input file begins with a bitcode
++  // file magic number.
++  bool IsInputBitcodeFile();
++
++  // Add a variable-length field to the header. The caller is responsible
++  // for freeing the data pointed to by the BCHeaderField.
++  void AddHeaderField(BCHeaderField* field);
++
++  // Generate a wrapped bitcode file from the input bitcode file
++  // and the current header data. Return true on success.
++  bool GenerateWrappedBitcodeFile();
++
++  // Unwrap the wrapped bitcode file, to the corresponding
++  // outfile. Return true on success.
++  bool GenerateRawBitcodeFile();
++
++  // Print current wrapper header fields to stderr for debugging.
++  void PrintWrapperHeader();
++
++  uint32_t getAndroidHeaderVersion() {
++    return android_header_version_;
++  }
++
++  uint32_t getAndroidTargetAPI() {
++    return android_target_api_;
++  }
++
++  uint32_t getAndroidCompilerVersion() {
++    return android_compiler_version_;
++  }
++
++  uint32_t getAndroidOptimizationLevel() {
++    return android_optimization_level_;
++  }
++
++  ~BitcodeWrapperer();
++
++ private:
++  DISALLOW_CLASS_COPY_AND_ASSIGN(BitcodeWrapperer);
++
++  // Refills the buffer with more bytes. Does this in a way
++  // such that it is maximally filled.
++  void FillBuffer();
++
++  // Returns the number of bytes in infile.
++  off_t GetInFileSize() {
++    if (infile_ != NULL) {
++      return infile_->Size();
++    } else {
++      return 0;
++    }
++  }
++
++  // Returns the offset of bitcode (i.e. the size of the wrapper header)
++  // if the output file were to be written now.
++  size_t BitcodeOffset();
++
++  // Returns true if we can read a word. If necessary, fills the buffer
++  // with enough characters so that there are at least a 32-bit value
++  // in the buffer. Returns false if there isn't a 32-bit value
++  // to read from the input file.
++  bool CanReadWord();
++
++  // Read a (32-bit) word from the input. Return true
++  // if able to read the word.
++  bool ReadWord(uint32_t& word);
++
++  // Write a (32-bit) word to the output. Return true if successful
++  bool WriteWord(uint32_t word);
++
++  // Write all variable-sized header fields to the output. Return true
++  // if successful.
++  bool WriteVariableFields();
++
++  // Parse the bitcode wrapper header in the infile, if any. Return true
++  // if successful.
++  bool ParseWrapperHeader();
++
++  // Returns the i-th character in front of the cursor in the buffer.
++  uint8_t BufferLookahead(int i) { return buffer_[cursor_ + i]; }
++
++  // Returns how many unread bytes are in the buffer.
++  size_t GetBufferUnreadBytes() { return buffer_size_ - cursor_; }
++
++
++  // Backs up the read cursor to the beginning of the input buffer.
++  void ResetCursor() {
++    cursor_ = 0;
++  }
++
++  // Generates the header sequence for the wrapped bitcode being
++  // generated.
++  bool WriteBitcodeWrapperHeader();
++
++  // Copies size bytes of infile to outfile, using the buffer.
++  bool BufferCopyInToOut(uint32_t size);
++
++  // Discards the old infile and replaces it with the given file.
++  void ReplaceInFile(WrapperInput* new_infile);
++
++  // Discards the old outfile and replaces it with the given file.
++  void ReplaceOutFile(WrapperOutput* new_outfile);
++
++  // Moves to the given position in the input file. Returns false
++  // if unsuccessful.
++  bool Seek(uint32_t pos);
++
++  // Clear the buffer of all contents.
++  void ClearBuffer();
++
++  // The input file being processed. Can be either
++  // a bitcode file, a wrappered bitcode file, or a secondary
++  // file to be wrapped.
++  WrapperInput* infile_;
++
++  // The output file being generated. Can be either
++  // a bitcode file, a wrappered bitcode file, or a secondary
++  // unwrapped file.
++  WrapperOutput* outfile_;
++
++  // A buffer of bytes read from the input file.
++  std::vector<uint8_t> buffer_;
++
++  // The number of bytes that were read from the input file
++  // into the buffer.
++  size_t buffer_size_;
++
++  // The index to the current read point within the buffer.
++  size_t cursor_;
++
++  // True when eof of input is reached.
++  bool infile_at_eof_;
++
++  // The 32-bit value defining the offset of the raw bitcode in the input file.
++  uint32_t infile_bc_offset_;
++
++  // The 32-bit value defining the generated offset of the wrapped bitcode.
++  // This value changes as new fields are added with AddHeaderField
++  uint32_t wrapper_bc_offset_;
++
++  // The 32-bit value defining the size of the raw wrapped bitcode.
++  uint32_t wrapper_bc_size_;
++
++  // Android header version and target API
++  uint32_t android_header_version_;
++  uint32_t android_target_api_;
++  uint32_t android_compiler_version_;
++  uint32_t android_optimization_level_;
++
++  // PNaCl bitcode version
++  uint32_t pnacl_bc_version_;
++
++  // Vector of variable header fields
++  std::vector<BCHeaderField> header_fields_;
++  // If any bufferdata from header fields is owned, it is stored here and
++  // freed on destruction.
++  std::vector<uint8_t*> variable_field_data_;
++
++  // True if there was an error condition (e.g. the file is not bitcode)
++  bool error_;
++};
++
++#endif  // LLVM_WRAP_BITCODE_WRAPPERER_H__
+diff --git a/include/llvm/Wrap/file_wrapper_input.h b/include/llvm/Wrap/file_wrapper_input.h
+new file mode 100644
+index 0000000..4ea5d7d
+--- /dev/null
++++ b/include/llvm/Wrap/file_wrapper_input.h
+@@ -0,0 +1,58 @@
++/*
++ * Copyright 2012, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++// Defines utility allowing files for bitcode input wrapping.
++
++#ifndef FILE_WRAPPER_INPUT_H__
++#define FILE_WRAPPER_INPUT_H__
++
++#include <stdio.h>
++
++#include "llvm/Wrap/support_macros.h"
++#include "llvm/Wrap/wrapper_input.h"
++
++// Define a class to wrap named files.
++class FileWrapperInput : public WrapperInput {
++ public:
++  FileWrapperInput(const char* _name);
++  ~FileWrapperInput();
++  // Tries to read the requested number of bytes into the buffer. Returns the
++  // actual number of bytes read.
++  virtual size_t Read(uint8_t* buffer, size_t wanted);
++  // Returns true if at end of file. Note: May return false
++  // until Read is called, and returns 0.
++  virtual bool AtEof();
++  // Returns the size of the file (in bytes).
++  virtual off_t Size();
++  // Moves to the given offset within the file. Returns
++  // false if unable to move to that position.
++  virtual bool Seek(uint32_t pos);
++ private:
++  // The name of the file.
++  const char* _name;
++  // True once eof has been encountered.
++  bool _at_eof;
++  // True if size has been computed.
++  bool _size_found;
++  // The size of the file.
++  off_t _size;
++  // The corresponding (opened) file.
++  FILE* _file;
++ private:
++  DISALLOW_CLASS_COPY_AND_ASSIGN(FileWrapperInput);
++};
++
++#endif // FILE_WRAPPER_INPUT_H__
+diff --git a/include/llvm/Wrap/file_wrapper_output.h b/include/llvm/Wrap/file_wrapper_output.h
+new file mode 100644
+index 0000000..1980106
+--- /dev/null
++++ b/include/llvm/Wrap/file_wrapper_output.h
+@@ -0,0 +1,45 @@
++/*
++ * Copyright 2012, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++// Defines utility allowing files for bitcode output wrapping.
++
++#ifndef FILE_WRAPPER_OUTPUT_H__
++#define FILE_WRAPPER_OUTPUT_H__
++
++#include <stdio.h>
++
++#include "llvm/Wrap/support_macros.h"
++#include "llvm/Wrap/wrapper_output.h"
++
++// Define a class to wrap named files. */
++class FileWrapperOutput : public WrapperOutput {
++ public:
++  FileWrapperOutput(const char* name);
++  ~FileWrapperOutput();
++  // Writes a single byte, returning false if unable to write.
++  virtual bool Write(uint8_t byte);
++  // Writes the specified number of bytes in the buffer to
++  // output. Returns false if unable to write.
++  virtual bool Write(const uint8_t* buffer, size_t buffer_size);
++ private:
++  // The name of the file
++  const char* _name;
++  // The corresponding (opened) file.
++  FILE* _file;
++ private:
++  DISALLOW_CLASS_COPY_AND_ASSIGN(FileWrapperOutput);
++};
++#endif  // FILE_WRAPPER_OUTPUT_H__
+diff --git a/include/llvm/Wrap/in_memory_wrapper_input.h b/include/llvm/Wrap/in_memory_wrapper_input.h
+new file mode 100644
+index 0000000..f4e2aba
+--- /dev/null
++++ b/include/llvm/Wrap/in_memory_wrapper_input.h
+@@ -0,0 +1,56 @@
++/*
++ * Copyright 2012, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++// Defines utility allowing in-memory buffers for bitcode input wrapping.
++
++#ifndef IN_MEMORY_WRAPPER_INPUT_H__
++#define IN_MEMORY_WRAPPER_INPUT_H__
++
++#include <stdio.h>
++
++#include "llvm/Wrap/support_macros.h"
++#include "llvm/Wrap/wrapper_input.h"
++
++// Define a class to wrap named files.
++class InMemoryWrapperInput : public WrapperInput {
++ public:
++  InMemoryWrapperInput(const char* buffer, size_t size);
++  ~InMemoryWrapperInput();
++  // Tries to read the requested number of bytes into the buffer. Returns the
++  // actual number of bytes read.
++  virtual size_t Read(uint8_t* buffer, size_t wanted);
++  // Returns true if at end of buffer. Note: May return false
++  // until Read is called, and returns 0.
++  virtual bool AtEof();
++  // Returns the size of the buffer (in bytes).
++  virtual off_t Size();
++  // Moves to the given offset within the buffer. Returns
++  // false if unable to move to that position.
++  virtual bool Seek(uint32_t pos);
++ private:
++  // The actual in-memory buffer
++  const char* _buffer;
++  // The position in the buffer
++  size_t _pos;
++  // True once eof has been encountered.
++  bool _at_eof;
++  // The size of the buffer.
++  size_t _size;
++ private:
++  DISALLOW_CLASS_COPY_AND_ASSIGN(InMemoryWrapperInput);
++};
++
++#endif // IN_MEMORY_WRAPPER_INPUT_H__
+diff --git a/include/llvm/Wrap/support_macros.h b/include/llvm/Wrap/support_macros.h
+new file mode 100644
+index 0000000..5d3b8ce
+--- /dev/null
++++ b/include/llvm/Wrap/support_macros.h
+@@ -0,0 +1,41 @@
++/*
++ * Copyright 2012, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++// Define support macros for defining classes, etc.
++
++#ifndef LLVM_SUPPORT_SUPPORT_MACROS_H__
++#define LLVM_SUPPORT_SUPPORT_MACROS_H__
++
++// Define macro, to use within a class declaration,  to disallow constructor
++// copy. Defines copy constructor declaration under the assumption that it
++// is never defined.
++#define DISALLOW_CLASS_COPY(class_name) \
++  class_name(class_name& arg)  // Do not implement
++
++// Define macro, to use within a class declaration,  to disallow assignment.
++// Defines assignment operation declaration under the assumption that it
++// is never defined.
++#define DISALLOW_CLASS_ASSIGN(class_name) \
++  void operator=(class_name& arg)  // Do not implement
++
++// Define macro to add copy and assignment declarations to a class file,
++// for which no bodies will be defined, effectively disallowing these from
++// being defined in the class.
++#define DISALLOW_CLASS_COPY_AND_ASSIGN(class_name) \
++  DISALLOW_CLASS_COPY(class_name); \
++  DISALLOW_CLASS_ASSIGN(class_name)
++
++#endif  // LLVM_SUPPORT_SUPPORT_MACROS_H__
+diff --git a/include/llvm/Wrap/wrapper_input.h b/include/llvm/Wrap/wrapper_input.h
+new file mode 100644
+index 0000000..d3330df
+--- /dev/null
++++ b/include/llvm/Wrap/wrapper_input.h
+@@ -0,0 +1,49 @@
++/*
++ * Copyright 2012, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++// Define a generic interface to a file/memory region that contains
++// a bitcode file, a wrapped bitcode file, or a data file to wrap.
++
++#ifndef LLVM_WRAP_WRAPPER_INPUT_H__
++#define LLVM_WRAP_WRAPPER_INPUT_H__
++
++#include <stdint.h>
++#include <sys/types.h>
++
++#include "support_macros.h"
++
++// The following is a generic interface to a file/memory region that contains
++// a bitcode file, a wrapped bitcode file, or data file to wrap.
++class WrapperInput {
++ public:
++  WrapperInput() {}
++  virtual ~WrapperInput() {}
++  // Tries to read the requested number of bytes into the buffer. Returns the
++  // actual number of bytes read.
++  virtual size_t Read(uint8_t* buffer, size_t wanted) = 0;
++  // Returns true if at end of input. Note: May return false until
++  // Read is called, and returns 0.
++  virtual bool AtEof() = 0;
++  // Returns the size of the input (in bytes).
++  virtual off_t Size() = 0;
++  // Moves to the given offset within the input region. Returns false
++  // if unable to move to that position.
++  virtual bool Seek(uint32_t pos) = 0;
++ private:
++  DISALLOW_CLASS_COPY_AND_ASSIGN(WrapperInput);
++};
++
++#endif  // LLVM_WRAP_WRAPPER_INPUT_H__
+diff --git a/include/llvm/Wrap/wrapper_output.h b/include/llvm/Wrap/wrapper_output.h
+new file mode 100644
+index 0000000..74eab90
+--- /dev/null
++++ b/include/llvm/Wrap/wrapper_output.h
+@@ -0,0 +1,45 @@
++/*
++ * Copyright 2012, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++// Defines a generic interface to a file/memory region that
++// contains a generated wrapped bitcode file, bitcode file,
++// or data file.
++
++#ifndef LLVM_WRAP_WRAPPER_OUTPUT_H__
++#define LLVM_WRAP_WRAPPER_OUTPUT_H__
++
++#include <stdint.h>
++#include <stddef.h>
++
++#include "llvm/Wrap/support_macros.h"
++
++// The following is a generic interface to a file/memory region
++// that contains a generated bitcode file, wrapped bitcode file,
++// or a data file.
++class WrapperOutput {
++ public:
++  WrapperOutput() {}
++  virtual ~WrapperOutput() {}
++  // Writes a single byte, returning false if unable to write.
++  virtual bool Write(uint8_t byte) = 0;
++  // Writes the specified number of bytes in the buffer to
++  // output. Returns false if unable to write.
++  virtual bool Write(const uint8_t* buffer, size_t buffer_size);
++ private:
++  DISALLOW_CLASS_COPY_AND_ASSIGN(WrapperOutput);
++};
++
++#endif  // LLVM_WRAP_WRAPPER_OUTPUT_H__
+diff --git a/lib/Makefile b/lib/Makefile
+index 57f016b..86b5ddd 100644
+--- a/lib/Makefile
++++ b/lib/Makefile
+@@ -12,7 +12,7 @@ include $(LEVEL)/Makefile.config
+ 
+ PARALLEL_DIRS := IR AsmParser Bitcode Archive Analysis Transforms CodeGen \
+                  Target ExecutionEngine Linker MC Object Option DebugInfo \
+-								 IRReader
++                 IRReader Wrap
+ 
+ include $(LEVEL)/Makefile.common
+ 
+diff --git a/lib/Wrap/BitcodeWrapper.cpp b/lib/Wrap/BitcodeWrapper.cpp
+new file mode 100644
+index 0000000..d779d3a
+--- /dev/null
++++ b/lib/Wrap/BitcodeWrapper.cpp
+@@ -0,0 +1,52 @@
++/*
++ * Copyright 2011-2012, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#include "llvm/Bitcode/ReaderWriter.h"
++#include "llvm/Wrap/BitcodeWrapper.h"
++#include "llvm/Wrap/bitcode_wrapperer.h"
++#include "llvm/Wrap/in_memory_wrapper_input.h"
++
++#include <cstdlib>
++#include <cstring>
++
++BitcodeWrapper::BitcodeWrapper(const char *bitcode, size_t bitcodeSize)
++    : mFileType(BC_NOT_BC), mBitcode(bitcode),
++      mBitcodeSize(bitcodeSize),
++      mHeaderVersion(0), mTargetAPI(0), mCompilerVersion(0),
++      mOptimizationLevel(3) {
++  InMemoryWrapperInput inMem(mBitcode, mBitcodeSize);
++  BitcodeWrapperer wrapperer(&inMem, NULL);
++  if (wrapperer.IsInputBitcodeWrapper()) {
++    mFileType = BC_WRAPPER;
++    mHeaderVersion = wrapperer.getAndroidHeaderVersion();
++    mTargetAPI = wrapperer.getAndroidTargetAPI();
++    mCompilerVersion = wrapperer.getAndroidCompilerVersion();
++    mOptimizationLevel = wrapperer.getAndroidOptimizationLevel();
++  } else if (wrapperer.IsInputBitcodeFile()) {
++    mFileType = BC_RAW;
++  }
++}
++
++
++BitcodeWrapper::~BitcodeWrapper() {
++  return;
++}
++
++
++bool BitcodeWrapper::unwrap() {
++  return mFileType != BC_NOT_BC;
++}
++
+diff --git a/lib/Wrap/LLVMBuild.txt b/lib/Wrap/LLVMBuild.txt
+new file mode 100644
+index 0000000..8750711
+--- /dev/null
++++ b/lib/Wrap/LLVMBuild.txt
+@@ -0,0 +1,21 @@
++;===- ./lib/Wrap/LLVMBuild.txt ------------------------------*- Conf -*--===;
++;
++;                     The LLVM Compiler Infrastructure
++;
++; This file is distributed under the University of Illinois Open Source
++; License. See LICENSE.TXT for details.
++;
++;===------------------------------------------------------------------------===;
++;
++; This is an LLVMBuild description file for the components in this subdirectory.
++;
++; For more information on the LLVMBuild system, please see:
++;
++;   http://llvm.org/docs/LLVMBuild.html
++;
++;===------------------------------------------------------------------------===;
++
++[component_0]
++type = Library
++name = Wrap
++parent = Libraries
+diff --git a/lib/Wrap/Makefile b/lib/Wrap/Makefile
+new file mode 100644
+index 0000000..641f6c4
+--- /dev/null
++++ b/lib/Wrap/Makefile
+@@ -0,0 +1,14 @@
++##===- lib/Wrap/Makefile ---------------------------------*- Makefile -*-===##
++#
++#                     The LLVM Compiler Infrastructure
++#
++# This file is distributed under the University of Illinois Open Source
++# License. See LICENSE.TXT for details.
++#
++##===----------------------------------------------------------------------===##
++
++LEVEL = ../..
++LIBRARYNAME = LLVMWrap
++BUILD_ARCHIVE := 1
++
++include $(LEVEL)/Makefile.common
+diff --git a/lib/Wrap/bitcode_wrapperer.cpp b/lib/Wrap/bitcode_wrapperer.cpp
+new file mode 100644
+index 0000000..65f94b7
+--- /dev/null
++++ b/lib/Wrap/bitcode_wrapperer.cpp
+@@ -0,0 +1,382 @@
++/*
++ * Copyright 2012, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#include "llvm/Wrap/bitcode_wrapperer.h"
++
++#include <stdio.h>
++#include <sys/stat.h>
++
++using std::vector;
++
++// The number of bytes in a 32 bit integer.
++static const uint32_t kWordSize = 4;
++
++// Number of LLVM-defined fixed fields in the header.
++static const uint32_t kLLVMFields = 4;
++
++// Total number of fixed fields in the header.
++static const uint32_t kFixedFields = 7;
++
++// The magic number that must exist for bitcode wrappers.
++static const uint32_t kWrapperMagicNumber = 0x0B17C0DE;
++
++// The version number associated with a wrapper file.
++// Note: llvm currently only allows the value 0. When this changes,
++// we should consider making this a command line option.
++static const uint32_t kLLVMVersionNumber = 0;
++
++// Fields defined by Android bitcode header.
++static const uint32_t kAndroidHeaderVersion = 0;
++static const uint32_t kAndroidTargetAPI = 0;
++static const uint32_t kAndroidDefaultCompilerVersion = 0;
++static const uint32_t kAndroidDefaultOptimizationLevel = 3;
++
++// PNaCl bitcode version number.
++static const uint32_t kPnaclBitcodeVersion = 0;
++
++// Max size for variable fields. Currently only used for writing them
++// out to files (the parsing works for arbitrary sizes).
++static const size_t kMaxVariableFieldSize = 256;
++
++BitcodeWrapperer::BitcodeWrapperer(WrapperInput* infile, WrapperOutput* outfile)
++    : infile_(infile),
++      outfile_(outfile),
++      buffer_size_(0),
++      cursor_(0),
++      infile_at_eof_(false),
++      infile_bc_offset_(0),
++      wrapper_bc_offset_(0),
++      wrapper_bc_size_(0),
++      android_header_version_(kAndroidHeaderVersion),
++      android_target_api_(kAndroidTargetAPI),
++      android_compiler_version_(kAndroidDefaultCompilerVersion),
++      android_optimization_level_(kAndroidDefaultOptimizationLevel),
++      pnacl_bc_version_(0),
++      error_(false) {
++  buffer_.resize(kBitcodeWrappererBufferSize);
++  if (IsInputBitcodeWrapper()) {
++    ParseWrapperHeader();
++  } else if (IsInputBitcodeFile()) {
++    wrapper_bc_offset_ = kWordSize * kFixedFields;
++    wrapper_bc_size_ = GetInFileSize();
++  } else {
++    fprintf(stderr, "Error: input file is not a bitcode file.\n");
++    error_ = true;
++  }
++}
++
++BitcodeWrapperer::~BitcodeWrapperer() {
++  for(size_t i = 0; i < variable_field_data_.size(); i++) {
++    delete [] variable_field_data_[i];
++  }
++}
++
++
++void BitcodeWrapperer::ClearBuffer() {
++  buffer_size_ = 0;
++  cursor_ = 0;
++  infile_at_eof_ = false;
++}
++
++bool BitcodeWrapperer::Seek(uint32_t pos) {
++  if (infile_ != NULL && infile_->Seek(pos)) {
++    ClearBuffer();
++    return true;
++  }
++  return false;
++}
++
++bool BitcodeWrapperer::CanReadWord() {
++  if (GetBufferUnreadBytes() < kWordSize) {
++    FillBuffer();
++    return GetBufferUnreadBytes() >= kWordSize;
++  } else {
++    return true;
++  }
++}
++
++void BitcodeWrapperer::FillBuffer() {
++  if (cursor_ > 0) {
++    // Before filling, move any remaining bytes to the
++    // front of the buffer. This allows us to assume
++    // that after the call to FillBuffer, readable
++    // text is contiguous.
++    if (cursor_ < buffer_size_) {
++      size_t i = 0;
++      while (cursor_ < buffer_size_) {
++        buffer_[i++] = buffer_[cursor_++];
++      }
++      cursor_ = 0;
++      buffer_size_ = i;
++    }
++  } else {
++    // Assume the buffer contents have been used,
++    // and we want to completely refill it.
++    buffer_size_ = 0;
++  }
++
++  // If we don't have an input, we can't refill the buffer at all.
++  if (infile_ == NULL) {
++    return;
++  }
++
++  // Now fill in remaining space.
++  size_t needed = buffer_.size() - buffer_size_;
++
++  while (buffer_.size() > buffer_size_) {
++    int actually_read = infile_->Read(&buffer_[buffer_size_], needed);
++    if (infile_->AtEof()) {
++      infile_at_eof_ = true;
++    }
++    if (actually_read) {
++      buffer_size_ += actually_read;
++      needed -= actually_read;
++    } else if (infile_at_eof_) {
++      break;
++    }
++  }
++}
++
++bool BitcodeWrapperer::ReadWord(uint32_t& word) {
++  if (!CanReadWord()) return false;
++  word = (((uint32_t) BufferLookahead(0)) << 0)
++      | (((uint32_t) BufferLookahead(1)) << 8)
++      | (((uint32_t) BufferLookahead(2)) << 16)
++      | (((uint32_t) BufferLookahead(3)) << 24);
++  cursor_ += kWordSize;
++  return true;
++}
++
++bool BitcodeWrapperer::WriteWord(uint32_t value) {
++  uint8_t buffer[kWordSize];
++  buffer[3] = (value >> 24) & 0xFF;
++  buffer[2] = (value >> 16) & 0xFF;
++  buffer[1] = (value >> 8)  & 0xFF;
++  buffer[0] = (value >> 0)  & 0xFF;
++  return outfile_->Write(buffer, kWordSize);
++}
++
++bool BitcodeWrapperer::WriteVariableFields() {
++  // This buffer may have to be bigger if we start using the fields
++  // for larger things.
++  uint8_t buffer[kMaxVariableFieldSize];
++  for (vector<BCHeaderField>::iterator it = header_fields_.begin();
++       it != header_fields_.end(); ++it) {
++    if (!it->Write(buffer, kMaxVariableFieldSize) ||
++        !outfile_->Write(buffer, it->GetTotalSize())) {
++      return false;
++    }
++  }
++  return true;
++}
++
++bool BitcodeWrapperer::ParseWrapperHeader() {
++  // Make sure LLVM-defined fields have been parsed
++  if (!IsInputBitcodeWrapper()) return false;
++  // Check the android/pnacl fields
++  if (!ReadWord(android_header_version_) ||
++      !ReadWord(android_target_api_) || !ReadWord(pnacl_bc_version_)) {
++    fprintf(stderr, "Error: file not long enough to contain header\n");
++    return false;
++  }
++  if (pnacl_bc_version_ != kPnaclBitcodeVersion) {
++    fprintf(stderr, "Error: bad PNaCl Bitcode version\n");
++    return false;
++  }
++  int field_data_total = wrapper_bc_offset_ - kWordSize * kFixedFields;
++  if (field_data_total > 0) {
++    // Read in the variable fields. We need to allocate space for the data.
++    int field_data_read = 0;
++
++    while (field_data_read < field_data_total) {
++      FillBuffer();
++      size_t buffer_needed = BCHeaderField::GetDataSizeFromSerialized(
++          &buffer_[cursor_]);
++      if (buffer_needed > buffer_.size()) {
++        buffer_.resize(buffer_needed +
++                       sizeof(BCHeaderField::FixedSubfield) * 2);
++        FillBuffer();
++      }
++      variable_field_data_.push_back(new uint8_t[buffer_needed]);
++
++      BCHeaderField field(BCHeaderField::kInvalid, 0,
++                          variable_field_data_.back());
++      field.Read(&buffer_[cursor_], buffer_size_);
++      header_fields_.push_back(field);
++      size_t field_size = field.GetTotalSize();
++      cursor_ += field_size;
++      field_data_read += field_size;
++      if (field_data_read > field_data_total) {
++        // We read too much data, the header is corrupted
++        fprintf(stderr, "Error: raw bitcode offset inconsistent with "
++              "variable field data\n");
++        return false;
++      }
++
++      struct IntFieldHelper {
++        BCHeaderField::FixedSubfield tag;
++        uint16_t len;
++        uint32_t val;
++      };
++      IntFieldHelper tempIntField;
++
++      switch (field.getID()) {
++        case BCHeaderField::kAndroidCompilerVersion:
++          if (field.Write((uint8_t*)&tempIntField,
++                          sizeof(tempIntField))) {
++            android_compiler_version_ = tempIntField.val;
++          }
++          break;
++        case BCHeaderField::kAndroidOptimizationLevel:
++          if (field.Write((uint8_t*)&tempIntField,
++                          sizeof(tempIntField))) {
++            android_optimization_level_ = tempIntField.val;
++          }
++          break;
++        default:
++          // Ignore other field types for now
++          break;
++      }
++    }
++    Seek(0);
++  }
++  return true;
++}
++
++bool BitcodeWrapperer::IsInputBitcodeWrapper() {
++  ResetCursor();
++  // First make sure that there are enough words (LLVM header)
++  // to peek at.
++  if (GetBufferUnreadBytes() < kLLVMFields * kWordSize) {
++    FillBuffer();
++    if (GetBufferUnreadBytes() < kLLVMFields * kWordSize) return false;
++  }
++
++  // Now make sure the magic number is right.
++  uint32_t first_word;
++  if ((!ReadWord(first_word)) ||
++      (kWrapperMagicNumber != first_word)) return false;
++
++  // Make sure the version is right.
++  uint32_t second_word;
++  if ((!ReadWord(second_word)) ||
++      (kLLVMVersionNumber != second_word)) return false;
++
++  // Make sure that the offset and size (for llvm) is defined.
++  uint32_t bc_offset;
++  uint32_t bc_size;
++  if (ReadWord(bc_offset) &&
++      ReadWord(bc_size)) {
++    // Before returning, save the extracted values.
++    wrapper_bc_offset_ = bc_offset;
++    infile_bc_offset_ = bc_offset;
++    wrapper_bc_size_ = bc_size;
++    return true;
++  }
++  // If reached, unable to read wrapped header.
++  return false;
++}
++
++bool BitcodeWrapperer::IsInputBitcodeFile() {
++  ResetCursor();
++  // First make sure that there are four bytes to peek at.
++  if (GetBufferUnreadBytes() < kWordSize) {
++    FillBuffer();
++    if (GetBufferUnreadBytes() < kWordSize) return false;
++  }
++  // If reached, Check if first 4 bytes match bitcode
++  // file magic number.
++  return (BufferLookahead(0) == 'B') &&
++      (BufferLookahead(1) == 'C') &&
++      (BufferLookahead(2) == 0xc0) &&
++      (BufferLookahead(3) == 0xde);
++}
++
++bool BitcodeWrapperer::BufferCopyInToOut(uint32_t size) {
++  while (size > 0) {
++    // Be sure buffer is non-empty before writing.
++    if (0 == buffer_size_) {
++      FillBuffer();
++      if (0 == buffer_size_) {
++        return false;
++      }
++    }
++    // copy the buffer to the output file.
++    size_t block = (buffer_size_ < size) ? buffer_size_ : size;
++    if (!outfile_->Write(&buffer_[cursor_], block)) return false;
++    size -= block;
++    buffer_size_ = 0;
++  }
++  // Be sure that there isn't more bytes on the input stream.
++  FillBuffer();
++  return buffer_size_ == 0;
++}
++
++void BitcodeWrapperer::AddHeaderField(BCHeaderField* field) {
++  header_fields_.push_back(*field);
++  wrapper_bc_offset_ += field->GetTotalSize();
++}
++
++bool BitcodeWrapperer::WriteBitcodeWrapperHeader() {
++  return
++      // Note: This writes out the 4 word header required by llvm wrapped
++      // bitcode.
++      WriteWord(kWrapperMagicNumber) &&
++      WriteWord(kLLVMVersionNumber) &&
++      WriteWord(wrapper_bc_offset_) &&
++      WriteWord(wrapper_bc_size_) &&
++      // 2 fixed fields defined by Android
++      WriteWord(android_header_version_) &&
++      WriteWord(android_target_api_) &&
++      // PNaClBitcode version
++      WriteWord(kPnaclBitcodeVersion) &&
++      // Common variable-length fields
++      WriteVariableFields();
++}
++
++void BitcodeWrapperer::PrintWrapperHeader() {
++  if (error_) {
++    fprintf(stderr, "Error condition exists: the following"
++            "data may not be reliable\n");
++  }
++  fprintf(stderr, "Wrapper magic:\t\t%x\n", kWrapperMagicNumber);
++  fprintf(stderr, "LLVM Bitcode version:\t%d\n", kLLVMVersionNumber);
++  fprintf(stderr, "Raw bitcode offset:\t%d\n", wrapper_bc_offset_);
++  fprintf(stderr, "Raw bitcode size:\t%d\n", wrapper_bc_size_);
++  fprintf(stderr, "Android header version:\t%d\n", android_header_version_);
++  fprintf(stderr, "Android target API:\t%d\n", android_target_api_);
++  fprintf(stderr, "PNaCl bitcode version:\t%d\n", kPnaclBitcodeVersion);
++  for (size_t i = 0; i < header_fields_.size(); i++) header_fields_[i].Print();
++}
++
++bool BitcodeWrapperer::GenerateWrappedBitcodeFile() {
++  if (!error_ &&
++      WriteBitcodeWrapperHeader() &&
++      Seek(infile_bc_offset_) &&
++      BufferCopyInToOut(wrapper_bc_size_)) {
++    off_t dangling = wrapper_bc_size_ & 3;
++    if (dangling) {
++      return outfile_->Write((const uint8_t*) "\0\0\0\0", 4 - dangling);
++    }
++    return true;
++  }
++  return false;
++}
++
++bool BitcodeWrapperer::GenerateRawBitcodeFile() {
++  return !error_ && Seek(infile_bc_offset_) &&
++      BufferCopyInToOut(wrapper_bc_size_);
++}
+diff --git a/lib/Wrap/file_wrapper_input.cpp b/lib/Wrap/file_wrapper_input.cpp
+new file mode 100644
+index 0000000..008bd61
+--- /dev/null
++++ b/lib/Wrap/file_wrapper_input.cpp
+@@ -0,0 +1,64 @@
++/*
++ * Copyright 2012, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#include <sys/stat.h>
++#include <stdlib.h>
++
++#include "llvm/Wrap/file_wrapper_input.h"
++
++FileWrapperInput::FileWrapperInput(const char* name) :
++    _name(name), _at_eof(false), _size_found(false), _size(0) {
++  _file = fopen(name, "rb");
++  if (NULL == _file) {
++    fprintf(stderr, "Unable to open: %s\n", name);
++    exit(1);
++  }
++}
++
++FileWrapperInput::~FileWrapperInput() {
++  fclose(_file);
++}
++
++size_t FileWrapperInput::Read(uint8_t* buffer, size_t wanted) {
++  size_t found = fread((char*) buffer, 1, wanted, _file);
++  if (feof(_file) || ferror(_file)) {
++    _at_eof = true;
++  }
++  return found;
++}
++
++bool FileWrapperInput::AtEof() {
++  return _at_eof;
++}
++
++off_t FileWrapperInput::Size() {
++  if (_size_found) return _size;
++  struct stat st;
++  if (0 == stat(_name, &st)) {
++    _size_found = true;
++    _size = st.st_size;
++    return _size;
++  } else {
++    fprintf(stderr, "Unable to compute file size: %s\n", _name);
++    exit(1);
++  }
++  // NOT REACHABLE.
++  return 0;
++}
++
++bool FileWrapperInput::Seek(uint32_t pos) {
++  return 0 == fseek(_file, (long) pos, SEEK_SET);
++}
+diff --git a/lib/Wrap/file_wrapper_output.cpp b/lib/Wrap/file_wrapper_output.cpp
+new file mode 100644
+index 0000000..9a62c29
+--- /dev/null
++++ b/lib/Wrap/file_wrapper_output.cpp
+@@ -0,0 +1,48 @@
++/*
++ * Copyright 2012, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#include <stdlib.h>
++
++#include "llvm/Wrap/file_wrapper_output.h"
++
++FileWrapperOutput::FileWrapperOutput(const char* name)
++    : _name(name) {
++  _file = fopen(name, "wb");
++  if (NULL == _file) {
++    fprintf(stderr, "Unable to open: %s\n", name);
++    exit(1);
++  }
++}
++
++FileWrapperOutput::~FileWrapperOutput() {
++  fclose(_file);
++}
++
++bool FileWrapperOutput::Write(uint8_t byte) {
++  return EOF != fputc(byte, _file);
++}
++
++bool FileWrapperOutput::Write(const uint8_t* buffer, size_t buffer_size) {
++  if (!buffer) {
++    return false;
++  }
++
++  if (buffer_size > 0) {
++    return buffer_size == fwrite(buffer, 1, buffer_size, _file);
++  } else {
++    return true;
++  }
++}
+diff --git a/lib/Wrap/in_memory_wrapper_input.cpp b/lib/Wrap/in_memory_wrapper_input.cpp
+new file mode 100644
+index 0000000..3a69834
+--- /dev/null
++++ b/lib/Wrap/in_memory_wrapper_input.cpp
+@@ -0,0 +1,60 @@
++/*
++ * Copyright 2012, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#include <sys/stat.h>
++#include <stdlib.h>
++
++#include "llvm/Wrap/in_memory_wrapper_input.h"
++
++InMemoryWrapperInput::InMemoryWrapperInput(const char* buffer, size_t size) :
++    _buffer(buffer), _pos(0), _size(size) {
++}
++
++InMemoryWrapperInput::~InMemoryWrapperInput() {
++}
++
++size_t InMemoryWrapperInput::Read(uint8_t* buffer, size_t wanted) {
++  size_t found = 0;
++
++  if (!buffer) {
++    return 0;
++  }
++
++  while (found < wanted) {
++    if (_pos >= _size) {
++      return found;
++    }
++    buffer[found++] = _buffer[_pos++];
++  }
++  return found;
++}
++
++bool InMemoryWrapperInput::AtEof() {
++  return (_pos >= _size);
++}
++
++off_t InMemoryWrapperInput::Size() {
++  return _size;
++}
++
++bool InMemoryWrapperInput::Seek(uint32_t pos) {
++  if (pos < _size) {
++    _pos = pos;
++    return true;
++  } else {
++    return false;
++  }
++}
+diff --git a/lib/Wrap/wrapper_output.cpp b/lib/Wrap/wrapper_output.cpp
+new file mode 100644
+index 0000000..f2bfe33
+--- /dev/null
++++ b/lib/Wrap/wrapper_output.cpp
+@@ -0,0 +1,25 @@
++/*
++ * Copyright 2012, The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#include "llvm/Wrap/wrapper_output.h"
++
++bool WrapperOutput::Write(const uint8_t* buffer, size_t buffer_size) {
++  // Default implementation that uses the byte write routine.
++  for (size_t i = 0; i < buffer_size; ++i) {
++    if (!Write(buffer[i])) return false;
++  }
++  return true;
++}
+-- 
+1.8.3
+

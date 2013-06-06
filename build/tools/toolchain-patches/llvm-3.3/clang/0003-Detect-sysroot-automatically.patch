@@ -1,0 +1,42 @@
+From 29f6bb40c973ce5ba4ac8169fa33c536d16a4ff4 Mon Sep 17 00:00:00 2001
+From: Logan Chien <loganchien@google.com>
+Date: Wed, 12 Sep 2012 18:32:47 +0800
+Subject: [PATCH 03/29] Detect sysroot automatically.
+
+If --sysroot is not specified, try to look for
+sysroot at <clang-executable-dir>/../sysroot.
+
+Conflicts:
+
+	lib/Driver/Driver.cpp
+
+Change-Id: I0540cdeba43c3127eeefb985581420db88cdf88e
+---
+ lib/Driver/Driver.cpp | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/lib/Driver/Driver.cpp b/lib/Driver/Driver.cpp
+index 1dbbc9a..fe40cc3 100644
+--- a/lib/Driver/Driver.cpp
++++ b/lib/Driver/Driver.cpp
+@@ -287,8 +287,16 @@ Compilation *Driver::BuildCompilation(ArrayRef<const char *> ArgList) {
+     A->claim();
+     PrefixDirs.push_back(A->getValue(0));
+   }
+-  if (const Arg *A = Args->getLastArg(options::OPT__sysroot_EQ))
++  if (const Arg *A = Args->getLastArg(options::OPT__sysroot_EQ)) {
+     SysRoot = A->getValue();
++  } else {
++    llvm::sys::Path SysRootCandidate(Dir);
++    SysRootCandidate.appendComponent("..");
++    SysRootCandidate.appendComponent("sysroot");
++    bool Exists = false;
++    if (!llvm::sys::fs::exists(SysRootCandidate.c_str(), Exists) && Exists)
++      SysRoot = SysRootCandidate.str();
++  }
+   if (Args->hasArg(options::OPT_nostdlib))
+     UseStdLib = false;
+ 
+-- 
+1.8.3
+

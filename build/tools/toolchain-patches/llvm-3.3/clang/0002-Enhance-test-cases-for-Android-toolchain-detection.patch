@@ -1,0 +1,160 @@
+From 8e2f46a3d3615ba96b4e4510725ed2a14c02ac93 Mon Sep 17 00:00:00 2001
+From: Logan Chien <tzuhsiang.chien@gmail.com>
+Date: Wed, 29 May 2013 11:48:32 +0800
+Subject: [PATCH 02/29] Enhance test cases for Android toolchain detection.
+
+---
+ .../basic_android_tree/arm-linux-androideabi/bin/as |  0
+ .../basic_android_tree/arm-linux-androideabi/bin/ld |  0
+ .../basic_android_tree/i686-linux-android/bin/.keep |  0
+ .../basic_android_tree/i686-linux-android/bin/ld    |  0
+ .../i686-linux-android/include/c++/4.4.3/.keep      |  0
+ .../basic_android_tree/i686-linux-android/lib/.keep |  0
+ .../lib/gcc/i686-linux-android/4.4.3/crtbegin.o     |  0
+ .../lib/gcc/i686-linux-android/4.4.3/crtbeginS.o    |  0
+ .../lib/gcc/i686-linux-android/4.4.3/crtbeginT.o    |  0
+ .../lib/gcc/i686-linux-android/4.4.3/crtend.o       |  0
+ .../lib/gcc/i686-linux-android/4.4.3/crtendS.o      |  0
+ .../basic_android_tree/mipsel-linux-android/bin/as  |  0
+ .../basic_android_tree/mipsel-linux-android/bin/ld  |  0
+ test/Driver/android.c                               | 21 +++++++++++++++++++++
+ test/Driver/clang-translation.c                     |  2 +-
+ test/Driver/linux-ld.c                              |  8 ++++----
+ 16 files changed, 26 insertions(+), 5 deletions(-)
+ create mode 100755 test/Driver/Inputs/basic_android_tree/arm-linux-androideabi/bin/as
+ create mode 100755 test/Driver/Inputs/basic_android_tree/arm-linux-androideabi/bin/ld
+ create mode 100644 test/Driver/Inputs/basic_android_tree/i686-linux-android/bin/.keep
+ create mode 100755 test/Driver/Inputs/basic_android_tree/i686-linux-android/bin/ld
+ create mode 100644 test/Driver/Inputs/basic_android_tree/i686-linux-android/include/c++/4.4.3/.keep
+ create mode 100644 test/Driver/Inputs/basic_android_tree/i686-linux-android/lib/.keep
+ create mode 100644 test/Driver/Inputs/basic_android_tree/lib/gcc/i686-linux-android/4.4.3/crtbegin.o
+ create mode 100644 test/Driver/Inputs/basic_android_tree/lib/gcc/i686-linux-android/4.4.3/crtbeginS.o
+ create mode 100644 test/Driver/Inputs/basic_android_tree/lib/gcc/i686-linux-android/4.4.3/crtbeginT.o
+ create mode 100644 test/Driver/Inputs/basic_android_tree/lib/gcc/i686-linux-android/4.4.3/crtend.o
+ create mode 100644 test/Driver/Inputs/basic_android_tree/lib/gcc/i686-linux-android/4.4.3/crtendS.o
+ create mode 100755 test/Driver/Inputs/basic_android_tree/mipsel-linux-android/bin/as
+ create mode 100755 test/Driver/Inputs/basic_android_tree/mipsel-linux-android/bin/ld
+ create mode 100644 test/Driver/android.c
+
+diff --git a/test/Driver/Inputs/basic_android_tree/arm-linux-androideabi/bin/as b/test/Driver/Inputs/basic_android_tree/arm-linux-androideabi/bin/as
+new file mode 100755
+index 0000000..e69de29
+diff --git a/test/Driver/Inputs/basic_android_tree/arm-linux-androideabi/bin/ld b/test/Driver/Inputs/basic_android_tree/arm-linux-androideabi/bin/ld
+new file mode 100755
+index 0000000..e69de29
+diff --git a/test/Driver/Inputs/basic_android_tree/i686-linux-android/bin/.keep b/test/Driver/Inputs/basic_android_tree/i686-linux-android/bin/.keep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/test/Driver/Inputs/basic_android_tree/i686-linux-android/bin/ld b/test/Driver/Inputs/basic_android_tree/i686-linux-android/bin/ld
+new file mode 100755
+index 0000000..e69de29
+diff --git a/test/Driver/Inputs/basic_android_tree/i686-linux-android/include/c++/4.4.3/.keep b/test/Driver/Inputs/basic_android_tree/i686-linux-android/include/c++/4.4.3/.keep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/test/Driver/Inputs/basic_android_tree/i686-linux-android/lib/.keep b/test/Driver/Inputs/basic_android_tree/i686-linux-android/lib/.keep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/test/Driver/Inputs/basic_android_tree/lib/gcc/i686-linux-android/4.4.3/crtbegin.o b/test/Driver/Inputs/basic_android_tree/lib/gcc/i686-linux-android/4.4.3/crtbegin.o
+new file mode 100644
+index 0000000..e69de29
+diff --git a/test/Driver/Inputs/basic_android_tree/lib/gcc/i686-linux-android/4.4.3/crtbeginS.o b/test/Driver/Inputs/basic_android_tree/lib/gcc/i686-linux-android/4.4.3/crtbeginS.o
+new file mode 100644
+index 0000000..e69de29
+diff --git a/test/Driver/Inputs/basic_android_tree/lib/gcc/i686-linux-android/4.4.3/crtbeginT.o b/test/Driver/Inputs/basic_android_tree/lib/gcc/i686-linux-android/4.4.3/crtbeginT.o
+new file mode 100644
+index 0000000..e69de29
+diff --git a/test/Driver/Inputs/basic_android_tree/lib/gcc/i686-linux-android/4.4.3/crtend.o b/test/Driver/Inputs/basic_android_tree/lib/gcc/i686-linux-android/4.4.3/crtend.o
+new file mode 100644
+index 0000000..e69de29
+diff --git a/test/Driver/Inputs/basic_android_tree/lib/gcc/i686-linux-android/4.4.3/crtendS.o b/test/Driver/Inputs/basic_android_tree/lib/gcc/i686-linux-android/4.4.3/crtendS.o
+new file mode 100644
+index 0000000..e69de29
+diff --git a/test/Driver/Inputs/basic_android_tree/mipsel-linux-android/bin/as b/test/Driver/Inputs/basic_android_tree/mipsel-linux-android/bin/as
+new file mode 100755
+index 0000000..e69de29
+diff --git a/test/Driver/Inputs/basic_android_tree/mipsel-linux-android/bin/ld b/test/Driver/Inputs/basic_android_tree/mipsel-linux-android/bin/ld
+new file mode 100755
+index 0000000..e69de29
+diff --git a/test/Driver/android.c b/test/Driver/android.c
+new file mode 100644
+index 0000000..e5867bf
+--- /dev/null
++++ b/test/Driver/android.c
+@@ -0,0 +1,21 @@
++// Test Android Toolchain Detection
++
++// RUN: %clang -no-canonical-prefixes %s -### -o %t.o \
++// RUN:     -target arm-linux-androideabi \
++// RUN:     -gcc-toolchain %S/Inputs/basic_android_tree 2>&1 \
++// RUN:   | FileCheck --check-prefix=CHECK-ANDROID-ARM %s
++// CHECK-ANDROID-ARM: "{{.*}}/Inputs/basic_android_tree/{{.*}}/arm-linux-androi
++// CHECK-ANDROID-ARM: "{{.*}}/Inputs/basic_android_tree/{{.*}}/arm-linux-androi
++
++// RUN: %clang -no-canonical-prefixes %s -### -o %t.o \
++// RUN:     -target mipsel-linux-android \
++// RUN:     -gcc-toolchain %S/Inputs/basic_android_tree 2>&1 \
++// RUN:   | FileCheck --check-prefix=CHECK-ANDROID-MIPS %s
++// CHECK-ANDROID-MIPS: "{{.*}}/Inputs/basic_android_tree/{{.*}}/mipsel-linux-an
++// CHECK-ANDROID-MIPS: "{{.*}}/Inputs/basic_android_tree/{{.*}}/mipsel-linux-an
++
++// RUN: %clang -no-canonical-prefixes %s -### -o %t.o \
++// RUN:     -target i686-linux-android \
++// RUN:     -gcc-toolchain %S/Inputs/basic_android_tree 2>&1 \
++// RUN:   | FileCheck --check-prefix=CHECK-ANDROID-X86 %s
++// CHECK-ANDROID-X86: "{{.*}}/Inputs/basic_android_tree/{{.*}}/i686-linux-andro
+diff --git a/test/Driver/clang-translation.c b/test/Driver/clang-translation.c
+index 3b2b7e8..735a5dd 100644
+--- a/test/Driver/clang-translation.c
++++ b/test/Driver/clang-translation.c
+@@ -202,7 +202,7 @@
+ // AMD64-MINGW: "amd64--mingw32"
+ // AMD64-MINGW: "-munwind-tables"
+ 
+-// RUN: %clang -target i386-linux-android -### -S %s 2>&1 \
++// RUN: %clang -target i686-linux-android -### -S %s 2>&1 \
+ // RUN:        --sysroot=%S/Inputs/basic_android_tree/sysroot \
+ // RUN:   | FileCheck --check-prefix=ANDROID-X86 %s
+ // ANDROID-X86: clang
+diff --git a/test/Driver/linux-ld.c b/test/Driver/linux-ld.c
+index ebac718..065fc57 100644
+--- a/test/Driver/linux-ld.c
++++ b/test/Driver/linux-ld.c
+@@ -482,7 +482,7 @@
+ // RUN:     --sysroot=%S/Inputs/basic_android_tree/sysroot \
+ // RUN:   | FileCheck --check-prefix=CHECK-ANDROID %s
+ // RUN: %clang -no-canonical-prefixes %s -### -o %t.o 2>&1 \
+-// RUN:     -target i386-linux-android \
++// RUN:     -target i686-linux-android \
+ // RUN:     --sysroot=%S/Inputs/basic_android_tree/sysroot \
+ // RUN:   | FileCheck --check-prefix=CHECK-ANDROID %s
+ // CHECK-ANDROID: "{{.*}}ld{{(.exe)?}}" "--sysroot=[[SYSROOT:[^"]+]]"
+@@ -509,7 +509,7 @@
+ // RUN:     -shared \
+ // RUN:   | FileCheck --check-prefix=CHECK-ANDROID-SO %s
+ // RUN: %clang -no-canonical-prefixes %s -### -o %t.o 2>&1 \
+-// RUN:     -target i386-linux-android \
++// RUN:     -target i686-linux-android \
+ // RUN:     --sysroot=%S/Inputs/basic_android_tree/sysroot \
+ // RUN:     -shared \
+ // RUN:   | FileCheck --check-prefix=CHECK-ANDROID-SO %s
+@@ -538,7 +538,7 @@
+ // RUN:     -static \
+ // RUN:   | FileCheck --check-prefix=CHECK-ANDROID-STATIC %s
+ // RUN: %clang -no-canonical-prefixes %s -### -o %t.o 2>&1 \
+-// RUN:     -target i386-linux-android \
++// RUN:     -target i686-linux-android \
+ // RUN:     --sysroot=%S/Inputs/basic_android_tree/sysroot \
+ // RUN:     -static \
+ // RUN:   | FileCheck --check-prefix=CHECK-ANDROID-STATIC %s
+@@ -566,7 +566,7 @@
+ // RUN:     -pie \
+ // RUN:   | FileCheck --check-prefix=CHECK-ANDROID-PIE %s
+ // RUN: %clang -no-canonical-prefixes %s -### -o %t.o 2>&1 \
+-// RUN:     -target i386-linux-android \
++// RUN:     -target i686-linux-android \
+ // RUN:     --sysroot=%S/Inputs/basic_android_tree/sysroot \
+ // RUN:     -pie \
+ // RUN:   | FileCheck --check-prefix=CHECK-ANDROID-PIE %s
+-- 
+1.8.3
+
