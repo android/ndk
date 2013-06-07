@@ -324,10 +324,12 @@ endif
 # If we're using the 'system' STL and use rtti or exceptions, then
 # automatically link against the GNU libsupc++ for now.
 #
+ifneq ($(NDK_NEED_GABIXX_SRCS),no)
 ifneq (,$(call module-has-c++-features,$(LOCAL_MODULE),rtti exceptions))
     ifeq (system,$(NDK_APP_STL))
       LOCAL_LDLIBS := $(LOCAL_LDLIBS) $(call host-path,$(NDK_ROOT)/sources/cxx-stl/gnu-libstdc++/$(TOOLCHAIN_VERSION)/libs/$(TARGET_ARCH_ABI)/libsupc++$(TARGET_LIB_EXTENSION))
     endif
+endif
 endif
 
 # Build the sources to object files
