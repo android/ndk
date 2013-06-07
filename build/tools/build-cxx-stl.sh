@@ -135,7 +135,7 @@ LIBCXX_SRCDIR=$ANDROID_NDK_ROOT/$LIBCXX_SUBDIR
 
 LIBCXX_INCLUDES="-I$LIBCXX_SRCDIR/libcxx/include -I$LIBCXX_SRCDIR/android/support/include -I$GABIXX_SRCDIR/include"
 
-COMMON_CFLAGS="-fPIC -O2 -ffunction-sections"
+COMMON_CFLAGS="-fPIC -O2 -ffunction-sections -fdata-sections"
 COMMON_CXXFLAGS="-fexceptions -frtti -fuse-cxa-atexit"
 
 # Determine GAbi++ build parameters. Note that GAbi++ is also built as part
@@ -191,7 +191,7 @@ src/c_locale.c \
 src/cxa.c"
 
 # Determine Libc++ build parameters
-LIBCXX_CFLAGS="$COMMON_CFLAGS $LIBCXX_INCLUDES"
+LIBCXX_CFLAGS="$COMMON_CFLAGS $LIBCXX_INCLUDES -Drestrict=__restrict__"
 LIBCXX_CXXFLAGS="$COMMON_CXXFLAGS -DLIBCXXRT=1 -DGABIXX_LIBCXX=1 -std=c++11"
 LIBCXX_SOURCES=\
 "libcxx/src/algorithm.cpp \
@@ -219,11 +219,123 @@ libcxx/src/typeinfo.cpp \
 libcxx/src/utility.cpp \
 libcxx/src/valarray.cpp \
 android/support/src/locale_support.c \
-android/support/src/nl_types_support.c \
 android/support/src/stdlib_support.c \
 android/support/src/wchar_support.c \
-android/support/src/wctype_support.c"
-
+android/support/src/locale/duplocale.c \
+android/support/src/locale/freelocale.c \
+android/support/src/locale/localeconv.c \
+android/support/src/locale/newlocale.c \
+android/support/src/locale/uselocale.c \
+android/support/src/stdio/vfwprintf.c \
+android/support/src/musl-multibyte/btowc.c \
+android/support/src/musl-multibyte/internal.c \
+android/support/src/musl-multibyte/mblen.c \
+android/support/src/musl-multibyte/mbrlen.c \
+android/support/src/musl-multibyte/mbrtowc.c \
+android/support/src/musl-multibyte/mbsinit.c \
+android/support/src/musl-multibyte/mbsnrtowcs.c \
+android/support/src/musl-multibyte/mbsrtowcs.c \
+android/support/src/musl-multibyte/mbstowcs.c \
+android/support/src/musl-multibyte/mbtowc.c \
+android/support/src/musl-multibyte/wcrtomb.c \
+android/support/src/musl-multibyte/wcsnrtombs.c \
+android/support/src/musl-multibyte/wcsrtombs.c \
+android/support/src/musl-multibyte/wcstombs.c \
+android/support/src/musl-multibyte/wctob.c \
+android/support/src/musl-multibyte/wctomb.c \
+android/support/src/musl-ctype/__ctype_b_loc.c \
+android/support/src/musl-ctype/__ctype_get_mb_cur_max.c \
+android/support/src/musl-ctype/__ctype_tolower_loc.c \
+android/support/src/musl-ctype/__ctype_toupper_loc.c \
+android/support/src/musl-ctype/isalnum.c \
+android/support/src/musl-ctype/isalpha.c \
+android/support/src/musl-ctype/isascii.c \
+android/support/src/musl-ctype/isblank.c \
+android/support/src/musl-ctype/iscntrl.c \
+android/support/src/musl-ctype/isdigit.c \
+android/support/src/musl-ctype/isgraph.c \
+android/support/src/musl-ctype/islower.c \
+android/support/src/musl-ctype/isprint.c \
+android/support/src/musl-ctype/ispunct.c \
+android/support/src/musl-ctype/isspace.c \
+android/support/src/musl-ctype/isupper.c \
+android/support/src/musl-ctype/iswalnum.c \
+android/support/src/musl-ctype/iswalpha.c \
+android/support/src/musl-ctype/iswblank.c \
+android/support/src/musl-ctype/iswcntrl.c \
+android/support/src/musl-ctype/iswctype.c \
+android/support/src/musl-ctype/iswdigit.c \
+android/support/src/musl-ctype/iswgraph.c \
+android/support/src/musl-ctype/iswlower.c \
+android/support/src/musl-ctype/iswprint.c \
+android/support/src/musl-ctype/iswpunct.c \
+android/support/src/musl-ctype/iswspace.c \
+android/support/src/musl-ctype/iswupper.c \
+android/support/src/musl-ctype/iswxdigit.c \
+android/support/src/musl-ctype/isxdigit.c \
+android/support/src/musl-ctype/toascii.c \
+android/support/src/musl-ctype/tolower.c \
+android/support/src/musl-ctype/toupper.c \
+android/support/src/musl-ctype/towctrans.c \
+android/support/src/musl-ctype/wcswidth.c \
+android/support/src/musl-ctype/wctrans.c \
+android/support/src/musl-ctype/wcwidth.c \
+android/support/src/musl-locale/catclose.c \
+android/support/src/musl-locale/catgets.c \
+android/support/src/musl-locale/catopen.c \
+android/support/src/musl-locale/iconv.c \
+android/support/src/musl-locale/intl.c \
+android/support/src/musl-locale/isalnum_l.c \
+android/support/src/musl-locale/isalpha_l.c \
+android/support/src/musl-locale/isblank_l.c \
+android/support/src/musl-locale/iscntrl_l.c \
+android/support/src/musl-locale/isdigit_l.c \
+android/support/src/musl-locale/isgraph_l.c \
+android/support/src/musl-locale/islower_l.c \
+android/support/src/musl-locale/isprint_l.c \
+android/support/src/musl-locale/ispunct_l.c \
+android/support/src/musl-locale/isspace_l.c \
+android/support/src/musl-locale/isupper_l.c \
+android/support/src/musl-locale/iswalnum_l.c \
+android/support/src/musl-locale/iswalpha_l.c \
+android/support/src/musl-locale/iswblank_l.c \
+android/support/src/musl-locale/iswcntrl_l.c \
+android/support/src/musl-locale/iswctype_l.c \
+android/support/src/musl-locale/iswdigit_l.c \
+android/support/src/musl-locale/iswgraph_l.c \
+android/support/src/musl-locale/iswlower_l.c \
+android/support/src/musl-locale/iswprint_l.c \
+android/support/src/musl-locale/iswpunct_l.c \
+android/support/src/musl-locale/iswspace_l.c \
+android/support/src/musl-locale/iswupper_l.c \
+android/support/src/musl-locale/iswxdigit_l.c \
+android/support/src/musl-locale/isxdigit_l.c \
+android/support/src/musl-locale/langinfo.c \
+android/support/src/musl-locale/nl_langinfo_l.c \
+android/support/src/musl-locale/strcasecmp_l.c \
+android/support/src/musl-locale/strcoll.c \
+android/support/src/musl-locale/strcoll_l.c \
+android/support/src/musl-locale/strerror_l.c \
+android/support/src/musl-locale/strfmon.c \
+android/support/src/musl-locale/strftime_l.c \
+android/support/src/musl-locale/strncasecmp_l.c \
+android/support/src/musl-locale/strxfrm.c \
+android/support/src/musl-locale/strxfrm_l.c \
+android/support/src/musl-locale/tolower_l.c \
+android/support/src/musl-locale/toupper_l.c \
+android/support/src/musl-locale/towctrans_l.c \
+android/support/src/musl-locale/towlower_l.c \
+android/support/src/musl-locale/towupper_l.c \
+android/support/src/musl-locale/wcscoll.c \
+android/support/src/musl-locale/wcscoll_l.c \
+android/support/src/musl-locale/wcsxfrm.c \
+android/support/src/musl-locale/wcsxfrm_l.c \
+android/support/src/musl-locale/wctrans_l.c \
+android/support/src/musl-locale/wctype_l.c \
+android/support/src/musl-stdio/swprintf.c \
+android/support/src/musl-stdio/vwprintf.c \
+android/support/src/musl-stdio/wprintf.c \
+"
 
 # If the --no-makefile flag is not used, we're going to put all build
 # commands in a temporary Makefile that we will be able to invoke with

@@ -14,6 +14,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := test_1_static
 LOCAL_SRC_FILES := test_1.cc
 LOCAL_STATIC_LIBRARIES := llvm_libc++_static
+LOCAL_LDFLAGS := -Wl,-gc-sections
 include $(BUILD_EXECUTABLE)
 
 include $(LOCAL_PATH)/../../../Android.mk

@@ -978,7 +978,7 @@ ctype<char>::do_narrow(const char_type* low, const char_type* high, char dfault,
     return low;
 }
 
-#ifdef EMSCRIPTEN
+#if defined(EMSCRIPTEN) || defined(__ANDROID__)
 extern "C" const unsigned short ** __ctype_b_loc();
 extern "C" const int ** __ctype_tolower_loc();
 extern "C" const int ** __ctype_toupper_loc();
@@ -991,18 +991,13 @@ ctype<char>::classic_table()  _NOEXCEPT
     return _DefaultRuneLocale.__runetype;
 #elif defined(__GLIBC__)
     return __cloc()->__ctype_b;
-#elif defined(__ANDROID__)
-    // TODO(ajwong): Should the actual traits functions delegate to the
-    // bionic ctype variants? Or should we do something similar to how we
-    // handle glibc where we use the _tolower_tab_ and _toupper_tab_ directly?
-    return __ctype_c_mask_table;
 #elif __sun__
     return __ctype_mask;
 #elif defined(_WIN32)
     return _ctype+1; // internal ctype mask table defined in msvcrt.dll
 // This is assumed to be safe, which is a nonsense assumption because we're
 // going to end up dereferencing it later...
-#elif defined(EMSCRIPTEN)
+#elif defined(EMSCRIPTEN) || defined(__ANDROID__)
     return *__ctype_b_loc();
 #else
     // Platform not supported: abort so the person doing the port knows what to
@@ -1027,7 +1022,7 @@ ctype<char>::__classic_upper_table() _NOEXCEPT
 }
 #endif // __GLIBC__
 
-#if defined(EMSCRIPTEN)
+#if defined(EMSCRIPTEN) || defined(__ANDROID__)
 const int*
 ctype<char>::__classic_lower_table() _NOEXCEPT
 {
