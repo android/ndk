@@ -82,6 +82,9 @@ register_var_option "--development-root=<path>" DEVELOPMENT_ROOT "Specify platfo
 LLVM_VERSION_LIST=$DEFAULT_LLVM_VERSION_LIST
 register_var_option "--llvm=<versions>" LLVM_VERSION_LIST "List of LLVM release versions"
 
+WITH_LIBCXX=
+register_var_option "--with-libc++" WITH_LIBCXX "Package experimental Libc++ sources"
+
 register_try64_option
 
 SEPARATE_64=no
@@ -363,9 +366,15 @@ rm -rf $REFERENCE/samples/*/{obj,libs,build.xml,local.properties,Android.mk} &&
 rm -rf $REFERENCE/tests/build/*/{obj,libs} &&
 rm -rf $REFERENCE/tests/device/*/{obj,libs}
 
-# Remove the libc++ sources, they're not ready for release.
-# http://b.android.com/36496
-rm -rf $REFERENCE/sources/cxx-stl/llvm-libc++
+if [ "$WITH_LIBCXX" ]; then
+    # Remove the libc++ test suite, it's large (28 MiB) and not useful for
+    # developers using the NDK.
+    rm -rf $REFERENCE/sources/cxx-stl/llvm-libc++/libcxx/test
+else
+    # Remove the libc++ sources, they're not ready for release.
+    # http://b.android.com/36496
+    rm -rf $REFERENCE/sources/cxx-stl/llvm-libc++
+fi
 
 # Regenerate HTML documentation, place the files under .../docs/
 $NDK_ROOT_DIR/build/tools/build-docs.sh \
@@ -392,6 +401,9 @@ if [ -z "$PREBUILT_NDK" ]; then
     for ABI in $ABIS; do
         unpack_prebuilt gabixx-libs-$ABI "$REFERENCE"
         unpack_prebuilt stlport-libs-$ABI "$REFERENCE"
+        if [ "$WITH_LIBCXX" ]; then
+            unpack_prebuilt libcxx-libs-$ABI "$REFERENCE"
+        fi
         for VERSION in $DEFAULT_GCC_VERSION_LIST; do
             unpack_prebuilt gnu-libstdc++-libs-$VERSION-$ABI "$REFERENCE"
         done
@@ -450,6 +462,17 @@ for SYSTEM in $SYSTEMS; do
             done
         else
             echo "WARNING: Could not find STLport source tree!"
+        fi
+
+        if [ "$WITH_LIBCXX" ]; then
+            if [ -d "$DSTDIR/$LIBCXX_SUBDIR" ]; then
+                LIBCXX_ABIS=$PREBUILT_ABIS
+                for STL_ABI in $LIBCXX_ABIS; do
+                    copy_prebuilt "$LIBCXX_SUBDIR/libs/$STL_ABI" "$LIBCXX_SUBDIR/libs"
+                done
+            else
+                echo "WARNING: Could not find Libc++ source tree!"
+            fi
         fi
 
         for VERSION in $DEFAULT_GCC_VERSION_LIST; do

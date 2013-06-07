@@ -90,12 +90,16 @@ ABIS=$(convert_archs_to_abis $ARCHS)
 
 FLAGS=$FLAGS" --abis=$ABIS"
 dump "Building $ABIS gabi++ binaries..."
-run $BUILDTOOLS/build-gabi++.sh $FLAGS
+run $BUILDTOOLS/build-cxx-stl.sh --stl=gabi++ $FLAGS
 fail_panic "Could not build gabi++!"
 
 dump "Building $ABIS stlport binaries..."
-run $BUILDTOOLS/build-stlport.sh $FLAGS
+run $BUILDTOOLS/build-cxx-stl.sh --stl=stlport $FLAGS
 fail_panic "Could not build stlport!"
+
+dump "Building $ABIS libc++ binaries..."
+run $BUILDTOOLS/build-cxx-stl.sh --stl=libc++ $FLAGS
+fail_panic "Could not build libc++!"
 
 if [ ! -z $VISIBLE_LIBGNUSTL_STATIC ]; then
     GNUSTL_STATIC_VIS_FLAG=--visible-libgnustl-static
