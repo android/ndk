@@ -92,7 +92,9 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := stlport_static
 LOCAL_CPP_EXTENSION := .cpp .cc
 LOCAL_SRC_FILES := $(libstlport_src_files)
+ifeq ($(NDK_UNKNOWN_APP_ABI),)
 LOCAL_SRC_FILES += $(libgabi++_src_files:%=../gabi++/%)
+endif
 LOCAL_CFLAGS := $(libstlport_cflags)
 LOCAL_CPPFLAGS := $(libstlport_cppflags)
 LOCAL_C_INCLUDES := $(libstlport_c_includes)
@@ -104,7 +106,9 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := stlport_shared
 LOCAL_CPP_EXTENSION := .cpp .cc
 LOCAL_SRC_FILES := $(libstlport_src_files)
+ifeq ($(NDK_UNKNOWN_APP_ABI),)
 LOCAL_SRC_FILES += $(libgabi++_src_files:%=../gabi++/%)
+endif
 LOCAL_CFLAGS := $(libstlport_cflags)
 LOCAL_CPPFLAGS := $(libstlport_cppflags)
 LOCAL_C_INCLUDES := $(libstlport_c_includes)

@@ -79,6 +79,7 @@ else
                 endif
             endif
             ifeq (1,$(words $(_unknown_abis_prefix)))
+                NDK_UNKNOWN_APP_ABI := true
                 NDK_APP_ABI := $(subst $(_unknown_abis_prefix),$(filter-out $(NDK_KNOWN_ARCHS),$(NDK_FOUND_ARCHS)),$(NDK_APP_ABI))
             endif
         endif
