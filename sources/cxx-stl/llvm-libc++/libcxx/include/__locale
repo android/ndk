@@ -370,20 +370,21 @@ public:
     static const mask xdigit = _ISXDIGIT;
     static const mask blank  = _ISBLANK;
 #elif defined(__ANDROID__)
-    typedef char mask;
-    static const mask space  = _S;
-    static const mask print  = _P | _U | _L | _N | _B;
-    static const mask cntrl  = _C;
-    static const mask upper  = _U;
-    static const mask lower  = _L;
-    static const mask alpha  = _U | _L;
-    static const mask digit  = _N;
-    static const mask punct  = _P;
-    static const mask xdigit = _N | _X;
-
-    // TODO(ajwong): bionic doesn't have a blank mask
-    static const mask blank  = 0;
-#else  // __GLIBC__ || _WIN32 || __APPLE__ || __FreeBSD__ || EMSCRIPTEN || __sun__
+    // NOTE: These match the musl values for __ctype_b_loc() which
+    //       themselve match the GLibc values. Values below are only
+    //       valid for little-endian systems.
+    typedef unsigned short mask;
+    static const mask space  = 0x2000;
+    static const mask print  = 0x4000;
+    static const mask cntrl  = 0x0002;
+    static const mask upper  = 0x0100;
+    static const mask lower  = 0x0200;
+    static const mask alpha  = 0x0400;
+    static const mask digit  = 0x0800;
+    static const mask punct  = 0x0002;
+    static const mask xdigit = 0x1000;
+    static const mask blank  = 0x0001;
+#else  // __ANDROID__
     typedef unsigned long mask;
     static const mask space  = 1<<0;
     static const mask print  = 1<<1;
@@ -395,7 +396,7 @@ public:
     static const mask punct  = 1<<7;
     static const mask xdigit = 1<<8;
     static const mask blank  = 1<<9;
-#endif  // __GLIBC__ || _WIN32 || __APPLE__ || __FreeBSD__
+#endif  // __GLIBC__ || _WIN32 || __APPLE__ || __FreeBSD__ || EMSCRIPTEN || __sun__ || __ANDROID__
     static const mask alnum  = alpha | digit;
     static const mask graph  = alnum | punct;
 
@@ -606,7 +607,7 @@ public:
 #endif
     _LIBCPP_ALWAYS_INLINE const mask* table() const  _NOEXCEPT {return __tab_;}
     static const mask* classic_table()  _NOEXCEPT;
-#if defined(__GLIBC__) || defined(EMSCRIPTEN)
+#if defined(__GLIBC__) || defined(EMSCRIPTEN) || defined(__ANDROID__)
     static const int* __classic_upper_table() _NOEXCEPT;
     static const int* __classic_lower_table() _NOEXCEPT;
 #endif

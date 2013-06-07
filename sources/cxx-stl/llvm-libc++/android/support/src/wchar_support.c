@@ -1,13 +1,3 @@
-// -*- C++ -*-
-//===-------------------- support/android/wchar_support.c ------------------===//
-//
-//                     The LLVM Compiler Infrastructure
-//
-// This file is dual licensed under the MIT and the University of Illinois Open
-// Source Licenses. See LICENSE.TXT for details.
-//
-//===----------------------------------------------------------------------===//
-
 #include <string.h>
 #include <wchar.h>
 #include <wctype.h>
@@ -305,42 +295,6 @@ wchar_t *wcstok(wchar_t *s, const wchar_t *delim, wchar_t **last) {
     return &s[tok_start];
 }
 
-int wcswidth(const wchar_t *str, size_t n) {
-    int len = 0;
-    size_t i;
-    for (i = 0; i < n; ++i) {
-        wchar_t wc = str[i];
-        if (wc == L'\0')
-            break;
-        int l = wcwidth(wc);
-        if (l < 0)
-            return -1;
-        len += l;
-    }
-    return len;
-}
-
-// TODO(digit): Handle real collations.
-size_t wcsxfrm(wchar_t *dst, const wchar_t *src, size_t len) {
-    // Handle trivial case first.
-    if (src[0] == L'\0') {
-        if (len != 0)
-            dst[0] = L'\0';
-        return 0;
-    }
-
-    size_t slen = wcslen(src);
-    if (len > 0) {
-        if (slen < len)
-            wcscpy(dst, src);
-        else {
-            wcsncpy(dst, src, len-1);
-            dst[len - 1] = L'\0';
-        }
-    }
-    return slen;
-}
-
 wchar_t * wmemchr(const wchar_t *s, wchar_t c, size_t n) {
     size_t i;
     for (i = 0; i < n; ++i) {
@@ -364,15 +318,15 @@ int wmemcmp(const wchar_t *s1, const wchar_t *s2, size_t n) {
 }
 
 wchar_t * wmemcpy(wchar_t *d, const wchar_t *s, size_t n) {
-        return (wchar_t *)memcpy((char*)d,
-                                 (const char*)s,
-                                 n * sizeof(wchar_t));
+    return (wchar_t *)memcpy((char*)d,
+                             (const char*)s,
+                             n * sizeof(wchar_t));
 }
 
 wchar_t* wmemmove(wchar_t* d, const wchar_t* s, size_t n) {
-        return (wchar_t* )memmove((char*)d,
-                                  (const char*)s,
-                                  n * sizeof(wchar_t));
+    return (wchar_t* )memmove((char*)d,
+                              (const char*)s,
+                              n * sizeof(wchar_t));
 }
 
 wchar_t* wmemset(wchar_t* s, wchar_t c, size_t n) {
@@ -403,21 +357,6 @@ long long wcstoll(const wchar_t* nptr, wchar_t** endptr, int base) {
 }
 
 unsigned long long wcstoull(const wchar_t* nptr, wchar_t** endptr, int base) {
-#warning Not implemented
-  return 0;
-}
-
-size_t wcsnrtombs(char *dst,
-                  const wchar_t **src,
-                  size_t nwc, size_t len,
-                  mbstate_t *ps) {
-#warning Not implemented
-  return 0;
-}
-
-size_t mbsnrtowcs(wchar_t *dst,
-                  const char **src, size_t nmc,
-                  size_t len, mbstate_t *ps) {
 #warning Not implemented
   return 0;
 }
