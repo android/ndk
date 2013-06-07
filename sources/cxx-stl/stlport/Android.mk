@@ -65,6 +65,9 @@ libstlport_c_includes := $(libstlport_path)/stlport
 include $(dir $(LOCAL_PATH))/gabi++/sources.mk
 
 libstlport_c_includes += $(libgabi++_c_includes)
+ifneq ($(NDK_TAKEOUT_GABIXX_SRCS),)
+libgabi++_src_files :=
+endif
 
 ifneq ($(STLPORT_FORCE_REBUILD),true)
 
