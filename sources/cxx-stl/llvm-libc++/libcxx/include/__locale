@@ -370,7 +370,7 @@ public:
     static const mask xdigit = _ISXDIGIT;
     static const mask blank  = _ISBLANK;
 #elif defined(__ANDROID__)
-    typedef char mask;
+    typedef unsigned short mask;
     static const mask space  = _S;
     static const mask print  = _P | _U | _L | _N | _B;
     static const mask cntrl  = _C;
@@ -380,10 +380,9 @@ public:
     static const mask digit  = _N;
     static const mask punct  = _P;
     static const mask xdigit = _N | _X;
-
-    // TODO(ajwong): bionic doesn't have a blank mask
-    static const mask blank  = 0;
-#else  // __GLIBC__ || _WIN32 || __APPLE__ || __FreeBSD__ || EMSCRIPTEN || __sun__
+    // See src/support/android/locale_android.cpp for details!
+    static const mask blank  = 0x100;
+#else  // __ANDROID__
     typedef unsigned long mask;
     static const mask space  = 1<<0;
     static const mask print  = 1<<1;
@@ -395,7 +394,7 @@ public:
     static const mask punct  = 1<<7;
     static const mask xdigit = 1<<8;
     static const mask blank  = 1<<9;
-#endif  // __GLIBC__ || _WIN32 || __APPLE__ || __FreeBSD__
+#endif  // __GLIBC__ || _WIN32 || __APPLE__ || __FreeBSD__ || EMSCRIPTEN || __sun__ || __ANDROID__
     static const mask alnum  = alpha | digit;
     static const mask graph  = alnum | punct;
 
