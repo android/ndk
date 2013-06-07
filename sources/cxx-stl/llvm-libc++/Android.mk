@@ -29,7 +29,8 @@ llvm_libc++_sources := \
 	thread.cpp \
 	typeinfo.cpp \
 	utility.cpp \
-	valarray.cpp
+	valarray.cpp \
+	support/android/locale_android.cpp
 
 llvm_libc++_sources := $(llvm_libc++_sources:%=libcxx/src/%)
 
@@ -86,7 +87,7 @@ LOCAL_CPPFLAGS := $(llvm_libc++_cxxflags)
 LOCAL_CPP_FEATURES := rtti exceptions
 LOCAL_EXPORT_C_INCLUDES := $(llvm_libc++_export_includes)
 LOCAL_EXPORT_CPPFLAGS := $(llvm_libc++_export_cxxflags)
-LOCAL_STATIC_LIBRARIES := llvm_libc++_support_android
+LOCAL_STATIC_LIBRARIES := android_support
 include $(BUILD_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
@@ -97,7 +98,7 @@ LOCAL_CPPFLAGS := $(llvm_libc++_cxxflags)
 LOCAL_CPP_FEATURES := rtti exceptions
 LOCAL_EXPORT_C_INCLUDES := $(llvm_libc++_export_includes)
 LOCAL_EXPORT_CPPFLAGS := $(llvm_libc++_export_cxxflags)
-LOCAL_STATIC_LIBRARIES := llvm_libc++_support_android
+LOCAL_STATIC_LIBRARIES := android_support
 include $(BUILD_SHARED_LIBRARY)
 
-include $(LOCAL_PATH)/android/support/Android.mk
+$(call import-module, android/support)
