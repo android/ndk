@@ -1,0 +1,227 @@
+From 744481eef4b1137560fd66ba011705244940df9a Mon Sep 17 00:00:00 2001
+From: David 'Digit' Turner <digit@google.com>
+Date: Thu, 4 Jul 2013 15:32:29 +0200
+Subject: android: Add locale support.
+
+This is based on the Bionic <ctype.h> declarations. Note that
+unfortunately, the _ctype_ table exposed by this header has a bug
+so a fixed copy is included here instead.
+
+See src/support/android/locale_android.cpp for details.
+---
+ include/__locale                       | 16 +++++++--
+ src/locale.cpp                         | 25 +++++++++++++-
+ src/support/android/locale_android.cpp | 63 ++++++++++++++++++++++++++++++++++
+ 3 files changed, 101 insertions(+), 3 deletions(-)
+ create mode 100644 src/support/android/locale_android.cpp
+
+diff --git a/include/__locale b/include/__locale
+index 24d565b..6849ab0 100644
+--- a/include/__locale
++++ b/include/__locale
+@@ -369,7 +369,19 @@ public:
+     static const mask punct  = _ISPUNCT;
+     static const mask xdigit = _ISXDIGIT;
+     static const mask blank  = _ISBLANK;
+-#else  // __GLIBC__ || _WIN32 || __APPLE__ || __FreeBSD__ || EMSCRIPTEN || __sun__
++#elif defined(__ANDROID__)
++    typedef char mask;
++    static const mask space  = _S;
++    static const mask print  = _P | _U | _L | _N | _B;
++    static const mask cntrl  = _C;
++    static const mask upper  = _U;
++    static const mask lower  = _L;
++    static const mask alpha  = _U | _L;
++    static const mask digit  = _N;
++    static const mask punct  = _P;
++    static const mask xdigit = _N | _X;
++    static const mask blank  = _B;
++#else  // __ANDROID__
+     typedef unsigned long mask;
+     static const mask space  = 1<<0;
+     static const mask print  = 1<<1;
+@@ -381,7 +393,7 @@ public:
+     static const mask punct  = 1<<7;
+     static const mask xdigit = 1<<8;
+     static const mask blank  = 1<<9;
+-#endif  // __GLIBC__ || _WIN32 || __APPLE__ || __FreeBSD__
++#endif  // __GLIBC__ || _WIN32 || __APPLE__ || __FreeBSD__ || EMSCRIPTEN || __sun__ || __ANDROID__
+     static const mask alnum  = alpha | digit;
+     static const mask graph  = alnum | punct;
+ 
+diff --git a/src/locale.cpp b/src/locale.cpp
+index 49c1cf2..d155dc6 100644
+--- a/src/locale.cpp
++++ b/src/locale.cpp
+@@ -788,6 +788,8 @@ ctype<wchar_t>::do_toupper(char_type c) const
+     return isascii(c) ? _DefaultRuneLocale.__mapupper[c] : c;
+ #elif defined(__GLIBC__) || defined(EMSCRIPTEN)
+     return isascii(c) ? ctype<char>::__classic_upper_table()[c] : c;
++#elif defined(__ANDROID__)
++    return isascii(c) ? _toupper_tab_[c + 1] : c;
+ #else
+     return (isascii(c) && iswlower_l(c, __cloc())) ? c-L'a'+L'A' : c;
+ #endif
+@@ -802,6 +804,8 @@ ctype<wchar_t>::do_toupper(char_type* low, const char_type* high) const
+ #elif defined(__GLIBC__) || defined(EMSCRIPTEN)
+         *low = isascii(*low) ? ctype<char>::__classic_upper_table()[*low]
+                              : *low;
++#elif defined(__ANDROID__)
++        *low = isascii(*low) ? _toupper_tab_[*low + 1] : *low;
+ #else
+         *low = (isascii(*low) && islower_l(*low, __cloc())) ? (*low-L'a'+L'A') : *low;
+ #endif
+@@ -815,6 +819,8 @@ ctype<wchar_t>::do_tolower(char_type c) const
+     return isascii(c) ? _DefaultRuneLocale.__maplower[c] : c;
+ #elif defined(__GLIBC__) || defined(EMSCRIPTEN)
+     return isascii(c) ? ctype<char>::__classic_lower_table()[c] : c;
++#elif defined(__ANDROID__)
++    return isascii(c) ? _tolower_tab_[c + 1] : c;
+ #else
+     return (isascii(c) && isupper_l(c, __cloc())) ? c-L'A'+'a' : c;
+ #endif
+@@ -829,6 +835,8 @@ ctype<wchar_t>::do_tolower(char_type* low, const char_type* high) const
+ #elif defined(__GLIBC__) || defined(EMSCRIPTEN)
+         *low = isascii(*low) ? ctype<char>::__classic_lower_table()[*low]
+                              : *low;
++#elif defined(__ANDROID__)
++        *low = isascii(*low) ? _tolower_tab_[*low] : *low;
+ #else
+         *low = (isascii(*low) && isupper_l(*low, __cloc())) ? *low-L'A'+L'a' : *low;
+ #endif
+@@ -896,6 +904,8 @@ ctype<char>::do_toupper(char_type c) const
+ #elif defined(__GLIBC__) || defined(EMSCRIPTEN)
+     return isascii(c) ? 
+       static_cast<char>(__classic_upper_table()[static_cast<size_t>(c)]) : c;
++#elif defined(__ANDROID__)
++    return isascii(c) ? _toupper_tab_[c + 1] : c;
+ #else
+     return (isascii(c) && islower_l(c, __cloc())) ? c-'a'+'A' : c;
+ #endif
+@@ -911,6 +921,8 @@ ctype<char>::do_toupper(char_type* low, const char_type* high) const
+ #elif defined(__GLIBC__) || defined(EMSCRIPTEN)
+         *low = isascii(*low) ?
+           static_cast<char>(__classic_upper_table()[static_cast<size_t>(*low)]) : *low;
++#elif defined(__ANDROID__)
++        *low = isascii(*low) ? _toupper_tab_[*low + 1] : *low;
+ #else
+         *low = (isascii(*low) && islower_l(*low, __cloc())) ? *low-'a'+'A' : *low;
+ #endif
+@@ -926,6 +938,8 @@ ctype<char>::do_tolower(char_type c) const
+ #elif defined(__GLIBC__) || defined(EMSCRIPTEN)
+     return isascii(c) ?
+       static_cast<char>(__classic_lower_table()[static_cast<size_t>(c)]) : c;
++#elif defined(__ANDROID__)
++    return isascii(c) ? _tolower_tab_[c + 1] : c;
+ #else
+     return (isascii(c) && isupper_l(c, __cloc())) ? c-'A'+'a' : c;
+ #endif
+@@ -939,6 +953,8 @@ ctype<char>::do_tolower(char_type* low, const char_type* high) const
+         *low = isascii(*low) ? static_cast<char>(_DefaultRuneLocale.__maplower[static_cast<ptrdiff_t>(*low)]) : *low;
+ #elif defined(__GLIBC__) || defined(EMSCRIPTEN)
+         *low = isascii(*low) ? static_cast<char>(__classic_lower_table()[static_cast<size_t>(*low)]) : *low;
++#elif defined(__ANDROID__)
++        *low = isascii(*low) ? _tolower_tab_[*low + 1] : *low;
+ #else
+         *low = (isascii(*low) && isupper_l(*low, __cloc())) ? *low-'A'+'a' : *low;
+ #endif
+@@ -978,12 +994,17 @@ ctype<char>::do_narrow(const char_type* low, const char_type* high, char dfault,
+     return low;
+ }
+ 
+-#ifdef EMSCRIPTEN
++#if defined(EMSCRIPTEN)
+ extern "C" const unsigned short ** __ctype_b_loc();
+ extern "C" const int ** __ctype_tolower_loc();
+ extern "C" const int ** __ctype_toupper_loc();
+ #endif
+ 
++#if defined(__ANDROID__)
++// See src/support/android/android_locale.cpp
++extern "C" const char* const _ctype_android;
++#endif
++
+ const ctype<char>::mask*
+ ctype<char>::classic_table()  _NOEXCEPT
+ {
+@@ -999,6 +1020,8 @@ ctype<char>::classic_table()  _NOEXCEPT
+ // going to end up dereferencing it later...
+ #elif defined(EMSCRIPTEN)
+     return *__ctype_b_loc();
++#elif defined(__ANDROID__)
++    return _ctype_android;
+ #else
+     // Platform not supported: abort so the person doing the port knows what to
+     // fix
+diff --git a/src/support/android/locale_android.cpp b/src/support/android/locale_android.cpp
+new file mode 100644
+index 0000000..56831e9
+--- /dev/null
++++ b/src/support/android/locale_android.cpp
+@@ -0,0 +1,63 @@
++// -*- C++ -*-
++//===-------------------- support/win32/locale_win32.cpp ------------------===//
++//
++//                     The LLVM Compiler Infrastructure
++//
++// This file is dual licensed under the MIT and the University of Illinois Open
++// Source Licenses. See LICENSE.TXT for details.
++//
++//===----------------------------------------------------------------------===//
++
++#include <ctype.h>
++
++// NOTE: A standalone forward declaration is required to ensure that this
++// variable is properly exported with a C name. In other words, this does
++// _not_ work:
++//
++//  extern "C" {
++//  const char* const _ctype_android = ...;
++//  }
++//
++extern "C" const char* const _ctype_android;
++
++// This is a local copy of the Bionic _ctype_ array to be used
++// by libc++. This is needed because the Bionic version of this
++// table misses the _B flag on the TAB (7) character.
++static const char ctype_android_tab[256] = {
++        _C,     _C,     _C,     _C,     _C,     _C,     _C,     _C|(char)_B,
++        _C,     _C|_S,  _C|_S,  _C|_S,  _C|_S,  _C|_S,  _C,     _C,
++        _C,     _C,     _C,     _C,     _C,     _C,     _C,     _C,
++        _C,     _C,     _C,     _C,     _C,     _C,     _C,     _C,
++   _S|(char)_B, _P,     _P,     _P,     _P,     _P,     _P,     _P,
++        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P,
++        _N,     _N,     _N,     _N,     _N,     _N,     _N,     _N,
++        _N,     _N,     _P,     _P,     _P,     _P,     _P,     _P,
++        _P,     _U|_X,  _U|_X,  _U|_X,  _U|_X,  _U|_X,  _U|_X,  _U,
++        _U,     _U,     _U,     _U,     _U,     _U,     _U,     _U,
++        _U,     _U,     _U,     _U,     _U,     _U,     _U,     _U,
++        _U,     _U,     _U,     _P,     _P,     _P,     _P,     _P,
++        _P,     _L|_X,  _L|_X,  _L|_X,  _L|_X,  _L|_X,  _L|_X,  _L,
++        _L,     _L,     _L,     _L,     _L,     _L,     _L,     _L,
++        _L,     _L,     _L,     _L,     _L,     _L,     _L,     _L,
++        /* determine printability based on the IS0 8859 8-bit standard */
++        _L,     _L,     _L,     _P,     _P,     _P,     _P,     _C,
++
++        _C,     _C,     _C,     _C,     _C,     _C,     _C,     _C, /* 80 */
++        _C,     _C,     _C,     _C,     _C,     _C,     _C,     _C, /* 88 */
++        _C,     _C,     _C,     _C,     _C,     _C,     _C,     _C, /* 90 */
++        _C,     _C,     _C,     _C,     _C,     _C,     _C,     _C, /* 98 */
++        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* A0 */
++        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* A8 */
++        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* B0 */
++        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* B8 */
++        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* C0 */
++        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* C8 */
++        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* D0 */
++        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* D8 */
++        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* E0 */
++        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* E8 */
++        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* F0 */
++        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P  /* F8 */
++};
++
++const char* const _ctype_android = ctype_android_tab;
+-- 
+1.7.12.146.g16d26b1
+
