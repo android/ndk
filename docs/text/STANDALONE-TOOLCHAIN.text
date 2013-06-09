@@ -89,10 +89,10 @@ to specify the MIPS GCC 4.6, or alternatively
         --toolchain=arm-linux-androideabi-4.7  # select ARM GCC 4.7 compiler
         --toolchain=mipsel-linux-android-4.6   # select MIPS GCC 4.6 compiler, same as --arch=mips
 
-If you wish, add '--llvm-version=3.2' to also copy clang/llvm 3.2, or
-use --toolchain with '-clang3.2' suffix.  For example:
+If you wish, add '--llvm-version=3.3' to also copy clang/llvm 3.3, or
+use --toolchain with '-clang3.3' suffix.  For example:
 
-        --toolchain=arm-linux-androideabi-clang3.2  # same as --arch=arm --llvm-version=3.2
+        --toolchain=arm-linux-androideabi-clang3.3  # same as --arch=arm --llvm-version=3.3
 
 You may specify --system=linux-x86_64 on 64-bit Linux or --system=darwin-x86_64 on 64-bit
 MacOSX to make 64-bit host toolchain instead of the 32-bit one (default).
@@ -131,7 +131,7 @@ Use --help for more options and details.
 
 It is possible to also install Clang binaries in the standalone
 installation by using the --llvm-version=<version> option, where
-<version> is a LLVM/Clang version number (e.g. `3.1` or `3.2`). E.g.:
+<version> is a LLVM/Clang version number (e.g. `3.2` or `3.3`). E.g.:
 
         build/tools/make-standalone-toolchain.sh \
             --install-dir=/tmp/mydir \

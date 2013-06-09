@@ -28,7 +28,7 @@ PROGRAM_DESCRIPTION=\
 
 Where <src-dir> is the location of toolchain sources, <ndk-dir> is
 the top-level NDK installation path and <toolchain> is the name of
-the toolchain to use (e.g. llvm-3.2)."
+the toolchain to use (e.g. llvm-3.3)."
 
 RELEASE=`date +%Y%m%d`
 BUILD_OUT=/tmp/ndk-$USER/build/toolchain
@@ -347,10 +347,10 @@ rm -rf $TOOLCHAIN_BUILD_PREFIX/bin/ld.bcc*
 rm -rf $TOOLCHAIN_BUILD_PREFIX/share
 
 UNUSED_LLVM_EXECUTABLES="
-bugpoint c-index-test clang-check clang-tblgen lli llvm-as llvm-bcanalyzer
+bugpoint c-index-test clang-check clang-format clang-tblgen lli llvm-as llvm-bcanalyzer
 llvm-config llvm-config-host llvm-cov llvm-diff llvm-dwarfdump llvm-extract llvm-ld
 llvm-mc llvm-nm llvm-mcmarkup llvm-objdump llvm-prof llvm-ranlib llvm-readobj llvm-rtdyld
-llvm-size llvm-stress llvm-stub llvm-tblgen macho-dump cloog"
+llvm-size llvm-stress llvm-stub llvm-symbolizer llvm-tblgen macho-dump cloog"
 
 for i in $UNUSED_LLVM_EXECUTABLES; do
     rm -f $TOOLCHAIN_BUILD_PREFIX/bin/$i
