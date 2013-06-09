@@ -419,15 +419,15 @@ run_ndk_build ()
 {
     if [ "$WINE" ]; then
         if [ "$WINE" = "wine12" ]; then
-            run $WINE cmd /c Z:$NDK/ndk-build.cmd -j$JOBS "$@" APP_LDFLAGS="$APP_LDFLAGS"
+            run $WINE cmd /c Z:$NDK/ndk-build.cmd -j$JOBS "$@" APP_LDFLAGS="$APP_LDFLAGS" APP_CFLAGS="$APP_CFLAGS"
         else
             # do "clean" instead of -B
             run $WINE cmd /c Z:$NDK/ndk-build.cmd clean
             # make.exe can't do parallel build in wine > 1.2.x
-            run $WINE cmd /c Z:$NDK/ndk-build.cmd "$@" -j1 APP_LDFLAGS="$APP_LDFLAGS"
+            run $WINE cmd /c Z:$NDK/ndk-build.cmd "$@" -j1 APP_LDFLAGS="$APP_LDFLAGS" APP_CFLAGS="$APP_CFLAGS"
         fi
     else
-        run $NDK/ndk-build -j$JOBS "$@" APP_LDFLAGS="$APP_LDFLAGS"
+        run $NDK/ndk-build -j$JOBS "$@" APP_LDFLAGS="$APP_LDFLAGS" APP_CFLAGS="$APP_CFLAGS"
     fi
 }
 
