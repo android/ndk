@@ -31,7 +31,7 @@
 PROGNAME=$(basename "$0")
 PROGDIR=$(dirname "$0")
 NDK_ROOT=$(cd "$PROGDIR/../.." && pwd)
-. $NDK_ROOT/build/core/ndk-common.sh
+. $NDK_ROOT/build/tools/ndk-common.sh
 
 panic () {
     echo "ERROR: $@" >&2; exit 1

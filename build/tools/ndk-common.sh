@@ -66,7 +66,7 @@ if [ ! -d $ANDROID_NDK_ROOT ] ; then
     exit 1
 fi
 
-if [ ! -f $ANDROID_NDK_ROOT/build/core/ndk-common.sh ] ; then
+if [ ! -f $ANDROID_NDK_ROOT/build/tools/ndk-common.sh ] ; then
     echo "ERROR: Your ANDROID_NDK_ROOT variable does not point to a valid directory."
     exit 1
 fi
