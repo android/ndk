@@ -53,6 +53,13 @@ TARGET_RELRO_LDFLAGS := -Wl,-z,relro -Wl,-z,now
 # These flags disable the above security feature
 TARGET_DISABLE_RELRO_LDFLAGS := -Wl,-z,norelro -Wl,-z,lazy
 
+# This flag are used to provide compiler protection against format
+# string vulnerabilities.
+TARGET_FORMAT_STRING_CFLAGS := -Wformat -Werror=format-security
+
+# This flag disables the above security checks
+TARGET_DISABLE_FORMAT_STRING_CFLAGS := -Wno-error=format-security
+
 # NOTE: Ensure that TARGET_LIBGCC is placed after all private objects
 #       and static libraries, but before any other library in the link
 #       command line when generating shared libraries and executables.

@@ -190,6 +190,14 @@ else
   LOCAL_LDFLAGS += $($(my)RELRO_LDFLAGS)
 endif
 
+# By default, we protect against format string vulnerabilities
+# If LOCAL_DISABLE_FORMAT_STRING_CHECKS is true, we disable the protections.
+ifeq ($(LOCAL_DISABLE_FORMAT_STRING_CHECKS),true)
+  LOCAL_CFLAGS += $($(my)DISABLE_FORMAT_STRING_CFLAGS)
+else
+  LOCAL_CFLAGS += $($(my)FORMAT_STRING_CFLAGS)
+endif
+
 #
 # The original Android build system allows you to use the .arm prefix
 # to a source file name to indicate that it should be defined in either
