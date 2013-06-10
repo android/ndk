@@ -195,7 +195,7 @@ for arch in $ARCHS; do
 
   # Copy binaries what we need
   mkdir -p $TOOLCHAIN_BUILD_PREFIX/$arch
-  cp -f $LLVM_BUILD_OUT/Release/lib/libLLVM-${DEFAULT_LLVM_VERSION}svn.so $TOOLCHAIN_BUILD_PREFIX/$arch
+  cp -f $LLVM_BUILD_OUT/Release/lib/libLLVM-${DEFAULT_LLVM_VERSION}.so $TOOLCHAIN_BUILD_PREFIX/$arch
   cp -f $LLVM_BUILD_OUT/Release/bin/le32-none-ndk-translate $TOOLCHAIN_BUILD_PREFIX/$arch
   cp -f $LLVM_BUILD_OUT/Release/bin/llc $TOOLCHAIN_BUILD_PREFIX/$arch
 
@@ -212,7 +212,7 @@ for arch in $ARCHS; do
   run $MCLINKER_SRC_DIR/configure \
     --prefix=$TOOLCHAIN_BUILD_PREFIX/$arch \
     --with-llvm-config=$LLVM_BUILD_OUT/BuildTools/Release/bin/llvm-config \
-    --with-llvm-shared-lib=$LLVM_BUILD_OUT/Release/lib/libLLVM-${DEFAULT_LLVM_VERSION}svn.so \
+    --with-llvm-shared-lib=$LLVM_BUILD_OUT/Release/lib/libLLVM-${DEFAULT_LLVM_VERSION}.so \
     --enable-targets=$arch \
     --host=$toolchain_prefix
   fail_panic "Couldn't configure mclinker for $arch"
