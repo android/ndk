@@ -244,7 +244,7 @@ builder_sources ()
             echo "ERROR: Missing source file: $srcfull"
             exit 1
         fi
-        obj=$(basename "$src")
+        obj=$src
         cflags="$_BUILD_CFLAGS"
         for inc in $_BUILD_C_INCLUDES; do
             cflags=$cflags" -I$inc"
@@ -288,6 +288,7 @@ builder_sources ()
             echo "$obj: $srcfull" >> $_BUILD_MK
         fi
         builder_log "${_BUILD_PREFIX}$text: $src"
+        builder_command mkdir -p $(dirname "$obj")
         builder_command $NDK_CCACHE $cc -c -o "$obj" "$srcfull" $cflags
         fail_panic "Could not compile ${_BUILD_PREFIX}$src"
         _BUILD_OBJECTS=$_BUILD_OBJECTS" $obj"
