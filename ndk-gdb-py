@@ -11,7 +11,7 @@ case $PROGDIR in
         ;;
 esac
 
-. $PROGDIR/build/core/ndk-common.sh
+. $PROGDIR/build/tools/ndk-common.sh
 
 # -u means unbuffered standard io.
 $PROGDIR/prebuilt/$HOST_TAG/bin/python -u $PROGDIR/ndk-gdb.py "$@"

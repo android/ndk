@@ -24,7 +24,7 @@ fi
 
 NDK_BUILDTOOLS_ABSPATH=$(cd $NDK_BUILDTOOLS_PATH && pwd)
 
-. $NDK_BUILDTOOLS_PATH/../core/ndk-common.sh
+. $NDK_BUILDTOOLS_PATH/ndk-common.sh
 . $NDK_BUILDTOOLS_PATH/dev-defaults.sh
 
 #====================================================

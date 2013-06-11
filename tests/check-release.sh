@@ -20,7 +20,7 @@
 PROGNAME=$(basename "$0")
 PROGDIR=$(dirname "$0")
 
-. "$PROGDIR"/../build/core/ndk-common.sh
+. "$PROGDIR"/../build/tools/ndk-common.sh
 
 panic () {
     echo "ERROR: $@" >&2

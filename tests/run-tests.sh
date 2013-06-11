@@ -29,8 +29,8 @@ PROGDIR=`cd $PROGDIR && pwd`
 #
 ROOTDIR=`cd $PROGDIR/.. && pwd`
 NDK_BUILDTOOLS_PATH=$ROOTDIR/build/tools
-. $ROOTDIR/build/core/ndk-common.sh
-. $ROOTDIR/build/tools/prebuilt-common.sh
+. $NDK_BUILDTOOLS_PATH/ndk-common.sh
+. $NDK_BUILDTOOLS_PATH/prebuilt-common.sh
 
 # The list of tests that are too long to be part of a normal run of
 # run-tests.sh. Most of these do not run properly at the moment.
@@ -281,7 +281,7 @@ if [ -n "$NDK_ROOT" ] ; then
         dump "Please use a valid path for this option."
         exit 1
     fi
-    if [ ! -f "$NDK_ROOT/ndk-build" -o ! -f "$NDK_ROOT/build/core/ndk-common.sh" ] ; then
+    if [ ! -f "$NDK_ROOT/ndk-build" -o ! -f "$NDK_ROOT/build/tools/prebuilt-common.sh" ] ; then
         dump "ERROR: Your --ndk option does not point to a valid NDK install: $NDK_ROOT"
         dump "Please use a valid NDK install path for this option."
         exit 3

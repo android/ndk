@@ -3,8 +3,8 @@
 PROGDIR=`dirname $0`
 NDK=`cd $PROGDIR/.. && pwd`
 NDK_BUILDTOOLS_PATH=$NDK/build/tools
-. $NDK/build/core/ndk-common.sh
-. $NDK/build/tools/prebuilt-common.sh
+. $NDK_BUILDTOOLS_PATH/ndk-common.sh
+. $NDK_BUILDTOOLS_PATH/prebuilt-common.sh
 
 # Find all devices
 DEVICE_arm=

@@ -35,7 +35,7 @@ case $PROGDIR in
         ;;
 esac
 
-. $PROGDIR/build/core/ndk-common.sh
+. $PROGDIR/build/tools/ndk-common.sh
 
 force_32bit_binaries
 
