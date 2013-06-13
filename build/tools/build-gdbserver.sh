@@ -186,7 +186,7 @@ CRTEND="$BUILD_SYSROOT/usr/lib/crtend_android.o"
 #       a function (__div0) which depends on raise(), implemented
 #       in the C library.
 #
-LIBRARY_LDFLAGS="$CRTBEGIN -lc -lm -lgcc -lc $CRTEND "
+STDLIBS="$CRTBEGIN -lc -lm -lgcc -lc $CRTEND "
 
 case "$GDB_VERSION" in
     6.6)
@@ -202,6 +202,10 @@ case "$GDB_VERSION" in
         # CRTBEGIN/END above.  Clean it up and re-enable it in the future.
         CONFIGURE_FLAGS=$CONFIGURE_FLAGS" --disable-inprocess-agent"
         ;;
+    7.6)
+        CONFIGURE_FLAGS="--with-libthread-db=$BUILD_SYSROOT/usr/lib/libthread_db.a"
+        CONFIGURE_FLAGS=$CONFIGURE_FLAGS" --disable-inprocess-agent"
+        ;;
     *)
         CONFIGURE_FLAGS=""
 esac
@@ -209,7 +213,8 @@ esac
 cd $BUILD_OUT &&
 export CC="$TOOLCHAIN_PREFIX-gcc --sysroot=$BUILD_SYSROOT" &&
 export CFLAGS="-O2 -nostdlib -D__ANDROID__ -DANDROID -DSTDC_HEADERS $INCLUDE_DIRS $GDBSERVER_CFLAGS"  &&
-export LDFLAGS="-static -Wl,-z,nocopyreloc -Wl,--no-undefined $LIBRARY_LDFLAGS $GDBSERVER_LDFLAGS" &&
+export LDFLAGS="-static -Wl,-z,nocopyreloc -Wl,--no-undefined" &&
+export LIBS="$STDLIBS" &&
 run $SRC_DIR/configure \
 --host=$GDBSERVER_HOST \
 $CONFIGURE_FLAGS
