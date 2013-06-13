@@ -39,35 +39,22 @@ print_vector_with_indices = False
 def lookup_stlport_type (typename):
     "Look up a type in the public STLport namespace."
 
-    try: # STLport 5.0 and later, _STL_DEBUG defined
-        return gdb.lookup_type ( 'stlpd_std::' + typename)
-    except RuntimeError:
-        try: # STLport 5.0 and later, _STL_DEBUG undefined
-            return gdb.lookup_type ('stlp_std::' + typename)
-        except RuntimeError: # STLport 4.6
-            return gdb.lookup_type ('_STL::' + typename)
-
+    namespaces = ['std::', 'stlpd_std::', 'stlp_std::', '_STL::']
+    for namespace in namespaces:
+        try:
+            return gdb.lookup_type (namespace + typename)
+        except RuntimeError:
+            pass
 
 def lookup_stlport_priv_type (typename):
     "Look up a type in the private STLport namespace."
 
-    try: # STLport 5.2, _STL_DEBUG defined
-        return gdb.lookup_type ( 'stlpd_std::priv::' + typename)
-    except RuntimeError:
-        try: # STLport 5.2, _STL_DEBUG undefined
-            return gdb.lookup_type ('stlp_std::priv::' + typename)
+    namespaces = ['std::priv::', 'stlpd_std::priv::', 'stlp_std::priv::', 'stlpd_std::', 'stlp_std::', '_STL::']
+    for namespace in namespaces:
+        try:
+            return gdb.lookup_type (namespace + typename)
         except RuntimeError:
-            try: # STLport 5.1
-                return gdb.lookup_type ('stlp_priv::' + typename)
-            except RuntimeError:
-                try: # STLport 5.0, _STL_DEBUG defined
-                    return gdb.lookup_type ('stlpd_std::' + typename)
-                except RuntimeError:
-                    try: # STLport 5.0, _STL_DEBUG undefined
-                        return gdb.lookup_type ('stlp_std::' + typename)
-                    except RuntimeError:
-                        # STLport 4.6
-                        return gdb.lookup_type ('_STL::' + typename)
+            pass
 
 
 def get_non_debug_impl (value, member = None):
@@ -706,7 +693,7 @@ def register_stlport_printers (obj):
 pretty_printers_dict = {}
 
 def add_entry (regex, printer, typename):
-    prefix = "^(stlpd?_std|_STL)::"
+    prefix = "^(stlpd?_std|_STL|std)::"
     suffix = "<.*>$"
     if typename != None:
         typename = "std::" + typename
