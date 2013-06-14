@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python
 
 r'''
  Copyright (C) 2010 The Android Open Source Project
@@ -77,6 +77,10 @@ OPTION_LAUNCH = None
 OPTION_LAUNCH_LIST = None
 OPTION_TUI = None
 OPTION_WAIT = ['-D']
+OPTION_STDCXXPYPR = None
+
+PYPRPR_BASE = sys.prefix + '/share/pretty-printers/'
+PYPRPR_GNUSTDCXX_BASE = PYPRPR_BASE + 'libstdcxx/'
 
 DEBUG_PORT = 5039
 JDB_PORT = 65534
@@ -110,6 +114,8 @@ def handle_args():
     global PROJECT, NDK
     global OPTION_START, OPTION_LAUNCH, OPTION_LAUNCH_LIST
     global OPTION_FORCE, OPTION_EXEC, OPTION_TUI, OPTION_WAIT
+    global OPTION_STDCXXPYPR
+    global PYPRPR_GNUSTDCXX_BASE
 
     parser = argparse.ArgumentParser(description='''
     Setup a gdb debugging session for your Android NDK application.
@@ -184,6 +190,15 @@ def handle_args():
                          help='Do not wait for debugger to attach (may miss early JNI breakpoints)',
                          action='store_true', dest='nowait')
 
+    stdcxx_pypr_versions = [ 'gnustdcxx'+d.replace('gcc','')
+                             for d in os.listdir(PYPRPR_GNUSTDCXX_BASE)
+                             if os.path.isdir(os.path.join(PYPRPR_GNUSTDCXX_BASE, d)) ]
+
+    parser.add_argument( '--stdcxx-py-pr',
+                         help='Specify stdcxx python pretty-printer',
+                         choices=['auto', 'none', 'gnustdcxx'] + stdcxx_pypr_versions + ['stlport'],
+                         default='none', dest='stdcxxpypr')
+
     args = parser.parse_args()
 
     VERBOSE = args.verbose
@@ -252,6 +267,8 @@ def handle_args():
         OPTION_WAIT = []
     elif not found_jdb:
         error('Failed to find jdb.\n..you can use --nowait to disable jdb\n..but may miss early breakpoints.')
+
+    OPTION_STDCXXPYPR = args.stdcxxpypr
 
 def get_build_var(var):
     global GNUMAKE_CMD, GNUMAKE_FLAGS, NDK, PROJECT
@@ -482,6 +499,8 @@ def main():
     global JDB_CMD
     global OPTION_START, OPTION_LAUNCH, OPTION_LAUNCH_LIST
     global OPTION_FORCE, OPTION_EXEC, OPTION_TUI, OPTION_WAIT
+    global OPTION_STDCXXPYPR
+    global PYPRPR_BASE, PYPRPR_GNUSTDCXX_BASE
 
     if NDK.find(' ')!=-1:
         error('NDK path cannot contain space')
@@ -525,7 +544,7 @@ def main():
     if PACKAGE_NAME is None:
         PACKAGE_NAME = '<none>'
     log('Found package name: %s' % (PACKAGE_NAME))
-    if PACKAGE_NAME is '<none>':
+    if PACKAGE_NAME == '<none>':
         error('''Could not extract package name from %s.
        Please check that the file is well-formed!''' % (PROJECT+os.sep+MANIFEST))
     if OPTION_LAUNCH_LIST:
@@ -717,6 +736,32 @@ After one of these, re-install to the device!''' % (PACKAGE_NAME))
         background_spawn([JDB_CMD,'-connect','com.sun.jdi.SocketAttach:hostname=localhost,port=%d' % (JDB_PORT)], True, output_jdb, True, input_jdb)
         time.sleep(1.0)
 
+    # Work out the python pretty printer details.
+    pypr_folder = None
+    pypr_function = None
+
+    # Automatic determination of pypr.
+    if OPTION_STDCXXPYPR == 'auto':
+        libdir = os.path.join(PROJECT,'libs',COMPAT_ABI)
+        libs = [ f for f in os.listdir(libdir)
+                 if os.path.isfile(os.path.join(libdir, f)) and f.endswith('.so') ]
+        if 'libstlport_shared.so' in libs:
+            OPTION_STDCXXPYPR = 'stlport'
+        elif 'libgnustl_shared.so' in libs:
+            OPTION_STDCXXPYPR = 'gnustdcxx'
+
+    if OPTION_STDCXXPYPR == 'stlport':
+        pypr_folder = PYPRPR_BASE + 'stlport/gppfs-0.2/stlport'
+        pypr_function = 'register_stlport_printers'
+    elif OPTION_STDCXXPYPR.startswith('gnustdcxx'):
+        if OPTION_STDCXXPYPR == 'gnustdcxx':
+            NDK_TOOLCHAIN_VERSION = get_build_var_for_abi('NDK_TOOLCHAIN_VERSION', COMPAT_ABI)
+            log('Using toolchain version: %s' % (NDK_TOOLCHAIN_VERSION))
+            pypr_folder = PYPRPR_GNUSTDCXX_BASE + 'gcc-' + NDK_TOOLCHAIN_VERSION
+        else:
+            pypr_folder = PYPRPR_GNUSTDCXX_BASE + OPTION_STDCXXPYPR.replace('gnustdcxx-','gcc-')
+        pypr_function = 'register_libstdcxx_printers'
+
     # Now launch the appropriate gdb client with the right init commands
     #
     GDBCLIENT = '%sgdb' % (TOOLCHAIN_PREFIX)
@@ -728,6 +773,15 @@ After one of these, re-install to the device!''' % (PACKAGE_NAME))
         gdbsetup.write('file '+APP_PROCESS+'\n')
         gdbsetup.write('target remote :%d\n' % (DEBUG_PORT))
         gdbsetup.write('set breakpoint pending on\n')
+
+        if pypr_function:
+            gdbsetup.write('python\n')
+            gdbsetup.write('import sys\n')
+            gdbsetup.write('sys.path.append("%s")\n' % pypr_folder)
+            gdbsetup.write('from printers import %s\n' % pypr_function)
+            gdbsetup.write('%s(None)\n' % pypr_function)
+            gdbsetup.write('end\n')
+
         if OPTION_EXEC:
             with open(OPTION_EXEC, 'r') as execfile:
                 for line in execfile:
