@@ -189,12 +189,13 @@ td_ta_new(struct ps_prochandle * proc_handle, td_thragent_t ** agent_out)
             if (tid_caps != my_caps) {
                 /* AAAARGH !! The permitted capabilities set differ. */
                 D("AAAAAH, Can't debug threads!\n");
+                fprintf(stderr, "Thread debugging is unsupported on this Android platform!\n");
                 closedir(dir);
                 return TD_NOLIBTHREAD;
             }
         }
         closedir(dir);
-        D("Victory: We can debug theads!\n");
+        D("Victory: We can debug threads!\n");
     } while (0);
 
     /* We now return to our regularly scheduled program */

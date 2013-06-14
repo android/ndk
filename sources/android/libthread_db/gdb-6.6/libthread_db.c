@@ -186,7 +186,7 @@ td_ta_new(struct ps_prochandle const * proc_handle, td_thragent_t ** agent_out)
             }
         }
         closedir(dir);
-        D("Victory: We can debug theads!\n");
+        D("Victory: We can debug threads!\n");
     } while (0);
 
     /* We now return to our regularly scheduled program */
