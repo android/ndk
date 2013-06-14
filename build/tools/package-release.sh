@@ -83,7 +83,7 @@ LLVM_VERSION_LIST=$DEFAULT_LLVM_VERSION_LIST
 register_var_option "--llvm=<versions>" LLVM_VERSION_LIST "List of LLVM release versions"
 
 WITH_LIBCXX=
-register_var_option "--with-libc++" WITH_LIBCXX "Package experimental Libc++ sources"
+register_var_option "--with-libcxx" WITH_LIBCXX "Package experimental Libc++ sources"
 
 register_try64_option
 

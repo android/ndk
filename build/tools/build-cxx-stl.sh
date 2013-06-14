@@ -333,11 +333,11 @@ build_stl_libs_for_abi ()
     fi
 
     if [ "$TYPE" = "static" ]; then
-        log "Building $DSTDIR/${CXX_STL}_static.a"
-        builder_static_library ${CXX_STL}_static
+        log "Building $DSTDIR/lib${CXX_STL}_static.a"
+        builder_static_library lib${CXX_STL}_static
     else
-        log "Building $DSTDIR/${CXX_STL}_shared.so"
-        builder_shared_library ${CXX_STL}_shared
+        log "Building $DSTDIR/lib${CXX_STL}_shared.so"
+        builder_shared_library lib${CXX_STL}_shared
     fi
 
     builder_end
@@ -352,7 +352,7 @@ done
 if [ -n "$PACKAGE_DIR" ] ; then
     for ABI in $ABIS; do
         FILES=""
-        for LIB in ${CXX_STL}_static.a ${CXX_STL}_shared.so; do
+        for LIB in lib${CXX_STL}_static.a lib${CXX_STL}_shared.so; do
             FILES="$FILES $CXX_STL_SUBDIR/libs/$ABI/$LIB"
         done
         PACKAGE="$PACKAGE_DIR/${CXX_STL_PACKAGE}-libs-$ABI.tar.bz2"
