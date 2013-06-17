@@ -720,6 +720,15 @@ LOCAL_DISABLE_RELRO
 >    * [Security enhancements in RedHat Enterprise Linux (section 6)](http://www.akkadia.org/drepper/nonselsec.pdf)
 
 - - - -
+LOCAL_DISABLE_FORMAT_STRING_CHECKS
+>    By default, NDK compiled code is compiled with format string
+>    protection. This forces a compiler error if a non-constant format
+>    string is used in a printf style function.
+>
+>    It is enabled by default, but you can disable it if you *really*
+>    need to by setting this variable to '`true`'.
+
+- - - -
 LOCAL_EXPORT_CFLAGS
 >    Define this variable to record a set of C/C++ compiler flags that will
 >    be added to the LOCAL_CFLAGS definition of any other module that uses
