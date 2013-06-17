@@ -727,7 +727,7 @@ module-get-link-libs = $(strip \
 #    direct dependencies.
 #  - otherwise, the module is a shared library, don't add build deps.
 -ndk-mod-link-deps = \
-  $(if $(call seq,$1,$(_ndk_mod_link_module))$(call module-is-static-library,$1),\
+  $(if $(call seq,$1,$(_ndk_mod_link_module)),\
     $(call module-get-direct-libs,$1))
 
 # -----------------------------------------------------------------------------
