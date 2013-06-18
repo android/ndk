@@ -722,7 +722,7 @@ module-get-link-libs = $(strip \
   $(eval _ndk_mod_link_module := $1) \
   $(call -ndk-mod-get-topological-depends,$1,-ndk-mod-link-deps))
 
-# Special dependency function used by nodule-get-link-libs.
+# Special dependency function used by module-get-link-libs.
 # The rules to follow are the following:
 #  - if $1 is the link module, or if it is a static library, then all
 #    direct dependencies.

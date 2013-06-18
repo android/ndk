@@ -322,12 +322,9 @@ endif
     $(call -ndk-mod-topo-count,$(_ndk_mod_nodes))\
     $(eval _ndk_mod_list :=)\
     $(eval _ndk_mod_wq := $(call -ndk-mod-topo-find-first-zero-incoming,$(_ndk_mod_nodes)))\
-    $(if $(_ndk_mod_wq),\
-        $(call -ndk-mod-topo-sort)\
-        $(_ndk_mod_list)\
-    ,\
-        $(_ndk_mod_nodes)\
-    ))
+    $(call -ndk-mod-topo-sort)\
+    $(_ndk_mod_list) $(_ndk_mod_nodes)\
+    )
 
 # Given a closure list of nodes, count their incoming edges.
 # $1: list of nodes, must be a graph closure.
@@ -346,6 +343,7 @@ endif
     $(call -ndk-mod-pop-first)\
     $(if $(_ndk_mod_module),\
         $(eval _ndk_mod_list += $(_ndk_mod_module))\
+        $(eval _ndk_mod_nodes := $(filter-out $(_ndk_mod_module),$(_ndk_mod_nodes)))\
         $(call -ndk-mod-topo-decrement-incoming,$(_ndk_mod_module))\
         $(call -ndk-mod-get-depends)\
         $(call -ndk-topo-debug,-ndk-mod-topo-sort:   deps='$(_ndk_mod_depends)')\
@@ -390,6 +388,13 @@ endif
     $(eval D_depends :=)\
     $(call test-expect,A C B D,$(call -ndk-mod-get-topo-list,A,-local-deps))
 
+-test-ndk-mod-get-topo-list.ABC.circular = \
+    $(eval -local-deps = $$($$1_depends))\
+    $(eval A_depends := B)\
+    $(eval B_depends := C)\
+    $(eval C_depends := B)\
+    $(call test-expect,A B C,$(call -ndk-mod-get-topo-list,A,-local-deps))
+
 #########################################################################
 # Return the topologically ordered closure of all dependencies from a
 # top-level node.
@@ -417,6 +422,16 @@ endif
     $(eval topo_deps := $$(call -ndk-mod-get-topological-depends,A,-local-get-deps))\
     $(call test-expect,B C,$(bfs_deps),dfs dependencies)\
     $(call test-expect,C B,$(topo_deps),topo dependencies)
+
+-test-ndk-mod-get-topological-depends.circular = \
+    $(eval -local-get-deps = $$($$1_depends))\
+    $(eval A_depends := B)\
+    $(eval B_depends := C)\
+    $(eval C_depends := B)\
+    $(eval bfs_deps := $$(call -ndk-mod-get-bfs-depends,A,-local-get-deps))\
+    $(eval topo_deps := $$(call -ndk-mod-get-topological-depends,A,-local-get-deps))\
+    $(call test-expect,B C,$(bfs_deps),dfs dependencies)\
+    $(call test-expect,B C,$(topo_deps),topo dependencies)
 
 #########################################################################
 # Return breadth-first walk of a graph, starting from an arbitrary
