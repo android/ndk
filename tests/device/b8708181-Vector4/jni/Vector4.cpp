@@ -10,10 +10,11 @@ typedef __m128 float32x4_t;
 #elif defined(__mips__)
 #define SP  "sp"
 typedef float float32x4_t __attribute__ ((__vector_size__ (16)));
-#else
+#elif !defined(__le32__)
 #error unknown arch for type float32x4_t
 #endif
 
+#ifndef __le32__
 class Vector4
 {
   public:
@@ -63,3 +64,12 @@ int main()
 #endif
     return 0;
 }
+
+#else // __le32__
+
+int main()
+{
+    return 0; // Skip this test (Should not assume vector4 type on le32 triple)
+}
+
+#endif
