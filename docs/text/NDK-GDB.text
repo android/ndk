@@ -1,4 +1,4 @@
-'ndk-gdb' Overview
+'ndk-gdb' and 'ndk-gdb-py' Overview
 ===
 
 IMPORTANT: IF YOU ARE DEBUGGING THREADED PROGRAMS, PLEASE READ THE
@@ -164,13 +164,33 @@ To see a list of options, type 'ndk-gdb --help'. Notable ones are:
   repeatedly, e.g. setting up a list of breakpoints then resuming
   execution automatically.
 
+  `--nowait`:
+> Disable pausing the Java code until GDB connects. Passing this option
+  may cause early breakpoints to be missed.
+
+  `--tui`:
+  `-t`:
+> Enable Text User Interface if GDB was built with it. [ndk-gdb-py only]
+
+  `--gnumake-flag=<flag>`:
+> Extra flag(s) to pass to the ndk-build system when querying it for
+  project information. Multiple instances can be used. [ndk-gdb-py only]
+
+  `--stdcxx-py-pr={auto|none|gnustdcxx[-GCCVER]|stlport}`:
+> Use specified Python pretty-printers for displaying types in the
+  Standard C++ Library. 'auto' mode works by looking at the .so files
+  for a libstdc++ library, and as such only works in the shared scenario.
+  When linking statically to a libstdc++ library, the required printers
+  must be specified. The default is 'none'. [ndk-gdb-py only]
+
 
 III. Requirements:
 ------------------
 
-At the moment 'ndk-gdb' requires a Unix shell to run. This means that
-Cygwin is required to run it on Windows. We hope to get rid of this
-limitation in a future NDK release.
+'ndk-gdb' requires a Unix shell to run. This means that Cygwin is required
+to run it on Windows. An experimental Python re-implementation called
+'ndk-gdb-py' is also provided, removing this restriction and providing
+some new features.
 
 The other NDK requirements apply: e.g. GNU Make 3.81 or higher.
 
