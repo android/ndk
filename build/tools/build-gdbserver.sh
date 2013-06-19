@@ -171,22 +171,6 @@ log "Using build sysroot: $BUILD_SYSROOT"
 
 # configure the gdbserver build now
 dump "Configure: $TOOLCHAIN gdbserver-$GDB_VERSION build."
-OLD_CC="$CC"
-OLD_CFLAGS="$CFLAGS"
-OLD_LDFLAGS="$LDFLAGS"
-
-INCLUDE_DIRS=\
-"-I$TOOLCHAIN_PATH/lib/gcc/$ABI_CONFIGURE_TARGET/$GCC_VERSION/include \
--I$BUILD_SYSROOT/usr/include"
-CRTBEGIN="$BUILD_SYSROOT/usr/lib/crtbegin_static.o"
-CRTEND="$BUILD_SYSROOT/usr/lib/crtend_android.o"
-
-# Note: we must put a second -lc after -lgcc to resolve a cyclical
-#       dependency on arm-linux-androideabi, where libgcc.a contains
-#       a function (__div0) which depends on raise(), implemented
-#       in the C library.
-#
-STDLIBS="$CRTBEGIN -lc -lm -lgcc -lc $CRTEND "
 
 case "$GDB_VERSION" in
     6.6)
@@ -212,9 +196,8 @@ esac
 
 cd $BUILD_OUT &&
 export CC="$TOOLCHAIN_PREFIX-gcc --sysroot=$BUILD_SYSROOT" &&
-export CFLAGS="-O2 -nostdlib -D__ANDROID__ -DANDROID -DSTDC_HEADERS $INCLUDE_DIRS $GDBSERVER_CFLAGS"  &&
+export CFLAGS="-O2 $GDBSERVER_CFLAGS"  &&
 export LDFLAGS="-static -Wl,-z,nocopyreloc -Wl,--no-undefined" &&
-export LIBS="$STDLIBS" &&
 run $SRC_DIR/configure \
 --host=$GDBSERVER_HOST \
 $CONFIGURE_FLAGS
@@ -222,9 +205,6 @@ if [ $? != 0 ] ; then
     dump "Could not configure gdbserver build. See $TMPLOG"
     exit 1
 fi
-CC="$OLD_CC"
-CFLAGS="$OLD_CFLAGS"
-LDFLAGS="$OLD_LDFLAGS"
 
 # build gdbserver
 dump "Building : $TOOLCHAIN gdbserver."
