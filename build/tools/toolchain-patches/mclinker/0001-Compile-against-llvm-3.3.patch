@@ -1,17 +1,18 @@
-From 2de173d78aa32c6663c903be8d90b557061678fa Mon Sep 17 00:00:00 2001
+From d4d813fa1fffb1ece1630a1fbc8bc9339dd4b3ae Mon Sep 17 00:00:00 2001
 From: Andrew Hsieh <andrewhsieh@google.com>
-Date: Thu, 6 Jun 2013 14:12:28 +0800
-Subject: [PATCH] Compile against llvm-3.3
+Date: Wed, 19 Jun 2013 15:09:04 -0700
+Subject: [PATCH 1/2] Compile against llvm-3.3
 
-Change-Id: Iefc01740017b2710907bf98257a0f68b1551021e
+Change-Id: I3e34b391e5effb173dc1a08c75fae5e9ba530bec
 ---
  lib/Fragment/FragmentLinker.cpp           |  2 +-
- lib/LD/ELFReader.cpp                      | 44 +++++++++++++++----------------
- lib/LD/GNUArchiveReader.cpp               |  4 +--
+ lib/LD/ELFReader.cpp                      | 36 +++++++++++++++----------------
+ lib/LD/GNUArchiveReader.cpp               |  4 ++--
  lib/LD/RelocationFactory.cpp              |  2 +-
+ lib/Target/GNULDBackend.cpp               |  8 +++----
  tools/llvm-mcld/llvm-mcld.cpp             |  3 ++-
  tools/mcld/lib/Support/Initialization.cpp |  3 ++-
- 6 files changed, 30 insertions(+), 28 deletions(-)
+ 7 files changed, 30 insertions(+), 28 deletions(-)
 
 diff --git a/lib/Fragment/FragmentLinker.cpp b/lib/Fragment/FragmentLinker.cpp
 index 2a183b2..5a4b53f 100644
@@ -27,7 +28,7 @@ index 2a183b2..5a4b53f 100644
  
       switch(pReloc.size(*m_Backend.getRelocator())) {
 diff --git a/lib/LD/ELFReader.cpp b/lib/LD/ELFReader.cpp
-index 6a9d8e4..f7b047f 100644
+index 3807834..15d4862 100644
 --- a/lib/LD/ELFReader.cpp
 +++ b/lib/LD/ELFReader.cpp
 @@ -91,7 +91,7 @@ bool ELFReader<32, true>::readSymbols(Input& pInput,
@@ -39,25 +40,7 @@ index 6a9d8e4..f7b047f 100644
        st_name  = symtab[idx].st_name;
        st_value = symtab[idx].st_value;
        st_size  = symtab[idx].st_size;
-@@ -222,7 +222,7 @@ bool ELFReader<32, true>::readRela(Input& pInput,
-     uint32_t r_offset = 0x0;
-     uint32_t r_info   = 0x0;
-     int32_t  r_addend = 0;
--    if (llvm::sys::isLittleEndianHost()) {
-+    if (llvm::sys::IsLittleEndianHost) {
-       r_offset = relaTab[idx].r_offset;
-       r_info   = relaTab[idx].r_info;
-       r_addend = relaTab[idx].r_addend;
-@@ -258,7 +258,7 @@ bool ELFReader<32, true>::readRel(Input& pInput,
-   for (size_t idx=0; idx < entsize; ++idx) {
-     uint32_t r_offset = 0x0;
-     uint32_t r_info   = 0x0;
--    if (llvm::sys::isLittleEndianHost()) {
-+    if (llvm::sys::IsLittleEndianHost) {
-       r_offset = relTab[idx].r_offset;
-       r_info   = relTab[idx].r_info;
-     }
-@@ -295,7 +295,7 @@ bool ELFReader<32, true>::isMyMachine(void* pELFHeader) const
+@@ -279,7 +279,7 @@ bool ELFReader<32, true>::isMyMachine(void* pELFHeader) const
    llvm::ELF::Elf32_Ehdr* hdr =
                            reinterpret_cast<llvm::ELF::Elf32_Ehdr*>(pELFHeader);
  
@@ -66,7 +49,7 @@ index 6a9d8e4..f7b047f 100644
      return (hdr->e_machine == target().getInfo().machine());
    return (mcld::bswap16(hdr->e_machine) == target().getInfo().machine());
  }
-@@ -306,7 +306,7 @@ Input::Type ELFReader<32, true>::fileType(void* pELFHeader) const
+@@ -290,7 +290,7 @@ Input::Type ELFReader<32, true>::fileType(void* pELFHeader) const
    llvm::ELF::Elf32_Ehdr* hdr =
                            reinterpret_cast<llvm::ELF::Elf32_Ehdr*>(pELFHeader);
    uint32_t type = 0x0;
@@ -75,7 +58,7 @@ index 6a9d8e4..f7b047f 100644
      type = hdr->e_type;
    else
      type = mcld::bswap16(hdr->e_type);
-@@ -338,7 +338,7 @@ ELFReader<32, true>::readSectionHeaders(Input& pInput, void* pELFHeader) const
+@@ -322,7 +322,7 @@ ELFReader<32, true>::readSectionHeaders(Input& pInput, void* pELFHeader) const
    uint32_t shnum     = 0x0;
    uint32_t shstrtab  = 0x0;
  
@@ -84,7 +67,7 @@ index 6a9d8e4..f7b047f 100644
      shoff     = ehdr->e_shoff;
      shentsize = ehdr->e_shentsize;
      shnum     = ehdr->e_shnum;
-@@ -372,7 +372,7 @@ ELFReader<32, true>::readSectionHeaders(Input& pInput, void* pELFHeader) const
+@@ -356,7 +356,7 @@ ELFReader<32, true>::readSectionHeaders(Input& pInput, void* pELFHeader) const
                                              shentsize);
      shdr = reinterpret_cast<llvm::ELF::Elf32_Shdr*>(shdr_region->start());
  
@@ -93,7 +76,7 @@ index 6a9d8e4..f7b047f 100644
        sh_size = shdr->sh_size;
        sh_link = shdr->sh_link;
      }
-@@ -397,7 +397,7 @@ ELFReader<32, true>::readSectionHeaders(Input& pInput, void* pELFHeader) const
+@@ -381,7 +381,7 @@ ELFReader<32, true>::readSectionHeaders(Input& pInput, void* pELFHeader) const
  
    // get .shstrtab first
    shdr = &shdrTab[shstrtab];
@@ -102,7 +85,7 @@ index 6a9d8e4..f7b047f 100644
      sh_offset = shdr->sh_offset;
      sh_size   = shdr->sh_size;
    }
-@@ -415,7 +415,7 @@ ELFReader<32, true>::readSectionHeaders(Input& pInput, void* pELFHeader) const
+@@ -399,7 +399,7 @@ ELFReader<32, true>::readSectionHeaders(Input& pInput, void* pELFHeader) const
  
    // create all LDSections, including first NULL section.
    for (size_t idx = 0; idx < shnum; ++idx) {
@@ -111,7 +94,7 @@ index 6a9d8e4..f7b047f 100644
        sh_name      = shdrTab[idx].sh_name;
        sh_type      = shdrTab[idx].sh_type;
        sh_flags     = shdrTab[idx].sh_flags;
-@@ -495,7 +495,7 @@ ResolveInfo* ELFReader<32, true>::readSignature(Input& pInput,
+@@ -479,7 +479,7 @@ ResolveInfo* ELFReader<32, true>::readSignature(Input& pInput,
    uint16_t st_shndx = 0x0;
    st_info  = entry->st_info;
    st_other = entry->st_other;
@@ -120,7 +103,7 @@ index 6a9d8e4..f7b047f 100644
      st_name  = entry->st_name;
      st_shndx = entry->st_shndx;
    }
-@@ -557,7 +557,7 @@ bool ELFReader<32, true>::readDynamic(Input& pInput) const
+@@ -541,7 +541,7 @@ bool ELFReader<32, true>::readDynamic(Input& pInput) const
      llvm::ELF::Elf32_Sword d_tag = 0x0;
      llvm::ELF::Elf32_Word d_val = 0x0;
  
@@ -129,7 +112,7 @@ index 6a9d8e4..f7b047f 100644
        d_tag = dynamic[idx].d_tag;
        d_val = dynamic[idx].d_un.d_val;
      } else {
-@@ -652,7 +652,7 @@ bool ELFReader<64, true>::readSymbols(Input& pInput,
+@@ -636,7 +636,7 @@ bool ELFReader<64, true>::readSymbols(Input& pInput,
      st_info  = symtab[idx].st_info;
      st_other = symtab[idx].st_other;
  
@@ -138,25 +121,7 @@ index 6a9d8e4..f7b047f 100644
        st_name  = symtab[idx].st_name;
        st_value = symtab[idx].st_value;
        st_size  = symtab[idx].st_size;
-@@ -778,7 +778,7 @@ bool ELFReader<64, true>::readRela(Input& pInput,
-     uint64_t r_offset = 0x0;
-     uint64_t r_info   = 0x0;
-     int64_t  r_addend = 0;
--    if (llvm::sys::isLittleEndianHost()) {
-+    if (llvm::sys::IsLittleEndianHost) {
-       r_offset = relaTab[idx].r_offset;
-       r_info   = relaTab[idx].r_info;
-       r_addend = relaTab[idx].r_addend;
-@@ -814,7 +814,7 @@ bool ELFReader<64, true>::readRel(Input& pInput,
-   for (size_t idx=0; idx < entsize; ++idx) {
-     uint64_t r_offset = 0x0;
-     uint64_t r_info   = 0x0;
--    if (llvm::sys::isLittleEndianHost()) {
-+    if (llvm::sys::IsLittleEndianHost) {
-       r_offset = relTab[idx].r_offset;
-       r_info   = relTab[idx].r_info;
-     }
-@@ -851,7 +851,7 @@ bool ELFReader<64, true>::isMyMachine(void* pELFHeader) const
+@@ -820,7 +820,7 @@ bool ELFReader<64, true>::isMyMachine(void* pELFHeader) const
    llvm::ELF::Elf64_Ehdr* hdr =
                            reinterpret_cast<llvm::ELF::Elf64_Ehdr*>(pELFHeader);
  
@@ -165,7 +130,7 @@ index 6a9d8e4..f7b047f 100644
      return (hdr->e_machine == target().getInfo().machine());
    return (mcld::bswap16(hdr->e_machine) == target().getInfo().machine());
  }
-@@ -862,7 +862,7 @@ Input::Type ELFReader<64, true>::fileType(void* pELFHeader) const
+@@ -831,7 +831,7 @@ Input::Type ELFReader<64, true>::fileType(void* pELFHeader) const
    llvm::ELF::Elf64_Ehdr* hdr =
                            reinterpret_cast<llvm::ELF::Elf64_Ehdr*>(pELFHeader);
    uint32_t type = 0x0;
@@ -174,7 +139,7 @@ index 6a9d8e4..f7b047f 100644
      type = hdr->e_type;
    else
      type = mcld::bswap16(hdr->e_type);
-@@ -894,7 +894,7 @@ ELFReader<64, true>::readSectionHeaders(Input& pInput, void* pELFHeader) const
+@@ -863,7 +863,7 @@ ELFReader<64, true>::readSectionHeaders(Input& pInput, void* pELFHeader) const
    uint32_t shnum     = 0x0;
    uint32_t shstrtab  = 0x0;
  
@@ -183,7 +148,7 @@ index 6a9d8e4..f7b047f 100644
      shoff     = ehdr->e_shoff;
      shentsize = ehdr->e_shentsize;
      shnum     = ehdr->e_shnum;
-@@ -928,7 +928,7 @@ ELFReader<64, true>::readSectionHeaders(Input& pInput, void* pELFHeader) const
+@@ -897,7 +897,7 @@ ELFReader<64, true>::readSectionHeaders(Input& pInput, void* pELFHeader) const
                                              shentsize);
      shdr = reinterpret_cast<llvm::ELF::Elf64_Shdr*>(shdr_region->start());
  
@@ -192,7 +157,7 @@ index 6a9d8e4..f7b047f 100644
        sh_size = shdr->sh_size;
        sh_link = shdr->sh_link;
      }
-@@ -953,7 +953,7 @@ ELFReader<64, true>::readSectionHeaders(Input& pInput, void* pELFHeader) const
+@@ -922,7 +922,7 @@ ELFReader<64, true>::readSectionHeaders(Input& pInput, void* pELFHeader) const
  
    // get .shstrtab first
    shdr = &shdrTab[shstrtab];
@@ -201,7 +166,7 @@ index 6a9d8e4..f7b047f 100644
      sh_offset = shdr->sh_offset;
      sh_size   = shdr->sh_size;
    }
-@@ -971,7 +971,7 @@ ELFReader<64, true>::readSectionHeaders(Input& pInput, void* pELFHeader) const
+@@ -940,7 +940,7 @@ ELFReader<64, true>::readSectionHeaders(Input& pInput, void* pELFHeader) const
  
    // create all LDSections, including first NULL section.
    for (size_t idx = 0; idx < shnum; ++idx) {
@@ -210,7 +175,7 @@ index 6a9d8e4..f7b047f 100644
        sh_name      = shdrTab[idx].sh_name;
        sh_type      = shdrTab[idx].sh_type;
        sh_flags     = shdrTab[idx].sh_flags;
-@@ -1051,7 +1051,7 @@ ResolveInfo* ELFReader<64, true>::readSignature(Input& pInput,
+@@ -1020,7 +1020,7 @@ ResolveInfo* ELFReader<64, true>::readSignature(Input& pInput,
    uint16_t st_shndx = 0x0;
    st_info  = entry->st_info;
    st_other = entry->st_other;
@@ -219,7 +184,7 @@ index 6a9d8e4..f7b047f 100644
      st_name  = entry->st_name;
      st_shndx = entry->st_shndx;
    }
-@@ -1113,7 +1113,7 @@ bool ELFReader<64, true>::readDynamic(Input& pInput) const
+@@ -1082,7 +1082,7 @@ bool ELFReader<64, true>::readDynamic(Input& pInput) const
      llvm::ELF::Elf64_Sxword d_tag = 0x0;
      llvm::ELF::Elf64_Xword d_val = 0x0;
  
@@ -263,8 +228,48 @@ index 8a065a8..bb56cdd 100644
       uint32_t tmp_data;
  
       switch (m_pConfig->targets().bitclass()) {
+diff --git a/lib/Target/GNULDBackend.cpp b/lib/Target/GNULDBackend.cpp
+index aa2d386..274fd7b 100644
+--- a/lib/Target/GNULDBackend.cpp
++++ b/lib/Target/GNULDBackend.cpp
+@@ -1679,7 +1679,7 @@ bool GNULDBackend::readRelocation(const llvm::ELF::Elf32_Rel& pRel,
+                                   uint32_t& pOffset) const
+ {
+   uint32_t r_info = 0x0;
+-  if (llvm::sys::isLittleEndianHost()) {
++  if (llvm::sys::IsLittleEndianHost) {
+     pOffset = pRel.r_offset;
+     r_info  = pRel.r_info;
+   }
+@@ -1701,7 +1701,7 @@ bool GNULDBackend::readRelocation(const llvm::ELF::Elf32_Rela& pRel,
+                                   int32_t& pAddend) const
+ {
+   uint32_t r_info   = 0x0;
+-  if (llvm::sys::isLittleEndianHost()) {
++  if (llvm::sys::IsLittleEndianHost) {
+     pOffset = pRel.r_offset;
+     r_info  = pRel.r_info;
+     pAddend = pRel.r_addend;
+@@ -1724,7 +1724,7 @@ bool GNULDBackend::readRelocation(const llvm::ELF::Elf64_Rel& pRel,
+                               uint64_t& pOffset) const
+ {
+   uint64_t r_info = 0x0;
+-  if (llvm::sys::isLittleEndianHost()) {
++  if (llvm::sys::IsLittleEndianHost) {
+     pOffset = pRel.r_offset;
+     r_info  = pRel.r_info;
+   }
+@@ -1746,7 +1746,7 @@ bool GNULDBackend::readRelocation(const llvm::ELF::Elf64_Rela& pRel,
+                               int64_t& pAddend) const
+ {
+   uint64_t r_info = 0x0;
+-  if (llvm::sys::isLittleEndianHost()) {
++  if (llvm::sys::IsLittleEndianHost) {
+     pOffset = pRel.r_offset;
+     r_info  = pRel.r_info;
+     pAddend = pRel.r_addend;
 diff --git a/tools/llvm-mcld/llvm-mcld.cpp b/tools/llvm-mcld/llvm-mcld.cpp
-index e984501..27585b1 100644
+index 2f356b3..6f66c4a 100644
 --- a/tools/llvm-mcld/llvm-mcld.cpp
 +++ b/tools/llvm-mcld/llvm-mcld.cpp
 @@ -36,13 +36,14 @@
