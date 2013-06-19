@@ -110,6 +110,10 @@ LOCAL_CPPFLAGS := $(libstlport_cppflags)
 LOCAL_C_INCLUDES := $(libstlport_c_includes)
 LOCAL_EXPORT_C_INCLUDES := $(libstlport_c_includes)
 LOCAL_CPP_FEATURES := rtti exceptions
+ifeq ($(strip $(filter-out $(NDK_KNOWN_ARCHS),$(TARGET_ARCH))),)
 include $(BUILD_SHARED_LIBRARY)
+else
+include $(BUILD_STATIC_LIBRARY)  # Unknown arch needs this for correctness
+endif
 
 endif # STLPORT_FORCE_REBUILD == true
