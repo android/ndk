@@ -1264,6 +1264,11 @@ convert_archs_to_abis ()
 get_toolchain_binprefix_for_arch ()
 {
     local NAME PREFIX DIR BINPREFIX
+    # Make sure if arch is x86_64 we are building for 64-bit host
+    # It's not the best place to add it, but that's currently the only place to enforce it everywhere.
+    if [ $1 == 'x86_64' ]; then
+       TRY64=yes
+    fi
     local SYSTEM=${3:-$(get_prebuilt_host_tag)}
     NAME=$(get_toolchain_name_for_arch $1 $2)
     PREFIX=$(get_default_toolchain_prefix_for_arch $1)

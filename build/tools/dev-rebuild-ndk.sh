@@ -44,8 +44,6 @@ register_var_option "--quick" OPTION_QUICK_BUILD "Only build the Linux basics"
 OPTION_TOOLCHAINS="$DEFAULT_ARCH_TOOLCHAIN_NAME_arm,$DEFAULT_ARCH_TOOLCHAIN_NAME_x86,$DEFAULT_ARCH_TOOLCHAIN_NAME_mips"
 register_var_option "--toolchains=<toolchain[,toolchain]>" OPTION_TOOLCHAINS "Toolchain(s) to package"
 
-register_try64_option
-
 OPTION_TRY_64=
 register_try64_option
 
@@ -152,7 +150,7 @@ else
 fi
 
 
-ARCHS="arm x86 mips"
+ARCHS=$DEFAULT_ARCHS
 
 # Build the platform
 echo

@@ -185,9 +185,9 @@ case $DEFAULT_LD in
     gold|bfd)
       ;;
     "")
-      # For now, we always use the default BFD linker.
-      # We should be able to switch to Gold later when all bugs are fixed.
-      DEFAULT_LD=bfd
+      # We always use the default gold linker.
+      # bfd is used for some of the older toolchains or archs not supported by gold.
+      DEFAULT_LD=gold
       ;;
     *)
       panic "Invalid --default-ld name '$DEFAULT_LD', valid values are: bfd gold"
@@ -993,75 +993,15 @@ setup_build_for_toolchain ()
     # These will go into CFLAGS_FOR_TARGET and others during the build
     # of GCC target libraries.
     if [ -z "$NO_STRIP" ]; then
-        TARGET_CFLAGS="-O2 -Os -fomit-frame-pointer -s"
+        TARGET_CFLAGS="-O2 -s"
     else
-        TARGET_CFLAGS="-O2 -Os -g"
+        TARGET_CFLAGS="-Os -g"
     fi
 
     TARGET_CXXFLAGS=$TARGET_CFLAGS
     TARGET_LDFLAGS=""
 
     case $TARGET_ARCH in
-        x86)
-        TARGET_CFLAGS=$TARGET_CFLAGS" \
-        -DANDROID -D__ANDROID__ -Ulinux \
-        -fPIC -Wa,--noexecstack -m32 -fstack-protector \
-        -W -Wall -Werror=address -Werror=format-security -Werror=non-virtual-dtor -Werror=return-type \
-        -Werror=sequence-point -Winit-self -Wno-multichar -Wno-unused -Wpointer-arith -Wstrict-aliasing=2 \
-        -fexceptions -ffunction-sections -finline-functions \
-        -finline-limit=300 -fmessage-length=0 -fno-inline-functions-called-once \
-        -fno-strict-aliasing -frtti \
-        -fstrict-aliasing -funswitch-loops -funwind-tables \
-        -march=i686 -mtune=atom -mbionic -mfpmath=sse -mstackrealign -DUSE_SSE2"
-
-        TARGET_LDFLAGS=$TARGET_LDFLAGS" \
-        -m32 -O2 -g -fPIC \
-        -nostartfiles \
-        -Wl,-z,noexecstack -Wl,--gc-sections -nostdlib \
-        -fexceptions -frtti -fstrict-aliasing -ffunction-sections -finline-functions  \
-        -finline-limit=300 -fno-inline-functions-called-once \
-        -funswitch-loops -funwind-tables -mstackrealign \
-        -ffunction-sections -funwind-tables -fmessage-length=0 \
-        -march=i686 -mstackrealign -mfpmath=sse -mbionic \
-        -Wno-multichar -Wl,-z,noexecstack -Werror=format-security -Wstrict-aliasing=2 \
-        -W -Wall -Wno-unused -Winit-self -Wpointer-arith -Werror=return-type -Werror=non-virtual-dtor \
-        -Werror=address -Werror=sequence-point \
-        -Werror=format-security -Wl,--no-undefined"
-
-        # The following was removed from the assignment above because we can't build these object files
-        # unless we already have a working binutils / assembler for them. I believe these are now handled
-        # by the right gcc config files now. Also TARGET_SYSROOT isn't defined yet.
-        #
-        #-nostartfiles $TARGET_SYSROOT/usr/lib/crtbegin_dynamic.o $TARGET_SYSROOT/usr/lib/crtend_android.o"
-        ;;
-
-        x86_64)
-        TARGET_CFLAGS=$TARGET_CFLAGS" \
-        -DANDROID -D__ANDROID__ -Ulinux \
-        -fPIC -Wa,--noexecstack -fstack-protector \
-        -W -Wall -Werror=address -Werror=format-security -Werror=non-virtual-dtor -Werror=return-type \
-        -Werror=sequence-point -Winit-self -Wno-multichar -Wno-unused -Wpointer-arith -Wstrict-aliasing=2 \
-        -fexceptions -ffunction-sections -finline-functions \
-        -finline-limit=300 -fmessage-length=0 -fno-inline-functions-called-once \
-        -fno-strict-aliasing -frtti \
-        -fstrict-aliasing -funswitch-loops -funwind-tables \
-        -march=x86-64 -mtune=atom -mbionic -mfpmath=sse -mstackrealign -DUSE_SSE2"
-
-        TARGET_LDFLAGS=$TARGET_LDFLAGS" \
-        -O2 -g -fPIC \
-        -nostartfiles \
-        -Wl,-z,noexecstack -Wl,--gc-sections -nostdlib \
-        -fexceptions -frtti -fstrict-aliasing -ffunction-sections -finline-functions  \
-        -finline-limit=300 -fno-inline-functions-called-once \
-        -funswitch-loops -funwind-tables -mstackrealign \
-        -ffunction-sections -funwind-tables -fmessage-length=0 \
-        -march=x86-64 -mstackrealign -mfpmath=sse -mbionic \
-        -Wno-multichar -Wl,-z,noexecstack -Werror=format-security -Wstrict-aliasing=2 \
-        -W -Wall -Wno-unused -Winit-self -Wpointer-arith -Werror=return-type -Werror=non-virtual-dtor \
-        -Werror=address -Werror=sequence-point \
-        -Werror=format-security -Wl,--no-undefined"
-        ;;
-
         mips)
         # Enable C++ exceptions, RTTI and GNU libstdc++ at the same time
         # You can't really build these separately at the moment.
@@ -1301,6 +1241,15 @@ build_host_binutils ()
         BUILD_GOLD=
     fi
 
+    # Another special case, for arch-x86_64 gold supports x32 starting from 2.23
+    #
+    if [ "$TARGET" = "x86_64-linux-android" ]; then
+       if ! version_is_greater_than $BINUTILS_VERSION 2.23; then
+        USE_LD_DEFAULT=true
+        BUILD_GOLD=
+       fi
+    fi
+
     # Another special case. Not or 2.19, it wasn't ready
     if [ "$BINUTILS_VERSION" = "2.19" ]; then
         BUILD_GOLD=
@@ -1449,6 +1398,8 @@ build_host_gcc_core ()
     ARGS=$ARGS" --disable-nls"
     ARGS=$ARGS" --disable-werror"
     ARGS=$ARGS" --enable-target-optspace"
+    # TODO: Build fails for libsanitizer which appears in 4.8. Disable for now.
+    ARGS=$ARGS" --disable-libsanitizer"
 
     case "$GCC_VERSION" in
      4.4.3)
@@ -1457,7 +1408,9 @@ build_host_gcc_core ()
      *)
        case $TARGET_ARCH in
 	     arm) ARGS=$ARGS" --enable-libgomp";;
-	     x86|x86_64) ARGS=$ARGS" --disable-libgomp";;
+	     x86) ARGS=$ARGS" --enable-libgomp";;
+             # TODO: Disable these libraries until we have platforms for x86_64
+	     x86_64) ARGS=$ARGS" --disable-libgomp --disable-libatomic";;
 	     mips|mipsel) ARGS=$ARGS" --disable-libgomp";;
 	 esac
 	 ;;
