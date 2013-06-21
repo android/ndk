@@ -298,6 +298,11 @@ if [ "$TOOLCHAIN" = "llvm-$DEFAULT_LLVM_VERSION" -a "$DARWIN" != "yes" ] ; then
     run copy_directory "$SRC_DIR/mclinker" "$MCLINKER_SRC_DIR"
     fail_panic "Couldn't copy mclinker source: $MCLINKER_SRC_DIR"
 
+    if [ "$HOST_TAG32" = "darwin-x86" -o "$DARWIN" = "yes" ]; then
+        CXXFLAGS="$CXXFLAGS -fexceptions"  # optimized/ScriptParser.cc needs it
+        export CXXFLAGS
+    fi
+
     cd $MCLINKER_SRC_DIR && run ./autogen.sh
     fail_panic "Couldn't run autogen.sh in $MCLINKER_SRC_DIR"
 
