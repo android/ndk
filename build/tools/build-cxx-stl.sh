@@ -278,6 +278,10 @@ else
 fi
 SHARED_CXXFLAGS=
 
+if [ -n "$(filter_out "$DEFAULT_ARCHS" "$ABIS")" ] && [ -n $(find_ndk_unknown_archs) ]; then
+  ABIS=$(find_ndk_unknown_archs)
+fi
+
 # build_stl_libs_for_abi
 # $1: ABI
 # $2: build directory
@@ -310,15 +314,18 @@ build_stl_libs_for_abi ()
     builder_set_dstdir "$DSTDIR"
 
     # Always rebuild GAbi++, except for unknown archs.
-    if [ "$CXX_STL" = "gabi++" -o "$(arch_in_unknown_archs $ABI)" != "yes" ]; then
-      builder_set_srcdir "$GABIXX_SRCDIR"
-      builder_reset_cflags DEFAULT_CFLAGS
-      builder_cflags "$DEFAULT_CFLAGS $GABIXX_CFLAGS"
+    builder_set_srcdir "$GABIXX_SRCDIR"
+    builder_reset_cflags DEFAULT_CFLAGS
+    builder_cflags "$DEFAULT_CFLAGS $GABIXX_CFLAGS"
 
-      builder_reset_cxxflags DEFAULT_CXXFLAGS
-      builder_cxxflags "$DEFAULT_CXXFLAGS $GABIXX_CXXFLAGS $EXTRA_CXXFLAGS"
-      builder_ldflags "$GABIXX_LDFLAGS"
+    builder_reset_cxxflags DEFAULT_CXXFLAGS
+    builder_cxxflags "$DEFAULT_CXXFLAGS $GABIXX_CXXFLAGS $EXTRA_CXXFLAGS"
+    builder_ldflags "$GABIXX_LDFLAGS"
+    if [ "$(find_ndk_unknown_archs)" != "$ABI" ]; then
       builder_sources $GABIXX_SOURCES
+    elif [ "$CXX_STL" = "gabi++" ]; then
+      log "Could not build gabi++ with unknown arch!"
+      exit 1
     fi
 
     # Build the runtime sources, except if we're only building GAbi++
@@ -337,7 +344,12 @@ build_stl_libs_for_abi ()
         builder_static_library lib${CXX_STL}_static
     else
         log "Building $DSTDIR/lib${CXX_STL}_shared.so"
-        builder_shared_library lib${CXX_STL}_shared
+        if [ "$(find_ndk_unknown_archs)" != "$ABI" ]; then
+            builder_shared_library lib${CXX_STL}_shared
+        else
+            builder_ldflags "-lc -lm"
+            builder_nostdlib_shared_library lib${CXX_STL}_shared  # Don't use libgcc
+        fi
     fi
 
     builder_end
