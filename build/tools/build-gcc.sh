@@ -451,7 +451,8 @@ run rm -f $TOOLCHAIN_PATH/bin/*-gccbug
 run rm -f $TOOLCHAIN_PATH/bin/*gdbtui$HOST_EXE
 run rm -rf $TOOLCHAIN_PATH/info
 run rm -rf $TOOLCHAIN_PATH/man
-run rm -rf $TOOLCHAIN_PATH/share
+run rm -rf $TOOLCHAIN_PATH/share/info
+run rm -rf $TOOLCHAIN_PATH/share/man
 run rm -rf $TOOLCHAIN_PATH/lib/gcc/$ABI_CONFIGURE_TARGET/*/install-tools
 run rm -rf $TOOLCHAIN_PATH/lib/gcc/$ABI_CONFIGURE_TARGET/*/plugin
 run rm -rf $TOOLCHAIN_PATH/libexec/gcc/$ABI_CONFIGURE_TARGET/*/install-tools
