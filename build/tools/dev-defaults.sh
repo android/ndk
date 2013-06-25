@@ -70,6 +70,9 @@ DEFAULT_ARCH_TOOLCHAIN_PREFIX_arm=arm-linux-androideabi
 DEFAULT_ARCH_TOOLCHAIN_NAME_x86=x86
 DEFAULT_ARCH_TOOLCHAIN_PREFIX_x86=i686-linux-android
 
+DEFAULT_ARCH_TOOLCHAIN_NAME_x86_64=x86_64
+DEFAULT_ARCH_TOOLCHAIN_PREFIX_x86_64=x86_64-linux-android
+
 DEFAULT_ARCH_TOOLCHAIN_NAME_mips=mipsel-linux-android
 DEFAULT_ARCH_TOOLCHAIN_PREFIX_mips=mipsel-linux-android
 
@@ -98,14 +101,11 @@ get_default_abi_for_arch ()
         arm)
             RET="armeabi"
             ;;
-        x86)
-            RET="x86"
-            ;;
-        mips)
-            RET="mips"
+        x86|x86_64|mips)
+            RET="$1"
             ;;
         *)
-            2> echo "ERROR: Unsupported architecture name: $1, use one of: arm x86 mips"
+            2> echo "ERROR: Unsupported architecture name: $1, use one of: arm x86 x86_64 mips"
             exit 1
             ;;
     esac
@@ -123,14 +123,11 @@ get_default_abis_for_arch ()
         arm)
             RET="armeabi armeabi-v7a"
             ;;
-        x86)
-            RET="x86"
-            ;;
-        mips)
-            RET="mips"
+        x86|x86_64|mips)
+            RET="$1"
             ;;
         *)
-            2> echo "ERROR: Unsupported architecture name: $1, use one of: arm x86 mips"
+            2> echo "ERROR: Unsupported architecture name: $1, use one of: arm x86 x86_64 mips"
             exit 1
             ;;
     esac
