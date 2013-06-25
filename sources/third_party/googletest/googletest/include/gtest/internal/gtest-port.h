@@ -611,9 +611,8 @@ using ::std::tuple_size;
 
 # if GTEST_OS_LINUX && !defined(__ia64__)
 #  if GTEST_OS_LINUX_ANDROID
-// On Android, clone() is only available starting with Gingerbread, except
-// on x86, for some reason.
-#    if !defined(__i386__) && !defined(__le32__) && __ANDROID_API__ >= 9
+// On Android, clone() is only available starting with Gingerbread.
+#    if __ANDROID_API__ >= 9
 #     define GTEST_HAS_CLONE 1
 #    else
 #     define GTEST_HAS_CLONE 0
