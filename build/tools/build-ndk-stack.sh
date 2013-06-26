@@ -44,6 +44,9 @@ register_var_option "--debug" DEBUG "Build debug version"
 PROGNAME=ndk-stack
 register_var_option "--program-name=<name>" PROGNAME "Alternate NDK tool program name"
 
+STATIC=
+register_var_option "--static" STATIC "Build static executable"
+
 PACKAGE_DIR=
 register_var_option "--package-dir=<path>" PACKAGE_DIR "Archive binary into specific directory"
 
@@ -88,11 +91,12 @@ export CFLAGS=$HOST_CFLAGS" -O2 -s"
 export LDFLAGS=$HOST_LDFLAGS
 run $GNUMAKE -C $SRCDIR -f $SRCDIR/GNUmakefile \
     -B -j$NUM_JOBS \
-    PROGNAME="$OUT" \
+    EXECUTABLE="$OUT" \
     BUILD_DIR="$BUILD_DIR" \
     CC="$CXX" CXX="$CXX" \
     STRIP="$STRIP" \
-    DEBUG=$DEBUG
+    DEBUG=$DEBUG \
+    STATIC=$STATIC
 
 if [ $? != 0 ]; then
     echo "ERROR: Could not build host program!"

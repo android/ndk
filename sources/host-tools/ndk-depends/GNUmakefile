@@ -13,60 +13,10 @@
 # limitations under the License.
 #
 
-# The following variables can be over-ridden by the caller
-CC        := gcc
-CXX       := g++
-STRIP     := strip
-BUILD_DIR := /tmp/ndk-$(USER)/build/build-ndk-depends
-PROGNAME  := /tmp/ndk-$(USER)/ndk-depends
+PROGNAME = ndk-depends
 
-EXECUTABLE := $(PROGNAME)
+INCLUDES :=
+CFLAGS   := -Werror -Wall -fno-exceptions -fno-rtti
+SOURCES  := ndk-depends.cc
 
-all: $(EXECUTABLE)
-
-# The rest should be left alone
-EXTRA_CFLAGS := -Wall -Werror -fno-exceptions -fno-rtti
-EXTRA_LDFLAGS := -lstdc++
-
-ifneq (,$(strip $(DEBUG)))
-  CFLAGS += -O0 -g
-  hide = @
-  strip-cmd =
-else
-  CFLAGS += -O2 -s
-  hide =
-  strip-cmd = $(STRIP) $1
-endif
-
-SOURCES := ndk-depends.cc
-
-OBJECTS=
-
-define build-c-object
-OBJECTS += $1
-$1: $2
-	mkdir -p $$(dir $1)
-	$$(CC) $$(CFLAGS) $$(EXTRA_CFLAGS) -c -o $1 $2
-endef
-
-define build-cxx-object
-OBJECTS += $1
-$1: $2
-	mkdir -p $$(dir $1)
-	$$(CXX) $$(CFLAGS) $$(EXTRA_CFLAGS) -c -o $1 $2
-endef
-
-$(foreach src,$(filter %.c,$(SOURCES)),\
-    $(eval $(call build-c-object,$(BUILD_DIR)/$(src:%.c=%.o),$(src)))\
-)
-
-$(foreach src,$(filter %.cc,$(SOURCES)),\
-    $(eval $(call build-cxx-object,$(BUILD_DIR)/$(src:%.cc=%.o),$(src)))\
-)
-
-clean:
-	rm -f $(EXECUTABLE)
-
-$(EXECUTABLE): $(OBJECTS)
-	$(CXX) $(LDFLAGS) $(OBJECTS) -o $@ $(EXTRA_LDFLAGS)
-	$(call strip-cmd,$@)
+include ../ndk-common/build-host-executable.mk
