@@ -130,12 +130,12 @@ gdb_ndk_package_name ()
 # directory. Relative to $NDK_DIR.
 gdb_ndk_install_dir ()
 {
-    echo "gdb-$(get_toolchain_name_for_arch $(bh_tag_to_arch $2))-$3/prebuilt/$1"
+    echo "gdb-$(get_toolchain_name_for_arch $(bh_tag_to_arch $2))-$3/prebuilt/$(install_dir_from_host_tag $1)"
 }
 
 python_build_install_dir ()
 {
-    echo "$PYTHON_BUILD_DIR/install/prebuilt/$1"
+    echo "$PYTHON_BUILD_DIR/install/prebuilt/$(install_dir_from_host_tag $1)"
 }
 
 # $1: host system tag
@@ -245,9 +245,11 @@ install_host_gdb ()
     case "$1" in
         windows*)
             dump "$TEXT Building gdb-stub"
-            run $BUILDTOOLS/build-gdb-stub.sh --gdb-executable-path=${DSTDIR}/$(bh_tag_to_config_triplet $2)-gdb.exe \
-                                              --python-prefix-dir=${PYDIR} \
-                                              --mingw-w64-gcc-path=${BH_HOST_CONFIG}-gcc
+            bh_setup_host_env
+            run $NDK_BUILDTOOLS_PATH/build-gdb-stub.sh \
+                --gdb-executable-path=${DSTDIR}/bin/$(bh_tag_to_config_triplet $2)-gdb.exe \
+                --python-prefix-dir=${PYDIR} \
+                --mingw-w64-gcc=${BH_HOST_CONFIG}-gcc
             ;;
         *)
             ;;
