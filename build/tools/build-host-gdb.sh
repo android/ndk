@@ -245,9 +245,9 @@ install_host_gdb ()
     case "$1" in
         windows*)
             dump "$TEXT Building gdb-stub"
-            run $BUILDTOOLS/build-gdb-stub.sh --gdb-executable-path=${DSTDIR}/$(bh_tag_to_config_triplet $2)-gdb.exe \
-                                              --python-prefix-dir=${PYDIR} \
-                                              --mingw-w64-gcc-path=${BH_HOST_CONFIG}-gcc
+            run $NDK_BUILDTOOLS_PATH/build-gdb-stub.sh --gdb-executable-path=${DSTDIR}/$(bh_tag_to_config_triplet $2)-gdb.exe \
+                                                       --python-prefix-dir=${PYDIR} \
+                                                       --mingw-w64-gcc-path=${BH_HOST_CONFIG}-gcc
             ;;
         *)
             ;;
