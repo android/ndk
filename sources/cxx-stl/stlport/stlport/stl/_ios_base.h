@@ -261,6 +261,14 @@ public:
 # endif
 };
 
+// WORKAROUND: Since some legacy code depends global obect like cin/cout before
+// main, this may cause init order problem if we use STLport as static library.
+//
+// Follow src/locale_impl.cpp:593, we use a unused pointer to make sure those
+// static objects are safely used.
+extern locale* _Stl_get_global_locale();  // Borrow from src/locale_impl.cpp
+static locale* phony_for_init = _Stl_get_global_locale();
+
 // ----------------------------------------------------------------------
 // ios_base manipulator functions, from section 27.4.5 of the C++ standard.
 // All of them are trivial one-line wrapper functions.
