@@ -175,6 +175,16 @@ filter_library_symbols ()
         libOpenSLES.so)
             set_symbol_excludes '^_' '^MPH_' # remove MPH_to_xxx definitions
             ;;
+        libGLESv*.so)
+            # Exclude non-OES extension entry points
+            set_symbol_excludes 'EXT$'
+            set_symbol_excludes 'AMD$'
+            set_symbol_excludes 'ANGLE$'
+            set_symbol_excludes 'APPLE$'
+            set_symbol_excludes 'IMG$'
+            set_symbol_excludes 'NV$'
+            set_symbol_excludes 'QCOM$'
+            ;;
     esac
     filter_symbols "$SYMBOL_TMPFILE"
 }
