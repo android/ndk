@@ -328,6 +328,8 @@ build_stl_libs_for_abi ()
     elif [ "$CXX_STL" = "gabi++" ]; then
       log "Could not build gabi++ with unknown arch!"
       exit 1
+    else
+      builder_sources src/delete.cc src/new.cc
     fi
 
     # Build the runtime sources, except if we're only building GAbi++
