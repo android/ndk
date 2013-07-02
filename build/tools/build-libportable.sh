@@ -89,10 +89,11 @@ fail_panic "Could not create build directory: $BUILD_DIR"
 
 # Location of the libportable source tree base
 LIBPORTABLE_SRCDIR_BASE=$ANDROID_NDK_ROOT/../development/ndk/$LIBPORTABLE_SUBDIR
+CPUFEATURE_SRCDIR=$ANDROID_NDK_ROOT/sources/android/cpufeatures
 
 # Compiler flags we want to use
 LIBPORTABLE_CFLAGS="-fPIC -O2 -DANDROID -D__ANDROID__ -ffunction-sections"
-LIBPORTABLE_CFLAGS=$LIBPORTABLE_CFLAGS" -I$LIBPORTABLE_SRCDIR_BASE/common/include -D__HOST__"
+LIBPORTABLE_CFLAGS=$LIBPORTABLE_CFLAGS" -I$LIBPORTABLE_SRCDIR_BASE/common/include -I$CPUFEATURE_SRCDIR -D__HOST__"
 LIBPORTABLE_CXXFLAGS="-fno-exceptions -fno-rtti"
 LIBPORTABLE_LDFLAGS=""
 
@@ -141,6 +142,9 @@ build_libportable_libs_for_abi ()
     builder_ldflags "$LIBPORTABLE_LDFLAGS"
     builder_sources $LIBPORTABLE_SOURCES
 
+    builder_set_srcdir "$CPUFEATURE_SRCDIR"
+    builder_sources $CPUFEATURE_SOURCES
+
     log "Building $DSTDIR/libportable.a"
     builder_static_library libportable
 
@@ -160,6 +164,7 @@ for ABI in $ABIS; do
     ARCH=$(convert_abi_to_arch $ABI)
     LIBPORTABLE_SRCDIR=$LIBPORTABLE_SRCDIR_BASE/arch-$ARCH
     LIBPORTABLE_SOURCES=$(cd $LIBPORTABLE_SRCDIR && ls *.[cS])
+    CPUFEATURE_SOURCES=$(cd $CPUFEATURE_SRCDIR && ls *.[cS])
     build_libportable_libs_for_abi $ABI "$BUILD_DIR/$ABI" "$OUT_DIR"
 done
 

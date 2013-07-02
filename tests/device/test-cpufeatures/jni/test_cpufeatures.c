@@ -31,11 +31,7 @@ int main(void)
         break;
     default:
         fprintf(stderr, "Unsupported CPU family: %d\n", family);
-#ifdef __le32__
-        return 0; // Should not assume which target on le32 triple
-#else
         return 1;
-#endif
     }
 
     if (family == ANDROID_CPU_FAMILY_ARM) {
