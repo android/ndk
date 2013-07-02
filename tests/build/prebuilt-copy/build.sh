@@ -32,6 +32,10 @@ if [ -z "$ABIS" ]; then
   ABIS="armeabi armeabi-v7a x86 mips"
 fi
 
+# Step 0: Remove obj/ and libs/ to ensure everything is clean
+rm -rf obj/ libs/
+rm -rf $PREBUILTS_DIR/obj/ $PREBUILTS_DIR/libs/
+
 # Step 1: Build prebuilt libraries.
 $NDK/ndk-build -C "$PREBUILTS_DIR"
 if [ $? != 0 ]; then
@@ -52,10 +56,9 @@ fi
 
 FAILURES=0
 for ABI in $ABIS; do
-  SHARED_LIB=$OUT/$ABI/libfoo.so
-  STATIC_LIB=$OUT/$ABI/libbar.a
   printf "Checking for $ABI shared library: "
-  if [ ! -f "$SHARED_LIB" ]; then
+  SHARED_LIB=$(ls $OUT/*$ABI/libfoo.so 2>/dev/null)
+  if [ $? != 0 ]; then
     printf "KO! missing file: $SHARED_LIB\n"
     FAILURES=$(( $FAILURES + 1 ))
   else
@@ -63,7 +66,8 @@ for ABI in $ABIS; do
   fi
 
   printf "Checking for $ABI static library: "
-  if [ -f "$STATIC_LIB" ]; then
+  STATIC_LIB=$(ls $OUT/*$ABI/libbar.a 2>/dev/null)
+  if [ $? = 0 ]; then
     printf "KO! file should not exist: $STATIC_LIB\n"
     FAILURES=$(( $FAILURES + 1 ))
   else
