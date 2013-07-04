@@ -184,6 +184,19 @@ include $(NDK_APP_BUILD_SCRIPT)
 
 $(call ndk-stl-add-dependencies,$(NDK_APP_STL))
 
+# Add libgabi++_shared.so dependency for unknown arch
+ifneq ($(strip $(filter-out $(NDK_KNOWN_ARCHS),$(TARGET_ARCH))),)
+
+# Prevent import gabi++ twice
+ifeq ($(call set_is_member,$(__ndk_modules),gabi++_shared),$(false))
+$(call import-module,cxx-stl/gabi++)
+endif
+
+$(foreach __module,$(__ndk_modules),\
+    $(if $(call module-is-installable,$(__module)),\
+    $(eval __ndk_modules.$(__module).SHARED_LIBRARIES += gabi++_shared)))
+endif
+
 # recompute all dependencies between modules
 $(call modules-compute-dependencies)
 
