@@ -20,7 +20,7 @@
 #
 # GOOGLE_PREBUILT=<some folder>
 # git clone https://android.googlesource.com/platform/prebuilt $GOOGLE_PREBUILT
-# export PATH=$GOOGLE_PREBUILT/linux-x86/toolchain/i686-linux-glibc2.7-4.4.3/bin:$PATH
+# export PATH=$GOOGLE_PREBUILT/linux-x86/toolchain/i686-linux-glibc2.7-4.6/bin:$PATH
 # build-mingw64-toolchain.sh --target-arch=i686                       \
 #                            --package-dir=i686-w64-mingw32-toolchain \
 #                            --binprefix=i686-linux

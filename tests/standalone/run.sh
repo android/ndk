@@ -102,7 +102,7 @@ if [ "$HELP" ]; then
     echo "option, or by defining PREFIX in your environment before calling this script."
     echo "For example:"
     echo ""
-    echo "  $PROGNAME --prefix=\$NDK/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin/arm-linux-androideabi"
+    echo "  $PROGNAME --prefix=\$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi"
     echo ""
     echo "The prefix can also be the full-path to the \$TARGET-gcc or \$TARGET-g++ program "
     echo ""

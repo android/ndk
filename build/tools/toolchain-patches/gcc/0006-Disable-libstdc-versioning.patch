@@ -8,35 +8,10 @@ instead of libstdc++.so.3 (or some similar number-versioned name).
 
 Change-Id: I63fb5be818115c6d0c7e96b937ba39f225b475cf
 ---
- gcc-4.4.3/libstdc++-v3/src/Makefile.am |    2 +-
- gcc-4.4.3/libstdc++-v3/src/Makefile.in |    7 +++++--
  gcc-4.6/libstdc++-v3/src/Makefile.am   |    2 +-
  gcc-4.6/libstdc++-v3/src/Makefile.in   |    7 +++++--
  4 files changed, 12 insertions(+), 6 deletions(-)
 
-diff --git a/gcc-4.4.3/libstdc++-v3/src/Makefile.in b/gcc-4.4.3/libstdc++-v3/src/Makefile.in
-index 74bbdd4..f08bf34 100644
---- a/gcc-4.4.3/libstdc++-v3/src/Makefile.in
-+++ b/gcc-4.4.3/libstdc++-v3/src/Makefile.in
-@@ -350,7 +350,7 @@ WARN_CXXFLAGS = \
- AM_CPPFLAGS = $(GLIBCXX_INCLUDES)
- 
- # Cross compiler support.
--toolexeclib_LTLIBRARIES = libstdc++.la
-+toolexeclib_LTLIBRARIES = libgnustl_shared.la
- @ENABLE_SYMVERS_DARWIN_TRUE@@ENABLE_SYMVERS_TRUE@version_arg = -Wl,-exported_symbols_list,libstdc++-symbols.explist
- @ENABLE_SYMVERS_FALSE@version_arg = 
- @ENABLE_SYMVERS_GNU_NAMESPACE_TRUE@@ENABLE_SYMVERS_TRUE@version_arg = -Wl,--version-script=libstdc++-symbols.ver
-@@ -576,6 +576,9 @@ clean-toolexeclibLTLIBRARIES:
- libstdc++.la: $(libstdc___la_OBJECTS) $(libstdc___la_DEPENDENCIES) 
- 	$(CXXLINK) -rpath $(toolexeclibdir) $(libstdc___la_LDFLAGS) $(libstdc___la_OBJECTS) $(libstdc___la_LIBADD) $(LIBS)
- 
-+libgnustl_shared.la: $(libstdc___la_OBJECTS) $(libstdc___la_DEPENDENCIES)
-+	$(CXXLINK) -rpath $(toolexeclibdir) $(libstdc___la_LDFLAGS) $(libstdc___la_OBJECTS) $(libstdc___la_LIBADD) $(LIBS)
-+
- mostlyclean-compile:
- 	-rm -f *.$(OBJEXT)
- 
 diff --git a/gcc-4.6/libstdc++-v3/src/Makefile.in b/gcc-4.6/libstdc++-v3/src/Makefile.in
 index 146ec3f..99f0f56 100644
 --- a/gcc-4.6/libstdc++-v3/src/Makefile.in

@@ -246,8 +246,8 @@ APP_SHORT_COMMANDS
 
 - - - -
 NDK_TOOLCHAIN_VERSION
->    Define this variable to either 4.4.3 or 4.6 to select version of GCC compiler.
->    4.6 is the default
+>    Define this variable to either 4.6, 4.7 or 4.8 to select version of
+>    the GCC compiler. 4.6 is the default
 
 - - - -
 APP_PIE
