@@ -28,7 +28,7 @@ PROGRAM_DESCRIPTION=\
 
 Where <src-dir> is the location of toolchain sources, <ndk-dir> is
 the top-level NDK installation path and <toolchain> is the name of
-the toolchain to use (e.g. arm-linux-androideabi-4.4.3)."
+the toolchain to use (e.g. arm-linux-androideabi-4.6)."
 
 RELEASE=`date +%Y%m%d`
 BUILD_OUT=/tmp/ndk-$USER/build/toolchain
@@ -140,7 +140,7 @@ set_parameters ()
 
 set_parameters $PARAMETERS
 
-# Disable x86_64 build for toolchains older 4.7
+# Disable x86_64 build for toolchains older than 4.7
 # x86_64-* targets are available on 64-bit host only
 case "$TOOLCHAIN" in
   x86_64-4.4.3|x86_64-4.6)

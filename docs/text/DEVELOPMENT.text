@@ -174,7 +174,7 @@ and place them in a directory named:
 These binary packages include the following:
 
   - host-specific toolchain binaries. e.g.
-    `arm-linux-androideabi-4.4.3-linux-x86.tar.bz2`.
+    `arm-linux-androideabi-4.6-linux-x86.tar.bz2`.
 
   - toolchain specific device binaries, e.g.
     `arm-gdbserver.tar.bz2`.
