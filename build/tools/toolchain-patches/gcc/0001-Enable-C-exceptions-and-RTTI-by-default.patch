@@ -6,25 +6,9 @@ Subject: Enable C++ exceptions and RTTI by default.
 With this change, -fexceptions and -frtti become default options
 when compiling C++ sources.
 ---
- gcc-4.4.3/gcc/config/linux-android.h |    4 ++--
  gcc-4.6/gcc/config/linux-android.h   |    4 ++--
  2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/gcc-4.4.3/gcc/config/linux-android.h b/gcc-4.4.3/gcc/config/linux-android.h
-index 5ca3858..d938c22 100644
---- a/gcc-4.4.3/gcc/config/linux-android.h
-+++ b/gcc-4.4.3/gcc/config/linux-android.h
-@@ -46,8 +46,8 @@
-   "%{!fno-pic:%{!fno-PIC:%{!fpic:%{!fPIC: " ANDROID_PIC_DEFAULT "}}}}"
- 
- #define ANDROID_CC1PLUS_SPEC						\
--  "%{!fexceptions:%{!fno-exceptions: -fno-exceptions}} "		\
--  "%{!frtti:%{!fno-rtti: -fno-rtti}}"
-+  "%{!fexceptions:%{!fno-exceptions: -fexceptions}} "		\
-+  "%{!frtti:%{!fno-rtti: -frtti}}"
- 
- #define ANDROID_ASM_SPEC \
-   "--noexecstack"
 diff --git a/gcc-4.6/gcc/config/linux-android.h b/gcc-4.6/gcc/config/linux-android.h
 index 94c5274..7256082 100644
 --- a/gcc-4.6/gcc/config/linux-android.h
