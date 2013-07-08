@@ -66,7 +66,8 @@ include $(dir $(LOCAL_PATH))/gabi++/sources.mk
 
 libstlport_c_includes += $(libgabi++_c_includes)
 ifneq ($(strip $(filter-out $(NDK_KNOWN_ARCHS),$(TARGET_ARCH))),)
-libgabi++_src_files :=
+libgabi++_src_files := src/delete.cc \
+                       src/new.cc
 endif
 
 ifneq ($(STLPORT_FORCE_REBUILD),true)
@@ -113,10 +114,6 @@ LOCAL_CPPFLAGS := $(libstlport_cppflags)
 LOCAL_C_INCLUDES := $(libstlport_c_includes)
 LOCAL_EXPORT_C_INCLUDES := $(libstlport_c_includes)
 LOCAL_CPP_FEATURES := rtti exceptions
-ifneq ($(strip $(filter-out $(NDK_KNOWN_ARCHS),$(TARGET_ARCH))),)
-include $(BUILD_STATIC_LIBRARY)  # for correctness
-else
 include $(BUILD_SHARED_LIBRARY)
-endif
 
 endif # STLPORT_FORCE_REBUILD == true
