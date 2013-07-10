@@ -279,6 +279,11 @@ builder_sources ()
                 ;;
         esac
 
+        # Source file path can include ../ path items, ensure
+        # that the generated object do not back up the output
+        # directory by translating them to __/
+        obj=$(echo "$obj" | tr '../' '__/')
+
         # Ensure we have unwind tables in the generated machine code
         # This is useful to get good stack traces
         cflags=$cflags" -funwind-tables"

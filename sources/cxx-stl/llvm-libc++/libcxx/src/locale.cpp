@@ -788,6 +788,8 @@ ctype<wchar_t>::do_toupper(char_type c) const
     return isascii(c) ? _DefaultRuneLocale.__mapupper[c] : c;
 #elif defined(__GLIBC__) || defined(EMSCRIPTEN)
     return isascii(c) ? ctype<char>::__classic_upper_table()[c] : c;
+#elif defined(__ANDROID__)
+    return isascii(c) ? _toupper_tab_[c + 1] : c;
 #else
     return (isascii(c) && iswlower_l(c, __cloc())) ? c-L'a'+L'A' : c;
 #endif
@@ -802,6 +804,8 @@ ctype<wchar_t>::do_toupper(char_type* low, const char_type* high) const
 #elif defined(__GLIBC__) || defined(EMSCRIPTEN)
         *low = isascii(*low) ? ctype<char>::__classic_upper_table()[*low]
                              : *low;
+#elif defined(__ANDROID__)
+        *low = isascii(*low) ? _toupper_tab_[*low + 1] : *low;
 #else
         *low = (isascii(*low) && islower_l(*low, __cloc())) ? (*low-L'a'+L'A') : *low;
 #endif
@@ -815,6 +819,8 @@ ctype<wchar_t>::do_tolower(char_type c) const
     return isascii(c) ? _DefaultRuneLocale.__maplower[c] : c;
 #elif defined(__GLIBC__) || defined(EMSCRIPTEN)
     return isascii(c) ? ctype<char>::__classic_lower_table()[c] : c;
+#elif defined(__ANDROID__)
+    return isascii(c) ? _tolower_tab_[c + 1] : c;
 #else
     return (isascii(c) && isupper_l(c, __cloc())) ? c-L'A'+'a' : c;
 #endif
@@ -829,6 +835,8 @@ ctype<wchar_t>::do_tolower(char_type* low, const char_type* high) const
 #elif defined(__GLIBC__) || defined(EMSCRIPTEN)
         *low = isascii(*low) ? ctype<char>::__classic_lower_table()[*low]
                              : *low;
+#elif defined(__ANDROID__)
+        *low = isascii(*low) ? _tolower_tab_[*low] : *low;
 #else
         *low = (isascii(*low) && isupper_l(*low, __cloc())) ? *low-L'A'+L'a' : *low;
 #endif
@@ -896,6 +904,8 @@ ctype<char>::do_toupper(char_type c) const
 #elif defined(__GLIBC__) || defined(EMSCRIPTEN)
     return isascii(c) ? 
       static_cast<char>(__classic_upper_table()[static_cast<size_t>(c)]) : c;
+#elif defined(__ANDROID__)
+    return isascii(c) ? _toupper_tab_[c + 1] : c;
 #else
     return (isascii(c) && islower_l(c, __cloc())) ? c-'a'+'A' : c;
 #endif
@@ -911,6 +921,8 @@ ctype<char>::do_toupper(char_type* low, const char_type* high) const
 #elif defined(__GLIBC__) || defined(EMSCRIPTEN)
         *low = isascii(*low) ?
           static_cast<char>(__classic_upper_table()[static_cast<size_t>(*low)]) : *low;
+#elif defined(__ANDROID__)
+        *low = isascii(*low) ? _toupper_tab_[*low + 1] : *low;
 #else
         *low = (isascii(*low) && islower_l(*low, __cloc())) ? *low-'a'+'A' : *low;
 #endif
@@ -926,6 +938,8 @@ ctype<char>::do_tolower(char_type c) const
 #elif defined(__GLIBC__) || defined(EMSCRIPTEN)
     return isascii(c) ?
       static_cast<char>(__classic_lower_table()[static_cast<size_t>(c)]) : c;
+#elif defined(__ANDROID__)
+    return isascii(c) ? _tolower_tab_[c + 1] : c;
 #else
     return (isascii(c) && isupper_l(c, __cloc())) ? c-'A'+'a' : c;
 #endif
@@ -939,6 +953,8 @@ ctype<char>::do_tolower(char_type* low, const char_type* high) const
         *low = isascii(*low) ? static_cast<char>(_DefaultRuneLocale.__maplower[static_cast<ptrdiff_t>(*low)]) : *low;
 #elif defined(__GLIBC__) || defined(EMSCRIPTEN)
         *low = isascii(*low) ? static_cast<char>(__classic_lower_table()[static_cast<size_t>(*low)]) : *low;
+#elif defined(__ANDROID__)
+        *low = isascii(*low) ? _tolower_tab_[*low + 1] : *low;
 #else
         *low = (isascii(*low) && isupper_l(*low, __cloc())) ? *low-'A'+'a' : *low;
 #endif
@@ -978,10 +994,15 @@ ctype<char>::do_narrow(const char_type* low, const char_type* high, char dfault,
     return low;
 }
 
-#ifdef EMSCRIPTEN
+#if defined(EMSCRIPTEN)
 extern "C" const unsigned short ** __ctype_b_loc();
 extern "C" const int ** __ctype_tolower_loc();
 extern "C" const int ** __ctype_toupper_loc();
+#endif
+
+#if defined(__ANDROID__)
+// See src/support/android/android_locale.cpp
+extern "C" const unsigned short* const _ctype_android;
 #endif
 
 const ctype<char>::mask*
@@ -991,11 +1012,6 @@ ctype<char>::classic_table()  _NOEXCEPT
     return _DefaultRuneLocale.__runetype;
 #elif defined(__GLIBC__)
     return __cloc()->__ctype_b;
-#elif defined(__ANDROID__)
-    // TODO(ajwong): Should the actual traits functions delegate to the
-    // bionic ctype variants? Or should we do something similar to how we
-    // handle glibc where we use the _tolower_tab_ and _toupper_tab_ directly?
-    return __ctype_c_mask_table;
 #elif __sun__
     return __ctype_mask;
 #elif defined(_WIN32)
@@ -1004,6 +1020,8 @@ ctype<char>::classic_table()  _NOEXCEPT
 // going to end up dereferencing it later...
 #elif defined(EMSCRIPTEN)
     return *__ctype_b_loc();
+#elif defined(__ANDROID__)
+    return _ctype_android;
 #else
     // Platform not supported: abort so the person doing the port knows what to
     // fix
