@@ -80,7 +80,7 @@ llvm_libc++_includes += $(libgabi++_c_includes)
 llvm_libc++_export_includes += $(libgabi++_c_includes)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE := llvm_libc++_static
+LOCAL_MODULE := libc++_static
 LOCAL_SRC_FILES := $(llvm_libc++_sources)
 LOCAL_C_INCLUDES := $(llvm_libc++_includes)
 LOCAL_CPPFLAGS := $(llvm_libc++_cxxflags)
@@ -91,7 +91,7 @@ LOCAL_STATIC_LIBRARIES := android_support
 include $(BUILD_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE := llvm_libc++_shared
+LOCAL_MODULE := libc++_shared
 LOCAL_SRC_FILES := $(llvm_libc++_sources)
 LOCAL_C_INCLUDES := $(llvm_libc++_includes)
 LOCAL_CPPFLAGS := $(llvm_libc++_cxxflags)

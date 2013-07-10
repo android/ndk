@@ -218,6 +218,7 @@ libcxx/src/thread.cpp \
 libcxx/src/typeinfo.cpp \
 libcxx/src/utility.cpp \
 libcxx/src/valarray.cpp \
+libcxx/src/support/android/locale_android.cpp \
 ../../android/support/src/locale_support.c \
 ../../android/support/src/stdlib_support.c \
 ../../android/support/src/wchar_support.c \
@@ -331,6 +332,7 @@ fi
 # Define a few common variables based on parameters.
 case $CXX_STL in
   gabi++)
+    CXX_STL_LIB=libgabi++
     CXX_STL_SUBDIR=$GABIXX_SUBDIR
     CXX_STL_SRCDIR=$GABIXX_SRCDIR
     CXX_STL_CFLAGS=$GABIXX_CFLAGS
@@ -340,6 +342,7 @@ case $CXX_STL in
     CXX_STL_PACKAGE=gabixx
     ;;
   stlport)
+    CXX_STL_LIB=libstlport
     CXX_STL_SUBDIR=$STLPORT_SUBDIR
     CXX_STL_SRCDIR=$STLPORT_SRCDIR
     CXX_STL_CFLAGS=$STLPORT_CFLAGS
@@ -349,6 +352,7 @@ case $CXX_STL in
     CXX_STL_PACKAGE=stlport
     ;;
   libc++)
+    CXX_STL_LIB=libc++
     CXX_STL_SUBDIR=$LIBCXX_SUBDIR
     CXX_STL_SRCDIR=$LIBCXX_SRCDIR
     CXX_STL_CFLAGS=$LIBCXX_CFLAGS
@@ -437,15 +441,15 @@ build_stl_libs_for_abi ()
     fi
 
     if [ "$TYPE" = "static" ]; then
-        log "Building $DSTDIR/lib${CXX_STL}_static.a"
-        builder_static_library lib${CXX_STL}_static
+        log "Building $DSTDIR/${CXX_STL_LIB}_static.a"
+        builder_static_library ${CXX_STL_LIB}_static
     else
-        log "Building $DSTDIR/lib${CXX_STL}_shared.so"
+        log "Building $DSTDIR/${CXX_STL_LIB}_shared.so"
         if [ "$(find_ndk_unknown_archs)" != "$ABI" ]; then
-            builder_shared_library lib${CXX_STL}_shared
+            builder_shared_library ${CXX_STL_LIB}_shared
         else
             builder_ldflags "-lc -lm"
-            builder_nostdlib_shared_library lib${CXX_STL}_shared  # Don't use libgcc
+            builder_nostdlib_shared_library ${CXX_STL_LIB}_shared  # Don't use libgcc
         fi
     fi
 
@@ -461,7 +465,7 @@ done
 if [ -n "$PACKAGE_DIR" ] ; then
     for ABI in $ABIS; do
         FILES=""
-        for LIB in lib${CXX_STL}_static.a lib${CXX_STL}_shared.so; do
+        for LIB in ${CXX_STL_LIB}_static.a ${CXX_STL_LIB}_shared.so; do
             FILES="$FILES $CXX_STL_SUBDIR/libs/$ABI/$LIB"
         done
         PACKAGE="$PACKAGE_DIR/${CXX_STL_PACKAGE}-libs-$ABI.tar.bz2"
