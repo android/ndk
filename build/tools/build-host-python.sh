@@ -240,7 +240,7 @@ build_host_python ()
     fi
 
     # Currently, 2.7.5 and 3.3.0 builds generate $SRCDIR/Lib/_sysconfigdata.py, unless it
-	# already exists (in which case it ends up wrong anyway!)... this should really be in
+    # already exists (in which case it ends up wrong anyway!)... this should really be in
     # the build directory instead.
     if [ ! -f "$SRCDIR/Lib/_sysconfigdata.py" ]; then
         log "Removing old $SRCDIR/Lib/_sysconfigdata.py"
@@ -329,6 +329,20 @@ build_host_python ()
     touch $SRCDIR/Parser/asdl_c.py
     touch $SRCDIR/Include/Python-ast.h
     touch $SRCDIR/Python/Python-ast.c
+
+    # By default, the Python build will force the following compiler flags
+    # after our own CFLAGS:
+    #   -g -fwrap -O3 -Wall -Wstrict-prototypes
+    #
+    # The '-g' is unfortunate because it makes the generated binaries
+    # much larger than necessary, and stripping them after the fact is
+    # a bit delicate when cross-compiling. To avoid this, define a
+    # custom OPT variable here (see Python-2.7.5/configure.ac) when
+    # generating non stripped builds.
+    if [ "$BH_BUILD_MODE" = "release" ]; then
+      OPT="-fwrapv -O3 -Wall -Wstrict-prototypes"
+      export OPT
+    fi
 
     dump "$TEXT Building"
     export CONFIG_SITE=$CFG_SITE &&
