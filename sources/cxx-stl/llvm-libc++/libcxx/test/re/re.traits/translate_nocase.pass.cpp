@@ -14,6 +14,9 @@
 
 // charT translate_nocase(charT c) const;
 
+// XFAIL: with_system_lib=x86_64-apple-darwin11
+// XFAIL: with_system_lib=x86_64-apple-darwin12
+
 #include <regex>
 #include <cassert>
 
@@ -38,7 +41,7 @@ int main()
         assert(t.translate_nocase('.') == '.');
         assert(t.translate_nocase('a') == 'a');
         assert(t.translate_nocase('1') == '1');
-        assert(t.translate_nocase('\xDA') == '\xDA');
+        assert(t.translate_nocase('\xDA') == '\xFA');
         assert(t.translate_nocase('\xFA') == '\xFA');
     }
     {

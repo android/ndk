@@ -13,6 +13,9 @@
 
 // const charT* tolower(charT* low, const charT* high) const;
 
+// XFAIL: with_system_lib=x86_64-apple-darwin11
+// XFAIL: with_system_lib=x86_64-apple-darwin12
+
 #include <locale>
 #include <string>
 #include <cassert>
@@ -29,7 +32,7 @@ int main()
             std::string in("\xDA A\x07.a1");
 
             assert(f.tolower(&in[0], in.data() + in.size()) == in.data() + in.size());
-            assert(in[0] == '\xDA');
+            assert(in[0] == '\xFA');
             assert(in[1] == ' ');
             assert(in[2] == 'a');
             assert(in[3] == '\x07');

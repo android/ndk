@@ -12,7 +12,7 @@ currentpath=`pwd`
 origpath=$currentpath
 currentdir=`basename $currentpath`
 while [ $currentdir != "test" ]; do
-	if [ $currentdir == "/" ]
+	if [ $currentdir = "/" ]
 	then
 		echo "current directory must be in or under \"test\"."
 		exit 1
@@ -38,7 +38,7 @@ fi
 
 if [ -z "$OPTIONS" ]
 then
-	OPTIONS="-std=c++0x -stdlib=libc++"
+	OPTIONS="-std=c++11 -stdlib=libc++"
 fi
 OPTIONS="$OPTIONS -I$LIBCXX_ROOT/test/support"
 
@@ -59,6 +59,12 @@ case $TRIPLE in
   *)
     TEST_EXE=a.out
     ;;
+esac
+
+case $(uname -s) in
+   NetBSD)
+     THREAD_FLAGS=-lpthread
+     ;;
 esac
 
 FAIL=0
@@ -91,7 +97,7 @@ afunc() {
             then
              	echo "Running test: " $FILE
             fi
-			if $CC $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS -o ./$TEST_EXE
+			if $CC $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS $(test $1 = no || echo $THREAD_FLAGS) -o ./$TEST_EXE
 			then
 				if ./$TEST_EXE
 				then
@@ -99,13 +105,13 @@ afunc() {
 					pass=$(($pass+1))
 				else
 					echo "`pwd`/$FILE failed at run time"
-					echo "Compile line was:" $CC $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS
+					echo "Compile line was:" $CC $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS $(test $1 = no || echo $THREAD_FLAGS)
 					fail=$(($fail+1))
 					rm ./$TEST_EXE
 				fi
 			else
 				echo "`pwd`/$FILE failed to compile"
-				echo "Compile line was:" $CC $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS
+				echo "Compile line was:" $CC $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS $(test $1 = no || echo $THREAD_FLAGS)
 				fail=$(($fail+1))
 			fi
 		done
@@ -138,13 +144,17 @@ afunc() {
 		if [ -d "$FILE" ];
 		then
 			cd $FILE
-			afunc
+			if [ $FILE = thread -o $1 = yes ]; then
+				afunc yes
+			else
+				afunc no
+			fi
 			cd ..
 		fi
 	done
 }
 
-afunc
+afunc no
 
 echo "****************************************************"
 echo "Results for `pwd`:"

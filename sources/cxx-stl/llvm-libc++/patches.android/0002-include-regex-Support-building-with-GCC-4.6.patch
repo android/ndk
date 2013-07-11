@@ -1,4 +1,4 @@
-From e42fed799f625e8cb8c552d7be595242ebcc2739 Mon Sep 17 00:00:00 2001
+From 1c99272d860d0d753803c156d60d20a07ec27255 Mon Sep 17 00:00:00 2001
 From: David 'Digit' Turner <digit@google.com>
 Date: Thu, 2 May 2013 14:11:11 +0200
 Subject: include/regex: Support building with GCC 4.6
@@ -8,7 +8,7 @@ Subject: include/regex: Support building with GCC 4.6
  1 file changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/include/regex b/include/regex
-index d1afa54..20818b6 100644
+index 19e08b1..2417dc9 100644
 --- a/include/regex
 +++ b/include/regex
 @@ -933,7 +933,7 @@ public:
