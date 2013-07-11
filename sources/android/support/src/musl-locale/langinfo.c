@@ -25,7 +25,8 @@ static const char c_time[] =
 static const char c_messages[] = "^[yY]\0" "^[nN]";
 static const char c_numeric[] = ".\0" "";
 
-char *__langinfo(nl_item item)
+// Android: this was __langinfo in musl.
+char *nl_langinfo(nl_item item)
 {
 	int cat = item >> 16;
 	int idx = item & 65535;
@@ -57,5 +58,3 @@ char *__langinfo(nl_item item)
 	for (; idx; idx--, str++) for (; *str; str++);
 	return (char *)str;
 }
-
-weak_alias(__langinfo, nl_langinfo);
