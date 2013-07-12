@@ -127,7 +127,7 @@ run git commit -m "upstream @$REVISION"
 echo "Create 'ndk' branch and apply patches.android/*"
 run git branch ndk master
 run git checkout ndk
-if [ -d "$NDK_LIBCXX_DIR/xxxpatches.android" ]; then
+if [ -d "$NDK_LIBCXX_DIR/patches.android" ]; then
   (
     set +e;
     run git am "$NDK_LIBCXX_DIR"/patches.android/*

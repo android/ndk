@@ -13,6 +13,9 @@
 
 // charT toupper(charT) const;
 
+// XFAIL: with_system_lib=x86_64-apple-darwin11
+// XFAIL: with_system_lib=x86_64-apple-darwin12
+
 #include <locale>
 #include <cassert>
 
@@ -33,7 +36,7 @@ int main()
             assert(f.toupper('a') == 'A');
             assert(f.toupper('1') == '1');
             assert(f.toupper('\xDA') == '\xDA');
-            assert(f.toupper('\xFA') == '\xFA');
+            assert(f.toupper('\xFA') == '\xDA');
         }
     }
     {

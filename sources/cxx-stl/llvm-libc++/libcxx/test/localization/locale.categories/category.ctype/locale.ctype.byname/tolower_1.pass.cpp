@@ -13,6 +13,9 @@
 
 // charT tolower(charT) const;
 
+// XFAIL: with_system_lib=x86_64-apple-darwin11
+// XFAIL: with_system_lib=x86_64-apple-darwin12
+
 #include <locale>
 #include <cassert>
 
@@ -32,7 +35,7 @@ int main()
             assert(f.tolower('.') == '.');
             assert(f.tolower('a') == 'a');
             assert(f.tolower('1') == '1');
-            assert(f.tolower('\xDA') == '\xDA');
+            assert(f.tolower('\xDA') == '\xFA');
             assert(f.tolower('\xFA') == '\xFA');
         }
     }
