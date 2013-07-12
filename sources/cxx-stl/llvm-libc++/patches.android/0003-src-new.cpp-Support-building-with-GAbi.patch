@@ -1,4 +1,4 @@
-From f5d1187b1ea38969dd4de6607a7fa9ed9fae94c6 Mon Sep 17 00:00:00 2001
+From cc35f95a952b52b0f9c5291c3bb044161e21d7b6 Mon Sep 17 00:00:00 2001
 From: David 'Digit' Turner <digit@google.com>
 Date: Thu, 2 May 2013 14:11:53 +0200
 Subject: src/new.cpp: Support building with GAbi++
