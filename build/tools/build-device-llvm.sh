@@ -217,9 +217,11 @@ for arch in $ARCHS; do
     --host=$toolchain_prefix
   fail_panic "Couldn't configure mclinker for $arch"
 
+  CXXFLAGS="$CXXFLAGS -fexceptions"  # optimized/ScriptParser.cc needs it
+  export CXXFLAGS
   dump "Building : mclinker"
   cd $MCLINKER_BUILD_OUT
-  run make -j$NUM_JOBS $MAKE_FLAGS
+  run make -j$NUM_JOBS $MAKE_FLAGS CXXFLAGS="$CXXFLAGS"
   fail_panic "Couldn't compile mclinker"
 
   mkdir -p $TOOLCHAIN_BUILD_PREFIX/$arch
