@@ -26,4 +26,22 @@ LOCAL_STATIC_LIBRARIES := cpufeatures
 include $(BUILD_EXECUTABLE)
 endif
 
+ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
+include $(CLEAR_VARS)
+LOCAL_MODULE := test_arm_idiv_support
+LOCAL_SRC_FILES := test_arm_idiv.c
+LOCAL_CFLAGS := -mcpu=cortex-a15
+LOCAL_ARM_MODE := arm
+LOCAL_STATIC_LIBRARIES := cpufeatures
+include $(BUILD_EXECUTABLE)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := test_thumb_idiv_support
+LOCAL_SRC_FILES := test_arm_idiv.c
+LOCAL_CFLAGS := -mcpu=cortex-a15
+LOCAL_ARM_MODE := thumb
+LOCAL_STATIC_LIBRARIES := cpufeatures
+include $(BUILD_EXECUTABLE)
+endif
+
 $(call import-module,android/cpufeatures)
