@@ -235,10 +235,6 @@ EXIT:
     return result;
 }
 
-/* Like strlen(), but for constant string literals */
-#define STRLEN_CONST(x)  ((sizeof(x)-1)
-
-
 /* Checks that a space-separated list of items contains one given 'item'.
  * Returns 1 if found, 0 otherwise.
  */
@@ -720,13 +716,9 @@ android_cpuInit(void)
                 g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_VFPv2 |
                                  ANDROID_CPU_ARM_FEATURE_ARMv7;
 
-            // Note that some buggy kernels do not report these even when
-            // the CPU actually support the division instructions. However,
-            // assume that if 'vfpv4' is detected, then the CPU supports
-            // sdiv/udiv properly.
-            if (has_idiva || has_vfpv4)
+            if (has_idiva)
                 g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_IDIV_ARM;
-            if (has_idivt || has_vfpv4)
+            if (has_idivt)
                 g_cpuFeatures |= ANDROID_CPU_ARM_FEATURE_IDIV_THUMB2;
 
             if (has_iwmmxt)
@@ -736,7 +728,7 @@ android_cpuInit(void)
         /* Extract the cpuid value from various fields */
         // The CPUID value is broken up in several entries in /proc/cpuinfo.
         // This table is used to rebuild it from the entries.
-        const struct CpuIdEntry {
+        static const struct CpuIdEntry {
             const char* field;
             char        format;
             char        bit_lshift;
@@ -748,6 +740,7 @@ android_cpuInit(void)
             { "CPU revision", 'd', 0, 4 },
         };
         size_t i;
+        D("Parsing /proc/cpuinfo to recover CPUID\n");
         for (i = 0;
              i < sizeof(cpu_id_entries)/sizeof(cpu_id_entries[0]);
              ++i) {
@@ -758,7 +751,7 @@ android_cpuInit(void)
             if (value == NULL)
                 continue;
 
-            printf("field=%s value='%s'\n", entry->field, value);
+            D("field=%s value='%s'\n", entry->field, value);
             char* value_end = value + strlen(value);
             int val = 0;
             const char* start = value;
@@ -779,6 +772,26 @@ android_cpuInit(void)
 
             free(value);
         }
+
+        // Handle kernel configuration bugs that prevent the correct
+        // reporting of CPU features.
+        static const struct CpuFix {
+            uint32_t  cpuid;
+            uint64_t  or_flags;
+        } cpu_fixes[] = {
+            /* The Nexus 4 (Qualcomm Krait) kernel configuration
+             * forgets to report IDIV support. */
+            { 0x510006f2, ANDROID_CPU_ARM_FEATURE_IDIV_ARM |
+                          ANDROID_CPU_ARM_FEATURE_IDIV_THUMB2 },
+        };
+        size_t n;
+        for (n = 0; n < sizeof(cpu_fixes)/sizeof(cpu_fixes[0]); ++n) {
+            const struct CpuFix* entry = &cpu_fixes[n];
+
+            if (g_cpuIdArm == entry->cpuid)
+                g_cpuFeatures |= entry->or_flags;
+        }
+
     }
 #endif /* __ARM_ARCH__ */
 
