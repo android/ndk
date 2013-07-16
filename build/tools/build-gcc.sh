@@ -141,13 +141,11 @@ set_parameters ()
 set_parameters $PARAMETERS
 
 # Disable x86_64 build for toolchains older 4.7
-# x86_64-* targets are available on 64-bit host only
 case "$TOOLCHAIN" in
   x86_64-4.4.3|x86_64-4.6)
     echo "ERROR: x86_64 toolchain is enabled in 4.7+. Please try to build newer version."
     exit 1
     ;;
-  x86_64-*) do_try64_option ;;
 esac
 
 prepare_target_build
