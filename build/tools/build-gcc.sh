@@ -325,8 +325,6 @@ case "$TOOLCHAIN" in
     ;;
     *-4.4.3)
     ;;
-    x86_64-4.7) # x32 support is included into gold 2.23, but 4.7 is based on 2.22, so stick it to bsd.
-    ;;
     *)
         EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-gold=default"
     ;;
