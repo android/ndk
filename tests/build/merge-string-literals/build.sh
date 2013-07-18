@@ -13,14 +13,30 @@ PROGDIR=$(cd "$PROGDIR" && pwd)
 rm -rf "$PROGDIR/obj" "$PROGDIR/libs"
 
 # Now run the build
-$NDK/ndk-build -C "$PROGDIR" "$@"
-RET=$?
+if [ -z "$APP_ABI" ]; then
+    for OPT; do
+        case $OPT in
+            APP_ABI=*)
+                APP_ABI=${OPT##APP_ABI=}
+                ;;
+        esac
+    done
+    $NDK/ndk-build -C "$PROGDIR" "$@"
+    RET=$?
+else
+    $NDK/ndk-build -C "$PROGDIR" "$@" APP_ABI="$APP_ABI"
+    RET=$?
+fi
 
 # find objdump. Any arch's objdump can do "-s -j".  We just need to find one
 # from $NDK/toolchains because MacOSX doesn't have that by default.
 get_build_var ()
 {
-    make --no-print-dir -f $NDK/build/core/build-local.mk DUMP_$1 | tail -1
+    if [ -z "$APP_ABI" ]; then
+        make --no-print-dir -f $NDK/build/core/build-local.mk DUMP_$1 | tail -1
+    else
+        make --no-print-dir -f $NDK/build/core/build-local.mk DUMP_$1 APP_ABI="$APP_ABI" | tail -1
+    fi
 }
 
 TOOLCHAIN_PREFIX=`get_build_var TOOLCHAIN_PREFIX`
