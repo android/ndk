@@ -6,6 +6,15 @@
 TEST(wchar, wchar_limits) {
   ASSERT_EQ(4U, sizeof(wchar_t));
   ASSERT_EQ(sizeof(int), sizeof(wint_t));
+#ifdef __arm__
+  ASSERT_GT(wchar_t(0), wchar_t(-1));
+  ASSERT_EQ(wchar_t(0), WCHAR_MIN);
+  ASSERT_EQ(wchar_t(0xffffffff), WCHAR_MAX);
+#else
+  ASSERT_LT(wchar_t(0), wchar_t(-1));
+  ASSERT_EQ(wchar_t(0x80000000), WCHAR_MIN);
+  ASSERT_EQ(wchar_t(0x7fffffff), WCHAR_MAX);
+#endif
 }
 
 TEST(wchar, wcschr) {

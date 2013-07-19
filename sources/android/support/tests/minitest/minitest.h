@@ -370,7 +370,7 @@ void RegisterTest(const char* test_name,
     if (!(expression)) { \
       printf("ASSERT_TRUE:%s:%d: expression '%s' return 'false', expected 'true'\n", \
              __FILE__, __LINE__, #expression); \
-      minitest_testcaseFatalFailure(); \
+      minitest_testcase->FatalFailure(); \
       return; \
     } \
   } while (0)
@@ -380,7 +380,7 @@ void RegisterTest(const char* test_name,
     if (!!(expression)) { \
       printf("ASSERT_FALSE:%s:%d: expression '%s' return 'true', expected 'false'\n", \
              __FILE__, __LINE__, #expression); \
-      minitest_testcaseFatalFailure(); \
+      minitest_testcase->FatalFailure(); \
       return; \
     } \
   } while (0)
