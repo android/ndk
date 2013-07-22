@@ -26,6 +26,7 @@ LOCAL_STATIC_LIBRARIES := cpufeatures
 include $(BUILD_EXECUTABLE)
 endif
 
+ifeq ($(TARGET_ARCH),arm)
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
 include $(CLEAR_VARS)
 LOCAL_MODULE := test_arm_idiv_support
@@ -46,6 +47,7 @@ TARGET_CFLAGS := $(filter-out -march=armv7-a, $(TARGET_CFLAGS))
 LOCAL_ARM_MODE := thumb
 LOCAL_STATIC_LIBRARIES := cpufeatures
 include $(BUILD_EXECUTABLE)
+endif
 endif
 
 $(call import-module,android/cpufeatures)
