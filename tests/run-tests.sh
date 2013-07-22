@@ -711,6 +711,17 @@ if is_testable device; then
         # those declared in $TEST/BROKEN_RUN
         adb_shell_mkdir "$DEVICE" $DSTDIR
 
+        # Prepare gabi++ runtime
+        if [ ! -z "$NDK_ABI_FILTER" ]; then
+            SRCFILE="$NDK/sources/cxx-stl/gabi++/libs/$CPU_ABI/libgabi++_shared.so"
+            run $ADB_CMD -s "$DEVICE" push "$SRCFILE" "$DSTDIR" &&
+            run $ADB_CMD -s "$DEVICE" shell chmod 0755 "$DSTDIR/libgabi++_shared.so"
+            if [ $? != 0 ] ; then
+                dump "ERROR: Could not install $SRCFILE to device $DEVICE!"
+                exit 1
+            fi
+        fi
+
         for SRCFILE in `ls $SRCDIR`; do
             DSTFILE=`basename $SRCFILE`
             echo "$DSTFILE" | grep -q -e '\.so$'
