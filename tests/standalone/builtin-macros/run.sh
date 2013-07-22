@@ -72,6 +72,31 @@ macro_check () {
     COUNT=$(( $COUNT + 1 ))
 }
 
+# Check the definition of a given macro against multiple values
+# $1: macro name
+# $2+: list of acceptable values.
+macro_multi_check () {
+    echo -n "Checking $1: "
+    local VAL=$(macro_val $1)
+    if [ -z "$VAL" ]; then
+      echo "Missing built-in macro definition: $1"
+      return 1
+    fi
+    local VAL2 FOUND
+    shift
+    for VAL2 in "$@"; do
+      if [ "$VAL2" = "$VAL" ]; then
+        FOUND=true
+        break
+      fi
+    done
+    if [ -z "$FOUND" ]; then
+      echo "Invalid built-in macro definition: '$VAL', expected one of: $@"
+      return 1
+    fi
+    return 0
+}
+
 # Check that a given macro is undefined
 macro_check_undef () {
     if [ -n "$2" ]; then
@@ -114,6 +139,9 @@ case $ABI in
         macro_check __ARMEL__ 1            "ARM little-endian"
         macro_check __THUMB_INTERWORK__ 1  "ARM thumb-interwork"
         macro_check __PIC__ 1              "Position independent code (-fpic)"
+        macro_check __WCHAR_TYPE__         "unsigned"
+        macro_check __WCHAR_MAX__          "4294967295U"
+        # Clang doesn't define __WCHAR_MIN__ so don't check it"
 
         case $ABI in
             armeabi)
@@ -148,6 +176,10 @@ case $ABI in
         macro_check __SSE3__ 1       "SSE3 instruction set"
         macro_check __SSE_MATH__ 1   "Use SSE for math operations"
         macro_check __SSE2_MATH__ 1  "Use SSE2 for math operations"
+        # GCC defines is as 'long', and Clang as 'int'
+        macro_multi_check __WCHAR_TYPE__   "long" "int"
+        # GCC defines it with an L suffix, Clang doesn't.
+        macro_multi_check __WCHAR_MAX__    "2147483647L" "2147483647"
         ;;
 
     mips)
@@ -155,6 +187,9 @@ case $ABI in
         macro_check _MIPS_ARCH_MIPS32 1 "Mips 32-bit ABI"
         macro_check __MIPSEL__ 1        "Mips little-endian"
         macro_check __PIC__ 1           "Position independent code (-fpic)"
+        # GCC defines it as "signed int", and Clang as "int"
+        macro_multi_check __WCHAR_TYPE__   "signed int" "int"
+        macro_check __WCHAR_MAX__       "2147483647"
         ;;
     *)
         echo "Unknown ABI: $ABI"

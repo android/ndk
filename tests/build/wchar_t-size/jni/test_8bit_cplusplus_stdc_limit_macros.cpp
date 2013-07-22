@@ -9,7 +9,7 @@
 #define _WCHAR_IS_8BIT
 #include <wchar.h>
 
-#if __ANDROID_API__ != 3
+#if defined(__arm__) && __ANDROID_API__ != 3
 #error "You should target API level 3 when compiling this file!"
 #endif
 
@@ -19,12 +19,17 @@
 #define STATIC_ASSERT(condition) \
   static char CONCAT(dummy_,__LINE__)[1 - 2*(!(condition))];
 
+#ifdef __arm__
 STATIC_ASSERT(sizeof(__WCHAR_TYPE__) == 1);
+#else
+STATIC_ASSERT(sizeof(__WCHAR_TYPE__) == 4);
+#endif
 
 // wchar_t is never redefined by <stddef.h> because it's a C++ keyword,
 // unlike in C.
 STATIC_ASSERT(sizeof(wchar_t) == 4);
 
-// This is C++ code but __STDC_LIMIT_MACROS was defined.
+// This is C++ code but __STDC_LIMIT_MACROS was defined, and
+// _WCHAR_IS_8BIT is defined, so the values are always 32-bit signed.
 STATIC_ASSERT(WCHAR_MIN == 0x80000000);
 STATIC_ASSERT(WCHAR_MAX == 0x7fffffff);
