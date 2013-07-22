@@ -847,11 +847,10 @@ bh_stamps_do ()
     fi
 }
 
-# Some common functions needed by both python and gdb build scripts.
-#
 # Return host tag with only translation that windows-x86 -> windows
+#
 # $1: host system tag
-python_host_tag ()
+install_dir_from_host_tag ()
 {
     case $1 in
         windows-x86)
@@ -864,22 +863,23 @@ python_host_tag ()
 }
 
 # Return the build install directory of a given Python version
+#
 # $1: host system tag
 # $2: python version
 # The suffix of this has to match python_ndk_install_dir
 #  as I package them from the build folder, substituting
 #  the end part of python_build_install_dir matching
 #  python_ndk_install_dir with nothing.
-# Needs to match with:
-#  python_build_install_dir () in build-host-gdb.sh
 python_build_install_dir ()
 {
-    echo "$BH_BUILD_DIR/install/prebuilt/$(python_host_tag $1)"
+    echo "$BH_BUILD_DIR/install/prebuilt/$(install_dir_from_host_tag $1)"
 }
 
 # Same as python_build_install_dir, but for the final NDK installation
 # directory. Relative to $NDK_DIR.
+#
+# $1: host system tag
 python_ndk_install_dir ()
 {
-    echo "prebuilt/$(python_host_tag $1)"
+    echo "prebuilt/$(install_dir_from_host_tag $1)"
 }

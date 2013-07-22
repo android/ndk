@@ -432,13 +432,18 @@ package_host_python ()
     local SRCDIR="$(python_ndk_install_dir $1 $2)"
     # This is similar to BLDDIR=${BLDDIR%%$SRCDIR} (and requires we use windows and not windows-x86)
     BLDDIR=$(echo "$BLDDIR" | sed "s/$(echo "$SRCDIR" | sed -e 's/\\/\\\\/g' -e 's/\//\\\//g' -e 's/&/\\\&/g')//g")
-    local PACKAGENAME=ndk-python-$(python_host_tag $1).tar.bz2
+    local PACKAGENAME=ndk-python-$(install_dir_from_host_tag $1).tar.bz2
     local PACKAGE="$PACKAGE_DIR/$PACKAGENAME"
 
     need_install_host_python $1 $2
 
     dump "$(bh_host_text) $PACKAGENAME: Packaging"
     run pack_archive "$PACKAGE" "$BLDDIR" "$SRCDIR"
+}
+
+need_package_host_python ()
+{
+    bh_stamps_do package-host-python-$1-$2 package_host_python $1 $2
 }
 
 PYTHON_VERSION=$(commas_to_spaces $PYTHON_VERSION)
@@ -457,7 +462,7 @@ if [ "$PACKAGE_DIR" ]; then
         bh_setup_build_for_host $SYSTEM
         if [ $AUTO_BUILD != "yes" -o $SYSTEM != $BH_BUILD_TAG ]; then
             for VERSION in $PYTHON_VERSION; do
-                package_host_python $SYSTEM $VERSION
+                need_package_host_python $SYSTEM $VERSION
             done
         fi
     done
