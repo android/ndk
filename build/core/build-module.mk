@@ -31,4 +31,25 @@ $(call __ndk_info,$(LOCAL_MAKEFILE):$(LOCAL_MODULE): Unknown LOCAL_MODULE_CLASS 
 $(call __ndk_error,Aborting)\
 )
 
+ifneq ($(strip $(filter-out $(NDK_KNOWN_ARCHS),$(TARGET_ARCH))),)
+# Add default runtime for unknown arch.
+LOCAL_SHARED_LIBRARIES += gabi++_shared
+endif
+
 $(call module-add,$(LOCAL_MODULE))
+
+ifneq ($(strip $(filter-out $(NDK_KNOWN_ARCHS),$(TARGET_ARCH))),)
+  _found_abi := $(APP_ABI)
+  $(foreach abi, $(NDK_KNOWN_ABIS), $(eval _found_abi := $(_found_abi:%$(abi)=%)))
+  ifeq ($(_found_abi),$(APP_ABI))
+    _testing_unknown_arch := false
+  else
+    _testing_unknown_arch := true
+  endif
+
+  ifeq ($(_testing_unknown_arch),true)
+    # Must add this after module-add, to make PREBUILT_SHARED_LIBRARY work
+    # only at unknown arch for on-host testing
+    $(call import-module, cxx-stl/gabi++)
+  endif
+endif
