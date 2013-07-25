@@ -169,7 +169,7 @@ extract_parameters "$@"
 
 TOOLCHAINS=$PARAMETERS
 if [ -z "$TOOLCHAINS" ]; then
-    TOOLCHAINS="arm-linux-androideabi-4.4.3,arm-linux-androideabi-4.6,x86-4.4.3,x86-4.6,mipsel-linux-android-4.4.3,mipsel-linux-android-4.6"
+    TOOLCHAINS="arm-linux-androideabi-4.6,x86-4.6,mipsel-linux-android-4.6"
     dump "Auto-config: $TOOLCHAINS"
 fi
 
@@ -379,7 +379,7 @@ extract_version ()
 # Given an input string of the form <foo>-<bar>-<version>, where
 # <version> can be <major>.<minor>, extract <major>
 #
-# $1: versioned name (e.g. arm-linux-androideabi-4.4.3)
+# $1: versioned name (e.g. arm-linux-androideabi-4.6)
 # Out: major version (e.g. 4)
 #
 # Examples:  arm-linux-androideabi-4.4.3 -> 4

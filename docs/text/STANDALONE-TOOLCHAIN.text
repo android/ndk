@@ -85,7 +85,7 @@ Use the '--arch=x86' option to specify the x86 GCC 4.6, or add '--arch=mips' opt
 to specify the MIPS GCC 4.6, or alternatively
 '--toolchain=<name>'.  For example:
 
-        --toolchain=x86-4.4.3                  # select x86 GCC 4.4.3 compiler
+        --toolchain=x86-4.8                    # select x86 GCC 4.8 compiler
         --toolchain=arm-linux-androideabi-4.7  # select ARM GCC 4.7 compiler
         --toolchain=mipsel-linux-android-4.6   # select MIPS GCC 4.6 compiler, same as --arch=mips
 
