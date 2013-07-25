@@ -1160,7 +1160,9 @@ find_ndk_archs ()
 find_ndk_unknown_archs()
 {
     local FOUND_ARCHS=$(find_ndk_archs)
-    echo "$(filter_out "$DEFAULT_ARCHS" "$FOUND_ARCHS")"
+    # TODO: x86_64 is here just to be found as known arch.
+    # It can be removed as soon as it is added into $DEFAULT_ARCHS
+    echo "$(filter_out "$DEFAULT_ARCHS x86_64" "$FOUND_ARCHS")"
 }
 
 # Determine whether given arch is in unknown archs list
