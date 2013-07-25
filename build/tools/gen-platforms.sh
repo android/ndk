@@ -431,16 +431,17 @@ gen_shared_lib ()
 # $1: Architecture
 # $2: symbol source directory (relative to $SRCDIR)
 # $3: destination directory for generated libs (relative to $DSTDIR)
+# $4: compiler flags (optional)
 gen_shared_libraries ()
 {
     local ARCH=$1
     local SYMDIR="$SRCDIR/$2"
-    local SYSROOT="$3"
-    local DSTDIR="$DSTDIR/$SYSROOT/usr/lib"
+    local DSTDIR="$DSTDIR/$3"
+    local FLAGS="$4"
     local CC funcs vars numfuncs numvars
 
     # Let's locate the toolchain we're going to use
-    CC=$(get_default_compiler_for_arch $ARCH)
+    CC=$(get_default_compiler_for_arch $ARCH)" $FLAGS"
 
     # In certain cases, the symbols directory doesn't exist,
     # e.g. on x86 for PLATFORM < 9
@@ -470,6 +471,7 @@ gen_shared_libraries ()
 # $3: common source directory (for crtbrand.c, etc)
 # $4: source directory (for *.S files)
 # $5: destination directory
+# $6: flags for compiler (optional)
 gen_crt_objects ()
 {
     local API=$1
@@ -477,6 +479,7 @@ gen_crt_objects ()
     local COMMON_SRC_DIR="$SRCDIR/$3"
     local SRC_DIR="$SRCDIR/$4"
     local DST_DIR="$DSTDIR/$5"
+    local FLAGS="$6"
     local SRC_FILE DST_FILE
     local CC
 
@@ -485,11 +488,11 @@ gen_crt_objects ()
     fi
 
     # Let's locate the toolchain we're going to use
-    CC=$(get_default_compiler_for_arch $ARCH)
+    CC=$(get_default_compiler_for_arch $ARCH)" $FLAGS"
 
     CRTBRAND_S=$DST_DIR/crtbrand.s
     log "Generating platform $API crtbrand assembly code: $CRTBRAND_S"
-    (cd "$COMMON_SRC_DIR" && $CC -DPLATFORM_SDK_VERSION=$API -fpic -S -o - crtbrand.c | \
+    (cd "$COMMON_SRC_DIR" && mkdir -p `dirname $CRTBRAND_S` && $CC -DPLATFORM_SDK_VERSION=$API -fpic -S -o - crtbrand.c | \
         sed -e '/\.note\.ABI-tag/s/progbits/note/' > "$CRTBRAND_S") 1>>$TMPL 2>&1
     if [ $? != 0 ]; then
         dump "ERROR: Could not generate $CRTBRAND_S from $COMMON_SRC_DIR/crtbrand.c"
@@ -514,15 +517,29 @@ gen_crt_objects ()
                 # Add .note.ABI-tag section
                 SRC_FILE=$SRC_FILE" $CRTBRAND_S"
                 ;;
+            "crtbegin.o")
+                # If we have a single source for both crtbegin_static.o and
+                # crtbegin_dynamic.o we generate one and make a copy later.
+                DST_FILE=crtbegin_dynamic.o
+                # Add .note.ABI-tag section
+                SRC_FILE=$SRC_FILE" $CRTBRAND_S"
+                ;;
         esac
 
         log "Generating $ARCH C runtime object: $DST_FILE"
-        (cd "$SRC_DIR" && $CC -O2 -fpic -Wl,-r -nostdlib -o "$DST_DIR/$DST_FILE" $SRC_FILE) 1>>$TMPL 2>&1
+        (cd "$SRC_DIR" && $CC \
+                 -I$SRCDIR/../../bionic/libc/include \
+                 -I$SRCDIR/../../bionic/libc/private \
+                 -I$SRCDIR/../../bionic/libc/arch-$ARCH/bionic \
+                 -O2 -fpic -Wl,-r -nostdlib -o "$DST_DIR/$DST_FILE" $SRC_FILE) 1>>$TMPL 2>&1
         if [ $? != 0 ]; then
             dump "ERROR: Could not generate $DST_FILE from $SRC_DIR/$SRC_FILE"
             dump "Please see the content of $TMPL for details!"
             cat $TMPL | tail -10
             exit 1
+        fi
+        if [ ! -s "$DST_DIR/crtbegin_static.o" ]; then
+            cp "$DST_DIR/crtbegin_dynamic.o" "$DST_DIR/crtbegin_static.o"
         fi
     done
     rm -f "$CRTBRAND_S"
@@ -640,7 +657,14 @@ for ARCH in $ARCHS; do
         # If --minimal is not used, copy or generate binary files.
         if [ -z "$OPTION_MINIMAL" ]; then
             # Copy the prebuilt static libraries.
-            copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib $SYSROOT_DST/lib "$ARCH sysroot libs"
+            if [ "$ARCH" = "x86_64" ]; then
+            # We need full set for multilib compiler
+                copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib $SYSROOT_DST/lib "x86 sysroot libs"
+                copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib64 $SYSROOT_DST/lib64 "x86_64 sysroot libs"
+                copy_src_directory $PLATFORM_SRC/arch-$ARCH/libx32 $SYSROOT_DST/libx32 "x32 sysroot libs"
+            else
+                copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib $SYSROOT_DST/lib "$ARCH sysroot libs"
+            fi
 
             # Generate C runtime object files when available
             PLATFORM_SRC_ARCH=$PLATFORM_SRC/arch-$ARCH/src
@@ -652,14 +676,35 @@ for ARCH in $ARCHS; do
 
             # Genreate crt objects for known archs
             if [ "$(arch_in_unknown_archs $ARCH)" != "yes" ]; then
-                gen_crt_objects $PLATFORM $ARCH platforms/common/src $PLATFORM_SRC_ARCH $SYSROOT_DST/lib
+               if [ "$ARCH" = "x86_64" ]; then
+               # We need full set for multilib compiler
+                 gen_crt_objects $PLATFORM $ARCH platforms/common/src $PLATFORM_SRC_ARCH $SYSROOT_DST/lib "-m32"
+                 gen_crt_objects $PLATFORM $ARCH platforms/common/src $PLATFORM_SRC_ARCH $SYSROOT_DST/lib64 "-m64"
+                 gen_crt_objects $PLATFORM $ARCH platforms/common/src $PLATFORM_SRC_ARCH $SYSROOT_DST/libx32 "-mx32"
+               else
+                 gen_crt_objects $PLATFORM $ARCH platforms/common/src $PLATFORM_SRC_ARCH $SYSROOT_DST/lib
+               fi
             fi
 
             # Generate shared libraries from symbol files
-            gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $PLATFORM_DST/arch-$ARCH
+            if [ "$ARCH" = "x86_64" ]; then
+               # We need full set for multilib compiler
+               gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $SYSROOT_DST/lib "-m32"
+               gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $SYSROOT_DST/lib64 "-m64"
+               gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $SYSROOT_DST/libx32 "-mx32"
+            else
+               gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $SYSROOT_DST/lib
+            fi
         else
             # Copy the prebuilt binaries to bootstrap GCC
-            copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib-bootstrap $SYSROOT_DST/lib "$ARCH sysroot libs (boostrap)"
+            if [ "$ARCH" = "x86_64" ]; then
+               # We need full set for multilib compiler
+               copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib-bootstrap/lib $SYSROOT_DST/lib "x86 sysroot libs (boostrap)"
+               copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib-bootstrap/lib64 $SYSROOT_DST/lib64 "x86_64 sysroot libs (boostrap)"
+               copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib-bootstrap/libx32 $SYSROOT_DST/libx32 "x32 sysroot libs (boostrap)"
+            else
+               copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib-bootstrap $SYSROOT_DST/lib "$ARCH sysroot libs (boostrap)"
+            fi
         fi
         PREV_SYSROOT_DST=$SYSROOT_DST
     done

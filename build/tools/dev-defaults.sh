@@ -58,7 +58,7 @@ DEFAULT_PERL_VERSION=5.16.2
 DEFAULT_PLATFORM=android-9
 
 # The list of default CPU architectures we support
-DEFAULT_ARCHS="arm x86 mips"
+DEFAULT_ARCHS="arm x86 x86_64 mips"
 
 # Default toolchain names and prefix
 #
