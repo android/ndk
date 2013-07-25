@@ -445,6 +445,7 @@ run cp -f $TOOLCHAIN_LICENSES/COPYING $TOOLCHAIN_LICENSES/COPYING.LIB $TOOLCHAIN
 # remove some unneeded files
 run rm -f $TOOLCHAIN_PATH/bin/*-gccbug
 run rm -f $TOOLCHAIN_PATH/bin/*gdbtui$HOST_EXE
+run rm -f $TOOLCHAIN_PATH/bin/*-run$HOST_EXE
 run rm -rf $TOOLCHAIN_PATH/info
 run rm -rf $TOOLCHAIN_PATH/man
 run rm -rf $TOOLCHAIN_PATH/share/info
@@ -472,6 +473,47 @@ run $STRIP $TOOLCHAIN_PATH/libexec/gcc/*/*/cc1$HOST_EXE
 run $STRIP $TOOLCHAIN_PATH/libexec/gcc/*/*/cc1plus$HOST_EXE
 run $STRIP $TOOLCHAIN_PATH/libexec/gcc/*/*/collect2$HOST_EXE
 run $STRIP $TOOLCHAIN_PATH/libexec/gcc/*/*/lto*$HOST_EXE
+
+# Some of the files should really be links to save space.
+# This is mostly to reduce the size of the Windows zip archives,
+# since:
+#  - The toolchain install script actually use hard-links
+#  - Tar automatically detects hard links and will only store a
+#    single copy of each file anyway.
+
+# $1: Source file (will be changed to a link)
+# $2: Destination (relative to source).
+do_relink () {
+    log "Relink: $1 --> $2"
+    local BASENAME DIRNAME
+    DIRNAME=$(dirname "$1")
+    BASENAME=$(basename "$1")
+    ( cd "$DIRNAME" && rm -f "$BASENAME" && ln -s "$2" "$BASENAME" )
+    fail_panic "Can't relink $1 to $2"
+}
+
+# <config>/bin/<name> should point to ../../<config>-<name>
+LINK_FILES=$(cd $TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/bin && ls * 2>/dev/null)
+for LINK_FILE in $LINK_FILES; do
+  do_relink $TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/bin/$LINK_FILE ../../bin/$ABI_CONFIGURE_TARGET-$LINK_FILE
+done
+
+# $1: Source file prefix (e.g. 'c++')
+# $2: Destination file prefix (e.g. 'g++')
+do_relink_bin () {
+    do_relink \
+        $TOOLCHAIN_PATH/bin/$ABI_CONFIGURE_TARGET-$1$HOST_EXE \
+        $ABI_CONFIGURE_TARGET-$2$HOST_EXE
+}
+
+do_relink_bin c++ g++
+do_relink_bin gcc-$GCC_VERSION gcc
+# Gold is the default except for 4.4.3
+if [ "$GCC_VERSION" = "4.4.3" ]; then
+    do_relink_bin ld ld.bfd
+else
+    do_relink_bin ld ld.gold
+fi
 
 # copy SOURCES file if present
 if [ -f "$SRC_DIR/SOURCES" ]; then
