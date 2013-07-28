@@ -1,9 +1,9 @@
 #include "minitest.h"
 
-#include <wchar.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <wchar.h>
 
 namespace {
 
@@ -71,12 +71,12 @@ String& String::operator<<(bool v) {
 }
 
 #define MINITEST_STRING_OPERATOR_LL_(ParamType, Format) \
-String& String::operator<<(ParamType v) { \
-  char buf[20]; \
-  ::snprintf(buf, sizeof(buf), Format, v); \
-  (*this) += buf; \
-  return *this; \
-}
+  String& String::operator<<(ParamType v) {             \
+    char buf[20];                                       \
+    ::snprintf(buf, sizeof(buf), Format, v);            \
+    (*this) += buf;                                     \
+    return *this;                                       \
+  }
 
 MINITEST_STRING_OPERATOR_LL_(signed char, "%hhd")
 MINITEST_STRING_OPERATOR_LL_(unsigned char, "%hhu")
@@ -131,13 +131,13 @@ internal::String Format(const char* format, ...) {
   int len;
   for (;;) {
     va_copy(args2, args);
-    len = snprintf(&result[0], result.size(), format, args2);
+    len = vsnprintf(&result[0], result.size(), format, args2);
     va_end(args2);
     // On Windows, snprintf() returns -1 on truncation. On other
     // platforms, it returns the size of the string, without truncation.
     if (len >= 0 && static_cast<size_t>(len) <= result.size())
       break;
-    result.Resize(result.size()*2);
+    result.Resize(result.size() * 2);
   }
   va_end(args);
   return result;
@@ -184,7 +184,7 @@ int main(void) {
   TestInfo* info = g_test_infos;
   unsigned num_failures = 0;
   unsigned num_tests = 0;
-  for ( ; info != NULL; info = info->next) {
+  for (; info != NULL; info = info->next) {
     minitest::TestCase testcase;
     printf("[ RUNNING   ] %s.%s\n", info->test_name, info->case_name);
     num_tests += 1;
@@ -209,4 +209,3 @@ int main(void) {
 
   return (num_failures > 0);
 }
-
