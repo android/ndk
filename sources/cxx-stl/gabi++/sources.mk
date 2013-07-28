@@ -5,6 +5,7 @@ libgabi++_src_files := \
         src/auxilary.cc \
         src/class_type_info.cc \
         src/cxxabi.cc \
+        src/cxxabi_vec.cc \
         src/delete.cc \
         src/dwarf_helper.cc \
         src/dynamic_cast.cc \
