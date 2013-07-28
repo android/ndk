@@ -29,6 +29,44 @@
 #ifndef __GABIXX_CXXABI_H__
 #define __GABIXX_CXXABI_H__
 
+// The specifications for the declarations found in this header are
+// the following:
+//
+// - Itanium C++ ABI [1]
+//   Used on about every CPU architecture, _except_ ARM, this
+//   is also commonly referred as the "generic C++ ABI".
+//
+//   NOTE: This document seems to only covers C++98
+//
+// - Itanium C++ ABI: Exception Handling. [2]
+//   Supplement to the above document describing how exception
+//   handle works with the generic C++ ABI. Again, this only
+//   seems to support C++98.
+//
+// - C++ ABI for the ARM architecture [3]
+//   Describes the ARM C++ ABI, mainly as a set of differences from
+//   the generic one.
+//
+// - Exception Handling for the ARM Architecture [4]
+//   Describes exception handling for ARM in detail. There are rather
+//   important differences in the stack unwinding process and
+//   exception cleanup.
+//
+// There are also no freely availabel documentation about certain
+// features introduced in C++0x or later. In this case, the best
+// source for information are the GNU and LLVM C++ runtime libraries
+// (libcxxabi, libsupc++ and even libc++ sources), as well as a few
+// proposals, for example:
+//
+// - For exception propagation:
+//   http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2007/n2179.html
+//   But the paper only describs the high-level language feature, not
+//   the low-level runtime support required to implement it.
+//
+// - For nested exceptions:
+//   http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2008/n2559.html
+//   Yet another high-level description without low-level details.
+// 
 #include <exception>
 #include <stdint.h>
 #include <typeinfo>
@@ -108,7 +146,7 @@ namespace __cxxabiv1
     }
 
     // FIXME: Right-shift of signed integer is implementation dependent.
-    // GCC Implement is as signed (as we expect)
+    // GCC Implements it as signed (as we expect)
     long offset() const {
       return __offset_flags >> __offset_shift;
     }
@@ -352,11 +390,162 @@ namespace __cxxabiv1
     void __cxa_rethrow_primary_exception(void* exceptionObject);
     void* __cxa_current_primary_exception() throw();
 
+    // The ARM ABI mandates that constructors and destructors
+    // must return 'this', i.e. their first parameter. This is
+    // also true for __cxa_vec_ctor and __cxa_vec_cctor.
+#ifdef __arm__
+    typedef void* __cxa_vec_ctor_return_type;
+#else
+    typedef void __cxa_vec_ctor_return_type;
+#endif
+
+    typedef __cxa_vec_ctor_return_type
+        (*__cxa_vec_constructor)(void *);
+
+    typedef __cxa_vec_constructor __cxa_vec_destructor;
+
+    typedef __cxa_vec_ctor_return_type
+        (*__cxa_vec_copy_constructor)(void*, void*);
+
+    void* __cxa_vec_new(size_t element_count,
+                        size_t element_size,
+                        size_t padding_size,
+                        __cxa_vec_constructor constructor,
+                        __cxa_vec_destructor destructor);
+
+    void* __cxa_vec_new2(size_t element_count,
+                         size_t element_size,
+                         size_t padding_size,
+                         __cxa_vec_constructor constructor,
+                         __cxa_vec_destructor destructor,
+                         void* (*alloc)(size_t),
+                         void  (*dealloc)(void*));
+
+    void* __cxa_vec_new3(size_t element_count,
+                         size_t element_size,
+                         size_t padding_size,
+                         __cxa_vec_constructor constructor,
+                         __cxa_vec_destructor destructor,
+                         void* (*alloc)(size_t),
+                         void  (*dealloc)(void*, size_t));
+
+    __cxa_vec_ctor_return_type
+    __cxa_vec_ctor(void*  array_address,
+                   size_t element_count,
+                   size_t element_size,
+                   __cxa_vec_constructor constructor,
+                   __cxa_vec_destructor destructor);
+
+    void __cxa_vec_dtor(void*  array_address,
+                        size_t element_count,
+                        size_t element_size,
+                        __cxa_vec_destructor destructor);
+
+    void __cxa_vec_cleanup(void* array_address,
+                           size_t element_count,
+                           size_t element_size,
+                           __cxa_vec_destructor destructor);
+
+    void __cxa_vec_delete(void*  array_address,
+                          size_t element_size,
+                          size_t padding_size,
+                          __cxa_vec_destructor destructor);
+
+    void __cxa_vec_delete2(void* array_address,
+                           size_t element_size,
+                           size_t padding_size,
+                           __cxa_vec_destructor destructor,
+                           void  (*dealloc)(void*));
+
+    void __cxa_vec_delete3(void* array_address,
+                           size_t element_size,
+                           size_t padding_size,
+                           __cxa_vec_destructor destructor,
+                           void  (*dealloc) (void*, size_t));
+
+    __cxa_vec_ctor_return_type
+    __cxa_vec_cctor(void*  dest_array,
+                    void*  src_array,
+                    size_t element_count,
+                    size_t element_size,
+                    __cxa_vec_copy_constructor constructor,
+                    __cxa_vec_destructor destructor );
+
   } // extern "C"
 
 } // namespace __cxxabiv1
 
 namespace abi = __cxxabiv1;
+
+#if _GABIXX_ARM_ABI
+// ARM-specific ABI additions. They  must be provided by the
+// C++ runtime to simplify calling code generated by the compiler.
+// Note that neither GCC nor Clang seem to use these, but this can
+// happen when using machine code generated with other ocmpilers
+// like RCVT.
+
+namespace __aeabiv1 {
+extern "C" {
+
+using __cxxabiv1::__cxa_vec_constructor;
+using __cxxabiv1::__cxa_vec_copy_constructor;
+using __cxxabiv1::__cxa_vec_destructor;
+
+void* __aeabi_vec_ctor_nocookie_nodtor(void* array_address,
+                                       __cxa_vec_constructor constructor,
+                                       size_t element_size,
+                                       size_t element_count);
+
+void* __aeabi_vec_ctor_cookie_nodtor(void* array_address,
+                                     __cxa_vec_constructor constructor,
+                                     size_t element_size,
+                                     size_t element_count);
+
+void* __aeabi_vec_cctor_nocookie_nodtor(
+    void* dst_array,
+    void* src_array,
+    size_t element_size,
+    size_t element_count,
+    __cxa_vec_copy_constructor constructor);
+
+void* __aeabi_vec_new_nocookie_noctor(size_t element_size,
+                                      size_t element_count);
+
+void* __aeabi_vec_new_nocookie(size_t element_size,
+                               size_t element_count,
+                               __cxa_vec_constructor constructor);
+
+void* __aeabi_vec_new_cookie_nodtor(size_t element_size,
+                                    size_t element_count,
+                                    __cxa_vec_constructor constructor);
+
+void* __aeabi_vec_new_cookie(size_t element_size,
+                             size_t element_count,
+                             __cxa_vec_constructor constructor,
+                             __cxa_vec_destructor destructor);
+
+void* __aeabi_vec_dtor(void* array_address,
+                       __cxa_vec_destructor destructor,
+                       size_t element_size,
+                       size_t element_count);
+  
+void* __aeabi_vec_dtor_cookie(void* array_address,
+                              __cxa_vec_destructor destructor);
+
+void __aeabi_vec_delete(void* array_address,
+                        __cxa_vec_destructor destructor);
+
+void __aeabi_vec_delete3(void* array_address,
+                         __cxa_vec_destructor destructor,
+                         void (*dealloc)(void*, size_t));
+
+void __aeabi_vec_delete3_nodtor(void* array_address,
+                                void (*dealloc)(void*, size_t));
+
+}  // extern "C"
+}  // namespace __
+
+#endif  // _GABIXX_ARM_ABI == 1
 
 #endif /* defined(__GABIXX_CXXABI_H__) */
 
