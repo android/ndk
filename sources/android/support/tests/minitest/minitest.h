@@ -117,26 +117,20 @@ struct AddConst<const T*> {
 //    str << minitest::Format("Hex value %08x\n", x);
 //
 class String {
-public:
+ public:
   String() : str_(NULL), size_(0), capacity_(0) {}
   String(const char* str, size_t len);
 
-  explicit String(const char* str) {
-    String(str, ::strlen(str));
-  }
+  explicit String(const char* str) { String(str, ::strlen(str)); }
 
-  String(const String& other) {
-    String(other.str_, other.size_);
-  }
+  String(const String& other) { String(other.str_, other.size_); }
 
   String& operator=(const String& other) {
     (*this) += other;
     return *this;
   }
 
-  char& operator[](size_t index) {
-    return str_[index];
-  }
+  char& operator[](size_t index) { return str_[index]; }
 
   ~String() { Clear(); }
 
@@ -165,8 +159,7 @@ public:
   String& operator<<(const String& other);
   String& operator<<(const char* str);
 
-#define MINITEST_OPERATOR_LL_(ParamType) \
-    String& operator<<(ParamType v)
+#define MINITEST_OPERATOR_LL_(ParamType) String& operator<<(ParamType v)
 
   MINITEST_OPERATOR_LL_(bool);
   MINITEST_OPERATOR_LL_(char);
@@ -189,7 +182,7 @@ public:
   void Clear();
   void Resize(size_t new_size);
 
-private:
+ private:
   void Reserve(size_t new_capacity);
   char* str_;
   size_t size_;
@@ -209,7 +202,7 @@ private:
 internal::String Format(const char* format, ...);
 
 class TestCase {
-public:
+ public:
   enum Result {
     PASS = 0,
     FAIL,
@@ -226,13 +219,13 @@ public:
 
   internal::String& GetText();
 
-private:
+ private:
   Result result_;
   internal::String text_;
 };
 
 // Type of a function defined through the TEST(<test>,<case>) macro.
-typedef void (TestFunction)(TestCase* testcase);
+typedef void(TestFunction)(TestCase* testcase);
 
 // Used internally to register new test functions.
 void RegisterTest(const char* test_name,
@@ -240,20 +233,20 @@ void RegisterTest(const char* test_name,
                   TestFunction* test_function);
 
 #define MINITEST_TEST_FUNCTION(testname, casename) \
-    MINITEST_TEST_FUNCTION_(testname, casename)
+  MINITEST_TEST_FUNCTION_(testname, casename)
 
 #define MINITEST_TEST_FUNCTION_(testname, casename) \
-    minitest_##testname##_##casename
+  minitest_##testname##_##casename
 
-#define TEST(testname, casename) \
+#define TEST(testname, casename)                                               \
   static void MINITEST_TEST_FUNCTION(testname, casename)(minitest::TestCase*); \
-  static void __attribute__((constructor)) \
-  RegisterMiniTest##testname##_##casename() { \
-    minitest::RegisterTest(#testname, #casename, \
-                           &MINITEST_TEST_FUNCTION(testname, casename)); \
-  } \
-  void MINITEST_TEST_FUNCTION(testname, casename)(\
-      minitest::TestCase* minitest_testcase)
+  static void                                                                  \
+      __attribute__((constructor)) RegisterMiniTest##testname##_##casename() { \
+    minitest::RegisterTest(                                                    \
+        #testname, #casename, &MINITEST_TEST_FUNCTION(testname, casename));    \
+  }                                                                            \
+  void MINITEST_TEST_FUNCTION(testname,                                        \
+                              casename)(minitest::TestCase* minitest_testcase)
 
 // Use this macro to add context text before an EXPECT or ASSERT statement
 // For example:
@@ -270,147 +263,240 @@ void RegisterTest(const char* test_name,
 
 // EXPECT_TRUE() must evaluate to something that supports the << operator
 // to receive debugging strings only in case of failure.
-#define EXPECT_TRUE(expression) \
-  do { \
-    if (!(expression)) { \
-      printf("EXPECT_TRUE:%s:%d: expression '%s' returned 'false', expected 'true'\n", \
-             __FILE__, __LINE__, #expression); \
-      minitest_testcase->Failure(); \
-    } \
+#define EXPECT_TRUE(expression)                                            \
+  do {                                                                     \
+    if (!(expression)) {                                                   \
+      printf(                                                              \
+          "EXPECT_TRUE:%s:%d: expression '%s' returned 'false', expected " \
+          "'true'\n",                                                      \
+          __FILE__,                                                        \
+          __LINE__,                                                        \
+          #expression);                                                    \
+      minitest_testcase->Failure();                                        \
+    }                                                                      \
   } while (0)
 
-#define EXPECT_FALSE(expression) \
-  do { \
-    if (!!(expression)) { \
-      printf("EXPECT_FALSE:%s:%d: expression '%s' returned 'true', expected 'false'\n", \
-             __FILE__, __LINE__, #expression); \
-      minitest_testcase->Failure(); \
-    } \
+#define EXPECT_FALSE(expression)                                           \
+  do {                                                                     \
+    if (!!(expression)) {                                                  \
+      printf(                                                              \
+          "EXPECT_FALSE:%s:%d: expression '%s' returned 'true', expected " \
+          "'false'\n",                                                     \
+          __FILE__,                                                        \
+          __LINE__,                                                        \
+          #expression);                                                    \
+      minitest_testcase->Failure();                                        \
+    }                                                                      \
   } while (0)
 
-#define MINITEST_DEFINE_LOCAL_EXPR_(varname, expr) \
-  typedef minitest::internal::AddConst<__typeof__(expr)>::type \
-    varname##Type; \
+#define MINITEST_DEFINE_LOCAL_EXPR_(varname, expr)                            \
+  typedef minitest::internal::AddConst<__typeof__(expr)>::type varname##Type; \
   const varname##Type varname = (expr);
 
-#define MINITEST_EXPECT_ASSERT_BINOP_(opname, op, expected, expression, is_assert) \
-  do { \
+#define MINITEST_EXPECT_ASSERT_BINOP_(                        \
+    opname, op, expected, expression, is_assert)              \
+  do {                                                        \
     MINITEST_DEFINE_LOCAL_EXPR_(minitest_expected, expected); \
     MINITEST_DEFINE_LOCAL_EXPR_(minitest_actual, expression); \
-    if (!(minitest_actual op minitest_expected)) { \
-      printf("%s" #opname ":%s:%d: with expression '%s'\n", \
-             is_assert ? "ASSERT_" : "EXPECT_", __FILE__, __LINE__, \
-             #expression); \
-      minitest::internal::String minitest_str; \
-      minitest_str << minitest_actual; \
-      printf("actual   : %s\n", minitest_str.c_str()); \
-      minitest_str.Clear(); \
-      minitest_str << minitest_expected; \
-      printf("expected : %s\n", minitest_str.c_str()); \
-      if (is_assert) { \
-        minitest_testcase->FatalFailure(); \
-        return; \
-      } \
-      minitest_testcase->Failure(); \
-    } \
+    if (!(minitest_actual op minitest_expected)) {            \
+      printf("%s" #opname ":%s:%d: with expression '%s'\n",   \
+             is_assert ? "ASSERT_" : "EXPECT_",               \
+             __FILE__,                                        \
+             __LINE__,                                        \
+             #expression);                                    \
+      minitest::internal::String minitest_str;                \
+      minitest_str << minitest_actual;                        \
+      printf("actual   : %s\n", minitest_str.c_str());        \
+      minitest_str.Clear();                                   \
+      minitest_str << minitest_expected;                      \
+      printf("expected : %s\n", minitest_str.c_str());        \
+      if (is_assert) {                                        \
+        minitest_testcase->FatalFailure();                    \
+        return;                                               \
+      }                                                       \
+      minitest_testcase->Failure();                           \
+    }                                                         \
   } while (0)
 
 #define MINITEST_EXPECT_BINOP_(opname, op, expected, expression) \
-    MINITEST_EXPECT_ASSERT_BINOP_(opname, op, expected, expression, false)
+  MINITEST_EXPECT_ASSERT_BINOP_(opname, op, expected, expression, false)
 
-#define EXPECT_EQ(expected, expression)  \
-    MINITEST_EXPECT_BINOP_(EQ, ==, expected, expression)
+#define EXPECT_EQ(expected, expression) \
+  MINITEST_EXPECT_BINOP_(EQ, ==, expected, expression)
 
-#define EXPECT_NE(expected, expression)  \
-    MINITEST_EXPECT_BINOP_(NE, !=, expected, expression)
+#define EXPECT_NE(expected, expression) \
+  MINITEST_EXPECT_BINOP_(NE, !=, expected, expression)
 
-#define EXPECT_LE(expected, expression)  \
-    MINITEST_EXPECT_BINOP_(LE, <=, expected, expression)
+#define EXPECT_LE(expected, expression) \
+  MINITEST_EXPECT_BINOP_(LE, <=, expected, expression)
 
-#define EXPECT_LT(expected, expression)  \
-    MINITEST_EXPECT_BINOP_(LT, <, expected, expression)
+#define EXPECT_LT(expected, expression) \
+  MINITEST_EXPECT_BINOP_(LT, <, expected, expression)
 
-#define EXPECT_GE(expected, expression)  \
-    MINITEST_EXPECT_BINOP_(GE, >=, expected, expression)
+#define EXPECT_GE(expected, expression) \
+  MINITEST_EXPECT_BINOP_(GE, >=, expected, expression)
 
-#define EXPECT_GT(expected, expression)  \
-    MINITEST_EXPECT_BINOP_(GT, >, expected, expression)
+#define EXPECT_GT(expected, expression) \
+  MINITEST_EXPECT_BINOP_(GT, >, expected, expression)
 
 #define MINITEST_EXPECT_ASSERT_STR_(expected, expression, is_eq, is_assert) \
-  do { \
-    const char* minitest_prefix = is_assert ? "ASSERT_STR" : "EXPECT_STR"; \
-    const char* minitest_suffix = is_eq ? "EQ" : "NEQ"; \
-    const char* minitest_expected = (expected); \
-    const char* minitest_actual = (expression); \
-    if (minitest_actual == NULL) { \
-      printf("%s%s:%s:%d: expression '%s' is NULL!\n", \
-             minitest_prefix, minitest_suffix, \
-             __FILE__, __LINE__, #expression); \
-    } else { \
-      bool minitest_eq = !strcmp(minitest_expected, minitest_actual); \
-      if (minitest_eq != is_eq) { \
-        printf("%s%s:%s:%d: with expression '%s'\n", \
-               minitest_prefix, minitest_suffix, \
-               __FILE__, __LINE__, #expression); \
-        printf("actual   : %s\n", minitest_actual); \
-        printf("expected : %s\n", minitest_expected); \
-        minitest_testcase->Failure(); \
-      } \
-    } \
+  do {                                                                      \
+    const char* minitest_prefix = is_assert ? "ASSERT_STR" : "EXPECT_STR";  \
+    const char* minitest_suffix = is_eq ? "EQ" : "NEQ";                     \
+    const char* minitest_expected = (expected);                             \
+    const char* minitest_actual = (expression);                             \
+    if (minitest_actual == NULL) {                                          \
+      printf("%s%s:%s:%d: expression '%s' is NULL!\n",                      \
+             minitest_prefix,                                               \
+             minitest_suffix,                                               \
+             __FILE__,                                                      \
+             __LINE__,                                                      \
+             #expression);                                                  \
+      minitest_testcase->Failure();                                         \
+    } else {                                                                \
+      bool minitest_eq = !strcmp(minitest_expected, minitest_actual);       \
+      if (minitest_eq != is_eq) {                                           \
+        printf("%s%s:%s:%d: with expression '%s'\n",                        \
+               minitest_prefix,                                             \
+               minitest_suffix,                                             \
+               __FILE__,                                                    \
+               __LINE__,                                                    \
+               #expression);                                                \
+        printf("actual   : %s\n", minitest_actual);                         \
+        printf("expected : %s\n", minitest_expected);                       \
+        minitest_testcase->Failure();                                       \
+      }                                                                     \
+    }                                                                       \
   } while (0)
 
 #define EXPECT_STREQ(expected, expression) \
   MINITEST_EXPECT_ASSERT_STR_(expected, expression, true, false)
 
 #define EXPECT_STRNEQ(expected, expression) \
-  MINITEST_EXPECT_ASSERT_STR_(expected, expression, false, true)
+  MINITEST_EXPECT_ASSERT_STR_(expected, expression, false, false)
 
-#define ASSERT_TRUE(expression) \
-  do { \
-    if (!(expression)) { \
-      printf("ASSERT_TRUE:%s:%d: expression '%s' return 'false', expected 'true'\n", \
-             __FILE__, __LINE__, #expression); \
-      minitest_testcase->FatalFailure(); \
-      return; \
-    } \
+#define MINITEST_EXPECT_ASSERT_MEM_(                                           \
+    expected, expected_len, expression, expression_len, is_eq, is_assert)      \
+  do {                                                                         \
+    const char* minitest_prefix = is_assert ? "ASSERT_MEM" : "EXPECT_MEM";     \
+    const char* minitest_suffix = is_eq ? "EQ" : "NEQ";                        \
+    const char* minitest_expected = (expected);                                \
+    size_t minitest_expected_len = static_cast<size_t>(expected_len);          \
+    const char* minitest_actual = (expression);                                \
+    size_t minitest_actual_len = static_cast<size_t>(expression_len);          \
+    if (minitest_actual == NULL) {                                             \
+      printf("%s%s:%s:%d: expression '%s' is NULL!\n",                         \
+             minitest_prefix,                                                  \
+             minitest_suffix,                                                  \
+             __FILE__,                                                         \
+             __LINE__,                                                         \
+             #expression);                                                     \
+      minitest_testcase->Failure();                                            \
+    } else if (minitest_actual_len != minitest_expected_len) {                 \
+      printf("%s:%s:%s:%d: size mistmatch for expression '%s'\n",              \
+             minitest_prefix,                                                  \
+             minitest_suffix,                                                  \
+             __FILE__,                                                         \
+             __LINE__,                                                         \
+             #expression);                                                     \
+      printf("actual size   : %d (0x%x)\n",                                    \
+             minitest_actual_len,                                              \
+             minitest_actual_len);                                             \
+      printf("expected size : %d (0x%x)\n",                                    \
+             minitest_expected_len,                                            \
+             minitest_expected_len);                                           \
+      minitest_testcase->Failure();                                            \
+    } else {                                                                   \
+      bool minitest_eq =                                                       \
+          !memcmp(minitest_expected, minitest_actual, minitest_expected_len);  \
+      if (minitest_eq != is_eq) {                                              \
+        printf("%s%s:%s:%d: with expression '%s' of %d bytes\n",               \
+               minitest_prefix,                                                \
+               minitest_suffix,                                                \
+               __FILE__,                                                       \
+               __LINE__,                                                       \
+               #expression,                                                    \
+               minitest_expected_len);                                         \
+        printf("actual   : '%.*s'\n", minitest_expected_len, minitest_actual); \
+        printf(                                                                \
+            "expected : '%.*s'\n", minitest_expected_len, minitest_expected);  \
+        minitest_testcase->Failure();                                          \
+      }                                                                        \
+    }                                                                          \
   } while (0)
 
-#define ASSERT_FALSE(expression) \
-  do { \
-    if (!!(expression)) { \
-      printf("ASSERT_FALSE:%s:%d: expression '%s' return 'true', expected 'false'\n", \
-             __FILE__, __LINE__, #expression); \
-      minitest_testcase->FatalFailure(); \
-      return; \
-    } \
+#define EXPECT_MEMEQ(expected, expected_len, expression, expression_len) \
+  MINITEST_EXPECT_ASSERT_MEM_(                                           \
+      expected, expected_len, expression, expression_len, true, false)
+
+#define EXPECT_MEMNEQ(expected, expected_len, expression, expression_len) \
+  MINITEST_EXPECT_ASSERT_MEM_(                                            \
+      expected, expected_len, expression, expression_len, false, false)
+
+#define ASSERT_TRUE(expression)                                          \
+  do {                                                                   \
+    if (!(expression)) {                                                 \
+      printf(                                                            \
+          "ASSERT_TRUE:%s:%d: expression '%s' return 'false', expected " \
+          "'true'\n",                                                    \
+          __FILE__,                                                      \
+          __LINE__,                                                      \
+          #expression);                                                  \
+      minitest_testcase->FatalFailure();                                 \
+      return;                                                            \
+    }                                                                    \
+  } while (0)
+
+#define ASSERT_FALSE(expression)                                         \
+  do {                                                                   \
+    if (!!(expression)) {                                                \
+      printf(                                                            \
+          "ASSERT_FALSE:%s:%d: expression '%s' return 'true', expected " \
+          "'false'\n",                                                   \
+          __FILE__,                                                      \
+          __LINE__,                                                      \
+          #expression);                                                  \
+      minitest_testcase->FatalFailure();                                 \
+      return;                                                            \
+    }                                                                    \
   } while (0)
 
 #define MINITEST_ASSERT_BINOP_(opname, op, expected, expression) \
-    MINITEST_EXPECT_ASSERT_BINOP_(opname, op, expected, expression, true)
+  MINITEST_EXPECT_ASSERT_BINOP_(opname, op, expected, expression, true)
 
-#define ASSERT_EQ(expected, expression)  \
-    MINITEST_ASSERT_BINOP_(EQ, ==, expected, expression)
+#define ASSERT_EQ(expected, expression) \
+  MINITEST_ASSERT_BINOP_(EQ, ==, expected, expression)
 
-#define ASSERT_NE(expected, expression)  \
-    MINITEST_ASSERT_BINOP_(NE, !=, expected, expression)
+#define ASSERT_NE(expected, expression) \
+  MINITEST_ASSERT_BINOP_(NE, !=, expected, expression)
 
-#define ASSERT_LE(expected, expression)  \
-    MINITEST_ASSERT_BINOP_(LE, <=, expected, expression)
+#define ASSERT_LE(expected, expression) \
+  MINITEST_ASSERT_BINOP_(LE, <=, expected, expression)
 
-#define ASSERT_LT(expected, expression)  \
-    MINITEST_ASSERT_BINOP_(LT, <, expected, expression)
+#define ASSERT_LT(expected, expression) \
+  MINITEST_ASSERT_BINOP_(LT, <, expected, expression)
 
-#define ASSERT_GE(expected, expression)  \
-    MINITEST_ASSERT_BINOP_(GE, >=, expected, expression)
+#define ASSERT_GE(expected, expression) \
+  MINITEST_ASSERT_BINOP_(GE, >=, expected, expression)
 
-#define ASSERT_GT(expected, expression)  \
-    MINITEST_ASSERT_BINOP_(GT, >, expected, expression)
+#define ASSERT_GT(expected, expression) \
+  MINITEST_ASSERT_BINOP_(GT, >, expected, expression)
 
 #define ASSERT_STREQ(expected, expression) \
-    MINITEST_EXPECT_ASSERT_STR_(expected, expression, true, true)
+  MINITEST_EXPECT_ASSERT_STR_(expected, expression, true, true)
 
 #define ASSERT_STRNEQ(expected, expression) \
-    MINITEST_EXPECT_ASSERT_STR_(expected, expression, false, true)
+  MINITEST_EXPECT_ASSERT_STR_(expected, expression, false, true)
+
+#define ASSERT_MEMEQ(expected, expected_len, expression, expression_len) \
+  MINITEST_EXPECT_ASSERT_MEM_(                                           \
+      expected, expected_len, expression, expression_len, true, true)
+
+#define ASSERT_MEMNEQ(expected, expected_len, expression, expression_len) \
+  MINITEST_EXPECT_ASSERT_MEM_(                                            \
+      expected, expected_len, expression, expression_len, false, true)
+
+#define ARRAY_LEN(x) (sizeof(x) / sizeof((x)[0]))
 
 }  // namespace minitest
 
