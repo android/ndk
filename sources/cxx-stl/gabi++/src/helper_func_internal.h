@@ -114,10 +114,6 @@ namespace __cxxabiv1 {
                            _Unwind_Exception* unwind_exception, _Unwind_Context* context) {
 #endif
 
-  // Print an error message to either stderr or the log. Then calls
-  // std::terminate(). Note: This always appends a newline to the message.
-  void fatalError(const char* message);
-
 } // namespace __cxxabiv1
 
 #endif // __GXXABI_HELPER_FUNC_INTERNAL_H

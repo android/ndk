@@ -1,4 +1,4 @@
-// Copyright (C) 2011 The Android Open Source Project
+// Copyright (C) 2012 The Android Open Source Project
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -24,24 +24,63 @@
 // LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 // SUCH DAMAGE.
-//
-// si_class_type_info.cc: Methods for __si_class_type_info.
+
+#include <exception>
+#include <typeinfo>
 
 #include "cxxabi_defines.h"
 
-namespace __cxxabiv1
-{
-  __si_class_type_info::~__si_class_type_info()
-  {
-  }
+namespace std {
 
-  bool __si_class_type_info::walk_to(const __class_type_info* base_type,
-                                     void*& adjustedPtr,
-                                     __UpcastInfo& info) const {
-    if (self_class_type_match(base_type, adjustedPtr, info)) {
-      return true;
-    }
+#if !defined(GABIXX_LIBCXX)
+exception::exception() throw() {
+}
+#endif // !defined(GABIXX_LIBCXX)
 
-    return __base_type->walk_to(base_type, adjustedPtr, info);
-  }
-} // namespace __cxxabiv1
+exception::~exception() throw() {
+}
+
+const char* exception::what() const throw() {
+  return "std::exception";
+}
+
+#if !defined(GABIXX_LIBCXX)
+bad_exception::bad_exception() throw() {
+}
+
+bad_exception::~bad_exception() throw() {
+}
+
+const char* bad_exception::what() const throw() {
+  return "std::bad_exception";
+}
+#endif // !defined(GABIXX_LIBCXX)
+
+bad_cast::bad_cast() throw() {
+}
+
+bad_cast::~bad_cast() throw() {
+}
+
+const char* bad_cast::what() const throw() {
+  return "std::bad_cast";
+}
+
+bad_typeid::bad_typeid() throw() {
+}
+
+bad_typeid::~bad_typeid() throw() {
+}
+
+const char* bad_typeid::what() const throw() {
+  return "std::bad_typeid";
+}
+
+bool uncaught_exception() throw() {
+  using namespace __cxxabiv1;
+
+  __cxa_eh_globals* globals = __cxa_get_globals();
+  return globals->uncaughtExceptions != 0;
+}
+
+}  // namespace std
