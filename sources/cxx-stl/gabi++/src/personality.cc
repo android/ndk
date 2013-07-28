@@ -40,10 +40,10 @@
 
 #include <cassert>
 #include <cstdlib>
-#include <cxxabi.h>
 #include <exception>
 #include <unwind.h>
 #include <typeinfo>
+#include "cxxabi_defines.h"
 #include "dwarf_helper.h"
 #include "helper_func_internal.h"
 

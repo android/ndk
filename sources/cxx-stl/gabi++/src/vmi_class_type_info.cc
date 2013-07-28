@@ -28,7 +28,7 @@
 // vmi_class_type_info.cc: Methods for __vmi_class_type_info.
 
 #include <cassert>
-#include <cxxabi.h>
+#include "cxxabi_defines.h"
 
 namespace __cxxabiv1
 {

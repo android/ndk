@@ -28,6 +28,8 @@
 #ifndef __GABIXX_EXCEPTION__
 #define __GABIXX_EXCEPTION__
 
+#include "gabixx_config.h"
+
 #if !defined(GABIXX_LIBCXX)
 
 namespace std {
@@ -49,12 +51,12 @@ namespace std {
   typedef void (*terminate_handler)();
   terminate_handler get_terminate();
   terminate_handler set_terminate(terminate_handler f);
-  void terminate();
+  _GABIXX_NORETURN void terminate();
 
   typedef void (*unexpected_handler)();
   unexpected_handler get_unexpected();
   unexpected_handler set_unexpected(unexpected_handler f);
-  void unexpected();
+  _GABIXX_NORETURN void unexpected();
 
   bool uncaught_exception() throw();
 

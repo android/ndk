@@ -10,6 +10,8 @@ libgabi++_src_files := \
         src/dwarf_helper.cc \
         src/dynamic_cast.cc \
         src/enum_type_info.cc \
+        src/exception.cc \
+        src/fatal_error.cc \
         src/function_type_info.cc \
         src/fundamental_type_info.cc \
         src/helper_func_internal.cc \
