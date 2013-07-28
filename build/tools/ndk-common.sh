@@ -290,6 +290,26 @@ case "$HOST_ARCH" in
     ;;
 esac
 
+# On Windows (which is never an NDK build machine), the user may have installed
+# a 64bit NDK but be running via a 32bit Cygwin or MSYS or vice versa. So if the
+# shell bit-ness prebuild/windows-$HOST_ARCH folder doesn't exist but the other
+# does then use the other one instead. This would fail only if a user of 32bit
+# Windows installs a 64bit NDK which is an unlikely case of PEBCAK.
+if [ "$HOST_OS" = windows ] ; then
+    case $HOST_ARCH in
+        x86)
+            if [ ! -d $ANDROID_NDK_ROOT/prebuilt/windows -a -d $ANDROID_NDK_ROOT/prebuilt/windows-x86_64 ] ; then
+                HOST_ARCH=x86_64
+            fi
+            ;;
+        x86_64)
+            if [ ! -d $ANDROID_NDK_ROOT/prebuilt/windows-x86_64 -a -d $ANDROID_NDK_ROOT/prebuilt/windows ] ; then
+                HOST_ARCH=x86
+            fi
+            ;;
+    esac
+fi
+
 HOST_FILE_PROGRAM="file"
 case "$HOST_OS-$HOST_ARCH" in
   linux-x86_64|darwin-x86_64)
