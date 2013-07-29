@@ -27,31 +27,32 @@
 //
 // delete.cc: delete operator
 
+#include <gabixx_config.h>
 #include <stdlib.h>
 #include <new>
 
-__attribute__ ((weak))
-void operator delete(void* ptr) throw()
+_GABIXX_WEAK
+void operator delete(void* ptr) _GABIXX_NOEXCEPT
 {
   if (ptr)
     free(ptr);
 }
 
-__attribute__ ((weak))
-void operator delete[](void* ptr) throw()
+_GABIXX_WEAK
+void operator delete[](void* ptr) _GABIXX_NOEXCEPT
 {
     ::operator delete(ptr);
 }
 
-__attribute__ ((weak))
-void operator delete(void* ptr, const std::nothrow_t &) throw()
+_GABIXX_WEAK
+void operator delete(void* ptr, const std::nothrow_t &) _GABIXX_NOEXCEPT
 {
     if (ptr)
         free(ptr);
 }
 
-__attribute__ ((weak))
-void operator delete[](void* ptr, const std::nothrow_t &nt) throw()
+_GABIXX_WEAK
+void operator delete[](void* ptr, const std::nothrow_t &nt) _GABIXX_NOEXCEPT
 {
     ::operator delete(ptr, nt);
 }
