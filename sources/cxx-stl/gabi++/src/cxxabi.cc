@@ -43,7 +43,8 @@ namespace {
     return exc == __gxx_exception_class;
   }
 
-  void defaultExceptionCleanupFunc(_Unwind_Reason_Code reason, _Unwind_Exception* exc) {
+  void defaultExceptionCleanupFunc(_Unwind_Reason_Code reason,
+                                   _Unwind_Exception* exc) {
     __cxa_free_exception(exc+1);
   }
 
@@ -87,7 +88,8 @@ namespace {
         obj = malloc(sizeof(__cxa_eh_globals));
         if (!obj) {
           // Shouldn't happen, but better be safe than sorry.
-          __gabixx::__fatal_error("Can't allocate thread-specific C++ runtime info block.");
+          __gabixx::__fatal_error(
+              "Can't allocate thread-specific C++ runtime info block.");
         }
         memset(obj, 0, sizeof(__cxa_eh_globals));
         pthread_setspecific(__cxa_thread_key, obj);

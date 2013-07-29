@@ -36,10 +36,10 @@
 // Target-independent helper functions
 namespace __cxxabiv1 {
 
-  void call_terminate(_Unwind_Exception* unwind_exception);
+  void call_terminate(_Unwind_Exception* unwind_exception) _GABIXX_HIDDEN;
 
 #if __arm__
-  uint32_t decodeRelocTarget2 (uint32_t ptr);
+  uint32_t decodeRelocTarget2 (uint32_t ptr) _GABIXX_HIDDEN;
 #endif
 
   // An exception spec acts like a catch handler, but in reverse.
@@ -50,33 +50,38 @@ namespace __cxxabiv1 {
                              uint8_t ttypeEncoding,
                              const std::type_info* excpType,
                              void* adjustedPtr,
-                             _Unwind_Exception* unwind_exception);
+                             _Unwind_Exception* unwind_exception)
+      _GABIXX_HIDDEN;
 
   void setRegisters(_Unwind_Exception* unwind_exception,
                     _Unwind_Context* context,
-                    const ScanResultInternal& results);
+                    const ScanResultInternal& results) _GABIXX_HIDDEN;
 
   _Unwind_Reason_Code continueUnwinding(_Unwind_Exception *ex,
-                                        _Unwind_Context *context);
+                                        _Unwind_Context *context)
+      _GABIXX_HIDDEN;
 
   void saveDataToBarrierCache(_Unwind_Exception* exc,
                               _Unwind_Context* ctx,
-                              const ScanResultInternal& results);
+                              const ScanResultInternal& results)
+      _GABIXX_HIDDEN;
 
   void loadDataFromBarrierCache(_Unwind_Exception* exc,
-                                ScanResultInternal& results);
+                                ScanResultInternal& results)
+      _GABIXX_HIDDEN;
 
-  void prepareBeginCleanup(_Unwind_Exception* exc);
+  void prepareBeginCleanup(_Unwind_Exception* exc) _GABIXX_HIDDEN;
 
   void saveUnexpectedDataToBarrierCache(_Unwind_Exception* exc,
                                         _Unwind_Context* ctx,
-                                        const ScanResultInternal& results);
+                                        const ScanResultInternal& results)
+      _GABIXX_HIDDEN;
 
   void scanEHTable(ScanResultInternal& results,
                    _Unwind_Action actions,
                    bool native_exception,
                    _Unwind_Exception* unwind_exception,
-                   _Unwind_Context* context);
+                   _Unwind_Context* context) _GABIXX_HIDDEN;
 
   // Make it easier to adapt to Itanium PR
 #ifdef __arm__
