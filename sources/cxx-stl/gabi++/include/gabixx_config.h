@@ -50,6 +50,9 @@
 // never be exposed to client code.
 #define _GABIXX_HIDDEN  __attribute__((__visibility__("hidden")))
 
+// Use _GABIXX_WEAK to define a symbol with weak linkage.
+#define _GABIXX_WEAK  __attribute__((__weak__))
+
 // Use _GABIXX_ALWAYS_INLINE to declare a function that shall always be
 // inlined. Note that the always_inline doesn't make a function inline
 // per se.

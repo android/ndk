@@ -265,14 +265,15 @@ namespace __cxxabiv1 {
     return header->adjustedPtr;
   }
 
-  extern "C" bool __cxa_uncaught_exception() throw() {
+  extern "C" bool __cxa_uncaught_exception() _GABIXX_NOEXCEPT {
     __cxa_eh_globals* globals = __cxa_get_globals();
     if (globals == NULL)
       return false;
     return globals->uncaughtExceptions == 0;
   }
 
-  extern "C" void __cxa_decrement_exception_refcount(void* exceptionObject) throw() {
+  extern "C" void __cxa_decrement_exception_refcount(void* exceptionObject)
+      _GABIXX_NOEXCEPT {
     if (exceptionObject != NULL)
     {
       __cxa_exception* header =
@@ -282,7 +283,8 @@ namespace __cxxabiv1 {
     }
   }
 
-  extern "C" void __cxa_increment_exception_refcount(void* exceptionObject) throw() {
+  extern "C" void __cxa_increment_exception_refcount(void* exceptionObject)
+      _GABIXX_NOEXCEPT {
     if (exceptionObject != NULL)
     {
       __cxa_exception* header =
@@ -299,7 +301,7 @@ namespace __cxxabiv1 {
 #endif /* defined(GABIXX_LIBCXX) */
   }
 
-  extern "C" void* __cxa_current_primary_exception() throw() {
+  extern "C" void* __cxa_current_primary_exception() _GABIXX_NOEXCEPT {
 #if defined(GABIXX_LIBCXX)
 // Only warn if we're building for libcxx since other libraries do not use
 // this.

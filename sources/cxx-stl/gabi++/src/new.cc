@@ -40,17 +40,17 @@ namespace std {
   const nothrow_t nothrow = {};
 #endif  // !defined(GABIXX_LIBCXX)
 
-  bad_alloc::bad_alloc() throw() {
+  bad_alloc::bad_alloc() _GABIXX_NOEXCEPT {
   }
 
-  bad_alloc::~bad_alloc() throw() {
+  bad_alloc::~bad_alloc() _GABIXX_NOEXCEPT {
   }
 
-  const char* bad_alloc::what() const throw() {
+  const char* bad_alloc::what() const _GABIXX_NOEXCEPT {
     return "std::bad_alloc";
   }
 
-  new_handler set_new_handler(new_handler next_handler) throw() {
+  new_handler set_new_handler(new_handler next_handler) _GABIXX_NOEXCEPT {
     new_handler old_handler = cur_handler;
     cur_handler = next_handler;
     return old_handler;
@@ -58,7 +58,7 @@ namespace std {
 
 } // namespace std
 
-__attribute__ ((weak))
+_GABIXX_WEAK
 void* operator new(std::size_t size) throw(std::bad_alloc) {
   void* space;
   do {
@@ -74,8 +74,9 @@ void* operator new(std::size_t size) throw(std::bad_alloc) {
   } while (space == 0);
 }
 
-__attribute__ ((weak))
-void* operator new(std::size_t size, const std::nothrow_t& no) throw() {
+_GABIXX_WEAK
+void* operator new(std::size_t size, const std::nothrow_t& no)
+    _GABIXX_NOEXCEPT {
   try {
     return ::operator new(size);
   } catch (const std::bad_alloc&) {
@@ -83,12 +84,13 @@ void* operator new(std::size_t size, const std::nothrow_t& no) throw() {
   }
 }
 
-__attribute__ ((weak))
+_GABIXX_WEAK
 void* operator new[](std::size_t size) throw(std::bad_alloc) {
   return ::operator new(size);
 }
 
-__attribute__ ((weak))
-void* operator new[](std::size_t size, const std::nothrow_t& no) throw() {
+_GABIXX_WEAK
+void* operator new[](std::size_t size, const std::nothrow_t& no)
+    _GABIXX_NOEXCEPT {
   return ::operator new(size, no);
 }

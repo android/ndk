@@ -107,11 +107,11 @@ namespace __cxxabiv1
     void __cxa_pure_virtual();
 
     // Missing libcxxabi functions.
-    bool __cxa_uncaught_exception() throw();
-    void __cxa_decrement_exception_refcount(void* exceptionObject) throw();
-    void __cxa_increment_exception_refcount(void* exceptionObject) throw();
+    bool __cxa_uncaught_exception() _GABIXX_NOEXCEPT;
+    void __cxa_decrement_exception_refcount(void* exceptionObject) _GABIXX_NOEXCEPT;
+    void __cxa_increment_exception_refcount(void* exceptionObject) _GABIXX_NOEXCEPT;
     void __cxa_rethrow_primary_exception(void* exceptionObject);
-    void* __cxa_current_primary_exception() throw();
+    void* __cxa_current_primary_exception() _GABIXX_NOEXCEPT;
 
     // The ARM ABI mandates that constructors and destructors
     // must return 'this', i.e. their first parameter. This is
