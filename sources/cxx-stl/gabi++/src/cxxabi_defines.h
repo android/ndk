@@ -317,14 +317,15 @@ struct __cxa_eh_globals {
 namespace __gabixx {
 
 // Default terminate handler.
-_GABIXX_NORETURN void __default_terminate(void);
+_GABIXX_NORETURN void __default_terminate(void) _GABIXX_HIDDEN;
 
 // Call |handler| and if it returns, call __default_terminate.
-_GABIXX_NORETURN void __terminate(std::terminate_handler handler);
+_GABIXX_NORETURN void __terminate(std::terminate_handler handler)
+    _GABIXX_HIDDEN;
 
 // Print a fatal error message to the log+stderr, then call
 // std::terminate().
-_GABIXX_NORETURN void __fatal_error(const char* message);
+_GABIXX_NORETURN void __fatal_error(const char* message) _GABIXX_HIDDEN;
 
 }  // __gabixx
 

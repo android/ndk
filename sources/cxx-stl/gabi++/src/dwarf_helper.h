@@ -43,6 +43,7 @@
 
 #include <cstdint>
 #include <unwind.h>
+#include <gabixx_config.h>
 
 namespace __cxxabiv1 {
 
@@ -78,10 +79,10 @@ namespace __cxxabiv1 {
                                  //        _URC_HANDLER_FOUND
   };
 
-  uintptr_t readULEB128(const uint8_t** data);
-  intptr_t readSLEB128(const uint8_t** data);
+  uintptr_t readULEB128(const uint8_t** data) _GABIXX_HIDDEN;
+  intptr_t readSLEB128(const uint8_t** data) _GABIXX_HIDDEN;
   uintptr_t readEncodedPointer(const uint8_t** data,
-                               uint8_t encoding);
+                               uint8_t encoding) _GABIXX_HIDDEN;
 
 } // namespace __cxxabiv1
 
