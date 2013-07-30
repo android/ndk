@@ -65,6 +65,7 @@ system_libs := \
     EGL \
     GLESv1_CM \
     GLESv2 \
+    GLESv3 \
     OpenSLES \
     OpenMAXAL
 
