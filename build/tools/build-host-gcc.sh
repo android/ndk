@@ -1525,6 +1525,15 @@ build_gcc ()
     fi
 }
 
+do_relink ()
+{
+    log "Relink $1 --> $2"
+    local BASENAME DIRNAME
+    DIRNAME=$(dirname "$1")
+    BASENAME=$(basename "$1")
+    ( cd "$DIRNAME" && rm -f "$BASENAME" && ln -s "$2" "$BASENAME" )
+}
+
 # $1: host system tag (e.g. linux-x86)
 # $2: toolchain name (e.g. x86-4.4.3)
 install_gcc ()
@@ -1562,10 +1571,21 @@ install_gcc ()
     # We need to generate symlinks for the binutils binaries from
     # $INSTALL_DIR/$TARGET/bin/$PROG to $INSTALL_DIR/bin/$TARGET-$PROG
     mkdir -p "$INSTALL_DIR/$TARGET/bin" &&
-    for PROG in $(cd $BINUTILS_DIR/$TARGET/bin && ls *); do
-        (cd "$INSTALL_DIR/$TARGET/bin" && rm -f $PROG && ln -s ../../bin/$TARGET-$PROG $PROG)
+    for PROG in $(cd $INSTALL_DIR/$TARGET/bin && ls * 2>/dev/null); do
+        do_relink "$INSTALL_DIR/$TARGET/bin/$PROG" ../../bin/$TARGET-$PROG
         fail_panic
     done
+
+    # Also relink a few files under $INSTALL_DIR/bin/
+    do_relink "$INSTALL_DIR"/bin/$TARGET-c++ $TARGET-g++ &&
+    do_relink "$INSTALL_DIR"/bin/$TARGET-gcc-$GCC_VERSION $TARGET-gcc &&
+    if [ "$GCC_VERSION" != "4.4.3" ]; then
+      do_relink "$INSTALL_DIR"/bin/$TARGET-ld $TARGET-ld.gold
+    fi
+    fail_panic
+
+    # Remove unwanted $TARGET-run simulator to save about 800 KB.
+    run2 rm -f "$INSTALL_DIR"/bin/$TARGET-run
 
     # Copy the license files
     local TOOLCHAIN_LICENSES="$ANDROID_NDK_ROOT"/build/tools/toolchain-licenses
