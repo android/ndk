@@ -307,6 +307,10 @@ When defined, this variable has two effects:
   2. It tells ndk-gdb to look into $NDK_OUT, instead of $PROJECT/obj for
      any symbolized (i.e. unstripped) versions of the generated binaries.
 
+Similarly you can override the default $PROJECT/libs (for libraries and
+gdbserver, etc) by defining NDK_LIBS_OUT to a new path.  This is rarely
+done since build system expects the default $PROJECT/libs/
+
 
 ### IV. Rebuild your application package:
 

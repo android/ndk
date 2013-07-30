@@ -33,6 +33,7 @@ currently supported:
       android-8      -> Official Android 2.2 system images
       android-9      -> Official Android 2.3 system images
       android-14     -> Official Android 4.0 system images
+      android-18     -> Official Android 4.3 system images
 
 Note that android-6 and android-7 are the same as android-5 for the NDK,
 i.e. they provide exactly the same native ABIs!
@@ -398,3 +399,34 @@ Starting with API level 14, the native audio API was extended to support
 decoding to PCM.  See section "The OpenSL ES native audio Library"
 above for a high-level summary of how to use OpenSL ES, and the details
 in docs/opensles/index.html.
+
+
+
+V. Android-18 Stable Native APIs:
+----------------------------------
+
+All the APIs listed below are available for developing native code that runs
+on Android 4.3 system images and above.
+
+
+### The OpenGL ES 3.0 Library:
+
+The standard OpenGL ES 3.0 headers `<GLES3/gl3.h>` and `<GLES3/gl3ext.h>` contain the
+declarations needed to perform OpenGL ES 3.0 rendering calls from native code.
+
+If you use them, your native module should link to /system/lib/libGLESv3.so
+as in:
+
+  LOCAL_LDLIBS := -lGLESv3
+
+Not all devices support OpenGL ES 3.0, developers should thus query the
+implementation's version and extension strings, and put a `<uses-feature>`
+tag in their Android manifest. See Section III above for details.
+
+The "hello-gl3" sample application demonstrate this.
+
+IMPORTANT NOTE:
+> The Android emulator does not support OpenGL ES 3.0 hardware emulation
+  at this time. Running and testing code that uses this API requires a
+  real device with such capabilities.
+
