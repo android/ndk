@@ -1579,8 +1579,10 @@ install_gcc ()
     # Also relink a few files under $INSTALL_DIR/bin/
     do_relink "$INSTALL_DIR"/bin/$TARGET-c++ $TARGET-g++ &&
     do_relink "$INSTALL_DIR"/bin/$TARGET-gcc-$GCC_VERSION $TARGET-gcc &&
-    if [ "$GCC_VERSION" != "4.4.3" ]; then
+    if [ -f "$INSTALL_DIR"/bin/$TARGET-ld.gold ]; then
       do_relink "$INSTALL_DIR"/bin/$TARGET-ld $TARGET-ld.gold
+    else
+      do_relink "$INSTALL_DIR"/bin/$TARGET-ld $TARGET-ld.bfd
     fi
     fail_panic
 

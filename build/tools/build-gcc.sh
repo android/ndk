@@ -504,18 +504,25 @@ done
 
 # $1: Source file prefix (e.g. 'c++')
 # $2: Destination file prefix (e.g. 'g++')
+# $3: Alternative file prefix if $2 doesn't exist (eg. ld.bfd)
 do_relink_bin () {
+    local DST_FILE=$2
+    if [ ! -f "$TOOLCHAIN_PATH/bin/$ABI_CONFIGURE_TARGET-$DST_FILE$HOST_EXE" ]; then
+        DST_FILE=$3
+    fi
+    if [ ! -f "$TOOLCHAIN_PATH/bin/$ABI_CONFIGURE_TARGET-$DST_FILE$HOST_EXE" ]; then
+        echo "ERROR: Can't relink $1 to $DST_FILE because $DST_FILE doesn't exist"
+        exit 1
+    fi
     do_relink \
         $TOOLCHAIN_PATH/bin/$ABI_CONFIGURE_TARGET-$1$HOST_EXE \
-        $ABI_CONFIGURE_TARGET-$2$HOST_EXE
+        $ABI_CONFIGURE_TARGET-$DST_FILE$HOST_EXE
 }
 
 do_relink_bin c++ g++
 do_relink_bin gcc-$GCC_VERSION gcc
-# Gold is the default except for 4.4.3
-if [ "$GCC_VERSION" != "4.4.3" ]; then
-    do_relink_bin ld ld.gold
-fi
+# symlink ld to either ld.gold or ld.bfd
+do_relink_bin ld ld.gold ld.bfd
 
 # copy SOURCES file if present
 if [ -f "$SRC_DIR/SOURCES" ]; then
