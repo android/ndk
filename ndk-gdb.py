@@ -93,7 +93,7 @@ MANIFEST = 'AndroidManifest.xml'
 # started, and sometimes this takes a few seconds.
 #
 DELAY = 2.0
-NDK = os.path.abspath(os.path.dirname(sys.argv[0]))
+NDK = os.path.abspath(os.path.dirname(sys.argv[0])).replace('\\','/')
 DEVICE_SERIAL = ''
 ADB_FLAGS = ''
 
@@ -118,8 +118,9 @@ def handle_args():
     global PYPRPR_GNUSTDCXX_BASE
 
     parser = argparse.ArgumentParser(description='''
-    Setup a gdb debugging session for your Android NDK application.
-    Read ''' + NDK + '''/docs/NDK-GDB.html for complete usage instructions.''')
+Setup a gdb debugging session for your Android NDK application.
+Read ''' + NDK + '''/docs/NDK-GDB.html for complete usage instructions.''',
+    formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument( '--verbose',
                          help='Enable verbose mode', action='store_true', dest='verbose')
