@@ -46,6 +46,10 @@
 #  define _GABIXX_NOEXCEPT_(x) /* nothing */
 #endif
 
+// Use _GABIXX_HIDDEN to declare internal functions of GAbi++ that should
+// never be exposed to client code.
+#define _GABIXX_HIDDEN  __attribute__((__visibility__("hidden")))
+
 // Use _GABIXX_ALWAYS_INLINE to declare a function that shall always be
 // inlined. Note that the always_inline doesn't make a function inline
 // per se.
