@@ -97,7 +97,7 @@ for SYSTEM in $SYSTEMS; do
         LD_NOEXE=${LD%%.exe}
         LD_MCLD=${LD_NOEXE}.mcld$HOST_EXE
         run rm -f "$LD_MCLD"
-        run cp -a "$MCLD" "$LD_MCLD"
+        run ln -s "$MCLD" "$LD_MCLD"
         ALL_LD_MCLDS=$ALL_LD_MCLDS" $LD_MCLD"
     done
 
