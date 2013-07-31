@@ -136,7 +136,7 @@ installation by using the --llvm-version=<version> option, where
         build/tools/make-standalone-toolchain.sh \
             --install-dir=/tmp/mydir \
             --toolchain=arm-linux-androideabi-4.7 \
-            --llvm-version=3.1
+            --llvm-version=3.3
 
 Note that Clang binaries are copied in addition to the GCC ones, because
 they rely on the same assembler, linker, headers, libraries and C++
@@ -152,7 +152,7 @@ The rest of this section gives more detail about how these work, in case
 you encounter some unexpected problems.
 
 For example, in an ARM standalone installation built with
-`--llvm-version=3.1`, `clang` is a one-liner that looks like this on Unix:
+`--llvm-version=3.3`, `clang` is a one-liner that looks like this on Unix:
 
         `dirname $0`/clang31 -target armv5te-none-linux-androideabi "$@"
 
