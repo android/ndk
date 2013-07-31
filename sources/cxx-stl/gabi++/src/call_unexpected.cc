@@ -64,8 +64,9 @@
 
 
 #include <cstdlib>
-#include <cxxabi.h>
 #include <unwind.h>
+
+#include "cxxabi_defines.h"
 #include "dwarf_helper.h"
 #include "helper_func_internal.h"
 

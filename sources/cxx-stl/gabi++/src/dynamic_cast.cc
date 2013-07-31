@@ -32,7 +32,7 @@
 // IHI0041A C++ Application Binary Interface for the ARM architecture.
 //
 
-#include <cxxabi.h>
+#include "cxxabi_defines.h"
 
 #include <cstddef>
 #include <cassert>

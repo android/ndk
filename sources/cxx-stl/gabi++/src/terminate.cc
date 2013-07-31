@@ -26,127 +26,96 @@
 // SUCH DAMAGE.
 
 #include <cstdlib>
-#include <cxxabi.h>
 #include <exception>
+#include "cxxabi_defines.h"
+
+namespace {
+
+std::terminate_handler current_terminate = __gabixx::__default_terminate;
+std::unexpected_handler current_unexpected = __gabixx::__default_terminate;
+
+}  // namespace
+
+
+namespace __gabixx {
+
+// The default std::terminate() implementation will crash the process.
+// This is done to help debugging, i.e.:
+//   - When running the program in a debugger, it's trivial to get
+//     a complete stack trace explaining the failure.
+//
+//   - Otherwise, the default SIGSEGV handler will generate a stack
+//     trace in the log, that can later be processed with ndk-stack
+//     and other tools.
+//
+//   - Finally, this also works when a custom SIGSEGV handler has been
+//     installed. E.g. when using Google Breakpad, the termination will
+//     be recorded in a Minidump, which contains a stack trace to be
+//     later analyzed.
+//
+// The C++ specification states that the default std::terminate()
+// handler is library-specific, even though most implementation simply
+// choose to call abort() in this case.
+//
+_GABIXX_NORETURN void __default_terminate(void) {
+  // The crash address is just a "magic" constant that can be used to
+  // identify stack traces (like 0xdeadbaad is used when heap corruption
+  // is detected in the C library). 'cab1' stands for "C++ ABI" :-)
+  *(reinterpret_cast<char*>(0xdeadcab1)) = 0;
+
+  // should not be here, but just in case.
+  abort();
+}
+
+_GABIXX_NORETURN void __terminate(std::terminate_handler handler) {
+  if (!handler)
+    handler = __default_terminate;
+
+#if _GABIXX_HAS_EXCEPTIONS
+  try {
+    (*handler)();
+  } catch (...) {
+    /* nothing */
+  }
+#else
+  (*handler)();
+#endif
+  __default_terminate();
+}
+
+}  // namespace __gabixx
 
 namespace std {
 
-  namespace {
-    // The default std::terminate() implementation will crash the process.
-    // This is done to help debugging, i.e.:
-    //   - When running the program in a debugger, it's trivial to get
-    //     a complete stack trace explaining the failure.
-    //
-    //   - Otherwise, the default SIGSEGV handler will generate a stack
-    //     trace in the log, that can later be processed with ndk-stack
-    //     and other tools.
-    //
-    //   - Finally, this also works when a custom SIGSEGV handler has been
-    //     installed. E.g. when using Google Breakpad, the termination will
-    //     be recorded in a Minidump, which contains a stack trace to be
-    //     later analyzed.
-    //
-    // The C++ specification states that the default std::terminate()
-    // handler is library-specific, even though most implementation simply
-    // choose to call abort() in this case.
-    //
-    void default_terminate(void) {
-      // The crash address is just a "magic" constant that can be used to
-      // identify stack traces (like 0xdeadbaad is used when heap corruption
-      // is detected in the C library). 'cab1' stands for "C++ ABI" :-)
-      *(reinterpret_cast<char*>(0xdeadcab1)) = 0;
+terminate_handler get_terminate() {
+  return __gabixx_sync_load(&current_terminate);
+}
 
-      // should not be here, but just in case.
-      abort();
-    }
+terminate_handler set_terminate(terminate_handler f) {
+  if (!f)
+    f = __gabixx::__default_terminate;
 
-    terminate_handler current_terminate_fn = default_terminate;
-    unexpected_handler current_unexpected_fn = terminate;
-  }  // namespace
+  return __gabixx_sync_swap(&current_terminate, f);
+}
 
-#if !defined(GABIXX_LIBCXX)
-  exception::exception() throw() {
-  }
-#endif // !defined(GABIXX_LIBCXX)
+_GABIXX_NORETURN void terminate() {
+  __gabixx::__terminate(std::get_terminate());
+}
 
-  exception::~exception() throw() {
-  }
+unexpected_handler get_unexpected() {
+  return __gabixx_sync_load(&current_unexpected);
+}
 
-  const char* exception::what() const throw() {
-    return "std::exception";
-  }
+unexpected_handler set_unexpected(unexpected_handler f) {
+  if (!f)
+    f = __gabixx::__default_terminate;
 
-#if !defined(GABIXX_LIBCXX)
-  bad_exception::bad_exception() throw() {
-  }
+  return __gabixx_sync_swap(&current_unexpected, f);
+}
 
-  bad_exception::~bad_exception() throw() {
-  }
-
-  const char* bad_exception::what() const throw() {
-    return "std::bad_exception";
-  }
-#endif // !defined(GABIXX_LIBCXX)
-
-  bad_cast::bad_cast() throw() {
-  }
-
-  bad_cast::~bad_cast() throw() {
-  }
-
-  const char* bad_cast::what() const throw() {
-    return "std::bad_cast";
-  }
-
-  bad_typeid::bad_typeid() throw() {
-  }
-
-  bad_typeid::~bad_typeid() throw() {
-  }
-
-  const char* bad_typeid::what() const throw() {
-    return "std::bad_typeid";
-  }
-
-  terminate_handler get_terminate() {
-    return current_terminate_fn;
-  }
-
-  terminate_handler set_terminate(terminate_handler f) {
-    terminate_handler tmp = current_terminate_fn;
-    current_terminate_fn = f;
-    return tmp;
-  }
-
-  void terminate() {
-    try {
-      current_terminate_fn();
-      abort();
-    } catch (...) {
-      abort();
-    }
-  }
-
-  unexpected_handler get_unexpected() {
-    return current_unexpected_fn;
-  }
-
-  unexpected_handler set_unexpected(unexpected_handler f) {
-    unexpected_handler tmp = current_unexpected_fn;
-    current_unexpected_fn = f;
-    return tmp;
-  }
-
-  void unexpected() {
-    current_unexpected_fn();
-    terminate();
-  }
-
-  bool uncaught_exception() throw() {
-    using namespace __cxxabiv1;
-
-    __cxa_eh_globals* globals = __cxa_get_globals();
-    return globals->uncaughtExceptions != 0;
-  }
+_GABIXX_NORETURN void unexpected() {
+  (*get_unexpected())();
+  terminate();
+}
 
 } // namespace std
