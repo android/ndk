@@ -570,7 +570,9 @@ builder_begin_android ()
 
     case $ABI in
         armeabi)
-            builder_cflags "-mthumb"
+            # add -minline-thumb1-jumptable such that gabi++/stlport/libc++ can be linked
+            # with compiler-rt where helpers __gnu_thumb1_case_* (in libgcc.a) don't exist
+            builder_cflags "-mthumb -minline-thumb1-jumptable"
             ;;
         armeabi-v7a)
             builder_cflags "-mthumb -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16"
