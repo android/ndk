@@ -1,0 +1,28 @@
+diff -urN a/llvm/autoconf/configure.ac b/llvm/autoconf/configure.ac
+--- a/llvm/autoconf/configure.ac	2013-08-05 01:03:38.528647849 +0100
++++ b/llvm/autoconf/configure.ac	2013-08-05 01:05:27.375311788 +0100
+@@ -61,8 +61,8 @@
+ 
+ dnl Default to empty (i.e. assigning the null string to) CFLAGS and CXXFLAGS,
+ dnl instead of the autoconf default (for example, '-g -O2' for CC=gcc).
+-${CFLAGS=}
+-${CXXFLAGS=}
++CFLAGS=
++CXXFLAGS=
+ 
+ dnl We need to check for the compiler up here to avoid anything else
+ dnl starting with a different one.
+diff -urN a/llvm/configure b/llvm/configure
+--- a/llvm/configure	2013-08-05 01:03:44.781980846 +0100
++++ b/llvm/configure	2013-08-05 01:05:09.845309516 +0100
+@@ -1987,8 +1987,8 @@
+   fi
+ fi
+ 
+-${CFLAGS=}
+-${CXXFLAGS=}
++CFLAGS=
++CXXFLAGS=
+ 
+ ac_ext=c
+ ac_cpp='$CPP $CPPFLAGS'
