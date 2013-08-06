@@ -62,6 +62,13 @@ register_var_option "--no-makefile" NO_MAKEFILE "Do not use makefile to speed-up
 VISIBLE_LIBPORTABLE_STATIC=
 register_var_option "--visible-libportable-static" VISIBLE_LIBPORTABLE_STATIC "Do not use hidden visibility for libportable.a"
 
+GCC_VERSION=$DEFAULT_GCC_VERSION
+register_var_option "--gcc-version=<ver>" GCC_VERSION "Specify GCC version"
+
+LLVM_VERSION=
+register_var_option "--llvm-version=<ver>" LLVM_VERSION "Specify LLVM version"
+
+
 register_jobs_option
 
 extract_parameters "$@"
@@ -128,7 +135,7 @@ build_libportable_libs_for_abi ()
 
     mkdir -p "$DSTDIR"
 
-    builder_begin_android $ABI "$BUILDDIR" "$LLVM_VERSION" "$MAKEFILE"
+    builder_begin_android $ABI "$BUILDDIR" "$GCC_VERSION" "$LLVM_VERSION" "$MAKEFILE"
     builder_set_srcdir "$LIBPORTABLE_SRCDIR"
     builder_set_dstdir "$DSTDIR"
 
