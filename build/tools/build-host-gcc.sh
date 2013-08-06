@@ -1408,9 +1408,7 @@ build_host_gcc_core ()
      *)
        case $TARGET_ARCH in
 	     arm) ARGS=$ARGS" --enable-libgomp";;
-	     x86) ARGS=$ARGS" --enable-libgomp";;
-             # TODO: Disable these libraries until we have platforms for x86_64
-	     x86_64) ARGS=$ARGS" --disable-libgomp --disable-libatomic";;
+	     x86*) ARGS=$ARGS" --enable-libgomp";;
 	     mips|mipsel) ARGS=$ARGS" --disable-libgomp";;
 	 esac
 	 ;;
@@ -1567,6 +1565,14 @@ install_gcc ()
 
     # Copy target gcc libraries
     run2 copy_directory "$TARGET_LIBS_DIR/lib/gcc/$TARGET" "$INSTALL_DIR/lib/gcc/$TARGET"
+    run2 copy_directory "$TARGET_LIBS_DIR/$TARGET/lib" "$INSTALL_DIR/$TARGET/lib"
+    # Multilib compiler should have these
+    if [ -d "$TARGET_LIBS_DIR/$TARGET/libx32" ]; then
+       run2 copy_directory "$TARGET_LIBS_DIR/$TARGET/libx32" "$INSTALL_DIR/$TARGET/libx32"
+    fi
+    if [ -d "$TARGET_LIBS_DIR/$TARGET/lib64" ]; then
+       run2 copy_directory "$TARGET_LIBS_DIR/$TARGET/lib64" "$INSTALL_DIR/$TARGET/lib64"
+    fi
 
     # We need to generate symlinks for the binutils binaries from
     # $INSTALL_DIR/$TARGET/bin/$PROG to $INSTALL_DIR/bin/$TARGET-$PROG
