@@ -1,4 +1,4 @@
-rem @echo off
+@echo off
 rem This is a Windows cmd.exe script used to find windows host name.
 rem %1 is the env. var to set to the windows host name.
 
