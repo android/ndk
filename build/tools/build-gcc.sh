@@ -311,9 +311,6 @@ fi
 
 # Enable OpenMP
 case "$TOOLCHAIN" in
-    # TODO: Need x86_64 platforms first to have libgomp and libatomic build.
-    # Disable for now until platforms are ready.
-    x86_64-*) EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --disable-libatomic" ;;
     *) EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-libgomp" ;;
 esac
 
