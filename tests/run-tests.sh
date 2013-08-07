@@ -382,7 +382,7 @@ if [ "$WINE" ]; then
             WINE=wine12
             ;;
         *)
-            WINE=wine15
+            WINE=wine17
             NDK_BUILD_FLAGS=""  # make.exe -B hangs in wine > 1.2.x
             if [ "$NDK_TOOLCHAIN_VERSION" != "4.4.3" ] ; then
                 APP_LDFLAGS="$APP_LDFLAGS -fuse-ld=mcld" # 64-bit ld.gold can't run in any wine!
