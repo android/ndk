@@ -1398,6 +1398,7 @@ build_host_gcc_core ()
     ARGS=$ARGS" --disable-nls"
     ARGS=$ARGS" --disable-werror"
     ARGS=$ARGS" --enable-target-optspace"
+    ARGS=$ARGS" --enable-eh-frame-hdr-for-static"
     # TODO: Build fails for libsanitizer which appears in 4.8. Disable for now.
     ARGS=$ARGS" --disable-libsanitizer"
 
