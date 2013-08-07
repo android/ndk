@@ -45,6 +45,7 @@ for VERSION in $DEFAULT_GCC_VERSION_LIST; do
     rm -rf $DIR/$GNUSTL_SUBDIR/$VERSION
 done
 rm -rf $DIR/$LIBPORTABLE_SUBDIR
+rm -rf $DIR/$COMPILER_RT_SUBDIR
 
 rm -f $DIR/ndk-stack*
 rm -f $DIR/ndk-depends*

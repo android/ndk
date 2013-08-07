@@ -62,7 +62,7 @@ diff --git a/gcc-4.8/libstdc++-v3/src/Makefile.in b/gcc-4.8/libstdc++-v3/src/Mak
 index 69001b4..e875539 100644
 --- a/gcc-4.8/libstdc++-v3/src/Makefile.in
 +++ b/gcc-4.8/libstdc++-v3/src/Makefile.in
-@@ -336,7 +336,7 @@ AM_CPPFLAGS = $(GLIBCXX_INCLUDES)
+@@ -335,7 +335,7 @@ AM_CPPFLAGS = $(GLIBCXX_INCLUDES)
  SUBDIRS = c++98 c++11
  
  # Cross compiler support.
@@ -71,7 +71,7 @@ index 69001b4..e875539 100644
  @GLIBCXX_LDBL_COMPAT_FALSE@ldbl_compat_sources = 
  @GLIBCXX_LDBL_COMPAT_TRUE@ldbl_compat_sources = compatibility-ldbl.cc
  parallel_compat_sources = \
-@@ -543,6 +543,9 @@ clean-toolexeclibLTLIBRARIES:
+@@ -544,6 +544,9 @@ clean-toolexeclibLTLIBRARIES:
  libstdc++.la: $(libstdc___la_OBJECTS) $(libstdc___la_DEPENDENCIES) 
  	$(libstdc___la_LINK) -rpath $(toolexeclibdir) $(libstdc___la_OBJECTS) $(libstdc___la_LIBADD) $(LIBS)
  

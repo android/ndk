@@ -85,6 +85,7 @@ if [ -z "$ARCH" ]; then
             ARCH=arm
             ;;
     esac
+    ARCH_INC=$ARCH
     log "Auto-config: --arch=$ARCH"
 else
     ARCH_INC=$ARCH
@@ -301,18 +302,21 @@ if [ -n "$LLVM_VERSION" ]; then
       arm) # NOte: -target may change by clang based on the
            #        presence of subsequent -march=armv7-a and/or -mthumb
           LLVM_TARGET=armv5te-none-linux-androideabi
+          TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_arm
           ;;
       x86)
           LLVM_TARGET=i686-none-linux-android
+          TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_x86
           ;;
       mips)
           LLVM_TARGET=mipsel-none-linux-android
+          TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_mips
           ;;
       *)
         dump "ERROR: Unsupported NDK architecture!"
   esac
   # Need to remove '.' from LLVM_VERSION when constructing new clang name,
-  # otherwise clang3.1++ may still compile *.c code as C, not C++, which
+  # otherwise clang3.3++ may still compile *.c code as C, not C++, which
   # is not consistent with g++
   LLVM_VERSION_WITHOUT_DOT=$(echo "$LLVM_VERSION" | sed -e "s!\.!!")
   mv "$TMPDIR/bin/clang${HOST_EXE}" "$TMPDIR/bin/clang${LLVM_VERSION_WITHOUT_DOT}${HOST_EXE}"
@@ -351,6 +355,8 @@ else
 fi
 EOF
   chmod 0755 "$TMPDIR/bin/clang" "$TMPDIR/bin/clang++"
+  cp -a "$TMPDIR/bin/clang" "$TMPDIR/bin/$TOOLCHAIN_PREFIX-clang"
+  cp -a "$TMPDIR/bin/clang++" "$TMPDIR/bin/$TOOLCHAIN_PREFIX-clang++"
 
   if [ -n "$HOST_EXE" ] ; then
     cat > "$TMPDIR/bin/clang.cmd" <<EOF
@@ -379,6 +385,8 @@ rem target/triple already spelled out.
 if ERRORLEVEL 1 exit /b 1
 :done
 EOF
+    cp -a "$TMPDIR/bin/clang.cmd" "$TMPDIR/bin/$TOOLCHAIN_PREFIX-clang.cmd"
+    cp -a "$TMPDIR/bin/clang++.cmd" "$TMPDIR/bin/$TOOLCHAIN_PREFIX-clang++.cmd"
   fi
 fi
 
@@ -440,10 +448,11 @@ copy_stl_libs () {
             ;;
         stlport)
             if [ "$ARCH_INC" != "$ARCH" ]; then
-              tmp_lib_dir=`mktemp -d`
+              tmp_lib_dir=$TMPDIR/stl
               $NDK_DIR/build/tools/build-cxx-stl.sh --stl=stlport --out-dir=$tmp_lib_dir --abis=unknown
               cp -p "`ls $tmp_lib_dir/sources/cxx-stl/stlport/libs/*/libstlport_static.a`" "$ABI_STL/lib/$ABI2/libstdc++.a"
               cp -p "`ls $tmp_lib_dir/sources/cxx-stl/stlport/libs/*/libstlport_shared.so`" "$ABI_STL/lib/$ABI2/libstlport_shared.so"
+              rm -rf $tmp_lib_dir
             else
               copy_file_list "$STLPORT_LIBS/$ABI" "$ABI_STL/lib/$ABI2" "libstlport_shared.so"
               cp -p "$STLPORT_LIBS/$ABI/libstlport_static.a" "$ABI_STL/lib/$ABI2/libstdc++.a"
