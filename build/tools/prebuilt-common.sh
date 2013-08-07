@@ -766,7 +766,7 @@ EOF
         DST_PREFIX="$NDK_CCACHE $DST_PREFIX"
     fi
     $NDK_BUILDTOOLS_PATH/gen-toolchain-wrapper.sh --src-prefix=$BINPREFIX --dst-prefix="$DST_PREFIX" "$CROSS_WRAP_DIR" \
-        --cflags="$HOST_CFLAGS" --cxxflags="$HOST_CFLAGS" --ldflags="HOST_LDFLAGS"
+        --cflags="$HOST_CFLAGS" --cxxflags="$HOST_CFLAGS" --ldflags="$HOST_LDFLAGS"
     # generate wrappers for BUILD toolchain
     # this is required for mingw/darwin build to avoid tools canadian cross configuration issues
     # 32-bit BUILD toolchain
