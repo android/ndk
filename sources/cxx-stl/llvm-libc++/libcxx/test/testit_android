@@ -220,12 +220,16 @@ if [ -z "$SOURCE_LIB" ]
 then
        SOURCE_LIB="-L$LIBCXX_LIBS"
 fi
+if [ -z "$ADB" ]
+then
+       ADB=adb
+fi
 
 if [ "$DO_STATIC" ]; then
   # Statically link to ensure the executable can be run easily through ADB
   LIBS=-lc++_static
 else
-  run2 adb push $LIBCXX_LIBS/libc++_shared.so /data/local/tmp 2>/dev/null
+  run2 $ADB push $LIBCXX_LIBS/libc++_shared.so /data/local/tmp 2>/dev/null
   if [ $? != 0 ]; then
     echo "ERROR: Can't push shared libc++ to target device!"
     exit 1
@@ -258,9 +262,9 @@ adb_shell () {
   # Run the command, while storing the standard output to CMD_OUT
   # and appending the exit code as the last line.
   if [ "$VERBOSE" -gt 2 ]; then
-    echo "COMMAND: adb shell $@"
+    echo "COMMAND: $ADB shell $@"
   fi
-  adb shell "$@ ; echo \$?" | sed -e 's![[:cntrl:]]!!g' > $CMD_OUT 2>&1
+  $ADB shell "$@ ; echo \$?" | sed -e 's![[:cntrl:]]!!g' > $CMD_OUT 2>&1
   # Get last line in log, which contains the exit code from the command
   RET=$(sed -e '$!d' $CMD_OUT)
   # Get output, which corresponds to everything except the last line
@@ -281,7 +285,7 @@ adb_run () {
   EXECUTABLE_BASENAME=$(basename "$EXECUTABLE")
   shift
   TARGET_PATH=/data/local/tmp
-  run2 adb push $EXECUTABLE $TARGET_PATH/$EXECUTABLE_BASENAME 2>/dev/null &&
+  run2 $ADB push $EXECUTABLE $TARGET_PATH/$EXECUTABLE_BASENAME 2>/dev/null &&
   adb_shell "LD_LIBRARY_PATH=$TARGET_PATH; cd $TARGET_PATH; ./$EXECUTABLE_BASENAME"
 }
 
