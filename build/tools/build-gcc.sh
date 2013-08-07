@@ -338,6 +338,9 @@ case "$TOOLCHAIN" in
     ;;
 esac
 
+# Enable linker option -eh-frame-hdr also for static executable
+EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-eh-frame-hdr-for-static"
+
 cd $BUILD_OUT && run \
 $BUILD_SRCDIR/configure --target=$ABI_CONFIGURE_TARGET \
                         --enable-initfini-array \
