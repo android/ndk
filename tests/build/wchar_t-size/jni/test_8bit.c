@@ -17,7 +17,7 @@
 #define STATIC_ASSERT(condition) \
   static char CONCAT(dummy_,__LINE__)[1 - 2*(!(condition))];
 
-#ifdef __arm__
+#if defined(__arm__) || __ANDROID_API__ == 3
 STATIC_ASSERT(sizeof(__WCHAR_TYPE__) == 1);
 STATIC_ASSERT(sizeof(wchar_t) == 1);
 #else
