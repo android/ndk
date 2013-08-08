@@ -73,6 +73,7 @@ void* operator new(std::size_t size) throw(std::bad_alloc) {
     }
     handler();
   } while (space == 0);
+  __builtin_unreachable();
 }
 
 _GABIXX_WEAK
