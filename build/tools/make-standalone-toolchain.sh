@@ -265,6 +265,7 @@ dump_extra_compile_commands () {
     echo '  shift'
     echo 'done'
     echo 'test -z "$output" && output=a.out'
+    echo 'export PYTHONPATH=`dirname $0`/../lib/python2.7/'
     echo '`dirname $0`/python `dirname $0`/ndk-bc2native.py --sysroot=`dirname $0`/../sysroot --abi='$TARGET_ABI' --platform='$PLATFORM' --file $output $output'
   else
     echo 'rem Call bc2native if needed'
@@ -284,6 +285,7 @@ dump_extra_compile_commands () {
     echo '  if not "%output%" == "" goto :check_done'
     echo '  set output=a.out'
     echo ':check_done'
+    echo 'set PYTHONPATH=%~dp0\\..\\lib\\python2.7\\'
     echo '%~dp0\\python'$HOST_EXE' %~dp0\\ndk-bc2native.py --sysroot=%~dp0\\..\\sysroot --abi='$TARGET_ABI' --platform='$PLATFORM' --file %output% %output%'
   fi
 }
