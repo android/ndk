@@ -28,7 +28,7 @@ r'''
   adb install && <start-application-on-device>
 '''
 
-import sys, os, argparse, subprocess, types
+import sys, os, platform, argparse, subprocess, types
 import xml.etree.cElementTree as ElementTree
 import shutil, time
 from threading import Thread
@@ -51,15 +51,39 @@ def find_program(program, extra_paths = []):
                     return True, full
     return False, None
 
-# Return the prebuilt bin path for the host os.
 def ndk_bin_path(ndk):
-    if sys.platform.startswith('linux'):
-        return ndk+os.sep+'prebuilt/linux-x86/bin'
-    elif sys.platform.startswith('darwin'):
-        return ndk+os.sep+'prebuilt/darwin-x86/bin'
-    elif sys.platform.startswith('win'):
-        return ndk+os.sep+'prebuilt/windows/bin'
-    return ndk+os.sep+'prebuilt/UNKNOWN/bin'
+    '''
+    Return the prebuilt bin path for the host OS.
+
+    If Python executable is the NDK-prebuilt one (it should be)
+    then use the location of the executable as the first guess.
+    We take the grand-parent foldername and then ensure that it
+    starts with one of 'linux', 'darwin' or 'windows'.
+
+    If this is not the case, then we're using some other Python
+    and fall-back to using platform.platform() and sys.maxsize.
+    '''
+
+    try:
+        ndk_host = os.path.basename(
+                    os.path.dirname(
+                     os.path.dirname(sys.executable)))
+    except:
+        ndk_host = ''
+    # NDK-prebuilt Python?
+    if (not ndk_host.startswith('linux') and
+        not ndk_host.startswith('darwin') and
+        not ndk_host.startswith('windows')):
+        is64bit = True if sys.maxsize > 2**32 else False
+        if platform.platform().startswith('Linux'):
+            ndk_host = 'linux%s' % ('-x86_64' if is64bit else '-x86')
+        elif platform.platform().startswith('Darwin'):
+            ndk_host = 'darwin%s' % ('-x86_64' if is64bit else '-x86')
+        elif platform.platform().startswith('Windows'):
+            ndk_host = 'windows%s' % ('-x86_64' if is64bit else '')
+        else:
+            ndk_host = 'UNKNOWN'
+    return ndk+os.sep+'prebuilt'+os.sep+ndk_host+os.sep+'bin'
 
 VERBOSE = False
 PROJECT = None
