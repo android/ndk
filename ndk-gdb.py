@@ -39,7 +39,7 @@ except ImportError:
 
 def find_program(program, extra_paths = []):
     ''' extra_paths are searched before PATH '''
-    PATHS = extra_paths+os.environ['PATH'].split(os.pathsep)
+    PATHS = extra_paths+os.environ['PATH'].replace('"','').split(os.pathsep)
     exts = ['']
     if sys.platform.startswith('win'):
         exts += ['.exe', '.bat', '.cmd']
