@@ -307,6 +307,7 @@ namespace __cxxabiv1 {
 // this.
 #warning "not implemented."
 #endif /* defined(GABIXX_LIBCXX) */
+    return NULL;
   }
 
 } // namespace __cxxabiv1

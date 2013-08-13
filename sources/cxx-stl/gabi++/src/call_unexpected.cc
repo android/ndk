@@ -282,7 +282,7 @@ void unexpected_helper(std::unexpected_handler u_handler) {
         std::terminate();
       }
       uint8_t lpStartEncoding = *lsda++;
-      const uint8_t* lpStart = (const uint8_t*)readEncodedPointer(&lsda, lpStartEncoding);
+      readEncodedPointer(&lsda, lpStartEncoding);
       uint8_t ttypeEncoding = *lsda++;
       if (ttypeEncoding == DW_EH_PE_omit) {
         terminate_helper(t_handler);
