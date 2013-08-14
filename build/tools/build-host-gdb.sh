@@ -265,6 +265,7 @@ install_host_gdb ()
                 --gdb-executable-path=${DSTDIR}/bin/$(bh_tag_to_config_triplet $2)-gdb.exe \
                 --python-prefix-dir=${PYDIR} \
                 --mingw-w64-gcc=${GCC_FOR_STUB}
+            fail_panic "Failed to build gdb-sutb"
             ;;
         *)
             ;;

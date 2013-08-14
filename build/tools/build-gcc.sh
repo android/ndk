@@ -437,6 +437,7 @@ if [ "$MINGW" = "yes" ] ; then
     run $NDK_DIR/build/tools/build-gdb-stub.sh --gdb-executable-path="$TOOLCHAIN_PATH/bin/${ABI_CONFIGURE_TARGET}-gdb.exe" \
                                                --python-prefix-dir=${WITH_PYTHON_PREFIX} \
                                                --mingw-w64-gcc=$GCC_FOR_STUB
+    fail_panic "Could not build gdb-stub"
 fi
 
 # don't forget to copy the GPL and LGPL license files
