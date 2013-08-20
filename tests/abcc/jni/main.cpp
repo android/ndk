@@ -47,7 +47,7 @@ enum TargetAbi {
 TargetAbi abi = abi_armeabi_v7a;
 #elif defined(__arm__)
 TargetAbi abi = abi_armeabi;
-#elif defined(__i686__)
+#elif defined(__i386__)
 TargetAbi abi = abi_x86;
 #elif defined(__mips__)
 TargetAbi abi = abi_mips;
