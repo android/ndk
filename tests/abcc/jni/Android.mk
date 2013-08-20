@@ -41,37 +41,17 @@ include external/stlport/libstlport.mk
 # We put this here since LOCAL_GENERATED_SOURCES only been used by binary.mk
 
 TOOLCHAIN_ASSETS := $(COMPILER_APP_DIR)/assets
-TOOLCHAIN_SRC_ALREADY_EXIST := true
-TOOLCHAIN_SRC := /proj/mtk03872/ndk-toolchain-src-20130813
 
-ifneq ($(ANDROID_BUILD_TOP),)
-NDK_ROOT := $(ANDROID_BUILD_TOP)/ndk
-else
-NDK_ROOT := $(LOCAL_PATH)/../../../../ndk
-endif
-
-ifeq ($(TOOLCHAIN_SRC_ALREADY_EXIST),true)
-
-define build_compiler_app_assets
-rm -rf $(TOOLCHAIN_ASSETS)
-$(NDK_ROOT)/build/tools/build-on-device-toolchain.sh --abi=$(TARGET_CPU_ABI) --out-dir=$(TOOLCHAIN_ASSETS) --no-sync $(TOOLCHAIN_SRC)
-endef
-
-else  # ($(TOOLCHAIN_SRC_ALREADY_EXIST),true)
-
-define build_compiler_app_assets
-rm -rf $(TOOLCHAIN_ASSETS)
-rm -rf $(TOOLCHAIN_SRC)
-mkdir -p $(TOOLCHAIN_SRC) && $(NDK_ROOT)/build/tools/download-toolchain-sources.sh $(TOOLCHAIN_SRC)
-$(NDK_ROOT)/build/tools/build-on-device-toolchain.sh ---abi=$(TARGET_CPU_ABI) --out-dir=$(TOOLCHAIN_ASSETS) --no-sync $(TOOLCHAIN_SRC)
-rm -rf $(TOOLCHAIN_SRC)
-endef
-
+ifndef NDK_TARGET_SYSROOT
+NDK_TARGET_SYSROOT := $(LOCAL_PATH)/../prebuilts/assets
 endif
 
 GEN := $(call local-intermediates-dir)/phony_file # Must under local intermediate dir
 $(GEN):
-	$(build_compiler_app_assets)
+	$(hide) rm -rf $(TOOLCHAIN_ASSETS)
+	$(hide) mkdir -p $(TOOLCHAIN_ASSETS)
+	$(hide) cp -a $(NDK_TARGET_SYSROOT)/$(TARGET_CPU_ABI)/* $(TOOLCHAIN_ASSETS)
+
 LOCAL_GENERATED_SOURCES := $(GEN)
 
 ########################################################
