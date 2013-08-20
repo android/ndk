@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="compiler.abcc"
+    android:sharedUserId="android.uid.system"
+    android:versionCode="1"
+    android:versionName="1.0" >
+
+    <application>
+        <uses-sdk android:minSdkVersion="17" />
+        <service android:name=".AbccService">
+            <intent-filter>
+                <action android:name="compiler.abcc.BITCODE_COMPILE" />
+                <action android:name="compiler.abcc.BITCODE_COMPILE_TEST" />
+            </intent-filter>
+        </service>
+    </application>
+
+</manifest>
