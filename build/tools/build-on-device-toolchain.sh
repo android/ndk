@@ -53,9 +53,8 @@ extract_parameters "$@"
 SRC_DIR="$PARAMETERS"
 check_toolchain_src_dir "$SRC_DIR"
 BUILDTOOLS=$ANDROID_NDK_ROOT/build/tools
-rm -rf $BUILD_DIR; mkdir -p $BUILD_DIR
-mkdir -p $OUT_DIR
-
+run rm -rf $BUILD_DIR
+run mkdir -p $BUILD_DIR $OUT_DIR
 
 FLAGS=
 if [ "$VERBOSE" = "yes" ]; then
@@ -73,45 +72,46 @@ GCC_TOOLCHAIN_VERSION=`cat $NDK_DIR/toolchains/llvm-$DEFAULT_LLVM_VERSION/setup.
 SYSROOT=$NDK_DIR/$(get_default_platform_sysroot_for_arch $ARCH)
 OUT_SYSROOT=$OUT_DIR
 
-mkdir -p $OUT_SYSROOT/usr/bin
-mkdir -p $OUT_SYSROOT/usr/lib
+run mkdir -p $OUT_SYSROOT/usr/bin
+run mkdir -p $OUT_SYSROOT/usr/lib
 
 dump "Copy platform CRT files..."
-cp -r $SYSROOT/usr/lib/crtbegin_dynamic.o $OUT_SYSROOT/usr/lib
-cp -r $SYSROOT/usr/lib/crtbegin_so.o $OUT_SYSROOT/usr/lib
-cp -r $SYSROOT/usr/lib/crtend_android.o $OUT_SYSROOT/usr/lib
-cp -r $SYSROOT/usr/lib/crtend_so.o $OUT_SYSROOT/usr/lib
+run cp -r $SYSROOT/usr/lib/crtbegin_dynamic.o $OUT_SYSROOT/usr/lib
+run cp -r $SYSROOT/usr/lib/crtbegin_so.o $OUT_SYSROOT/usr/lib
+run cp -r $SYSROOT/usr/lib/crtend_android.o $OUT_SYSROOT/usr/lib
+run cp -r $SYSROOT/usr/lib/crtend_so.o $OUT_SYSROOT/usr/lib
 
 dump "Copy $ABI gabi++ library"
-cp -f $NDK_DIR/$GABIXX_SUBDIR/libs/$ABI/libgabi++_shared.so $OUT_SYSROOT/usr/lib
+run cp -f $NDK_DIR/$GABIXX_SUBDIR/libs/$ABI/libgabi++_shared.so $OUT_SYSROOT/usr/lib
 
 dump "Copy $ABI libportable library"
-cp -f $NDK_DIR/$LIBPORTABLE_SUBDIR/libs/$ABI/libportable.a $OUT_SYSROOT/usr/lib
-cp -f $NDK_DIR/$LIBPORTABLE_SUBDIR/libs/$ABI/libportable.wrap $OUT_SYSROOT/usr/lib
+run cp -f $NDK_DIR/$LIBPORTABLE_SUBDIR/libs/$ABI/libportable.a $OUT_SYSROOT/usr/lib
+run cp -f $NDK_DIR/$LIBPORTABLE_SUBDIR/libs/$ABI/libportable.wrap $OUT_SYSROOT/usr/lib
 
 dump "Copy $ABI libportable library"
-cp -f $NDK_DIR/$COMPILER_RT_SUBDIR/libs/$ABI/libcompiler_rt_static.a $OUT_SYSROOT/usr/lib
+run cp -f $NDK_DIR/$COMPILER_RT_SUBDIR/libs/$ABI/libcompiler_rt_static.a $OUT_SYSROOT/usr/lib
 
 if [ "$TESTING" = "yes" ]; then
   dump "Copy stuff for testing"
-  cp -f $NDK_DIR/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI/libsupc++.a $OUT_SYSROOT/usr/lib
-  cp -f $NDK_DIR/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI/libgnustl_static.a $OUT_SYSROOT/usr/lib
-  cp -f $NDK_DIR/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI/libgnustl_shared.so $OUT_SYSROOT/usr/lib
+  run cp -f $NDK_DIR/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI/libsupc++.a $OUT_SYSROOT/usr/lib
+  run cp -f $NDK_DIR/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI/libgnustl_static.a $OUT_SYSROOT/usr/lib
+  run cp -f $NDK_DIR/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI/libgnustl_shared.so $OUT_SYSROOT/usr/lib
 
-  cp -f $NDK_DIR/$STLPORT_SUBDIR/libs/$ABI/libstlport_static.a $OUT_SYSROOT/usr/lib
-  cp -f $NDK_DIR/$STLPORT_SUBDIR/libs/$ABI/libstlport_shared.so $OUT_SYSROOT/usr/lib
+  run cp -f $NDK_DIR/$STLPORT_SUBDIR/libs/$ABI/libstlport_static.a $OUT_SYSROOT/usr/lib
+  run cp -f $NDK_DIR/$STLPORT_SUBDIR/libs/$ABI/libstlport_shared.so $OUT_SYSROOT/usr/lib
 
-  cp -f $NDK_DIR/$GABIXX_SUBDIR/libs/$ABI/libgabi++_static.a $OUT_SYSROOT/usr/lib
-  cp -f $NDK_DIR/$GABIXX_SUBDIR/libs/$ABI/libgabi++_shared.so $OUT_SYSROOT/usr/lib
+  run cp -f $NDK_DIR/$GABIXX_SUBDIR/libs/$ABI/libgabi++_static.a $OUT_SYSROOT/usr/lib
+  run cp -f $NDK_DIR/$GABIXX_SUBDIR/libs/$ABI/libgabi++_shared.so $OUT_SYSROOT/usr/lib
 fi
 
 
-dump "Build $ARCH LLVM toolchain..."
-run $BUILDTOOLS/build-device-llvm.sh $FLAGS --arch=$ARCH --gcc-version=$GCC_TOOLCHAIN_VERSION $SRC_DIR $NDK_DIR
+dump "Build $ABI LLVM toolchain from $SRC_DIR ..."
+run $BUILDTOOLS/build-device-llvm.sh $FLAGS --abis=$ABI --gcc-version=$GCC_TOOLCHAIN_VERSION $SRC_DIR $NDK_DIR
 fail_panic "Could not build le32 LLVM toolchain!"
-mv -f $TMP_OUT_DIR/$ARCH/lib*.so $OUT_SYSROOT/usr/lib
-mv -f $TMP_OUT_DIR/$ARCH/* $OUT_SYSROOT/usr/bin
-
+run mv -f $TMP_OUT_DIR/$ABI/lib*.so $OUT_SYSROOT/usr/lib
+run mv -f $TMP_OUT_DIR/$ABI/* $OUT_SYSROOT/usr/bin
+run rmdir $TMP_OUT_DIR/$ABI
+run rmdir $TMP_OUT_DIR
 
 if [ "$NO_SYNC" != "yes" ]; then
   dump "Push on-device $ABI toolchain sysroot to /data/local/tmp/"
