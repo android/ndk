@@ -179,6 +179,7 @@ for arch in $ARCHS; do
     --with-bug-report-url=$DEFAULT_ISSUE_TRACKER_URL \
     --enable-targets=$arch \
     --enable-optimized \
+    --enable-shrink-binary-size \
     --disable-polly \
     --with-clang-srcdir=/dev/null \
     --enable-shared \
