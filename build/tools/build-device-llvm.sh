@@ -153,7 +153,7 @@ for abi in $ABIS; do
   if [ -n "$OPTION_GCC_VERSION" ]; then
     toolchain_name="${toolchain_name//${DEFAULT_GCC_VERSION}/${OPTION_GCC_VERSION}}"
   fi
-  CFLAGS="-fomit-frame-pointer -fstrict-aliasing"
+  CFLAGS="-fomit-frame-pointer -fstrict-aliasing -ffunction-sections -fdata-sections -DNDEBUG"
   case $abi in
     armeabi)
       # No -mthumb, because ./llvm/lib/Target/ARM/ARMJITInfo.cpp now contain inline assembly
@@ -242,6 +242,9 @@ for abi in $ABIS; do
   # Strip
   STRIP=$BUILD_OUT/ndk-standalone-$arch/bin/$toolchain_prefix-strip
   find $TOOLCHAIN_BUILD_PREFIX/$abi -maxdepth 1 -type f -exec $STRIP --strip-all {} \;
+
+  # copy SOURCES
+  run cp "$SRC_DIR/SOURCES" $TOOLCHAIN_BUILD_PREFIX/$abi
 done
 
 TOOLCHAIN_BUILD_PREFIX="`cd $TOOLCHAIN_BUILD_PREFIX; pwd`"
