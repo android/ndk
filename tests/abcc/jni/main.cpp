@@ -26,6 +26,9 @@
 #include <vector>
 #include <fstream>
 #include <pthread.h>
+#if ENABLE_PARALLEL_LLVM_CG
+#include <cpu-features.h>
+#endif
 
 #define LOG_TAG "AbccNative"
 #define LOGE(format, ...)  do {\
@@ -440,6 +443,9 @@ void* compileBitcode(void *par) {
 #endif
   cmd += " -filetype=obj -relocation-model=pic -code-model=small";
   cmd += " -use-init-array -mc-relax-all -float-abi=soft -O2";
+#if ENABLE_PARALLEL_LLVM_CG
+  cmd += " -thread=" + android_getCpuCount();
+#endif
   cmd += std::string(" ") + target_data[abi][target_extra_cflags];
   cmd += std::string(" -o ") + obj;
   cmd += std::string(" ") + target_bc;
