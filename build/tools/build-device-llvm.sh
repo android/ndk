@@ -242,6 +242,9 @@ for abi in $ABIS; do
   # Strip
   STRIP=$BUILD_OUT/ndk-standalone-$arch/bin/$toolchain_prefix-strip
   find $TOOLCHAIN_BUILD_PREFIX/$abi -maxdepth 1 -type f -exec $STRIP --strip-all {} \;
+
+  # copy SOURCES
+  run cp "$SRC_DIR/SOURCES" $TOOLCHAIN_BUILD_PREFIX/$abi
 done
 
 TOOLCHAIN_BUILD_PREFIX="`cd $TOOLCHAIN_BUILD_PREFIX; pwd`"
