@@ -10,3 +10,4 @@ toolchains/*/prebuilt/
 /ndk-stack*
 /ndk-depends*
 prebuilt/
+tests/abcc/prebuilts/

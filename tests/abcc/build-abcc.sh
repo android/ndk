@@ -148,7 +148,7 @@ for ABI in $ABIS; do
   else  # DEBUG != yes
     run ant release -Dasset.dir=prebuilts/assets/$ABI
     fail_panic "Build dex failed. Abort."
-    run cp -a bin/$ABCC-release-unsigned.apk $OUT_DIR/$ABCC-$ABI.apk
+    run cp -a bin/$ABCC-release-unsigned.apk $OUT_DIR/$ABCC-$ABI-unsigned.apk
   fi
 done
 
