@@ -28,36 +28,13 @@ LOCAL_SRC_FILES := main.cpp
 # Check in AOSP or NDK usage
 ifeq ($(SYSTEM_PREBUILT_PACKAGE),true)
 
-ifeq ($(OUT_DIR),)
-$(error No OUT_DIR defined. Not lunch yet?)
-endif
-
-COMPILER_APP_DIR := $(realpath $(OUT_DIR))/obj/APPS/AndroidBitcodeCompiler_intermediates
-
 LOCAL_SHARED_LIBRARIES := liblog libstlport
 include external/stlport/libstlport.mk
 
-#######################################################
-# We put this here since LOCAL_GENERATED_SOURCES only been used by binary.mk
-
-TOOLCHAIN_ASSETS := $(COMPILER_APP_DIR)/assets
-
-ifndef NDK_TARGET_SYSROOT
-NDK_TARGET_SYSROOT := $(LOCAL_PATH)/../prebuilts/assets
-endif
-
-GEN := $(call local-intermediates-dir)/phony_file # Must under local intermediate dir
-$(GEN):
-	$(hide) rm -rf $(TOOLCHAIN_ASSETS)
-	$(hide) mkdir -p $(TOOLCHAIN_ASSETS)
-	$(hide) cp -a $(NDK_TARGET_SYSROOT)/$(TARGET_CPU_ABI)/* $(TOOLCHAIN_ASSETS)
-
-LOCAL_GENERATED_SOURCES := $(GEN)
-
-########################################################
-
 else  # SYSTEM_PREBUILT_PACKAGE
+
 LOCAL_LDLIBS := -llog
+
 endif
 
 include $(BUILD_SHARED_LIBRARY)
