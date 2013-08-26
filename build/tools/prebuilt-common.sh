@@ -1178,6 +1178,19 @@ arch_in_unknown_archs()
     fi
 }
 
+# Get library suffix for given ABI
+# $1: ABI
+# Return: .so or .bc
+get_lib_suffix_for_abi ()
+{
+    local ABI=$1
+    if [ $(arch_in_unknown_archs $ABI) = "yes" ]; then
+       echo ".bc"
+    else
+       echo ".so"
+    fi
+}
+
 # Convert an ABI name into an Architecture name
 # $1: ABI name
 # Result: Arch name

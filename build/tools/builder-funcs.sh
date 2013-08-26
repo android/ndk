@@ -346,10 +346,14 @@ builder_host_static_library ()
 
 builder_shared_library ()
 {
-    local lib libname
+    local lib libname suffix
     libname=$1
+    suffix=$2
+    if [ -z "$suffix" ]; then
+        suffix=".so"
+    fi
     lib=$_BUILD_DSTDIR/$libname
-    lib=${lib%%.so}.so
+    lib=${lib%%${suffix}}${suffix}
     if [ "$_BUILD_MK" ]; then
         _BUILD_TARGETS=$_BUILD_TARGETS" $lib"
         echo "$lib: $_BUILD_OBJECTS" >> $_BUILD_MK
@@ -377,10 +381,14 @@ builder_shared_library ()
 # Same as builder_shared_library, but do not link the default libs
 builder_nostdlib_shared_library ()
 {
-    local lib libname
+    local lib libname suffix
     libname=$1
+    suffix=$2
+    if [ -z "$suffix" ]; then
+        suffix=".so"
+    fi
     lib=$_BUILD_DSTDIR/$libname
-    lib=${lib%%.so}.so
+    lib=${lib%%${suffix}}${suffix}
     if [ "$_BUILD_MK" ]; then
         _BUILD_TARGETS=$_BUILD_TARGETS" $lib"
         echo "$lib: $_BUILD_OBJECTS" >> $_BUILD_MK

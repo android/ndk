@@ -397,11 +397,12 @@ build_stl_libs_for_abi ()
     local TYPE="$3"
     local DSTDIR="$4"
     local DEFAULT_CFLAGS DEFAULT_CXXFLAGS
-    local SRC OBJ OBJECTS EXTRA_CXXFLAGS
+    local SRC OBJ OBJECTS EXTRA_CXXFLAGS LIB_SUFFIX
 
     mkdir -p "$BUILDDIR"
 
     DSTDIR=$DSTDIR/$CXX_STL_SUBDIR/libs/$ABI
+    LIB_SUFFIX="$(get_lib_suffix_for_abi $ABI)"
 
     if [ "$TYPE" = "static" -a -z "$VISIBLE_STATIC" ]; then
       EXTRA_CXXFLAGS="$STATIC_CXXFLAGS"
@@ -447,12 +448,12 @@ build_stl_libs_for_abi ()
         log "Building $DSTDIR/${CXX_STL_LIB}_static.a"
         builder_static_library ${CXX_STL_LIB}_static
     else
-        log "Building $DSTDIR/${CXX_STL_LIB}_shared.so"
+        log "Building $DSTDIR/${CXX_STL_LIB}_shared${LIB_SUFFIX}"
         if [ "$(find_ndk_unknown_archs)" != "$ABI" ]; then
-            builder_shared_library ${CXX_STL_LIB}_shared
+            builder_shared_library ${CXX_STL_LIB}_shared $LIB_SUFFIX
         else
             builder_ldflags "-lc -lm"
-            builder_nostdlib_shared_library ${CXX_STL_LIB}_shared  # Don't use libgcc
+            builder_nostdlib_shared_library ${CXX_STL_LIB}_shared $LIB_SUFFIX # Don't use libgcc
         fi
     fi
 
@@ -468,7 +469,8 @@ done
 if [ -n "$PACKAGE_DIR" ] ; then
     for ABI in $ABIS; do
         FILES=""
-        for LIB in ${CXX_STL_LIB}_static.a ${CXX_STL_LIB}_shared.so; do
+        LIB_SUFFIX="$(get_lib_suffix_for_abi $ABI)"
+        for LIB in ${CXX_STL_LIB}_static.a ${CXX_STL_LIB}_shared${LIB_SUFFIX}; do
             FILES="$FILES $CXX_STL_SUBDIR/libs/$ABI/$LIB"
         done
         PACKAGE="$PACKAGE_DIR/${CXX_STL_PACKAGE}-libs-$ABI.tar.bz2"
