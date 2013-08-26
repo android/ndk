@@ -50,7 +50,8 @@ SYSTEMS=$DEFAULT_SYSTEMS
 register_var_option "--systems=<list>" SYSTEMS "Specify host systems"
 
 # ARCH to build for
-ARCHS=$DEFAULT_ARCHS
+ARCHS=$(find_ndk_unknown_archs)
+ARCHS="$DEFAULT_ARCHS $ARCHS"
 register_var_option "--arch=<arch>" ARCHS "Specify target architecture(s)"
 
 # set to 'yes' if we should use 'git ls-files' to list the files to
@@ -124,8 +125,15 @@ extract_parameters "$@"
 # Ensure that SYSTEMS is space-separated
 SYSTEMS=$(commas_to_spaces $SYSTEMS)
 
-# Do we need to support x86?
+# Detect unknown archs
 ARCHS=$(commas_to_spaces $ARCHS)
+UNKNOWN_ARCH=$(filter_out "$DEFAULT_ARCHS" "$ARCHS")
+if [ ! -z "$UNKNOWN_ARCH" ]; then
+    ARCHS=$(filter_out "$UNKNOWN_ARCH" "$ARCHS")
+fi
+
+# Do we need to support x86?
+
 echo "$ARCHS" | tr ' ' '\n' | grep -q x86
 if [ $? = 0 ] ; then
     TRY_X86=yes
@@ -150,6 +158,8 @@ for ARCH in $ARCHS; do
         ABIS=$ABIS" $DEFAULT_ABIS"
     fi
 done
+
+UNKNOWN_ABIS=$(convert_archs_to_abis $UNKNOWN_ARCH)
 
 # Convert comma-separated list to space-separated list
 LLVM_VERSION_LIST=$(commas_to_spaces $LLVM_VERSION_LIST)
@@ -410,6 +420,12 @@ if [ -z "$PREBUILT_NDK" ]; then
         unpack_prebuilt libportable-libs-$ABI "$REFERENCE"
         unpack_prebuilt compiler-rt-libs-$ABI "$REFERENCE"
     done
+    for ABI in $UNKNOWN_ABIS; do
+        unpack_prebuilt stlport-libs-$ABI "$REFERENCE"
+        if [ "$WITH_LIBCXX" ]; then
+            unpack_prebuilt libcxx-libs-$ABI "$REFERENCE"
+        fi
+    done
 fi
 
 # create a release file named 'RELEASE.TXT' containing the release
@@ -456,7 +472,7 @@ for SYSTEM in $SYSTEMS; do
         fi
 
         if [ -d "$DSTDIR/$STLPORT_SUBDIR" ] ; then
-            STLPORT_ABIS=$PREBUILT_ABIS
+            STLPORT_ABIS=$PREBUILT_ABIS $UNKNOWN_ABIS
             for STL_ABI in $STLPORT_ABIS; do
                 copy_prebuilt "$STLPORT_SUBDIR/libs/$STL_ABI" "$STLPORT_SUBDIR/libs"
             done
@@ -466,7 +482,7 @@ for SYSTEM in $SYSTEMS; do
 
         if [ "$WITH_LIBCXX" ]; then
             if [ -d "$DSTDIR/$LIBCXX_SUBDIR" ]; then
-                LIBCXX_ABIS=$PREBUILT_ABIS
+                LIBCXX_ABIS=$PREBUILT_ABIS $UNKNOWN_ABIS
                 for STL_ABI in $LIBCXX_ABIS; do
                     copy_prebuilt "$LIBCXX_SUBDIR/libs/$STL_ABI" "$LIBCXX_SUBDIR/libs"
                 done
