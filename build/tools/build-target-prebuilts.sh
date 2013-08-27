@@ -23,7 +23,8 @@ PROGDIR=$(dirname $0)
 NDK_DIR=$ANDROID_NDK_ROOT
 register_var_option "--ndk-dir=<path>" NDK_DIR "NDK installation directory"
 
-ARCHS=$DEFAULT_ARCHS
+ARCHS=$(find_ndk_unknown_archs)
+ARCHS="$DEFAULT_ARCHS $ARCHS"
 register_var_option "--arch=<list>" ARCHS "List of target archs to build for"
 
 PACKAGE_DIR=
@@ -61,6 +62,12 @@ fail_panic "Could not generate platforms and samples directores!"
 
 ARCHS=$(commas_to_spaces $ARCHS)
 
+# Detect unknown arch
+UNKNOWN_ARCH=$(filter_out "$DEFAULT_ARCHS" "$ARCHS")
+if [ ! -z "$UNKNOWN_ARCH" ]; then
+    ARCHS=$(filter_out "$UNKNOWN_ARCH" "$ARCHS")
+fi
+
 FLAGS=
 if [ "$VERBOSE" = "yes" ]; then
     FLAGS=$FLAGS" --verbose"
@@ -87,18 +94,18 @@ done
 
 FLAGS=$FLAGS" --ndk-dir=\"$NDK_DIR\""
 ABIS=$(convert_archs_to_abis $ARCHS)
+UNKNOWN_ABIS=$(convert_archs_to_abis $UNKNOWN_ARCH)
 
-FLAGS=$FLAGS" --abis=$ABIS"
 dump "Building $ABIS gabi++ binaries..."
-run $BUILDTOOLS/build-cxx-stl.sh --stl=gabi++ $FLAGS
+run $BUILDTOOLS/build-cxx-stl.sh --stl=gabi++ --abis="$ABIS" $FLAGS
 fail_panic "Could not build gabi++!"
 
-dump "Building $ABIS stlport binaries..."
-run $BUILDTOOLS/build-cxx-stl.sh --stl=stlport $FLAGS
+dump "Building $ABIS $UNKNOWN_ABIS stlport binaries..."
+run $BUILDTOOLS/build-cxx-stl.sh --stl=stlport --abis="$ABIS,$UNKNOWN_ABIS" $FLAGS
 fail_panic "Could not build stlport!"
 
-dump "Building $ABIS libc++ binaries..."
-run $BUILDTOOLS/build-cxx-stl.sh --stl=libc++ $FLAGS
+dump "Building $ABIS $UNKNOWN_ABIS libc++ binaries..."
+run $BUILDTOOLS/build-cxx-stl.sh --stl=libc++ --abis="$ABIS,$UNKNOWN_ABIS" $FLAGS
 fail_panic "Could not build libc++!"
 
 if [ ! -z $VISIBLE_LIBGNUSTL_STATIC ]; then
@@ -106,15 +113,15 @@ if [ ! -z $VISIBLE_LIBGNUSTL_STATIC ]; then
 fi
 
 dump "Building $ABIS gnustl binaries..."
-run $BUILDTOOLS/build-gnu-libstdc++.sh $FLAGS $GNUSTL_STATIC_VIS_FLAG "$SRC_DIR"
+run $BUILDTOOLS/build-gnu-libstdc++.sh --abis="$ABIS" $FLAGS $GNUSTL_STATIC_VIS_FLAG "$SRC_DIR"
 fail_panic "Could not build gnustl!"
 
 dump "Building $ABIS libportable binaries..."
-run $BUILDTOOLS/build-libportable.sh $FLAGS
+run $BUILDTOOLS/build-libportable.sh --abis="$ABIS" $FLAGS
 fail_panic "Could not build libportable!"
 
 dump "Building $ABIS compiler-rt binaries..."
-run $BUILDTOOLS/build-compiler-rt.sh $FLAGS --src-dir="$SRC_DIR/llvm-$DEFAULT_LLVM_VERSION/compiler-rt"
+run $BUILDTOOLS/build-compiler-rt.sh --abis="$ABIS" $FLAGS --src-dir="$SRC_DIR/llvm-$DEFAULT_LLVM_VERSION/compiler-rt"
 fail_panic "Could not build compiler-rt!"
 
 if [ "$PACKAGE_DIR" ]; then
