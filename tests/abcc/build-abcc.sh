@@ -138,7 +138,7 @@ fi
 
 for ABI in $ABIS; do
   run rm -f obj libs
-  run $NDK_DIR/ndk-build -B APP_ABI=$ABI APP_STL=stlport_static SYSTEM_PREBUILT_PACKAGE=false -C jni
+  run $NDK_DIR/ndk-build -B APP_ABI=$ABI -C jni
   if [ "$DEBUG" = "yes" ]; then
     run rm -f AndroidManifest.xml
     run cp -a AndroidManifest.xml.debug AndroidManifest.xml
