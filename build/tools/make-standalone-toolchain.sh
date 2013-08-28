@@ -103,10 +103,19 @@ else
             ARCH=arm
             ;;
     esac
+
 fi
-test -z "`echo $ARCH_INC | grep $ARCH`" && NO_BC2NATIVE=yes
-test "$ARCH_INC" != "$ARCH" && ARCH_INC=$(find_ndk_unknown_archs)
-test -z "$ARCH_INC" && ARCH_INC="$ARCH"
+
+ARCH_LIB=$ARCH
+ARCH_STL=$ARCH
+if [ "$ARCH_INC" != "$ARCH" ]; then
+    test -n "`echo $ARCH_INC | grep bc$ARCH`" && NEED_BC2NATIVE=yes
+    test -z "`echo $ARCH_INC | grep $ARCH`" && NEED_BC_LIB=yes
+    ARCH_INC=$(find_ndk_unknown_archs)
+    test -z "$ARCH_INC" && ARCH_INC="$ARCH"
+    test "$NEED_BC_LIB" = "yes" && ARCH_LIB=$ARCH_INC
+    test "$NEED_BC_LIB" = "yes" -o "$NEED_BC2NATIVE" = "yes" && ARCH_STL=$ARCH_INC
+fi
 
 # Check toolchain name
 if [ -z "$TOOLCHAIN_NAME" ]; then
@@ -114,8 +123,20 @@ if [ -z "$TOOLCHAIN_NAME" ]; then
     echo "Auto-config: --toolchain=$TOOLCHAIN_NAME"
 fi
 
-test "$ARCH_INC" != "$ARCH" && STL=stlport && TARGET_ABI=$(convert_arch_to_abi $ARCH | tr ',' '\n' | tail -n 1)
-test "$ARCH_INC" != "$ARCH" -a -z "$LLVM_VERSION" && LLVM_VERSION=$DEFAULT_LLVM_VERSION
+if [ "$ARCH_STL" != "$ARCH" ]; then
+    if [ "$STL" != stlport ]; then
+        echo "Force-config: --stl=stlport"
+        STL=stlport
+    fi
+fi
+
+if [ "$ARCH_INC" != "$ARCH" ]; then
+    TARGET_ABI=$(convert_arch_to_abi $ARCH | tr ',' '\n' | tail -n 1)
+    if [ -z "$LLVM_VERSION" ]; then
+        LLVM_VERSION=$DEFAULT_LLVM_VERSION
+    fi
+fi
+
 # Detect LLVM version from toolchain name
 if [ -z "$LLVM_VERSION" ]; then
     LLVM_VERSION_EXTRACT=$(echo "$TOOLCHAIN_NAME" | grep 'clang[0-9]\.[0-9]$' | sed -e 's/.*-clang//')
@@ -174,8 +195,7 @@ fi
 
 # Compute source sysroot
 SRC_SYSROOT_INC="$NDK_DIR/platforms/$PLATFORM/arch-$ARCH_INC/usr/include"
-SRC_SYSROOT_LIB="$NDK_DIR/platforms/$PLATFORM/arch-$ARCH/usr/lib"
-test "$NO_BC2NATIVE" = "yes" && SRC_SYSROOT_LIB="$NDK_DIR/platforms/$PLATFORM/arch-$ARCH_INC/usr/lib"
+SRC_SYSROOT_LIB="$NDK_DIR/platforms/$PLATFORM/arch-$ARCH_LIB/usr/lib"
 if [ ! -d "$SRC_SYSROOT_INC" -o ! -d "$SRC_SYSROOT_LIB" ] ; then
     echo "No platform files ($PLATFORM) for this architecture: $ARCH"
     exit 1
@@ -251,7 +271,7 @@ if [ "$HOST_TAG32" = "windows" ]; then
 fi
 
 dump_extra_compile_commands () {
-  if [ "$NO_BC2NATIVE" = "yes" ]; then
+  if [ "$NEED_BC2NATIVE" != "yes" ]; then
     return
   fi
 
@@ -337,7 +357,7 @@ if [ -n "$LLVM_VERSION" ]; then
 
   EXTRA_CLANG_FLAGS=
   EXTRA_CLANGXX_FLAGS=
-  if [ "$ARCH_INC" != "$ARCH" ]; then
+  if [ "$ARCH_STL" != "$ARCH" ]; then
     LLVM_TARGET=le32-none-ndk
     EXTRA_CLANG_FLAGS="-emit-llvm"
     EXTRA_CLANGXX_FLAGS="$EXTRA_CLANG_FLAGS -I\`dirname \$0\`/../include/c++/$GCC_BASE_VERSION"
@@ -408,6 +428,10 @@ if [ "$ARCH_INC" != "$ARCH" ]; then
     cp -a $NDK_DIR/$COMPILER_RT_SUBDIR/libs/$ABI/* $TMPDIR/sysroot/usr/lib
 fi
 
+if [ "$ARCH_LIB" != "$ARCH" ]; then
+    cp -a $NDK_DIR/platforms/$PLATFORM/arch-$ARCH/usr/lib/crt* $TMPDIR/sysroot/usr/lib
+fi
+
 dump "Copying libstdc++ headers and libraries..."
 
 GNUSTL_DIR=$NDK_DIR/$GNUSTL_SUBDIR/$GCC_VERSION
@@ -454,11 +478,11 @@ copy_stl_libs () {
             cp -p "$GNUSTL_LIBS/$ABI/libgnustl_static.a" "$ABI_STL/lib/$ABI2/libstdc++.a"
             ;;
         stlport)
-            if [ "$ARCH_INC" != "$ARCH" ]; then
+            if [ "$ARCH_STL" != "$ARCH" ]; then
               tmp_lib_dir=$TMPDIR/stl
               $NDK_DIR/build/tools/build-cxx-stl.sh --stl=stlport --out-dir=$tmp_lib_dir --abis=unknown
               cp -p "`ls $tmp_lib_dir/sources/cxx-stl/stlport/libs/*/libstlport_static.a`" "$ABI_STL/lib/$ABI2/libstdc++.a"
-              cp -p "`ls $tmp_lib_dir/sources/cxx-stl/stlport/libs/*/libstlport_shared.so`" "$ABI_STL/lib/$ABI2/libstlport_shared.so"
+              cp -p "`ls $tmp_lib_dir/sources/cxx-stl/stlport/libs/*/libstlport_shared.bc`" "$ABI_STL/lib/$ABI2/libstlport_shared.so"
               rm -rf $tmp_lib_dir
             else
               copy_file_list "$STLPORT_LIBS/$ABI" "$ABI_STL/lib/$ABI2" "libstlport_shared.so"
