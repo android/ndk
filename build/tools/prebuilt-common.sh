@@ -1138,11 +1138,11 @@ get_prebuilt_host_exe_ext ()
     fi
 }
 
-# Find all archs from $NDK_DIR/platforms/android-*
-# Return: the list of found arch names
+# Find all archs from $DEV_DIR/platforms or $NDK_DIR/platforms
+# Return: the list of found arch name
 find_ndk_archs ()
 {
-    local NDK_ROOT_DIR
+    local NDK_ROOT_DIR DEVDIR
     local RESULT FOUND_ARCHS
 
     if [ ! -z "$NDK_DIR" ]; then
@@ -1151,15 +1151,31 @@ find_ndk_archs ()
         NDK_ROOT_DIR=$ANDROID_NDK_ROOT
     fi
 
-    if [ ! -d $NDK_ROOT_DIR/platforms ]; then
-        echo "ERROR: Cannot find directory '$NDK_ROOT_DIR/platforms'!"
-        exit 1
+    DEVDIR="$ANDROID_NDK_ROOT/../development/ndk"
+
+    # Check development directory first
+    if [ -d $DEVDIR/platforms ]; then
+        RESULT=$(ls $DEVDIR/platforms/android-* | grep "arch-")
+        for arch in $RESULT; do
+            arch=$(basename $arch | sed -e 's/^arch-//')
+            FOUND_ARCHS="$FOUND_ARCHS $arch"
+        done
     fi
-    RESULT=$(ls $NDK_ROOT_DIR/platforms/android-* | grep "arch-")
-    for arch in $RESULT; do
-        arch=$(basename $arch | sed -e 's/^arch-//')
-        FOUND_ARCHS="$FOUND_ARCHS $arch"
-    done
+
+    # Check ndk directory
+    if [ -z "$FOUND_ARCHS" ] && [ -d $NDK_ROOT_DIR/platforms ]; then
+        RESULT=$(ls $NDK_ROOT_DIR/platforms/android-* | grep "arch-")
+        for arch in $RESULT; do
+            arch=$(basename $arch | sed -e 's/^arch-//')
+            FOUND_ARCHS="$FOUND_ARCHS $arch"
+        done
+    fi
+
+    # If we cannot find any arch, set to default archs
+    if [ -z "$FOUND_ARCHS" ]; then
+        FOUND_ARCHS=$DEFAULT_ARCHS
+    fi
+
     echo "$(sort_uniq $FOUND_ARCHS)"
 }
 
