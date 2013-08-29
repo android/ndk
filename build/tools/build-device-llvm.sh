@@ -226,7 +226,8 @@ for abi in $ABIS; do
     --with-llvm-config=$LLVM_BUILD_OUT/BuildTools/Release/bin/llvm-config \
     --with-llvm-shared-lib=$LLVM_BUILD_OUT/Release/lib/libLLVM-${DEFAULT_LLVM_VERSION}.so \
     --enable-targets=$arch \
-    --host=$toolchain_prefix
+    --host=$toolchain_prefix \
+    --enable-shrink-binary-size
   fail_panic "Couldn't configure mclinker for ABI $abi"
 
   CXXFLAGS="$CXXFLAGS -fexceptions"  # optimized/ScriptParser.cc needs it
