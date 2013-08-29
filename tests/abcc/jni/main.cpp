@@ -658,13 +658,11 @@ Java_compiler_abcc_AbccService_genLibs(JNIEnv *env, jobject thiz,
   if (handleTask(std::string("ls ") + lib_dir + "/compile_error") != 0) {
     handleTask(std::string("echo 0 > ") + lib_dir + "/compile_result");
     handleTask(std::string("chmod 0644 ") + lib_dir + "/compile_result");
-    handleTask(std::string("rm -f ") + lib_dir + "/compile_result");
     return 0;
   } else {
     handleTask(std::string("echo 56 > ") + lib_dir + "/compile_result");
     handleTask(std::string("chmod 0644 ") + lib_dir + "/compile_result");
     handleTask(std::string("chmod 0644 ") + lib_dir + "/compile_error");
-    handleTask(std::string("rm -f ") + lib_dir + "/compile_result");
     return 56;
   }
 }
