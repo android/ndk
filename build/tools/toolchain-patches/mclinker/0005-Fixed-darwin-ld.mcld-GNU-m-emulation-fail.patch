@@ -15,7 +15,7 @@ diff --git a/tools/llvm-mcld/llvm-mcld.cpp b/tools/llvm-mcld/llvm-mcld.cpp
 index b5152e6..f7ddd90 100644
 --- a/tools/llvm-mcld/llvm-mcld.cpp
 +++ b/tools/llvm-mcld/llvm-mcld.cpp
-@@ -1018,12 +1018,12 @@ static Triple ParseEmulation(const std::string& pEmulation)
+@@ -1019,12 +1019,12 @@ static Triple ParseEmulation(const std::string& pEmulation)
  {
    Triple result = StringSwitch<Triple>(pEmulation)
      .Case("armelf_linux_eabi", Triple("arm", "", "linux", "gnueabi"))
