@@ -400,8 +400,29 @@ case $ABI in
         NDK_BUILD_FLAGS="$NDK_BUILD_FLAGS APP_ABI=$ABI"
         ;;
     *)
-        echo "ERROR: Unsupported abi value: $ABI"
-        exit 1
+        if [ -n "$(filter_out "$PREBUILT_ABIS" "$ABI")" ] && [ -n "$(find_ndk_unknown_archs)" ]; then
+            ABI=$(find_ndk_unknown_archs)
+            NDK_BUILD_FLAGS="$NDK_BUILD_FLAGS APP_ABI=$ABI"
+
+            # Create those temporarily files to make testing happy
+            GCC_TOOLCHAIN_VERSION=`cat $NDK/toolchains/llvm-$DEFAULT_LLVM_VERSION/setup.mk | grep '^TOOLCHAIN_VERSION' | awk '{print $3'}`
+            run mkdir -p $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI
+            run mkdir -p $NDK/$GABIXX_SUBDIR/libs/$ABI
+            run mkdir -p $NDK/$LIBPORTABLE_SUBDIR/libs/$ABI
+            TEMP_FILE=`mktemp`
+            mv $TEMP_FILE ${TEMP_FILE}.c
+            run $(get_llvm_toolchain_binprefix $DEFAULT_LLVM_VERSION)/clang -target le32-none-ndk -emit-llvm -c -o $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI/libsupc++.a ${TEMP_FILE}.c
+            run $(get_llvm_toolchain_binprefix $DEFAULT_LLVM_VERSION)/clang -target le32-none-ndk -emit-llvm -c -o $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI/libgnustl_static.a ${TEMP_FILE}.c
+            run $(get_llvm_toolchain_binprefix $DEFAULT_LLVM_VERSION)/clang -target le32-none-ndk -emit-llvm -c -o $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI/libgnustl_shared.bc ${TEMP_FILE}.c
+            run $(get_llvm_toolchain_binprefix $DEFAULT_LLVM_VERSION)/clang -target le32-none-ndk -emit-llvm -c -o $NDK/$GABIXX_SUBDIR/libs/$ABI/libgabi++_static.a ${TEMP_FILE}.c
+            run $(get_llvm_toolchain_binprefix $DEFAULT_LLVM_VERSION)/clang -target le32-none-ndk -emit-llvm -c -o $NDK/$GABIXX_SUBDIR/libs/$ABI/libgabi++_shared.bc ${TEMP_FILE}.c
+            run cp -a $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$(get_default_abi_for_arch arm)/include $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI
+            run cp -a $NDK/$LIBPORTABLE_SUBDIR/libs/$(get_default_abi_for_arch arm)/libportable.a $NDK/$LIBPORTABLE_SUBDIR/libs/$ABI
+            rm -f ${TEMP_FILE}.c
+        else
+            echo "ERROR: Unsupported abi value: $ABI"
+            exit 1
+        fi
         ;;
 esac
 
@@ -500,8 +521,8 @@ is_broken_build ()
 is_incompatible_abi ()
 {
     local PROJECT="$1"
-
-    if [ "$ABI" != "default" ] ; then
+    # Basically accept all for unknown arch, even some cases may not be suitable for this way
+    if [ "$ABI" != "default" -a "$ABI" != "$(find_ndk_unknown_archs)" ] ; then
         # check APP_ABI
         local APP_ABIS=`get_build_var $PROJECT APP_ABI`
         APP_ABIS=$APP_ABIS" "
@@ -519,6 +540,54 @@ is_incompatible_abi ()
     fi
     return 1
 }
+
+compile_on_the_fly()
+{
+    local DSTDIR="$1"
+    local COMPILER_PKGNAME="compiler.abcc"
+    if [ -z "`$ADB_CMD -s "$DEVICE" shell pm path $COMPILER_PKGNAME`" ]; then
+        dump "ERROR: No abcc found for unknown arch testing"
+        return 1
+    fi
+    run $ADB_CMD -s "$DEVICE" shell am force-stop $COMPILER_PKGNAME
+    run $ADB_CMD -s "$DEVICE" shell am startservice --user 0 -a ${COMPILER_PKGNAME}.BITCODE_COMPILE_TEST -n $COMPILER_PKGNAME/.AbccService -e working_dir $DSTDIR
+
+    old_pid="`$ADB_CMD -s "$DEVICE" shell top -n 1 | grep $COMPILER_PKGNAME | awk '{print $1}'`"
+    threshold=`echo $((60*10))` # Wait at most 10 minutes for large testcases
+    sleep_seconds=0
+    while [ 2 -eq 2 ]; do
+      if [ $sleep_seconds -gt $threshold ]; then
+        pid="`$ADB_CMD -s "$DEVICE" shell top -n 1 | grep $COMPILER_PKGNAME | awk '{print $1}'`"
+        if [ "$pid" = "$old_pid" ]; then
+          # Too much time
+          break
+        fi
+        old_pid="$pid"
+        sleep_seconds=0
+      fi
+      if [ -n "`$ADB_CMD -s "$DEVICE" shell ls $DSTDIR | grep compile_result`" ]; then
+        # Compile done
+        break
+      fi
+      sleep 3
+      sleep_seconds="`echo $sleep_seconds + 3 | bc`"
+    done
+    ret="`$ADB_CMD -s "$DEVICE" shell cat $DSTDIR/compile_result`"
+    ret=`echo $ret | tr -d "\r\n"`
+    if [ $sleep_seconds -gt $threshold ] || [ "$ret" != "0" ]; then
+      dump "ERROR: Could not compile bitcodes for $TEST_NAME on device"
+      if [ $sleep_seconds -gt $threshold ]; then
+        dump "- Reason: Compile time too long"
+      elif [ -n "`$ADB_CMD -s "$DEVICE" shell ls $DSTDIR | grep compile_error`" ]; then
+        dump "- Reason: `$ADB_CMD -s "$DEVICE" shell cat $DSTDIR/compile_error`"
+      fi
+      run $ADB_CMD -s "$DEVICE" shell am force-stop $COMPILER_PKGNAME
+      return 1
+    fi
+    run $ADB_CMD -s "$DEVICE" shell am force-stop $COMPILER_PKGNAME
+    return 0
+}
+
 
 build_project ()
 {
@@ -702,14 +771,38 @@ if is_testable device; then
                 fi
             fi
         fi
+        if [ "$ABI" = "$(find_ndk_unknown_archs)" ] && [ -d "$BUILD_DIR/`basename $TEST`/libs" ]; then
+            cd $BUILD_DIR/`basename $TEST`/libs && ln -s $ABI $CPU_ABI
+        fi
         SRCDIR="$BUILD_DIR/`basename $TEST`/libs/$CPU_ABI"
-        if [ ! -d "$SRCDIR" ]; then
+        if [ ! -d "$SRCDIR" ] || [ -z "`ls $SRCDIR`" ]; then
             dump "Skipping NDK device test run (no $CPU_ABI binaries): $TEST_NAME"
             return 0
         fi
         # First, copy all files to the device, except for gdbserver, gdb.setup, and
         # those declared in $TEST/BROKEN_RUN
         adb_shell_mkdir "$DEVICE" $DSTDIR
+
+        if [ "$ABI" = "$(find_ndk_unknown_archs)" ]; then # on-the-fly on-device compilation
+            run $ADB_CMD -s "$DEVICE" shell rm -rf $DSTDIR/abcc_tmp
+            adb_shell_mkdir "$DEVICE" $DSTDIR/abcc_tmp
+            run $ADB_CMD -s "$DEVICE" shell chmod 0777 $DSTDIR/abcc_tmp
+            for SRCFILE in `ls $SRCDIR`; do
+                run $ADB_CMD -s "$DEVICE" push "$SRCDIR/$SRCFILE" $DSTDIR/abcc_tmp
+                run $ADB_CMD -s "$DEVICE" shell chmod 0644 $DSTDIR/abcc_tmp/$SRCFILE
+            done
+            compile_on_the_fly $DSTDIR/abcc_tmp
+            if [ $? -ne 0 ]; then
+                test "$CONTINUE_ON_BUILD_FAIL" != "yes" && exit 1
+                return 1
+            fi
+            run rm -f $SRCDIR/*
+            run $ADB_CMD -s "$DEVICE" pull $DSTDIR/abcc_tmp $SRCDIR
+            run rm -f $SRCDIR/compile_result
+            run rm -f $SRCDIR/compile_error
+            run rm -f $SRCDIR/*$(get_lib_suffix_for_abi $ABI)
+            run $ADB_CMD -s "$DEVICE" shell rm -rf $DSTDIR/abcc_tmp
+        fi
 
         # Prepare gabi++ runtime
         if [ ! -z "$NDK_ABI_FILTER" ]; then
@@ -831,7 +924,7 @@ if is_testable device; then
               CPU_ABIS=armeabi
             fi
             for CPU_ABI in $CPU_ABIS; do
-                if [ "$ABI" = "default" -o "$ABI" = "$CPU_ABI" ] ; then
+                if [ "$ABI" = "default" -o "$ABI" = "$CPU_ABI" -o "$ABI" = "$(find_ndk_unknown_archs)" ] ; then
                     AT_LEAST_CPU_ABI_MATCH="yes"
                     for DIR in `ls -d $ROOTDIR/tests/device/*`; do
                         if is_buildable $DIR; then
@@ -849,5 +942,11 @@ if is_testable device; then
 fi
 
 dump "Cleaning up..."
+if [ "$ABI" = "$(find_ndk_unknown_archs)" ]; then
+  # Cleanup some intermediate files for testing
+  run rm -rf $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI
+  run rm -rf $NDK/$GABIXX_SUBDIR/libs/$ABI
+  run rm -rf $NDK/$LIBPORTABLE_SUBDIR/libs/$ABI
+fi
 rm -rf $BUILD_DIR
 dump "Done."
