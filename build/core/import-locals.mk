@@ -17,12 +17,12 @@
 
 $(call assert-defined,LOCAL_MODULE)
 
-# For LOCAL_CFLAGS, LOCAL_CPPFLAGS and LOCAL_C_INCLUDES, we need
-# to use the exported definitions of the closure of all modules
+# For LOCAL_CFLAGS, LOCAL_CONLYFLAGS, LOCAL_CPPFLAGS and LOCAL_C_INCLUDES,
+# we need to use the exported definitions of the closure of all modules
 # we depend on.
 #
 # I.e. If module 'foo' depends on 'bar' which depends on 'zoo',
-# then 'foo' will get the CFLAGS/CPPFLAGS/C_INCLUDES of both 'bar'
+# then 'foo' will get the CFLAGS/CONLYFLAGS/CPPFLAGS/C_INCLUDES of both 'bar'
 # and 'zoo'
 #
 
@@ -30,12 +30,14 @@ all_depends := $(call module-get-all-dependencies,$(LOCAL_MODULE))
 all_depends := $(filter-out $(LOCAL_MODULE),$(all_depends))
 
 imported_CFLAGS     := $(call module-get-listed-export,$(all_depends),CFLAGS)
+imported_CONLYFLAGS := $(call module-get-listed-export,$(all_depends),CONLYFLAGS)
 imported_CPPFLAGS   := $(call module-get-listed-export,$(all_depends),CPPFLAGS)
 imported_C_INCLUDES := $(call module-get-listed-export,$(all_depends),C_INCLUDES)
 
 ifdef NDK_DEBUG_IMPORTS
     $(info Imports for module $(LOCAL_MODULE):)
     $(info   CFLAGS='$(imported_CFLAGS)')
+    $(info   CONLYFLAGS='$(imported_CONLYFLAGS)')
     $(info   CPPFLAGS='$(imported_CPPFLAGS)')
     $(info   C_INCLUDES='$(imported_C_INCLUDES)')
     $(info All depends='$(all_depends)')
@@ -46,6 +48,7 @@ endif
 # (this allows the module to override them).
 #
 LOCAL_CFLAGS     := $(strip $(imported_CFLAGS) $(LOCAL_CFLAGS))
+LOCAL_CONLYFLAGS := $(strip $(imported_CONLYFLAGS) $(LOCAL_CONLYFLAGS))
 LOCAL_CPPFLAGS   := $(strip $(imported_CPPFLAGS) $(LOCAL_CPPFLAGS))
 
 #

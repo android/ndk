@@ -378,6 +378,7 @@ modules-LOCALS := \
     CPP_EXTENSION \
     C_INCLUDES \
     CFLAGS \
+    CONLYFLAGS \
     CXXFLAGS \
     CPPFLAGS \
     STATIC_LIBRARIES \
@@ -391,6 +392,7 @@ modules-LOCALS := \
     DISABLE_RELRO \
     DISABLE_FORMAT_STRING_CHECKS \
     EXPORT_CFLAGS \
+    EXPORT_CONLYFLAGS \
     EXPORT_CPPFLAGS \
     EXPORT_LDLIBS \
     EXPORT_C_INCLUDES \
@@ -820,9 +822,10 @@ module-get-c++-flags = $(strip \
 # $2: List of flags to remove
 #
 module-filter-out-compiler-flags = \
-    $(eval __ndk_modules.$1.CFLAGS   := $(filter-out $2,$(__ndk_modules.$1.CFLAGS)))\
-    $(eval __ndk_modules.$1.CPPFLAGS := $(filter-out $2,$(__ndk_modules.$1.CPPFLAGS)))\
-    $(eval __ndk_modules.$1.CXXFLAGS := $(filter-out $2,$(__ndk_modules.$1.CXXFLAGS)))
+    $(eval __ndk_modules.$1.CFLAGS     := $(filter-out $2,$(__ndk_modules.$1.CFLAGS)))\
+    $(eval __ndk_modules.$1.CONLYFLAGS := $(filter-out $2,$(__ndk_modules.$1.CONLYFLAGS)))\
+    $(eval __ndk_modules.$1.CPPFLAGS   := $(filter-out $2,$(__ndk_modules.$1.CPPFLAGS)))\
+    $(eval __ndk_modules.$1.CXXFLAGS   := $(filter-out $2,$(__ndk_modules.$1.CXXFLAGS)))
 
 # Return true if a module's compiler flags enable rtti
 # We just look at -frtti and -fno-rtti on the command-line
@@ -1247,8 +1250,8 @@ $(foreach __src,$(LOCAL_SRC_FILES),$(info LOCAL_SRC_FILES_TEXT.$(__src) = $(LOCA
 NDK_APP_VARS_REQUIRED :=
 
 # the list of variables that *may* be defined in Application.mk files
-NDK_APP_VARS_OPTIONAL := APP_OPTIM APP_CPPFLAGS APP_CFLAGS APP_CXXFLAGS APP_LDFLAGS \
-                         APP_PLATFORM APP_BUILD_SCRIPT APP_ABI APP_MODULES \
+NDK_APP_VARS_OPTIONAL := APP_OPTIM APP_CPPFLAGS APP_CFLAGS APP_CONLY_FLAGS APP_CXXFLAGS \
+                         APP_LDFLAGS APP_PLATFORM APP_BUILD_SCRIPT APP_ABI APP_MODULES \
                          APP_PROJECT_PATH APP_STL APP_SHORT_COMMANDS \
                          APP_PIE APP_THIN_ARCHIVE
 
@@ -1478,7 +1481,9 @@ _FLAGS := $$($$(my)CFLAGS) \
           $$(call get-src-file-target-cflags,$(1)) \
           $$(call host-c-includes,$$(LOCAL_C_INCLUDES) $$(LOCAL_PATH)) \
           $$(LOCAL_CFLAGS) \
+          $$(LOCAL_CONLYFLAGS) \
           $$(NDK_APP_CFLAGS) \
+          $$(NDK_APP_CONLYFLAGS) \
           $$(call host-c-includes,$$($(my)C_INCLUDES)) \
           -c \
 
