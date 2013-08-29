@@ -79,6 +79,8 @@ enum ExecutableFieldID {
 const unsigned NUM_THREADS = 1;
 const char *lib_dir;
 const char *sysroot;
+bool for_testing;
+std::string complement_ldlibs;  // Used when for_testing == true
 
 // Use std::list to easily keep validity while erase
 typedef std::vector<std::string> LDFlagsTy;
@@ -322,6 +324,7 @@ int handleTask(const std::string &cmd) {
   return handleTask(cmd, err_msg);
 }
 
+
 int getFilesFromDir(const char *dir, std::vector<std::string> &files) {
   files.clear();
   DIR *dp = opendir(dir);
@@ -344,6 +347,14 @@ int getFilesFromDir(const char *dir, std::vector<std::string> &files) {
     close(fd);
     swapEndian(buffer, 4);
     int magic = transferBytesToNum(buffer, 4);
+    if (for_testing && magic == 0xdec04342) {
+      if (filename == "libgnustl_shared.bc") {
+        complement_ldlibs = std::string(" ") + sysroot + "/usr/lib/libsupc++.a -lgnustl_shared -ldl";
+        LOGI("Manually add %s for testing, and ignore the file %s", complement_ldlibs.c_str(), full_path.c_str());
+        continue;
+      }
+    }
+
     if (magic != 0x0b17c0de) {
       LOGI("Found file %s magic: %x, but we need: %x (Ignored)", full_path.c_str(), magic, 0x0b17c0de);
       continue;
@@ -500,6 +511,8 @@ int linkBitcode(const BitcodeInfoTy &info) {
        i != e; ++i) {
     cmd += std::string(" ") + *i;
   }
+  if (for_testing)
+      cmd += complement_ldlibs;
   // TODO: If this module needs libfoo.so, but since libfoo.so is not a real bitcode under
   //       our trick, it won't be included at module.info. How did we workaround this?
   cmd += info.mLDLibsStr;
@@ -515,6 +528,11 @@ int linkBitcode(const BitcodeInfoTy &info) {
 
   std::string err_msg;
   int ret = handleTask(cmd, err_msg);
+  if (ret != 0 && for_testing) {
+    // Bail out if it uses gnustl_static but we don't know. Try to use -lgnustl_shared
+    cmd += std::string(" ") + sysroot + "/usr/lib/libsupc++.a -lgnustl_shared -ldl";
+    ret = handleTask(cmd, err_msg);
+  }
   if (ret != 0) {
     LOGE("Cannot link bitcode (%s): %s", info.mBitcode.c_str(), cmd.c_str());
     std::fstream fout;
@@ -645,26 +663,29 @@ extern "C" {
 
 JNIEXPORT jint JNICALL
 Java_compiler_abcc_AbccService_genLibs(JNIEnv *env, jobject thiz,
-                                       jstring j_lib_dir, jstring j_sysroot) {
+                                       jstring j_lib_dir, jstring j_sysroot, jboolean j_for_testing) {
   lib_dir = env->GetStringUTFChars(j_lib_dir, 0);
   LOGI("Working directory: %s", lib_dir);
 
   sysroot = env->GetStringUTFChars(j_sysroot, 0);
   LOGI("Sysroot: %s", sysroot);
 
+  for_testing = (bool) j_for_testing;
+  LOGI("For testing: %d", for_testing);
+
   handleTask(std::string("rm -f ") + lib_dir + "/compile_error");
   genLibs(lib_dir, sysroot);
   handleTask(std::string("cd ") + lib_dir + " && ln -s " + sysroot + "/usr/lib/libgabi++_shared.so libgabi++_shared.so");
+  if (for_testing)
+    handleTask(std::string("cd ") + lib_dir + " && ln -s " + sysroot + "/usr/lib/libgnustl_shared.so libgnustl_shared.so");
   if (handleTask(std::string("ls ") + lib_dir + "/compile_error") != 0) {
     handleTask(std::string("echo 0 > ") + lib_dir + "/compile_result");
     handleTask(std::string("chmod 0644 ") + lib_dir + "/compile_result");
-    handleTask(std::string("rm -f ") + lib_dir + "/compile_result");
     return 0;
   } else {
     handleTask(std::string("echo 56 > ") + lib_dir + "/compile_result");
     handleTask(std::string("chmod 0644 ") + lib_dir + "/compile_result");
     handleTask(std::string("chmod 0644 ") + lib_dir + "/compile_error");
-    handleTask(std::string("rm -f ") + lib_dir + "/compile_result");
     return 56;
   }
 }
