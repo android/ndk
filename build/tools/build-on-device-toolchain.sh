@@ -108,6 +108,7 @@ fi
 dump "Build $ABI LLVM toolchain from $SRC_DIR ..."
 run $BUILDTOOLS/build-device-llvm.sh $FLAGS --abis=$ABI --gcc-version=$GCC_TOOLCHAIN_VERSION $SRC_DIR $NDK_DIR
 fail_panic "Could not build le32 LLVM toolchain!"
+run mv -f $TMP_OUT_DIR/$ABI/SOURCES $OUT_SYSROOT/usr
 run mv -f $TMP_OUT_DIR/$ABI/lib*.so $OUT_SYSROOT/usr/lib
 run mv -f $TMP_OUT_DIR/$ABI/* $OUT_SYSROOT/usr/bin
 run rmdir $TMP_OUT_DIR/$ABI
