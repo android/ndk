@@ -1,0 +1,9 @@
+Code-Review+1: Ying Wang <wangying@android.com>
+Code-Review+2: Andrew Hsieh <andrewhsieh@google.com>
+Verified+1: Andrew Hsieh <andrewhsieh@google.com>
+Code-Review+1: Pavel Chupin <pavel.v.chupin@intel.com>
+Submitted-by: Andrew Hsieh <andrewhsieh@google.com>
+Submitted-at: Fri, 30 Aug 2013 01:24:23 +0000
+Reviewed-on: https://android-review.googlesource.com/64453
+Project: platform/ndk
+Branch: refs/heads/master
