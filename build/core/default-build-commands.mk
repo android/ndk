@@ -115,6 +115,7 @@ else
 TARGET_CC       = $(TOOLCHAIN_PREFIX)gcc
 endif
 TARGET_CFLAGS   =
+TARGET_CONLYFLAGS =
 
 ifneq ($(findstring c++-analyzer,$(CXX)),)
 TARGET_CXX      = $(CXX)
