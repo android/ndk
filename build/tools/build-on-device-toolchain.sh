@@ -106,7 +106,7 @@ fi
 
 dump "Strip $ABI binaries"
 STRIP=$NDK_DIR/$(get_default_toolchain_binprefix_for_arch $ARCH)strip
-run find $OUT_SYSROOT/usr/lib \( -name "*\.a" -o -name "*\.so" \) -exec $STRIP --strip-all {} \;
+run find $OUT_SYSROOT/usr/lib \( -name "*\.so" \) -exec $STRIP --strip-all {} \;
 
 dump "Build $ABI LLVM toolchain from $SRC_DIR ..."
 run $BUILDTOOLS/build-device-llvm.sh $FLAGS --abis=$ABI --gcc-version=$GCC_TOOLCHAIN_VERSION $SRC_DIR $NDK_DIR
