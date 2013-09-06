@@ -31,10 +31,15 @@ ifeq ($(SYSTEM_PREBUILT_PACKAGE),true)
 LOCAL_SHARED_LIBRARIES := liblog libstlport
 include external/stlport/libstlport.mk
 
+include $(BUILD_SHARED_LIBRARY)
 else  # SYSTEM_PREBUILT_PACKAGE
 
+LOCAL_CFLAGS += -DENABLE_PARALLEL_LLVM_CG=1
 LOCAL_LDLIBS := -llog
+LOCAL_STATIC_LIBRARIES := cpufeatures
+include $(BUILD_SHARED_LIBRARY)
+
+$(call import-module,android/cpufeatures)
 
 endif
 
-include $(BUILD_SHARED_LIBRARY)
