@@ -27,7 +27,8 @@ register_var_option "--ndk-dir=<path>" NDK_DIR "Put binaries into NDK install di
 BUILD_DIR=/tmp/ndk-$USER/build
 register_var_option "--build-dir=<path>" BUILD_DIR "Specify temporary build directory"
 
-ARCHS=$DEFAULT_ARCHS
+ARCHS=$(find_ndk_unknown_archs)
+ARCHS="$DEFAULT_ARCHS $ARCHS"
 register_var_option "--arch=<arch>" ARCHS "Specify target architectures"
 
 SYSTEMS=$HOST_TAG32

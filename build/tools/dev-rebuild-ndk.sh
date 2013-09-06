@@ -150,7 +150,8 @@ else
 fi
 
 
-ARCHS=$DEFAULT_ARCHS
+ARCHS=$(find_ndk_unknown_archs)
+ARCHS="$DEFAULT_ARCHS $ARCHS"
 
 # Build the platform
 echo
