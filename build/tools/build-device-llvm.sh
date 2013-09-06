@@ -238,7 +238,12 @@ for abi in $ABIS; do
   fail_panic "Couldn't compile mclinker"
 
   run mkdir -p $TOOLCHAIN_BUILD_PREFIX/$abi
-  run cp -f $MCLINKER_BUILD_OUT/optimized/ld.mcld $TOOLCHAIN_BUILD_PREFIX/$abi
+  if [ -f $MCLINKER_BUILD_OUT/tools/ld.lite/ld.lite ]; then
+    run cp -f $MCLINKER_BUILD_OUT/tools/ld.lite/ld.lite $TOOLCHAIN_BUILD_PREFIX/$abi/ld.mcld
+  else
+    run cp -f $MCLINKER_BUILD_OUT/optimized/ld.mcld $TOOLCHAIN_BUILD_PREFIX/$abi
+  fi
+  fail_panic "Couldn't copy mclinker"
 
   # Strip
   STRIP=$BUILD_OUT/ndk-standalone-$arch/bin/$toolchain_prefix-strip
