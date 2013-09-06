@@ -1,0 +1,7 @@
+LOCAL_PATH := $(call my-dir)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := issue58135-_C_LABEL_STRING
+LOCAL_SRC_FILES := issue58135-_C_LABEL_STRING.cpp
+LOCAL_CPPFLAGS += -std=c++11 -Werror
+include $(BUILD_EXECUTABLE)
