@@ -26,7 +26,7 @@
 // SUCH DAMAGE.
 
 #ifndef _GABIXX_CXXABI_DEFINES_H
-#define _GABIXX_CXXABI_DEIFNES_H
+#define _GABIXX_CXXABI_DEFINES_H
 
 #include <cxxabi.h>
 #include <stdint.h>
