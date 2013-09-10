@@ -77,6 +77,7 @@ FLAGS=
 test "$VERBOSE" = "yes" && FLAGS=$FLAGS" --verbose"
 test "$VERBOSE2" = "yes" && FLAGS=$FLAGS" --verbose"
 FLAGS="$FLAGS -j$NUM_JOBS"
+test "$DEBUG" = "yes" && FLAGS=$FLAGS" --testing"
 
 #
 # First: Build toolchain assets

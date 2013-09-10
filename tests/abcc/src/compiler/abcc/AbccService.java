@@ -25,6 +25,7 @@ public class AbccService extends IntentService {
 
   String mWorkingDir = null;
   String mSysroot = null;
+  boolean mForTesting = false;
 
   // For onBind()
   private IBinder mBinder = new LocalBinder();
@@ -51,7 +52,7 @@ public class AbccService extends IntentService {
       }
 
       Log.i(TAG, "mWorkingDir for genLibs: " + mWorkingDir);
-      if (genLibs(mWorkingDir, mSysroot) != 0) {
+      if (genLibs(mWorkingDir, mSysroot, mForTesting) != 0) {
         synchronized (mStatusLock) {
           mCurrentStatus = AbccService.STATUS_ERROR;
           mStatusLock.notifyAll();
@@ -226,6 +227,7 @@ public class AbccService extends IntentService {
 
     extractIntentInfo(intent);
     installToolchain();
+    mForTesting = true;
     new WorkingThread().start();
   }
 
@@ -261,7 +263,7 @@ public class AbccService extends IntentService {
 
   // If succeess, it will be 0 in file working_dir/compile_result.
   // Otherwise, there will be error message in file working_dir/compile_error.
-  private native int genLibs(String working_dir, String sysroot);
+  private native int genLibs(String working_dir, String sysroot, boolean for_test);
 
   static {
     // Distinguish whether this is a system prebuilt apk or an updated apk
