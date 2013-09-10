@@ -7,6 +7,7 @@ import android.content.res.AssetManager;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Parcel;
 import android.os.ResultReceiver;
@@ -76,24 +77,22 @@ public class AbccService extends IntentService {
         throw new RemoteException("AbccLocalBinder pingBinder return false!");
       }
 
-      switch (code) {
-        // Use magic number instead of meaningful string since PackageManager is not integrated yet
-        // PackageManager.BITCODE_ACTION_START_COMPILE
-        case 10: {
-          String path = data.readString();
-          if (path == null)
-            Log.e(TAG, "onTransact but no working_dir provided!?");
-          else
-            mWorkingDir = path;
-          return compileForBinder();
-        }
-        // PackageManager.BITCODE_ACTION_QUERY_STATUS
-        case 11:
-          return queryStatusForBinder();
-        default:
-          Log.e(TAG, "Unreconizable onTransact code.");
-          return false;
+      // The code is not important now. This is just a communication way
+      // and what we really need is the information from @data
+      Bundle real_data = data.readBundle();
+      if (real_data == null) {
+        Log.e(TAG, "Should get some information from the Parcel.");
+        return false;
       }
+      String path = real_data.getString("working_dir");
+      if (path == null ) {
+        Log.e(TAG, "onTransact but no working_dir provided?");
+        return false;
+      }
+
+      mWorkingDir = path;
+      compileForBinder();
+      return queryStatusForBinder();
     }
   }
 
