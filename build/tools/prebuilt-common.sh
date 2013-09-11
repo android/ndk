@@ -1195,7 +1195,7 @@ find_ndk_unknown_archs()
 arch_in_unknown_archs()
 {
     local UNKNOWN_ARCH=$(find_ndk_unknown_archs | grep $1)
-    if [ -z $UNKNOWN_ARCH ]; then
+    if [ -z "$UNKNOWN_ARCH" ]; then
         echo "no"
     else
         echo "yes"

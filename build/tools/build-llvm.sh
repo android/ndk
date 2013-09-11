@@ -314,6 +314,9 @@ if [ "$TOOLCHAIN" = "llvm-$DEFAULT_LLVM_VERSION" ] ; then
     fail_panic "Couldn't configure mclinker"
 
     dump "Building : mclinker"
+    if [ "$MINGW" = "yes" ]; then
+        MAKE_FLAGS="$MAKE_FLAGS LIBS=-lshlwapi" # lib/Object/SectionMap.cpp needs PathMatchSpec to replace fnmatch()
+    fi
     cd $MCLINKER_BUILD_OUT
     run make -j$NUM_JOBS $MAKE_FLAGS CXXFLAGS="$CXXFLAGS"
     fail_panic "Couldn't compile mclinker"
@@ -343,11 +346,17 @@ rm -rf $TOOLCHAIN_BUILD_PREFIX/lib/B*.so
 rm -rf $TOOLCHAIN_BUILD_PREFIX/lib/B*.dylib
 rm -rf $TOOLCHAIN_BUILD_PREFIX/lib/LLVMH*.so
 rm -rf $TOOLCHAIN_BUILD_PREFIX/lib/LLVMH*.dylib
-rm -rf $TOOLCHAIN_BUILD_PREFIX/bin/ld.bcc*
+if [ -f $TOOLCHAIN_BUILD_PREFIX/bin/ld.lite${HOST_EXE} ]; then
+    # rename ld.lite to ld.mcld
+    rm -rf $TOOLCHAIN_BUILD_PREFIX/bin/ld.[bm]*
+    mv -f $TOOLCHAIN_BUILD_PREFIX/bin/ld.lite${HOST_EXE} $TOOLCHAIN_BUILD_PREFIX/bin/ld.mcld${HOST_EXE}
+else
+    rm -rf $TOOLCHAIN_BUILD_PREFIX/bin/ld.bcc
+fi
 rm -rf $TOOLCHAIN_BUILD_PREFIX/share
 
 UNUSED_LLVM_EXECUTABLES="
-bugpoint c-index-test clang-check clang-format clang-tblgen lli llvm-as llvm-bcanalyzer
+bugpoint c-index-test clang-check clang-format clang-tblgen lli llvm-bcanalyzer
 llvm-config llvm-config-host llvm-cov llvm-diff llvm-dwarfdump llvm-extract llvm-ld
 llvm-mc llvm-nm llvm-mcmarkup llvm-objdump llvm-prof llvm-ranlib llvm-readobj llvm-rtdyld
 llvm-size llvm-stress llvm-stub llvm-symbolizer llvm-tblgen macho-dump cloog"
