@@ -22,9 +22,6 @@ LOCAL_MODULE    := libjni_abcc
 LOCAL_MODULE_CLASS := SHARED_LIBRARIES
 LOCAL_SRC_FILES := main.cpp
 
-## Read ldflags from bitcode wrapper or info file
-#LOCAL_CFLAGS    := -DREAD_BITCODE_INFO_FILE
-
 # Check in AOSP or NDK usage
 ifeq ($(SYSTEM_PREBUILT_PACKAGE),true)
 
