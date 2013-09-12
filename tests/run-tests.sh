@@ -298,6 +298,14 @@ fi
 BUILD_DIR=$TEST_DIR/build
 mkdir -p "$BUILD_DIR" && rm -rf "$BUILD_DIR/*"
 
+#
+# Add -link-native-binary to allow linking native binaries
+#
+if [ ! -z "$NDK_ABI_FILTER" ]; then
+  APP_LDFLAGS="$APP_LDFLAGS -Wl,-link-native-binary"
+fi
+
+
 ###
 ### RUN AWK TESTS
 ###

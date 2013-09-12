@@ -45,7 +45,7 @@ TARGET_CFLAGS := \
 TARGET_NO_EXECUTE_CFLAGS :=
 
 # Add and LDFLAGS for the target here
-TARGET_LDFLAGS := \
+TARGET_LDFLAGS += \
     -target $(LLVM_TRIPLE) \
     -emit-llvm \
     -no-canonical-prefixes
