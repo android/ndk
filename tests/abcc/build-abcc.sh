@@ -55,6 +55,10 @@ DEBUG=
 do_debug_option () { DEBUG=yes; }
 register_option "--no-share-system-uid" do_debug_option "Just for testing. Be careful of device directory permission issue!"
 
+TESTING=
+do_testing_option () { TESTING=yes; }
+register_option "--testing" do_testing_option "Package all prebuilts into abcc for testing"
+
 NO_REBUILD_ASSETS=
 do_no_rebuild_assets_option () { NO_REBUILD_ASSETS=yes; }
 register_option "--no-rebuild-assets" do_no_rebuild_assets_option "Use existing toolchain prebuilt assets instead of rebuilding them"
@@ -77,7 +81,7 @@ FLAGS=
 test "$VERBOSE" = "yes" && FLAGS=$FLAGS" --verbose"
 test "$VERBOSE2" = "yes" && FLAGS=$FLAGS" --verbose"
 FLAGS="$FLAGS -j$NUM_JOBS"
-test "$DEBUG" = "yes" && FLAGS=$FLAGS" --testing"
+test "$TESTING" = "yes" && FLAGS=$FLAGS" --testing"
 
 #
 # First: Build toolchain assets
@@ -138,7 +142,7 @@ if [ $? -ne 0 ]; then
 fi
 
 for ABI in $ABIS; do
-  run rm -f obj libs
+  run rm -rf obj libs
   run $NDK_DIR/ndk-build -B APP_ABI=$ABI -C jni
   if [ "$DEBUG" = "yes" ]; then
     run rm -f AndroidManifest.xml

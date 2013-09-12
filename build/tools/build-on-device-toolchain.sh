@@ -97,9 +97,6 @@ if [ "$TESTING" = "yes" ]; then
   run cp -f $NDK_DIR/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI/libgnustl_static.a $OUT_SYSROOT/usr/lib
   run cp -f $NDK_DIR/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI/libgnustl_shared.so $OUT_SYSROOT/usr/lib
 
-  run cp -f $NDK_DIR/$STLPORT_SUBDIR/libs/$ABI/libstlport_static.a $OUT_SYSROOT/usr/lib
-  run cp -f $NDK_DIR/$STLPORT_SUBDIR/libs/$ABI/libstlport_shared.so $OUT_SYSROOT/usr/lib
-
   run cp -f $NDK_DIR/$GABIXX_SUBDIR/libs/$ABI/libgabi++_static.a $OUT_SYSROOT/usr/lib
   run cp -f $NDK_DIR/$GABIXX_SUBDIR/libs/$ABI/libgabi++_shared.so $OUT_SYSROOT/usr/lib
 fi
