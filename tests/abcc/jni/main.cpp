@@ -1,5 +1,5 @@
 /*
- * Copyright 2012, The Android Open Source Project
+ * Copyright 2013, The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,9 +25,10 @@
 #include <utility>
 #include <vector>
 #include <fstream>
-#include <pthread.h>
-#if ENABLE_PARALLEL_LLVM_CG
 #include <sstream>
+#include <pthread.h>
+#include <sys/stat.h>
+#if ENABLE_PARALLEL_LLVM_CG
 #include <cpu-features.h>
 #endif
 
@@ -83,8 +84,6 @@ enum ExecutableFieldID {
 const unsigned NUM_THREADS = 1;
 const char *lib_dir;
 const char *sysroot;
-bool for_testing;
-std::string complement_ldlibs;  // Used when for_testing == true
 
 // Use std::list to easily keep validity while erase
 typedef std::vector<std::string> LDFlagsTy;
@@ -140,30 +139,32 @@ int transferBytesToNum(const unsigned char *buffer, size_t n) {
     uint32_t OptimizationLevel;
   };
 */
-#ifdef READ_BITCODE_INFO_FILE
-int readInfoFile(BitcodeInfoTy &info) {
+
+int parseLDFlags(BitcodeInfoTy &info, std::string& ldflags) {
+
   if (info.mBitcode.empty()) {
-    LOGE("Must set bitcode name before readInfoFile.");
+    LOGE("Must set bitcode name before parseLDFlags.");
     return 1;
   }
+
   info.mSOName = info.mBitcode.substr(info.mBitcode.rfind("/") + 1);
   info.mLDFlags.clear();
   info.mLDLibs.clear();
   info.mLDLibsStr.clear();
 
-  std::string filename(info.mBitcode + ".info");
-  std::fstream fin(filename.c_str());
+  std::stringstream ss(ldflags);
   std::string str;
-  while (fin >> str) {
+
+  while (ss >> str) {
     if (str.find("--sysroot") != std::string::npos) {
       continue; // Ignore on-host sysroot
     }
     if (str == "-o") {  // Ignore on-host output path
-      fin >> str;
+      ss >> str;
       continue;
     }
     if (str == "-soname") {  // Ignore on-host output path
-      fin >> str;
+      ss >> str;
       info.mSOName = str;
       continue;
     }
@@ -193,7 +194,7 @@ int readInfoFile(BitcodeInfoTy &info) {
   }
   return 0;
 }
-#else // READ_BITCODE_INFO_FILE
+
 int readWrapper(BitcodeInfoTy &info) {
   if (info.mBitcode.empty()) {
     LOGE("Must set bitcode name before readWrapper.");
@@ -246,63 +247,8 @@ int readWrapper(BitcodeInfoTy &info) {
         info.mShared = true;
       }
     } else if (tag == 0x5002) {
-      info.mSOName = reinterpret_cast<char*>(large_buffer);
-    } else if (tag == 0x5003) {
-      const char *lib = reinterpret_cast<char*>(large_buffer);
-      info.mLDLibs.push_back(lib);
-      info.mLDLibsStr += std::string(" -l") + lib;
-    } else if (tag == 0x5004) {
-      swapEndian(large_buffer, length);
-      int flag = transferBytesToNum(large_buffer, length);
-      if (flag & (1 << 0)) {
-        info.mLDFlags.push_back("-z combreloc");
-      }
-      if (flag & (1 << 1)) {
-        info.mLDFlags.push_back("--no-undefined");
-      }
-      if (flag & (1 << 2)) {
-        info.mLDFlags.push_back("-z execstack");
-      } else {
-        info.mLDFlags.push_back("-z noexecstack");
-      }
-      if (flag & (1 << 3)) {
-        info.mLDFlags.push_back("-z initfirst");
-      }
-      if (flag & (1 << 4)) {
-        info.mLDFlags.push_back("-z interpose");
-      }
-      if (flag & (1 << 5)) {
-        info.mLDFlags.push_back("-z loadfltr");
-      }
-      if (flag & (1 << 6)) {
-        info.mLDFlags.push_back("-z muldefs");
-      }
-      if (flag & (1 << 7)) {
-        info.mLDFlags.push_back("-z nocopyreloc");
-      }
-      if (flag & (1 << 8)) {
-        info.mLDFlags.push_back("-z nodefaultlib");
-      }
-      if (flag & (1 << 9)) {
-        info.mLDFlags.push_back("-z nodelete");
-      }
-      if (flag & (1 << 10)) {
-        info.mLDFlags.push_back("-z nodlopen");
-      }
-      if (flag & (1 << 11)) {
-        info.mLDFlags.push_back("-z nodump");
-      }
-      if (flag & (1 << 12)) {
-        info.mLDFlags.push_back("-z relro");
-      }
-      if (flag & (1 << 13)) {
-        info.mLDFlags.push_back("-z lazy");
-      } else {
-        info.mLDFlags.push_back("-z now");
-      }
-      if (flag & (1 << 14)) {
-        info.mLDFlags.push_back("-z origin");
-      }
+      std::string ldflags = reinterpret_cast<char*>(large_buffer);
+      parseLDFlags(info,ldflags);
     } else {
       // Other field, just omit
     }
@@ -312,7 +258,6 @@ int readWrapper(BitcodeInfoTy &info) {
   close(fd);
   return 0;
 }
-#endif // READ_BITCODE_INFO_FILE
 
 int handleTask(const std::string &cmd, std::string &err_msg) {
   int ret = system(cmd.c_str());
@@ -351,13 +296,6 @@ int getFilesFromDir(const char *dir, std::vector<std::string> &files) {
     close(fd);
     swapEndian(buffer, 4);
     int magic = transferBytesToNum(buffer, 4);
-    if (for_testing && magic == 0xdec04342) {
-      if (filename == "libgnustl_shared.bc") {
-        complement_ldlibs = std::string(" ") + sysroot + "/usr/lib/libsupc++.a -lgnustl_shared -ldl";
-        LOGI("Manually add %s for testing, and ignore the file %s", complement_ldlibs.c_str(), full_path.c_str());
-        continue;
-      }
-    }
 
     if (magic != 0x0b17c0de) {
       LOGI("Found file %s magic: %x, but we need: %x (Ignored)", full_path.c_str(), magic, 0x0b17c0de);
@@ -501,7 +439,7 @@ int linkBitcode(const BitcodeInfoTy &info) {
     cmd += " -shared";
   }
   cmd += " -eh-frame-hdr -dynamic-linker /system/bin/linker";
-  cmd += std::string(" -X -Bsymbolic -m ") + target_data[abi][target_emulation];
+  cmd += std::string(" -X -m ") + target_data[abi][target_emulation];
   cmd += std::string(" ") + target_data[abi][target_extra_ldflags];
   if (info.mShared) {
     cmd += std::string(" ") + sysroot + "/usr/lib/crtbegin_so.o";
@@ -513,21 +451,21 @@ int linkBitcode(const BitcodeInfoTy &info) {
   }
   cmd += std::string(" ") + obj;
   cmd += std::string(" @") + sysroot + "/usr/lib/libportable.wrap " + sysroot + "/usr/lib/libportable.a";
+  cmd += std::string(" -L/system/lib");
   cmd += std::string(" -L") + lib_dir;
   cmd += std::string(" -L") + sysroot + "/usr/lib";
-  cmd += std::string(" -L/system/lib");
   for (LDFlagsTy::const_iterator i = info.mLDFlags.begin(), e = info.mLDFlags.end();
        i != e; ++i) {
     cmd += std::string(" ") + *i;
   }
-  if (for_testing)
-      cmd += complement_ldlibs;
   // TODO: If this module needs libfoo.so, but since libfoo.so is not a real bitcode under
   //       our trick, it won't be included at module.info. How did we workaround this?
   cmd += info.mLDLibsStr;
   // Replace libgcc by libcompiler-rt + libgabi++
   cmd += std::string(" ") + sysroot + "/usr/lib/libcompiler_rt_static.a";
   cmd += std::string(" ") + sysroot + "/usr/lib/libgabi++_shared.so";
+  cmd += std::string(" -ldl");
+
   if (info.mShared) {
     cmd += std::string(" ") + sysroot + "/usr/lib/crtend_so.o";
   } else {
@@ -537,11 +475,6 @@ int linkBitcode(const BitcodeInfoTy &info) {
 
   std::string err_msg;
   int ret = handleTask(cmd, err_msg);
-  if (ret != 0 && for_testing) {
-    // Bail out if it uses gnustl_static but we don't know. Try to use -lgnustl_shared
-    cmd += std::string(" ") + sysroot + "/usr/lib/libsupc++.a -lgnustl_shared -ldl";
-    ret = handleTask(cmd, err_msg);
-  }
   if (ret != 0) {
     LOGE("Cannot link bitcode (%s): %s", info.mBitcode.c_str(), cmd.c_str());
     std::fstream fout;
@@ -555,6 +488,24 @@ int linkBitcode(const BitcodeInfoTy &info) {
 #ifdef NDEBUG
   handleTask(std::string("rm -f ") + obj);
 #endif
+  return 0;
+}
+
+int prepareRuntime(const BitcodeInfoTy &info) {
+  std::stringstream ss(info.mLDLibsStr);
+  std::string deplibs;
+
+  while (ss >> deplibs) {
+    if (deplibs.substr(0,2) == "-l") {
+        std::string libname = "lib" + deplibs.substr(2) + ".so";
+        std::string full_lib_path = std::string(sysroot) + "/usr/lib/" + libname;
+        struct stat buf;
+        // runtime found
+        if (stat(full_lib_path.c_str(),&buf) == 0) {
+          handleTask("cp -p " + full_lib_path + " " + lib_dir + "/" + libname);
+        }
+    }
+  }
   return 0;
 }
 
@@ -574,11 +525,7 @@ int genLibs(const char *lib_dir, const char *sysroot) {
        e = files.end(); i != e; ++i) {
     const std::string &bitcode = *i;
     BitcodeInfoTy bc_info(bitcode);
-#ifdef READ_BITCODE_INFO_FILE
-    ret = readInfoFile(bc_info);
-#else
     ret = readWrapper(bc_info);
-#endif
     if (ret != 0) {
       LOGE("Cannot read wrapper for bitcodes.");
       return ret;
@@ -645,12 +592,12 @@ int genLibs(const char *lib_dir, const char *sysroot) {
       if (info.mLDLibs.empty()) {
         // No internal dependency for this bitcode
         LOGI("Process bitcode: %s -> %s", info.mBitcode.c_str(), info.mSOName.c_str());
+        prepareRuntime(info);
         ret = linkBitcode(info);
         if (ret != 0) {
           LOGE("Process bitcode failed on %s!", info.mBitcode.c_str());
         }
 
-        handleTask(std::string("rm -f ") + info.mBitcode + ".info");
         soname_map.erase(i);
         removeExternalLDLibs(soname_map);
         break;
@@ -672,21 +619,17 @@ extern "C" {
 
 JNIEXPORT jint JNICALL
 Java_compiler_abcc_AbccService_genLibs(JNIEnv *env, jobject thiz,
-                                       jstring j_lib_dir, jstring j_sysroot, jboolean j_for_testing) {
+                                       jstring j_lib_dir, jstring j_sysroot) {
   lib_dir = env->GetStringUTFChars(j_lib_dir, 0);
   LOGI("Working directory: %s", lib_dir);
 
   sysroot = env->GetStringUTFChars(j_sysroot, 0);
   LOGI("Sysroot: %s", sysroot);
 
-  for_testing = (bool) j_for_testing;
-  LOGI("For testing: %d", for_testing);
-
   handleTask(std::string("rm -f ") + lib_dir + "/compile_error");
   genLibs(lib_dir, sysroot);
-  handleTask(std::string("cd ") + lib_dir + " && ln -s " + sysroot + "/usr/lib/libgabi++_shared.so libgabi++_shared.so");
-  if (for_testing)
-    handleTask(std::string("cd ") + lib_dir + " && ln -s " + sysroot + "/usr/lib/libgnustl_shared.so libgnustl_shared.so");
+  handleTask(std::string("cp -p ") + sysroot + "/usr/lib/libgabi++_shared.so " + lib_dir + "/libgabi++_shared.so");
+
   if (handleTask(std::string("ls ") + lib_dir + "/compile_error") != 0) {
     handleTask(std::string("echo 0 > ") + lib_dir + "/compile_result");
     handleTask(std::string("chmod 0644 ") + lib_dir + "/compile_result");
