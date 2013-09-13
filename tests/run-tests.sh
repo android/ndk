@@ -397,7 +397,7 @@ fi
 gen_empty_bitcode() {
     TEMP_FILE=`mktemp`
     mv $TEMP_FILE ${TEMP_FILE}.c
-    run $(get_llvm_toolchain_binprefix $DEFAULT_LLVM_VERSION)/clang -target le32-none-ndk -emit-llvm -c -o $1 ${TEMP_FILE}.c
+    run $NDK/$(get_llvm_toolchain_binprefix $DEFAULT_LLVM_VERSION)/clang -target le32-none-ndk -emit-llvm -c -o $1 ${TEMP_FILE}.c
     rm -f ${TEMP_FILE}.c
 }
 
