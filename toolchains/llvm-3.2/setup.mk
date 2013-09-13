@@ -23,7 +23,7 @@
 # revisions of the NDK.
 #
 
-TOOLCHAIN_VERSION := 4.7
+TOOLCHAIN_VERSION := 4.8
 
 ifneq ($(filter %bcarmeabi-v7a,$(TARGET_ARCH_ABI)),)
 SYSROOT_LINK     := $(NDK_PLATFORMS_ROOT)/$(TARGET_PLATFORM)/arch-arm
