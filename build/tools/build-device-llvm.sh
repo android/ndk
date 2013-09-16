@@ -47,6 +47,9 @@ register_var_option "--abis=<armeabi,armeabi-v7a,x86,mips>" OPTION_ABIS "Default
 OPTION_GCC_VERSION=
 register_var_option "--gcc-version=<version>" OPTION_GCC_VERSION "Specify GCC toolchain version [Default: $DEFAULT_GCC_VERSION]"
 
+STL=stlport
+register_var_option "--stl=<name>" STL "Specify C++ STL"
+
 register_jobs_option
 
 extract_parameters "$@"
@@ -170,7 +173,7 @@ for abi in $ABIS; do
 
   run $BUILDTOOLS/make-standalone-toolchain.sh \
     --toolchain=$toolchain_name \
-    --stl=stlport \
+    --stl=$STL \
     --arch=$arch \
     --system=$HOST_TAG \
     --platform=android-9 \
@@ -178,7 +181,7 @@ for abi in $ABIS; do
   fail_panic "Couldn't make standalone for $arch"
 
   run mkdir -p $TOOLCHAIN_BUILD_PREFIX/$abi
-  run cp -f $BUILD_OUT/ndk-standalone-$arch/$toolchain_prefix/lib/libstlport_shared.so $TOOLCHAIN_BUILD_PREFIX/$abi
+  run cp -f $BUILD_OUT/ndk-standalone-$arch/$toolchain_prefix/lib/lib${STL}_shared.so $TOOLCHAIN_BUILD_PREFIX/$abi
 
   CC=$BUILD_OUT/ndk-standalone-$arch/bin/$toolchain_prefix-gcc
   CXX=$BUILD_OUT/ndk-standalone-$arch/bin/$toolchain_prefix-g++
@@ -194,7 +197,7 @@ for abi in $ABIS; do
     --disable-polly \
     --with-clang-srcdir=/dev/null \
     --enable-shared \
-    --with-extra-ld-options=-lstlport_shared \
+    --with-extra-ld-options=-l${STL}_shared \
     --disable-assertions \
     --with-extra-options="$CFLAGS"
   fail_panic "Couldn't configure llvm toolchain for ABI $abi"
@@ -218,7 +221,7 @@ for abi in $ABIS; do
   fail_panic "Couldn't cd into mclinker build path: $MCLINKER_BUILD_OUT"
 
   CC="$BUILD_OUT/ndk-standalone-$arch/bin/$toolchain_prefix-gcc $CFLAGS"
-  CXX="$BUILD_OUT/ndk-standalone-$arch/bin/$toolchain_prefix-g++ $CFLAGS -lstlport_shared"
+  CXX="$BUILD_OUT/ndk-standalone-$arch/bin/$toolchain_prefix-g++ $CFLAGS -l${STL}_shared"
   export CC CXX
 
   run $MCLINKER_SRC_DIR/configure \
