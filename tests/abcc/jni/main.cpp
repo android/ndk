@@ -70,7 +70,7 @@ enum TargetFieldID {
 const char* target_data[4][5] = {
   {"arm", "armv5te-linux-androideabi", "armelf_linux_eabi", "", ""},
   {"arm", "thumbv7-linux-androideabi", "armelf_linux_eabi", "", ""},
-  {"x86", "i686-linux-android", "elf_i386", "-disable-fp-elim -mattr=-ssse3,-sse41,-sse42,-sse4a,-popcnt", ""},
+  {"x86", "i686-linux-android", "elf_i386", "-disable-fp-elim -force-align-stack -mattr=-ssse3,-sse41,-sse42,-sse4a,-popcnt", ""},
   {"mips", "mipsel-linux-android", "elf32ltsmip", "", ""},
 };
 
