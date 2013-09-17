@@ -56,6 +56,14 @@
  *
  * NDK r4: Initial release
  */
+
+#if defined(__le32__)
+
+// When users enter this, we should only provide interface and
+// libportable will give the implementations.
+
+#else // !__le32__
+
 #include <sys/system_properties.h>
 #ifdef __arm__
 #include <machine/cpu-features.h>
@@ -1071,3 +1079,5 @@ android_setCpuArm(int cpu_count, uint64_t cpu_features, uint32_t cpu_id)
  * ARCH_NEON_FP16 (+EXT_FP16)
  *
  */
+
+#endif // defined(__le32__)
