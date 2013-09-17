@@ -423,7 +423,6 @@ case $ABI in
             run gen_empty_bitcode $NDK/$GABIXX_SUBDIR/libs/$ABI/libgabi++_static.a
             run gen_empty_bitcode $NDK/$GABIXX_SUBDIR/libs/$ABI/libgabi++_shared.bc
             run cp -a $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$(get_default_abi_for_arch arm)/include $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI
-            run cp -a $NDK/$LIBPORTABLE_SUBDIR/libs/$(get_default_abi_for_arch arm)/libportable.a $NDK/$LIBPORTABLE_SUBDIR/libs/$ABI
         else
             echo "ERROR: Unsupported abi value: $ABI"
             exit 1
@@ -951,7 +950,6 @@ if [ "$ABI" = "$(find_ndk_unknown_archs)" ]; then
   # Cleanup some intermediate files for testing
   run rm -rf $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI
   run rm -rf $NDK/$GABIXX_SUBDIR/libs/$ABI
-  run rm -rf $NDK/$LIBPORTABLE_SUBDIR/libs/$ABI
 fi
 rm -rf $BUILD_DIR
 dump "Done."
