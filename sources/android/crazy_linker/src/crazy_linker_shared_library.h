@@ -7,6 +7,9 @@
 
 #include <link.h>
 
+#include "crazy_linker_elf_relro.h"
+#include "crazy_linker_elf_symbols.h"
+#include "crazy_linker_elf_view.h"
 #include "crazy_linker_error.h"
 #include "crazy_linker_rdebug.h"
 #include "crazy_linker_util.h"
@@ -27,63 +30,15 @@ class LibraryView;
 
 class SharedLibrary {
  public:
-  const ELF::Phdr* phdr;
-  size_t phnum;
-  ELF::Addr load_bias;
-
-  ELF::Addr entry;
-  ELF::Addr base;
-  size_t size;
-
-  ELF::Dyn* dynamic;
-  size_t dynamic_count;
-  ELF::Word dynamic_flags;
-
-  SharedLibrary* list_next;
-  SharedLibrary* list_prev;
-  unsigned flags;
-
-  const char* strtab;
-  ELF::Sym* symtab;
-
-  size_t nbucket;
-  size_t nchain;
-  unsigned* bucket;
-  unsigned* chain;
-
-  typedef void (*linker_function_t)();
-
-  linker_function_t* preinit_array;
-  size_t preinit_array_count;
-  linker_function_t* init_array;
-  size_t init_array_count;
-  linker_function_t* fini_array;
-  size_t fini_array_count;
-  linker_function_t init_func;
-  linker_function_t fini_func;
-
-#ifdef __arm__
-  // ARM EABI section used for stack unwinding.
-  unsigned* ARM_exidx;
-  size_t ARM_exidx_count;
-#endif
-
-  link_map_t link_map;
-
-  bool has_DT_SYMBOLIC;
-
-  size_t relro_start;
-  size_t relro_size;
-  int relro_fd;
-  bool relro_used;
-
-  void* java_vm;
-
-  const char* base_name;
-  char full_path[512];
-
   SharedLibrary();
   ~SharedLibrary();
+
+  size_t load_address() const { return view_.load_address(); }
+  size_t load_size() const { return view_.load_size(); }
+  size_t load_bias() const { return view_.load_bias(); }
+  const ELF::Phdr* phdr() const { return view_.phdr(); }
+  size_t phdr_count() const { return view_.phdr_count(); }
+  const char* base_name() const { return base_name_; }
 
   // Load a library (without its dependents) from an ELF file.
   // Note: This does not apply relocations, nor runs constructors.
@@ -107,6 +62,23 @@ class SharedLibrary {
                 Vector<LibraryView*>* dependencies,
                 Error* error);
 
+  void GetInfo(size_t* load_address,
+               size_t* load_size,
+               size_t* relro_start,
+               size_t* relro_size) {
+    *load_address = view_.load_address();
+    *load_size = view_.load_size();
+    *relro_start = relro_start_;
+    *relro_size = relro_size_;
+  }
+
+  // Returns true iff a given library is mapped to a virtual address range
+  // that contains a given address.
+  bool ContainsAddress(void* address) const {
+    size_t addr = reinterpret_cast<size_t>(address);
+    return load_address() <= addr && addr <= load_address() + load_size();
+  }
+
   // Call all constructors in the library.
   void CallConstructors();
 
@@ -115,21 +87,34 @@ class SharedLibrary {
 
   // Return the ELF symbol entry for a given symbol, if defined by
   // this library, or NULL otherwise.
-  ELF::Sym* LookupSymbolEntry(const char* symbol_name);
+  const ELF::Sym* LookupSymbolEntry(const char* symbol_name);
+
+  // Find the nearest symbol near a given |address|. On success, return
+  // true and set |*sym_name| to the symbol name, |*sym_addr| to its address
+  // in memory, and |*sym_size| to its size in bytes, if any.
+  bool FindNearestSymbolForAddress(void* address,
+                                   const char** sym_name,
+                                   void** sym_addr,
+                                   size_t* sym_size) {
+    return symbols_.LookupNearestByAddress(
+        address, load_bias(), sym_name, sym_addr, sym_size);
+  }
 
   // Return the address of a given |symbol_name| if it is exported
   // by the library, NULL otherwise.
   void* FindAddressForSymbol(const char* symbol_name);
 
-  // Find the symbol entry in this library that matches a given
-  // address in memory. Returns NULL on failure.
-  ELF::Sym* FindSymbolForAddress(void* address);
-
-  // Prepare the relro section for sharing with another process.
-  // On success, return true and sets relro_fd to an ashmem file
-  // descriptor holding the shared RELRO section. On failure
-  // return false ands sets |error| message.
-  bool EnableSharedRelro(Error* error);
+  // Create a new Ashmem region holding a copy of the library's RELRO section,
+  // potentially relocated for a new |load_address|. On success, return true
+  // and sets |*relro_start|, |*relro_size| and |*relro_fd|. Note that the
+  // RELRO start address is adjusted for |load_address|, and that the caller
+  // becomes the owner of |*relro_fd|. On failure, return false and set
+  // |error| message.
+  bool CreateSharedRelro(size_t load_address,
+                         size_t* relro_start,
+                         size_t* relro_size,
+                         int* relro_fd,
+                         Error* error);
 
   // Try to use a shared relro section from another process.
   // On success, return true. On failure return false and
@@ -161,7 +146,9 @@ class SharedLibrary {
   class DependencyIterator {
    public:
     DependencyIterator(SharedLibrary* lib)
-        : dynamic_(lib->dynamic), strtab_(lib->strtab), dep_name_(NULL) {}
+        : iter_(&lib->view_),
+          symbols_(&lib->symbols_),
+          dep_name_(NULL) {}
 
     bool GetNext();
 
@@ -172,10 +159,50 @@ class SharedLibrary {
     DependencyIterator(const DependencyIterator&);
     DependencyIterator& operator=(const DependencyIterator&);
 
-    ELF::Dyn* dynamic_;
-    const char* strtab_;
+    ElfView::DynamicIterator iter_;
+    const ElfSymbols* symbols_;
     const char* dep_name_;
   };
+
+  typedef void (*linker_function_t)();
+
+ private:
+  friend class LibraryList;
+
+  ElfView view_;
+  ElfSymbols symbols_;
+
+  size_t relro_start_;
+  size_t relro_size_;
+  bool relro_used_;
+
+  SharedLibrary* list_next_;
+  SharedLibrary* list_prev_;
+  unsigned flags_;
+
+  linker_function_t* preinit_array_;
+  size_t preinit_array_count_;
+  linker_function_t* init_array_;
+  size_t init_array_count_;
+  linker_function_t* fini_array_;
+  size_t fini_array_count_;
+  linker_function_t init_func_;
+  linker_function_t fini_func_;
+
+#ifdef __arm__
+  // ARM EABI section used for stack unwinding.
+  unsigned* arm_exidx_;
+  size_t arm_exidx_count_;
+#endif
+
+  link_map_t link_map_;
+
+  bool has_DT_SYMBOLIC_;
+
+  void* java_vm_;
+
+  const char* base_name_;
+  char full_path_[512];
 };
 
 }  // namespace crazy

@@ -69,30 +69,7 @@ class LibraryView {
                size_t* load_size,
                size_t* relro_start,
                size_t* relro_size,
-               int* relro_fd,
                Error* error);
-
-  // Enable RELRO section sharing. On This moves the RELRO section into
-  // a shareable ashmem region. On success, return true and sets
-  // |*load_address| to the library load address, |*load_size| to its
-  // full load size, |*relro_start| to the start of the RELRO section
-  // in memory, |*relro_size| to its size, and |*relro_fd| to the ashmem
-  // region's file descriptor.
-  // On failure, return false and sets |error| message.
-  bool EnableSharedRelro(Error* error);
-
-  // Use a shared RELRO section from another process. |relro_start|
-  // and |relro_size| are the start and size of the RELRO section,
-  // and |relro_fd| is a file descriptor for the ashmem region.
-  // On success, return true. On failure, return false and sets
-  // |error| message.
-  // NOTE: This function doesn't do anything except return true
-  // if |relro_fd| is negative, or |relro_size| is 0. This shall correspond
-  // to the case where there is no RELRO section in a library.
-  bool UseSharedRelro(size_t relro_start,
-                      size_t relro_size,
-                      int relro_fd,
-                      Error* error);
 
   // Only used for debugging.
   int ref_count() const { return ref_count_; }

@@ -169,18 +169,16 @@ int WrapDladdr(void* address, Dl_info* info) {
     LibraryList* lib_list = Globals::GetLibraries();
     LibraryView* wrap = lib_list->FindLibraryForAddress(address);
     if (wrap && wrap->IsCrazy()) {
+      size_t sym_size = 0;
+
       SharedLibrary* lib = wrap->GetCrazy();
       ::memset(info, 0, sizeof(*info));
-      info->dli_fname = lib->base_name;
-      info->dli_fbase = reinterpret_cast<void*>(lib->base);
+      info->dli_fname = lib->base_name();
+      info->dli_fbase = reinterpret_cast<void*>(lib->load_address());
 
       // Determine if any symbol in the library contains the specified address.
-      ELF::Sym* sym = lib->FindSymbolForAddress(address);
-      if (sym != NULL) {
-        info->dli_sname = lib->strtab + sym->st_name;
-        info->dli_saddr =
-            reinterpret_cast<void*>(lib->load_bias + sym->st_value);
-      }
+      (void)lib->FindNearestSymbolForAddress(
+          address, &info->dli_sname, &info->dli_saddr, &sym_size);
       return 0;
     }
   }

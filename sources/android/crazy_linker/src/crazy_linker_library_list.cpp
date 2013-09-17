@@ -27,11 +27,11 @@ struct SymbolLookupState {
 
   // Check a symbol entry.
   bool CheckSymbol(const char* symbol, SharedLibrary* lib) {
-    ELF::Sym* entry = lib->LookupSymbolEntry(symbol);
+    const ELF::Sym* entry = lib->LookupSymbolEntry(symbol);
     if (!entry)
       return false;
 
-    void* address = reinterpret_cast<void*>(lib->base + entry->st_value);
+    void* address = reinterpret_cast<void*>(lib->load_bias() + entry->st_value);
 
     // If this is a strong symbol, record it and return true.
     if (ELF_ST_BIND(entry->st_info) == STB_GLOBAL) {
@@ -132,14 +132,12 @@ LibraryView* LibraryList::FindLibraryForAddress(void* address) {
   // Linearly scan all libraries, looking for one that contains
   // a given address. NOTE: This doesn't check that this falls
   // inside one of the mapped library segments.
-  uintptr_t addr = reinterpret_cast<uintptr_t>(address);
-
   for (size_t n = 0; n < known_libraries_.GetCount(); ++n) {
     LibraryView* wrap = known_libraries_[n];
     // TODO(digit): Search addresses inside system libraries.
     if (wrap->IsCrazy()) {
       SharedLibrary* lib = wrap->GetCrazy();
-      if (lib->base <= addr && addr < lib->base + lib->size)
+      if (lib->ContainsAddress(address))
         return wrap;
     }
   }
@@ -148,12 +146,10 @@ LibraryView* LibraryList::FindLibraryForAddress(void* address) {
 
 #ifdef __arm__
 _Unwind_Ptr LibraryList::FindArmExIdx(void* pc, int* count) {
-  uintptr_t addr = reinterpret_cast<uintptr_t>(pc);
-
-  for (SharedLibrary* lib = head_; lib; lib = lib->list_next) {
-    if (addr >= lib->base && addr < lib->base + lib->size) {
-      *count = static_cast<int>(lib->ARM_exidx_count);
-      return reinterpret_cast<_Unwind_Ptr>(lib->ARM_exidx);
+  for (SharedLibrary* lib = head_; lib; lib = lib->list_next_) {
+    if (lib->ContainsAddress(pc)) {
+      *count = static_cast<int>(lib->arm_exidx_count_);
+      return reinterpret_cast<_Unwind_Ptr>(lib->arm_exidx_);
     }
   }
   *count = 0;
@@ -162,12 +158,12 @@ _Unwind_Ptr LibraryList::FindArmExIdx(void* pc, int* count) {
 #else  // !__arm__
 int LibraryList::IteratePhdr(PhdrIterationCallback callback, void* data) {
   int result = 0;
-  for (SharedLibrary* lib = head_; lib; lib = lib->list_next) {
+  for (SharedLibrary* lib = head_; lib; lib = lib->list_next_) {
     dl_phdr_info info;
-    info.dlpi_addr = lib->link_map.l_addr;
-    info.dlpi_name = lib->link_map.l_name;
-    info.dlpi_phdr = lib->phdr;
-    info.dlpi_phnum = lib->phnum;
+    info.dlpi_addr = lib->link_map_.l_addr;
+    info.dlpi_name = lib->link_map_.l_name;
+    info.dlpi_phdr = lib->phdr();
+    info.dlpi_phnum = lib->phdr_count();
     result = callback(&info, sizeof(info), data);
     if (result)
       break;
@@ -194,12 +190,12 @@ void LibraryList::UnloadLibrary(LibraryView* wrap) {
     SharedLibrary* lib = wrap->GetCrazy();
 
     // Remove from internal list of crazy libraries.
-    if (lib->list_next)
-      lib->list_next->list_prev = lib->list_prev;
-    if (lib->list_prev)
-      lib->list_prev->list_next = lib->list_next;
+    if (lib->list_next_)
+      lib->list_next_->list_prev_ = lib->list_prev_;
+    if (lib->list_prev_)
+      lib->list_prev_->list_next_ = lib->list_next_;
     if (lib == head_)
-      head_ = lib->list_next;
+      head_ = lib->list_next_;
 
     // Call JNI_OnUnload, if necessary, then the destructors.
     lib->CallJniOnUnload();
@@ -214,7 +210,7 @@ void LibraryList::UnloadLibrary(LibraryView* wrap) {
     }
 
     // Tell GDB of this removal.
-    Globals::GetRDebug()->DelEntry(&lib->link_map);
+    Globals::GetRDebug()->DelEntry(&lib->link_map_);
   }
 
   known_libraries_.Remove(wrap);
@@ -247,7 +243,7 @@ LibraryView* LibraryList::LoadLibrary(const char* lib_name,
                       load_address);
         return NULL;
       }
-      uintptr_t actual_address = wrap->GetCrazy()->base;
+      uintptr_t actual_address = wrap->GetCrazy()->load_address();
       if (actual_address != load_address) {
         error->Format("Library already loaded at @%08x, can't load it at @%08x",
                       actual_address,
@@ -345,18 +341,18 @@ LibraryView* LibraryList::LoadLibrary(const char* lib_name,
     return NULL;
 
   // Notify GDB of load.
-  lib->link_map.l_addr = lib->base;
-  lib->link_map.l_name = const_cast<char*>(lib->base_name);
-  lib->link_map.l_ld = reinterpret_cast<uintptr_t>(lib->dynamic);
-  Globals::GetRDebug()->AddEntry(&lib->link_map);
+  lib->link_map_.l_addr = lib->load_address();
+  lib->link_map_.l_name = const_cast<char*>(lib->base_name_);
+  lib->link_map_.l_ld = reinterpret_cast<uintptr_t>(lib->view_.dynamic());
+  Globals::GetRDebug()->AddEntry(&lib->link_map_);
 
   // The library was properly loaded, add it to the list of crazy
   // libraries. IMPORTANT: Do this _before_ calling the constructors
   // because these could call dlopen().
-  lib->list_next = head_;
-  lib->list_prev = NULL;
+  lib->list_next_ = head_;
+  lib->list_prev_ = NULL;
   if (head_)
-    head_->list_prev = lib.Get();
+    head_->list_prev_ = lib.Get();
   head_ = lib.Get();
 
   // Then create a new LibraryView for it.
