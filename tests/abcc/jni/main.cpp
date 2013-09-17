@@ -26,10 +26,13 @@
 #include <vector>
 #include <fstream>
 #include <pthread.h>
+#include <sys/time.h>
 #if ENABLE_PARALLEL_LLVM_CG
 #include <sstream>
 #include <cpu-features.h>
 #endif
+
+#define VERBOSE 1
 
 #define LOG_TAG "AbccNative"
 #define LOGE(format, ...)  do {\
@@ -37,6 +40,9 @@
   } while(0)
 #define LOGI(format, ...)  do {\
   __android_log_print(ANDROID_LOG_INFO, LOG_TAG, format, ##__VA_ARGS__);\
+  } while(0)
+#define LOGV(format, ...)  do {\
+  __android_log_print(ANDROID_LOG_VERBOSE, LOG_TAG, format, ##__VA_ARGS__);\
   } while(0)
 
 
@@ -120,6 +126,22 @@ int transferBytesToNum(const unsigned char *buffer, size_t n) {
   }
   return ret;
 }
+
+class Timer
+{
+  private:
+    struct timeval _t0;
+  public:
+    Timer() {};
+    void start() { gettimeofday(&_t0, NULL); }
+    long long stop() {
+      struct timeval t;
+      gettimeofday(&t, NULL);
+      long long l0 = _t0.tv_sec * 1000000LL + _t0.tv_usec;
+      long long l = t.tv_sec * 1000000LL + t.tv_usec;
+      return l - l0;
+    }
+};
 
 /*
   The bitcode wrapper definition:
@@ -315,6 +337,9 @@ int readWrapper(BitcodeInfoTy &info) {
 #endif // READ_BITCODE_INFO_FILE
 
 int handleTask(const std::string &cmd, std::string &err_msg) {
+#if VERBOSE
+  LOGV("Command: %s", cmd.c_str());
+#endif
   int ret = system(cmd.c_str());
   if (ret != 0) {
     LOGE("Failed command: %s", cmd.c_str());
@@ -683,7 +708,15 @@ Java_compiler_abcc_AbccService_genLibs(JNIEnv *env, jobject thiz,
   LOGI("For testing: %d", for_testing);
 
   handleTask(std::string("rm -f ") + lib_dir + "/compile_error");
+#if VERBOSE
+  Timer t; t.start();
+#endif
   genLibs(lib_dir, sysroot);
+#if VERBOSE
+  long long elapsed_msec = (t.stop() + 500) / 1000;
+  LOGV("Elapsed time: %lld.%03ds", elapsed_msec/1000, (int)elapsed_msec%1000);
+#endif
+
   handleTask(std::string("cd ") + lib_dir + " && ln -s " + sysroot + "/usr/lib/libgabi++_shared.so libgabi++_shared.so");
   if (for_testing)
     handleTask(std::string("cd ") + lib_dir + " && ln -s " + sysroot + "/usr/lib/libgnustl_shared.so libgnustl_shared.so");
