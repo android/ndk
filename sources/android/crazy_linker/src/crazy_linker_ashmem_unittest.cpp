@@ -12,7 +12,7 @@ namespace crazy {
 
 TEST(AshmemRegion, Construction) {
   AshmemRegion region;
-  EXPECT_EQ(-1, region.Get());
+  EXPECT_EQ(-1, region.fd());
 }
 
 TEST(AshmemRegion, Allocate) {
@@ -23,7 +23,7 @@ TEST(AshmemRegion, Allocate) {
                      kSize,
                      PROT_READ | PROT_WRITE,
                      MAP_ANONYMOUS | MAP_SHARED,
-                     region.Get(),
+                     region.fd(),
                      0);
   EXPECT_NE(MAP_FAILED, map);
 

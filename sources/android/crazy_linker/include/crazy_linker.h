@@ -168,7 +168,6 @@ typedef struct {
   size_t load_size;
   size_t relro_start;
   size_t relro_size;
-  int relro_fd;
 } crazy_library_info_t;
 
 // Retrieve information about a given library.
@@ -188,15 +187,23 @@ crazy_status_t crazy_library_get_info(crazy_library_t* library,
 // the exploitation of this security issue in your code.
 crazy_status_t crazy_system_can_share_relro(void);
 
-// Enable RELRO section sharing for this library. This can only be
-// called once per library loaded through crazy_library_open(), and
-// will only work for non-system libraries.
-// On success, return CRAZY_STATUS_SUCCESS and sets |*library_info| with
-// all relevant data. On failure, return CRAZY_STATUS_FAILURE and sets
-// the error message in |context|.
-crazy_status_t crazy_library_enable_relro_sharing(
+// Create an ashmem region containing a copy of the RELRO section for a given
+// |library|. This can be used with crazy_library_use_shared_relro().
+// |load_address| can be specified as non-0 to ensure that the content of the
+// ashmem region corresponds to a RELRO relocated for a new load address.
+// on success, return CRAZY_STATUS_SUCCESS and sets |*relro_start| to the
+// start of the RELRO section in memory, |*relro_size| to its size in bytes
+// and |*relro_fd| to a file descriptor to a read-only ashmem region containing
+// the data. On failure, return false and set error message in |context|.
+// NOTE: On success, the caller becomes the owner of |*relro_fd| and is shall
+// close it appropriately.
+crazy_status_t crazy_library_create_shared_relro(
     crazy_library_t* library,
-    crazy_context_t* context) _CRAZY_PUBLIC;
+    crazy_context_t* context,
+    size_t load_address,
+    size_t* relro_start,
+    size_t* relro_size,
+    int* relro_fd) _CRAZY_PUBLIC;
 
 // Use the shared RELRO section of the same library loaded in a different
 // address space. On success, return CRAZY_STATUS_SUCCESS and owns |relro_fd|.
@@ -208,14 +215,13 @@ crazy_status_t crazy_library_enable_relro_sharing(
 // |context| will receive an error in case of failure.
 // NOTE: This will fail if this is a system library, or if the RELRO
 // parameters do not match the library's actual load address.
-// IMPORTANT NOTE: For security reasons, this _always_ closes the |relro_fd|
-// file descriptor, if it's non-negative, whether the function succeeds or not.
-crazy_status_t crazy_library_use_relro_sharing(
+// NOTE: The caller is responsible for closing the file descriptor after this call.
+crazy_status_t crazy_library_use_shared_relro(
     crazy_library_t* library,
+    crazy_context_t* context,
     size_t relro_start,
     size_t relro_size,
-    int relro_fd,
-    crazy_context_t* context) _CRAZY_PUBLIC;
+    int relro_fd) _CRAZY_PUBLIC;
 
 // Look for a library named |library_name| in the set of currently
 // loaded libraries, and return a handle for it in |*library| on success.

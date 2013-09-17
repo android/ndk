@@ -2,21 +2,21 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "crazy_linker_elf_relocator.h"
+#include "crazy_linker_elf_relocations.h"
 
 #include <errno.h>
-#include <string.h>
 
 #include "crazy_linker_debug.h"
+#include "crazy_linker_elf_symbols.h"
+#include "crazy_linker_elf_view.h"
+#include "crazy_linker_error.h"
 #include "crazy_linker_util.h"
 #include "linker_phdr.h"
 
-// Set to 1 to print debug traces during relocations.
-// Default is 0 since there are _tons_ of them.
 #define DEBUG_RELOCATIONS 0
 
 #define RLOG(...) LOG_IF(DEBUG_RELOCATIONS, __VA_ARGS__)
-#define RLOG_ERRNO(...) LOG_IF_ERRNO(DEBUG_RELOCATIONS, __VA_ARGS__)
+#define RLOG_ERRNO(...) LOG_ERRNO_IF(DEBUG_RELOCATIONS, __VA_ARGS__)
 
 #ifndef DF_SYMBOLIC
 #define DF_SYMBOLIC 2
@@ -108,35 +108,19 @@ RelocationType GetRelocationType(unsigned r_type) {
 
 }  // namespace
 
-ElfRelocator::ElfRelocator() { memset(this, 0, sizeof(*this)); }
+bool ElfRelocations::Init(const ElfView* view, Error* error) {
+  // Save these for later.
+  phdr_ = view->phdr();
+  phdr_count_ = view->phdr_count();
+  load_bias_ = view->load_bias();
 
-bool ElfRelocator::Init(const ELF::Phdr* phdr,
-                        size_t phdr_count,
-                        size_t load_bias,
-                        const ELF::Dyn* dyn,
-                        size_t count,
-                        Error* error) {
-  phdr_ = phdr;
-  phdr_count_ = phdr_count;
-  load_bias_ = load_bias;
+  // Parse the dynamic table.
+  ElfView::DynamicIterator dyn(view);
+  for (; dyn.HasNext(); dyn.GetNext()) {
+    ELF::Addr dyn_value = dyn.GetValue();
+    uintptr_t dyn_addr = dyn.GetAddress(view->load_bias());
 
-  LOG("%s: phdr=%p phdr_count=%d load_bias=%x dyn_table=%p dyn_count=%d\n",
-      __FUNCTION__,
-      phdr,
-      (int)phdr_count,
-      (int)load_bias,
-      dyn,
-      (int)count);
-
-  for (; count > 0; dyn++, count--) {
-    // Be paranoid.
-    if (dyn->d_tag == DT_NULL)
-      break;
-
-    ELF::Addr dyn_value = dyn->d_un.d_val;
-    uintptr_t dyn_addr = load_bias_ + dyn->d_un.d_ptr;
-
-    switch (dyn->d_tag) {
+    switch (dyn.GetTag()) {
       case DT_PLTREL:
         // NOTE: Yes, there is nothing to record here, the content of
         // plt_rel_ will come from DT_JMPREL instead.
@@ -148,23 +132,25 @@ bool ElfRelocator::Init(const ELF::Phdr* phdr,
         break;
       case DT_JMPREL:
         RLOG("  DT_JMPREL addr=%p\n", dyn_addr);
-        plt_rel_ = reinterpret_cast<ELF::Rel*>(dyn_addr);
+        plt_relocations_ = reinterpret_cast<ELF::Rel*>(dyn_addr);
         break;
       case DT_PLTRELSZ:
-        plt_rel_count_ = dyn_value / sizeof(ELF::Rel);
-        RLOG("  DT_PLTRELSZ size=%d count=%d\n", dyn_value, plt_rel_count_);
+        plt_relocations_count_ = dyn_value / sizeof(ELF::Rel);
+        RLOG("  DT_PLTRELSZ size=%d count=%d\n",
+             dyn_value,
+             plt_relocations_count_);
         break;
       case DT_REL:
         RLOG("  DT_REL addr=%p\n", dyn_addr);
-        rel_ = reinterpret_cast<ELF::Rel*>(dyn_addr);
+        relocations_ = reinterpret_cast<ELF::Rel*>(dyn_addr);
         break;
       case DT_RELSZ:
-        rel_count_ = dyn_value / sizeof(ELF::Rel);
-        RLOG("  DT_RELSZ size=%d count=%d\n", dyn_value, rel_count_);
+        relocations_count_ = dyn_value / sizeof(ELF::Rel);
+        RLOG("  DT_RELSZ size=%d count=%d\n", dyn_value, relocations_count_);
         break;
       case DT_PLTGOT:
-        // NOTE from original linker:
-        // Save this in case we decide to do lazy binding. We don't yet.
+        // Only used on MIPS currently. Could also be used on other platforms
+        // when lazy binding (i.e. RTLD_LAZY) is implemented.
         RLOG("  DT_PLTGOT addr=%p\n", dyn_addr);
         plt_got_ = reinterpret_cast<uintptr_t*>(dyn_addr);
         break;
@@ -205,29 +191,17 @@ bool ElfRelocator::Init(const ELF::Phdr* phdr,
         break;
 #endif
       default:
-        RLOG("  UNKNOWN tag=%d value=%08x addr=%p\n",
-             dyn->d_tag,
-             dyn_value,
-             (void*)dyn_addr);
         ;
     }
   }
-  LOG("%s: Done!\n", __FUNCTION__);
+
   return true;
 }
 
-bool ElfRelocator::Apply(SymbolResolver* resolver,
-                         const char* string_table,
-                         const ELF::Sym* symbol_table,
-                         Error* error) {
-  resolver_ = resolver;
-  string_table_ = string_table;
-  symbol_table_ = symbol_table;
-
-  LOG("%s: string_table=%p sybol_table=%p\n",
-      __FUNCTION__,
-      string_table,
-      symbol_table);
+bool ElfRelocations::ApplyAll(const ElfSymbols* symbols,
+                              SymbolResolver* resolver,
+                              Error* error) {
+  LOG("%s: Enter\n", __FUNCTION__);
 
   if (has_text_relocations_) {
     if (phdr_table_unprotect_segments(phdr_, phdr_count_, load_bias_) < 0) {
@@ -236,38 +210,37 @@ bool ElfRelocator::Apply(SymbolResolver* resolver,
     }
   }
 
-  if (!ApplyRelocs(plt_rel_, plt_rel_count_, error) ||
-      !ApplyRelocs(rel_, rel_count_, error)) {
+  if (!ApplyRelocs(plt_relocations_,
+                   plt_relocations_count_,
+                   symbols,
+                   resolver,
+                   error) ||
+      !ApplyRelocs(
+           relocations_, relocations_count_, symbols, resolver, error)) {
     return false;
   }
 
 #ifdef __mips__
-  if (!RelocateMipsGot(error))
+  if (!RelocateMipsGot(symbols, resolver, error))
     return false;
 #endif
 
   if (has_text_relocations_) {
     if (phdr_table_protect_segments(phdr_, phdr_count_, load_bias_) < 0) {
-      error->Format("Can't protect loadable segments: %s", strerror(errno));
+      error->Format("Can't reprotect loadable segments: %s", strerror(errno));
       return false;
     }
-  }
-
-  // Turn on GNU RELRO protection now.
-  LOG("%s: Enabling GNU RELRO protection\n", __FUNCTION__);
-
-  if (phdr_table_protect_gnu_relro(phdr_, phdr_count_, load_bias_) < 0) {
-    error->Format("Can't enable GNU RELRO protection: %s", strerror(errno));
-    return false;
   }
 
   LOG("%s: Done\n", __FUNCTION__);
   return true;
 }
 
-bool ElfRelocator::ApplyRelocs(const ELF::Rel* rel,
-                               size_t rel_count,
-                               Error* error) {
+bool ElfRelocations::ApplyRelocs(const ELF::Rel* rel,
+                                 size_t rel_count,
+                                 const ElfSymbols* symbols,
+                                 SymbolResolver* resolver,
+                                 Error* error) {
   RLOG("%s: rel=%p rel_count=%d\n", __FUNCTION__, rel, rel_count);
 
   if (!rel)
@@ -294,9 +267,9 @@ bool ElfRelocator::ApplyRelocs(const ELF::Rel* rel,
 
     // If this is a symbolic relocation, compute the symbol's address.
     if (__builtin_expect(rel_symbol != 0, 0)) {
-      const char* sym_name = string_table_ + symbol_table_[rel_symbol].st_name;
+      const char* sym_name = symbols->LookupNameById(rel_symbol);
       RLOG("    symbol name='%s'\n", sym_name);
-      void* address = resolver_->Lookup(sym_name);
+      void* address = resolver->Lookup(sym_name);
       if (address) {
         // The symbol was found, so compute its address.
         RLOG("%s: symbol %s resolved to %p\n", __FUNCTION__, sym_name, address);
@@ -305,7 +278,7 @@ bool ElfRelocator::ApplyRelocs(const ELF::Rel* rel,
       } else {
         // The symbol was not found. Normally this is an error except
         // if this is a weak reference.
-        if (ELF_ST_BIND(symbol_table_[rel_symbol].st_info) != STB_WEAK) {
+        if (!symbols->IsWeakById(rel_symbol)) {
           error->Format("Could not find symbol '%s'", sym_name);
           return false;
         }
@@ -437,7 +410,9 @@ bool ElfRelocator::ApplyRelocs(const ELF::Rel* rel,
 }
 
 #ifdef __mips__
-bool ElfRelocator::RelocateMipsGot(Error* error) {
+bool ElfRelocations::RelocateMipsGot(const ElfSymbols* symbols,
+                                     SymbolResolver* resolver,
+                                     Error* error) {
   if (!plt_got_)
     return true;
 
@@ -458,28 +433,103 @@ bool ElfRelocator::RelocateMipsGot(Error* error) {
 
   // Handle the global GOT entries.
   got += mips_local_got_count_;
-  const ELF::Sym* sym = symbol_table_ + mips_gotsym_;
-  const ELF::Sym* sym_limit = symbol_table_ + mips_symtab_count_;
-  for (; sym < sym_limit; ++sym, ++got) {
-    const char* sym_name = string_table_ + sym->st_name;
-    void* sym_addr = resolver_->Lookup(sym_name);
+  for (size_t idx = mips_gotsym_; idx < mips_symtab_count_; idx++, got++) {
+    const char* sym_name = symbols->LookupNameById(idx);
+    void* sym_addr = resolver->Lookup(sym_name);
     if (sym_addr) {
+      // Found symbol, update GOT entry.
       *got = reinterpret_cast<ELF::Addr>(sym_addr);
       continue;
     }
 
-    // Undefined symbols are only ok if this is a weak reference.
-    if (ELF_ST_BIND(sym->st_info) != STB_WEAK) {
-      error->Format("Cannot locate symbol %s", sym_name);
-      return false;
+    if (symbols->IsWeakById(idx)) {
+      // Undefined symbols are only ok if this is a weak reference.
+      // Update GOT entry to 0 though.
+      *got = 0;
+      continue;
     }
 
-    // Leave undefined symbols from weak references to 0.
-    *got = 0;
+    error->Format("Cannot locate symbol %s", sym_name);
+    return false;
   }
 
   return true;
 }
 #endif  // __mips__
+
+void ElfRelocations::CopyAndRelocate(size_t src_addr,
+                                     size_t dst_addr,
+                                     size_t map_addr,
+                                     size_t size) {
+  // First, a straight copy.
+  ::memcpy(reinterpret_cast<void*>(dst_addr),
+           reinterpret_cast<void*>(src_addr),
+           size);
+
+  // Add this value to each source address to get the corresponding
+  // destination address.
+  size_t dst_delta = dst_addr - src_addr;
+  size_t map_delta = map_addr - src_addr;
+
+  // Ignore PLT relocations, which all target symbols (ignored here).
+  const ELF::Rel* rel = relocations_;
+  const ELF::Rel* rel_limit = rel + relocations_count_;
+
+  for (; rel < rel_limit; ++rel) {
+    unsigned rel_type = ELF_R_TYPE(rel->r_info);
+    unsigned rel_symbol = ELF_R_SYM(rel->r_info);
+    ELF::Addr src_reloc = static_cast<ELF::Addr>(rel->r_offset + load_bias_);
+
+    if (rel_type == 0 || rel_symbol != 0) {
+      // Ignore empty and symbolic relocations
+      continue;
+    }
+
+    if (src_reloc < src_addr || src_reloc >= src_addr + size) {
+      // Ignore entries that don't relocate addresses inside the source section.
+      continue;
+    }
+
+    ELF::Addr* dst_ptr = reinterpret_cast<ELF::Addr*>(src_reloc + dst_delta);
+
+    switch (rel_type) {
+#ifdef __arm__
+      case R_ARM_RELATIVE:
+        *dst_ptr += map_delta;
+        break;
+#endif  // __arm__
+
+#ifdef __i386__
+      case R_386_RELATIVE:
+        *dst_ptr += map_delta;
+        break;
+#endif
+
+#ifdef __mips__
+      case R_MIPS_REL32:
+        *dst_ptr += map_delta;
+        break;
+#endif
+      default:
+        ;
+    }
+  }
+
+#ifdef __mips__
+  // Only relocate local GOT entries.
+  ELF::Addr* got = plt_got_;
+  if (got) {
+    for (ELF::Addr n = 2; n < mips_local_got_count_; ++n) {
+      size_t got_addr = reinterpret_cast<size_t>(&got[n]);
+      if (got_addr < src_addr || got_addr >= src_addr + size)
+        continue;
+      ELF::Addr* dst_ptr = reinterpret_cast<ELF::Addr*>(got_addr + dst_delta);
+      *dst_ptr += map_delta;
+    }
+  }
+#endif
+
+  // Done
+}
 
 }  // namespace crazy

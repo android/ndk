@@ -75,7 +75,7 @@ int phdr_table_get_arm_exidx(const ELF::Phdr* phdr_table,
 void phdr_table_get_dynamic_section(const ELF::Phdr* phdr_table,
                                     int phdr_count,
                                     ELF::Addr load_bias,
-                                    ELF::Dyn** dynamic,
+                                    const ELF::Dyn** dynamic,
                                     size_t* dynamic_count,
                                     ELF::Word* dynamic_flags);
 

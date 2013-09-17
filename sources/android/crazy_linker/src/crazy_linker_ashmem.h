@@ -16,7 +16,7 @@ class AshmemRegion {
 
   ~AshmemRegion() { Reset(-1); }
 
-  int Get() const { return fd_; }
+  int fd() const { return fd_; }
 
   int Release() {
     int ret = fd_;

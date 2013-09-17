@@ -175,7 +175,6 @@ crazy_status_t crazy_library_get_info(crazy_library_t* library,
                      &info->load_size,
                      &info->relro_start,
                      &info->relro_size,
-                     &info->relro_fd,
                      &context->error)) {
     return CRAZY_STATUS_FAILURE;
   }
@@ -187,47 +186,47 @@ crazy_status_t crazy_system_can_share_relro(void) {
   crazy::AshmemRegion region;
   if (!region.Allocate(PAGE_SIZE, NULL) ||
       !region.SetProtectionFlags(PROT_READ) ||
-      !crazy::AshmemRegion::CheckFileDescriptorIsReadOnly(region.Get()))
+      !crazy::AshmemRegion::CheckFileDescriptorIsReadOnly(region.fd()))
     return CRAZY_STATUS_FAILURE;
 
   return CRAZY_STATUS_SUCCESS;
 }
 
-crazy_status_t crazy_library_enable_relro_sharing(crazy_library_t* library,
-                                                  crazy_context_t* context) {
+crazy_status_t crazy_library_create_shared_relro(crazy_library_t* library,
+                                                 crazy_context_t* context,
+                                                 size_t load_address,
+                                                 size_t* relro_start,
+                                                 size_t* relro_size,
+                                                 int* relro_fd) {
   LibraryView* wrap = reinterpret_cast<LibraryView*>(library);
 
-  if (!library) {
+  if (!library || !wrap->IsCrazy()) {
     context->error = "Invalid library file handle";
     return CRAZY_STATUS_FAILURE;
   }
 
-  if (!wrap->EnableSharedRelro(&context->error))
+  crazy::SharedLibrary* lib = wrap->GetCrazy();
+  if (!lib->CreateSharedRelro(
+           load_address, relro_start, relro_size, relro_fd, &context->error))
     return CRAZY_STATUS_FAILURE;
 
   return CRAZY_STATUS_SUCCESS;
 }
 
-crazy_status_t crazy_library_use_relro_sharing(crazy_library_t* library,
-                                               size_t relro_start,
-                                               size_t relro_size,
-                                               int relro_fd,
-                                               crazy_context_t* context) {
+crazy_status_t crazy_library_use_shared_relro(crazy_library_t* library,
+                                              crazy_context_t* context,
+                                              size_t relro_start,
+                                              size_t relro_size,
+                                              int relro_fd) {
   LibraryView* wrap = reinterpret_cast<LibraryView*>(library);
 
-  if (!library) {
+  if (!library || !wrap->IsCrazy()) {
     context->error = "Invalid library file handle";
     return CRAZY_STATUS_FAILURE;
   }
 
-  bool success =
-      wrap->UseSharedRelro(relro_start, relro_size, relro_fd, &context->error);
-
-  // Always close the file descriptor.
-  if (relro_fd >= 0)
-    TEMP_FAILURE_RETRY(::close(relro_fd));
-
-  if (!success)
+  crazy::SharedLibrary* lib = wrap->GetCrazy();
+  if (!lib->UseSharedRelro(relro_start, relro_size, relro_fd, &context->error))
     return CRAZY_STATUS_FAILURE;
 
   return CRAZY_STATUS_SUCCESS;

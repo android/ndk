@@ -79,14 +79,20 @@ LOCAL_STATIC_LIBRARIES := crazy_linker
 include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE := test_relro_sharing
-LOCAL_SRC_FILES := test_relro_sharing.cpp
+LOCAL_MODULE := test_shared_relro
+LOCAL_SRC_FILES := test_shared_relro.cpp
 LOCAL_STATIC_LIBRARIES := crazy_linker
 include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE := test_relro_sharing_two_libs
-LOCAL_SRC_FILES := test_relro_sharing_two_libs.cpp
+LOCAL_MODULE := test_relocated_shared_relro
+LOCAL_SRC_FILES := test_relocated_shared_relro.cpp
+LOCAL_STATIC_LIBRARIES := crazy_linker
+include $(BUILD_EXECUTABLE)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := test_two_shared_relros
+LOCAL_SRC_FILES := test_two_shared_relros.cpp
 LOCAL_STATIC_LIBRARIES := crazy_linker
 include $(BUILD_EXECUTABLE)
 

@@ -22,92 +22,6 @@
 
 typedef void (*FunctionPtr)();
 
-struct Library {
-  const char* name;
-  crazy_library_t* library;
-  crazy_library_info_t info;
-
-  void Init(const char* name, crazy_context_t* context) {
-    printf("Loading %s\n", name);
-    this->name = name;
-    if (!crazy_library_open(&this->library, name, context)) {
-      Panic("Could not open %s: %s\n", name, crazy_context_get_error(context));
-    }
-  }
-
-  void Close() { crazy_library_close(this->library); }
-
-  void EnableSharedRelro(crazy_context_t* context) {
-    if (!crazy_library_enable_relro_sharing(this->library, context)) {
-      Panic("Could not enable %s RELRO sharing: %s",
-            this->name,
-            crazy_context_get_error(context));
-    }
-
-    if (!crazy_library_get_info(this->library, context, &this->info))
-      Panic("Could not get %s library info: %s",
-            this->name,
-            crazy_context_get_error(context));
-
-    printf(
-        "Parent %s relro info load_addr=%p load_size=%p"
-        " relro_start=%p relro_size=%p relro_fd=%d\n",
-        this->name,
-        (void*)this->info.load_address,
-        (void*)this->info.load_size,
-        (void*)this->info.relro_start,
-        (void*)this->info.relro_size,
-        this->info.relro_fd);
-  }
-
-  void SendRelroInfo(int fd) {
-    if (SendFd(fd, this->info.relro_fd) < 0) {
-      Panic("Could not send %s RELRO fd: %s", this->name, strerror(errno));
-    }
-
-    int ret = TEMP_FAILURE_RETRY(::write(fd, &this->info, sizeof(this->info)));
-    if (ret != static_cast<int>(sizeof(this->info))) {
-      Panic("Parent could not send %s RELRO info: %s",
-            this->name,
-            strerror(errno));
-    }
-  }
-
-  void ReceiveRelroInfo(int fd) {
-    // Receive relro information from parent.
-    int relro_fd = -1;
-    if (ReceiveFd(fd, &relro_fd) < 0) {
-      Panic("Could not receive %s relro descriptor from parent", this->name);
-    }
-
-    printf("Child received %s relro fd %d\n", this->name, relro_fd);
-
-    int ret = TEMP_FAILURE_RETRY(::read(fd, &this->info, sizeof(this->info)));
-    if (ret != static_cast<int>(sizeof(this->info))) {
-      Panic("Could not receive %s relro information from parent", this->name);
-    }
-
-    this->info.relro_fd = relro_fd;
-    printf("Child received %s relro load=%p start=%p size=%p\n",
-           this->name,
-           (void*)this->info.load_address,
-           (void*)this->info.relro_start,
-           (void*)this->info.relro_size);
-  }
-
-  void UseSharedRelro(crazy_context_t* context) {
-    if (!crazy_library_use_relro_sharing(this->library,
-                                         this->info.relro_start,
-                                         this->info.relro_size,
-                                         this->info.relro_fd,
-                                         context)) {
-      Panic("Could not use %s shared RELRO: %s\n",
-            this->name,
-            crazy_context_get_error(context));
-    }
-  }
-};
-
 int main() {
 
   if (!crazy_system_can_share_relro()) {
@@ -117,8 +31,8 @@ int main() {
 
   crazy_context_t* context = crazy_context_create();
 
-  Library foo;
-  Library bar;
+  RelroLibrary foo;
+  RelroLibrary bar;
 
   crazy_context_add_search_path_for_address(context, (void*)&main);
 
