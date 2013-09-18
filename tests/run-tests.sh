@@ -397,8 +397,13 @@ fi
 gen_empty_bitcode() {
     TEMP_FILE=`mktemp`
     mv $TEMP_FILE ${TEMP_FILE}.c
-    run $NDK/$(get_llvm_toolchain_binprefix $DEFAULT_LLVM_VERSION)/clang -target le32-none-ndk -emit-llvm -c -o $1 ${TEMP_FILE}.c
+    run $NDK/$(get_llvm_toolchain_binprefix $DEFAULT_LLVM_VERSION)/clang -shared -target le32-none-ndk -emit-llvm -o $1 ${TEMP_FILE}.c
     rm -f ${TEMP_FILE}.c
+}
+
+# $1: output archive path
+gen_empty_archive() {
+    run ar crs $1
 }
 
 case $ABI in
@@ -417,13 +422,13 @@ case $ABI in
             run mkdir -p $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI
             run mkdir -p $NDK/$GABIXX_SUBDIR/libs/$ABI
             run mkdir -p $NDK/$LIBPORTABLE_SUBDIR/libs/$ABI
-            run gen_empty_bitcode $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI/libsupc++.a
-            run gen_empty_bitcode $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI/libgnustl_static.a
+            run gen_empty_archive $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI/libsupc++.a
+            run gen_empty_archive $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI/libgnustl_static.a
             run gen_empty_bitcode $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI/libgnustl_shared.bc
-            run gen_empty_bitcode $NDK/$GABIXX_SUBDIR/libs/$ABI/libgabi++_static.a
+            run gen_empty_archive $NDK/$GABIXX_SUBDIR/libs/$ABI/libgabi++_static.a
             run gen_empty_bitcode $NDK/$GABIXX_SUBDIR/libs/$ABI/libgabi++_shared.bc
+            run gen_empty_archive $NDK/$LIBPORTABLE_SUBDIR/libs/$ABI/libportable.a
             run cp -a $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$(get_default_abi_for_arch arm)/include $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI
-            run cp -a $NDK/$LIBPORTABLE_SUBDIR/libs/$(get_default_abi_for_arch arm)/libportable.a $NDK/$LIBPORTABLE_SUBDIR/libs/$ABI
         else
             echo "ERROR: Unsupported abi value: $ABI"
             exit 1
