@@ -22,6 +22,8 @@
 #include <sys/uio.h>
 #include <unistd.h>
 
+#include <crazy_linker.h>
+
 namespace {
 
 // Print an error message and exit the process.
@@ -364,6 +366,99 @@ inline void CheckRelroMaps(int expected_count) {
 
   printf("RELRO count check ok!\n");
 }
+
+struct RelroInfo {
+  size_t start;
+  size_t size;
+  int fd;
+};
+
+struct RelroLibrary {
+  const char* name;
+  crazy_library_t* library;
+  RelroInfo relro;
+
+  void Init(const char* name, crazy_context_t* context) {
+    printf("Loading %s\n", name);
+    this->name = name;
+    if (!crazy_library_open(&this->library, name, context)) {
+      Panic("Could not open %s: %s\n", name, crazy_context_get_error(context));
+    }
+  }
+
+  void Close() { crazy_library_close(this->library); }
+
+  void CreateSharedRelro(crazy_context_t* context, size_t load_address) {
+    if (!crazy_library_create_shared_relro(this->library,
+                                           context,
+                                           load_address,
+                                           &this->relro.start,
+                                           &this->relro.size,
+                                           &this->relro.fd)) {
+      Panic("Could not create shared RELRO for %s: %s",
+            this->name,
+            crazy_context_get_error(context));
+    }
+
+    printf(
+        "Parent %s relro info relro_start=%p relro_size=%p relro_fd=%d\n",
+        this->name,
+        (void*)this->relro.start,
+        (void*)this->relro.size,
+        this->relro.fd);
+  }
+
+  void EnableSharedRelro(crazy_context_t* context) {
+    CreateSharedRelro(context, 0);
+    UseSharedRelro(context);
+  }
+
+  void SendRelroInfo(int fd) {
+    if (SendFd(fd, this->relro.fd) < 0) {
+      Panic("Could not send %s RELRO fd: %s", this->name, strerror(errno));
+    }
+
+    int ret = TEMP_FAILURE_RETRY(::write(fd, &this->relro, sizeof(this->relro)));
+    if (ret != static_cast<int>(sizeof(this->relro))) {
+      Panic("Parent could not send %s RELRO info: %s",
+            this->name,
+            strerror(errno));
+    }
+  }
+
+  void ReceiveRelroInfo(int fd) {
+    // Receive relro information from parent.
+    int relro_fd = -1;
+    if (ReceiveFd(fd, &relro_fd) < 0) {
+      Panic("Could not receive %s relro descriptor from parent", this->name);
+    }
+
+    printf("Child received %s relro fd %d\n", this->name, relro_fd);
+
+    int ret = TEMP_FAILURE_RETRY(::read(fd, &this->relro, sizeof(this->relro)));
+    if (ret != static_cast<int>(sizeof(this->relro))) {
+      Panic("Could not receive %s relro information from parent", this->name);
+    }
+
+    this->relro.fd = relro_fd;
+    printf("Child received %s relro start=%p size=%p\n",
+           this->name,
+           (void*)this->relro.start,
+           (void*)this->relro.size);
+  }
+
+  void UseSharedRelro(crazy_context_t* context) {
+    if (!crazy_library_use_shared_relro(this->library,
+                                        context,
+                                        this->relro.start,
+                                        this->relro.size,
+                                        this->relro.fd)) {
+      Panic("Could not use %s shared RELRO: %s\n",
+            this->name,
+            crazy_context_get_error(context));
+    }
+  }
+};
 
 }  // namespace
 

@@ -9,7 +9,10 @@ crazy_linker_sources := \
   src/crazy_linker_ashmem.cpp \
   src/crazy_linker_debug.cpp \
   src/crazy_linker_elf_loader.cpp \
-  src/crazy_linker_elf_relocator.cpp \
+  src/crazy_linker_elf_relocations.cpp \
+  src/crazy_linker_elf_relro.cpp \
+  src/crazy_linker_elf_symbols.cpp \
+  src/crazy_linker_elf_view.cpp \
   src/crazy_linker_error.cpp \
   src/crazy_linker_globals.cpp \
   src/crazy_linker_library_list.cpp \

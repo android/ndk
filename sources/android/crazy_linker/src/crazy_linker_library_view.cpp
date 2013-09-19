@@ -40,44 +40,14 @@ bool LibraryView::GetInfo(size_t* load_address,
                           size_t* load_size,
                           size_t* relro_start,
                           size_t* relro_size,
-                          int* relro_fd,
                           Error* error) {
   if (type_ != TYPE_CRAZY) {
     *error = "No RELRO sharing with system libraries";
     return false;
   }
 
-  *load_address = crazy_->base;
-  *load_size = crazy_->size;
-  *relro_start = crazy_->relro_start;
-  *relro_size = crazy_->relro_size;
-  *relro_fd = crazy_->relro_fd;
+  crazy_->GetInfo(load_address, load_size, relro_start, relro_size);
   return true;
-}
-
-bool LibraryView::EnableSharedRelro(Error* error) {
-  if (type_ != TYPE_CRAZY) {
-    *error = "No RELRO sharing with system libraries";
-    return false;
-  }
-
-  return crazy_->EnableSharedRelro(error);
-}
-
-bool LibraryView::UseSharedRelro(size_t relro_start,
-                                 size_t relro_size,
-                                 int relro_fd,
-                                 Error* error) {
-  if (type_ != TYPE_CRAZY) {
-    *error = "No RELRO sharing with system libraries";
-    return false;
-  }
-
-  // If there is no RELRO segment, don't do anything.
-  if (relro_fd < 0 || relro_size == 0)
-    return true;
-
-  return crazy_->UseSharedRelro(relro_start, relro_size, relro_fd, error);
 }
 
 }  // namespace crazy
