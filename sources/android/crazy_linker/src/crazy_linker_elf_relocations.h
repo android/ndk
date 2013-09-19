@@ -18,7 +18,7 @@ class Error;
 // An ElfRelocations instance holds information about relocations in a mapped
 // ELF binary.
 class ElfRelocations {
-public:
+ public:
   ElfRelocations() { ::memset(this, 0, sizeof(*this)); }
   ~ElfRelocations() {}
 
@@ -55,7 +55,7 @@ public:
                        size_t map_addr,
                        size_t size);
 
-private:
+ private:
   bool ApplyRelocs(const ELF::Rel* relocs,
                    size_t relocs_count,
                    const ElfSymbols* symbols,
@@ -88,10 +88,8 @@ private:
 
   bool has_text_relocations_;
   bool has_symbolic_;
-
 };
 
 }  // namespace crazy
 
-#endif  //CRAZY_LINKER_ELF_RELOCATIONS_H
-
+#endif  // CRAZY_LINKER_ELF_RELOCATIONS_H

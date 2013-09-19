@@ -146,9 +146,7 @@ class SharedLibrary {
   class DependencyIterator {
    public:
     DependencyIterator(SharedLibrary* lib)
-        : iter_(&lib->view_),
-          symbols_(&lib->symbols_),
-          dep_name_(NULL) {}
+        : iter_(&lib->view_), symbols_(&lib->symbols_), dep_name_(NULL) {}
 
     bool GetNext();
 

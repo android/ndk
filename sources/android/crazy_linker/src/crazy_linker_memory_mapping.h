@@ -34,10 +34,7 @@ class MemoryMapping {
   // |prot| are the desired protection bit flags.
   // |fd| is -1 (for anonymous mappings), or a valid file descriptor.
   // on failure, return false and sets errno.
-  bool Allocate(void* address,
-                size_t size,
-                Protection prot,
-                int fd) {
+  bool Allocate(void* address, size_t size, Protection prot, int fd) {
     int flags = (fd >= 0) ? MAP_SHARED : MAP_ANONYMOUS;
     if (address)
       flags |= MAP_FIXED;
