@@ -219,12 +219,12 @@ By default, the NDK will generate machine code for the 'armeabi' ABI.
 You can however add the following line to your Application.mk to generate
 ARMv7-a compatible machine code instead:
 
-      APP_ABI := armeabi-v7a
+        APP_ABI := armeabi-v7a
 
 It is also possible to build machine code for two or more distinct ABIs,
 for example:
 
-      APP_ABI := armeabi armeabi-v7a
+        APP_ABI := armeabi armeabi-v7a
 
 This will instruct the NDK to build two versions of your machine code: one for
 each ABI listed on this line. Both libraries will be copied to your application
@@ -237,7 +237,7 @@ target device. See below for details.
 
 Also you can use:
 
-      APP_ABI := all
+        APP_ABI := all
 
 which will generate machine code for all supported ABIs with this NDK. Doing so
 will ensure that your application package contains libraries for all target ABIs.
