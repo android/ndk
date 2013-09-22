@@ -238,8 +238,8 @@ for abi in $ABIS; do
   fail_panic "Couldn't compile mclinker"
 
   run mkdir -p $TOOLCHAIN_BUILD_PREFIX/$abi
-  if [ -f $MCLINKER_BUILD_OUT/tools/ld.lite/ld.lite ]; then
-    run cp -f $MCLINKER_BUILD_OUT/tools/ld.lite/ld.lite $TOOLCHAIN_BUILD_PREFIX/$abi/ld.mcld
+  if [ -f $MCLINKER_BUILD_OUT/tools/lite/ld.lite ]; then
+    run cp -f $MCLINKER_BUILD_OUT/tools/lite/ld.lite $TOOLCHAIN_BUILD_PREFIX/$abi/ld.mcld
   else
     run cp -f $MCLINKER_BUILD_OUT/optimized/ld.mcld $TOOLCHAIN_BUILD_PREFIX/$abi
   fi

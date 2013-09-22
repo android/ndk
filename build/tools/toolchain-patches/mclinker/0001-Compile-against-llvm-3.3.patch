@@ -1,307 +1,204 @@
-From d4d813fa1fffb1ece1630a1fbc8bc9339dd4b3ae Mon Sep 17 00:00:00 2001
+From e144ea2749d880e707977c62b0a958e544603f86 Mon Sep 17 00:00:00 2001
 From: Andrew Hsieh <andrewhsieh@google.com>
-Date: Wed, 19 Jun 2013 15:09:04 -0700
-Subject: [PATCH 1/2] Compile against llvm-3.3
+Date: Sun, 22 Sep 2013 12:18:46 +0800
+Subject: [PATCH 1/3] Compile against llvm-3.3
 
-Change-Id: I3e34b391e5effb173dc1a08c75fae5e9ba530bec
+instead of against LLVM trunk@187732
+
+Change-Id: Ibe45c9100421a2b937219fa7c9d69be59014379f
 ---
- lib/Fragment/FragmentLinker.cpp           |  2 +-
- lib/LD/ELFReader.cpp                      | 36 +++++++++++++++----------------
- lib/LD/GNUArchiveReader.cpp               |  4 ++--
- lib/LD/RelocationFactory.cpp              |  2 +-
- lib/Target/GNULDBackend.cpp               |  8 +++----
- tools/llvm-mcld/llvm-mcld.cpp             |  3 ++-
- tools/mcld/lib/Support/Initialization.cpp |  3 ++-
- 7 files changed, 30 insertions(+), 28 deletions(-)
+ include/mcld/Support/raw_ostream.h |  3 ++-
+ lib/CodeGen/MCLDTargetMachine.cpp  |  6 ++---
+ lib/Support/ToolOutputFile.cpp     |  5 ++--
+ lib/Support/Windows/PathV3.inc     |  1 +
+ lib/Support/raw_ostream.cpp        |  2 +-
+ lib/Target/Mips/MipsELFDynamic.cpp | 48 +++++++++++++++++++++++++++-----------
+ 6 files changed, 44 insertions(+), 21 deletions(-)
 
-diff --git a/lib/Fragment/FragmentLinker.cpp b/lib/Fragment/FragmentLinker.cpp
-index 2a183b2..5a4b53f 100644
---- a/lib/Fragment/FragmentLinker.cpp
-+++ b/lib/Fragment/FragmentLinker.cpp
-@@ -231,7 +231,7 @@ void FragmentLinker::writeRelocationResult(Relocation& pReloc, uint8_t* pOutput)
+diff --git a/include/mcld/Support/raw_ostream.h b/include/mcld/Support/raw_ostream.h
+index 0e2cc40..ee063fa 100644
+--- a/include/mcld/Support/raw_ostream.h
++++ b/include/mcld/Support/raw_ostream.h
+@@ -13,6 +13,7 @@
+ #endif
+ #include <string>
+ #include <llvm/Support/raw_ostream.h>
++#include <llvm/Support/FileSystem.h>
  
-   uint8_t* target_addr = pOutput + out_offset;
-   // byte swapping if target and host has different endian, and then write back
--  if(llvm::sys::isLittleEndianHost() != m_Config.targets().isLittleEndian()) {
-+  if(llvm::sys::IsLittleEndianHost != m_Config.targets().isLittleEndian()) {
-      uint64_t tmp_data = 0;
+ namespace mcld {
  
-      switch(pReloc.size(*m_Backend.getRelocator())) {
-diff --git a/lib/LD/ELFReader.cpp b/lib/LD/ELFReader.cpp
-index 3807834..15d4862 100644
---- a/lib/LD/ELFReader.cpp
-+++ b/lib/LD/ELFReader.cpp
-@@ -91,7 +91,7 @@ bool ELFReader<32, true>::readSymbols(Input& pInput,
-     st_info  = symtab[idx].st_info;
-     st_other = symtab[idx].st_other;
+@@ -31,7 +32,7 @@ public:
+   /// output errors).
+   raw_fd_ostream(const char *pFilename,
+                  std::string &pErrorInfo,
+-                 llvm::sys::fs::OpenFlags pFlags = llvm::sys::fs::F_None);
++                 unsigned pFlags = 0);
  
--    if (llvm::sys::isLittleEndianHost()) {
-+    if (llvm::sys::IsLittleEndianHost) {
-       st_name  = symtab[idx].st_name;
-       st_value = symtab[idx].st_value;
-       st_size  = symtab[idx].st_size;
-@@ -279,7 +279,7 @@ bool ELFReader<32, true>::isMyMachine(void* pELFHeader) const
-   llvm::ELF::Elf32_Ehdr* hdr =
-                           reinterpret_cast<llvm::ELF::Elf32_Ehdr*>(pELFHeader);
+   /// raw_fd_ostream ctor - FD is the file descriptor that this writes to.  If
+   /// ShouldClose is true, this closes the file when the stream is destroyed.
+diff --git a/lib/CodeGen/MCLDTargetMachine.cpp b/lib/CodeGen/MCLDTargetMachine.cpp
+index 964a5be..03bdfa3 100644
+--- a/lib/CodeGen/MCLDTargetMachine.cpp
++++ b/lib/CodeGen/MCLDTargetMachine.cpp
+@@ -125,7 +125,7 @@ static void addPassesToHandleExceptions(llvm::TargetMachine *TM,
+     // removed from the parent invoke(s). This could happen when a landing
+     // pad is shared by multiple invokes and is also a target of a normal
+     // edge from elsewhere.
+-    PM.add(createSjLjEHPreparePass(TM));
++    PM.add(createSjLjEHPreparePass(TM->getTargetLowering()));
+     // FALLTHROUGH
+   case llvm::ExceptionHandling::DwarfCFI:
+   case llvm::ExceptionHandling::ARM:
+@@ -133,7 +133,7 @@ static void addPassesToHandleExceptions(llvm::TargetMachine *TM,
+     PM.add(createDwarfEHPass(TM));
+     break;
+   case llvm::ExceptionHandling::None:
+-    PM.add(createLowerInvokePass(TM));
++    PM.add(createLowerInvokePass(TM->getTargetLowering()));
  
--  if (llvm::sys::isLittleEndianHost())
-+  if (llvm::sys::IsLittleEndianHost)
-     return (hdr->e_machine == target().getInfo().machine());
-   return (mcld::bswap16(hdr->e_machine) == target().getInfo().machine());
- }
-@@ -290,7 +290,7 @@ Input::Type ELFReader<32, true>::fileType(void* pELFHeader) const
-   llvm::ELF::Elf32_Ehdr* hdr =
-                           reinterpret_cast<llvm::ELF::Elf32_Ehdr*>(pELFHeader);
-   uint32_t type = 0x0;
--  if (llvm::sys::isLittleEndianHost())
-+  if (llvm::sys::IsLittleEndianHost)
-     type = hdr->e_type;
-   else
-     type = mcld::bswap16(hdr->e_type);
-@@ -322,7 +322,7 @@ ELFReader<32, true>::readSectionHeaders(Input& pInput, void* pELFHeader) const
-   uint32_t shnum     = 0x0;
-   uint32_t shstrtab  = 0x0;
+     // The lower invoke pass may create unreachable code. Remove it.
+     PM.add(createUnreachableBlockEliminationPass());
+@@ -288,7 +288,7 @@ bool mcld::MCLDTargetMachine::addCompilerPasses(PassManagerBase &pPM,
+   MCInstPrinter *InstPrinter =
+     m_pLLVMTarget->createMCInstPrinter(MAI.getAssemblerDialect(), MAI,
+                                            MII,
+-                                           *Context->getRegisterInfo(), STI);
++                                           Context->getRegisterInfo(), STI);
  
--  if (llvm::sys::isLittleEndianHost()) {
-+  if (llvm::sys::IsLittleEndianHost) {
-     shoff     = ehdr->e_shoff;
-     shentsize = ehdr->e_shentsize;
-     shnum     = ehdr->e_shnum;
-@@ -356,7 +356,7 @@ ELFReader<32, true>::readSectionHeaders(Input& pInput, void* pELFHeader) const
-                                             shentsize);
-     shdr = reinterpret_cast<llvm::ELF::Elf32_Shdr*>(shdr_region->start());
+   MCCodeEmitter* MCE = 0;
+   MCAsmBackend *MAB = 0;
+diff --git a/lib/Support/ToolOutputFile.cpp b/lib/Support/ToolOutputFile.cpp
+index 2b97f25..70ee997 100644
+--- a/lib/Support/ToolOutputFile.cpp
++++ b/lib/Support/ToolOutputFile.cpp
+@@ -18,6 +18,7 @@
  
--    if (llvm::sys::isLittleEndianHost()) {
-+    if (llvm::sys::IsLittleEndianHost) {
-       sh_size = shdr->sh_size;
-       sh_link = shdr->sh_link;
-     }
-@@ -381,7 +381,7 @@ ELFReader<32, true>::readSectionHeaders(Input& pInput, void* pELFHeader) const
- 
-   // get .shstrtab first
-   shdr = &shdrTab[shstrtab];
--  if (llvm::sys::isLittleEndianHost()) {
-+  if (llvm::sys::IsLittleEndianHost) {
-     sh_offset = shdr->sh_offset;
-     sh_size   = shdr->sh_size;
-   }
-@@ -399,7 +399,7 @@ ELFReader<32, true>::readSectionHeaders(Input& pInput, void* pELFHeader) const
- 
-   // create all LDSections, including first NULL section.
-   for (size_t idx = 0; idx < shnum; ++idx) {
--    if (llvm::sys::isLittleEndianHost()) {
-+    if (llvm::sys::IsLittleEndianHost) {
-       sh_name      = shdrTab[idx].sh_name;
-       sh_type      = shdrTab[idx].sh_type;
-       sh_flags     = shdrTab[idx].sh_flags;
-@@ -479,7 +479,7 @@ ResolveInfo* ELFReader<32, true>::readSignature(Input& pInput,
-   uint16_t st_shndx = 0x0;
-   st_info  = entry->st_info;
-   st_other = entry->st_other;
--  if (llvm::sys::isLittleEndianHost()) {
-+  if (llvm::sys::IsLittleEndianHost) {
-     st_name  = entry->st_name;
-     st_shndx = entry->st_shndx;
-   }
-@@ -541,7 +541,7 @@ bool ELFReader<32, true>::readDynamic(Input& pInput) const
-     llvm::ELF::Elf32_Sword d_tag = 0x0;
-     llvm::ELF::Elf32_Word d_val = 0x0;
- 
--    if (llvm::sys::isLittleEndianHost()) {
-+    if (llvm::sys::IsLittleEndianHost) {
-       d_tag = dynamic[idx].d_tag;
-       d_val = dynamic[idx].d_un.d_val;
-     } else {
-@@ -636,7 +636,7 @@ bool ELFReader<64, true>::readSymbols(Input& pInput,
-     st_info  = symtab[idx].st_info;
-     st_other = symtab[idx].st_other;
- 
--    if (llvm::sys::isLittleEndianHost()) {
-+    if (llvm::sys::IsLittleEndianHost) {
-       st_name  = symtab[idx].st_name;
-       st_value = symtab[idx].st_value;
-       st_size  = symtab[idx].st_size;
-@@ -820,7 +820,7 @@ bool ELFReader<64, true>::isMyMachine(void* pELFHeader) const
-   llvm::ELF::Elf64_Ehdr* hdr =
-                           reinterpret_cast<llvm::ELF::Elf64_Ehdr*>(pELFHeader);
- 
--  if (llvm::sys::isLittleEndianHost())
-+  if (llvm::sys::IsLittleEndianHost)
-     return (hdr->e_machine == target().getInfo().machine());
-   return (mcld::bswap16(hdr->e_machine) == target().getInfo().machine());
- }
-@@ -831,7 +831,7 @@ Input::Type ELFReader<64, true>::fileType(void* pELFHeader) const
-   llvm::ELF::Elf64_Ehdr* hdr =
-                           reinterpret_cast<llvm::ELF::Elf64_Ehdr*>(pELFHeader);
-   uint32_t type = 0x0;
--  if (llvm::sys::isLittleEndianHost())
-+  if (llvm::sys::IsLittleEndianHost)
-     type = hdr->e_type;
-   else
-     type = mcld::bswap16(hdr->e_type);
-@@ -863,7 +863,7 @@ ELFReader<64, true>::readSectionHeaders(Input& pInput, void* pELFHeader) const
-   uint32_t shnum     = 0x0;
-   uint32_t shstrtab  = 0x0;
- 
--  if (llvm::sys::isLittleEndianHost()) {
-+  if (llvm::sys::IsLittleEndianHost) {
-     shoff     = ehdr->e_shoff;
-     shentsize = ehdr->e_shentsize;
-     shnum     = ehdr->e_shnum;
-@@ -897,7 +897,7 @@ ELFReader<64, true>::readSectionHeaders(Input& pInput, void* pELFHeader) const
-                                             shentsize);
-     shdr = reinterpret_cast<llvm::ELF::Elf64_Shdr*>(shdr_region->start());
- 
--    if (llvm::sys::isLittleEndianHost()) {
-+    if (llvm::sys::IsLittleEndianHost) {
-       sh_size = shdr->sh_size;
-       sh_link = shdr->sh_link;
-     }
-@@ -922,7 +922,7 @@ ELFReader<64, true>::readSectionHeaders(Input& pInput, void* pELFHeader) const
- 
-   // get .shstrtab first
-   shdr = &shdrTab[shstrtab];
--  if (llvm::sys::isLittleEndianHost()) {
-+  if (llvm::sys::IsLittleEndianHost) {
-     sh_offset = shdr->sh_offset;
-     sh_size   = shdr->sh_size;
-   }
-@@ -940,7 +940,7 @@ ELFReader<64, true>::readSectionHeaders(Input& pInput, void* pELFHeader) const
- 
-   // create all LDSections, including first NULL section.
-   for (size_t idx = 0; idx < shnum; ++idx) {
--    if (llvm::sys::isLittleEndianHost()) {
-+    if (llvm::sys::IsLittleEndianHost) {
-       sh_name      = shdrTab[idx].sh_name;
-       sh_type      = shdrTab[idx].sh_type;
-       sh_flags     = shdrTab[idx].sh_flags;
-@@ -1020,7 +1020,7 @@ ResolveInfo* ELFReader<64, true>::readSignature(Input& pInput,
-   uint16_t st_shndx = 0x0;
-   st_info  = entry->st_info;
-   st_other = entry->st_other;
--  if (llvm::sys::isLittleEndianHost()) {
-+  if (llvm::sys::IsLittleEndianHost) {
-     st_name  = entry->st_name;
-     st_shndx = entry->st_shndx;
-   }
-@@ -1082,7 +1082,7 @@ bool ELFReader<64, true>::readDynamic(Input& pInput) const
-     llvm::ELF::Elf64_Sxword d_tag = 0x0;
-     llvm::ELF::Elf64_Xword d_val = 0x0;
- 
--    if (llvm::sys::isLittleEndianHost()) {
-+    if (llvm::sys::IsLittleEndianHost) {
-       d_tag = dynamic[idx].d_tag;
-       d_val = dynamic[idx].d_un.d_val;
-     } else {
-diff --git a/lib/LD/GNUArchiveReader.cpp b/lib/LD/GNUArchiveReader.cpp
-index 6324824..e391b20 100644
---- a/lib/LD/GNUArchiveReader.cpp
-+++ b/lib/LD/GNUArchiveReader.cpp
-@@ -265,7 +265,7 @@ bool GNUArchiveReader::readSymbolTable(Archive& pArchive)
- 
-     // read the number of symbols
-     uint32_t number = 0;
--    if (llvm::sys::isLittleEndianHost())
-+    if (llvm::sys::IsLittleEndianHost)
-       number = mcld::bswap32(*data);
-     else
-       number = *data;
-@@ -276,7 +276,7 @@ bool GNUArchiveReader::readSymbolTable(Archive& pArchive)
- 
-     // add the archive symbols
-     for (uint32_t i = 0; i < number; ++i) {
--      if (llvm::sys::isLittleEndianHost())
-+      if (llvm::sys::IsLittleEndianHost)
-         pArchive.addSymbol(name, mcld::bswap32(*data));
-       else
-         pArchive.addSymbol(name, *data);
-diff --git a/lib/LD/RelocationFactory.cpp b/lib/LD/RelocationFactory.cpp
-index 8a065a8..bb56cdd 100644
---- a/lib/LD/RelocationFactory.cpp
-+++ b/lib/LD/RelocationFactory.cpp
-@@ -45,7 +45,7 @@ Relocation* RelocationFactory::produce(RelocationFactory::Type pType,
-   DWord target_data = 0;
- 
-   // byte swapping if the host and target have different endian
--  if(llvm::sys::isLittleEndianHost() != m_pConfig->targets().isLittleEndian()) {
-+  if(llvm::sys::IsLittleEndianHost != m_pConfig->targets().isLittleEndian()) {
-      uint32_t tmp_data;
- 
-      switch (m_pConfig->targets().bitclass()) {
-diff --git a/lib/Target/GNULDBackend.cpp b/lib/Target/GNULDBackend.cpp
-index aa2d386..274fd7b 100644
---- a/lib/Target/GNULDBackend.cpp
-+++ b/lib/Target/GNULDBackend.cpp
-@@ -1679,7 +1679,7 @@ bool GNULDBackend::readRelocation(const llvm::ELF::Elf32_Rel& pRel,
-                                   uint32_t& pOffset) const
- {
-   uint32_t r_info = 0x0;
--  if (llvm::sys::isLittleEndianHost()) {
-+  if (llvm::sys::IsLittleEndianHost) {
-     pOffset = pRel.r_offset;
-     r_info  = pRel.r_info;
-   }
-@@ -1701,7 +1701,7 @@ bool GNULDBackend::readRelocation(const llvm::ELF::Elf32_Rela& pRel,
-                                   int32_t& pAddend) const
- {
-   uint32_t r_info   = 0x0;
--  if (llvm::sys::isLittleEndianHost()) {
-+  if (llvm::sys::IsLittleEndianHost) {
-     pOffset = pRel.r_offset;
-     r_info  = pRel.r_info;
-     pAddend = pRel.r_addend;
-@@ -1724,7 +1724,7 @@ bool GNULDBackend::readRelocation(const llvm::ELF::Elf64_Rel& pRel,
-                               uint64_t& pOffset) const
- {
-   uint64_t r_info = 0x0;
--  if (llvm::sys::isLittleEndianHost()) {
-+  if (llvm::sys::IsLittleEndianHost) {
-     pOffset = pRel.r_offset;
-     r_info  = pRel.r_info;
-   }
-@@ -1746,7 +1746,7 @@ bool GNULDBackend::readRelocation(const llvm::ELF::Elf64_Rela& pRel,
-                               int64_t& pAddend) const
- {
-   uint64_t r_info = 0x0;
--  if (llvm::sys::isLittleEndianHost()) {
-+  if (llvm::sys::IsLittleEndianHost) {
-     pOffset = pRel.r_offset;
-     r_info  = pRel.r_info;
-     pAddend = pRel.r_addend;
-diff --git a/tools/llvm-mcld/llvm-mcld.cpp b/tools/llvm-mcld/llvm-mcld.cpp
-index 2f356b3..6f66c4a 100644
---- a/tools/llvm-mcld/llvm-mcld.cpp
-+++ b/tools/llvm-mcld/llvm-mcld.cpp
-@@ -36,13 +36,14 @@
- #include <llvm/Support/Debug.h>
- #include <llvm/Support/FormattedStream.h>
- #include <llvm/Support/Host.h>
--#include <llvm/Support/IRReader.h>
-+#include <llvm/IRReader/IRReader.h>
- #include <llvm/Support/ManagedStatic.h>
  #include <llvm/Support/Signals.h>
- #include <llvm/Support/TargetRegistry.h>
- #include <llvm/Support/TargetSelect.h>
- #include <llvm/Support/Process.h>
- #include <llvm/Target/TargetMachine.h>
-+#include <llvm/Support/SourceMgr.h>
+ #include <llvm/Support/Path.h>
++#include <llvm/Support/FileSystem.h>
+ #include <llvm/Support/FormattedStream.h>
  
- #if defined(HAVE_UNISTD_H)
- # include <unistd.h>
-diff --git a/tools/mcld/lib/Support/Initialization.cpp b/tools/mcld/lib/Support/Initialization.cpp
-index 71bd57d..90cb574 100644
---- a/tools/mcld/lib/Support/Initialization.cpp
-+++ b/tools/mcld/lib/Support/Initialization.cpp
-@@ -22,7 +22,8 @@
- 
- namespace {
- 
--void llvm_error_handler(void *pUserData, const std::string &pMessage) {
-+void llvm_error_handler(void *pUserData, const std::string &pMessage,
-+                        bool gen_crash_diag = true) {
-   ALOGE("%s", pMessage.c_str());
-   ::exit(1);
+ using namespace mcld;
+@@ -29,7 +30,7 @@ ToolOutputFile::CleanupInstaller::CleanupInstaller(const sys::fs::Path& pPath)
+   : Keep(false), m_Path(pPath) {
+   // Arrange for the file to be deleted if the process is killed.
+   if ("-" != m_Path.native())
+-    llvm::sys::RemoveFileOnSignal(m_Path.native());
++       llvm::sys::RemoveFileOnSignal(llvm::sys::Path(m_Path.native()));
  }
+ 
+ ToolOutputFile::CleanupInstaller::~CleanupInstaller()
+@@ -45,7 +46,7 @@ ToolOutputFile::CleanupInstaller::~CleanupInstaller()
+   // Ok, the file is successfully written and closed, or deleted. There's no
+   // further need to clean it up on signals.
+   if ("_" != m_Path.native())
+-    llvm::sys::DontRemoveFileOnSignal(m_Path.native());
++    llvm::sys::DontRemoveFileOnSignal(llvm::sys::Path(m_Path.native()));
+ }
+ 
+ //===----------------------------------------------------------------------===//
+diff --git a/lib/Support/Windows/PathV3.inc b/lib/Support/Windows/PathV3.inc
+index 2f36c93..02a400a 100644
+--- a/lib/Support/Windows/PathV3.inc
++++ b/lib/Support/Windows/PathV3.inc
+@@ -7,6 +7,7 @@
+ //
+ //===----------------------------------------------------------------------===//
+ #include <mcld/Support/Path.h>
++#include <llvm/Support/ErrorHandling.h>
+ #include <sys/types.h>
+ #include <sys/stat.h>
+ #include <stack>
+diff --git a/lib/Support/raw_ostream.cpp b/lib/Support/raw_ostream.cpp
+index 32e362a..34e37ef 100644
+--- a/lib/Support/raw_ostream.cpp
++++ b/lib/Support/raw_ostream.cpp
+@@ -37,7 +37,7 @@ using namespace mcld;
+ //===----------------------------------------------------------------------===//
+ mcld::raw_fd_ostream::raw_fd_ostream(const char *pFilename,
+                                      std::string &pErrorInfo,
+-                                     llvm::sys::fs::OpenFlags pFlags)
++                                     unsigned pFlags)
+   : llvm::raw_fd_ostream(pFilename, pErrorInfo, pFlags),
+     m_bConfigColor(false),
+     m_bSetColor(false) {
+diff --git a/lib/Target/Mips/MipsELFDynamic.cpp b/lib/Target/Mips/MipsELFDynamic.cpp
+index b532b03..c0822b5 100644
+--- a/lib/Target/Mips/MipsELFDynamic.cpp
++++ b/lib/Target/Mips/MipsELFDynamic.cpp
+@@ -17,6 +17,26 @@
+ 
+ using namespace mcld;
+ 
++
++// MIPS mandatory dynamic section entries
++enum {
++  DT_MIPS_RLD_VERSION  = 0x70000001,
++  DT_MIPS_FLAGS        = 0x70000005,
++  DT_MIPS_BASE_ADDRESS = 0x70000006,
++  DT_MIPS_LOCAL_GOTNO  = 0x7000000a,
++  DT_MIPS_SYMTABNO     = 0x70000011,
++  DT_MIPS_GOTSYM       = 0x70000013,
++  DT_MIPS_PLTGOT       = 0x70000032,
++};
++
++// Dynamic section MIPS flags
++enum {
++  RHF_NONE                   = 0x00000000,  // None
++  RHF_QUICKSTART             = 0x00000001,  // Use shortcut pointers
++  RHF_NOTPOT                 = 0x00000002,  // Hash size not power of two
++  RHF_NO_LIBRARY_REPLACEMENT = 0x00000004   // Ignore LD_LIBRARY_PATH
++};
++
+ MipsELFDynamic::MipsELFDynamic(const MipsGNULDBackend& pParent,
+                                const LinkerConfig& pConfig)
+   : ELFDynamic(pParent, pConfig),
+@@ -30,15 +50,15 @@ void MipsELFDynamic::reserveTargetEntries(const ELFFileFormat& pFormat)
+   if (pFormat.hasGOT())
+     reserveOne(llvm::ELF::DT_PLTGOT);
+ 
+-  reserveOne(llvm::ELF::DT_MIPS_RLD_VERSION);
+-  reserveOne(llvm::ELF::DT_MIPS_FLAGS);
+-  reserveOne(llvm::ELF::DT_MIPS_BASE_ADDRESS);
+-  reserveOne(llvm::ELF::DT_MIPS_LOCAL_GOTNO);
+-  reserveOne(llvm::ELF::DT_MIPS_SYMTABNO);
+-  reserveOne(llvm::ELF::DT_MIPS_GOTSYM);
++  reserveOne(DT_MIPS_RLD_VERSION);
++  reserveOne(DT_MIPS_FLAGS);
++  reserveOne(DT_MIPS_BASE_ADDRESS);
++  reserveOne(DT_MIPS_LOCAL_GOTNO);
++  reserveOne(DT_MIPS_SYMTABNO);
++  reserveOne(DT_MIPS_GOTSYM);
+ 
+   if (pFormat.hasGOTPLT())
+-    reserveOne(llvm::ELF::DT_MIPS_PLTGOT);
++    reserveOne(DT_MIPS_PLTGOT);
+ }
+ 
+ void MipsELFDynamic::applyTargetEntries(const ELFFileFormat& pFormat)
+@@ -46,15 +66,15 @@ void MipsELFDynamic::applyTargetEntries(const ELFFileFormat& pFormat)
+   if (pFormat.hasGOT())
+     applyOne(llvm::ELF::DT_PLTGOT, pFormat.getGOT().addr());
+ 
+-  applyOne(llvm::ELF::DT_MIPS_RLD_VERSION, 1);
+-  applyOne(llvm::ELF::DT_MIPS_FLAGS, llvm::ELF::RHF_NOTPOT);
+-  applyOne(llvm::ELF::DT_MIPS_BASE_ADDRESS, getBaseAddress());
+-  applyOne(llvm::ELF::DT_MIPS_LOCAL_GOTNO, getLocalGotNum(pFormat));
+-  applyOne(llvm::ELF::DT_MIPS_SYMTABNO, getSymTabNum(pFormat));
+-  applyOne(llvm::ELF::DT_MIPS_GOTSYM, getGotSym(pFormat));
++  applyOne(DT_MIPS_RLD_VERSION, 1);
++  applyOne(DT_MIPS_FLAGS, RHF_NOTPOT);
++  applyOne(DT_MIPS_BASE_ADDRESS, getBaseAddress());
++  applyOne(DT_MIPS_LOCAL_GOTNO, getLocalGotNum(pFormat));
++  applyOne(DT_MIPS_SYMTABNO, getSymTabNum(pFormat));
++  applyOne(DT_MIPS_GOTSYM, getGotSym(pFormat));
+ 
+   if (pFormat.hasGOTPLT())
+-    applyOne(llvm::ELF::DT_MIPS_PLTGOT, pFormat.getGOTPLT().addr());
++    applyOne(DT_MIPS_PLTGOT, pFormat.getGOTPLT().addr());
+ }
+ 
+ size_t MipsELFDynamic::getSymTabNum(const ELFFileFormat& pFormat) const
 -- 
-1.8.3
+1.8.4
 

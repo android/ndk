@@ -1,0 +1,52 @@
+From 35896d8e00372e9c20ff54c29eb888fb9ffae430 Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Sun, 22 Sep 2013 12:20:23 +0800
+Subject: [PATCH 2/3] Fixed darwin ld.mcld GNU -m emulation fail
+
+Change-Id: Ie0bb6b40687052026b458d4beea35f5a4859a51b
+---
+ tools/lite/lib/TripleOptions.cpp | 4 ++--
+ tools/mcld/main.cpp              | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/tools/lite/lib/TripleOptions.cpp b/tools/lite/lib/TripleOptions.cpp
+index 3fbf069..5036e26 100644
+--- a/tools/lite/lib/TripleOptions.cpp
++++ b/tools/lite/lib/TripleOptions.cpp
+@@ -84,12 +84,12 @@ ParseEmulation(llvm::Triple& pTriple, const std::string& pEmulation)
+ {
+   llvm::Triple triple = llvm::StringSwitch<llvm::Triple>(pEmulation)
+     .Case("armelf_linux_eabi", llvm::Triple("arm", "", "linux", "gnueabi"))
+-    .Case("elf_i386",          llvm::Triple("i386", "", "", "gnu"))
++    .Case("elf_i386",          llvm::Triple("i386", "", "linux", "gnu"))
+     .Case("elf_x86_64",        llvm::Triple("x86_64", "", "", "gnu"))
+     .Case("elf32_x86_64",      llvm::Triple("x86_64", "", "", "gnux32"))
+     .Case("elf_i386_fbsd",     llvm::Triple("i386", "", "freebsd", "gnu"))
+     .Case("elf_x86_64_fbsd",   llvm::Triple("x86_64", "", "freebsd", "gnu"))
+-    .Case("elf32ltsmip",       llvm::Triple("mipsel", "", "", "gnu"))
++    .Case("elf32ltsmip",       llvm::Triple("mipsel", "", "linux", "gnu"))
+     .Default(llvm::Triple());
+ 
+   if (triple.getArch()        == llvm::Triple::UnknownArch &&
+diff --git a/tools/mcld/main.cpp b/tools/mcld/main.cpp
+index aceb0f4..f6a1e5f 100644
+--- a/tools/mcld/main.cpp
++++ b/tools/mcld/main.cpp
+@@ -1018,12 +1018,12 @@ static Triple ParseEmulation(const std::string& pEmulation)
+ {
+   Triple result = StringSwitch<Triple>(pEmulation)
+     .Case("armelf_linux_eabi", Triple("arm", "", "linux", "gnueabi"))
+-    .Case("elf_i386",          Triple("i386", "", "", "gnu"))
++    .Case("elf_i386",          Triple("i386", "", "linux", "gnu"))
+     .Case("elf_x86_64",        Triple("x86_64", "", "", "gnu"))
+     .Case("elf32_x86_64",      Triple("x86_64", "", "", "gnux32"))
+     .Case("elf_i386_fbsd",     Triple("i386", "", "freebsd", "gnu"))
+     .Case("elf_x86_64_fbsd",   Triple("x86_64", "", "freebsd", "gnu"))
+-    .Case("elf32ltsmip",       Triple("mipsel", "", "", "gnu"))
++    .Case("elf32ltsmip",       Triple("mipsel", "", "linux", "gnu"))
+     .Default(Triple());
+ 
+   if (result.getArch()        == Triple::UnknownArch &&
+-- 
+1.8.4
+
