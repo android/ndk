@@ -417,7 +417,13 @@ void* compileBitcode(void *par) {
   cmd += std::string(" -arm-enable-ehabi -arm-enable-ehabi-descriptors");
 #endif
   cmd += " -filetype=obj -relocation-model=pic -code-model=small";
-  cmd += " -use-init-array -mc-relax-all -float-abi=soft -O2";
+  cmd += " -use-init-array -mc-relax-all -O2";
+#if defined(__arm__)
+  cmd += " -float-abi=soft";
+  if (abi == abi_armeabi_v7a) {
+    cmd += "fp";  // -float-abi=softfp
+  }
+#endif
 #if ENABLE_PARALLEL_LLVM_CG
   std::ostringstream stream;
   stream << android_getCpuCount();
