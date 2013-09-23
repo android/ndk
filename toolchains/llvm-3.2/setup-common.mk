@@ -45,7 +45,7 @@ TARGET_CFLAGS := \
 TARGET_NO_EXECUTE_CFLAGS :=
 
 # Add and LDFLAGS for the target here
-TARGET_LDFLAGS := \
+TARGET_LDFLAGS += \
     -target $(LLVM_TRIPLE) \
     -emit-llvm \
     -no-canonical-prefixes
@@ -86,11 +86,12 @@ $(PRIVATE_CXX) \
     $(PRIVATE_LDFLAGS) \
     $(PRIVATE_LDLIBS) \
     -o $(call host-path,$(LOCAL_BUILT_MODULE)) && \
+    $(call host-mv, $(call host-path,$(LOCAL_BUILT_MODULE)), $(call host-path,$(LOCAL_BUILT_MODULE)).bc) && \
     $(BC2NATIVE) \
     --ndk-dir=$(NDK_ROOT) \
     --abi=$(TARGET_ARCH_ABI) \
     --platform=$(TARGET_PLATFORM) \
-    --file $(call host-path, $(LOCAL_BUILT_MODULE)) $(patsubst %.bc,%.so,$(call host-path,$(LOCAL_BUILT_MODULE)))
+    --file $(call host-path, $(LOCAL_BUILT_MODULE)).bc $(patsubst %.bc,%.so,$(call host-path,$(LOCAL_BUILT_MODULE)))
 endef
 
 define cmd-build-executable
@@ -102,11 +103,12 @@ $(PRIVATE_CXX) \
     $(PRIVATE_LDFLAGS) \
     $(PRIVATE_LDLIBS) \
     -o $(call host-path,$(LOCAL_BUILT_MODULE)) && \
+    $(call host-mv, $(call host-path,$(LOCAL_BUILT_MODULE)), $(call host-path,$(LOCAL_BUILT_MODULE)).bc) && \
     $(BC2NATIVE) \
     --ndk-dir=$(NDK_ROOT) \
     --abi=$(TARGET_ARCH_ABI) \
     --platform=$(TARGET_PLATFORM) \
-    --file $(call host-path,$(LOCAL_BUILT_MODULE)) $(call host-path,$(LOCAL_BUILT_MODULE))
+    --file $(call host-path,$(LOCAL_BUILT_MODULE)).bc $(call host-path,$(LOCAL_BUILT_MODULE))
 endef
 
 endif
