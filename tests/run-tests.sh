@@ -34,7 +34,10 @@ NDK_BUILDTOOLS_PATH=$ROOTDIR/build/tools
 
 # The list of tests that are too long to be part of a normal run of
 # run-tests.sh. Most of these do not run properly at the moment.
-LONG_TESTS="prebuild-stlport test-stlport test-gnustl-full test-stlport_shared-exception test-stlport_static-exception test-googletest-full"
+LONG_TESTS="prebuild-stlport test-stlport test-gnustl-full \
+test-stlport_shared-exception test-stlport_static-exception \
+test-gnustl_shared-exception-full test-gnustl_static-exception-full \
+test-googletest-full"
 
 #
 # Parse options
@@ -301,7 +304,7 @@ mkdir -p "$BUILD_DIR" && rm -rf "$BUILD_DIR/*"
 #
 # Add -link-native-binary to allow linking native binaries
 #
-if [ ! -z "$NDK_ABI_FILTER" ]; then
+if [ "$NDK_ABI_FILTER" != "${NDK_ABI_FILTER%%bc*}" ] ; then
   APP_LDFLAGS="$APP_LDFLAGS -Wl,-link-native-binary"
 fi
 
@@ -963,6 +966,7 @@ if [ "$ABI" = "$(find_ndk_unknown_archs)" ]; then
   # Cleanup some intermediate files for testing
   run rm -rf $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI
   run rm -rf $NDK/$GABIXX_SUBDIR/libs/$ABI
+  run rm -rf $NDK/$LIBPORTABLE_SUBDIR/libs/$ABI
 fi
 rm -rf $BUILD_DIR
 dump "Done."

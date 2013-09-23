@@ -62,7 +62,7 @@ diff --git a/gcc-4.8/libstdc++-v3/src/Makefile.in b/gcc-4.8/libstdc++-v3/src/Mak
 index 69001b4..e875539 100644
 --- a/gcc-4.8/libstdc++-v3/src/Makefile.in
 +++ b/gcc-4.8/libstdc++-v3/src/Makefile.in
-@@ -335,7 +335,7 @@ AM_CPPFLAGS = $(GLIBCXX_INCLUDES)
+@@ -336,7 +336,7 @@ AM_CPPFLAGS = $(GLIBCXX_INCLUDES)
  SUBDIRS = c++98 c++11
  
  # Cross compiler support.
