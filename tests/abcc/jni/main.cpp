@@ -281,23 +281,37 @@ int readWrapper(BitcodeInfoTy &info) {
   return 0;
 }
 
-int handleTask(const std::string &cmd, std::string &err_msg) {
+int handleTask(const std::string &cmd, bool write_err_msg = false) {
 #if VERBOSE
   LOGV("Command: %s", cmd.c_str());
 #endif
-  int ret = system(cmd.c_str());
+  int ret;
+  std::string logfilename = std::string(lib_dir) + "/compile_log";
+  if (write_err_msg) {
+    std::string new_cmd = cmd + " > " + logfilename + " 2>&1";
+    ret = system(new_cmd.c_str());
+  } else {
+    ret = system(cmd.c_str());
+  }
   if (ret != 0) {
     LOGE("Failed command: %s", cmd.c_str());
-    err_msg += std::string("Failed command: ") + cmd + std::string("\n");
+    if (write_err_msg) {
+      std::ifstream ifs(logfilename.c_str());
+      std::stringstream sstr;
+      sstr << ifs.rdbuf();
+
+      LOGE("Error message: %s", sstr.str().c_str());
+
+      std::fstream fout;
+      std::string file = std::string(lib_dir) + "/compile_error";
+      fout.open(file.c_str(), std::fstream::out | std::fstream::app);
+      fout << "Failed command: " << cmd << "\n";
+      fout << "Error message: " << sstr.str() << "\n";
+      fout.close();
+    }
   }
   return ret;
 }
-
-int handleTask(const std::string &cmd) {
-  std::string err_msg;
-  return handleTask(cmd, err_msg);
-}
-
 
 int getFilesFromDir(const char *dir, std::vector<std::string> &files) {
   files.clear();
@@ -378,7 +392,7 @@ void removeExternalLDLibs(SONameMapTy &soname_map) {
   }
 }
 
-void* translateBitcode(void *par) {
+void *translateBitcode(void *par) {
   std::string bc = (char*)par;
   std::string stem = bc.substr(0, bc.rfind("."));
   std::string target_bc = stem + "-target.bc";
@@ -393,14 +407,18 @@ void* translateBitcode(void *par) {
   cmd += std::string(" -o ") + target_bc;
   cmd += std::string(" ") + bc;
 
-  handleTask(cmd);
+  int ret = handleTask(cmd, true/*write_err_msg*/);
+  if (ret != 0) {
+    LOGE("Cannot translate bitcode (%s): %s", bc.c_str(), cmd.c_str());
+  } else {
 #ifdef NDEBUG
-  handleTask(std::string("rm -f ") + bc);
+    handleTask(std::string("rm -f ") + bc);
 #endif
-  return 0;
+  }
+  return (void*)ret;
 }
 
-void* compileBitcode(void *par) {
+void *compileBitcode(void *par) {
   std::string bc = (char*)par;
   std::string stem = bc.substr(0, bc.rfind("."));
   std::string target_bc = stem + "-target.bc";
@@ -430,20 +448,15 @@ void* compileBitcode(void *par) {
   cmd += std::string(" -o ") + obj;
   cmd += std::string(" ") + target_bc;
 
-  std::string err_msg;
-  int ret = handleTask(cmd, err_msg);
+  int ret = handleTask(cmd, true/*write_err_msg*/);
   if (ret != 0) {
     LOGE("Cannot compile bitcode (%s): %s", bc.c_str(), cmd.c_str());
-    std::fstream fout;
-    std::string file = std::string(lib_dir) + "/compile_error";
-    fout.open(file.c_str(), std::fstream::out | std::fstream::app);
-    fout << err_msg;
-    fout.close();
-  }
+  } else {
 #ifdef NDEBUG
-  handleTask(std::string("rm -f ") + target_bc);
+    handleTask(std::string("rm -f ") + target_bc);
 #endif
-  return 0;
+  }
+  return (void*)ret;
 }
 
 int linkBitcode(const BitcodeInfoTy &info) {
@@ -501,22 +514,16 @@ int linkBitcode(const BitcodeInfoTy &info) {
   }
   cmd += std::string(" -o ") + lib;
 
-  std::string err_msg;
-  int ret = handleTask(cmd, err_msg);
+  int ret = handleTask(cmd, true/*write_err_msg*/);
   if (ret != 0) {
     LOGE("Cannot link bitcode (%s): %s", info.mBitcode.c_str(), cmd.c_str());
-    std::fstream fout;
-    std::string file = std::string(lib_dir) + "/compile_error";
-    fout.open(file.c_str(), std::fstream::out | std::fstream::app);
-    fout << err_msg;
-    fout.close();
-    return ret;
-  }
-  handleTask(std::string("chmod 0755 ") + lib);
+  } else {
+    handleTask(std::string("chmod 0755 ") + lib);
 #ifdef NDEBUG
-  handleTask(std::string("rm -f ") + obj);
+    handleTask(std::string("rm -f ") + obj);
 #endif
-  return 0;
+  }
+  return ret;
 }
 
 int prepareRuntime(const BitcodeInfoTy &info) {
@@ -665,6 +672,7 @@ Java_compiler_abcc_AbccService_genLibs(JNIEnv *env, jobject thiz,
 #endif
   handleTask(std::string("cp -p ") + sysroot + "/usr/lib/libgabi++_shared.so " + lib_dir + "/libgabi++_shared.so");
 
+  handleTask(std::string("rm -f ") + lib_dir + "/compile_log");
   if (handleTask(std::string("ls ") + lib_dir + "/compile_error") != 0) {
     handleTask(std::string("echo 0 > ") + lib_dir + "/compile_result");
     handleTask(std::string("chmod 0644 ") + lib_dir + "/compile_result");
