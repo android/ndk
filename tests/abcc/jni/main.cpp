@@ -387,7 +387,7 @@ void* translateBitcode(void *par) {
    * le32-none-ndk-translate
    */
   std::string cmd;
-  cmd = std::string("LD_LIBRARY_PATH=") + sysroot + "/usr/lib";
+  cmd = std::string("LD_LIBRARY_PATH=") + sysroot + "/usr/lib/llvm";
   cmd += std::string(" ") + sysroot + "/usr/bin/le32-none-ndk-translate";
   cmd += std::string(" -arch=") + target_data[abi][target_arch];
   cmd += std::string(" -o ") + target_bc;
@@ -410,7 +410,7 @@ void* compileBitcode(void *par) {
    * llc
    */
   std::string cmd;
-  cmd = std::string("LD_LIBRARY_PATH=") + sysroot + "/usr/lib";
+  cmd = std::string("LD_LIBRARY_PATH=") + sysroot + "/usr/lib/llvm";
   cmd += std::string(" ") + sysroot + "/usr/bin/llc";
   cmd += std::string(" -mtriple=") + target_data[abi][target_triple];
 #if defined(__arm__)
@@ -460,7 +460,7 @@ int linkBitcode(const BitcodeInfoTy &info) {
    */
   handleTask(std::string("rm -f ") + lib);
   std::string cmd;
-  cmd = std::string("LD_LIBRARY_PATH=") + sysroot + "/usr/lib";
+  cmd = std::string("LD_LIBRARY_PATH=") + sysroot + "/usr/lib/llvm";
   cmd += std::string(" ") + sysroot + "/usr/bin/ld.mcld";
   cmd += std::string(" --sysroot=") + sysroot;
   if (info.mShared) {

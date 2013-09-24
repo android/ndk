@@ -53,7 +53,7 @@ register_option "--only-assets" do_only_assets_option "Build toolchain only unde
 
 DEBUG=
 do_debug_option () { DEBUG=yes; }
-register_option "--no-share-system-uid" do_debug_option "Just for testing. Be careful of device directory permission issue!"
+register_option "--no-share-system-uid" do_debug_option "Workaround for platform system permission"
 
 TESTING=
 do_testing_option () { TESTING=yes; }
@@ -144,6 +144,7 @@ fi
 for ABI in $ABIS; do
   run rm -rf obj libs
   run $NDK_DIR/ndk-build -B APP_ABI=$ABI -C jni
+  fail_panic "Build native code failed. Abort."
   if [ "$DEBUG" = "yes" ]; then
     run rm -f AndroidManifest.xml
     run cp -a AndroidManifest.xml.debug AndroidManifest.xml

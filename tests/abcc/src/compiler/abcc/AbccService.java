@@ -167,8 +167,13 @@ public class AbccService extends IntentService {
     cur_file.mkdirs();
     cur_file.setReadable(true, /*OwnerOnly=*/false);
     cur_file.setExecutable(true, /*OwnerOnly=*/false);
+    cur_file = new File(mSysroot + "/usr/lib/llvm");
+    cur_file.mkdirs();
+    cur_file.setReadable(true, /*OwnerOnly=*/false);
+    cur_file.setExecutable(true, /*OwnerOnly=*/false);
     copyAssets("usr/bin", mSysroot + "/usr/bin", /*executable=*/true);
     copyAssets("usr/lib", mSysroot + "/usr/lib", /*executable=*/false);
+    copyAssets("usr/lib/llvm", mSysroot + "/usr/lib/llvm", /*executable=*/false);
   }
 
   private void copyAssets(String asset_dir, String out_dir, boolean executable) {
