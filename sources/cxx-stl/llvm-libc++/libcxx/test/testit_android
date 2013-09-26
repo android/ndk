@@ -195,7 +195,9 @@ if [ -z "$TOOLCHAIN_PREFIX" ]; then
       exit 1
       ;;
   esac
-  CXX=$TOOLCHAIN_PREFIX-g++
+  if [ -z "$CXX" ]; then
+      CXX=$TOOLCHAIN_PREFIX-g++
+  fi
 fi
 
 REAL_CXX=$(which "$CXX" 2>/dev/null)
@@ -312,6 +314,7 @@ afunc() {
                       if [ "$VERBOSE" -gt 1 ]; then
                           echo "Running test: " $FILE
                       fi
+                        COMMAND="( cd $(pwd) && $CC $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS )"
 			if run $CC $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS -o $TEST_EXE
 			then
 				if adb_run $TEST_EXE
@@ -320,13 +323,13 @@ afunc() {
 					pass=$(($pass+1))
 				else
 					echo "`pwd`/$FILE failed at run time"
-					echo "Compile line was:" $CC $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS
+					echo "Compile line was: $COMMAND"
 					fail=$(($fail+1))
 					rm $TEST_EXE
 				fi
 			else
 				echo "`pwd`/$FILE failed to compile"
-				echo "Compile line was:" $CC $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS
+				echo "Compile line was: $COMMAND"
 				fail=$(($fail+1))
 			fi
 		done
