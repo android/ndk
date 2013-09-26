@@ -40,6 +40,10 @@ TESTING=
 do_testing_option () { TESTING=yes; }
 register_option "--testing" do_testing_option "Copy each c++ libraries for (even for GPL stuff)"
 
+SHARED=
+do_shared_option () { SHARED=yes; }
+register_option "--shared" do_shared_option "Build libLLVM*.so shared by on-device llvm toolchain (vs. statically linked)"
+
 register_jobs_option
 
 PROGRAM_PARAMETERS="<toolchain-src-dir>"
@@ -58,12 +62,16 @@ run mkdir -p $BUILD_DIR $OUT_DIR
 
 FLAGS=
 if [ "$VERBOSE" = "yes" ]; then
-    FLAGS=$FLAGS" --verbose"
+  FLAGS=$FLAGS" --verbose"
 fi
 if [ "$VERBOSE2" = "yes" ]; then
-    FLAGS=$FLAGS" --verbose"
+  FLAGS=$FLAGS" --verbose"
 fi
 FLAGS="$FLAGS -j$NUM_JOBS"
+if [ "$SHARED" = "yes" ]; then
+  FLAGS="$FLAGS --shared"
+fi
+
 TMP_OUT_DIR=/tmp/ndk-$USER/on_device_out
 FLAGS="$FLAGS --out-dir=$TMP_OUT_DIR"
 ARCH="$(convert_abi_to_arch $ABI)"
@@ -112,7 +120,9 @@ dump "Build $ABI LLVM toolchain from $SRC_DIR ..."
 run $BUILDTOOLS/build-device-llvm.sh $FLAGS --abis=$ABI --gcc-version=$GCC_TOOLCHAIN_VERSION $SRC_DIR $NDK_DIR
 fail_panic "Could not build le32 LLVM toolchain!"
 run mv -f $TMP_OUT_DIR/$ABI/SOURCES $OUT_SYSROOT/usr
-run mv -f $TMP_OUT_DIR/$ABI/lib*.so $OUT_SYSROOT/usr/lib
+if [ "$SHARED" = "yes" ]; then
+  run mv -f $TMP_OUT_DIR/$ABI/lib*.so $OUT_SYSROOT/usr/lib
+fi
 run mv -f $TMP_OUT_DIR/$ABI/* $OUT_SYSROOT/usr/bin
 run rmdir $TMP_OUT_DIR/$ABI
 run rmdir $TMP_OUT_DIR

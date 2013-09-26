@@ -50,6 +50,10 @@ register_var_option "--gcc-version=<version>" OPTION_GCC_VERSION "Specify GCC to
 STL=stlport
 register_var_option "--stl=<name>" STL "Specify C++ STL"
 
+SHARED=
+do_shared_option () { SHARED=yes; }
+register_option "--shared" do_shared_option "Build libLLVM*.so shared by on-device llvm toolchain (vs. statically linked)"
+
 register_jobs_option
 
 extract_parameters "$@"
@@ -187,6 +191,13 @@ for abi in $ABIS; do
   CXX=$BUILD_OUT/ndk-standalone-$arch/bin/$toolchain_prefix-g++
   export CC CXX
 
+  EXTRA_LLVM_CONFIG=""
+  EXTRA_MCLINKER_CONFIG=""
+  if [ "$SHARED" = "yes" ]; then
+    EXTRA_LLVM_CONFIG="--enable-shared"
+    EXTRA_MCLINKER_CONFIG="--with-llvm-shared-lib=$LLVM_BUILD_OUT/Release/lib/libLLVM-${DEFAULT_LLVM_VERSION}.so"
+  fi
+
   run $SRC_DIR/$TOOLCHAIN/llvm/configure \
     --prefix=$TOOLCHAIN_BUILD_PREFIX/$abi \
     --host=$toolchain_prefix \
@@ -196,10 +207,10 @@ for abi in $ABIS; do
     --enable-shrink-binary-size \
     --disable-polly \
     --with-clang-srcdir=/dev/null \
-    --enable-shared \
     --with-extra-ld-options=-l${STL}_shared \
     --disable-assertions \
-    --with-extra-options="$CFLAGS"
+    --with-extra-options="$CFLAGS" \
+    $EXTRA_LLVM_CONFIG
   fail_panic "Couldn't configure llvm toolchain for ABI $abi"
 
   dump "Building : llvm toolchain [this can take a long time]."
@@ -227,10 +238,10 @@ for abi in $ABIS; do
   run $MCLINKER_SRC_DIR/configure \
     --prefix=$TOOLCHAIN_BUILD_PREFIX/$abi \
     --with-llvm-config=$LLVM_BUILD_OUT/BuildTools/Release/bin/llvm-config \
-    --with-llvm-shared-lib=$LLVM_BUILD_OUT/Release/lib/libLLVM-${DEFAULT_LLVM_VERSION}.so \
     --enable-targets=$arch \
     --host=$toolchain_prefix \
-    --enable-shrink-binary-size
+    --enable-shrink-binary-size \
+    $EXTRA_MCLINKER_CONFIG
   fail_panic "Couldn't configure mclinker for ABI $abi"
 
   CXXFLAGS="$CXXFLAGS -fexceptions"  # optimized/ScriptParser.cc needs it
