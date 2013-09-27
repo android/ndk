@@ -170,6 +170,16 @@ for LIB in libc++_static.a libc++_shared.so; do
   fi
 done
 
+LIBCOMPILER_RT_LIBS=$(cd "$LIBCXX_ROOT"/../../../android/compiler-rt && pwd)/libs/$TARGET_ABI
+for LIB in libcompiler_rt_static.a libcompiler_rt_shared.so; do
+  if [ ! -f "$LIBCOMPILER_RT_LIBS/$LIB" ]; then
+    echo "ERROR: Missing prebuilt library: $LIBCOMPILER_RT_LIBS/$LIB"
+    echo "Please run: build/tools/build-compiler-rt.sh --ndk-dir=$NDK \
+--src-dir=/tmp/ndk-$USER/src/llvm-3.3/compiler-rt --llvm-version=3.3"
+    exit 1
+  fi
+done
+
 # Check or detect C++ toolchain.
 TOOLCHAIN_CFLAGS=
 TOOLCHAIN_LDFLAGS=
@@ -222,6 +232,8 @@ if [ -z "$SOURCE_LIB" ]
 then
        SOURCE_LIB="-L$LIBCXX_LIBS"
 fi
+SOURCE_LIB="$SOURCE_LIB -L$LIBCOMPILER_RT_LIBS"
+
 if [ -z "$ADB" ]
 then
        ADB=adb
@@ -229,14 +241,19 @@ fi
 
 if [ "$DO_STATIC" ]; then
   # Statically link to ensure the executable can be run easily through ADB
-  LIBS=-lc++_static
+  LIBS="-lc++_static -lcompiler_rt_static"
 else
   run2 $ADB push $LIBCXX_LIBS/libc++_shared.so /data/local/tmp 2>/dev/null
   if [ $? != 0 ]; then
     echo "ERROR: Can't push shared libc++ to target device!"
     exit 1
   fi
-  LIBS=-lc++_shared
+  run2 $ADB push $LIBCOMPILER_RT_LIBS/libcompiler_rt_shared.so /data/local/tmp 2>/dev/null
+  if [ $? != 0 ]; then
+    echo "ERROR: Can't push shared libcompiler_rt to target device!"
+    exit 1
+  fi
+  LIBS="-lc++_shared -lcompiler_rt_shared"
 fi
 
 case $TRIPLE in
