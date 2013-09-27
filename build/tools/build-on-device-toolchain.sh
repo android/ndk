@@ -96,8 +96,11 @@ dump "Copy $ABI libportable library"
 run cp -f $NDK_DIR/$LIBPORTABLE_SUBDIR/libs/$ABI/libportable.a $OUT_SYSROOT/usr/lib
 run cp -f $NDK_DIR/$LIBPORTABLE_SUBDIR/libs/$ABI/libportable.wrap $OUT_SYSROOT/usr/lib
 
-dump "Copy $ABI libportable library"
+dump "Copy $ABI compiler-rt library"
 run cp -f $NDK_DIR/$COMPILER_RT_SUBDIR/libs/$ABI/libcompiler_rt_static.a $OUT_SYSROOT/usr/lib
+
+dump "Copy $ABI gccunwind library"
+run cp -f $NDK_DIR/$GCCUNWIND_SUBDIR/libs/$ABI/libgccunwind.a $OUT_SYSROOT/usr/lib
 
 if [ "$TESTING" = "yes" ]; then
   dump "Copy stuff for testing"

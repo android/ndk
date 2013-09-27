@@ -502,9 +502,9 @@ int linkBitcode(const BitcodeInfoTy &info) {
   // TODO: If this module needs libfoo.so, but since libfoo.so is not a real bitcode under
   //       our trick, it won't be included at module.info. How did we workaround this?
   cmd += info.mLDLibsStr;
-  // Replace libgcc by libcompiler-rt + libgabi++
+  // Replace libgcc by libcompiler-rt + gccunwind
   cmd += std::string(" ") + sysroot + "/usr/lib/libcompiler_rt_static.a";
-  cmd += std::string(" ") + sysroot + "/usr/lib/libgabi++_shared.so";
+  cmd += std::string(" ") + sysroot + "/usr/lib/libgccunwind.a";
   cmd += std::string(" -ldl");
 
   if (info.mShared) {
@@ -670,7 +670,6 @@ Java_compiler_abcc_AbccService_genLibs(JNIEnv *env, jobject thiz,
   long long elapsed_msec = (t.stop() + 500) / 1000;
   LOGV("Elapsed time: %lld.%03ds", elapsed_msec/1000, (int)elapsed_msec%1000);
 #endif
-  handleTask(std::string("cp -p ") + sysroot + "/usr/lib/libgabi++_shared.so " + lib_dir + "/libgabi++_shared.so");
 
   handleTask(std::string("rm -f ") + lib_dir + "/compile_log");
   if (handleTask(std::string("ls ") + lib_dir + "/compile_error") != 0) {
