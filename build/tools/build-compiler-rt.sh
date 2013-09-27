@@ -102,7 +102,7 @@ COMPILER_RT_LDFLAGS="-nostdlib -nodefaultlibs"
 COMPILER_RT_GENERIC_SOURCES=$(cd $SRC_DIR && ls lib/*.c)
 
 # filter out the sources we don't need
-UNUSED_SOURCES="lib/apple_versioning.c lib/atomic.c lib/clear_cache.c lib/gcc_personality_v0.c"
+UNUSED_SOURCES="lib/apple_versioning.c lib/clear_cache.c lib/gcc_personality_v0.c"
 COMPILER_RT_GENERIC_SOURCES=$(filter_out "$UNUSED_SOURCES" "$COMPILER_RT_GENERIC_SOURCES")
 
 # ARM specific
@@ -223,6 +223,7 @@ build_compiler_rt_libs_for_abi ()
         builder_static_library libcompiler_rt_static
     else
         log "Building $DSTDIR/libcompiler_rt_shared.so"
+        builder_ldflags "-lc -lm"
         builder_nostdlib_shared_library libcompiler_rt_shared
     fi
     builder_end
