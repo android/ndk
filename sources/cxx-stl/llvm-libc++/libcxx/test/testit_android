@@ -170,6 +170,16 @@ for LIB in libc++_static.a libc++_shared.so; do
   fi
 done
 
+LIBCOMPILER_RT_LIBS=$(cd "$LIBCXX_ROOT"/../../../android/compiler-rt && pwd)/libs/$TARGET_ABI
+for LIB in libcompiler_rt_static.a libcompiler_rt_shared.so; do
+  if [ ! -f "$LIBCOMPILER_RT_LIBS/$LIB" ]; then
+    echo "ERROR: Missing prebuilt library: $LIBCOMPILER_RT_LIBS/$LIB"
+    echo "Please run: build/tools/build-compiler-rt.sh --ndk-dir=$NDK \
+--src-dir=/tmp/ndk-$USER/src/llvm-3.3/compiler-rt --llvm-version=3.3"
+    exit 1
+  fi
+done
+
 # Check or detect C++ toolchain.
 TOOLCHAIN_CFLAGS=
 TOOLCHAIN_LDFLAGS=
@@ -209,34 +219,44 @@ CC=$CXX
 
 if [ -z "$OPTIONS" ]
 then
-	OPTIONS="-std=c++11"
+  OPTIONS="-std=c++11"
 fi
+OPTIONS="$OPTIONS $TOOLCHAIN_CFLAGS $TOOLCHAIN_LDFLAGS"
 OPTIONS="$OPTIONS -I$LIBCXX_ROOT/test/support"
+# llvm-libc++/libcxx/test/lit.cfg line #294 defineds the following for testing on Linux
+OPTIONS="$OPTIONS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS"
 
 if [ -z "$HEADER_INCLUDE" ]
 then
-       HEADER_INCLUDE="-I$LIBCXX_ROOT/include -I$ANDROID_SUPPORT/include"
+  HEADER_INCLUDE="-I$LIBCXX_ROOT/include -I$ANDROID_SUPPORT/include"
 fi
 
 if [ -z "$SOURCE_LIB" ]
 then
-       SOURCE_LIB="-L$LIBCXX_LIBS"
+  SOURCE_LIB="-L$LIBCXX_LIBS"
 fi
+SOURCE_LIB="$SOURCE_LIB -L$LIBCOMPILER_RT_LIBS"
+
 if [ -z "$ADB" ]
 then
-       ADB=adb
+  ADB=adb
 fi
 
 if [ "$DO_STATIC" ]; then
   # Statically link to ensure the executable can be run easily through ADB
-  LIBS=-lc++_static
+  LIBS="-lc++_static -lcompiler_rt_static -latomic"
 else
   run2 $ADB push $LIBCXX_LIBS/libc++_shared.so /data/local/tmp 2>/dev/null
   if [ $? != 0 ]; then
     echo "ERROR: Can't push shared libc++ to target device!"
     exit 1
   fi
-  LIBS=-lc++_shared
+  run2 $ADB push $LIBCOMPILER_RT_LIBS/libcompiler_rt_shared.so /data/local/tmp 2>/dev/null
+  if [ $? != 0 ]; then
+    echo "ERROR: Can't push shared libcompiler_rt to target device!"
+    exit 1
+  fi
+  LIBS="-lc++_shared -lcompiler_rt_shared -latomic"
 fi
 
 case $TRIPLE in
@@ -323,13 +343,13 @@ afunc() {
 					pass=$(($pass+1))
 				else
 					echo "`pwd`/$FILE failed at run time"
-					echo "Compile line was: $COMMAND"
+					echo "Compile line was: $COMMAND # run-time"
 					fail=$(($fail+1))
 					rm $TEST_EXE
 				fi
 			else
 				echo "`pwd`/$FILE failed to compile"
-				echo "Compile line was: $COMMAND"
+				echo "Compile line was: $COMMAND # compile-time"
 				fail=$(($fail+1))
 			fi
 		done
