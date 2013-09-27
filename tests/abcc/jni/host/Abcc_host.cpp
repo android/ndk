@@ -25,6 +25,7 @@ HostBitcodeCompiler::HostBitcodeCompiler(const std::string &abi, const std::stri
                                          const std::string &platform)
   : BitcodeCompiler(abi, sysroot, working_dir), mIn(input), mOut(output),
     mNDKDir(""), mPlatform(platform) {
+  initRuntimePath();
 }
 
 HostBitcodeCompiler::HostBitcodeCompiler(const std::string &abi, const std::string &sysroot, const std::string &ndk_dir, const std::string &toolchain_bin,
@@ -32,6 +33,25 @@ HostBitcodeCompiler::HostBitcodeCompiler(const std::string &abi, const std::stri
                                          const std::string &platform)
   : BitcodeCompiler(abi, sysroot, working_dir), mIn(input), mOut(output),
     mNDKDir(ndk_dir), mPlatform(platform), mToolchainBinPath(toolchain_bin) {
+  initRuntimePath();
+}
+
+void HostBitcodeCompiler::initRuntimePath() {
+  mRuntimePath.clear();
+
+  mRuntimePath.insert(std::make_pair("gabi++_static", getGAbixxPath() + "/libgabi++_static.a"));
+  mRuntimePath.insert(std::make_pair("gabi++_shared", getGAbixxPath() + "/libgabi++_shared.so"));
+  mRuntimePath.insert(std::make_pair("compiler_rt_static", getCompilerRTPath() + "/libcompiler_rt_static.a"));
+  mRuntimePath.insert(std::make_pair("portable", getLibPortablePath() + "/libportable.a"));
+  mRuntimePath.insert(std::make_pair("portable.wrap", getLibPortablePath() + "/libportable.wrap"));
+  mRuntimePath.insert(std::make_pair("gccunwind", getGCCUnwindPath() + "/libgccunwind.a"));
+}
+
+const std::string HostBitcodeCompiler::getRuntimePath(const std::string &libname) {
+  if (mRuntimePath.count(libname)) {
+    return mRuntimePath.find(libname)->second;
+  }
+  return "";
 }
 
 int HostBitcodeCompiler::parseLDFlags(BitcodeInfo &info, const std::string &orig_str) {
@@ -72,8 +92,14 @@ int HostBitcodeCompiler::parseLDFlags(BitcodeInfo &info, const std::string &orig
     // Parse -lxxx
     if (str.size() > 2 &&
         str.substr(0, 2) == "-l") {
-      info.mLDLibs.push_back(str.substr(2));
-      info.mLDLibsStr += " " + str;
+      std::string runtime_path = getRuntimePath(str.substr(2));
+      if (!runtime_path.empty()) {
+        info.mLDLibsStr += " " + runtime_path;
+      }
+      else {
+        info.mLDLibs.push_back(str.substr(2));
+        info.mLDLibsStr += " " + str;
+      }
       continue;
     }
 
@@ -109,9 +135,9 @@ void HostBitcodeCompiler::prepareToolchain() {
   cmd += " -L" + mSysroot + "/usr/lib";
   mExecutableToolsPath[(unsigned)CMD_LINK] = cmd;
 
-  cmd = " @" + getLibPortablePath() + "/libportable.wrap " + getLibPortablePath() + "/libportable.a";
-  cmd += " " + getCompilerRTPath() + "/libcompiler_rt_static.a";
-  cmd += " " + getGAbixxPath() + "/libgabi++_shared.so";
+  cmd = " @" + getRuntimePath("portable.wrap") + " " + getRuntimePath("portable");
+  cmd += " " + getRuntimePath("compiler_rt_static");
+  cmd += " " + getRuntimePath("gccunwind");
   cmd += " -ldl";
   mExecutableToolsPath[(unsigned)CMD_LINK_RUNTIME] = cmd;
 }
@@ -148,6 +174,13 @@ const std::string HostBitcodeCompiler::getGAbixxPath() const {
 const std::string HostBitcodeCompiler::getLibPortablePath() const {
   if (!mNDKDir.empty())
     return std::string(mNDKDir) + "/sources/android/libportable/libs/" + (const char*)mAbi;
+  else
+    return mSysroot + "/usr/lib";
+}
+
+const std::string HostBitcodeCompiler::getGCCUnwindPath() const {
+  if (!mNDKDir.empty())
+    return std::string(mNDKDir) + "/sources/android/gccunwind/libs/" + (const char*)mAbi;
   else
     return mSysroot + "/usr/lib";
 }

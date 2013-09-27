@@ -191,13 +191,12 @@ void DeviceBitcodeCompiler::prepareToolchain() {
 
   cmd = " @" + mSysroot + "/usr/lib/libportable.wrap " + mSysroot + "/usr/lib/libportable.a";
   cmd += " " + mSysroot + "/usr/lib/libcompiler_rt_static.a";
-  cmd += " " + mSysroot + "/usr/lib/libgabi++_shared.so";
+  cmd += " " + mSysroot + "/usr/lib/libgccunwind.a";
   cmd += " -ldl";
   mExecutableToolsPath[(unsigned)CMD_LINK_RUNTIME] = cmd;
 }
 
 void DeviceBitcodeCompiler::copyRuntime(const BitcodeInfo &info) {
-  runCmd(std::string("cp -f ") + mSysroot + "/usr/lib/libgabi++_shared.so " + mWorkingDir + "/libgabi++_shared.so");
 
   std::stringstream ss(info.mLDLibsStr);
   std::string deplib;

@@ -39,6 +39,7 @@ class HostBitcodeCompiler : public BitcodeCompiler {
   std::string mNDKDir;  // empty string if standalone mode
   std::string mPlatform;
   std::string mToolchainBinPath;  // Used at ndk mode to prevent tedious path issue
+  std::map<std::string, std::string> mRuntimePath; // mappings of library name and full path
 
 public:
   HostBitcodeCompiler(const std::string &abi, const std::string &sysroot,
@@ -56,12 +57,15 @@ private:
   virtual void prepareToolchain();
   virtual void copyRuntime(const BitcodeInfo &info);
   virtual void removeIntermediateFile(const std::string &path);
+  void initRuntimePath();
+  const std::string getRuntimePath(const std::string &libname);
 
 private:
   const std::string getToolchainBinPath() const;
   const std::string getCompilerRTPath() const;
   const std::string getGAbixxPath() const;
   const std::string getLibPortablePath() const;
+  const std::string getGCCUnwindPath() const;
 };
 
 } // namespace abcc
