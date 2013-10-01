@@ -28,7 +28,12 @@ TARGET_STRIP := $(TOOLCHAIN_PREFIX)$(LLVM_TRIPLE)-strip$(HOST_EXEEXT)
 # Compiler runtime is determined in bc2native
 TARGET_LIBGCC :=
 
+# Only use integrated binary if existed. Otherwise, use python version
+ifeq (,$(wildcard $(TOOLCHAIN_PREBUILT_ROOT)/bin/ndk-bc2native))
 BC2NATIVE := $(HOST_PYTHON) $(TOOLCHAIN_PREBUILT_ROOT)/bin/ndk-bc2native.py
+else
+BC2NATIVE := $(TOOLCHAIN_PREBUILT_ROOT)/bin/ndk-bc2native
+endif
 
 TARGET_CFLAGS := \
     -target $(LLVM_TRIPLE) \
