@@ -130,7 +130,13 @@ int main()
     static_assert((std::is_same<decltype(ftell(fp)), long>::value), "");
     static_assert((std::is_same<decltype(rewind(fp)), void>::value), "");
     static_assert((std::is_same<decltype(clearerr(fp)), void>::value), "");
+#if !defined(feof)
+    //check return type of feof only if it's not an macro which may be a compound expression
     static_assert((std::is_same<decltype(feof(fp)), int>::value), "");
+#endif
+#if !defined(ferror)
+    //check return type of ferror only if it's not an macro which may be a compound expression
     static_assert((std::is_same<decltype(ferror(fp)), int>::value), "");
+#endif
     static_assert((std::is_same<decltype(perror("")), void>::value), "");
 }

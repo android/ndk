@@ -223,6 +223,7 @@ libcxx/src/utility.cpp \
 libcxx/src/valarray.cpp \
 libcxx/src/support/android/locale_android.cpp \
 ../../android/support/src/locale_support.c \
+../../android/support/src/math_support.c \
 ../../android/support/src/stdlib_support.c \
 ../../android/support/src/wchar_support.c \
 ../../android/support/src/locale/duplocale.c \

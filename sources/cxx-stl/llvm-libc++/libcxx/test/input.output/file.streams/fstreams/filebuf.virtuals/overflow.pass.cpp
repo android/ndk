@@ -115,6 +115,9 @@ int main()
         assert(f.sgetc() == L'a');
     }
     std::remove("overflow.dat");
+#if !defined(__ANDROID__)
+    // Remove tests setlocale() to other than "", "C", and "POSIX"
+    // for Android
     {
         test_buf<wchar_t> f;
         f.pubimbue(std::locale(LOCALE_en_US_UTF_8));
@@ -139,4 +142,5 @@ int main()
         assert(f.sbumpc() == -1);
     }
     std::remove("overflow.dat");
+#endif // __ANDROID__
 }

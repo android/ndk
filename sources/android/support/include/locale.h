@@ -35,6 +35,21 @@
 #undef localeconv
 #include <xlocale.h>
 
+/* Define all LC_XXX to itself.  Sounds silly but libc++ expects it's defined, not in enum */
+#define LC_CTYPE           LC_CTYPE
+#define LC_NUMERIC         LC_NUMERIC
+#define LC_TIME            LC_TIME
+#define LC_COLLATE         LC_COLLATE
+#define LC_MONETARY        LC_MONETARY
+#define LC_MESSAGES        LC_MESSAGES
+#define LC_ALL             LC_ALL
+#define LC_PAPER           LC_PAPER
+#define LC_NAME            LC_NAME
+#define LC_ADDRESS         LC_ADDRESS
+#define LC_TELEPHONE       LC_TELEPHONE
+#define LC_MEASUREMENT     LC_MEASUREMENT
+#define LC_IDENTIFICATION  LC_IDENTIFICATION
+
 #ifdef __cplusplus
 extern "C" {
 #endif
