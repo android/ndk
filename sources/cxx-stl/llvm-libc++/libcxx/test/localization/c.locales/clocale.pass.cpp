@@ -12,6 +12,17 @@
 #include <clocale>
 #include <type_traits>
 
+#if defined(__ANDROID__)
+// In Android the following are not defined as symbol but instead in enum
+int lc_all = LC_ALL;
+int lc_collate = LC_COLLATE;
+int lc_ctype = LC_CTYPE;
+int lc_monetary = LC_MONETARY;
+int lc_numeric = LC_NUMERIC;
+int lc_time = LC_TIME;
+
+#else
+
 #ifndef LC_ALL
 #error LC_ALL not defined
 #endif
@@ -35,6 +46,8 @@
 #ifndef LC_TIME
 #error LC_TIME not defined
 #endif
+
+#endif // __ANDROID__
 
 #ifndef NULL
 #error NULL not defined

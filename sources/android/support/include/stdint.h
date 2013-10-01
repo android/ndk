@@ -25,34 +25,11 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
+#ifndef NDK_ANDROID_SUPPORT_STDINT_H
+#define NDK_ANDROID_SUPPORT_STDINT_H
 
-// Contains an implementation of all stdlib functions missing from bionic.
-//
-// TODO(digit): Make these work.
+#include_next <stdint.h>
 
-#include <inttypes.h>
-#include <stdlib.h>
-#include <assert.h>
+#include <limits.h> // For SIZE_MAX
 
-long double strtold(const char* nptr, char** endptr) {
-  //FIXME: Although in Android long double is the same as double, can we borrow stdtod?
-  return strtod(nptr, endptr);
-}
-
-intmax_t imaxabs(intmax_t j)
-{
-  return (j < 0 ? -j : j);
-}
-
-imaxdiv_t imaxdiv(intmax_t numer, intmax_t denom)
-{
-  imaxdiv_t retval;
-
-  retval.quot = numer / denom;
-  retval.rem = numer % denom;
-  if (numer >= 0 && retval.rem < 0) {
-    retval.quot++;
-    retval.rem -= denom;
-  }
-  return (retval);
-}
+#endif  // NDK_ANDROID_SUPPORT_STDINT_H
