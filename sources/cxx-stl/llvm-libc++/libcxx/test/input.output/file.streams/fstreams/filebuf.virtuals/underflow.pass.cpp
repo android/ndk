@@ -108,6 +108,9 @@ int main()
         assert(*f.gptr() == L'9');
         assert(f.egptr() - f.gptr() == 1);
     }
+#if !defined(__ANDROID__)
+    // Remove tests setlocale() to other than "", "C", and "POSIX"
+    // for Android
     {
         test_buf<wchar_t> f;
         f.pubimbue(std::locale(LOCALE_en_US_UTF_8));
@@ -118,4 +121,5 @@ int main()
         assert(f.sbumpc() == 0x4E53);
         assert(f.sbumpc() == -1);
     }
+#endif // __ANDROID__
 }
