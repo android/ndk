@@ -156,13 +156,13 @@ set_new_handler(new_handler handler) _NOEXCEPT
 {
     return __sync_lock_test_and_set(&__new_handler, handler);
 }
-#endif
 
 new_handler
 get_new_handler() _NOEXCEPT
 {
     return __sync_fetch_and_add(&__new_handler, (new_handler)0);
 }
+#endif
 
 #if !defined(LIBCXXRT)
 

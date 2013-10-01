@@ -54,6 +54,9 @@ int main()
         assert(is.eof());
         assert(!is.fail());
     }
+#if !defined(__ANDROID__)
+    // Remove tests setlocale() to other than "", "C", and "POSIX"
+    // for Android
     {
         testbuf<wchar_t> sb(L"  Sat Dec 31 23:55:59 2061");
         std::wistream is(&sb);
@@ -70,4 +73,5 @@ int main()
         assert(is.eof());
         assert(!is.fail());
     }
+#endif
 }

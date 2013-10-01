@@ -25,34 +25,21 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
+#ifndef NDK_ANDROID_SUPPORT_INTTYPES_H
+#define NDK_ANDROID_SUPPORT_INTTYPES_H
 
-// Contains an implementation of all stdlib functions missing from bionic.
-//
-// TODO(digit): Make these work.
+#include_next <inttypes.h>
+#include <wchar.h>
 
-#include <inttypes.h>
-#include <stdlib.h>
-#include <assert.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-long double strtold(const char* nptr, char** endptr) {
-  //FIXME: Although in Android long double is the same as double, can we borrow stdtod?
-  return strtod(nptr, endptr);
-}
+intmax_t imaxabs(intmax_t) __attribute__((__const__));
+imaxdiv_t imaxdiv(intmax_t, intmax_t) __attribute__((__const__));
 
-intmax_t imaxabs(intmax_t j)
-{
-  return (j < 0 ? -j : j);
-}
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
-imaxdiv_t imaxdiv(intmax_t numer, intmax_t denom)
-{
-  imaxdiv_t retval;
-
-  retval.quot = numer / denom;
-  retval.rem = numer % denom;
-  if (numer >= 0 && retval.rem < 0) {
-    retval.quot++;
-    retval.rem -= denom;
-  }
-  return (retval);
-}
+#endif  // NDK_ANDROID_SUPPORT_INTTYPES_H

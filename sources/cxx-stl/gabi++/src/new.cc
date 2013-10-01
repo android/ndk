@@ -52,9 +52,10 @@ namespace std {
   }
 
   new_handler set_new_handler(new_handler next_handler) _GABIXX_NOEXCEPT {
-    new_handler old_handler = cur_handler;
-    cur_handler = next_handler;
-    return old_handler;
+    return __sync_lock_test_and_set(&cur_handler, next_handler);
+  }
+  new_handler get_new_handler() _GABIXX_NOEXCEPT {
+    return __sync_fetch_and_add(&cur_handler, (new_handler)0);
   }
 
 } // namespace std

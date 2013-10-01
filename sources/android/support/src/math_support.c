@@ -26,33 +26,30 @@
  * SUCH DAMAGE.
  */
 
-// Contains an implementation of all stdlib functions missing from bionic.
-//
-// TODO(digit): Make these work.
-
-#include <inttypes.h>
-#include <stdlib.h>
+#include <math.h>
 #include <assert.h>
 
-long double strtold(const char* nptr, char** endptr) {
-  //FIXME: Although in Android long double is the same as double, can we borrow stdtod?
-  return strtod(nptr, endptr);
+double log2(double d) {
+#warning Not implemented
+  assert(0);
+  return 0;
 }
 
-intmax_t imaxabs(intmax_t j)
-{
-  return (j < 0 ? -j : j);
+double nexttoward(double d, long double td) {
+#warning Not implemented
+  assert(0);
+  return 0;
+}
+   
+float nexttowardf(float f, long double td) {
+#warning Not implemented
+  assert(0);
+  return 0;
+}
+   
+long double nexttowardl(long double ld, long double td) {
+#warning Not implemented
+  assert(0);
+  return 0;
 }
 
-imaxdiv_t imaxdiv(intmax_t numer, intmax_t denom)
-{
-  imaxdiv_t retval;
-
-  retval.quot = numer / denom;
-  retval.rem = numer % denom;
-  if (numer >= 0 && retval.rem < 0) {
-    retval.quot++;
-    retval.rem -= denom;
-  }
-  return (retval);
-}

@@ -50,6 +50,9 @@ protected:
 
 int main()
 {
+#if !defined(__ANDROID__)
+    // Remove tests setlocale() to other than "", "C", and "POSIX"
+    // for Android
     {
         testbuf<char> sb;
         std::ostream os(&sb);
@@ -86,4 +89,5 @@ int main()
         os << std::put_money(x, true);
         assert(sb.str() == L"-USD 1,234,567.89");
     }
+#endif // __ANDROID__
 }
