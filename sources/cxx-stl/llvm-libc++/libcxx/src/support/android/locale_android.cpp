@@ -45,57 +45,57 @@ extern "C" const unsigned short* const _ctype_android;
 
 static const unsigned short ctype_android_tab[256+128] = {
        /* -128..-1 */
-        _C,     _C,     _C,     _C,     _C,     _C,     _C,     _C, /* 80 */
-        _C,     _C,     _C,     _C,     _C,     _C,     _C,     _C, /* 88 */
-        _C,     _C,     _C,     _C,     _C,     _C,     _C,     _C, /* 90 */
-        _C,     _C,     _C,     _C,     _C,     _C,     _C,     _C, /* 98 */
-        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* A0 */
-        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* A8 */
-        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* B0 */
-        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* B8 */
-        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* C0 */
-        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* C8 */
-        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* D0 */
-        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* D8 */
-        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* E0 */
-        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* E8 */
-        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* F0 */
-        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* F8 */
+        _C,     _C,           _C,     _C,     _C,     _C,     _C,     _C, /* 80 */
+        _C,     _C,           _C,     _C,     _C,     _C,     _C,     _C, /* 88 */
+        _C,     _C,           _C,     _C,     _C,     _C,     _C,     _C, /* 90 */
+        _C,     _C,           _C,     _C,     _C,     _C,     _C,     _C, /* 98 */
+        _P,     _P,           _P,     _P,     _P,     _P,     _P,     _P, /* A0 */
+        _P,     _P,           _P,     _P,     _P,     _P,     _P,     _P, /* A8 */
+        _P,     _P,           _P,     _P,     _P,     _P,     _P,     _P, /* B0 */
+        _P,     _P,           _P,     _P,     _P,     _P,     _P,     _P, /* B8 */
+        _P,     _P,           _P,     _P,     _P,     _P,     _P,     _P, /* C0 */
+        _P,     _P,           _P,     _P,     _P,     _P,     _P,     _P, /* C8 */
+        _P,     _P,           _P,     _P,     _P,     _P,     _P,     _P, /* D0 */
+        _P,     _P,           _P,     _P,     _P,     _P,     _P,     _P, /* D8 */
+        _P,     _P,           _P,     _P,     _P,     _P,     _P,     _P, /* E0 */
+        _P,     _P,           _P,     _P,     _P,     _P,     _P,     _P, /* E8 */
+        _P,     _P,           _P,     _P,     _P,     _P,     _P,     _P, /* F0 */
+        _P,     _P,           _P,     _P,     _P,     _P,     _P,     _P, /* F8 */
        /* 0..127 */
-        _C,     _C,     _C,     _C,     _C,     _C,     _C,     _C|_BLANK,
-        _C,     _C|_S,  _C|_S,  _C|_S,  _C|_S,  _C|_S,  _C,     _C,
-        _C,     _C,     _C,     _C,     _C,     _C,     _C,     _C,
-        _C,     _C,     _C,     _C,     _C,     _C,     _C,     _C,
-  _S|_B|_BLANK, _P,     _P,     _P,     _P,     _P,     _P,     _P,
-        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P,
-        _N,     _N,     _N,     _N,     _N,     _N,     _N,     _N,
-        _N,     _N,     _P,     _P,     _P,     _P,     _P,     _P,
-        _P,     _U|_X,  _U|_X,  _U|_X,  _U|_X,  _U|_X,  _U|_X,  _U,
-        _U,     _U,     _U,     _U,     _U,     _U,     _U,     _U,
-        _U,     _U,     _U,     _U,     _U,     _U,     _U,     _U,
-        _U,     _U,     _U,     _P,     _P,     _P,     _P,     _P,
-        _P,     _L|_X,  _L|_X,  _L|_X,  _L|_X,  _L|_X,  _L|_X,  _L,
-        _L,     _L,     _L,     _L,     _L,     _L,     _L,     _L,
-        _L,     _L,     _L,     _L,     _L,     _L,     _L,     _L,
+        _C,     _C,           _C,     _C,     _C,     _C,     _C,     _C,
+        _C,     _C|_S|_BLANK, _C|_S,  _C|_S,  _C|_S,  _C|_S,  _C,     _C,
+        _C,     _C,           _C,     _C,     _C,     _C,     _C,     _C,
+        _C,     _C,           _C,     _C,     _C,     _C,     _C,     _C,
+  _S|_B|_BLANK, _P,           _P,     _P,     _P,     _P,     _P,     _P,
+        _P,     _P,           _P,     _P,     _P,     _P,     _P,     _P,
+        _N,     _N,           _N,     _N,     _N,     _N,     _N,     _N,
+        _N,     _N,           _P,     _P,     _P,     _P,     _P,     _P,
+        _P,     _U|_X,        _U|_X,  _U|_X,  _U|_X,  _U|_X,  _U|_X,  _U,
+        _U,     _U,           _U,     _U,     _U,     _U,     _U,     _U,
+        _U,     _U,           _U,     _U,     _U,     _U,     _U,     _U,
+        _U,     _U,           _U,     _P,     _P,     _P,     _P,     _P,
+        _P,     _L|_X,        _L|_X,  _L|_X,  _L|_X,  _L|_X,  _L|_X,  _L,
+        _L,     _L,           _L,     _L,     _L,     _L,     _L,     _L,
+        _L,     _L,           _L,     _L,     _L,     _L,     _L,     _L,
         /* determine printability based on the IS0 8859 8-bit standard */
-        _L,     _L,     _L,     _P,     _P,     _P,     _P,     _C,
+        _L,     _L,           _L,     _P,     _P,     _P,     _P,     _C,
         /* 128..255, same as -128..127 */
-        _C,     _C,     _C,     _C,     _C,     _C,     _C,     _C, /* 80 */
-        _C,     _C,     _C,     _C,     _C,     _C,     _C,     _C, /* 88 */
-        _C,     _C,     _C,     _C,     _C,     _C,     _C,     _C, /* 90 */
-        _C,     _C,     _C,     _C,     _C,     _C,     _C,     _C, /* 98 */
-        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* A0 */
-        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* A8 */
-        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* B0 */
-        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* B8 */
-        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* C0 */
-        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* C8 */
-        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* D0 */
-        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* D8 */
-        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* E0 */
-        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* E8 */
-        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* F0 */
-        _P,     _P,     _P,     _P,     _P,     _P,     _P,     _P, /* F8 */
+        _C,     _C,           _C,     _C,     _C,     _C,     _C,     _C, /* 80 */
+        _C,     _C,           _C,     _C,     _C,     _C,     _C,     _C, /* 88 */
+        _C,     _C,           _C,     _C,     _C,     _C,     _C,     _C, /* 90 */
+        _C,     _C,           _C,     _C,     _C,     _C,     _C,     _C, /* 98 */
+        _P,     _P,           _P,     _P,     _P,     _P,     _P,     _P, /* A0 */
+        _P,     _P,           _P,     _P,     _P,     _P,     _P,     _P, /* A8 */
+        _P,     _P,           _P,     _P,     _P,     _P,     _P,     _P, /* B0 */
+        _P,     _P,           _P,     _P,     _P,     _P,     _P,     _P, /* B8 */
+        _P,     _P,           _P,     _P,     _P,     _P,     _P,     _P, /* C0 */
+        _P,     _P,           _P,     _P,     _P,     _P,     _P,     _P, /* C8 */
+        _P,     _P,           _P,     _P,     _P,     _P,     _P,     _P, /* D0 */
+        _P,     _P,           _P,     _P,     _P,     _P,     _P,     _P, /* D8 */
+        _P,     _P,           _P,     _P,     _P,     _P,     _P,     _P, /* E0 */
+        _P,     _P,           _P,     _P,     _P,     _P,     _P,     _P, /* E8 */
+        _P,     _P,           _P,     _P,     _P,     _P,     _P,     _P, /* F0 */
+        _P,     _P,           _P,     _P,     _P,     _P,     _P,     _P, /* F8 */
 };
 
 const unsigned short* const _ctype_android = ctype_android_tab + 128;

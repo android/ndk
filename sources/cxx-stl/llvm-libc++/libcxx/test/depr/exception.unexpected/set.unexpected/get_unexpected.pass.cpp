@@ -34,6 +34,10 @@ int main()
     assert(std::get_unexpected() == f2);
     // verify calling original unexpected handler calls terminate
     std::set_terminate(f3);
+#if !defined(__ANDROID__)
+    // Disable the following for Android whoes __gabixx::__default_terminate()
+    // causes segfault on purpose to get stack dump
     (*old)();
     assert(0);
+#endif
 }
