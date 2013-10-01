@@ -144,6 +144,7 @@ fi
 for ABI in $ABIS; do
   run rm -rf obj libs
   run $NDK_DIR/ndk-build -B APP_ABI=$ABI -C jni
+  fail_panic "Build ndk-build failed. Abort."
   if [ "$DEBUG" = "yes" ]; then
     run rm -f AndroidManifest.xml
     run cp -a AndroidManifest.xml.debug AndroidManifest.xml
