@@ -792,7 +792,7 @@ if is_testable device; then
             fi
         fi
         if [ "$ABI" = "$(find_ndk_unknown_archs)" ] && [ -d "$BUILD_DIR/`basename $TEST`/libs" ]; then
-            cd $BUILD_DIR/`basename $TEST`/libs && ln -s $ABI $CPU_ABI
+            cd $BUILD_DIR/`basename $TEST`/libs && cp -a $ABI $CPU_ABI
         fi
         SRCDIR="$BUILD_DIR/`basename $TEST`/libs/$CPU_ABI"
         if [ ! -d "$SRCDIR" ] || [ -z "`ls $SRCDIR`" ]; then

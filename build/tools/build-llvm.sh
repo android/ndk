@@ -53,6 +53,10 @@ CHECK=no
 do_check_option () { CHECK=yes; }
 register_option "--check" do_check_option "Check LLVM"
 
+USE_PYTHON=no
+do_use_python_option () { USE_PYTHON=yes; }
+register_option "--use-python" do_use_python_option "Use python bc2native instead of integrated one"
+
 register_jobs_option
 register_canadian_option
 register_try64_option
@@ -236,6 +240,24 @@ LLVM_BUILD_OUT=$BUILD_OUT/llvm
 mkdir -p $LLVM_BUILD_OUT && cd $LLVM_BUILD_OUT
 fail_panic "Couldn't cd into llvm build path: $LLVM_BUILD_OUT"
 
+# Only start using integrated bc2native source >= 3.3 by default
+LLVM_VERSION="`echo $TOOLCHAIN | tr '-' '\n' | tail -n 1`"
+LLVM_VERSION_MAJOR=`echo $LLVM_VERSION | tr '.' '\n' | head -n 1`
+LLVM_VERSION_MINOR=`echo $LLVM_VERSION | tr '.' '\n' | tail -n 1`
+if [ $LLVM_VERSION_MAJOR -lt 3 ]; then
+  USE_PYTHON=yes
+elif [ $LLVM_VERSION_MAJOR -eq 3 ] && [ $LLVM_VERSION_MINOR -lt 3 ]; then
+  USE_PYTHON=yes
+fi
+
+if [ "$USE_PYTHON" != "yes" ]; then
+  run cp -a $NDK_DIR/tests/abcc/jni/*.cpp $SRC_DIR/$TOOLCHAIN/llvm/tools/ndk-bc2native
+  run cp -a $NDK_DIR/tests/abcc/jni/*.h $SRC_DIR/$TOOLCHAIN/llvm/tools/ndk-bc2native
+  run cp -a $NDK_DIR/tests/abcc/jni/host/*.cpp $SRC_DIR/$TOOLCHAIN/llvm/tools/ndk-bc2native
+  run cp -a $NDK_DIR/tests/abcc/jni/host/*.h $SRC_DIR/$TOOLCHAIN/llvm/tools/ndk-bc2native
+  export LLVM_TOOLS_FILTER="PARALLEL_DIRS:=\$\$(PARALLEL_DIRS:%=% ndk-bc2native)"
+fi
+
 run $SRC_DIR/$TOOLCHAIN/llvm/configure \
     --prefix=$TOOLCHAIN_BUILD_PREFIX \
     --host=$ABI_CONFIGURE_HOST \
@@ -373,7 +395,13 @@ find $TOOLCHAIN_BUILD_PREFIX/bin -maxdepth 1 -type f -exec $STRIP {} \;
 find $TOOLCHAIN_BUILD_PREFIX/lib -maxdepth 1 -type f \( -name "*.dll" -o -name "*.so" \) -exec $STRIP {} \;
 
 # install script
-cp -p "$SRC_DIR/$TOOLCHAIN/llvm/tools/ndk-bc2native/ndk-bc2native.py" "$TOOLCHAIN_BUILD_PREFIX/bin/"
+if [ "$USE_PYTHON" != "yes" ]; then
+    # Remove those intermediate cpp
+    rm -f $SRC_DIR/$TOOLCHAIN/llvm/tools/ndk-bc2native/*.cpp
+    rm -f $SRC_DIR/$TOOLCHAIN/llvm/tools/ndk-bc2native/*.h
+else
+    cp -p "$SRC_DIR/$TOOLCHAIN/llvm/tools/ndk-bc2native/ndk-bc2native.py" "$TOOLCHAIN_BUILD_PREFIX/bin/ndk-bc2native.py"
+fi
 
 # copy to toolchain path
 run copy_directory "$TOOLCHAIN_BUILD_PREFIX" "$TOOLCHAIN_PATH"
