@@ -168,3 +168,65 @@ strip-lib-prefix = $(1:lib%=%)
   $(call test-expect,foolib,$(call strip-lib-prefix,foolib))\
   $(call test-expect,foo bar,$(call strip-lib-prefix,libfoo libbar))
 
+# -----------------------------------------------------------------------------
+# Left-justify input string with spaces to fill a width of 15.
+# Function: left-justify-quoted-15
+# Arguments: 1: Input text
+# Returns: A quoted string that can be used in command scripts to print
+#          the left-justified input with host-echo.
+#
+# Usage:  ---->@$(call host-echo, $(call left-justify-quoted-15,$(_TEXT)): Do stuff)
+#         Where ----> is a TAB character.
+# -----------------------------------------------------------------------------
+left-justify-quoted-15 = $(call -left-justify,$1,xxxxxxxxxxxxxxx)
+
+-test-left-justify-quoted-15 = \
+  $(call test-expect,"               ",$(call left-justify-quoted-15,))\
+  $(call test-expect,"Foo Bar        ",$(call left-justify-quoted-15,Foo Bar))\
+  $(call test-expect,"Very long string over 15 characters wide",$(strip \
+    $(call left-justify-quoted-15,Very long string over 15 characters wide)))
+
+# Used internally to compute a quoted left-justified text string.
+# $1: Input string.
+# $2: A series of contiguous x's, its length determines the full width to justify to.
+# Return: A quoted string with the input text left-justified appropriately.
+-left-justify = $(strip \
+    $(eval __lj_temp := $(subst $(space),x,$1))\
+    $(foreach __lj_a,$(__gmsl_characters),$(eval __lj_temp := $$(subst $$(__lj_a),x,$(__lj_temp))))\
+    $(eval __lj_margin := $$(call -justification-margin,$(__lj_temp),$2)))"$1$(subst x,$(space),$(__lj_margin))"
+
+-test-left-justify = \
+  $(call test-expect,"",$(call -left-justify,,))\
+  $(call test-expect,"foo",$(call -left-justify,foo,xxx))\
+  $(call test-expect,"foo ",$(call -left-justify,foo,xxxx))\
+  $(call test-expect,"foo   ",$(call -left-justify,foo,xxxxxx))\
+  $(call test-expect,"foo         ",$(call -left-justify,foo,xxxxxxxxxxxx))\
+  $(call test-expect,"very long string",$(call -left-justify,very long string,xxx))\
+
+# Used internally to compute a justification margin.
+# Expects $1 to be defined to a string of consecutive x's (e.g. 'xxxx')
+# Expects $2 to be defined to a maximum string of x's (e.g. 'xxxxxxxxx')
+# Returns a string of x's such as $1 + $(result) is equal to $2
+# If $1 is larger than $2, return empty string..
+-justification-margin = $(strip \
+    $(if $2,\
+      $(if $1,\
+        $(call -justification-margin-inner,$1,$2),\
+        $2\
+      ),\
+    $1))
+
+-justification-margin-inner = $(if $(findstring $2,$1),,x$(call -justification-margin-inner,x$1,$2))
+
+-test-justification-margin = \
+  $(call test-expect,,$(call -justification-margin,,))\
+  $(call test-expect,,$(call -justification-margin,xxx,xxx))\
+  $(call test-expect,xxxxxx,$(call -justification-margin,,xxxxxx))\
+  $(call test-expect,xxxxx,$(call -justification-margin,x,xxxxxx))\
+  $(call test-expect,xxxx,$(call -justification-margin,xx,xxxxxx))\
+  $(call test-expect,xxx,$(call -justification-margin,xxx,xxxxxx))\
+  $(call test-expect,xx,$(call -justification-margin,xxxx,xxxxxx))\
+  $(call test-expect,x,$(call -justification-margin,xxxxx,xxxxxx))\
+  $(call test-expect,,$(call -justification-margin,xxxxxx,xxxxxx))\
+  $(call test-expect,,$(call -justification-margin,xxxxxxxxxxx,xxxxxx))\
+

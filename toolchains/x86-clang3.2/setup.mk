@@ -83,7 +83,6 @@ $(eval __debug_sources := $(call get-src-files-with-tag,debug)) \
 $(eval __release_sources := $(call get-src-files-without-tag,debug)) \
 $(call set-src-files-target-cflags, $(__debug_sources), $(TARGET_x86_debug_CFLAGS)) \
 $(call set-src-files-target-cflags, $(__release_sources),$(TARGET_x86_release_CFLAGS)) \
-$(call set-src-files-text,$(LOCAL_SRC_FILES),x86$(space)$(space)) \
 
 # The ABI-specific sub-directory that the SDK tools recognize for
 # this toolchain's generated binaries

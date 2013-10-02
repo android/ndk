@@ -64,5 +64,3 @@ $(call set-src-files-target-cflags, \
 $(call set-src-files-target-cflags,\
     $(__release_sources),\
     $(TARGET_mips_release_CFLAGS)) \
-$(call set-src-files-text,$(__debug_sources),mips$(space)) \
-$(call set-src-files-text,$(__release_sources),mips$(space)) \
