@@ -120,6 +120,15 @@ host-install = install -p $1 $2
 endif
 
 # -----------------------------------------------------------------------------
+# Function : host-echo-build-step
+# Arguments: 1: Step description (e.g. 'Compile C++', or 'StaticLibrary')
+# Usage    : ---->|$(call host-echo-build-step,Compile) ....other text...
+# Rationale: This function expands to the host-specific shell command used
+#            to print the prefix of a given build step / command.
+# -----------------------------------------------------------------------------
+host-echo-build-step = @ $(HOST_ECHO) [$(TARGET_ARCH_ABI)] $(call left-justify-quoted-15,$1):
+
+# -----------------------------------------------------------------------------
 # Function : host-c-includes
 # Arguments: 1: list of file paths (e.g. "foo bar")
 # Returns  : list of include compiler options (e.g. "-Ifoo -Ibar")

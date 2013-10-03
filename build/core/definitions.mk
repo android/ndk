@@ -1372,7 +1372,7 @@ $$(_OBJ): PRIVATE_SRC      := $$(_SRC)
 $$(_OBJ): PRIVATE_OBJ      := $$(_OBJ)
 $$(_OBJ): PRIVATE_DEPS     := $$(call host-path,$$(_OBJ).d)
 $$(_OBJ): PRIVATE_MODULE   := $$(LOCAL_MODULE)
-$$(_OBJ): PRIVATE_TEXT     := "$$(_TEXT)"
+$$(_OBJ): PRIVATE_TEXT     := $$(_TEXT)
 $$(_OBJ): PRIVATE_CC       := $$(_CC)
 $$(_OBJ): PRIVATE_CFLAGS   := $$(_FLAGS)
 
@@ -1386,7 +1386,7 @@ endif
 $$(call generate-file-dir,$$(_OBJ))
 
 $$(_OBJ): $$(_SRC) $$(LOCAL_MAKEFILE) $$(NDK_APP_APPLICATION_MK) $$(NDK_DEPENDENCIES_CONVERTER)
-	@$$(HOST_ECHO) "$$(PRIVATE_TEXT)  : $$(PRIVATE_MODULE) <= $$(notdir $$(PRIVATE_SRC))"
+	$$(call host-echo-build-step,$$(PRIVATE_TEXT)) "$$(PRIVATE_MODULE) <= $$(notdir $$(PRIVATE_SRC))"
 	$$(hide) $$(PRIVATE_CC) -MMD -MP -MF $$(call convert-deps,$$(PRIVATE_DEPS)) $$(PRIVATE_CFLAGS) $$(call host-path,$$(PRIVATE_SRC)) -o $$(call host-path,$$(PRIVATE_OBJ)) \
 	$$(call cmd-convert-deps,$$(PRIVATE_DEPS))
 endef
@@ -1451,7 +1451,7 @@ else
   $$(_OBJ_ASM_FILTERED): PRIVATE_FILTER := $$(LOCAL_FILTER_ASM)
   $$(_OBJ_ASM_FILTERED): PRIVATE_MODULE := $$(LOCAL_MODULE)
   $$(_OBJ_ASM_FILTERED): $$(_OBJ_ASM_ORIGINAL)
-	@$$(HOST_ECHO) "AsmFilter      : $$(PRIVATE_MODULE) <= $$(notdir $$(PRIVATE_SRC))"
+	$$(call host-echo-build-step,AsmFilter) "$$(PRIVATE_MODULE) <= $$(notdir $$(PRIVATE_SRC))"
 	$$(hide) $$(PRIVATE_FILTER) $$(PRIVATE_SRC) $$(PRIVATE_DST)
 
   # Then, generate the final object, we need to keep assembler-specific
@@ -1459,7 +1459,7 @@ else
   _SRC   := $$(_OBJ_ASM_FILTERED)
   _OBJ   := $$(_ORG_OBJ)
   _FLAGS := $$(filter -Wa%,$$(_ORG_FLAGS)) -c
-  _TEXT  := "Assembly     "
+  _TEXT  := Assembly
   $$(eval $$(call ev-build-file))
 endif
 endef
@@ -1487,7 +1487,7 @@ _FLAGS := $$($$(my)CFLAGS) \
           $$(call host-c-includes,$$($(my)C_INCLUDES)) \
           -c \
 
-_TEXT := "Compile $$(call get-src-file-text,$1)"
+_TEXT := Compile $$(call get-src-file-text,$1)
 _CC   := $$(NDK_CCACHE) $$(TARGET_CC)
 
 $$(eval $$(call ev-build-source-file))
@@ -1539,7 +1539,7 @@ _FLAGS := $$($$(my)CXXFLAGS) \
           -c \
 
 _CC   := $$(NDK_CCACHE) $$($$(my)CXX)
-_TEXT := "Compile++ $$(call get-src-file-text,$1)"
+_TEXT := Compile++ $$(call get-src-file-text,$1)
 
 $$(eval $$(call ev-build-source-file))
 endef

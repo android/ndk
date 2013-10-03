@@ -136,5 +136,5 @@ $(call set-src-files-target-cflags,\
 $(call add-src-files-target-cflags,\
     $(call get-src-files-with-tag,neon),\
     $(TARGET_CFLAGS.neon)) \
-$(call set-src-files-text,$(__arm_sources),arm$(space)$(space)) \
+$(call set-src-files-text,$(__arm_sources),arm) \
 $(call set-src-files-text,$(__thumb_sources),thumb)

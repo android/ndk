@@ -117,7 +117,7 @@ else
 $(cleantarget): PRIVATE_CLEAN_FILES := $($(my)OBJS)
 endif
 $(cleantarget)::
-	@$(HOST_ECHO) "Clean: $(PRIVATE_MODULE) $(PRIVATE_TEXT)"
+	$(call host-echo-build-step,Clean) "$(PRIVATE_MODULE) $(PRIVATE_TEXT)"
 	$(hide) $(call host-rmdir,$(PRIVATE_CLEAN_FILES))
 
 ifeq ($(NDK_APP_DEBUGGABLE),true)
@@ -432,7 +432,7 @@ $(LOCAL_BUILT_MODULE): PRIVATE_AR_OBJECTS := $(ar_objects)
 $(LOCAL_BUILT_MODULE): PRIVATE_BUILD_STATIC_LIB := $(cmd-build-static-library)
 
 $(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
-	@ $(HOST_ECHO) "StaticLibrary  : $(PRIVATE_NAME)"
+	$(call host-echo-build-step,StaticLibrary) "$(PRIVATE_NAME)"
 	$(hide) $(call host-rm,$@)
 	$(hide) $(PRIVATE_BUILD_STATIC_LIB)
 
@@ -530,7 +530,7 @@ endif
 ifeq ($(call module-get-class,$(LOCAL_MODULE)),SHARED_LIBRARY)
 $(LOCAL_BUILT_MODULE): PRIVATE_BUILD_SHARED_LIB := $(cmd-build-shared-library)
 $(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
-	@ $(HOST_ECHO) "SharedLibrary  : $(PRIVATE_NAME)"
+	$(call host-echo-build-step,SharedLibrary) "$(PRIVATE_NAME)"
 	$(hide) $(PRIVATE_BUILD_SHARED_LIB)
 
 ALL_SHARED_LIBRARIES += $(LOCAL_BUILT_MODULE)
@@ -542,7 +542,7 @@ endif
 ifeq ($(call module-get-class,$(LOCAL_MODULE)),EXECUTABLE)
 $(LOCAL_BUILT_MODULE): PRIVATE_BUILD_EXECUTABLE := $(cmd-build-executable)
 $(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
-	@ $(HOST_ECHO) "Executable     : $(PRIVATE_NAME)"
+	$(call host-echo-build-step,Executable) "$(PRIVATE_NAME)"
 	$(hide) $(PRIVATE_BUILD_EXECUTABLE)
 
 ALL_EXECUTABLES += $(LOCAL_BUILT_MODULE)
@@ -553,7 +553,7 @@ endif
 #
 ifeq ($(call module-is-copyable,$(LOCAL_MODULE)),$(true))
 $(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
-	@ $(HOST_ECHO) "Prebuilt       : $(PRIVATE_NAME) <= $(call pretty-dir,$(dir $<))"
+	$(call host-echo-build-step,Prebuilt) "$(PRIVATE_NAME) <= $(call pretty-dir,$(dir $<))"
 	$(hide) $(call host-cp,$<,$@)
 endif
 
@@ -569,7 +569,7 @@ $(LOCAL_INSTALLED): PRIVATE_STRIP     := $(TARGET_STRIP)
 $(LOCAL_INSTALLED): PRIVATE_STRIP_CMD := $(call cmd-strip, $(PRIVATE_DST))
 
 $(LOCAL_INSTALLED): $(LOCAL_BUILT_MODULE) clean-installed-binaries
-	@$(HOST_ECHO) "Install        : $(PRIVATE_NAME) => $(call pretty-dir,$(PRIVATE_DST))"
+	$(call host-echo-build-step,Install) "$(PRIVATE_NAME) => $(call pretty-dir,$(PRIVATE_DST))"
 	$(hide) $(call host-install,$(PRIVATE_SRC),$(PRIVATE_DST))
 	$(hide) $(PRIVATE_STRIP_CMD)
 
