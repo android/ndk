@@ -20,7 +20,11 @@ SYSTEM_PREBUILT_PACKAGE ?= true
 
 LOCAL_MODULE    := libjni_abcc
 LOCAL_MODULE_CLASS := SHARED_LIBRARIES
-LOCAL_SRC_FILES := main.cpp
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/device
+LOCAL_SRC_FILES := \
+  Abcc.cpp \
+  device/Abcc_device.cpp \
+  device/main.cpp
 
 # Check in AOSP or NDK usage
 ifeq ($(SYSTEM_PREBUILT_PACKAGE),true)
@@ -31,6 +35,7 @@ include external/stlport/libstlport.mk
 include $(BUILD_SHARED_LIBRARY)
 else  # SYSTEM_PREBUILT_PACKAGE
 
+LOCAL_CFLAGS += -DON_DEVICE=1
 LOCAL_CFLAGS += -DENABLE_PARALLEL_LLVM_CG=1
 LOCAL_CFLAGS += -DVERBOSE=0
 LOCAL_LDLIBS := -llog
