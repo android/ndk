@@ -121,12 +121,13 @@ endif
 
 # -----------------------------------------------------------------------------
 # Function : host-echo-build-step
-# Arguments: 1: Step description (e.g. 'Compile C++', or 'StaticLibrary')
+# Arguments: 1: ABI
+#            2: Step description (e.g. 'Compile C++', or 'StaticLibrary')
 # Usage    : ---->|$(call host-echo-build-step,Compile) ....other text...
 # Rationale: This function expands to the host-specific shell command used
 #            to print the prefix of a given build step / command.
 # -----------------------------------------------------------------------------
-host-echo-build-step = @ $(HOST_ECHO) [$(TARGET_ARCH_ABI)] $(call left-justify-quoted-15,$1):
+host-echo-build-step = @ $(HOST_ECHO) [$1] $(call left-justify-quoted-15,$2):
 
 # -----------------------------------------------------------------------------
 # Function : host-c-includes

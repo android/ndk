@@ -108,8 +108,8 @@ cleantarget := clean-$(LOCAL_MODULE)-$(TARGET_ARCH_ABI)
 .PHONY: $(cleantarget)
 clean: $(cleantarget)
 
+$(cleantarget): PRIVATE_ABI         := $(TARGET_ARCH_ABI)
 $(cleantarget): PRIVATE_MODULE      := $(LOCAL_MODULE)
-$(cleantarget): PRIVATE_TEXT        := [$(TARGET_ARCH_ABI)]
 ifneq ($(LOCAL_BUILT_MODULE_NOT_COPIED),true)
 $(cleantarget): PRIVATE_CLEAN_FILES := $(LOCAL_BUILT_MODULE) \
                                        $($(my)OBJS)
@@ -117,7 +117,7 @@ else
 $(cleantarget): PRIVATE_CLEAN_FILES := $($(my)OBJS)
 endif
 $(cleantarget)::
-	$(call host-echo-build-step,Clean) "$(PRIVATE_MODULE) $(PRIVATE_TEXT)"
+	$(call host-echo-build-step,$(PRIVATE_ABI),Clean) "$(PRIVATE_MODULE) [$(PRIVATE_ABI)]"
 	$(hide) $(call host-rmdir,$(PRIVATE_CLEAN_FILES))
 
 ifeq ($(NDK_APP_DEBUGGABLE),true)
@@ -427,12 +427,13 @@ ifeq (true,$(thin_archive))
     ar_flags := $(ar_flags)T
 endif
 
+$(LOCAL_BUILT_MODULE): PRIVATE_ABI := $(TARGET_ARCH_ABI)
 $(LOCAL_BUILT_MODULE): PRIVATE_AR := $(TARGET_AR) $(ar_flags)
 $(LOCAL_BUILT_MODULE): PRIVATE_AR_OBJECTS := $(ar_objects)
 $(LOCAL_BUILT_MODULE): PRIVATE_BUILD_STATIC_LIB := $(cmd-build-static-library)
 
 $(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
-	$(call host-echo-build-step,StaticLibrary) "$(PRIVATE_NAME)"
+	$(call host-echo-build-step,$(PRIVATE_ABI),StaticLibrary) "$(PRIVATE_NAME)"
 	$(hide) $(call host-rm,$@)
 	$(hide) $(PRIVATE_BUILD_STATIC_LIB)
 
@@ -517,6 +518,7 @@ ifeq ($(LOCAL_SHORT_COMMANDS),true)
 endif
 
 $(LOCAL_BUILT_MODULE): $(shared_libs) $(static_libs) $(whole_static_libs)
+$(LOCAL_BUILT_MODULE): PRIVATE_ABI := $(TARGET_ARCH_ABI)
 $(LOCAL_BUILT_MODULE): PRIVATE_LINKER_OBJECTS_AND_LIBRARIES := $(linker_objects_and_libraries)
 $(LOCAL_BUILT_MODULE): PRIVATE_STATIC_LIBRARIES := $(static_libs)
 $(LOCAL_BUILT_MODULE): PRIVATE_WHOLE_STATIC_LIBRARIES := $(whole_static_libs))
@@ -530,7 +532,7 @@ endif
 ifeq ($(call module-get-class,$(LOCAL_MODULE)),SHARED_LIBRARY)
 $(LOCAL_BUILT_MODULE): PRIVATE_BUILD_SHARED_LIB := $(cmd-build-shared-library)
 $(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
-	$(call host-echo-build-step,SharedLibrary) "$(PRIVATE_NAME)"
+	$(call host-echo-build-step,$(PRIVATE_ABI),SharedLibrary) "$(PRIVATE_NAME)"
 	$(hide) $(PRIVATE_BUILD_SHARED_LIB)
 
 ALL_SHARED_LIBRARIES += $(LOCAL_BUILT_MODULE)
@@ -540,9 +542,10 @@ endif
 # If this is an executable module
 #
 ifeq ($(call module-get-class,$(LOCAL_MODULE)),EXECUTABLE)
+$(LOCAL_BUILT_MODULE): PRIVATE_ABI := $(TARGET_ARCH_ABI)
 $(LOCAL_BUILT_MODULE): PRIVATE_BUILD_EXECUTABLE := $(cmd-build-executable)
 $(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
-	$(call host-echo-build-step,Executable) "$(PRIVATE_NAME)"
+	$(call host-echo-build-step,$(PRIVATE_ABI),Executable) "$(PRIVATE_NAME)"
 	$(hide) $(PRIVATE_BUILD_EXECUTABLE)
 
 ALL_EXECUTABLES += $(LOCAL_BUILT_MODULE)
@@ -553,7 +556,7 @@ endif
 #
 ifeq ($(call module-is-copyable,$(LOCAL_MODULE)),$(true))
 $(LOCAL_BUILT_MODULE): $(LOCAL_OBJECTS)
-	$(call host-echo-build-step,Prebuilt) "$(PRIVATE_NAME) <= $(call pretty-dir,$(dir $<))"
+	$(call host-echo-build-step,$(PRIVATE_ABI),Prebuilt) "$(PRIVATE_NAME) <= $(call pretty-dir,$(dir $<))"
 	$(hide) $(call host-cp,$<,$@)
 endif
 
@@ -561,6 +564,7 @@ endif
 # If this is an installable module
 #
 ifeq ($(call module-is-installable,$(LOCAL_MODULE)),$(true))
+$(LOCAL_INSTALLED): PRIVATE_ABI       := $(TARGET_ARCH_ABI)
 $(LOCAL_INSTALLED): PRIVATE_NAME      := $(notdir $(LOCAL_BUILT_MODULE))
 $(LOCAL_INSTALLED): PRIVATE_SRC       := $(LOCAL_BUILT_MODULE)
 $(LOCAL_INSTALLED): PRIVATE_DST_DIR   := $(NDK_APP_DST_DIR)
@@ -569,7 +573,7 @@ $(LOCAL_INSTALLED): PRIVATE_STRIP     := $(TARGET_STRIP)
 $(LOCAL_INSTALLED): PRIVATE_STRIP_CMD := $(call cmd-strip, $(PRIVATE_DST))
 
 $(LOCAL_INSTALLED): $(LOCAL_BUILT_MODULE) clean-installed-binaries
-	$(call host-echo-build-step,Install) "$(PRIVATE_NAME) => $(call pretty-dir,$(PRIVATE_DST))"
+	$(call host-echo-build-step,$(PRIVATE_ABI),Install) "$(PRIVATE_NAME) => $(call pretty-dir,$(PRIVATE_DST))"
 	$(hide) $(call host-install,$(PRIVATE_SRC),$(PRIVATE_DST))
 	$(hide) $(PRIVATE_STRIP_CMD)
 
