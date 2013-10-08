@@ -245,17 +245,17 @@ LLVM_VERSION="`echo $TOOLCHAIN | tr '-' '\n' | tail -n 1`"
 LLVM_VERSION_MAJOR=`echo $LLVM_VERSION | tr '.' '\n' | head -n 1`
 LLVM_VERSION_MINOR=`echo $LLVM_VERSION | tr '.' '\n' | tail -n 1`
 if [ $LLVM_VERSION_MAJOR -lt 3 ]; then
-  USE_PYTHON=yes
+    USE_PYTHON=yes
 elif [ $LLVM_VERSION_MAJOR -eq 3 ] && [ $LLVM_VERSION_MINOR -lt 3 ]; then
-  USE_PYTHON=yes
+    USE_PYTHON=yes
 fi
 
 if [ "$USE_PYTHON" != "yes" ]; then
-  run cp -a $NDK_DIR/tests/abcc/jni/*.cpp $SRC_DIR/$TOOLCHAIN/llvm/tools/ndk-bc2native
-  run cp -a $NDK_DIR/tests/abcc/jni/*.h $SRC_DIR/$TOOLCHAIN/llvm/tools/ndk-bc2native
-  run cp -a $NDK_DIR/tests/abcc/jni/host/*.cpp $SRC_DIR/$TOOLCHAIN/llvm/tools/ndk-bc2native
-  run cp -a $NDK_DIR/tests/abcc/jni/host/*.h $SRC_DIR/$TOOLCHAIN/llvm/tools/ndk-bc2native
-  export LLVM_TOOLS_FILTER="PARALLEL_DIRS:=\$\$(PARALLEL_DIRS:%=% ndk-bc2native)"
+    run cp -a $NDK_DIR/tests/abcc/jni/*.cpp $SRC_DIR/$TOOLCHAIN/llvm/tools/ndk-bc2native
+    run cp -a $NDK_DIR/tests/abcc/jni/*.h $SRC_DIR/$TOOLCHAIN/llvm/tools/ndk-bc2native
+    run cp -a $NDK_DIR/tests/abcc/jni/host/*.cpp $SRC_DIR/$TOOLCHAIN/llvm/tools/ndk-bc2native
+    run cp -a $NDK_DIR/tests/abcc/jni/host/*.h $SRC_DIR/$TOOLCHAIN/llvm/tools/ndk-bc2native
+    export LLVM_TOOLS_FILTER="PARALLEL_DIRS:=\$\$(PARALLEL_DIRS:%=% ndk-bc2native)"
 fi
 
 run $SRC_DIR/$TOOLCHAIN/llvm/configure \
