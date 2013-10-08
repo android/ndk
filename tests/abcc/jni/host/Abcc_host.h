@@ -43,10 +43,10 @@ class HostBitcodeCompiler : public BitcodeCompiler {
 public:
   HostBitcodeCompiler(const std::string &abi, const std::string &sysroot,
                       const std::string &input, const std::string &output, const std::string &working_dir,
-                      const std::string &platform);
+                      const std::string &platform, const bool savetemps);
   HostBitcodeCompiler(const std::string &abi, const std::string &sysroot, const std::string &ndk_dir, const std::string &toolchain_bin,
                       const std::string &input, const std::string &output, const std::string &working_dir,
-                      const std::string &platform);
+                      const std::string &platform, const bool savetemps);
 
 public:
   virtual int parseLDFlags(BitcodeInfo &info, const std::string &str);

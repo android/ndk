@@ -22,15 +22,15 @@ bool kVerbose = false;
 
 HostBitcodeCompiler::HostBitcodeCompiler(const std::string &abi, const std::string &sysroot,
                                          const std::string &input, const std::string &output, const std::string &working_dir,
-                                         const std::string &platform)
-  : BitcodeCompiler(abi, sysroot, working_dir), mIn(input), mOut(output),
+                                         const std::string &platform, const bool savetemps)
+  : BitcodeCompiler(abi, sysroot, working_dir, savetemps), mIn(input), mOut(output),
     mNDKDir(""), mPlatform(platform) {
 }
 
 HostBitcodeCompiler::HostBitcodeCompiler(const std::string &abi, const std::string &sysroot, const std::string &ndk_dir, const std::string &toolchain_bin,
                                          const std::string &input, const std::string &output, const std::string &working_dir,
-                                         const std::string &platform)
-  : BitcodeCompiler(abi, sysroot, working_dir), mIn(input), mOut(output),
+                                         const std::string &platform, const bool savetemps)
+  : BitcodeCompiler(abi, sysroot, working_dir, savetemps), mIn(input), mOut(output),
     mNDKDir(ndk_dir), mPlatform(platform), mToolchainBinPath(toolchain_bin) {
 }
 

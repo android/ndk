@@ -23,6 +23,7 @@ static int parseArguments(char **argv,
                            std::string &abi, std::string &ndk_dir, std::string &sysroot,
                            std::string &input, std::string &output, std::string &platform) {
   unsigned idx = 1;
+  bool savetemps = false;
   while (argv[idx] != 0) {
     std::string arg = argv[idx++];
     if (arg.find("--abi=") != std::string::npos) {
@@ -46,8 +47,13 @@ static int parseArguments(char **argv,
       output = argv[idx++];
       continue;
     }
-    if (arg == "--verbose") {
+    if (arg == "--verbose" || arg == "-v") {
       kVerbose = true;
+      continue;
+    }
+
+    if (arg == "-save-temps") {
+      savetemps = true;
       continue;
     }
 
@@ -113,11 +119,11 @@ int main(int argc, char **argv) {
   if (ndk_dir.empty())
     compiler.reset(new HostBitcodeCompiler(abi, sysroot,
                                            input, output,
-                                           working_dir, platform));
+                                           working_dir, platform, savetemps));
   else
     compiler.reset(new HostBitcodeCompiler(abi, sysroot, ndk_dir, toolchain_bin,
                                            input, output,
-                                           working_dir, platform));
+                                           working_dir, platform, savetemps));
 
   compiler->prepare();
   if (compiler->returnCode() != RET_OK) {
