@@ -185,7 +185,14 @@ void BitcodeCompiler::compile() {
     std::string cmd = mExecutableToolsPath[(unsigned)CMD_COMPILE];
     cmd += " " + mGlobalCFlags;
     cmd += " " + bc.mTargetBCPath + " -o " + bc.mObjPath;
+#if ON_DEVICE && VERBOSE
+    Timer t_llc;
+    t_llc.start();
+#endif
     runCmd(cmd, /*dump=*/true);
+#if ON_DEVICE && VERBOSE
+    llc_usec += t_llc.stop();
+#endif
     if (returnCode() != RET_OK) {
       mRet = RET_FAIL_COMPILE;
       return;

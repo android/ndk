@@ -29,7 +29,7 @@ TARGET_STRIP := $(TOOLCHAIN_PREFIX)$(LLVM_TRIPLE)-strip$(HOST_EXEEXT)
 TARGET_LIBGCC :=
 
 # Only use integrated binary if existed. Otherwise, use python version
-ifeq (,$(wildcard $(TOOLCHAIN_PREBUILT_ROOT)/bin/ndk-bc2native))
+ifeq (,$(wildcard $(TOOLCHAIN_PREBUILT_ROOT)/bin/ndk-bc2native$(HOST_EXEEXT)))
 BC2NATIVE := $(HOST_PYTHON) $(TOOLCHAIN_PREBUILT_ROOT)/bin/ndk-bc2native.py
 else
 BC2NATIVE := $(TOOLCHAIN_PREBUILT_ROOT)/bin/ndk-bc2native$(HOST_EXEEXT)

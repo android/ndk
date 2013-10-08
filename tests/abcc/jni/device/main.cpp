@@ -19,6 +19,10 @@
 #include "Abcc_device.h"
 using namespace abcc;
 
+#if VERBOSE
+long long abcc::llc_usec;
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -49,13 +53,16 @@ Java_compiler_abcc_AbccService_genLibs(JNIEnv *env, jobject thiz,
 #if VERBOSE
   Timer t;
   t.start();
+  llc_usec = 0;
 #endif
 
   compiler->execute();
 
 #if VERBOSE
   long long elapsed_msec = (t.stop() + 500) / 1000;
-  LOGV("Elapsed time: %lld.%03ds", elapsed_msec/1000, (int)elapsed_msec%1000);
+  long long llc_msec = (llc_usec + 500) / 1000;
+  LOGV("Elapsed time: %lld.%03ds (llc = %lld.%03ds)", elapsed_msec/1000, (int)elapsed_msec%1000,
+           llc_msec/1000, (int)llc_msec%1000);
 #endif
 
   compiler->cleanupPost();
