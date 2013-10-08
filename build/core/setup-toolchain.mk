@@ -145,6 +145,7 @@ ifeq ($(TARGET_SONAME_EXTENSION),.so)
 
 installed_modules: $(NDK_APP_GDBSERVER)
 
+$(NDK_APP_GDBSERVER): PRIVATE_ABI     := $(TARGET_ARCH_ABI)
 $(NDK_APP_GDBSERVER): PRIVATE_NAME    := $(TOOLCHAIN_NAME)
 $(NDK_APP_GDBSERVER): PRIVATE_SRC     := $(TARGET_GDBSERVER)
 $(NDK_APP_GDBSERVER): PRIVATE_DST     := $(NDK_APP_GDBSERVER)
@@ -152,17 +153,18 @@ $(NDK_APP_GDBSERVER): PRIVATE_DST     := $(NDK_APP_GDBSERVER)
 $(call generate-file-dir,$(NDK_APP_GDBSERVER))
 
 $(NDK_APP_GDBSERVER): clean-installed-binaries
-	$(call host-echo-build-step,Gdbserver) "[$(PRIVATE_NAME)] $(call pretty-dir,$(PRIVATE_DST))"
+	$(call host-echo-build-step,$(PRIVATE_ABI),Gdbserver) "[$(PRIVATE_NAME)] $(call pretty-dir,$(PRIVATE_DST))"
 	$(hide) $(call host-install,$(PRIVATE_SRC),$(PRIVATE_DST))
 
 installed_modules: $(NDK_APP_GDBSETUP)
 
+$(NDK_APP_GDBSETUP): PRIVATE_ABI := $(TARGET_ARCH_ABI)
 $(NDK_APP_GDBSETUP): PRIVATE_DST := $(NDK_APP_GDBSETUP)
 $(NDK_APP_GDBSETUP): PRIVATE_SOLIB_PATH := $(TARGET_OUT)
 $(NDK_APP_GDBSETUP): PRIVATE_SRC_DIRS := $(SYSROOT_INC)/usr/include
 
 $(NDK_APP_GDBSETUP):
-	$(call host-echo-build-step,Gdbsetup) "$(call pretty-dir,$(PRIVATE_DST))"
+	$(call host-echo-build-step,$(PRIVATE_ABI),Gdbsetup) "$(call pretty-dir,$(PRIVATE_DST))"
 	$(hide) $(HOST_ECHO) "set solib-search-path $(call host-path,$(PRIVATE_SOLIB_PATH))" > $(PRIVATE_DST)
 	$(hide) $(HOST_ECHO) "directory $(call host-path,$(call remove-duplicates,$(PRIVATE_SRC_DIRS)))" >> $(PRIVATE_DST)
 

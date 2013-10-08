@@ -1368,6 +1368,7 @@ endif
 # _TEXT: Display text (e.g. "Compile++ thumb", must be EXACTLY 15 chars long)
 #
 define ev-build-file
+$$(_OBJ): PRIVATE_ABI      := $$(TARGET_ARCH_ABI)
 $$(_OBJ): PRIVATE_SRC      := $$(_SRC)
 $$(_OBJ): PRIVATE_OBJ      := $$(_OBJ)
 $$(_OBJ): PRIVATE_DEPS     := $$(call host-path,$$(_OBJ).d)
@@ -1386,7 +1387,7 @@ endif
 $$(call generate-file-dir,$$(_OBJ))
 
 $$(_OBJ): $$(_SRC) $$(LOCAL_MAKEFILE) $$(NDK_APP_APPLICATION_MK) $$(NDK_DEPENDENCIES_CONVERTER)
-	$$(call host-echo-build-step,$$(PRIVATE_TEXT)) "$$(PRIVATE_MODULE) <= $$(notdir $$(PRIVATE_SRC))"
+	$$(call host-echo-build-step,$$(PRIVATE_ABI),$$(PRIVATE_TEXT)) "$$(PRIVATE_MODULE) <= $$(notdir $$(PRIVATE_SRC))"
 	$$(hide) $$(PRIVATE_CC) -MMD -MP -MF $$(call convert-deps,$$(PRIVATE_DEPS)) $$(PRIVATE_CFLAGS) $$(call host-path,$$(PRIVATE_SRC)) -o $$(call host-path,$$(PRIVATE_OBJ)) \
 	$$(call cmd-convert-deps,$$(PRIVATE_DEPS))
 endef
@@ -1446,12 +1447,13 @@ else
   endif
 
   # Next, process the assembly file with the filter
+  $$(_OBJ_ASM_FILTERED): PRIVATE_ABI    := $$(TARGET_ARCH_ABI)
   $$(_OBJ_ASM_FILTERED): PRIVATE_SRC    := $$(_OBJ_ASM_ORIGINAL)
   $$(_OBJ_ASM_FILTERED): PRIVATE_DST    := $$(_OBJ_ASM_FILTERED)
   $$(_OBJ_ASM_FILTERED): PRIVATE_FILTER := $$(LOCAL_FILTER_ASM)
   $$(_OBJ_ASM_FILTERED): PRIVATE_MODULE := $$(LOCAL_MODULE)
   $$(_OBJ_ASM_FILTERED): $$(_OBJ_ASM_ORIGINAL)
-	$$(call host-echo-build-step,AsmFilter) "$$(PRIVATE_MODULE) <= $$(notdir $$(PRIVATE_SRC))"
+	$$(call host-echo-build-step,$$(PRIVATE_ABI),AsmFilter) "$$(PRIVATE_MODULE) <= $$(notdir $$(PRIVATE_SRC))"
 	$$(hide) $$(PRIVATE_FILTER) $$(PRIVATE_SRC) $$(PRIVATE_DST)
 
   # Then, generate the final object, we need to keep assembler-specific
