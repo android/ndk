@@ -77,6 +77,7 @@ DO_HELP=
 DO_STATIC=
 TARGET_ABI=
 TARGET_ARCH=
+TARGET_PATH=/data/local/tmp/libcxx
 CXX=
 for OPT; do
   case $OPT in
@@ -170,6 +171,16 @@ for LIB in libc++_static.a libc++_shared.so; do
   fi
 done
 
+LIBCOMPILER_RT_LIBS=$(cd "$LIBCXX_ROOT"/../../../android/compiler-rt && pwd)/libs/$TARGET_ABI
+for LIB in libcompiler_rt_static.a libcompiler_rt_shared.so; do
+  if [ ! -f "$LIBCOMPILER_RT_LIBS/$LIB" ]; then
+    echo "ERROR: Missing prebuilt library: $LIBCOMPILER_RT_LIBS/$LIB"
+    echo "Please run: build/tools/build-compiler-rt.sh --ndk-dir=$NDK \
+--src-dir=/tmp/ndk-$USER/src/llvm-3.3/compiler-rt --llvm-version=3.3"
+    exit 1
+  fi
+done
+
 # Check or detect C++ toolchain.
 TOOLCHAIN_CFLAGS=
 TOOLCHAIN_LDFLAGS=
@@ -178,11 +189,13 @@ if [ -z "$TOOLCHAIN_PREFIX" ]; then
   case $TARGET_ABI in
     armeabi)
       TOOLCHAIN_PREFIX=arm-linux-androideabi
+      TOOLCHAIN_CFLAGS="-mthumb"
+      TOOLCHAIN_LDFLAGS="-mthumb"
       ;;
     armeabi-v7a)
       TOOLCHAIN_PREFIX=arm-linux-androideabi
-      TOOLCHAIN_CFLAGS="-march=armv7-a -mfpu=vfpv3-d16"
-      TOOLCHAIN_LDFLAGS="-march=armv7-a -Wl,--fix-cortex-a8"
+      TOOLCHAIN_CFLAGS="-march=armv7-a -mthumb -mfpu=vfpv3-d16"
+      TOOLCHAIN_LDFLAGS="-march=armv7-a -mthumb -Wl,--fix-cortex-a8"
       ;;
     x86)
       TOOLCHAIN_PREFIX=i686-linux-android
@@ -209,52 +222,28 @@ CC=$CXX
 
 if [ -z "$OPTIONS" ]
 then
-	OPTIONS="-std=c++11"
+  OPTIONS="-std=c++11 -O2 -g"
 fi
+OPTIONS="$OPTIONS $TOOLCHAIN_CFLAGS $TOOLCHAIN_LDFLAGS"
 OPTIONS="$OPTIONS -I$LIBCXX_ROOT/test/support"
+# llvm-libc++/libcxx/test/lit.cfg line #294 defineds the following for testing on Linux
+OPTIONS="$OPTIONS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS"
 
 if [ -z "$HEADER_INCLUDE" ]
 then
-       HEADER_INCLUDE="-I$LIBCXX_ROOT/include -I$ANDROID_SUPPORT/include"
+  HEADER_INCLUDE="-I$LIBCXX_ROOT/include -I$ANDROID_SUPPORT/include"
 fi
 
 if [ -z "$SOURCE_LIB" ]
 then
-       SOURCE_LIB="-L$LIBCXX_LIBS"
+  SOURCE_LIB="-L$LIBCXX_LIBS"
 fi
+SOURCE_LIB="$SOURCE_LIB -L$LIBCOMPILER_RT_LIBS"
+
 if [ -z "$ADB" ]
 then
-       ADB=adb
+  ADB=adb
 fi
-
-if [ "$DO_STATIC" ]; then
-  # Statically link to ensure the executable can be run easily through ADB
-  LIBS=-lc++_static
-else
-  run2 $ADB push $LIBCXX_LIBS/libc++_shared.so /data/local/tmp 2>/dev/null
-  if [ $? != 0 ]; then
-    echo "ERROR: Can't push shared libc++ to target device!"
-    exit 1
-  fi
-  LIBS=-lc++_shared
-fi
-
-case $TRIPLE in
-  *-*-mingw* | *-*-cygwin* | *-*-win*)
-    TEST_EXE=test.exe
-    ;;
-  *)
-    TEST_EXE=a.out
-    ;;
-esac
-
-TEST_EXE=/tmp/testit_android-$USER-$$-$TEST_EXE
-
-FAIL=0
-PASS=0
-UNIMPLEMENTED=0
-IMPLEMENTED_FAIL=0
-IMPLEMENTED_PASS=0
 
 # Run a shell command through ADB, return its status.
 adb_shell () {
@@ -278,18 +267,59 @@ adb_shell () {
   return $RET
 }
 
+# Push a given file through ADB.
+# $1: File path
+adb_push () {
+  local FILE=$1
+  local FILE_BASENAME=$(basename "$FILE")
+  run2 $ADB push $FILE $TARGET_PATH/$FILE_BASENAME 2>/dev/null
+}
+
 # Run a given executable through ADB.
 # $1: Executable path
-# $2+: arguments.
 adb_run () {
-  local EXECUTABLE EXECUTABLE_BASENAME TARGET_PATH
-  EXECUTABLE=$1
-  EXECUTABLE_BASENAME=$(basename "$EXECUTABLE")
-  shift
-  TARGET_PATH=/data/local/tmp
+  local EXECUTABLE=$1
+  local EXECUTABLE_BASENAME=$(basename "$EXECUTABLE")
   run2 $ADB push $EXECUTABLE $TARGET_PATH/$EXECUTABLE_BASENAME 2>/dev/null &&
   adb_shell "LD_LIBRARY_PATH=$TARGET_PATH; cd $TARGET_PATH; ./$EXECUTABLE_BASENAME"
 }
+
+adb_shell "rm -rf $TARGET_PATH"
+adb_shell "mkdir -p $TARGET_PATH"
+
+if [ "$DO_STATIC" ]; then
+  # Statically link to ensure the executable can be run easily through ADB
+  LIBS="-lc++_static -lcompiler_rt_static -latomic"
+else
+  run2 $ADB push $LIBCXX_LIBS/libc++_shared.so $TARGET_PATH 2>/dev/null
+  if [ $? != 0 ]; then
+    echo "ERROR: Can't push shared libc++ to target device!"
+    exit 1
+  fi
+  run2 $ADB push $LIBCOMPILER_RT_LIBS/libcompiler_rt_shared.so $TARGET_PATH 2>/dev/null
+  if [ $? != 0 ]; then
+    echo "ERROR: Can't push shared libcompiler_rt to target device!"
+    exit 1
+  fi
+  LIBS="-lc++_shared -lcompiler_rt_shared -latomic"
+fi
+
+case $TRIPLE in
+  *-*-mingw* | *-*-cygwin* | *-*-win*)
+    TEST_EXE=test.exe
+    ;;
+  *)
+    TEST_EXE=a.out
+    ;;
+esac
+
+TEST_EXE=/tmp/testit_android-$USER-$$-$TEST_EXE
+
+FAIL=0
+PASS=0
+UNIMPLEMENTED=0
+IMPLEMENTED_FAIL=0
+IMPLEMENTED_PASS=0
 
 afunc() {
 	fail=0
@@ -310,6 +340,19 @@ afunc() {
 
 	if (ls *.pass.cpp > /dev/null 2>&1)
 	then
+		if (ls *.dat > /dev/null 2>&1)
+		then
+			adb_shell "rm $TARGET_PATH/*.dat"
+			for FILE in $(ls *.dat); do
+	                      if [ "$VERBOSE" -gt 1 ]; then
+	                          echo "Pushing data: " $FILE
+			      fi
+			      adb_push $FILE
+			      if [ $? != 0 ]; then
+				  echo "Failed to push file $FILE"
+	                      fi
+			done
+		fi
 		for FILE in $(ls *.pass.cpp); do
                       if [ "$VERBOSE" -gt 1 ]; then
                           echo "Running test: " $FILE
@@ -323,13 +366,13 @@ afunc() {
 					pass=$(($pass+1))
 				else
 					echo "`pwd`/$FILE failed at run time"
-					echo "Compile line was: $COMMAND"
+					echo "Compile line was: $COMMAND # run-time"
 					fail=$(($fail+1))
 					rm $TEST_EXE
 				fi
 			else
 				echo "`pwd`/$FILE failed to compile"
-				echo "Compile line was: $COMMAND"
+				echo "Compile line was: $COMMAND # compile-time"
 				fail=$(($fail+1))
 			fi
 		done
