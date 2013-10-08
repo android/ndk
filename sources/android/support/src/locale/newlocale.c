@@ -27,6 +27,7 @@
  */
 #include "locale_impl.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 locale_t newlocale(int category_mask, const char* locale, locale_t base) {
   // Return LC_GLOBALE_LOCALE directly.
@@ -34,8 +35,12 @@ locale_t newlocale(int category_mask, const char* locale, locale_t base) {
     return base;
 
   // Only accept "", "C" and "POSIX"
-  if (*locale && strcmp(locale, "C") && strcmp(locale, "POSIX"))
+  if (*locale && strcmp(locale, "C") && strcmp(locale, "POSIX")) {
+    //FIXME: although the following line is extremely helpful to single out the usual suspects locale
+	//       remove it in production otherwise it may become too noisy
+    printf("newlocale() WARNING: Trying to set locale to %s other than \"\", \"C\" or \"POSIX\"\n", locale);
     return LC_NULL_LOCALE;
+  }
 
   if (base == LC_NULL_LOCALE)
     base = calloc(1, sizeof(*base));

@@ -26,15 +26,11 @@ index b23a516..cf1d3c0 100644
  new_handler
  set_new_handler(new_handler handler) _NOEXCEPT
  {
-     return __sync_lock_test_and_set(&__new_handler, handler);
- }
-+#endif
- 
- new_handler
- get_new_handler() _NOEXCEPT
-@@ -160,7 +164,7 @@ get_new_handler() _NOEXCEPT
+@@ -159,8 +162,9 @@ get_new_handler() _NOEXCEPT
+ {
      return __sync_fetch_and_add(&__new_handler, (new_handler)0);
  }
++#endif
  
 -#ifndef LIBCXXRT
 +#if !defined(LIBCXXRT)
