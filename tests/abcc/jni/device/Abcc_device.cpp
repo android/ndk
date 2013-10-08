@@ -39,7 +39,7 @@ using namespace abcc;
 
 
 DeviceBitcodeCompiler::DeviceBitcodeCompiler(const std::string &working_dir, const std::string &sysroot)
-  : BitcodeCompiler(CURRENT_ABI, sysroot, working_dir) {}
+  : BitcodeCompiler(CURRENT_ABI, sysroot, working_dir, false/*!savetemps*/) {}
 
 void DeviceBitcodeCompiler::cleanupPost() {
   ReturnCode ret = mRet;

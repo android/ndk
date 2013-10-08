@@ -137,7 +137,7 @@ protected:
   std::string mExecutableToolsPath[(unsigned)CMD_LINK_RUNTIME+1];
 
 public:
-  BitcodeCompiler(const std::string &abi, const std::string &sysroot, const std::string &working_dir);
+  BitcodeCompiler(const std::string &abi, const std::string &sysroot, const std::string &working_dir, const bool savetemps);
   const ReturnCode returnCode() const { return mRet; }
   virtual void cleanupPre() {}
   virtual void cleanupPost() {}
@@ -165,6 +165,8 @@ public:
   }
 
 private:
+  bool mSaveTemps;
+
   void prepareBitcodes();
   void createSONameMapping();
   virtual void getBitcodeFiles() = 0;

@@ -134,8 +134,8 @@ int BitcodeInfo::transferBytesToNum(const unsigned char *buffer, size_t n) {
 }
 
 
-BitcodeCompiler::BitcodeCompiler(const std::string &abi, const std::string &sysroot, const std::string &working_dir)
-  : mAbi(abi), mSysroot(sysroot), mWorkingDir(working_dir), mRet(RET_OK) {
+BitcodeCompiler::BitcodeCompiler(const std::string &abi, const std::string &sysroot, const std::string &working_dir, const bool savetemps)
+  : mAbi(abi), mSysroot(sysroot), mWorkingDir(working_dir), mRet(RET_OK), mSaveTemps(savetemps) {
   // CFlags
   mGlobalCFlags = kGlobalTargetAttrs[mAbi].mBaseCFlags;
   mGlobalCFlags += std::string(" -mtriple=") + kGlobalTargetAttrs[mAbi].mTriple;
@@ -173,8 +173,8 @@ void BitcodeCompiler::translate() {
       mRet = RET_FAIL_TRANSLATE;
       return;
     }
-
-    removeIntermediateFile(bc.mBCPath);
+    if (!mSaveTemps)
+      removeIntermediateFile(bc.mBCPath);
   }
 }
 
@@ -197,8 +197,8 @@ void BitcodeCompiler::compile() {
       mRet = RET_FAIL_COMPILE;
       return;
     }
-
-    removeIntermediateFile(bc.mTargetBCPath);
+    if (!mSaveTemps)
+      removeIntermediateFile(bc.mTargetBCPath);
   }
 }
 
@@ -237,7 +237,8 @@ void BitcodeCompiler::link() {
           return;
 
         copyRuntime(bc);
-        removeIntermediateFile(bc.mObjPath);
+        if (!mSaveTemps)
+          removeIntermediateFile(bc.mObjPath);
 
         mSonameMap.erase(i);
         BitcodeInfo::dropExternalLDLibs(mSonameMap);
