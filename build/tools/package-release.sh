@@ -419,6 +419,7 @@ if [ -z "$PREBUILT_NDK" ]; then
         done
         unpack_prebuilt libportable-libs-$ABI "$REFERENCE"
         unpack_prebuilt compiler-rt-libs-$ABI "$REFERENCE"
+        unpack_prebuilt libgccunwind-libs-$ABI "$REFERENCE"
     done
     for ABI in $UNKNOWN_ABIS; do
         unpack_prebuilt stlport-libs-$ABI "$REFERENCE"
@@ -514,6 +515,15 @@ for SYSTEM in $SYSTEMS; do
             done
         else
             echo "WARNING: Could not find compiler-rt source tree!"
+        fi
+
+        if [ -d "$DSTDIR/$GCCUNWIND_SUBDIR" ]; then
+            GCCUNWIND_ABIS=$PREBUILT_ABIS
+            for GCCUNWIND_ABI in $GCCUNWIND_ABIS; do
+                copy_prebuilt "$GCCUNWIND_SUBDIR/libs/$GCCUNWIND_ABI" "$GCCUNWIND_SUBDIR/libs"
+            done
+        else
+            echo "WARNING: Could not find libgccunwind source tree!"
         fi
     else
         # Unpack toolchains

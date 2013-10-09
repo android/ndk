@@ -406,6 +406,68 @@ if [ $? != 0 ] ; then
     exit 1
 fi
 
+unwind_library_for_abi ()
+{
+    local ABI="$1"
+    local BASE_DIR OBJS UNWIND_OBJS
+
+    case $ABI in
+    armeabi)
+    BASE_DIR="$BUILD_OUT/gcc-$GCC_VERSION/$ABI_CONFIGURE_TARGET/libgcc/"
+    OBJS="unwind-arm.o \
+          libunwind.o \
+          pr-support.o \
+          unwind-c.o"
+    ;;
+    armeabi-v7a)
+    BASE_DIR="$BUILD_OUT/gcc-$GCC_VERSION/$ABI_CONFIGURE_TARGET/armv7-a/libgcc/"
+    OBJS="unwind-arm.o \
+          libunwind.o \
+          pr-support.o \
+          unwind-c.o"
+    ;;
+    x86)
+    BASE_DIR="$BUILD_OUT/gcc-$GCC_VERSION/$ABI_CONFIGURE_TARGET/libgcc/"
+    OBJS="unwind-c.o \
+          unwind-dw2-fde-glibc.o \
+          unwind-dw2.o"
+    ;;
+    mips)
+    BASE_DIR="$BUILD_OUT/gcc-$GCC_VERSION/$ABI_CONFIGURE_TARGET/libgcc/"
+    OBJS="unwind-c.o \
+          unwind-dw2-fde-glibc.o \
+          unwind-dw2.o"
+    ;;
+    esac
+
+    for OBJ in $OBJS; do
+        UNWIND_OBJS=$UNWIND_OBJS" $BASE_DIR/$OBJ"
+    done
+    echo $UNWIND_OBJS
+}
+
+# Create libgccunwind.a for app linking
+# $1: arch name
+# $2: NDK_DIR
+create_unwind_library ()
+{
+    local ARCH="$1"
+    local NDK_DIR="$2"
+    local ABIS=$(commas_to_spaces $(convert_archs_to_abis $ARCH))
+    local ABI UNWIND_OBJS UNWIND_LIB
+    for ABI in $ABIS; do
+        UNWIND_OBJS=$(unwind_library_for_abi $ABI)
+        UNWIND_LIB_DIR="$NDK_DIR/$GCCUNWIND_SUBDIR/libs/$ABI/"
+        run mkdir -p $UNWIND_LIB_DIR
+        run ar crs $UNWIND_LIB_DIR/libgccunwind.a $UNWIND_OBJS
+    done
+}
+
+# Only create libgccunwind.a when building default version of gcc
+if [ "$GCC_VERSION" = "$DEFAULT_GCC_VERSION" ]; then
+    run create_unwind_library $ARCH $NDK_DIR
+fi
+
 # copy to toolchain path
 run copy_directory "$TOOLCHAIN_BUILD_PREFIX" "$TOOLCHAIN_PATH"
 
@@ -539,6 +601,18 @@ if [ "$PACKAGE_DIR" ]; then
         EXCLUSIONS=$EXCLUSIONS" --exclude=$SUBDIR/$ABI_CONFIGURE_TARGET/bin/ld.mcld${HOST_EXE}"
     fi
     pack_archive "$PACKAGE_DIR/$ARCHIVE" "$NDK_DIR" "$SUBDIR" $EXCLUSIONS
+    # package libgccunwind.a
+    if [ "$GCC_VERSION" = "$DEFAULT_GCC_VERSION" ]; then
+        ABIS=$(commas_to_spaces $(convert_archs_to_abis $ARCH))
+        for ABI in $ABIS; do
+            FILES="$GCCUNWIND_SUBDIR/libs/$ABI/libgccunwind.a"
+            PACKAGE="$PACKAGE_DIR/libgccunwind-libs-$ABI.tar.bz2"
+            log "Packaging: $PACKAGE"
+            pack_archive "$PACKAGE" "$NDK_DIR" "$FILES"
+            fail_panic "Could not package $ABI libgccunwind binaries!"
+            dump "Packaging: $PACKAGE"
+        done
+    fi
 fi
 
 dump "Done."
