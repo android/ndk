@@ -10,8 +10,10 @@
 #ifndef TEST_UTIL_H
 #define TEST_UTIL_H
 
-#include <errno.h>
+#include <crazy_linker.h>
+
 #include <dirent.h>
+#include <errno.h>
 #include <limits.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -21,8 +23,6 @@
 #include <sys/stat.h>
 #include <sys/uio.h>
 #include <unistd.h>
-
-#include <crazy_linker.h>
 
 namespace {
 
@@ -400,12 +400,11 @@ struct RelroLibrary {
             crazy_context_get_error(context));
     }
 
-    printf(
-        "Parent %s relro info relro_start=%p relro_size=%p relro_fd=%d\n",
-        this->name,
-        (void*)this->relro.start,
-        (void*)this->relro.size,
-        this->relro.fd);
+    printf("Parent %s relro info relro_start=%p relro_size=%p relro_fd=%d\n",
+           this->name,
+           (void*)this->relro.start,
+           (void*)this->relro.size,
+           this->relro.fd);
   }
 
   void EnableSharedRelro(crazy_context_t* context) {
@@ -418,7 +417,8 @@ struct RelroLibrary {
       Panic("Could not send %s RELRO fd: %s", this->name, strerror(errno));
     }
 
-    int ret = TEMP_FAILURE_RETRY(::write(fd, &this->relro, sizeof(this->relro)));
+    int ret =
+        TEMP_FAILURE_RETRY(::write(fd, &this->relro, sizeof(this->relro)));
     if (ret != static_cast<int>(sizeof(this->relro))) {
       Panic("Parent could not send %s RELRO info: %s",
             this->name,

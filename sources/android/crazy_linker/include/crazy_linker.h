@@ -197,13 +197,12 @@ crazy_status_t crazy_system_can_share_relro(void);
 // the data. On failure, return false and set error message in |context|.
 // NOTE: On success, the caller becomes the owner of |*relro_fd| and is shall
 // close it appropriately.
-crazy_status_t crazy_library_create_shared_relro(
-    crazy_library_t* library,
-    crazy_context_t* context,
-    size_t load_address,
-    size_t* relro_start,
-    size_t* relro_size,
-    int* relro_fd) _CRAZY_PUBLIC;
+crazy_status_t crazy_library_create_shared_relro(crazy_library_t* library,
+                                                 crazy_context_t* context,
+                                                 size_t load_address,
+                                                 size_t* relro_start,
+                                                 size_t* relro_size,
+                                                 int* relro_fd) _CRAZY_PUBLIC;
 
 // Use the shared RELRO section of the same library loaded in a different
 // address space. On success, return CRAZY_STATUS_SUCCESS and owns |relro_fd|.
@@ -215,13 +214,13 @@ crazy_status_t crazy_library_create_shared_relro(
 // |context| will receive an error in case of failure.
 // NOTE: This will fail if this is a system library, or if the RELRO
 // parameters do not match the library's actual load address.
-// NOTE: The caller is responsible for closing the file descriptor after this call.
-crazy_status_t crazy_library_use_shared_relro(
-    crazy_library_t* library,
-    crazy_context_t* context,
-    size_t relro_start,
-    size_t relro_size,
-    int relro_fd) _CRAZY_PUBLIC;
+// NOTE: The caller is responsible for closing the file descriptor after this
+// call.
+crazy_status_t crazy_library_use_shared_relro(crazy_library_t* library,
+                                              crazy_context_t* context,
+                                              size_t relro_start,
+                                              size_t relro_size,
+                                              int relro_fd) _CRAZY_PUBLIC;
 
 // Look for a library named |library_name| in the set of currently
 // loaded libraries, and return a handle for it in |*library| on success.

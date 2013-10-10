@@ -18,7 +18,7 @@ class Error;
 // the crazy linker. This can be used to describe either system or crazy
 // libraries.
 class ElfView {
-public:
+ public:
   ElfView() { ::memset(this, 0, sizeof(*this)); }
 
   ~ElfView() {}
@@ -59,7 +59,7 @@ public:
   //        }
   //     }
   class DynamicIterator {
-  public:
+   public:
     DynamicIterator(const ElfView* view) {
       dyn_ = view->dynamic();
       dyn_limit_ = dyn_ + view->dynamic_count();
@@ -84,7 +84,7 @@ public:
       return load_bias + dyn_->d_un.d_ptr;
     }
 
-  private:
+   private:
     const ELF::Dyn* dyn_;
     const ELF::Dyn* dyn_limit_;
   };
@@ -93,7 +93,7 @@ public:
   // ELF binary is mapped.On failure, return false and set |error| message.
   bool ProtectRelroSection(Error* error);
 
-protected:
+ protected:
   const ELF::Phdr* phdr_;
   size_t phdr_count_;
   const ELF::Dyn* dynamic_;
@@ -105,6 +105,5 @@ protected:
 };
 
 }  // namespace crazy
-
 
 #endif  // CRAZY_LINKER_ELF_VIEW_H

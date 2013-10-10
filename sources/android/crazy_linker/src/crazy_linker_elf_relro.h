@@ -5,9 +5,9 @@
 #ifndef CRAZY_LINKER_ELF_RELRO_H
 #define CRAZY_LINKER_ELF_RELRO_H
 
-#include "crazy_linker_system.h"
 #include "crazy_linker_ashmem.h"
 #include "crazy_linker_memory_mapping.h"
+#include "crazy_linker_system.h"
 #include "elf_traits.h"
 
 namespace crazy {
@@ -32,25 +32,19 @@ class SharedRelro {
 
   // Return the ashmem region's file descriptor, and detach it from the object.
   // After this call, fd() will always return -1.
-  int DetachFd() {
-    return ashmem_.Release();
-  }
+  int DetachFd() { return ashmem_.Release(); }
 
   // Allocate a new ashmem region of |relro_size| bytes for |library_name|.
   // This operation doesn't change the process' mappings. On error, return
   // false and set |error| message.
-  bool Allocate(size_t relro_size,
-                const char* library_name,
-                Error* error);
+  bool Allocate(size_t relro_size, const char* library_name, Error* error);
 
   // Copy the content of the current process' RELRO into the ashmem region.
   // |relro_start| is the RELRO address (page-aligned).
   // |relro_size| is the RELRO size in bytes (page-aligned), and must match
   // the allocation size passed to Allocate().
   // On failure, return false and set |error| message.
-  bool CopyFrom(size_t relro_start,
-                size_t relro_size,
-                Error* error);
+  bool CopyFrom(size_t relro_start, size_t relro_size, Error* error);
 
   // Copy the contents of the current process' RELRO into the ashmem region
   // but adjust any relocation targets within it to correspond to a new

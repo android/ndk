@@ -13,7 +13,8 @@ namespace crazy {
 
 class ElfView;
 
-// An ElfSymbols instance holds information about symbols in a mapped ELF binary.
+// An ElfSymbols instance holds information about symbols in a mapped ELF
+// binary.
 class ElfSymbols {
  public:
   ElfSymbols() { ::memset(this, 0, sizeof(*this)); }

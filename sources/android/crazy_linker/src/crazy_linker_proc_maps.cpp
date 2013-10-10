@@ -89,7 +89,7 @@ bool ParseProcMapsLine(const char* line,
         break;
 
       case 2:  // protection bits
-               {
+      {
         int flags = 0;
         for (const char* t = tok_start; t < tok_end; ++t) {
           if (*t == 'r')
