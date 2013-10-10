@@ -1,0 +1,53 @@
+From 7d6b3a763d7dc78eb70a3e4570c4f155f3019b45 Mon Sep 17 00:00:00 2001
+From: Chinyen Chou <petechou@gmail.com>
+Date: Tue, 8 Oct 2013 14:26:48 +0800
+Subject: [PATCH] [ARM] Bypass R_ARM_V4BX relocation now.
+
+Upstream 824a0b515c437abe3e5c59d1e143e9552668e710
+
+Change-Id: I2b04ec08c3660ee8904748a4c306ed49777808a6
+---
+ lib/Target/ARM/ARMLDBackend.cpp         | 6 ++++--
+ lib/Target/ARM/ARMRelocationFunctions.h | 2 +-
+ 2 files changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/lib/Target/ARM/ARMLDBackend.cpp b/lib/Target/ARM/ARMLDBackend.cpp
+index 8082426..f159c46 100644
+--- a/lib/Target/ARM/ARMLDBackend.cpp
++++ b/lib/Target/ARM/ARMLDBackend.cpp
+@@ -536,8 +536,7 @@ ARMGNULDBackend::doRelax(Module& pModule, IRBuilder& pBuilder, bool& pFinished)
+           case llvm::ELF::R_ARM_THM_CALL:
+           case llvm::ELF::R_ARM_THM_XPC22:
+           case llvm::ELF::R_ARM_THM_JUMP24:
+-          case llvm::ELF::R_ARM_THM_JUMP19:
+-          case llvm::ELF::R_ARM_V4BX: {
++          case llvm::ELF::R_ARM_THM_JUMP19: {
+             // calculate the possible symbol value
+             uint64_t sym_value = 0x0;
+             LDSymbol* symbol = relocation->symInfo()->outSymbol();
+@@ -576,6 +575,9 @@ ARMGNULDBackend::doRelax(Module& pModule, IRBuilder& pBuilder, bool& pFinished)
+             }
+             break;
+           }
++          case llvm::ELF::R_ARM_V4BX:
++            /* FIXME: bypass R_ARM_V4BX relocation now */
++            break;
+           default:
+             break;
+         } // end of switch
+diff --git a/lib/Target/ARM/ARMRelocationFunctions.h b/lib/Target/ARM/ARMRelocationFunctions.h
+index 94df077..364815b 100644
+--- a/lib/Target/ARM/ARMRelocationFunctions.h
++++ b/lib/Target/ARM/ARMRelocationFunctions.h
+@@ -77,7 +77,7 @@ DECL_ARM_APPLY_RELOC_FUNC(unsupport)
+   { &unsupport,         37, "R_ARM_ALU_SBREL_27_20_CK"},  \
+   { &abs32,             38, "R_ARM_TARGET1"           },  \
+   { &unsupport,         39, "R_ARM_SBREL31"           },  \
+-  { &unsupport,         40, "R_ARM_V4BX"              },  \
++  { &none,              40, "R_ARM_V4BX"              },  \
+   { &got_prel,          41, "R_ARM_TARGET2"           },  \
+   { &prel31,            42, "R_ARM_PREL31"            },  \
+   { &movw_abs_nc,       43, "R_ARM_MOVW_ABS_NC"       },  \
+-- 
+1.8.4
+
