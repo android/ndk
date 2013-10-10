@@ -1432,8 +1432,7 @@ build_host_gcc_core ()
             ;;
         mips)
             # Add --disable-fixed-point to disable fixed-point support
-            # Add --disable-threads for eh_frame handling in a single thread
-            ARGS=$ARGS" --with-arch=mips32 --disable-fixed-point --disable-threads"
+            ARGS=$ARGS" --with-arch=mips32 --disable-fixed-point"
             ;;
     esac
 
