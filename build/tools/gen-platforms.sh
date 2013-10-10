@@ -531,6 +531,7 @@ gen_crt_objects ()
         (cd "$SRC_DIR" && $CC \
                  -I$SRCDIR/../../bionic/libc/include \
                  -I$SRCDIR/../../bionic/libc/private \
+                 -I$SRCDIR/../../bionic/libc/arch-common/bionic \
                  -I$SRCDIR/../../bionic/libc/arch-$ARCH/include \
                  -isystem $SRCDIR/../../bionic/libc/kernel/common \
                  -isystem $SRCDIR/../../bionic/libc/kernel/common/linux \
