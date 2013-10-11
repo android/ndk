@@ -258,7 +258,7 @@ void BitcodeCompiler::runCmd(std::string cmd, bool dump) {
   LOGV("Command: %s", cmd.c_str());
   std::string logfilename = mWorkingDir + "/compile_log";
   if (dump) {
-    cmd += " 2>&1 > " + logfilename;
+    cmd += " > " + logfilename + " 2>&1";
   }
   int ret = system(cmd.c_str());
   if (ret != 0) {

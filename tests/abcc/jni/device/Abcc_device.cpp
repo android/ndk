@@ -97,7 +97,7 @@ int DeviceBitcodeCompiler::parseLDFlags(BitcodeInfo &info, const std::string &or
 }
 
 void DeviceBitcodeCompiler::getBitcodeFiles() {
-  std::vector<std::string> files;
+  std::vector<std::string> bc_files,lib_files;
   DIR *dp = opendir(mWorkingDir.c_str());
   if (!dp) {
     mRet = RET_FAIL_PREPARE_BITCODE;
@@ -114,12 +114,10 @@ void DeviceBitcodeCompiler::getBitcodeFiles() {
     std::string libpath = mSysroot + "/usr/lib/" + filename.substr(0, filename.rfind('.')) + ".so";
     struct stat buf;
     if (stat(libpath.c_str(), &buf) == 0) {
-      // This file has the same name in our runtime library pool.
-      std::string cmd = "rm -f " + full_path;
-      runCmd(cmd.c_str());
+      // This file has the same name in our runtime library pool.  Add to deletion list.
+      lib_files.push_back(full_path);
       continue;
     }
-
 
     int fd = open(full_path.c_str(), O_RDONLY);
     if (fd < 0) {
@@ -139,11 +137,11 @@ void DeviceBitcodeCompiler::getBitcodeFiles() {
     }
 
     LOGV("Push_back a bitcode: %s", full_path.c_str());
-    files.push_back(full_path);
+    bc_files.push_back(full_path);
   } // while
   closedir(dp);
 
-  if (files.empty()) {
+  if (bc_files.empty()) {
     LOGV("No bitcodes needs to compile");
     return;
   }
@@ -153,8 +151,15 @@ void DeviceBitcodeCompiler::getBitcodeFiles() {
     return;
   }
 
-  for (std::vector<std::string>::const_iterator i = files.begin(),
-       e = files.end(); i != e; ++i) {
+  // Reomve lib file
+  for (std::vector<std::string>::const_iterator i = lib_files.begin(),
+       e = lib_files.end(); i != e; ++i) {
+      std::string cmd = "rm -f " + *i;
+      runCmd(cmd.c_str());
+  }
+
+  for (std::vector<std::string>::const_iterator i = bc_files.begin(),
+       e = bc_files.end(); i != e; ++i) {
     BitcodeInfo bcinfo(*i);
     if (bcinfo.readWrapper(*this) != 0) {
       LOGE("Cannot read wrapper for bitcode %s", i->c_str());
