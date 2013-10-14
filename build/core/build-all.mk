@@ -107,7 +107,7 @@ ifeq ($(HOST_OS),cygwin)
     $(info ------ end of script -----)
   endif
 $(NDK_DEPENDENCIES_CONVERTER):
-	$(call host-echo-build-step,$(TARGET_ARCH_ABI),Cygwin) Generating dependency file converter script
+	$(call host-echo-build-step,$(NDK_APP_ABI),Cygwin) Generating dependency file converter script
 	$(hide) mkdir -p $(dir $@)
 	$(hide) $(GEN_CYGWIN_DEPS_CONVERTER) > $@ && chmod +x $@
 
