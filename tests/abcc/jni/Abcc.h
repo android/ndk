@@ -33,14 +33,14 @@ enum ReturnCode {
   RET_FAIL_CLEANUP,
   RET_FAIL_TRANSLATE,
   RET_FAIL_COMPILE,
-  RET_FAIL_LINK,
+  RET_FAIL_LINK
 };
 
 enum Command {
   CMD_TRANSLATE = 0,
   CMD_COMPILE,
   CMD_LINK,
-  CMD_LINK_RUNTIME,
+  CMD_LINK_RUNTIME
 };
 
 class TargetAbi {
@@ -49,7 +49,7 @@ public:
     ARMEABI = 0,
     ARMEABI_V7A,
     X86,
-    MIPS,
+    MIPS
   };
 
 private:
@@ -185,7 +185,7 @@ protected:
 } // namespace abcc
 
 // FIXME: We use LOGV, LOGE in Abcc.cpp, how to prevent this anti dependency?
-#ifdef ON_DEVICE
+#if ON_DEVICE
 #include "Abcc_device.h"
 #else
 #include "Abcc_host.h"

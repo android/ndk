@@ -53,6 +53,9 @@ public:
     return l - l0;
   }
 };
+
+extern long long llc_usec;
+
 #endif // VERBOSE
 
 
