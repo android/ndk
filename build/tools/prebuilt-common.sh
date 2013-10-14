@@ -1042,7 +1042,7 @@ parse_toolchain_name ()
         # You can't really build these separately at the moment.
         ABI_CFLAGS_FOR_TARGET="-fPIC"
         ;;
-    mips*)
+    mipsel*)
         ARCH="mips"
         ABI=$ARCH
         ABI_INSTALL_NAME="mips"
@@ -1057,8 +1057,23 @@ parse_toolchain_name ()
         # Add --disable-fixed-point to disable fixed-point support
         ABI_CONFIGURE_EXTRA_FLAGS="$ABI_CONFIGURE_EXTRA_FLAGS --disable-fixed-point"
         ;;
+    mips64el*)
+        ARCH="mips64"
+        ABI=$ARCH
+        ABI_INSTALL_NAME="mips64"
+        ABI_CONFIGURE_TARGET="mips64el-linux-android"
+        # Set default to mips64r2
+        ABI_CONFIGURE_EXTRA_FLAGS="--with-arch=mips64r2"
+        # Enable C++ exceptions, RTTI and GNU libstdc++ at the same time
+        # You can't really build these separately at the moment.
+        # Add -fpic, because MIPS NDK will need to link .a into .so.
+        ABI_CFLAGS_FOR_TARGET="-fexceptions -fpic"
+        ABI_CXXFLAGS_FOR_TARGET="-frtti -fpic"
+        # Add --disable-fixed-point to disable fixed-point support
+        ABI_CONFIGURE_EXTRA_FLAGS="$ABI_CONFIGURE_EXTRA_FLAGS --disable-fixed-point --disable-libgomp --disable-libatomic"
+        ;;
     * )
-        echo "Invalid toolchain specified. Expected (arm-linux-androideabi-*|arm-eabi-*|x86-*|mips*)"
+        echo "Invalid toolchain specified. Expected (arm-linux-androideabi-*|arm-eabi-*|x86-*|mipsel*|mips64el*)"
         echo ""
         print_help
         exit 1
