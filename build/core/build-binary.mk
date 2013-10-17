@@ -60,6 +60,7 @@ system_libs := \
     jnigraphics \
     log \
     m \
+    m_hard \
     stdc++ \
     z \
     EGL \
