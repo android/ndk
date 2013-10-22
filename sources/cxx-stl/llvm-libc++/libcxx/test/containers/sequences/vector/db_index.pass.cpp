@@ -11,7 +11,7 @@
 
 // Index vector out of bounds.
 
-#if _LIBCPP_DEBUG2 >= 1
+#if _LIBCPP_DEBUG >= 1
 
 #define _LIBCPP_ASSERT(x, m) ((x) ? (void)0 : std::exit(0))
 
@@ -21,7 +21,7 @@
 #include <exception>
 #include <cstdlib>
 
-#include "../../min_allocator.h"
+#include "min_allocator.h"
 
 int main()
 {

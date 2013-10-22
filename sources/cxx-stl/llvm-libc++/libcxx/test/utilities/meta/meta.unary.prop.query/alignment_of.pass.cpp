@@ -12,6 +12,7 @@
 // alignment_of
 
 #include <type_traits>
+#include <cstdint>
 
 template <class T, unsigned A>
 void test_alignment_of()
@@ -32,11 +33,15 @@ int main()
 {
     test_alignment_of<int&, 4>();
     test_alignment_of<Class, 1>();
-    test_alignment_of<int*, sizeof(long) == 4 ? 4 : 8>();
-    test_alignment_of<const int*, sizeof(long) == 4 ? 4 : 8>();
+    test_alignment_of<int*, sizeof(intptr_t)>();
+    test_alignment_of<const int*, sizeof(intptr_t)>();
     test_alignment_of<char[3], 1>();
     test_alignment_of<int, 4>();
     test_alignment_of<double, 8>();
+#if (defined(__ppc__) && !defined(__ppc64__))
+    test_alignment_of<bool, 4>();	// 32-bit PPC has four byte bool
+#else
     test_alignment_of<bool, 1>();
+#endif
     test_alignment_of<unsigned, 4>();
 }

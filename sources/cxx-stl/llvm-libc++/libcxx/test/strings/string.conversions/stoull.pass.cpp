@@ -6,6 +6,9 @@
 // Source Licenses. See LICENSE.TXT for details.
 //
 //===----------------------------------------------------------------------===//
+//
+// XFAIL: with_system_lib=x86_64-apple-darwin11
+// XFAIL: with_system_lib=x86_64-apple-darwin12
 
 // <string>
 
@@ -82,6 +85,25 @@ int main()
         assert(false);
     }
     catch (const std::invalid_argument&)
+    {
+        assert(idx == 0);
+    }
+//  LWG issue #2009
+    try
+    {
+        std::stoull("9999999999999999999999999999999999999999999999999", &idx);
+        assert(false);
+    }
+    catch (const std::out_of_range&)
+    {
+        assert(idx == 0);
+    }
+    try
+    {
+        std::stoull(L"9999999999999999999999999999999999999999999999999", &idx);
+        assert(false);
+    }
+    catch (const std::out_of_range&)
     {
         assert(idx == 0);
     }

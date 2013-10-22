@@ -20,8 +20,10 @@ llvm_libc++_sources := \
 	memory.cpp \
 	mutex.cpp \
 	new.cpp \
+	optional.cpp \
 	random.cpp \
 	regex.cpp \
+	shared_mutex.cpp \
 	stdexcept.cpp \
 	string.cpp \
 	strstream.cpp \
@@ -76,7 +78,7 @@ LOCAL_CPPFLAGS := $(llvm_libc++_cxxflags)
 LOCAL_CPP_FEATURES := rtti exceptions
 LOCAL_EXPORT_C_INCLUDES := $(llvm_libc++_export_includes)
 LOCAL_EXPORT_CPPFLAGS := $(llvm_libc++_export_cxxflags)
-LOCAL_STATIC_LIBRARIES := android_support
+LOCAL_STATIC_LIBRARIES := android_support compiler_rt_static
 include $(BUILD_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
@@ -88,6 +90,8 @@ LOCAL_CPP_FEATURES := rtti exceptions
 LOCAL_EXPORT_C_INCLUDES := $(llvm_libc++_export_includes)
 LOCAL_EXPORT_CPPFLAGS := $(llvm_libc++_export_cxxflags)
 LOCAL_STATIC_LIBRARIES := android_support
+LOCAL_SHARED_LIBRARIES := compiler_rt_shared
 include $(BUILD_SHARED_LIBRARY)
 
 $(call import-module, android/support)
+$(call import-module, android/compiler-rt)

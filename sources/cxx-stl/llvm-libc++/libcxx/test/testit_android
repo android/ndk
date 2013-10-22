@@ -26,8 +26,6 @@ cd ..
 LIBCXX_ROOT=`pwd`
 cd $origpath
 
-ANDROID_SUPPORT=$(cd "$LIBCXX_ROOT"/../../../android/support && pwd)
-
 VERBOSE=1
 
 run () {
@@ -279,6 +277,7 @@ adb_shell "mkdir -p $TARGET_PATH"
 if [ "$DO_STATIC" ]; then
   # Statically link to ensure the executable can be run easily through ADB
   LIBS="-lcompiler_rt_static -latomic"
+#LIBS="-lc++_static -lcompiler_rt_static -latomic"
 else
   run2 $ADB push $LIBCXX_LIBS/libc++_shared.so $TARGET_PATH 2>/dev/null
   if [ $? != 0 ]; then
@@ -291,6 +290,7 @@ else
     exit 1
   fi
   LIBS="-lc++_shared -lcompiler_rt_shared -latomic"
+#LIBS="-nodefaultlibs -lc++_shared -lcompiler_rt_shared -latomic -ldl -lc -lm"
 fi
 
 case $TRIPLE in
