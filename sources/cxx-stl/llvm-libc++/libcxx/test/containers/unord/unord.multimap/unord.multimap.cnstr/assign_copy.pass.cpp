@@ -22,8 +22,8 @@
 
 #include "../../../test_compare.h"
 #include "../../../test_hash.h"
-#include "../../../test_allocator.h"
-#include "../../../min_allocator.h"
+#include "test_allocator.h"
+#include "min_allocator.h"
 
 int main()
 {
@@ -85,6 +85,24 @@ int main()
         assert(std::distance(c.cbegin(), c.cend()) == c.size());
         assert(fabs(c.load_factor() - (float)c.size()/c.bucket_count()) < FLT_EPSILON);
         assert(c.max_load_factor() == 1);
+    }
+    {
+        typedef std::unordered_multimap<int, std::string> C;
+        typedef std::pair<const int, std::string> P;
+        const P a[] =
+        {
+            P(1, "one"),
+            P(2, "two"),
+            P(3, "three"),
+            P(4, "four"),
+            P(1, "four"),
+            P(2, "four"),
+        };
+        C c(a, a+sizeof(a)/sizeof(a[0]));
+        C *p = &c;
+        c = *p;
+        assert(c.size() == 6);
+        assert(std::is_permutation(c.begin(), c.end(), a));
     }
     {
         typedef other_allocator<std::pair<const int, std::string> > A;

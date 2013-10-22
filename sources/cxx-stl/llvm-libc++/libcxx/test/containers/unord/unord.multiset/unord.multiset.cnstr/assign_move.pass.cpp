@@ -21,8 +21,8 @@
 
 #include "../../../test_compare.h"
 #include "../../../test_hash.h"
-#include "../../../test_allocator.h"
-#include "../../../min_allocator.h"
+#include "test_allocator.h"
+#include "min_allocator.h"
 
 int main()
 {
@@ -268,6 +268,18 @@ int main()
         assert(std::distance(c.cbegin(), c.cend()) == c.size());
         assert(fabs(c.load_factor() - (float)c.size()/c.bucket_count()) < FLT_EPSILON);
         assert(c.max_load_factor() == 1);
+    }
+#endif
+#if _LIBCPP_DEBUG >= 1
+    {
+        std::unordered_multiset<int> s1 = {1, 2, 3};
+        std::unordered_multiset<int>::iterator i = s1.begin();
+        int k = *i;
+        std::unordered_multiset<int> s2;
+        s2 = std::move(s1);
+        assert(*i == k);
+        s2.erase(i);
+        assert(s2.size() == 2);
     }
 #endif
 #endif  // _LIBCPP_HAS_NO_RVALUE_REFERENCES

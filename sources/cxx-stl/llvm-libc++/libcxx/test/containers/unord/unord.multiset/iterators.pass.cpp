@@ -23,7 +23,7 @@
 #include <unordered_set>
 #include <cassert>
 
-#include "../../min_allocator.h"
+#include "min_allocator.h"
 
 int main()
 {
@@ -105,6 +105,20 @@ int main()
         assert(std::distance(c.begin(), c.end()) == c.size());
         assert(std::distance(c.cbegin(), c.cend()) == c.size());
         C::const_iterator i;
+    }
+#endif
+#if _LIBCPP_STD_VER > 11
+    { // N3644 testing
+        typedef std::unordered_multiset<int> C;
+        C::iterator ii1{}, ii2{};
+        C::iterator ii4 = ii1;
+        C::const_iterator cii{};
+        assert ( ii1 == ii2 );
+        assert ( ii1 == ii4 );
+        assert ( ii1 == cii );
+
+        assert ( !(ii1 != ii2 ));
+        assert ( !(ii1 != cii ));
     }
 #endif
 }

@@ -21,8 +21,8 @@
 
 #include "../../../test_compare.h"
 #include "../../../test_hash.h"
-#include "../../../test_allocator.h"
-#include "../../../min_allocator.h"
+#include "test_allocator.h"
+#include "min_allocator.h"
 
 int main()
 {
@@ -70,6 +70,24 @@ int main()
         assert(std::distance(c.cbegin(), c.cend()) == c.size());
         assert(fabs(c.load_factor() - (float)c.size()/c.bucket_count()) < FLT_EPSILON);
         assert(c.max_load_factor() == 1);
+    }
+    {
+        typedef std::unordered_set<int> C;
+        typedef int P;
+        P a[] =
+        {
+            P(1),
+            P(2),
+            P(3),
+            P(4),
+            P(1),
+            P(2)
+        };
+        C c(a, a + sizeof(a)/sizeof(a[0]));
+        C *p = &c;
+        c = *p;
+        assert(c.size() == 4);
+        assert(std::is_permutation(c.begin(), c.end(), a));
     }
     {
         typedef other_allocator<int> A;

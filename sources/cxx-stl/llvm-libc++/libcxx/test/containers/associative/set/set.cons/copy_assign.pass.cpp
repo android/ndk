@@ -17,7 +17,7 @@
 #include <cassert>
 
 #include "../../../test_compare.h"
-#include "../../../test_allocator.h"
+#include "test_allocator.h"
 
 int main()
 {
@@ -55,6 +55,21 @@ int main()
         assert(*mo.begin() == 1);
         assert(*next(mo.begin()) == 2);
         assert(*next(mo.begin(), 2) == 3);
+    }
+    {
+        typedef int V;
+        const V ar[] =
+        {
+            1,
+            2,
+            3
+        };
+        std::set<int> m(ar, ar+sizeof(ar)/sizeof(ar[0]));
+        std::set<int> *p = &m;
+        m = *p;
+
+        assert(m.size() == 3);
+        assert(std::equal(m.begin(), m.end(), ar));
     }
     {
         typedef int V;
