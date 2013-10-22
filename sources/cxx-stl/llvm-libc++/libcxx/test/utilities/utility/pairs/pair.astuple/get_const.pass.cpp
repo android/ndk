@@ -26,4 +26,13 @@ int main()
         assert(std::get<0>(p) == 3);
         assert(std::get<1>(p) == 4);
     }
+
+#if __cplusplus > 201103L
+    {
+        typedef std::pair<int, short> P;
+        constexpr P p1(3, 4);
+        static_assert(std::get<0>(p1) == 3, "");
+        static_assert(std::get<1>(p1) == 4, "");
+    }
+#endif
 }

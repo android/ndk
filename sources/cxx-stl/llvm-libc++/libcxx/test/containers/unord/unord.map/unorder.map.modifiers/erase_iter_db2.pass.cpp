@@ -7,42 +7,30 @@
 //
 //===----------------------------------------------------------------------===//
 
-// <list>
+// <unordered_map>
 
-// Compare iterators from different containers with == or !=.
+// Call erase(const_iterator position) with iterator from another container
 
-#if _LIBCPP_DEBUG2 >= 1
+#if _LIBCPP_DEBUG >= 1
 
 #define _LIBCPP_ASSERT(x, m) ((x) ? (void)0 : std::exit(0))
 
-#include <list>
+#include <unordered_map>
 #include <cassert>
-#include <iterator>
-#include <exception>
 #include <cstdlib>
-
-#include "../../min_allocator.h"
+#include <exception>
 
 int main()
 {
     {
-    typedef int T;
-    typedef std::list<T> C;
-    C c1;
-    C c2;
-    bool b = c1.begin() != c2.begin();
+    typedef std::pair<int, int> P;
+    P a1[] = {P(1, 1), P(2, 2), P(3, 3)};
+    std::unordered_map<int, int> l1(a1, a1+3);
+    std::unordered_map<int, int> l2(a1, a1+3);
+    std::unordered_map<int, int>::const_iterator i = l2.begin();
+    l1.erase(i);
     assert(false);
     }
-#if __cplusplus >= 201103L
-    {
-    typedef int T;
-    typedef std::list<T, min_allocator<T>> C;
-    C c1;
-    C c2;
-    bool b = c1.begin() != c2.begin();
-    assert(false);
-    }
-#endif
 }
 
 #else

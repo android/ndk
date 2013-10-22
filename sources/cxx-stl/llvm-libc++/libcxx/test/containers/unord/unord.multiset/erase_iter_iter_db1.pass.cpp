@@ -7,42 +7,28 @@
 //
 //===----------------------------------------------------------------------===//
 
-// <vector>
+// <unordered_set>
 
-// Compare iterators from different containers with == or !=.
+// Call erase(const_iterator first, const_iterator last); with first iterator from another container
 
-#if _LIBCPP_DEBUG2 >= 1
+#if _LIBCPP_DEBUG >= 1
 
 #define _LIBCPP_ASSERT(x, m) ((x) ? (void)0 : std::exit(0))
 
-#include <vector>
+#include <unordered_set>
 #include <cassert>
-#include <iterator>
 #include <exception>
 #include <cstdlib>
-
-#include "../../min_allocator.h"
 
 int main()
 {
     {
-    typedef int T;
-    typedef std::vector<T> C;
-    C c1;
-    C c2;
-    bool b = c1.begin() != c2.begin();
+    int a1[] = {1, 2, 3};
+    std::unordered_multiset<int> l1(a1, a1+3);
+    std::unordered_multiset<int> l2(a1, a1+3);
+    std::unordered_multiset<int>::iterator i = l1.erase(l2.cbegin(), next(l1.cbegin()));
     assert(false);
     }
-#if __cplusplus >= 201103L
-    {
-    typedef int T;
-    typedef std::vector<T, min_allocator<T>> C;
-    C c1;
-    C c2;
-    bool b = c1.begin() != c2.begin();
-    assert(false);
-    }
-#endif
 }
 
 #else

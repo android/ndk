@@ -1,4 +1,4 @@
-From b841103ec8f8f9b136ab154f15e02ed282cfac22 Mon Sep 17 00:00:00 2001
+From 8e4ed6fa0e291924c4a7ce0fa49aa15de980462b Mon Sep 17 00:00:00 2001
 From: Andrew Hsieh <andrewhsieh@google.com>
 Date: Fri, 4 Oct 2013 16:16:13 +0800
 Subject: [PATCH 7/7] temp fix: disable part of some tests for Android
@@ -86,10 +86,10 @@ index ed02fa6..425b606 100644
 +#endif
  }
 diff --git a/test/input.output/file.streams/c.files/cstdio.pass.cpp b/test/input.output/file.streams/c.files/cstdio.pass.cpp
-index 9b2e511..83dbc1c 100644
+index 1a60dd6..e28d0cf 100644
 --- a/test/input.output/file.streams/c.files/cstdio.pass.cpp
 +++ b/test/input.output/file.streams/c.files/cstdio.pass.cpp
-@@ -131,7 +131,13 @@ int main()
+@@ -133,7 +133,13 @@ int main()
      static_assert((std::is_same<decltype(std::ftell(fp)), long>::value), "");
      static_assert((std::is_same<decltype(std::rewind(fp)), void>::value), "");
      static_assert((std::is_same<decltype(std::clearerr(fp)), void>::value), "");

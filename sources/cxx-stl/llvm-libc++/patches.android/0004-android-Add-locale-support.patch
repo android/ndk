@@ -1,7 +1,7 @@
-From 315b90e29f532ed75066bca52223b0ba98961ae0 Mon Sep 17 00:00:00 2001
+From 2856ec9bad55dd7691efaf8737740a048e6be4bc Mon Sep 17 00:00:00 2001
 From: David 'Digit' Turner <digit@google.com>
 Date: Tue, 9 Jul 2013 23:20:03 +0200
-Subject: android: Add locale support.
+Subject: [PATCH 4/7] android: Add locale support.
 
 This is based on the Bionic <ctype.h> declarations. Note that
 unfortunately, the _ctype_ table exposed by this header has a bug
@@ -16,10 +16,10 @@ See src/support/android/locale_android.cpp for details.
  create mode 100644 src/support/android/locale_android.cpp
 
 diff --git a/include/__locale b/include/__locale
-index 92f4e0c..d95b565 100644
+index 2073e1b..ed90678 100644
 --- a/include/__locale
 +++ b/include/__locale
-@@ -373,7 +373,20 @@ public:
+@@ -375,7 +375,20 @@ public:
      static const mask punct  = _ISPUNCT;
      static const mask xdigit = _ISXDIGIT;
      static const mask blank  = _ISBLANK;
@@ -41,7 +41,7 @@ index 92f4e0c..d95b565 100644
      typedef unsigned long mask;
      static const mask space  = 1<<0;
      static const mask print  = 1<<1;
-@@ -385,7 +398,7 @@ public:
+@@ -387,7 +400,7 @@ public:
      static const mask punct  = 1<<7;
      static const mask xdigit = 1<<8;
      static const mask blank  = 1<<9;
@@ -51,10 +51,10 @@ index 92f4e0c..d95b565 100644
      static const mask graph  = alnum | punct;
  
 diff --git a/src/locale.cpp b/src/locale.cpp
-index 47c4061..42ef374 100644
+index 8fadbb6..d600aa4 100644
 --- a/src/locale.cpp
 +++ b/src/locale.cpp
-@@ -792,6 +792,8 @@ ctype<wchar_t>::do_toupper(char_type c) const
+@@ -814,6 +814,8 @@ ctype<wchar_t>::do_toupper(char_type c) const
      return isascii(c) ? _DefaultRuneLocale.__mapupper[c] : c;
  #elif defined(__GLIBC__) || defined(EMSCRIPTEN) || defined(__NetBSD__)
      return isascii(c) ? ctype<char>::__classic_upper_table()[c] : c;
@@ -63,7 +63,7 @@ index 47c4061..42ef374 100644
  #else
      return (isascii(c) && iswlower_l(c, __cloc())) ? c-L'a'+L'A' : c;
  #endif
-@@ -806,6 +808,8 @@ ctype<wchar_t>::do_toupper(char_type* low, const char_type* high) const
+@@ -828,6 +830,8 @@ ctype<wchar_t>::do_toupper(char_type* low, const char_type* high) const
  #elif defined(__GLIBC__) || defined(EMSCRIPTEN) || defined(__NetBSD__)
          *low = isascii(*low) ? ctype<char>::__classic_upper_table()[*low]
                               : *low;
@@ -72,7 +72,7 @@ index 47c4061..42ef374 100644
  #else
          *low = (isascii(*low) && islower_l(*low, __cloc())) ? (*low-L'a'+L'A') : *low;
  #endif
-@@ -819,6 +823,8 @@ ctype<wchar_t>::do_tolower(char_type c) const
+@@ -841,6 +845,8 @@ ctype<wchar_t>::do_tolower(char_type c) const
      return isascii(c) ? _DefaultRuneLocale.__maplower[c] : c;
  #elif defined(__GLIBC__) || defined(EMSCRIPTEN) || defined(__NetBSD__)
      return isascii(c) ? ctype<char>::__classic_lower_table()[c] : c;
@@ -81,7 +81,7 @@ index 47c4061..42ef374 100644
  #else
      return (isascii(c) && isupper_l(c, __cloc())) ? c-L'A'+'a' : c;
  #endif
-@@ -833,6 +839,8 @@ ctype<wchar_t>::do_tolower(char_type* low, const char_type* high) const
+@@ -855,6 +861,8 @@ ctype<wchar_t>::do_tolower(char_type* low, const char_type* high) const
  #elif defined(__GLIBC__) || defined(EMSCRIPTEN) || defined(__NetBSD__)
          *low = isascii(*low) ? ctype<char>::__classic_lower_table()[*low]
                               : *low;
@@ -90,7 +90,7 @@ index 47c4061..42ef374 100644
  #else
          *low = (isascii(*low) && isupper_l(*low, __cloc())) ? *low-L'A'+L'a' : *low;
  #endif
-@@ -902,6 +910,8 @@ ctype<char>::do_toupper(char_type c) const
+@@ -924,6 +932,8 @@ ctype<char>::do_toupper(char_type c) const
  #elif defined(__GLIBC__) || defined(EMSCRIPTEN)
      return isascii(c) ? 
        static_cast<char>(__classic_upper_table()[static_cast<unsigned char>(c)]) : c;
@@ -99,7 +99,7 @@ index 47c4061..42ef374 100644
  #else
      return (isascii(c) && islower_l(c, __cloc())) ? c-'a'+'A' : c;
  #endif
-@@ -919,6 +929,8 @@ ctype<char>::do_toupper(char_type* low, const char_type* high) const
+@@ -941,6 +951,8 @@ ctype<char>::do_toupper(char_type* low, const char_type* high) const
  #elif defined(__GLIBC__) || defined(EMSCRIPTEN)
          *low = isascii(*low) ?
            static_cast<char>(__classic_upper_table()[static_cast<size_t>(*low)]) : *low;
@@ -108,7 +108,7 @@ index 47c4061..42ef374 100644
  #else
          *low = (isascii(*low) && islower_l(*low, __cloc())) ? *low-'a'+'A' : *low;
  #endif
-@@ -936,6 +948,8 @@ ctype<char>::do_tolower(char_type c) const
+@@ -958,6 +970,8 @@ ctype<char>::do_tolower(char_type c) const
  #elif defined(__GLIBC__) || defined(EMSCRIPTEN) || defined(__NetBSD__)
      return isascii(c) ?
        static_cast<char>(__classic_lower_table()[static_cast<size_t>(c)]) : c;
@@ -117,7 +117,7 @@ index 47c4061..42ef374 100644
  #else
      return (isascii(c) && isupper_l(c, __cloc())) ? c-'A'+'a' : c;
  #endif
-@@ -951,6 +965,8 @@ ctype<char>::do_tolower(char_type* low, const char_type* high) const
+@@ -973,6 +987,8 @@ ctype<char>::do_tolower(char_type* low, const char_type* high) const
          *low = static_cast<char>(__classic_lower_table()[static_cast<unsigned char>(*low)]);
  #elif defined(__GLIBC__) || defined(EMSCRIPTEN)
          *low = isascii(*low) ? static_cast<char>(__classic_lower_table()[static_cast<size_t>(*low)]) : *low;
@@ -126,7 +126,7 @@ index 47c4061..42ef374 100644
  #else
          *low = (isascii(*low) && isupper_l(*low, __cloc())) ? *low-'A'+'a' : *low;
  #endif
-@@ -996,6 +1012,11 @@ extern "C" const int ** __ctype_tolower_loc();
+@@ -1018,6 +1034,11 @@ extern "C" const int ** __ctype_tolower_loc();
  extern "C" const int ** __ctype_toupper_loc();
  #endif
  
@@ -138,16 +138,16 @@ index 47c4061..42ef374 100644
  const ctype<char>::mask*
  ctype<char>::classic_table()  _NOEXCEPT
  {
-@@ -1013,6 +1034,8 @@ ctype<char>::classic_table()  _NOEXCEPT
- // going to end up dereferencing it later...
- #elif defined(EMSCRIPTEN)
+@@ -1037,6 +1058,8 @@ ctype<char>::classic_table()  _NOEXCEPT
      return *__ctype_b_loc();
+ #elif defined(_AIX)
+     return (const unsigned long *)__lc_ctype_ptr->obj->mask;
 +#elif defined(__ANDROID__)
 +    return _ctype_android;
  #else
      // Platform not supported: abort so the person doing the port knows what to
      // fix
-@@ -1397,7 +1420,7 @@ locale::id codecvt<wchar_t, char, mbstate_t>::id;
+@@ -1422,7 +1445,7 @@ locale::id codecvt<wchar_t, char, mbstate_t>::id;
  
  codecvt<wchar_t, char, mbstate_t>::codecvt(size_t refs)
      : locale::facet(refs),
@@ -158,7 +158,7 @@ index 47c4061..42ef374 100644
  
 diff --git a/src/support/android/locale_android.cpp b/src/support/android/locale_android.cpp
 new file mode 100644
-index 0000000..81c3b28
+index 0000000..4224231
 --- /dev/null
 +++ b/src/support/android/locale_android.cpp
 @@ -0,0 +1,101 @@
@@ -264,5 +264,5 @@ index 0000000..81c3b28
 +
 +const unsigned short* const _ctype_android = ctype_android_tab + 128;
 -- 
-1.7.12.146.g16d26b1
+1.8.4
 

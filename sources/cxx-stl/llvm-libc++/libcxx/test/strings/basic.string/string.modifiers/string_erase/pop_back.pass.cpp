@@ -11,6 +11,10 @@
 
 // void pop_back();
 
+#if _LIBCPP_DEBUG >= 1
+#define _LIBCPP_ASSERT(x, m) ((x) ? (void)0 : std::exit(0))
+#endif
+
 #include <string>
 #include <cassert>
 
@@ -41,4 +45,11 @@ int main()
     test(S("abcdefghijklmnopqrst"), S("abcdefghijklmnopqrs"));
     }
 #endif
+#if _LIBCPP_DEBUG >= 1
+    {
+        std::string s;
+        s.pop_back();
+        assert(false);
+    }
+#endif        
 }

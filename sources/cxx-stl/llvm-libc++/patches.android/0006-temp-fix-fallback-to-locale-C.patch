@@ -1,4 +1,4 @@
-From 19540b96f7f14a32570b70b493d7a3ef2ff2102d Mon Sep 17 00:00:00 2001
+From 929fe8bbe8487b2169096da106bc7a862fababf8 Mon Sep 17 00:00:00 2001
 From: Andrew Hsieh <andrewhsieh@google.com>
 Date: Fri, 4 Oct 2013 16:02:18 +0800
 Subject: [PATCH 6/7] temp fix: fallback to locale("C")
@@ -11,10 +11,10 @@ other issues.
  1 file changed, 118 insertions(+), 6 deletions(-)
 
 diff --git a/src/locale.cpp b/src/locale.cpp
-index f5650f2..19e704b 100644
+index d600aa4..ad29cb3 100644
 --- a/src/locale.cpp
 +++ b/src/locale.cpp
-@@ -48,6 +48,10 @@ locale_t __cloc() {
+@@ -54,6 +54,10 @@ locale_t __cloc() {
  }
  #endif // __cloc_defined
  
@@ -25,7 +25,7 @@ index f5650f2..19e704b 100644
  namespace {
  
  struct release
-@@ -635,8 +639,14 @@ collate_byname<char>::collate_byname(const char* n, size_t refs)
+@@ -657,8 +661,14 @@ collate_byname<char>::collate_byname(const char* n, size_t refs)
  {
  #ifndef _LIBCPP_NO_EXCEPTIONS
      if (__l == 0)
@@ -40,7 +40,7 @@ index f5650f2..19e704b 100644
  #endif  // _LIBCPP_NO_EXCEPTIONS
  }
  
-@@ -646,8 +656,14 @@ collate_byname<char>::collate_byname(const string& name, size_t refs)
+@@ -668,8 +678,14 @@ collate_byname<char>::collate_byname(const string& name, size_t refs)
  {
  #ifndef _LIBCPP_NO_EXCEPTIONS
      if (__l == 0)
@@ -55,7 +55,7 @@ index f5650f2..19e704b 100644
  #endif  // _LIBCPP_NO_EXCEPTIONS
  }
  
-@@ -687,8 +703,14 @@ collate_byname<wchar_t>::collate_byname(const char* n, size_t refs)
+@@ -709,8 +725,14 @@ collate_byname<wchar_t>::collate_byname(const char* n, size_t refs)
  {
  #ifndef _LIBCPP_NO_EXCEPTIONS
      if (__l == 0)
@@ -70,7 +70,7 @@ index f5650f2..19e704b 100644
  #endif  // _LIBCPP_NO_EXCEPTIONS
  }
  
-@@ -698,8 +720,14 @@ collate_byname<wchar_t>::collate_byname(const string& name, size_t refs)
+@@ -720,8 +742,14 @@ collate_byname<wchar_t>::collate_byname(const string& name, size_t refs)
  {
  #ifndef _LIBCPP_NO_EXCEPTIONS
      if (__l == 0)
@@ -85,7 +85,7 @@ index f5650f2..19e704b 100644
  #endif  // _LIBCPP_NO_EXCEPTIONS
  }
  
-@@ -1092,8 +1120,14 @@ ctype_byname<char>::ctype_byname(const char* name, size_t refs)
+@@ -1117,8 +1145,14 @@ ctype_byname<char>::ctype_byname(const char* name, size_t refs)
  {
  #ifndef _LIBCPP_NO_EXCEPTIONS
      if (__l == 0)
@@ -100,7 +100,7 @@ index f5650f2..19e704b 100644
  #endif  // _LIBCPP_NO_EXCEPTIONS
  }
  
-@@ -1103,8 +1137,14 @@ ctype_byname<char>::ctype_byname(const string& name, size_t refs)
+@@ -1128,8 +1162,14 @@ ctype_byname<char>::ctype_byname(const string& name, size_t refs)
  {
  #ifndef _LIBCPP_NO_EXCEPTIONS
      if (__l == 0)
@@ -115,7 +115,7 @@ index f5650f2..19e704b 100644
  #endif  // _LIBCPP_NO_EXCEPTIONS
  }
  
-@@ -1149,8 +1189,14 @@ ctype_byname<wchar_t>::ctype_byname(const char* name, size_t refs)
+@@ -1174,8 +1214,14 @@ ctype_byname<wchar_t>::ctype_byname(const char* name, size_t refs)
  {
  #ifndef _LIBCPP_NO_EXCEPTIONS
      if (__l == 0)
@@ -130,7 +130,7 @@ index f5650f2..19e704b 100644
  #endif  // _LIBCPP_NO_EXCEPTIONS
  }
  
-@@ -1160,8 +1206,14 @@ ctype_byname<wchar_t>::ctype_byname(const string& name, size_t refs)
+@@ -1185,8 +1231,14 @@ ctype_byname<wchar_t>::ctype_byname(const string& name, size_t refs)
  {
  #ifndef _LIBCPP_NO_EXCEPTIONS
      if (__l == 0)
@@ -145,7 +145,7 @@ index f5650f2..19e704b 100644
  #endif  // _LIBCPP_NO_EXCEPTIONS
  }
  
-@@ -1430,8 +1482,14 @@ codecvt<wchar_t, char, mbstate_t>::codecvt(const char* nm, size_t refs)
+@@ -1455,8 +1507,14 @@ codecvt<wchar_t, char, mbstate_t>::codecvt(const char* nm, size_t refs)
  {
  #ifndef _LIBCPP_NO_EXCEPTIONS
      if (__l == 0)
@@ -160,7 +160,7 @@ index f5650f2..19e704b 100644
  #endif  // _LIBCPP_NO_EXCEPTIONS
  }
  
-@@ -4225,7 +4283,12 @@ numpunct_byname<char>::__init(const char* nm)
+@@ -4250,7 +4308,12 @@ numpunct_byname<char>::__init(const char* nm)
  {
      if (strcmp(nm, "C") != 0)
      {
@@ -174,7 +174,7 @@ index f5650f2..19e704b 100644
  #ifndef _LIBCPP_NO_EXCEPTIONS
          if (loc == nullptr)
              throw runtime_error("numpunct_byname<char>::numpunct_byname"
-@@ -4268,7 +4331,12 @@ numpunct_byname<wchar_t>::__init(const char* nm)
+@@ -4293,7 +4356,12 @@ numpunct_byname<wchar_t>::__init(const char* nm)
  {
      if (strcmp(nm, "C") != 0)
      {
@@ -188,7 +188,7 @@ index f5650f2..19e704b 100644
  #ifndef _LIBCPP_NO_EXCEPTIONS
          if (loc == nullptr)
              throw runtime_error("numpunct_byname<char>::numpunct_byname"
-@@ -4682,8 +4750,14 @@ __time_get::__time_get(const char* nm)
+@@ -4707,8 +4775,14 @@ __time_get::__time_get(const char* nm)
  {
  #ifndef _LIBCPP_NO_EXCEPTIONS
      if (__loc_ == 0)
@@ -203,7 +203,7 @@ index f5650f2..19e704b 100644
  #endif  // _LIBCPP_NO_EXCEPTIONS
  }
  
-@@ -4692,8 +4766,14 @@ __time_get::__time_get(const string& nm)
+@@ -4717,8 +4791,14 @@ __time_get::__time_get(const string& nm)
  {
  #ifndef _LIBCPP_NO_EXCEPTIONS
      if (__loc_ == 0)
@@ -218,7 +218,7 @@ index f5650f2..19e704b 100644
  #endif  // _LIBCPP_NO_EXCEPTIONS
  }
  
-@@ -5365,8 +5445,14 @@ __time_put::__time_put(const char* nm)
+@@ -5395,8 +5475,14 @@ __time_put::__time_put(const char* nm)
  {
  #ifndef _LIBCPP_NO_EXCEPTIONS
      if (__loc_ == 0)
@@ -233,7 +233,7 @@ index f5650f2..19e704b 100644
  #endif  // _LIBCPP_NO_EXCEPTIONS
  }
  
-@@ -5375,8 +5461,14 @@ __time_put::__time_put(const string& nm)
+@@ -5405,8 +5491,14 @@ __time_put::__time_put(const string& nm)
  {
  #ifndef _LIBCPP_NO_EXCEPTIONS
      if (__loc_ == 0)
@@ -248,7 +248,7 @@ index f5650f2..19e704b 100644
  #endif  // _LIBCPP_NO_EXCEPTIONS
  }
  
-@@ -5795,7 +5887,12 @@ void
+@@ -5825,7 +5917,12 @@ void
  moneypunct_byname<char, false>::init(const char* nm)
  {
      typedef moneypunct<char, false> base;
@@ -262,7 +262,7 @@ index f5650f2..19e704b 100644
  #ifndef _LIBCPP_NO_EXCEPTIONS
      if (loc == nullptr)
          throw runtime_error("moneypunct_byname"
-@@ -5843,7 +5940,12 @@ void
+@@ -5873,7 +5970,12 @@ void
  moneypunct_byname<char, true>::init(const char* nm)
  {
      typedef moneypunct<char, true> base;
@@ -276,7 +276,7 @@ index f5650f2..19e704b 100644
  #ifndef _LIBCPP_NO_EXCEPTIONS
      if (loc == nullptr)
          throw runtime_error("moneypunct_byname"
-@@ -5908,7 +6010,12 @@ void
+@@ -5938,7 +6040,12 @@ void
  moneypunct_byname<wchar_t, false>::init(const char* nm)
  {
      typedef moneypunct<wchar_t, false> base;
@@ -290,7 +290,7 @@ index f5650f2..19e704b 100644
  #ifndef _LIBCPP_NO_EXCEPTIONS
      if (loc == nullptr)
          throw runtime_error("moneypunct_byname"
-@@ -5991,7 +6098,12 @@ void
+@@ -6021,7 +6128,12 @@ void
  moneypunct_byname<wchar_t, true>::init(const char* nm)
  {
      typedef moneypunct<wchar_t, true> base;

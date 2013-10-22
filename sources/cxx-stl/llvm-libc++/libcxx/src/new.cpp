@@ -7,6 +7,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+#define _LIBCPP_BUILDING_NEW
+
 #include <stdlib.h>
 
 #include "new"
@@ -28,16 +30,18 @@
     #if defined(LIBCXXRT) || __has_include(<cxxabi.h>)
         #include <cxxabi.h>
     #endif  // __has_include(<cxxabi.h>)
-    #ifndef _LIBCPPABI_VERSION
+    #if !defined(_LIBCPPABI_VERSION) && !defined(__GLIBCXX__)
         static std::new_handler __new_handler;
     #endif  // _LIBCPPABI_VERSION
 #endif
+
+#ifndef __GLIBCXX__
 
 // Implement all new and delete operators as weak definitions
 // in this shared library, so that they can be overriden by programs
 // that define non-weak copies of the functions.
 
-__attribute__((__weak__, __visibility__("default")))
+_LIBCPP_WEAK _LIBCPP_NEW_DELETE_VIS
 void *
 operator new(std::size_t size)
 #if !__has_feature(cxx_noexcept)
@@ -64,7 +68,7 @@ operator new(std::size_t size)
     return p;
 }
 
-__attribute__((__weak__, __visibility__("default")))
+_LIBCPP_WEAK _LIBCPP_NEW_DELETE_VIS
 void*
 operator new(size_t size, const std::nothrow_t&) _NOEXCEPT
 {
@@ -83,7 +87,7 @@ operator new(size_t size, const std::nothrow_t&) _NOEXCEPT
     return p;
 }
 
-__attribute__((__weak__, __visibility__("default")))
+_LIBCPP_WEAK _LIBCPP_NEW_DELETE_VIS
 void*
 operator new[](size_t size)
 #if !__has_feature(cxx_noexcept)
@@ -93,7 +97,7 @@ operator new[](size_t size)
     return ::operator new(size);
 }
 
-__attribute__((__weak__, __visibility__("default")))
+_LIBCPP_WEAK _LIBCPP_NEW_DELETE_VIS
 void*
 operator new[](size_t size, const std::nothrow_t&) _NOEXCEPT
 {
@@ -112,7 +116,7 @@ operator new[](size_t size, const std::nothrow_t&) _NOEXCEPT
     return p;
 }
 
-__attribute__((__weak__, __visibility__("default")))
+_LIBCPP_WEAK _LIBCPP_NEW_DELETE_VIS
 void
 operator delete(void* ptr) _NOEXCEPT
 {
@@ -120,37 +124,40 @@ operator delete(void* ptr) _NOEXCEPT
         ::free(ptr);
 }
 
-__attribute__((__weak__, __visibility__("default")))
+_LIBCPP_WEAK _LIBCPP_NEW_DELETE_VIS
 void
 operator delete(void* ptr, const std::nothrow_t&) _NOEXCEPT
 {
     ::operator delete(ptr);
 }
 
-__attribute__((__weak__, __visibility__("default")))
+_LIBCPP_WEAK _LIBCPP_NEW_DELETE_VIS
 void
 operator delete[] (void* ptr) _NOEXCEPT
 {
     ::operator delete (ptr);
 }
 
-__attribute__((__weak__, __visibility__("default")))
+_LIBCPP_WEAK _LIBCPP_NEW_DELETE_VIS
 void
 operator delete[] (void* ptr, const std::nothrow_t&) _NOEXCEPT
 {
     ::operator delete[](ptr);
 }
 
+#endif // !__GLIBCXX__
+
 namespace std
 {
 
-#ifndef GABIXX_LIBCXX
+#if !defined(__GLIBCXX__) && !defined(GABIXX_LIBCXX)
 const nothrow_t nothrow = {};
 #endif
 
-#if !defined(_LIBCPPABI_VERSION)
+#ifndef _LIBCPPABI_VERSION
 
-#if !defined(GABIXX_LIBCXX)
+#if !defined(__GLIBCXX__) && !defined(GABIXX_LIBCXX)
+
 new_handler
 set_new_handler(new_handler handler) _NOEXCEPT
 {
@@ -162,13 +169,16 @@ get_new_handler() _NOEXCEPT
 {
     return __sync_fetch_and_add(&__new_handler, (new_handler)0);
 }
-#endif
 
-#if !defined(LIBCXXRT)
+#endif // !__GLIBCXX__
+
+#ifndef LIBCXXRT
 
 bad_alloc::bad_alloc() _NOEXCEPT
 {
 }
+
+#ifndef __GLIBCXX__
 
 bad_alloc::~bad_alloc() _NOEXCEPT
 {
@@ -180,7 +190,9 @@ bad_alloc::what() const _NOEXCEPT
     return "std::bad_alloc";
 }
 
-#endif // !LIBCXXRT
+#endif // !__GLIBCXX__
+
+#endif //LIBCXXRT
 
 bad_array_new_length::bad_array_new_length() _NOEXCEPT
 {
@@ -191,12 +203,28 @@ bad_array_new_length::~bad_array_new_length() _NOEXCEPT
 }
 
 const char*
+bad_array_length::what() const _NOEXCEPT
+{
+    return "bad_array_length";
+}
+
+bad_array_length::bad_array_length() _NOEXCEPT
+{
+}
+
+bad_array_length::~bad_array_length() _NOEXCEPT
+{
+}
+
+const char*
 bad_array_new_length::what() const _NOEXCEPT
 {
     return "bad_array_new_length";
 }
 
-#endif // !_LIBCPPABI_VERSION && !GABIXX_LIBCXX
+#endif // _LIBCPPABI_VERSION
+
+#ifndef LIBSTDCXX
 
 void
 __throw_bad_alloc()
@@ -205,5 +233,7 @@ __throw_bad_alloc()
     throw bad_alloc();
 #endif
 }
+
+#endif // !LIBSTDCXX
 
 }  // std
