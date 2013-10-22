@@ -17,8 +17,8 @@
 
 #ifndef _LIBCPP_HAS_NO_RVALUE_REFERENCES
 
-#include "../test_allocator.h"
-#include "../min_allocator.h"
+#include "test_allocator.h"
+#include "min_allocator.h"
 
 template <class S>
 void

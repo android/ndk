@@ -19,7 +19,7 @@
 #include <cassert>
 
 #include "../../../MoveOnly.h"
-#include "../../../test_allocator.h"
+#include "test_allocator.h"
 
 template <class T>
 struct some_comp
@@ -48,13 +48,13 @@ int main()
     }
     {
         typedef std::unordered_multimap<MoveOnly, MoveOnly, std::hash<MoveOnly>,
-                           std::equal_to<MoveOnly>, test_allocator<MoveOnly>> C;
+                           std::equal_to<MoveOnly>, test_allocator<std::pair<const MoveOnly, MoveOnly>>> C;
         C c1, c2;
         static_assert(noexcept(swap(c1, c2)), "");
     }
     {
         typedef std::unordered_multimap<MoveOnly, MoveOnly, std::hash<MoveOnly>,
-                          std::equal_to<MoveOnly>, other_allocator<MoveOnly>> C;
+                          std::equal_to<MoveOnly>, other_allocator<std::pair<const MoveOnly, MoveOnly>>> C;
         C c1, c2;
         static_assert(noexcept(swap(c1, c2)), "");
     }

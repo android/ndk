@@ -17,8 +17,8 @@
 #include <cassert>
 
 #include "../../../test_compare.h"
-#include "../../../test_allocator.h"
-#include "../../../min_allocator.h"
+#include "test_allocator.h"
+#include "min_allocator.h"
 
 int main()
 {
@@ -47,6 +47,26 @@ int main()
 
         assert(mo.get_allocator() == A(2));
         assert(mo.key_comp() == C(5));
+    }
+    {
+        typedef std::pair<const int, double> V;
+        const V ar[] =
+        {
+            V(1, 1),
+            V(1, 1.5),
+            V(1, 2),
+            V(2, 1),
+            V(2, 1.5),
+            V(2, 2),
+            V(3, 1),
+            V(3, 1.5),
+            V(3, 2),
+        };
+        std::multimap<int, double> m(ar, ar+sizeof(ar)/sizeof(ar[0]));
+        std::multimap<int, double> *p = &m;
+        m = *p;
+        assert(m.size() == sizeof(ar)/sizeof(ar[0]));
+        assert(std::equal(m.begin(), m.end(), ar));
     }
     {
         typedef std::pair<const int, double> V;

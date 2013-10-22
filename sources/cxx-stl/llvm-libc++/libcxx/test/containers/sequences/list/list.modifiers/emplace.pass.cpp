@@ -11,14 +11,14 @@
 
 // template <class... Args> void emplace(const_iterator p, Args&&... args);
 
-#if _LIBCPP_DEBUG2 >= 1
+#if _LIBCPP_DEBUG >= 1
 #define _LIBCPP_ASSERT(x, m) ((x) ? (void)0 : std::exit(0))
 #endif
 
 #include <list>
 #include <cassert>
 
-#include "../../../min_allocator.h"
+#include "min_allocator.h"
 
 class A
 {
@@ -51,7 +51,7 @@ int main()
     assert(c.back().geti() == 3);
     assert(c.back().getd() == 4.5);
     }
-#if _LIBCPP_DEBUG2 >= 1
+#if _LIBCPP_DEBUG >= 1
     {
         std::list<A> c1;
         std::list<A> c2;
@@ -75,7 +75,7 @@ int main()
     assert(c.back().geti() == 3);
     assert(c.back().getd() == 4.5);
     }
-#if _LIBCPP_DEBUG2 >= 1
+#if _LIBCPP_DEBUG >= 1
     {
         std::list<A, min_allocator<A>> c1;
         std::list<A, min_allocator<A>> c2;

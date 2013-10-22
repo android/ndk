@@ -11,10 +11,14 @@
 
 // iterator insert(const_iterator p, initializer_list<charT> il);
 
+#if _LIBCPP_DEBUG >= 1
+#define _LIBCPP_ASSERT(x, m) ((x) ? (void)0 : std::exit(0))
+#endif
+
 #include <string>
 #include <cassert>
 
-#include "../../min_allocator.h"
+#include "min_allocator.h"
 
 int main()
 {
@@ -32,6 +36,14 @@ int main()
         S::iterator i = s.insert(s.begin() + 3, {'a', 'b', 'c'});
         assert(i - s.begin() == 3);
         assert(s == "123abc456");
+    }
+#endif
+#if _LIBCPP_DEBUG >= 1
+    {
+        std::string s;
+        std::string s2;
+        s.insert(s2.begin(), {'a', 'b', 'c'});
+        assert(false);
     }
 #endif
 #endif  // _LIBCPP_HAS_NO_GENERALIZED_INITIALIZERS
