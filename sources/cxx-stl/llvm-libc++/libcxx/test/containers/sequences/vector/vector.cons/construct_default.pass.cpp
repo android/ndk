@@ -14,10 +14,10 @@
 #include <vector>
 #include <cassert>
 
-#include "../../../test_allocator.h"
+#include "test_allocator.h"
 #include "../../../NotConstructible.h"
 #include "../../../stack_allocator.h"
-#include "../../../min_allocator.h"
+#include "min_allocator.h"
 
 template <class C>
 void

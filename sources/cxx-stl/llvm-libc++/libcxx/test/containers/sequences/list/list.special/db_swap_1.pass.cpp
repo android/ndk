@@ -12,7 +12,7 @@
 // template <class T, class Alloc>
 //   void swap(list<T,Alloc>& x, list<T,Alloc>& y);
 
-#if _LIBCPP_DEBUG2 >= 1
+#if _LIBCPP_DEBUG >= 1
 #define _LIBCPP_ASSERT(x, m) ((x) ? (void)0 : std::exit(0))
 #endif
 
@@ -20,11 +20,11 @@
 #include <cassert>
 
 #include <__debug>
-#include "../../../min_allocator.h"
+#include "min_allocator.h"
 
 int main()
 {
-#if _LIBCPP_DEBUG2 >= 1
+#if _LIBCPP_DEBUG >= 1
     {
         int a1[] = {1, 3, 7, 9, 10};
         int a2[] = {0, 2, 4, 5, 6, 8, 11};

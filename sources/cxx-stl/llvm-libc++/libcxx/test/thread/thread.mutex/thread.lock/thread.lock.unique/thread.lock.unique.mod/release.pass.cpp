@@ -11,7 +11,7 @@
 
 // template <class Mutex> class unique_lock;
 
-// void swap(unique_lock& u);
+// mutex_type* release() noexcept;
 
 #include <mutex>
 #include <cassert>

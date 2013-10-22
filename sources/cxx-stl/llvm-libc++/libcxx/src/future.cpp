@@ -26,11 +26,20 @@ __future_error_category::name() const _NOEXCEPT
     return "future";
 }
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch"
+#elif defined(__GNUC__) || defined(__GNUG__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch"
+#endif
+
 string
 __future_error_category::message(int ev) const
 {
     switch (static_cast<future_errc>(ev))
     {
+    case future_errc(0):  // For backwards compatibility with C++11 (LWG 2056)
     case future_errc::broken_promise:
         return string("The associated promise has been destructed prior "
                       "to the associated state becoming ready.");
@@ -45,6 +54,12 @@ __future_error_category::message(int ev) const
     }
     return string("unspecified future_errc value\n");
 }
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__) || defined(__GNUG__)
+#pragma GCC diagnostic pop
+#endif
 
 const error_category&
 future_category() _NOEXCEPT

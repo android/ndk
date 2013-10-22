@@ -28,7 +28,9 @@
 
 // Note:  optimize for size
 
+#if ! defined(_LIBCPP_MSVC)
 #pragma GCC visibility push(hidden)
+#endif
 
 namespace
 {
@@ -44,12 +46,12 @@ private:
     static const std::ptrdiff_t offset = static_cast<std::ptrdiff_t>(2*sizeof(unused_t) +
                                                                        sizeof(count_t));
 
-    count_t& count() const _NOEXCEPT {return (count_t&)(*(str_ - sizeof(count_t)));}
+    count_t& count() const _NOEXCEPT {return *const_cast<count_t *>(reinterpret_cast<const count_t *>(str_ - sizeof(count_t)));}
 public:
     explicit __libcpp_nmstr(const char* msg);
-    __libcpp_nmstr(const __libcpp_nmstr& s) _LIBCPP_CANTTHROW;
-    __libcpp_nmstr& operator=(const __libcpp_nmstr& s) _LIBCPP_CANTTHROW;
-    ~__libcpp_nmstr() _LIBCPP_CANTTHROW;
+    __libcpp_nmstr(const __libcpp_nmstr& s) _NOEXCEPT;
+    __libcpp_nmstr& operator=(const __libcpp_nmstr& s) _NOEXCEPT;
+    ~__libcpp_nmstr();
     const char* c_str() const _NOEXCEPT {return str_;}
 };
 
@@ -57,7 +59,7 @@ __libcpp_nmstr::__libcpp_nmstr(const char* msg)
 {
     std::size_t len = strlen(msg);
     str_ = new char[len + 1 + offset];
-    unused_t* c = (unused_t*)str_;
+    unused_t* c = reinterpret_cast<unused_t*>(const_cast<char *>(str_));
     c[0] = c[1] = len;
     str_ += offset;
     count() = 0;
@@ -65,19 +67,19 @@ __libcpp_nmstr::__libcpp_nmstr(const char* msg)
 }
 
 inline
-__libcpp_nmstr::__libcpp_nmstr(const __libcpp_nmstr& s)
+__libcpp_nmstr::__libcpp_nmstr(const __libcpp_nmstr& s) _NOEXCEPT
     : str_(s.str_)
 {
     __sync_add_and_fetch(&count(), 1);
 }
 
 __libcpp_nmstr&
-__libcpp_nmstr::operator=(const __libcpp_nmstr& s)
+__libcpp_nmstr::operator=(const __libcpp_nmstr& s) _NOEXCEPT
 {
     const char* p = str_;
     str_ = s.str_;
     __sync_add_and_fetch(&count(), 1);
-    if (__sync_add_and_fetch((count_t*)(p-sizeof(count_t)), count_t(-1)) < 0)
+    if (__sync_add_and_fetch(reinterpret_cast<count_t*>(const_cast<char*>(p)-sizeof(count_t)), count_t(-1)) < 0)
         delete [] (p-offset);
     return *this;
 }
@@ -91,95 +93,99 @@ __libcpp_nmstr::~__libcpp_nmstr()
 
 }
 
+#if ! defined(_LIBCPP_MSVC)
 #pragma GCC visibility pop
+#endif
 
 namespace std  // purposefully not using versioning namespace
 {
 
 logic_error::logic_error(const string& msg)
 {
-    __libcpp_nmstr& s = (__libcpp_nmstr&)__imp_;
-    ::new(&s) __libcpp_nmstr(msg.c_str());
+    __libcpp_nmstr *s = reinterpret_cast<__libcpp_nmstr *>(&__imp_);
+    ::new(s) __libcpp_nmstr(msg.c_str());
 }
 
 logic_error::logic_error(const char* msg)
 {
-    __libcpp_nmstr& s = (__libcpp_nmstr&)__imp_;
-    ::new(&s) __libcpp_nmstr(msg);
+    __libcpp_nmstr *s = reinterpret_cast<__libcpp_nmstr *>(&__imp_);
+    ::new(s) __libcpp_nmstr(msg);
 }
 
 logic_error::logic_error(const logic_error& le) _NOEXCEPT
 {
-    __libcpp_nmstr& s = (__libcpp_nmstr&)__imp_;
-    ::new(&s) __libcpp_nmstr((const __libcpp_nmstr&)le.__imp_);
+    __libcpp_nmstr *s = reinterpret_cast<__libcpp_nmstr *>(&__imp_);
+    const __libcpp_nmstr *s2 = reinterpret_cast<const __libcpp_nmstr *>(&le.__imp_);
+    ::new(s) __libcpp_nmstr(*s2);
 }
 
 logic_error&
 logic_error::operator=(const logic_error& le) _NOEXCEPT
 {
-    __libcpp_nmstr& s1 = (__libcpp_nmstr&)__imp_;
-    const __libcpp_nmstr& s2 = (const __libcpp_nmstr&)le.__imp_;
-    s1 = s2;
+    __libcpp_nmstr *s1 = reinterpret_cast<__libcpp_nmstr *>(&__imp_);
+    const __libcpp_nmstr *s2 = reinterpret_cast<const __libcpp_nmstr *>(&le.__imp_);
+    *s1 = *s2;
     return *this;
 }
 
-#ifndef _LIBCPPABI_VERSION
+#if !defined(_LIBCPPABI_VERSION) && !defined(LIBSTDCXX)
 
 logic_error::~logic_error() _NOEXCEPT
 {
-    __libcpp_nmstr& s = (__libcpp_nmstr&)__imp_;
-    s.~__libcpp_nmstr();
+    __libcpp_nmstr *s = reinterpret_cast<__libcpp_nmstr *>(&__imp_);
+    s->~__libcpp_nmstr();
 }
 
 const char*
 logic_error::what() const _NOEXCEPT
 {
-    __libcpp_nmstr& s = (__libcpp_nmstr&)__imp_;
-    return s.c_str();
+    const __libcpp_nmstr *s = reinterpret_cast<const __libcpp_nmstr *>(&__imp_);
+    return s->c_str();
 }
 
 #endif
 
 runtime_error::runtime_error(const string& msg)
 {
-    __libcpp_nmstr& s = (__libcpp_nmstr&)__imp_;
-    ::new(&s) __libcpp_nmstr(msg.c_str());
+    __libcpp_nmstr *s = reinterpret_cast<__libcpp_nmstr *>(&__imp_);
+    ::new(s) __libcpp_nmstr(msg.c_str());
 }
 
 runtime_error::runtime_error(const char* msg)
 {
-    __libcpp_nmstr& s = (__libcpp_nmstr&)__imp_;
-    ::new(&s) __libcpp_nmstr(msg);
+    __libcpp_nmstr *s = reinterpret_cast<__libcpp_nmstr *>(&__imp_);
+    ::new(s) __libcpp_nmstr(msg);
 }
 
 runtime_error::runtime_error(const runtime_error& le) _NOEXCEPT
 {
-    __libcpp_nmstr& s = (__libcpp_nmstr&)__imp_;
-    ::new(&s) __libcpp_nmstr((const __libcpp_nmstr&)le.__imp_);
+    __libcpp_nmstr *s = reinterpret_cast<__libcpp_nmstr *>(&__imp_);
+    const __libcpp_nmstr *s2 = reinterpret_cast<const __libcpp_nmstr *>(&le.__imp_);
+    ::new(s) __libcpp_nmstr(*s2);
 }
 
 runtime_error&
 runtime_error::operator=(const runtime_error& le) _NOEXCEPT
 {
-    __libcpp_nmstr& s1 = (__libcpp_nmstr&)__imp_;
-    const __libcpp_nmstr& s2 = (const __libcpp_nmstr&)le.__imp_;
-    s1 = s2;
+    __libcpp_nmstr *s1 = reinterpret_cast<__libcpp_nmstr *>(&__imp_);
+    const __libcpp_nmstr *s2 = reinterpret_cast<const __libcpp_nmstr *>(&le.__imp_);
+    *s1 = *s2;
     return *this;
 }
 
-#ifndef _LIBCPPABI_VERSION
+#if !defined(_LIBCPPABI_VERSION) && !defined(LIBSTDCXX)
 
 runtime_error::~runtime_error() _NOEXCEPT
 {
-    __libcpp_nmstr& s = (__libcpp_nmstr&)__imp_;
-    s.~__libcpp_nmstr();
+    __libcpp_nmstr *s = reinterpret_cast<__libcpp_nmstr *>(&__imp_);
+    s->~__libcpp_nmstr();
 }
 
 const char*
 runtime_error::what() const _NOEXCEPT
 {
-    __libcpp_nmstr& s = (__libcpp_nmstr&)__imp_;
-    return s.c_str();
+    const __libcpp_nmstr *s = reinterpret_cast<const __libcpp_nmstr *>(&__imp_);
+    return s->c_str();
 }
 
 domain_error::~domain_error() _NOEXCEPT {}

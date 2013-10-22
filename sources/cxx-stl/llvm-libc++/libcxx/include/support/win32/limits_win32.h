@@ -11,16 +11,15 @@
 #ifndef _LIBCPP_SUPPORT_WIN32_LIMITS_WIN32_H
 #define _LIBCPP_SUPPORT_WIN32_LIMITS_WIN32_H
 
-#if !defined(_MSC_VER)
-#error "This header is MSVC specific, Clang and GCC should not include it"
+#if !defined(_LIBCPP_MSVCRT)
+#error "This header complements the Microsoft C Runtime library, and should not be included otherwise."
 #else
 
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <windows.h> // ymath.h works correctly
-
+#include <limits.h> // CHAR_BIT
 #include <float.h> // limit constants
+
+#if ! defined(__clang__)
+#define __CHAR_BIT__       CHAR_BIT
 
 #define __FLT_MANT_DIG__   FLT_MANT_DIG
 #define __FLT_DIG__        FLT_DIG
@@ -73,7 +72,8 @@
 #define __builtin_nans(__dummy)  _Snan._Double
 #define __builtin_nansf(__dummy) _FSnan._Float
 #define __builtin_nansl(__dummy) _LSnan._Long_double
+#endif // ! defined(__clang__)
 
-#endif // _MSC_VER
+#endif // _LIBCPP_MSVCRT
 
 #endif // _LIBCPP_SUPPORT_WIN32_LIMITS_WIN32_H
