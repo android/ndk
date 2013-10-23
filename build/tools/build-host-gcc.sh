@@ -261,6 +261,7 @@ tag_to_os ()
 {
     local RET
     case $1 in
+        android-*) RET="android";;
         linux-*) RET="linux";;
         darwin-*) RET="darwin";;
         windows|windows-*) RET="windows";;
@@ -273,6 +274,8 @@ tag_to_arch ()
 {
     local RET
     case $1 in
+        *-armeabi|*-armeabi-v7a) RET=arm;;
+        *-mips) RET=mips;;
         windows|*-x86) RET=x86;;
         *-x86_64) RET=x86_64;;
     esac
@@ -284,10 +287,27 @@ tag_to_bits ()
 {
     local RET
     case $1 in
-        windows|*-x86) RET=32;;
+        windows|*-x86|*-arm|*-armeabi|*-armeabi-v7a|*-mips|*-x32) RET=32;;
         *-x86_64) RET=64;;
     esac
     echo $RET
+}
+
+tag_to_config_triplet ()
+{
+    local RET
+    case $1 in
+        android-armeabi|android-armeabi-v7a) RET=arm-linux-androideabi;;
+        android-x86) RET=i686-linux-android;;
+        android-mips) RET=mipsel-linux-android;;
+        linux-x86) RET=i686-linux-gnu;;
+        linux-x86_64) RET=x86_64-linux-gnu;;
+        darwin-x86) RET=i686-apple-darwin;;
+        darwin-x86_64) RET=x86_64-apple-darwin;;
+        windows|windows-x86) RET=i586-pc-mingw32msvc;;
+        windows-x86_64) RET=x86_64-w64-mingw32;;
+    esac
+    echo "$RET"
 }
 
 if [ "$NO_COLOR" ]; then
@@ -305,7 +325,7 @@ fi
 # Pretty printing with colors!
 host_text ()
 {
-    printf "[${COLOR_GREEN}${HOST}${COLOR_END}]"
+    printf "[${COLOR_GREEN}${HOST_TAG}${COLOR_END}]"
 }
 
 toolchain_text ()
@@ -315,7 +335,7 @@ toolchain_text ()
 
 target_text ()
 {
-    printf "[${COLOR_CYAN}${TARGET}${COLOR_END}]"
+    printf "[${COLOR_CYAN}${TARGET_TRIPLET}${COLOR_END}]"
 }
 
 arch_text ()
@@ -362,6 +382,7 @@ case $(tag_to_bits $BUILD_TAG) in
 esac
 
 BUILD_BITS=$(tag_to_bits $BUILD_TAG)
+BUILD_TRIPLET=$(tag_to_config_triplet $BUILD_TAG)
 
 # On Darwin, parallel installs of certain libraries do not work on
 # some multi-core machines. So define NUM_BUILD_JOBS as 1 on this
@@ -435,20 +456,6 @@ version_is_greater_than ()
     fi
 }
 
-tag_to_config_triplet ()
-{
-    local RET
-    case $1 in
-        linux-x86) RET=i686-linux-gnu;;
-        linux-x86_64) RET=x86_64-linux-gnu;;
-        darwin-x86) RET=i686-apple-darwin;;
-        darwin-x86_64) RET=x86_64-apple-darwin;;
-        windows|windows-x86) RET=i586-pc-mingw32msvc;;
-        windows-x86_64) RET=x86_64-w64-mingw32;;
-    esac
-    echo "$RET"
-}
-
 run_on_setup ()
 {
     if [ "$PHASE" = setup ]; then
@@ -481,7 +488,7 @@ setup_build ()
         fail_panic "Can't create packaging directory: $PACKAGE_DIR"
     fi
 
-    BUILD=$(tag_to_config_triplet $BUILD_TAG)
+    BUILD_TRIPLET=$(tag_to_config_triplet $BUILD_TAG)
 }
 
 stamps_do ()
@@ -632,9 +639,9 @@ EOF
 # This function probes the system to find the best toolchain or cross-toolchain
 # to build binaries that run on a given host system. After that, it generates
 # a wrapper toolchain under $WRAPPERS_DIR with a prefix of ${HOST}-
-# where $HOST is a GNU configuration name.
+# where $HOST_TRIPLET is a GNU configuration name.
 #
-# Important: this script might redefine $HOST to a different value!
+# Important: this script might redefine $HOST_TRIPLET to a different value!
 # Important: must be called after setup_build.
 #
 # $1: NDK system tag (e.g. linux-x86)
@@ -655,9 +662,13 @@ select_toolchain_for_host ()
     # a full Android platform source checkout, we can look at the prebuilts/
     # directory.
     case $1 in
+        android-*)
+           try_host_prefix $(tag_to_config_triplet $1)
+           ;;
         linux-x86)
             # If possible, automatically use our custom toolchain to generate
             # 32-bit executables that work on Ubuntu 8.04 and higher.
+            try_host_fullprefix "$(dirname $ANDROID_NDK_ROOT)/prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.7" i686-linux
             try_host_fullprefix "$(dirname $ANDROID_NDK_ROOT)/prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" i686-linux
             try_host_fullprefix "$(dirname $ANDROID_NDK_ROOT)/prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.4.3" i686-linux
             try_host_fullprefix "$(dirname $ANDROID_NDK_ROOT)/prebuilt/linux-x86/toolchain/i686-linux-glibc2.7-4.4.3" i686-linux
@@ -670,6 +681,7 @@ select_toolchain_for_host ()
         linux-x86_64)
             # If possible, automaticaly use our custom toolchain to generate
             # 64-bit executables that work on Ubuntu 8.04 and higher.
+            try_host_fullprefix "$(dirname $ANDROID_NDK_ROOT)/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.7" x86_64-linux
             try_host_fullprefix "$(dirname $ANDROID_NDK_ROOT)/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" x86_64-linux
             try_host_prefix x86_64-linux-gnu
             try_host_prefix x84_64-linux
@@ -757,15 +769,15 @@ select_toolchain_for_host ()
                         dump ""
                         exit 1
                     fi
-                    # Adjust $HOST to match the toolchain to ensure proper builds.
+                    # Adjust $HOST_TRIPLET to match the toolchain to ensure proper builds.
                     # I.e. chose configuration triplets that are known to work
                     # with the gmp/mpfr/mpc/binutils/gcc configure scripts.
                     case $HOST_FULLPREFIX in
                         *-mingw32msvc-*|i686-pc-mingw32)
-                            HOST=i586-pc-mingw32msvc
+                            HOST_TRIPLET=i586-pc-mingw32msvc
                             ;;
                         *)
-                            HOST=i686-w64-mingw32msvc
+                            HOST_TRIPLET=i686-w64-mingw32msvc
                             ;;
                     esac
                     ;;
@@ -806,10 +818,10 @@ select_toolchain_for_host ()
                     case $HOST_FULLPREFIX in
                         *-mingw32msvc*)
                             # Actually, this has never been tested.
-                            HOST=amd64-pc-mingw32msvc
+                            HOST_TRIPLET=amd64-pc-mingw32msvc
                             ;;
                         *)
-                            HOST=x86_64-w64-mingw32
+                            HOST_TRIPLET=x86_64-w64-mingw32
                             ;;
                     esac
                     ;;
@@ -820,9 +832,13 @@ select_toolchain_for_host ()
             ;;
     esac
 
-    mkdir -p "$(host_build_dir)"
+    if [ -z "$HOST_FULLPREFIX" ]; then
+      panic "Sorry, could not find a toolchain for host system $1"
+    fi
+
+    mkdir -p "$(host_build_dir $HOST_TAG)"
     if [ "$FORCE" ]; then
-        rm -rf "$(host_build_dir)"/*
+        rm -rf "$(host_build_dir $HOST_TAG)"/*
     fi
 
     # Determine the default bitness of our compiler. It it doesn't match
@@ -846,8 +862,8 @@ select_toolchain_for_host ()
         DST_PREFIX="$NDK_CCACHE $HOST_FULLPREFIX"
     fi
 
-    # We're going to generate a wrapper toolchain with the $HOST prefix
-    # i.e. if $HOST is 'i686-linux-gnu', then we're going to generate a
+    # We're going to generate a wrapper toolchain with the $HOST_TRIPLET prefix
+    # i.e. if $HOST_TRIPLET is 'i686-linux-gnu', then we're going to generate a
     # wrapper toolchain named 'i686-linux-gnu-gcc' that will redirect
     # to whatever HOST_FULLPREFIX points to, with appropriate modifier
     # compiler/linker flags.
@@ -856,7 +872,7 @@ select_toolchain_for_host ()
     # configure scripts.
     #
     run $NDK_BUILDTOOLS_PATH/gen-toolchain-wrapper.sh "$WRAPPERS_DIR" \
-        --src-prefix="$HOST-" \
+        --src-prefix="$HOST_TRIPLET-" \
         --dst-prefix="$DST_PREFIX" \
         --cflags="$HOST_CFLAGS" \
         --cxxflags="$HOST_CXXFLAGS" \
@@ -875,92 +891,76 @@ setup_build_for_host ()
     local HOST_VARNAME=$(dashes_to_underscores $1)
     local HOST_VAR=_HOST_${HOST_VARNAME}
 
-    # Determine the host configuration triplet in $HOST
-    HOST=$(tag_to_config_triplet $1)
+    # Determine the host configuration triplet in $HOST_TRIPLET
+    HOST_TRIPLET=$(tag_to_config_triplet $1)
     HOST_OS=$(tag_to_os $1)
     HOST_ARCH=$(tag_to_arch $1)
     HOST_BITS=$(tag_to_bits $1)
     HOST_TAG=$1
 
-    # Note: since select_toolchain_for_host can change the value of $HOST
+    # Note: since select_toolchain_for_host can change the value of $HOST_TRIPLET
     # we need to save it in a variable to later get the correct one when
     # this function is called again.
     if [ -z "$(var_value ${HOST_VAR}_SETUP)" ]; then
         select_toolchain_for_host $1
-        var_assign ${HOST_VAR}_CONFIG $HOST
+        var_assign ${HOST_VAR}_CONFIG $HOST_TRIPLET
         var_assign ${HOST_VAR}_SETUP true
     else
-        HOST=$(var_value ${HOST_VAR}_CONFIG)
+        HOST_TRIPLET=$(var_value ${HOST_VAR}_CONFIG)
     fi
 }
 
-# Returns the location of all $HOST specific files (build and install)
+# Returns the location of all host-specific files (build and install)
+# $1: Host NDK tag
 host_build_dir ()
 {
-    echo "$TOP_BUILD_DIR/$HOST"
+    echo "$TOP_BUILD_DIR/host-$1"
 }
 
 # Return the location of the build directory for a specific component
-# $1: component name (e.g. gmp-4.2.4)
+# $1: Host NDK tag.
+# $2: component name (e.g. gmp-4.2.4)
 host_build_dir_for ()
 {
-    echo "$(host_build_dir)/build-$1"
+    echo "$(host_build_dir $1)/build-$2"
 }
 
-# Returns the install location of the $HOST pre-reqs libraries
+# Returns the install location of the host-specific pre-reqs libraries
+# $1: Host NDK tag.
 host_prereqs_install_dir ()
 {
-    echo "$(host_build_dir)/temp-prereqs"
+    echo "$(host_build_dir $1)/install-prereqs"
 }
 
-# Returns the install location of the $HOST binutils cross-toolchain
+# Returns the install location of the host-specific binutils cross-toolchain
+# $1: Host NDK tag.
 host_binutils_install_dir ()
 {
-    echo "$(host_build_dir)/temp-binutils-$BINUTILS_VERSION-$TARGET"
+    echo "$(host_build_dir $1)/install-binutils-$BINUTILS_VERSION-$TARGET_TRIPLET"
 }
 
-# Returns the install location of the $HOST binutils cross-toolchain
-build_binutils_install_dir ()
-{
-    echo "$TOP_BUILD_DIR/$BUILD/temp-binutils-$BINUTILS_VERSION-$TARGET"
-}
-
-# Returns the install location of the $HOST gcc cross-toolchain
+# Returns the install location of the host-specific gcc cross-toolchain
+# $1: Host NDK tag.
 host_gcc_install_dir ()
 {
-    echo "$(host_build_dir)/temp-$TOOLCHAIN"
+    echo "$(host_build_dir $1)/install-gcc-$GCC_VERSION-$TARGET_TRIPLET"
 }
-
-# Returns the install location of the $BUILD gcc cross-toolchain
-build_gcc_install_dir ()
-{
-    echo "$TOP_BUILD_DIR/$BUILD/temp-$TOOLCHAIN"
-}
-
 
 # Location of the host sysroot used during the build
+# $1: Host NDK tag.
 host_sysroot ()
 {
-    # This must be a sub-directory of $(host_gcc_install_dir)
+    # This must be a sub-directory of $(host_gcc_install_dir $1)
     # to generate relocatable binaries that are used by
     # standalone versions of the toolchain.
     #
     # If you change this, you will need to modify make-standalone-toolchain.sh
     # as well.
     #
-    echo "$(host_gcc_install_dir)/sysroot"
+    echo "$(host_gcc_install_dir $1)/sysroot"
 }
 
-# Returns the final install location of the $HOST toolchain
-# This ones contains the binutils binaries, the gcc ones,
-# the target libraries, but does *not* include the sysroot
-# and other stuff (e.g. documentation like info or man files).
-#
-host_gcc_final_dir ()
-{
-    echo "$(host_build_dir)/final-$TOOLCHAIN"
-}
-
+# $1: Toolchain name.
 setup_build_for_toolchain ()
 {
     GCC_VERSION=$(extract_version $1)
@@ -971,10 +971,10 @@ setup_build_for_toolchain ()
     # NOTE: The 'mipsel' toolchain architecture name maps to the 'mips'
     # NDK architecture name.
     case $TARGET_ARCH in
-        arm) TARGET=arm-linux-androideabi;;
-        x86) TARGET=i686-linux-android;;
-        x86_64) TARGET=x86_64-linux-android;;
-        mips|mipsel) TARGET=mipsel-linux-android; TARGET_ARCH=mips;;
+        arm) TARGET_TRIPLET=arm-linux-androideabi;;
+        x86) TARGET_TRIPLET=i686-linux-android;;
+        x86_64) TARGET_TRIPLET=x86_64-linux-android;;
+        mips|mipsel) TARGET_TRIPLET=mipsel-linux-android; TARGET_ARCH=mips;;
         *) panic "Unknown target toolchain architecture: $TARGET_ARCH"
     esac
 
@@ -985,7 +985,7 @@ setup_build_for_toolchain ()
     fi
 
     # TODO: We will need to place these under
-    #      $NDK_DIR/prebuilts/$HOST/android-$TARGET_ARCH-gcc-$GCC_VERSION/
+    #      $NDK_DIR/prebuilts/$HOST_TRIPLET/android-$TARGET_ARCH-gcc-$GCC_VERSION/
     #      in a future patch.
     TOOLCHAIN_SUB_DIR=toolchains/$TOOLCHAIN/prebuilt/$HOST_TAG
     TOOLCHAIN_INSTALL_DIR=$NDK_DIR/$TOOLCHAIN_SUB_DIR
@@ -1017,15 +1017,15 @@ setup_build_for_toolchain ()
 #
 setup_host_env ()
 {
-    CC=$HOST-gcc
-    CXX=$HOST-g++
-    LD=$HOST-ld
-    AR=$HOST-ar
-    AS=$HOST-as
-    RANLIB=$HOST-ranlib
-    NM=$HOST-nm
-    STRIP=$HOST-strip
-    STRINGS=$HOST-strings
+    CC=$HOST_TRIPLET-gcc
+    CXX=$HOST_TRIPLET-g++
+    LD=$HOST_TRIPLET-ld
+    AR=$HOST_TRIPLET-ar
+    AS=$HOST_TRIPLET-as
+    RANLIB=$HOST_TRIPLET-ranlib
+    NM=$HOST_TRIPLET-nm
+    STRIP=$HOST_TRIPLET-strip
+    STRINGS=$HOST_TRIPLET-strings
     export CC CXX AS LD AR RANLIB STRIP STRINGS NM
 
     CFLAGS=
@@ -1036,6 +1036,12 @@ setup_host_env ()
         CXXFLAGS=$CFLAGS
     fi
 
+    case $SYSTEM in
+      android-armeabi-v7a)
+        CFLAGS="$CFLAGS -march=armv7-a -mfpu=vfpv3-d16"
+        LDFLAGS="$LFDFLAGS -march=armv7-a -Wl,--fix-cortex-a8"
+        ;;
+    esac
     # This should only used when building the target GCC libraries
     CFLAGS_FOR_TARGET=$TARGET_CFLAGS
     CXXFLAGS_FOR_TARGET=$TARGET_CXXFLAGS
@@ -1044,6 +1050,38 @@ setup_host_env ()
     export CFLAGS CXXFLAGS LDFLAGS CFLAGS_FOR_TARGET CXXFLAGS_FOR_TARGET LDFLAGS_FOR_TARGET
 
     PATH=$WRAPPERS_DIR:$PATH
+}
+
+# $1: Target generated shell script file.
+generate_host_env_setup () {
+  (
+    setup_host_env &&
+    cat > "$1" <<EOF
+AR="$AR"
+AS="$AS"
+CC="$CC"
+CXX="$CXX"
+LD="$LD"
+NM="$NM"
+RANLIB="$RANLIB"
+STRIP="$STRIP"
+STRINGS="$STRINGS"
+export AR AS CC CXX LD NM RANLIB STRINGS STRIP
+
+CFLAGS="$CFLAGS"
+CXXFLAGS="$CXXFLAGS"
+LDFLAGS="$LDFLAGS"
+export CFLAGS CXXFLAGS LDFLAGS
+
+CFLAGS_FOR_TARGET="$CFLAGS_FOR_TARGET"
+CXXFLAGS_FOR_TARGET="$CXXFLAGS_FOR_TARGET"
+LDFLAGS_FOR_TARGET="$LDFLAGS_FOR_TARGET"
+export CFLAGS_FOR_TARGET CXXFLAGS_FOR_TARGET LDFLAGS_FOR_TARGET
+
+PATH="$PATH"
+export PATH
+EOF
+  )
 }
 
 # $1: NDK architecture name (e.g. 'arm')
@@ -1068,6 +1106,30 @@ gen_minimal_sysroot ()
     run2 $NDK_BUILDTOOLS_PATH/gen-platforms.sh --minimal --arch=$ARCH --dst-dir="$INSTALL_DIR"
 }
 
+# Apply a set of target patches
+# $1: Source package name (e.g. gmp-3.0.1)
+#     This looks under $NDK_ROOT/build/tools/toolchain-patches-target/$1/
+# $2: Source directory where to apply the patches.
+apply_target_patches ()
+{
+  local PACKAGE=$1
+  local SRC_DIR="$2"
+  local PATCHES_DIR="$NDK_DIR/build/tools/toolchain-patches-target/$PACKAGE"
+  local PATCH PATCHES
+  if [ ! -d "$PATCHES_DIR" ]; then
+    log2 "No target patch to apply for $1"
+    return
+  fi
+
+  PATCHES=$(cd "$PATCHES_DIR" && ls *.patch 2>/dev/null)
+  for PATCH in $PATCHES; do
+    dump "  Applying $PATCH"
+    (
+      run2 cd "$SRC_DIR/$PACKAGE" &&
+      patch -p1 < "$PATCHES_DIR/$PATCH" > /dev/null
+    ) || return $?
+  done
+}
 
 # $1: gmp version
 extract_gmp_sources ()
@@ -1077,27 +1139,30 @@ extract_gmp_sources ()
     dump "Extracting gmp-$1"
     run2 mkdir -p "$SRC_DIR" &&
     run2 tar xjf "$TOOLCHAIN_SRC_DIR/gmp/gmp-$1.tar.bz2" -C "$SRC_DIR"
+    apply_target_patches gmp-$1 "$SRC_DIR"
 }
 
 # $1: gmp version
 build_gmp ()
 {
     local SRC_DIR="$TOP_BUILD_DIR/temp-src/gmp-$1"
-    local INSTALL_DIR="$(host_prereqs_install_dir)"
-    local BUILD_DIR
+    local INSTALL_DIR="$(host_prereqs_install_dir $HOST_TAG)"
+    local BUILD_DIR ENV_SETUP
 
     stamps_do extract-gmp-$1 extract_gmp_sources $1
 
     dump "$(host_text) Building gmp-$1"
     (
-        setup_host_env &&
-        BUILD_DIR="$(host_build_dir_for gmp-$GMP_VERSION)" &&
+        BUILD_DIR="$(host_build_dir_for $HOST_TAG gmp-$GMP_VERSION)" &&
+        ENV_SETUP=$BUILD_DIR/env_setup.sh &&
         run2 mkdir -p "$BUILD_DIR" && run2 rm -rf "$BUILD_DIR"/* &&
+        generate_host_env_setup "$ENV_SETUP" &&
         cd "$BUILD_DIR" &&
+        . "$ENV_SETUP" &&
         run2 "$SRC_DIR"/configure \
             --prefix=$INSTALL_DIR \
-            --build=$BUILD \
-            --host=$HOST \
+            --build=$BUILD_TRIPLET \
+            --host=$HOST_TRIPLET \
             --disable-shared &&
         run2 make -j$NUM_JOBS &&
         run2 make install -j$NUM_INSTALL_JOBS
@@ -1112,29 +1177,32 @@ extract_mpfr_sources ()
     dump "Extracting mpfr-$1"
     run2 mkdir -p "$SRC_DIR" &&
     run2 tar xjf "$TOOLCHAIN_SRC_DIR/mpfr/mpfr-$1.tar.bz2" -C "$SRC_DIR"
+    apply_target_patches mpfr-$1 "$SRC_DIR"
 }
 
 # $1: mpfr-version
 build_mpfr ()
 {
     local SRC_DIR="$TOP_BUILD_DIR/temp-src/mpfr-$1"
-    local INSTALL_DIR="$(host_prereqs_install_dir)"
-    local BUILD_DIR
+    local INSTALL_DIR="$(host_prereqs_install_dir $HOST_TAG)"
+    local BUILD_DIR ENV_SETUP
 
     stamps_do extract-mpfr-$MPFR_VERSION extract_mpfr_sources $1
 
-    stamps_do build-gmp-$GMP_VERSION-$HOST build_gmp $GMP_VERSION
+    stamps_do build-gmp-$GMP_VERSION-$HOST_TRIPLET build_gmp $GMP_VERSION
 
     dump "$(host_text) Building mpfr-$1"
     (
-        setup_host_env &&
-        BUILD_DIR="$(host_build_dir_for mpfr-$MPFR_VERSION)" &&
+        BUILD_DIR="$(host_build_dir_for $HOST_TAG mpfr-$MPFR_VERSION)" &&
+        ENV_SETUP=$BUILD_DIR/env_setup.sh &&
         run2 mkdir -p "$BUILD_DIR" && run2 rm -rf "$BUILD_DIR"/* &&
+        generate_host_env_setup "$ENV_SETUP" &&
         cd $BUILD_DIR &&
+        . "$ENV_SETUP" &&
         run2 "$SRC_DIR"/configure \
             --prefix=$INSTALL_DIR \
-            --build=$BUILD \
-            --host=$HOST \
+            --build=$BUILD_TRIPLET \
+            --host=$HOST_TRIPLET \
             --disable-shared \
             --with-gmp=$INSTALL_DIR &&
         run2 make -j$NUM_JOBS &&
@@ -1151,6 +1219,7 @@ extract_mpc_sources ()
     dump "Extracting mpc-$1"
     run2 mkdir -p "$SRC_DIR" &&
     run2 tar xzf "$TOOLCHAIN_SRC_DIR/mpc/mpc-$1.tar.gz" -C "$SRC_DIR"
+    apply_target_patches mpc-$1 "$SRC_DIR"
 }
 
 
@@ -1158,23 +1227,25 @@ extract_mpc_sources ()
 build_mpc ()
 {
     local SRC_DIR="$TOP_BUILD_DIR/temp-src/mpc-$1"
-    local INSTALL_DIR="$(host_prereqs_install_dir)"
-    local BUILD_DIR
+    local INSTALL_DIR="$(host_prereqs_install_dir $HOST_TAG)"
+    local BUILD_DIR ENV_SETUP
 
     stamps_do extract-mpc-$1 extract_mpc_sources $1
 
-    stamps_do build-mpfr-$MPFR_VERSION-$HOST build_mpfr $MPFR_VERSION
+    stamps_do build-mpfr-$MPFR_VERSION-$HOST_TRIPLET build_mpfr $MPFR_VERSION
 
     dump "$(host_text) Building mpc-$1"
     (
-        setup_host_env &&
-        BUILD_DIR="$(host_build_dir_for mpc-$MPC_VERSION)" &&
+        BUILD_DIR="$(host_build_dir_for $HOST_TAG mpc-$MPC_VERSION)" &&
+        ENV_SETUP=$BUILD_DIR/env_setup.sh &&
         run2 mkdir -p "$BUILD_DIR" && run2 rm -rf "$BUILD_DIR"/* &&
+        generate_host_env_setup "$ENV_SETUP" &&
         cd $BUILD_DIR &&
+        . "$ENV_SETUP" &&
         run2 "$SRC_DIR"/configure \
             --prefix=$INSTALL_DIR \
-            --build=$BUILD \
-            --host=$HOST \
+            --build=$BUILD_TRIPLET \
+            --host=$HOST_TRIPLET \
             --disable-shared \
             --with-gmp=$INSTALL_DIR \
             --with-mpfr=$INSTALL_DIR &&
@@ -1192,7 +1263,7 @@ build_mpc ()
 #
 build_host_prereqs ()
 {
-    local INSTALL_DIR="$(host_prereqs_install_dir)"
+    local INSTALL_DIR="$(host_prereqs_install_dir $HOST_TAG)"
     local ARGS
 
     ARGS=" --with-gmp=$INSTALL_DIR --with-mpfr=$INSTALL_DIR"
@@ -1200,9 +1271,9 @@ build_host_prereqs ()
     # Only build MPC when we need it.
     if [ "$HOST_NEED_MPC" ]; then
         ARGS=$ARGS" --with-mpc=$INSTALL_DIR"
-        stamps_do build-mpc-$MPC_VERSION-$HOST build_mpc $MPC_VERSION
+        stamps_do build-mpc-$MPC_VERSION-$HOST_TRIPLET build_mpc $MPC_VERSION
     else
-        stamps_do build-mpfr-$MPFR_VERSION-$HOST build_mpfr $MPFR_VERSION
+        stamps_do build-mpfr-$MPFR_VERSION-$HOST_TRIPLET build_mpfr $MPFR_VERSION
     fi
 
     # This gets used by build_host_binutils and others.
@@ -1212,9 +1283,9 @@ build_host_prereqs ()
 build_host_binutils ()
 {
     local SRC_DIR="$TOOLCHAIN_SRC_DIR/binutils/binutils-$BINUTILS_VERSION"
-    local INSTALL_DIR="$(host_binutils_install_dir)"
-    local PREREQS_INSTALL_DIR="$(host_prereqs_install_dir)"
-    local ARGS
+    local INSTALL_DIR="$(host_binutils_install_dir $HOST_TAG)"
+    local PREREQS_INSTALL_DIR="$(host_prereqs_install_dir $HOST_TAG)"
+    local ARGS ENV_SETUP
 
     build_host_prereqs
 
@@ -1229,21 +1300,21 @@ build_host_binutils ()
     BUILD_GOLD=true
 
     # Special case, gold is not ready for mips yet.
-    if [ "$TARGET" = "mipsel-linux-android" ]; then
+    if [ "$TARGET_TRIPLET" = "mipsel-linux-android" ]; then
         BUILD_GOLD=
     fi
 
     # Another special case, gold in binutils-2.21 for arch-x86 is buggy
     # (i.e. when building the platform with it, the system doesn't boot)
     #
-    if [ "$BINUTILS_VERSION" = "2.21" -a "$TARGET" = "i686-linux-android" ]; then
+    if [ "$BINUTILS_VERSION" = "2.21" -a "$TARGET_TRIPLET" = "i686-linux-android" ]; then
         USE_LD_DEFAULT=true
         BUILD_GOLD=
     fi
 
     # Another special case, for arch-x86_64 gold supports x32 starting from 2.23
     #
-    if [ "$TARGET" = "x86_64-linux-android" ]; then
+    if [ "$TARGET_TRIPLET" = "x86_64-linux-android" ]; then
        if ! version_is_greater_than $BINUTILS_VERSION 2.23; then
         USE_LD_DEFAULT=true
         BUILD_GOLD=
@@ -1325,17 +1396,21 @@ build_host_binutils ()
     dump "$(host_text)$(target_text) Building binutils-$BINUTILS_VERSION"
     (
         setup_host_env &&
-        BUILD_DIR="$(host_build_dir_for binutils-$BINUTILS_VERSION-$TARGET)" &&
+        BUILD_DIR="$(host_build_dir_for $HOST_TAG \
+            binutils-$BINUTILS_VERSION-$TARGET_TRIPLET)" &&
+        ENV_SETUP=$BUILD_DIR/env_setup.sh &&
         run2 mkdir -p "$BUILD_DIR" && run2 rm -rf "$BUILD_DIR"/* &&
+        generate_host_env_setup "$ENV_SETUP" &&
         cd "$BUILD_DIR" &&
+        . "$ENV_SETUP" &&
         run2 "$SRC_DIR"/configure \
             --prefix="$INSTALL_DIR" \
             --disable-shared \
             --disable-werror \
             --disable-nls \
-            --build=$BUILD \
-            --host=$HOST \
-            --target=$TARGET \
+            --build=$BUILD_TRIPLET \
+            --host=$HOST_TRIPLET \
+            --target=$TARGET_TRIPLET \
             --with-sysroot="$INSTALL_DIR/sysroot" \
             $ARGS &&
         run2 make -j$NUM_JOBS &&
@@ -1344,8 +1419,12 @@ build_host_binutils ()
         # doesn't seem to build gold, and the Makefile script forgets to
         # copy it to $INSTALL/bin/mipsel-linux-android-ld. Take care of this
         # here with a symlink, which will be enough for now.
-        if [ ! -f "$INSTALL_DIR/bin/$TARGET-ld" ]; then
-            run2 ln -s "$TARGET-ld.bfd" "$INSTALL_DIR/bin/$TARGET-ld"
+        LD_TARGET_PREFIX=
+        if [ "$TARGET_TRIPLET" != "$HOST_TRIPLET" ]; then
+            LD_TARGET_PREFIX=$TARGET_TRIPLET-
+        fi
+        if [ ! -f "$INSTALL_DIR/bin/${LD_TARGET_PREFIX}ld" ]; then
+            run2 ln -s "${LD_TARGET_PREFIX}ld.bfd" "$INSTALL_DIR/bin/${LD_TARGET_PREFIX}ld"
         fi
     )
     return $?
@@ -1354,7 +1433,7 @@ build_host_binutils ()
 copy_target_sysroot ()
 {
     local SRC_SYSROOT=$(arch_sysroot_dir $TARGET_ARCH)
-    local SYSROOT=$(host_sysroot)
+    local SYSROOT=$(host_sysroot $HOST_TAG)
 
     # We need the arch-specific minimal sysroot
     stamps_do sysroot-arch-$TARGET_ARCH gen_minimal_sysroot $TARGET_ARCH
@@ -1367,17 +1446,18 @@ copy_target_sysroot ()
 build_host_gcc_core ()
 {
     local SRC_DIR="$TOOLCHAIN_SRC_DIR/gcc/gcc-$GCC_VERSION"
-    local INSTALL_DIR="$(host_gcc_install_dir)"
-    local ARGS NEW_PATH
+    local INSTALL_DIR="$(host_gcc_install_dir $HOST_TAG)"
+    local ARGS NEW_PATH ENV_SETUP
 
-    stamps_do build-binutils-$BINUTILS_VERSION-$HOST-$TARGET build_host_binutils
+    stamps_do build-binutils-$BINUTILS_VERSION-$HOST_TRIPLET-$TARGET_TRIPLET \
+        build_host_binutils
     stamps_do sysroot-gcc-$SYSTEM-$TOOLCHAIN copy_target_sysroot
 
     build_host_prereqs
 
-    NEW_PATH=$(host_gcc_install_dir)/bin:$(host_binutils_install_dir)/bin
-    if [ "$HOST" != "$BUILD" ]; then
-        NEW_PATH=$(build_gcc_install_dir)/bin:$(build_binutils_install_dir)/bin
+    NEW_PATH=$(host_gcc_install_dir $HOST_TAG)/bin:$(host_binutils_install_dir $HOST_TAG)/bin
+    if [ "$HOST_TRIPLET" != "$BUILD_TRIPLET" ]; then
+        NEW_PATH=$(host_gcc_install_dir $BUILD_TAG)/bin:$(host_binutils_install_dir $BUILD_TAG)/bin
     fi
 
     ARGS=$HOST_PREREQS_ARGS
@@ -1438,16 +1518,19 @@ build_host_gcc_core ()
 
     dump "$(host_text)$(toolchain_text) Building gcc-core"
     (
-        setup_host_env &&
-        BUILD_DIR="$(host_build_dir_for gcc-$GCC_VERSION-$TARGET)" &&
+        BUILD_DIR="$(host_build_dir_for $HOST_TAG \
+            gcc-$GCC_VERSION-$TARGET_TRIPLET)" &&
+        ENV_SETUP=$BUILD_DIR/env_setup.sh &&
         run2 mkdir -p "$BUILD_DIR" && run2 rm -rf "$BUILD_DIR"/* &&
-        cd "$BUILD_DIR" &&
         PATH=$NEW_PATH:$PATH &&
+        generate_host_env_setup "$ENV_SETUP" &&
+        cd "$BUILD_DIR" &&
+        . "$ENV_SETUP" &&
         run2 "$SRC_DIR"/configure \
             --prefix="$INSTALL_DIR" \
-            --build=$BUILD \
-            --host=$HOST \
-            --target=$TARGET \
+            --build=$BUILD_TRIPLET \
+            --host=$HOST_TRIPLET \
+            --target=$TARGET_TRIPLET \
             --with-sysroot="$INSTALL_DIR/sysroot" \
             $HOST_PREREQS_ARGS $ARGS &&
         run2 make -j$NUM_JOBS all-gcc &&
@@ -1459,17 +1542,18 @@ build_host_gcc_core ()
 build_target_gcc_libs ()
 {
     local SRC_DIR="$TOOLCHAIN_SRC_DIR/gcc/gcc-$GCC_VERSION"
-    local INSTALL_DIR="$(host_gcc_install_dir)"
+    local INSTALL_DIR="$(host_gcc_install_dir $HOST_TAG)"
     local ARGS NEW_PATH
 
     stamps_do gcc-core-$GCC_VERSION-$SYSTEM-$TOOLCHAIN build_host_gcc_core
 
-    NEW_PATH=$(host_gcc_install_dir)/bin:$(host_binutils_install_dir)/bin
+    NEW_PATH=$(host_gcc_install_dir $HOST_TAG)/bin:$(host_binutils_install_dir $HOST_TAG)/bin
 
     dump "$(host_text)$(toolchain_text) Building target libraries"
     (
         setup_host_env &&
-        BUILD_DIR="$(host_build_dir_for gcc-$GCC_VERSION-$TARGET)" &&
+        BUILD_DIR="$(host_build_dir_for $HOST_TAG \
+            gcc-$GCC_VERSION-$TARGET_TRIPLET)" &&
         cd "$BUILD_DIR" &&
         PATH=$NEW_PATH:$PATH &&
         run2 make -j$NUM_JOBS all &&
@@ -1483,8 +1567,8 @@ copy_target_gcc_libs ()
     local SRC_DIR DST_DIR
     dump "$(host_text)$(toolchain_text) Copying target GCC libraries"
 
-    SRC_DIR="$(build_gcc_install_dir)/$TARGET"
-    DST_DIR="$(host_gcc_install_dir)/$TARGET"
+    SRC_DIR="$(host_gcc_install_dir $BUILD_TAG)/$TARGET_TRIPLET"
+    DST_DIR="$(host_gcc_install_dir $HOST_TAG)/$TARGET_TRIPLET"
 
     run2 copy_directory "$SRC_DIR" "$DST_DIR"
 }
@@ -1544,56 +1628,134 @@ install_gcc ()
 
     dump "$(host_text)$(toolchain_text) Installing to NDK."
 
-    BINUTILS_DIR=$(host_binutils_install_dir)
-    GCC_DIR=$(host_gcc_install_dir)
-    TARGET_LIBS_DIR=$(build_gcc_install_dir)
+    BINUTILS_DIR=$(host_binutils_install_dir $HOST_TAG)
+    GCC_DIR=$(host_gcc_install_dir $HOST_TAG)
+    TARGET_LIBS_DIR=$(host_gcc_install_dir $BUILD_TAG)
     INSTALL_DIR=$TOOLCHAIN_INSTALL_DIR
 
+    log "BINUTILS_DIR=$BINUTILS_DIR"
+    log "GCC_DIR=$GCC_DIR"
+    log "TARGET_LIBS_DIR=$TARGET_LIBS_DIR"
+    log "INSTALL_DIR=$INSTALL_DIR"
+    log "TARGET=$TARGET_TRIPLET"
+
     # Copy binutils binaries
+    #
+    #  The source directories of interest are:
+    #
+    #  $BINUTILS_DIR/$TARGET_TRIPLET/bin:
+    #     Contains a few programs that the compiler depends on, without any
+    #     target prefix, i.e. 'ar', 'as', 'ld', etc...
+    #
+    #  $BINUTIL_DIR/bin
+    #     Contains copies of the previous programs, but with a target prefix
+    #     (e.g. $TARGET_TRIPLET-ar, $TARGET_TRIPLET-as). In addition, a few
+    #     more prefixed programs (e.g. $TARGET_TRIPLET-readelf,
+    #     $TARGET_TRIPLET-strings), which are never directly invoked by
+    #     the compiler.
+    #
+    #  $BINUTILS_DIR/$TARGET_TRIPLET/lib/ldscripts/
+    #     Contains various linker scripts. Not sure if all of them are used.
+    #
+    # IMPORTANT: GCC will always look for the binutils utilities in the
+    #   $INSTALL_DIR/$TARGET_TRIPLET/bin directory. Even if there is a
+    #   corresponding $TARGET_TRIPLET-<tool> in $INSTALL_DIR/bin/, it will
+    #   be ignored by the 'gcc' driver program.
+    #
+    log "Copying binutils binaries."
     run2 copy_directory "$BINUTILS_DIR/bin" "$INSTALL_DIR/bin" &&
-    run2 copy_directory "$BINUTILS_DIR/$TARGET/lib" "$INSTALL_DIR/$TARGET/lib" &&
+    run2 copy_directory "$BINUTILS_DIR/$TARGET_TRIPLET/bin" "$INSTALL_DIR/$TARGET_TRIPLET/bin" &&
+    run2 copy_directory "$BINUTILS_DIR/$TARGET_TRIPLET/lib" "$INSTALL_DIR/$TARGET_TRIPLET/lib" &&
 
     # The following is used to copy the libbfd. See --enable-install-libbfd
     # which is set in build_host_binutils above.
-    run2 copy_directory "$BINUTILS_DIR/$HOST/$TARGET/include" "$INSTALL_DIR/include" &&
-    run2 copy_directory "$BINUTILS_DIR/$HOST/$TARGET/lib"     "$INSTALL_DIR/lib$(tag_to_bits $SYSTEM)" &&
+    if [ -d "$BINUTILS_DIR/$HOST_TRIPLET/$TARGET_TRIPLET" ]; then
+        log "Copying target libbfd files."
+        run2 copy_directory "$BINUTILS_DIR/$HOST_TRIPLET/$TARGET_TRIPLET/include" "$INSTALL_DIR/include" &&
+        run2 copy_directory "$BINUTILS_DIR/$HOST_TRIPLET/$TARGET_TRIPLET/lib"     "$INSTALL_DIR/lib$(tag_to_bits $SYSTEM)"
+    else
+        log "Skipping non-existing $BINUTILS_DIR/$HOST_TRIPLET/$TARGET_TRIPLET."
+    fi &&
 
-    # Copy gcc core binaries
+    # Copy GCC core binaries.
+    #
+    # The source directories of interest are:
+    #
+    #  $GCC_DIR/bin:
+    #    Contains prefixed versions of 'cc', 'gcc', 'g++' and 'gcc-$GCC_VERSION'.
+    #    If this is a target build (i.e. HOST_CONFIG == TARGET_CONFIG), then this
+    #    will also contain non-prefixed copies of the same programs.
+    #
+    #    For a target build, ignore the prefixed binaries, for a regular one,
+    #    ignore the non-prefixed copies.
+    #
+    #  $GCC_DIR/libexec/gcc/$TARGET_TRIPLET/$GCC_VERSION:
+    #    Contains compiler binaries (cc1, cc1plus) and compiler plugin shared libraries
+    #    (liblto_plugin.so).
+    #
+    log "Copying gcc core binaries."
     run2 copy_directory "$GCC_DIR/bin" "$INSTALL_DIR/bin" &&
-    run2 copy_directory "$GCC_DIR/lib/gcc/$TARGET" "$INSTALL_DIR/lib/gcc/$TARGET" &&
-    run2 copy_directory "$GCC_DIR/libexec/gcc/$TARGET" "$INSTALL_DIR/libexec/gcc/$TARGET" &&
+    run2 copy_directory "$GCC_DIR/libexec/gcc/$TARGET_TRIPLET" "$INSTALL_DIR/libexec/gcc/$TARGET_TRIPLET" &&
 
-    # Copy target gcc libraries
-    run2 copy_directory "$TARGET_LIBS_DIR/lib/gcc/$TARGET" "$INSTALL_DIR/lib/gcc/$TARGET"
-    run2 copy_directory "$TARGET_LIBS_DIR/$TARGET/lib" "$INSTALL_DIR/$TARGET/lib"
+    # Copy GCC target libraries.
+    #
+    #  $TARGET_LIBS_DIR/lib/gcc/$TARGET_TRIPLET/$GCC_VERSION:
+    #    Contains target runtime object files (crtbegin.o) and compiler libraries (libgcc.a)
+    #    plus compiler-specific headers (stddef.h)
+    #
+    #  $TARGET_LIBS_DIR/$TARGET_TRIPLET/lib/
+    #    Contains other target libraries (e.g. libgomp.a used to implement OpenMP).
+    #
+    #  $TARGET_LIBS_DIR/$TARGET_TRIPLET/libx32
+    #  $TARGET_LIBS_DIR/$TARGET_TRIPLET/lib64
+    #    Optional directories used by multi-lib compilers to store target objects
+    #    and libraries.
+    #
+    log "Copying target gcc libraries."
+    run2 copy_directory "$TARGET_LIBS_DIR/lib/gcc/$TARGET_TRIPLET" "$INSTALL_DIR/lib/gcc/$TARGET_TRIPLET"
+    run2 copy_directory "$TARGET_LIBS_DIR/$TARGET_TRIPLET/lib" "$INSTALL_DIR/$TARGET_TRIPLET/lib"
     # Multilib compiler should have these
-    if [ -d "$TARGET_LIBS_DIR/$TARGET/libx32" ]; then
-       run2 copy_directory "$TARGET_LIBS_DIR/$TARGET/libx32" "$INSTALL_DIR/$TARGET/libx32"
+    if [ -d "$TARGET_LIBS_DIR/$TARGET_TRIPLET/libx32" ]; then
+       run2 copy_directory "$TARGET_LIBS_DIR/$TARGET_TRIPLET/libx32" "$INSTALL_DIR/$TARGET_TRIPLET/libx32"
     fi
-    if [ -d "$TARGET_LIBS_DIR/$TARGET/lib64" ]; then
-       run2 copy_directory "$TARGET_LIBS_DIR/$TARGET/lib64" "$INSTALL_DIR/$TARGET/lib64"
+    if [ -d "$TARGET_LIBS_DIR/$TARGET_TRIPLET/lib64" ]; then
+       run2 copy_directory "$TARGET_LIBS_DIR/$TARGET_TRIPLET/lib64" "$INSTALL_DIR/$TARGET_TRIPLET/lib64"
     fi
 
-    # We need to generate symlinks for the binutils binaries from
-    # $INSTALL_DIR/$TARGET/bin/$PROG to $INSTALL_DIR/bin/$TARGET-$PROG
-    mkdir -p "$INSTALL_DIR/$TARGET/bin" &&
-    for PROG in $(cd $INSTALL_DIR/$TARGET/bin && ls * 2>/dev/null); do
-        do_relink "$INSTALL_DIR/$TARGET/bin/$PROG" ../../bin/$TARGET-$PROG
-        fail_panic
+    # If this is a target build, remove any prefixed binaries from $INSTALL_DIR/bin/
+    if [ "$TARGET_TRIPLET" = "$HOST_TRIPLET" ]; then
+        run2 rm -f "$INSTALL_DIR"/bin/$TARGET_TRIPLET-*
+    fi
+
+    # Reduce disk usage by linking files from $INSTALL_DIR/bin into the same ones
+    # that exist in $INSTALL_DIR/$TARGET_TRIPLET/bin.
+    #
+    # Example for a target build:
+    #    $INSTALL_DIR/bin/as --> $INSTALL_DIR/$TARGET_TRIPLET/bin/as
+    # Example for a regular build:
+    #    $INSTALL_DIR/bin/$TARGET_TRIPLET-as --> $INSTALL_DIR/$TARGET_TRIPLET/bin/as
+    #
+    if [ "$TARGET_TRIPLET" = "$HOST_TRIPLET" ]; then
+      TARGET_BIN_PREFIX=
+    else
+      TARGET_BIN_PREFIX=$TARGET_TRIPLET-
+    fi
+    for PROG in $(cd $INSTALL_DIR/$TARGET_TRIPLET/bin && ls * 2>/dev/null); do
+        do_relink "$INSTALL_DIR/bin/${TARGET_BIN_PREFIX}$PROG" ../$TARGET_TRIPLET/bin/$PROG
     done
 
-    # Also relink a few files under $INSTALL_DIR/bin/
-    do_relink "$INSTALL_DIR"/bin/$TARGET-c++ $TARGET-g++ &&
-    do_relink "$INSTALL_DIR"/bin/$TARGET-gcc-$GCC_VERSION $TARGET-gcc &&
-    if [ -f "$INSTALL_DIR"/bin/$TARGET-ld.gold ]; then
-      do_relink "$INSTALL_DIR"/bin/$TARGET-ld $TARGET-ld.gold
-    else
-      do_relink "$INSTALL_DIR"/bin/$TARGET-ld $TARGET-ld.bfd
-    fi
-    fail_panic
+    # Another way to reduce disk usage is to create symlinks for obvious copies
+    do_relink "$INSTALL_DIR"/bin/${TARGET_BIN_PREFIX}c++ ${TARGET_BIN_PREFIX}g++
+    do_relink "$INSTALL_DIR"/bin/${TARGET_BIN_PREFIX}gcc-$GCC_VERSION ${TARGET_BIN_PREFIX}gcc
 
-    # Remove unwanted $TARGET-run simulator to save about 800 KB.
-    run2 rm -f "$INSTALL_DIR"/bin/$TARGET-run
+    if [ -f "$INSTALL_DIR"/$TARGET_PREFIX/bin/ld.gold ]; then
+      do_relink "$INSTALL_DIR"/$TARGET_PREFIX/bin/ld ld.gold
+    else
+      do_relink "$INSTALL_DIR"/$TARGET_PREFIX/bin/ld ld.bfd
+    fi
+
+    # Remove unwanted $TARGET_TRIPLET-run simulator to save about 800 KB.
+    run2 rm -f "$INSTALL_DIR"/bin/$TARGET_TRIPLET-run
 
     # Copy the license files
     local TOOLCHAIN_LICENSES="$ANDROID_NDK_ROOT"/build/tools/toolchain-licenses
@@ -1617,23 +1779,26 @@ package_gcc ()
     pack_archive "$PACKAGE_FILE" "$NDK_DIR" "$TOOLCHAIN_SUB_DIR"
 }
 
-setup_build
+(
+  set -e
+  setup_build
 
-for PHASE in setup build; do
-    for SYSTEM in $HOST_SYSTEMS; do
-        setup_build_for_host $SYSTEM
-        for TOOLCHAIN in $TOOLCHAINS; do
-            build_gcc $SYSTEM $TOOLCHAIN
-        done
-    done
-done
+  for PHASE in setup build; do
+      for SYSTEM in $HOST_SYSTEMS; do
+          setup_build_for_host $SYSTEM
+          for TOOLCHAIN in $TOOLCHAINS; do
+              build_gcc $SYSTEM $TOOLCHAIN
+          done
+      done
+  done
 
-for SYSTEM in $HOST_SYSTEMS; do
-    setup_build_for_host $SYSTEM
-    for TOOLCHAIN in $TOOLCHAINS; do
-        install_gcc $SYSTEM $TOOLCHAIN
-    done
-done
+  for SYSTEM in $HOST_SYSTEMS; do
+      setup_build_for_host $SYSTEM
+      for TOOLCHAIN in $TOOLCHAINS; do
+          install_gcc $SYSTEM $TOOLCHAIN
+      done
+  done
+) || panic "ERROR DURING BUILD!"
 
 if [ "$PACKAGE_DIR" ]; then
     for SYSTEM in $HOST_SYSTEMS; do

@@ -1,0 +1,54 @@
+From 7a4e91b37e4d6ea36d6c9cc8365a35b1c8eb4586 Mon Sep 17 00:00:00 2001
+From: David 'Digit' Turner <digit@google.com>
+Date: Thu, 24 Oct 2013 19:24:19 +0200
+Subject: [2.21] [2.22] [2.23] Support building the library on Android.
+
+Bionic's <unistd.h> defines getpagesize() as a static inlined function
+which prevents libiberty/getpagesize.c from compiling properly.
+---
+ binutils-2.21/libiberty/getpagesize.c | 3 +++
+ binutils-2.22/libiberty/getpagesize.c | 3 +++
+ binutils-2.23/libiberty/getpagesize.c | 3 +++
+ 3 files changed, 9 insertions(+)
+
+diff --git a/binutils-2.21/libiberty/getpagesize.c b/binutils-2.21/libiberty/getpagesize.c
+index 1c3a263..7624943 100644
+--- a/binutils-2.21/libiberty/getpagesize.c
++++ b/binutils-2.21/libiberty/getpagesize.c
+@@ -60,11 +60,14 @@ BUGS
+ # endif /* PAGESIZE */
+ #endif /* GNU_OUR_PAGESIZE */
+ 
++// On Android, getpagesize() is defined as a static inline function.
++#ifndef __ANDROID__
+ int
+ getpagesize (void)
+ {
+   return (GNU_OUR_PAGESIZE);
+ }
++#endif
+ 
+ #else /* VMS */
+ 
+diff --git a/binutils-2.23/libiberty/getpagesize.c b/binutils-2.23/libiberty/getpagesize.c
+index 1c3a263..7624943 100644
+--- a/binutils-2.23/libiberty/getpagesize.c
++++ b/binutils-2.23/libiberty/getpagesize.c
+@@ -60,11 +60,14 @@ BUGS
+ # endif /* PAGESIZE */
+ #endif /* GNU_OUR_PAGESIZE */
+ 
++// On Android, getpagesize() is defined as a static inline function.
++#ifndef __ANDROID__
+ int
+ getpagesize (void)
+ {
+   return (GNU_OUR_PAGESIZE);
+ }
++#endif
+ 
+ #else /* VMS */
+ 
+-- 
+1.8.4.1
+

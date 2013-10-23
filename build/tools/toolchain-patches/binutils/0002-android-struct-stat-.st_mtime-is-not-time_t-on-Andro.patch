@@ -1,0 +1,51 @@
+From 80df964e49eebd85ba5f2dfd2d725e77fee6bad5 Mon Sep 17 00:00:00 2001
+From: David 'Digit' Turner <digit@google.com>
+Date: Thu, 24 Oct 2013 19:58:16 +0200
+Subject: android: (struct stat).st_mtime is not time_t on Android.
+
+---
+ binutils-2.21/bfd/archive.c | 7 +++++++
+ binutils-2.22/bfd/archive.c | 6 ++++++
+ binutils-2.23/bfd/archive.c | 6 ++++++
+ 3 files changed, 19 insertions(+)
+
+diff --git a/binutils-2.21/bfd/archive.c b/binutils-2.21/bfd/archive.c
+index 258c8d9..a125c7c 100644
+--- a/binutils-2.21/bfd/archive.c
++++ b/binutils-2.21/bfd/archive.c
+@@ -1755,7 +1755,14 @@ bfd_ar_hdr_from_filesystem (bfd *abfd, const char *filename, bfd *member)
+     {
+       /* Assume we just "made" the member, and fake it.  */
+       struct bfd_in_memory *bim = (struct bfd_in_memory *) member->iostream;
++#ifdef __ANDROID__
++      /* On Android, st_mtime is 'long int', while time_t is 32-bit */
++      time_t mtime;
++      time(&mtime);
++      status.st_mtime = mtime;
++#else
+       time (&status.st_mtime);
++#endif
+       status.st_uid = getuid ();
+       status.st_gid = getgid ();
+       status.st_mode = 0644;
+diff --git a/binutils-2.23/bfd/archive.c b/binutils-2.23/bfd/archive.c
+index 5814b46..a88dec4 100644
+--- a/binutils-2.23/bfd/archive.c
++++ b/binutils-2.23/bfd/archive.c
+@@ -1863,7 +1863,13 @@ bfd_ar_hdr_from_filesystem (bfd *abfd, const char *filename, bfd *member)
+     {
+       /* Assume we just "made" the member, and fake it.  */
+       struct bfd_in_memory *bim = (struct bfd_in_memory *) member->iostream;
++#ifdef __ANDROID__
++      time_t mtime;
++      time (&mtime);
++      status.st_mtime = mtime;
++#else
+       time (&status.st_mtime);
++#endif
+       status.st_uid = getuid ();
+       status.st_gid = getgid ();
+       status.st_mode = 0644;
+-- 
+1.8.4.1
+

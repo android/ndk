@@ -1,0 +1,98 @@
+From 3197eb969370a05d7a813555eb68b07d967f2cd1 Mon Sep 17 00:00:00 2001
+From: David 'Digit' Turner <digit@google.com>
+Date: Thu, 24 Oct 2013 19:58:55 +0200
+Subject: android: Avoid conflicts with 'major' and 'minor'.
+
+Apparently, Android's <sys/sysmacros.h>, included from <sys/systypes.h>
+defines the 'major' and 'minor' functions as static inlines, which
+conflicts with the ability to compile these source files.
+---
+ binutils-2.21/ld/plugin.c        |  6 +++---
+ binutils-2.22/binutils/readelf.c | 10 +++++-----
+ binutils-2.22/ld/plugin.c        |  6 +++---
+ binutils-2.23/binutils/readelf.c | 10 +++++-----
+ binutils-2.23/ld/plugin.c        |  6 +++---
+ 5 files changed, 19 insertions(+), 19 deletions(-)
+
+diff --git a/binutils-2.21/ld/plugin.c b/binutils-2.21/ld/plugin.c
+index 79b39e8..cb4641e 100644
+--- a/binutils-2.21/ld/plugin.c
++++ b/binutils-2.21/ld/plugin.c
+@@ -580,8 +580,8 @@ set_tv_header (struct ld_plugin_tv *tv)
+   size_t i;
+ 
+   /* Version info.  */
+-  static const unsigned int major = (unsigned)(BFD_VERSION / 100000000UL);
+-  static const unsigned int minor = (unsigned)(BFD_VERSION / 1000000UL) % 100;
++  static const unsigned int major_version = (unsigned)(BFD_VERSION / 100000000UL);
++  static const unsigned int minor_version = (unsigned)(BFD_VERSION / 1000000UL) % 100;
+ 
+   if (!tv)
+     return tv_header_size;
+@@ -599,7 +599,7 @@ set_tv_header (struct ld_plugin_tv *tv)
+ 	    TVU(val) = LD_PLUGIN_API_VERSION;
+ 	    break;
+ 	  case LDPT_GNU_LD_VERSION:
+-	    TVU(val) = major * 100 + minor;
++	    TVU(val) = major_version * 100 + minor_version;
+ 	    break;
+ 	  case LDPT_LINKER_OUTPUT:
+ 	    TVU(val) = link_info.relocatable ? LDPO_REL
+diff --git a/binutils-2.23/binutils/readelf.c b/binutils-2.23/binutils/readelf.c
+index d9ec436..488c544 100644
+--- a/binutils-2.23/binutils/readelf.c
++++ b/binutils-2.23/binutils/readelf.c
+@@ -12683,13 +12683,13 @@ print_gnu_note (Elf_Internal_Note *pnote)
+ 
+     case NT_GNU_ABI_TAG:
+       {
+-	unsigned long os, major, minor, subminor;
++	unsigned long os, major_version, minor_version, subminor_version;
+ 	const char *osname;
+ 
+ 	os = byte_get ((unsigned char *) pnote->descdata, 4);
+-	major = byte_get ((unsigned char *) pnote->descdata + 4, 4);
+-	minor = byte_get ((unsigned char *) pnote->descdata + 8, 4);
+-	subminor = byte_get ((unsigned char *) pnote->descdata + 12, 4);
++	major_version = byte_get ((unsigned char *) pnote->descdata + 4, 4);
++	minor_version = byte_get ((unsigned char *) pnote->descdata + 8, 4);
++	subminor_version = byte_get ((unsigned char *) pnote->descdata + 12, 4);
+ 
+ 	switch (os)
+ 	  {
+@@ -12714,7 +12714,7 @@ print_gnu_note (Elf_Internal_Note *pnote)
+ 	  }
+ 
+ 	printf (_("    OS: %s, ABI: %ld.%ld.%ld\n"), osname,
+-		major, minor, subminor);
++		major_version, minor_version, subminor_version);
+       }
+       break;
+     }
+diff --git a/binutils-2.23/ld/plugin.c b/binutils-2.23/ld/plugin.c
+index da99e77..556e045 100644
+--- a/binutils-2.23/ld/plugin.c
++++ b/binutils-2.23/ld/plugin.c
+@@ -683,8 +683,8 @@ set_tv_header (struct ld_plugin_tv *tv)
+   size_t i;
+ 
+   /* Version info.  */
+-  static const unsigned int major = (unsigned)(BFD_VERSION / 100000000UL);
+-  static const unsigned int minor = (unsigned)(BFD_VERSION / 1000000UL) % 100;
++  static const unsigned int major_version = (unsigned)(BFD_VERSION / 100000000UL);
++  static const unsigned int minor_version = (unsigned)(BFD_VERSION / 1000000UL) % 100;
+ 
+   for (i = 0; i < tv_header_size; i++)
+     {
+@@ -699,7 +699,7 @@ set_tv_header (struct ld_plugin_tv *tv)
+ 	  TVU(val) = LD_PLUGIN_API_VERSION;
+ 	  break;
+ 	case LDPT_GNU_LD_VERSION:
+-	  TVU(val) = major * 100 + minor;
++	  TVU(val) = major_version * 100 + minor_version;
+ 	  break;
+ 	case LDPT_LINKER_OUTPUT:
+ 	  TVU(val) = (link_info.relocatable
+-- 
+1.8.4.1
+

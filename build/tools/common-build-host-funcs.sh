@@ -88,7 +88,7 @@ bh_tag_to_arch ()
 {
     local RET
     case $1 in
-        *-arm) RET=arm;;
+        *-arm|*-armeabi|*-armeabi-v7a) RET=arm;;
         *-mips) RET=mips;;
         windows|*-x86) RET=x86;;
         *-x86_64) RET=x86_64;;
@@ -103,7 +103,7 @@ bh_tag_to_bits ()
 {
     local RET
     case $1 in
-        windows|*-x86|*-arm|*-mips) RET=32;;
+        windows|*-x86|*-arm|*-armeabi|*-armeabi-v7a|*-x32|*-mips) RET=32;;
         *-x86_64) RET=64;;
     esac
     echo $RET
@@ -486,9 +486,13 @@ _bh_select_toolchain_for_host ()
     # a full Android platform source checkout, we can look at the prebuilts/
     # directory.
     case $1 in
+        android-*)
+            _bh_try_host_fullprefix $(bh_tag_to_config_triplet $1)
+            ;;
         linux-x86)
             # If possible, automatically use our custom toolchain to generate
             # 32-bit executables that work on Ubuntu 8.04 and higher.
+            _bh_try_host_fullprefix "$(dirname $ANDROID_NDK_ROOT)/prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.7" i686-linux
             _bh_try_host_fullprefix "$(dirname $ANDROID_NDK_ROOT)/prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" i686-linux
             _bh_try_host_fullprefix "$(dirname $ANDROID_NDK_ROOT)/prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.4.3" i686-linux
             _bh_try_host_fullprefix "$(dirname $ANDROID_NDK_ROOT)/prebuilt/linux-x86/toolchain/i686-linux-glibc2.7-4.4.3" i686-linux
@@ -501,6 +505,7 @@ _bh_select_toolchain_for_host ()
         linux-x86_64)
             # If possible, automaticaly use our custom toolchain to generate
             # 64-bit executables that work on Ubuntu 8.04 and higher.
+            _bh_try_host_fullprefix "$(dirname $ANDROID_NDK_ROOT)/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.7" x86_64-linux
             _bh_try_host_fullprefix "$(dirname $ANDROID_NDK_ROOT)/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" x86_64-linux
             _bh_try_host_prefix x86_64-linux-gnu
             _bh_try_host_prefix x84_64-linux
@@ -648,6 +653,10 @@ _bh_select_toolchain_for_host ()
             HOST_CXXFLAGS=$HOST_CXXFLAGS" -D__USE_MINGW_ANSI_STDIO=1"
             ;;
     esac
+
+    if [ -z "$HOST_FULLPREFIX" ]; then
+        panic "Can't find a toolchain for host system $1"
+    fi
 
     # Determine the default bitness of our compiler. It it doesn't match
     # HOST_BITS, tries to see if it supports -m32 or -m64 to change it.

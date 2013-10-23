@@ -1,0 +1,52 @@
+From b4ffaf59f4649d6b21f8462a156fefaec43e3071 Mon Sep 17 00:00:00 2001
+From: David 'Digit' Turner <digit@google.com>
+Date: Fri, 25 Oct 2013 10:17:18 +0200
+Subject: android: Make libiberty/getpagesize.c compile on Android.
+
+The issue is that Bionic's <unistd.h> defines getpagesize() as a
+static inline function.
+---
+ gcc-4.6/libiberty/getpagesize.c | 2 ++
+ gcc-4.7/libiberty/getpagesize.c | 2 ++
+ gcc-4.8/libiberty/getpagesize.c | 2 ++
+ 3 files changed, 6 insertions(+)
+
+diff --git a/gcc-4.6/libiberty/getpagesize.c b/gcc-4.6/libiberty/getpagesize.c
+index 1c3a263..44bfb6a 100644
+--- a/gcc-4.6/libiberty/getpagesize.c
++++ b/gcc-4.6/libiberty/getpagesize.c
+@@ -60,11 +60,13 @@ BUGS
+ # endif /* PAGESIZE */
+ #endif /* GNU_OUR_PAGESIZE */
+ 
++#ifndef __ANDROID__
+ int
+ getpagesize (void)
+ {
+   return (GNU_OUR_PAGESIZE);
+ }
++#endif
+ 
+ #else /* VMS */
+ 
+diff --git a/gcc-4.8/libiberty/getpagesize.c b/gcc-4.8/libiberty/getpagesize.c
+index 1c3a263..44bfb6a 100644
+--- a/gcc-4.8/libiberty/getpagesize.c
++++ b/gcc-4.8/libiberty/getpagesize.c
+@@ -60,11 +60,13 @@ BUGS
+ # endif /* PAGESIZE */
+ #endif /* GNU_OUR_PAGESIZE */
+ 
++#ifndef __ANDROID__
+ int
+ getpagesize (void)
+ {
+   return (GNU_OUR_PAGESIZE);
+ }
++#endif
+ 
+ #else /* VMS */
+ 
+-- 
+1.8.4.1
+

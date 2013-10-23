@@ -1,0 +1,27 @@
+From 8a582225d4f90cbaf1823568a0231d854c787639 Mon Sep 17 00:00:00 2001
+From: David 'Digit' Turner <digit@google.com>
+Date: Thu, 24 Oct 2013 18:52:15 +0200
+Subject: android: Support building library for Android.
+
+Android's <locale.h> support is minimal, this patch allows
+the library to build properly on this platform.
+---
+ src/mpfr-impl.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/mpfr-impl.h b/src/mpfr-impl.h
+index 6662842..e4cd93a 100644
+--- a/src/mpfr-impl.h
++++ b/src/mpfr-impl.h
+@@ -1131,7 +1131,7 @@ do {                                                                  \
+   } while (0)
+ 
+ /* Needs <locale.h> */
+-#ifdef HAVE_LOCALE_H
++#if defined(HAVE_LOCALE_H) && !defined(__ANDROID__)
+ #include <locale.h>
+ /* Warning! In case of signed char, the value of MPFR_DECIMAL_POINT may
+    be negative (the ISO C99 does not seem to forbid negative values). */
+-- 
+1.8.4.1
+
