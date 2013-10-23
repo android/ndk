@@ -77,11 +77,21 @@ register_var_option "--no-makefile" NO_MAKEFILE "Do not use makefile to speed-up
 VISIBLE_STATIC=
 register_var_option "--visible-static" VISIBLE_STATIC "Do not use hidden visibility for the static library"
 
+EXPLICIT_COMPILER_VERSION=
+
 GCC_VERSION=$DEFAULT_GCC_VERSION
-register_var_option "--gcc-version=<ver>" GCC_VERSION "Specify GCC version"
+register_option "--gcc-version=<ver>" do_gcc_version "Specify GCC version" "$GCC_VERSION"
+do_gcc_version() {
+    GCC_VERSION=$1
+    EXPLICIT_COMPILER_VERSION=true
+}
 
 LLVM_VERSION=
-register_var_option "--llvm-version=<ver>" LLVM_VERSION "Specify LLVM version"
+register_option "--llvm-version=<ver>" do_llvm_version "Specify LLVM version"
+do_llvm_version() {
+    LLVM_VERSION=$1
+    EXPLICIT_COMPILER_VERSION=true
+}
 
 register_jobs_option
 
@@ -145,6 +155,10 @@ COMMON_CXXFLAGS="-fexceptions -frtti -fuse-cxa-atexit"
 # of STLport and Libc++, in slightly different ways.
 if [ "$CXX_STL" = "libc++" ]; then
   GABIXX_INCLUDES=$LIBCXX_INCLUDES
+  # Use clang to build libc++ by default
+  if [ "$EXPLICIT_COMPILER_VERSION" != "true" ]; then
+    LLVM_VERSION=$DEFAULT_LLVM_VERSION
+  fi
 else
   GABIXX_INCLUDES="-I$GABIXX_SRCDIR/include"
 fi
