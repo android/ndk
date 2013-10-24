@@ -68,7 +68,16 @@ system_libs := \
     GLESv2 \
     GLESv3 \
     OpenSLES \
-    OpenMAXAL
+    OpenMAXAL \
+    bcc \
+    bcinfo \
+    cutils \
+    gui \
+    RScpp \
+    RScpp_static \
+    RS \
+    ui \
+    utils
 
 libs_in_ldflags := $(filter-out $(addprefix -l,$(system_libs)), $(libs_in_ldflags))
 
@@ -128,6 +137,9 @@ endif
 # list of generated object files
 LOCAL_OBJECTS :=
 
+# list of generated object files from RS files, subset of LOCAL_OBJECTS
+LOCAL_RS_OBJECTS :=
+
 # always define ANDROID when building binaries
 #
 LOCAL_CFLAGS := -DANDROID $(LOCAL_CFLAGS)
@@ -150,7 +162,7 @@ else
 endif
 
 #
-# Check LOCAL_CPP_EXTENSION, use '.cpp' by default
+# Check LOCAL_CPP_EXTENSION
 #
 bad_cpp_extensions := $(strip $(filter-out .%,$(LOCAL_CPP_EXTENSION)))
 ifdef bad_cpp_extensions
@@ -161,8 +173,8 @@ LOCAL_CPP_EXTENSION := $(strip $(LOCAL_CPP_EXTENSION))
 ifeq ($(LOCAL_CPP_EXTENSION),)
   # Match the default GCC C++ extensions.
   LOCAL_CPP_EXTENSION := $(default-c++-extensions)
-else
 endif
+LOCAL_RS_EXTENSION := $(default-rs-extensions)
 
 #
 # If LOCAL_ALLOW_UNDEFINED_SYMBOLS is not true, the linker will allow the generation
@@ -301,9 +313,10 @@ LOCAL_DEPENDENCY_DIRS :=
 
 # all_source_patterns contains the list of filename patterns that correspond
 # to source files recognized by our build system
-all_source_extensions := .c .s .S $(LOCAL_CPP_EXTENSION)
+all_source_extensions := .c .s .S $(LOCAL_CPP_EXTENSION) $(LOCAL_RS_EXTENSION)
 all_source_patterns   := $(foreach _ext,$(all_source_extensions),%$(_ext))
 all_cpp_patterns      := $(foreach _ext,$(LOCAL_CPP_EXTENSION),%$(_ext))
+all_rs_patterns       := $(foreach _ext,$(LOCAL_RS_EXTENSION),%$(_ext))
 
 unknown_sources := $(strip $(filter-out $(all_source_patterns),$(LOCAL_SRC_FILES)))
 ifdef unknown_sources
@@ -321,6 +334,14 @@ $(foreach _ext,$(all_source_extensions),\
 LOCAL_OBJECTS := $(filter %$(TARGET_OBJ_EXTENSION),$(LOCAL_OBJECTS))
 LOCAL_OBJECTS := $(subst ../,__/,$(LOCAL_OBJECTS))
 LOCAL_OBJECTS := $(foreach _obj,$(LOCAL_OBJECTS),$(LOCAL_OBJS_DIR)/$(_obj))
+
+LOCAL_RS_OBJECTS := $(filter $(all_rs_patterns),$(LOCAL_SRC_FILES))
+$(foreach _ext,$(LOCAL_RS_EXTENSION),\
+    $(eval LOCAL_RS_OBJECTS := $$(LOCAL_RS_OBJECTS:%$(_ext)=%$$(TARGET_OBJ_EXTENSION)))\
+)
+LOCAL_RS_OBJECTS := $(filter %$(TARGET_OBJ_EXTENSION),$(LOCAL_RS_OBJECTS))
+LOCAL_RS_OBJECTS := $(subst ../,__/,$(LOCAL_RS_OBJECTS))
+LOCAL_RS_OBJECTS := $(foreach _obj,$(LOCAL_RS_OBJECTS),$(LOCAL_OBJS_DIR)/$(_obj))
 
 # If the module has any kind of C++ features, enable them in LOCAL_CPPFLAGS
 #
@@ -340,14 +361,34 @@ ifneq (,$(call module-has-c++-features,$(LOCAL_MODULE),rtti exceptions))
     endif
 endif
 
+# Set include patch for renderscript
+
+
+ifneq ($(LOCAL_RENDERSCRIPT_INCLUDES_OVERRIDE),)
+    LOCAL_RENDERSCRIPT_INCLUDES := $(LOCAL_RENDERSCRIPT_INCLUDES_OVERRIDE)
+else
+    LOCAL_RENDERSCRIPT_INCLUDES := \
+        $(RENDERSCRIPT_TOOLCHAIN_HEADER) \
+        $(TARGET_C_INCLUDES)/rs/scriptc \
+        $(LOCAL_RENDERSCRIPT_INCLUDES)
+endif
+
+RS_COMPAT :=
+ifneq ($(call module-is-shared-library,$(LOCAL_MODULE)),)
+    RS_COMPAT := true
+endif
+
 # Build the sources to object files
 #
 
 $(foreach src,$(filter %.c,$(LOCAL_SRC_FILES)), $(call compile-c-source,$(src),$(call get-object-name,$(src))))
 $(foreach src,$(filter %.S %.s,$(LOCAL_SRC_FILES)), $(call compile-s-source,$(src),$(call get-object-name,$(src))))
-
 $(foreach src,$(filter $(all_cpp_patterns),$(LOCAL_SRC_FILES)),\
     $(call compile-cpp-source,$(src),$(call get-object-name,$(src)))\
+)
+
+$(foreach src,$(filter $(all_rs_patterns),$(LOCAL_SRC_FILES)),\
+    $(call compile-rs-source,$(src),$(call get-rs-scriptc-name,$(src)),$(call get-rs-bc-name,$(src)),$(call get-rs-so-name,$(src)),$(call get-object-name,$(src)),$(RS_COMPAT))\
 )
 
 #
