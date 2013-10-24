@@ -1,0 +1,141 @@
+commit 69dc7d5ef1c74a60b9391441924f7a25078457a6
+Author: Chinyen Chou <petechou@gmail.com>
+Date:   Mon Oct 21 14:29:15 2013 +0800
+
+    [Linker Option] Add --no-warn-mismatch option support.
+
+diff --git a/include/mcld/GeneralOptions.h b/include/mcld/GeneralOptions.h
+index 46a1e57..60487c0 100644
+--- a/include/mcld/GeneralOptions.h
++++ b/include/mcld/GeneralOptions.h
+@@ -274,6 +274,12 @@ public:
+   bool printMap() const
+   { return m_bPrintMap; }
+ 
++  void setWarnMismatch(bool pEnable = true)
++  { m_bWarnMismatch = pEnable; }
++
++  bool warnMismatch() const
++  { return m_bWarnMismatch; }
++
+   // -G, max GP size option
+   void setGPSize(int gpsize)
+   { m_GPSize = gpsize; }
+@@ -371,6 +377,7 @@ private:
+   bool m_bNewDTags: 1; // --enable-new-dtags
+   bool m_bNoStdlib: 1; // -nostdlib
+   bool m_bPrintMap: 1; // --print-map
++  bool m_bWarnMismatch: 1; // --no-warn-mismatch
+   uint32_t m_GPSize; // -G, --gpsize
+   StripSymbolMode m_StripSymbols;
+   RpathList m_RpathList;
+diff --git a/lib/Core/GeneralOptions.cpp b/lib/Core/GeneralOptions.cpp
+index c0196e5..b4c1f22 100644
+--- a/lib/Core/GeneralOptions.cpp
++++ b/lib/Core/GeneralOptions.cpp
+@@ -53,6 +53,7 @@ GeneralOptions::GeneralOptions()
+     m_bFatalWarnings(false),
+     m_bNewDTags(false),
+     m_bNoStdlib(false),
++    m_bWarnMismatch(true),
+     m_GPSize(8),
+     m_StripSymbols(KeepAllSymbols),
+     m_HashStyle(SystemV) {
+diff --git a/lib/Object/ObjectLinker.cpp b/lib/Object/ObjectLinker.cpp
+index 67fd1d5..1becc30 100644
+--- a/lib/Object/ObjectLinker.cpp
++++ b/lib/Object/ObjectLinker.cpp
+@@ -185,8 +185,9 @@ void ObjectLinker::normalize()
+       }
+     }
+     else {
+-      warning(diag::warn_unrecognized_input_file) << (*input)->path()
+-        << m_Config.targets().triple().str();
++      if (m_Config.options().warnMismatch())
++        warning(diag::warn_unrecognized_input_file) << (*input)->path()
++          << m_Config.targets().triple().str();
+     }
+   } // end of for
+ }
+diff --git a/tools/lite/include/lite/OutputFormatOptions.h b/tools/lite/include/lite/OutputFormatOptions.h
+index 99ce54e..c9982d5 100644
+--- a/tools/lite/include/lite/OutputFormatOptions.h
++++ b/tools/lite/include/lite/OutputFormatOptions.h
+@@ -51,6 +51,8 @@ private:
+   llvm::cl::opt<bool>& m_ExportDynamic;
+   llvm::cl::opt<std::string>& m_BuildID;
+   llvm::cl::list<std::string>& m_ExcludeLIBS;
++
++  llvm::cl::opt<bool>& m_NoWarnMismatch;
+ };
+ 
+ } // namespace of mcld
+diff --git a/tools/lite/lib/OutputFormatOptions.cpp b/tools/lite/lib/OutputFormatOptions.cpp
+index 7ee8248..cfc6c04 100644
+--- a/tools/lite/lib/OutputFormatOptions.cpp
++++ b/tools/lite/lib/OutputFormatOptions.cpp
+@@ -147,6 +147,10 @@ llvm::cl::opt<mcld::GeneralOptions::HashStyle> ArgHashStyle("hash-style",
+                  "both the classic ELF and new style GNU hash tables"),
+        clEnumValEnd));
+ 
++llvm::cl::opt<bool> ArgNoWarnMismatch("no-warn-mismatch",
++  llvm::cl::desc("Allow linking together mismatched input files."),
++  llvm::cl::init(false));
++
+ // Not supported yet {
+ llvm::cl::opt<bool> ArgExportDynamic("export-dynamic",
+   llvm::cl::desc("Export all dynamic symbols"),
+@@ -193,7 +197,8 @@ OutputFormatOptions::OutputFormatOptions()
+     m_HashStyle(ArgHashStyle),
+     m_ExportDynamic(ArgExportDynamic),
+     m_BuildID(ArgBuildID),
+-    m_ExcludeLIBS(ArgExcludeLIBS) {
++    m_ExcludeLIBS(ArgExcludeLIBS),
++    m_NoWarnMismatch(ArgNoWarnMismatch) {
+ }
+ 
+ bool OutputFormatOptions::parse(mcld::Module& pModule, LinkerConfig& pConfig)
+@@ -222,6 +227,10 @@ bool OutputFormatOptions::parse(mcld::Module& pModule, LinkerConfig& pConfig)
+   pConfig.options().setOMagic(m_OMagic);
+   pConfig.options().setHashStyle(m_HashStyle);
+   pConfig.options().setExportDynamic(m_ExportDynamic);
++  if (m_NoWarnMismatch)
++    pConfig.options().setWarnMismatch(false);
++  else
++    pConfig.options().setWarnMismatch(true);
+   // build-id
+   // exclude-libs
+ 
+diff --git a/tools/mcld/main.cpp b/tools/mcld/main.cpp
+index aceb0f4..3fc1a7b 100644
+--- a/tools/mcld/main.cpp
++++ b/tools/mcld/main.cpp
+@@ -707,13 +707,14 @@ ArgARMCompatibility("p",
+                     cl::desc("Ignore for ARM backward compatibility"),
+                     cl::init(false));
+ 
++/// @{
++/// @name FIXME: end of unsupported options
++/// @}
++
+ static cl::opt<bool>
+ ArgNoWarnMismatch("no-warn-mismatch",
+                   cl::desc("Allow linking together mismatched input files."),
+                   cl::init(false));
+-/// @{
+-/// @name FIXME: end of unsupported options
+-/// @}
+ 
+ static cl::opt<bool>
+ ArgNoStdlib("nostdlib",
+@@ -1144,6 +1145,10 @@ static bool ProcessLinkerOptionsFromCommand(mcld::LinkerScript& pScript,
+   pConfig.options().setNoStdlib(ArgNoStdlib);
+   pConfig.options().setPrintMap(ArgPrintMap);
+   pConfig.options().setGPSize(ArgGPSize);
++  if (ArgNoWarnMismatch)
++    pConfig.options().setWarnMismatch(false);
++  else
++    pConfig.options().setWarnMismatch(true);
+ 
+   if (ArgStripAll)
+     pConfig.options().setStripSymbols(mcld::GeneralOptions::StripAllSymbols);
