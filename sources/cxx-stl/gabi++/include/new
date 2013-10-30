@@ -50,6 +50,7 @@ public:
 
 typedef void (*new_handler)();
 new_handler set_new_handler(new_handler) throw();
+new_handler get_new_handler() throw();
 
 }
 

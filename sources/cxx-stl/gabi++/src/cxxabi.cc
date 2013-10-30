@@ -110,7 +110,7 @@ namespace {
   // file. They handle the pthread_key_t allocation/deallocation.
   static CxaThreadKey instance;
 
-  void throwException(__cxa_exception *header) {
+  _GABIXX_NORETURN void throwException(__cxa_exception *header) {
     __cxa_eh_globals* globals = __cxa_get_globals();
     header->unexpectedHandler = std::get_unexpected();
     header->terminateHandler = std::get_terminate();
@@ -127,22 +127,25 @@ namespace {
 
 namespace __cxxabiv1 {
   __shim_type_info::~__shim_type_info() {
-  }
+}  // namespace __cxxabiv1
 
   extern "C" void __cxa_pure_virtual() {
     __gabixx::__fatal_error("Pure virtual function called!");
   }
 
-  extern "C" __cxa_eh_globals* __cxa_get_globals() {
+  extern "C" void __cxa_deleted_virtual() {
+    __gabixx::__fatal_error("Deleted virtual function called!");
+  }
+
+  extern "C" __cxa_eh_globals* __cxa_get_globals() _GABIXX_NOEXCEPT {
     return CxaThreadKey::getSlow();
   }
 
-  extern "C" __cxa_eh_globals* __cxa_get_globals_fast() {
+  extern "C" __cxa_eh_globals* __cxa_get_globals_fast() _GABIXX_NOEXCEPT {
     return CxaThreadKey::getFast();
   }
 
-
-  extern "C" void *__cxa_allocate_exception(size_t thrown_size) {
+  extern "C" void *__cxa_allocate_exception(size_t thrown_size) _GABIXX_NOEXCEPT {
     size_t size = thrown_size + sizeof(__cxa_exception);
     __cxa_exception *buffer = static_cast<__cxa_exception*>(malloc(size));
     if (!buffer) {
@@ -152,11 +155,11 @@ namespace __cxxabiv1 {
       __gabixx::__fatal_error("Not enough memory to allocate exception!");
     }
 
-    memset(buffer, 0, sizeof(__cxa_exception));
+    ::memset(buffer, 0, sizeof(__cxa_exception));
     return buffer + 1;
   }
 
-  extern "C" void __cxa_free_exception(void* thrown_exception) {
+  extern "C" void __cxa_free_exception(void* thrown_exception) _GABIXX_NOEXCEPT {
     __cxa_exception *exc = static_cast<__cxa_exception*>(thrown_exception)-1;
 
     if (exc->exceptionDestructor) {
@@ -169,7 +172,6 @@ namespace __cxxabiv1 {
 
     free(exc);
   }
-
 
   extern "C" void __cxa_throw(void* thrown_exc,
                               std::type_info* tinfo,
@@ -202,8 +204,7 @@ namespace __cxxabiv1 {
     throwException(header);
   }
 
-
-  extern "C" void* __cxa_begin_catch(void* exc) {
+  extern "C" void* __cxa_begin_catch(void* exc) _GABIXX_NOEXCEPT {
     _Unwind_Exception *exception = static_cast<_Unwind_Exception*>(exc);
     __cxa_exception* header = reinterpret_cast<__cxa_exception*>(exception+1)-1;
     __cxa_eh_globals* globals = __cxa_get_globals();
@@ -227,7 +228,7 @@ namespace __cxxabiv1 {
     return header->adjustedPtr;
   }
 
-  extern "C" void __cxa_end_catch() {
+  extern "C" void __cxa_end_catch() _GABIXX_NOEXCEPT {
     __cxa_eh_globals *globals = __cxa_get_globals_fast();
     __cxa_exception *header = globals->caughtExceptions;
     _Unwind_Exception* exception = &header->unwindHeader;
@@ -258,7 +259,7 @@ namespace __cxxabiv1 {
     header->handlerCount = count;
   }
 
-  extern "C" void* __cxa_get_exception_ptr(void* exceptionObject) {
+  extern "C" void* __cxa_get_exception_ptr(void* exceptionObject) _GABIXX_NOEXCEPT {
     __cxa_exception* header =
       reinterpret_cast<__cxa_exception*>(
         reinterpret_cast<_Unwind_Exception *>(exceptionObject)+1)-1;

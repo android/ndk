@@ -49,7 +49,7 @@ namespace __cxxabiv1 {
                                      uint8_t ttypeEncoding,
                                      _Unwind_Exception* unwind_exception);
 
-  void call_terminate(_Unwind_Exception* unwind_exception) {
+  _GABIXX_NORETURN void call_terminate(_Unwind_Exception* unwind_exception) {
     __cxa_begin_catch(unwind_exception);  // terminate is also a handler
     std::terminate();
   }

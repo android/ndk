@@ -9,6 +9,7 @@ ifeq (,$(GABIXX_FORCE_REBUILD))
   LOCAL_SRC_FILES:= libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE)$(TARGET_SONAME_EXTENSION)
   LOCAL_EXPORT_C_INCLUDES := $(libgabi++_c_includes)
   LOCAL_CPP_FEATURES := rtti exceptions
+  LOCAL_CFLAGS := -Wall -Werror
   include $(PREBUILT_SHARED_LIBRARY)
 
   include $(CLEAR_VARS)
@@ -16,6 +17,7 @@ ifeq (,$(GABIXX_FORCE_REBUILD))
   LOCAL_SRC_FILES:= libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE)$(TARGET_LIB_EXTENSION)
   LOCAL_EXPORT_C_INCLUDES := $(libgabi++_c_includes)
   LOCAL_CPP_FEATURES := rtti exceptions
+  LOCAL_CFLAGS := -Wall -Werror
   include $(PREBUILT_STATIC_LIBRARY)
 
 else # ! GABIXX_FORCE_REBUILD

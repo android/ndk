@@ -36,7 +36,7 @@
 // Target-independent helper functions
 namespace __cxxabiv1 {
 
-  void call_terminate(_Unwind_Exception* unwind_exception) _GABIXX_HIDDEN;
+  _GABIXX_NORETURN void call_terminate(_Unwind_Exception* unwind_exception) _GABIXX_HIDDEN;
 
 #if __arm__
   uint32_t decodeRelocTarget2 (uint32_t ptr) _GABIXX_HIDDEN;
