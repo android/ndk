@@ -449,6 +449,9 @@ GNUSTL_LIBS=$GNUSTL_DIR/libs
 STLPORT_DIR=$NDK_DIR/$STLPORT_SUBDIR
 STLPORT_LIBS=$STLPORT_DIR/libs
 
+LIBCXX_DIR=$NDK_DIR/$LIBCXX_SUBDIR
+LIBCXX_LIBS=$LIBCXX_DIR/libs
+
 ABI_STL="$TMPDIR/$ABI_CONFIGURE_TARGET"
 ABI_STL_INCLUDE="$TMPDIR/include/c++/$GCC_BASE_VERSION"
 ABI_STL_INCLUDE_TARGET="$ABI_STL_INCLUDE/$ABI_CONFIGURE_TARGET"
@@ -465,6 +468,10 @@ copy_stl_common_headers () {
     case $STL in
         gnustl)
             copy_directory "$GNUSTL_DIR/include" "$ABI_STL_INCLUDE"
+            ;;
+        libcxx|libc++)
+            copy_directory "$LIBCXX_DIR/libcxx/include" "$ABI_STL_INCLUDE"
+            copy_directory "$SUPPORT_SUBDIR/include" "$ABI_STL_INCLUDE"
             ;;
         stlport)
             copy_directory "$STLPORT_DIR/stlport" "$ABI_STL_INCLUDE"
@@ -490,6 +497,10 @@ copy_stl_libs () {
             copy_file_list "$GNUSTL_LIBS/$ABI1" "$ABI_STL/lib/$ABI2" "libgnustl_shared.so"
             copy_file_list "$GNUSTL_LIBS/$ABI1" "$ABI_STL/lib/$ABI2" "libsupc++.a"
             cp -p "$GNUSTL_LIBS/$ABI1/libgnustl_static.a" "$ABI_STL/lib/$ABI2/libstdc++.a"
+            ;;
+        libcxx|libc++)
+            copy_file_list "$LIBCXX_LIBS/$ABI" "$ABI_STL/lib/$ABI2" "libc++_shared.so"
+            cp -p "$LIBCXX_LIBS/$ABI/libc++_static.a" "$ABI_STL/lib/$ABI2/libstdc++.a"
             ;;
         stlport)
             if [ "$ARCH_STL" != "$ARCH" ]; then
