@@ -105,6 +105,7 @@ public:
   static void dropExternalLDLibs(SONameMap &map);
 
   bool mShared;
+  int mOptimizationLevel;
   std::string mBCPath;
   std::string mTargetBCPath;
   std::string mObjPath;
@@ -115,8 +116,7 @@ public:
   std::string mLDLibsStr; // Immutable once read in
 
 public:
-  static void swapEndian(unsigned char *buffer, size_t n);
-  static int transferBytesToNum(const unsigned char *buffer, size_t n);
+  static int transferBytesToNumLe(const unsigned char *buffer, size_t n);
 };
 
 
