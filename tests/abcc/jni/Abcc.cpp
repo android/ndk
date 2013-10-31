@@ -21,6 +21,10 @@
 #include <stdint.h>
 #include <unistd.h>
 #include "Abcc.h"
+
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 using namespace abcc;
 
 TargetAbi::TargetAbi(const std::string &abi) {
@@ -46,58 +50,55 @@ BitcodeInfo::BitcodeInfo(const std::string &bc)
 
 int BitcodeInfo::readWrapper(BitcodeCompiler &compiler) {
   int fd = open(mBCPath.c_str(), O_RDONLY);
+
   if (fd < 0) {
     return -1;
   }
 
-  unsigned char buffer[5] = {'\0', '\0', '\0', '\0', '\0'};
-  read(fd, buffer, 4);  // Skip magic number, we have checked
-  read(fd, buffer, 4);  // version
-  read(fd, buffer, 4);  // offset
-  swapEndian(buffer, 4);
-  int offset = transferBytesToNum(buffer, 4);
-  lseek(fd, 4*7, SEEK_SET);
-  offset -= 4*7;  // Useless, skip
+  unsigned char *buf, *p;
+  struct stat st;
+  int bc_offset;
 
-  while (offset > 0) {
-    read(fd, buffer, 4);
-    swapEndian(buffer, 4);
-    uint16_t length = transferBytesToNum(buffer, 2);
-    uint16_t tag = transferBytesToNum(buffer+2, 2);
-    LOGV("length: %d", length);
-    LOGV("tag: %d", tag);
-    length = (length + 3) & ~3;
+  fstat (fd, &st);
+  buf = (unsigned char *) mmap (NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+  close (fd);
 
-    unsigned char *large_buffer = (unsigned char*) malloc(length+1);
-    if (large_buffer == 0) {
-      LOGE("Cannot create buffer for wrapper field");
-      close(fd);
-      return -1;
-    }
-    large_buffer[length] = '\0';
-    int n = read(fd, large_buffer, length);
-    if (n != length) {
-      LOGE("Read wrapper field error");
-      close(fd);
-      return -1;
+  bc_offset = transferBytesToNumLe (buf+ 8, 4);
+  p = buf + 4 * 7;      // Offset to tag fields.
+
+  while (p < buf + bc_offset) {
+    uint16_t tag, length;
+
+    tag = transferBytesToNumLe (p, 2);
+    length = transferBytesToNumLe (p + 2, 2);
+    p += 4;
+    switch (tag) {
+      case 0x4002:       // Optimization Level,. e.g., 2 for -O2
+        mOptimizationLevel = transferBytesToNumLe (p, 4);
+        LOGV("Wrapper field: -O%d", mOptimizationLevel);
+        break;
+
+      case 0x5002:       // LDFLAGS string
+        LOGV("Wrapper field: %s", p);
+        if (compiler.parseLDFlags (*this, reinterpret_cast<const char *>(p)) != 0) {
+          LOGE("Cannot parse ldflags from wrapper");
+          close(fd);
+          return -1;
+        }
+        break;
+
+      case 0x4001:       // Compiler Version, e.g., 3300 for llvm-3.3.
+      case 0x5001:       // Bitcode Type, e.g., rel, shared, or exec.
+      default:
+        // Some field maybe useful, but we use wrapper to encode command line,
+        // this is not necessary for now.
+        break;
     }
 
-    if (tag == 0x5002) {
-      const char* ldflags = reinterpret_cast<char*>(large_buffer);
-      LOGV("Wrapper field: %s", ldflags);
-      if (compiler.parseLDFlags(*this, ldflags) != 0) {
-        LOGE("Cannot parse ldflags from wrapper");
-        close(fd);
-        return -1;
-      }
-    } else {
-      // Some field maybe useful, but we use wrapper to encode command line,
-      // this is not necessary for now.
-    }
-    offset -= (length + 4);
-    free(large_buffer);
-  } // while
-  close(fd);
+    p += (length + 3) & ~3;  // Data are always padding to 4-byte boundary.
+  }
+
+  munmap (buf, st.st_size);
   return 0;
 }
 
@@ -116,23 +117,16 @@ void BitcodeInfo::dropExternalLDLibs(SONameMap &map) {
   }
 }
 
-void BitcodeInfo::swapEndian(unsigned char *buffer, size_t n) {
-  // We uses le32, so it must be LITTLE ENDIAN
-  for (size_t i = 0; i < n/2; ++i) {
-    char tmp = buffer[i];
-    buffer[i] = buffer[n-i-1];
-    buffer[n-i-1] =tmp;
-  }
-}
-
-int BitcodeInfo::transferBytesToNum(const unsigned char *buffer, size_t n) {
+// This function reads N bytes from BUFFER in little endian.
+int BitcodeInfo::transferBytesToNumLe(const unsigned char *buffer, size_t n) {
   int ret = 0;
-  for (size_t i = 0; i < n; ++i) {
-    ret = ret * 0x100 + buffer[i];
-  }
+  const unsigned char *p = buffer + n;
+
+  while (--p >= buffer)
+    ret = ret * 0x100 + *p;
+
   return ret;
 }
-
 
 BitcodeCompiler::BitcodeCompiler(const std::string &abi, const std::string &sysroot, const std::string &working_dir, const bool savetemps)
   : mAbi(abi), mSysroot(sysroot), mWorkingDir(working_dir), mRet(RET_OK), mSaveTemps(savetemps) {
@@ -141,12 +135,6 @@ BitcodeCompiler::BitcodeCompiler(const std::string &abi, const std::string &sysr
   mGlobalCFlags += std::string(" -mtriple=") + kGlobalTargetAttrs[mAbi].mTriple;
   mGlobalCFlags += " -filetype=obj -relocation-model=pic -code-model=small";
   mGlobalCFlags += " -use-init-array -mc-relax-all";
-
-#ifdef DEBUG
-  mGlobalCFlags += std::string(" ") + "-O0";
-#else
-  mGlobalCFlags += std::string(" ") + "-O2";
-#endif
 
   if (mAbi == TargetAbi::ARMEABI || mAbi == TargetAbi::ARMEABI_V7A)
     mGlobalCFlags += std::string(" ") + "-arm-enable-ehabi -arm-enable-ehabi-descriptors -float-abi=soft";
@@ -182,14 +170,19 @@ void BitcodeCompiler::compile() {
   for (std::vector<BitcodeInfo>::const_iterator i = mBitcodeFiles.begin(),
        e = mBitcodeFiles.end(); i != e; ++i) {
     const BitcodeInfo &bc = *i;
-    std::string cmd = mExecutableToolsPath[(unsigned)CMD_COMPILE];
-    cmd += " " + mGlobalCFlags;
-    cmd += " " + bc.mTargetBCPath + " -o " + bc.mObjPath;
+    std::ostringstream os;
+
+    os << mExecutableToolsPath[(unsigned)CMD_COMPILE]
+       << " " << mGlobalCFlags
+       << " -O" << bc.mOptimizationLevel
+       << " " << bc.mTargetBCPath
+       << " -o " << bc.mObjPath;
+
 #if ON_DEVICE && VERBOSE
     Timer t_llc;
     t_llc.start();
 #endif
-    runCmd(cmd, /*dump=*/true);
+    runCmd(os.str(), /*dump=*/true);
 #if ON_DEVICE && VERBOSE
     llc_usec += t_llc.stop();
 #endif
