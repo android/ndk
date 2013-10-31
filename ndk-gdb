@@ -35,6 +35,8 @@ case $PROGDIR in
         ;;
 esac
 
+NDK_BUILDTOOLS_PATH=$PROGDIR/build/tools
+. $PROGDIR/build/tools/prebuilt-common.sh
 . $PROGDIR/build/tools/ndk-common.sh
 
 force_32bit_binaries
@@ -78,6 +80,8 @@ AWK_CMD=${AWK_CMD:-$(find_program awk)}
 
 DEBUG_PORT=5039
 JDB_PORT=65534
+
+PORTABLE_ABI=$(find_ndk_unknown_archs)
 
 # Delay in seconds between launching the activity and attaching gdbserver on it.
 # This is needed because there is no way to know when the activity has really
@@ -544,13 +548,19 @@ CPU_ABIS=$(echo $CPU_ABIS | tr ',' ' ')
 log "Device CPU ABIs: $CPU_ABIS"
 
 APP_ABIS=$APP_ABIS" "
-for CPU_ABI in $CPU_ABIS; do
-    if [ "$APP_ABIS" != "${APP_ABIS%$CPU_ABI *}" ] ; then
-        COMPAT_ABI=$CPU_ABI
-        break
-    fi
-done
 
+adb_var_shell BCFILES run-as $PACKAGE_NAME /system/bin/sh -c "ls lib/*.bc"
+if [ $? == 0 ]; then
+    # If any bitcode is found on device, assuming it's portable application.
+    COMPAT_ABI="$PORTABLE_ABI"
+else
+    for CPU_ABI in $CPU_ABIS; do
+        if [ "$APP_ABIS" != "${APP_ABIS%$CPU_ABI *}" ] ; then
+            COMPAT_ABI=$CPU_ABI
+            break
+        fi
+    done
+fi
 if [ "$COMPAT_ABI" = none ] ; then
     echo "ERROR: The device does not support the application's targetted CPU ABIs!"
     echo "       Device supports:  $CPU_ABIS"
@@ -563,7 +573,26 @@ log "Compatible device ABI: $COMPAT_ABI"
 GDBSETUP_INIT=`get_build_var_for_abi NDK_APP_GDBSETUP $COMPAT_ABI`
 log "Using gdb setup init: $GDBSETUP_INIT"
 
-TOOLCHAIN_PREFIX=`get_build_var_for_abi TOOLCHAIN_PREFIX $COMPAT_ABI`
+# Find the <dataDir> of the package on the device
+adb_var_shell2 DATA_DIR run-as $PACKAGE_NAME /system/bin/sh -c pwd
+if [ $? != 0 -o -z "$DATA_DIR" ] ; then
+    echo "ERROR: Could not extract package's data directory. Are you sure that"
+    echo "       your installed application is debuggable?"
+    exit 1
+fi
+log "Found data directory: '$DATA_DIR'"
+
+if [ "$COMPAT_ABI" != "$PORTABLE_ABI" ]; then
+    TOOLCHAIN_PREFIX=`get_build_var_for_abi TOOLCHAIN_PREFIX $COMPAT_ABI`
+    HOST_GDB_FILE=gdbserver
+    DEVICE_GDBSERVER=$DATA_DIR/lib/gdbserver
+else
+    TOOLCHAIN_ABI=$(echo $CPU_ABIS | awk '{print $NF}')
+    TOOLCHAIN_PREFIX=`get_build_var_for_abi TOOLCHAIN_PREFIX $TOOLCHAIN_ABI`
+    # Portable NDK doesn't have native gdbserver.
+    HOST_GDB_FILE=gdb.setup
+    DEVICE_GDBSERVER=/data/local/tmp/gdbserver
+fi
 log "Using toolchain prefix: $TOOLCHAIN_PREFIX"
 
 APP_OUT=`get_build_var_for_abi TARGET_OUT $COMPAT_ABI`
@@ -573,11 +602,11 @@ log "Using app out directory: $APP_OUT"
 DEBUGGABLE=`run_awk_manifest_script extract-debuggable.awk`
 log "Found debuggable flag: $DEBUGGABLE"
 if [ $? != 0 -o "$DEBUGGABLE" != "true" ] ; then
-    # If gdbserver exists, then we built with 'ndk-build NDK_DEBUG=1' and it's
+    # If $HOST_GDB_FILE exists, then we built with 'ndk-build NDK_DEBUG=1' and it's
     # ok to not have android:debuggable set to true in the original manifest.
     # However, if this is not the case, then complain!!
-    if [ -f $PROJECT/libs/$COMPAT_ABI/gdbserver ] ; then
-        log "Found gdbserver under libs/$COMPAT_ABI, assuming app was built with NDK_DEBUG=1"
+    if [ -f $PROJECT/libs/$COMPAT_ABI/$HOST_GDB_FILE ] ; then
+        log "Found $HOST_GDB_FILE under libs/$COMPAT_ABI, assuming app was built with NDK_DEBUG=1"
     else
         echo "ERROR: Package $PACKAGE_NAME is not debuggable ! You can fix that in two ways:"
         echo ""
@@ -592,8 +621,8 @@ if [ $? != 0 -o "$DEBUGGABLE" != "true" ] ; then
 else
     # DEBUGGABLE is true in the manifest. Let's check that the user didn't change the
     # debuggable flag in the manifest without calling ndk-build afterwards.
-    if [ ! -f $PROJECT/libs/$COMPAT_ABI/gdbserver ] ; then
-        echo "ERROR: Could not find gdbserver binary under $PROJECT/libs/$COMPAT_ABI"
+    if [ ! -f $PROJECT/libs/$COMPAT_ABI/$HOST_GDB_FILE ] ; then
+        echo "ERROR: Could not find $HOST_GDB_FILE under $PROJECT/libs/$COMPAT_ABI"
         echo "       This usually means you modified your AndroidManifest.xml to set"
         echo "       the android:debuggable flag to 'true' but did not rebuild the"
         echo "       native binaries. Please call 'ndk-build' to do so,"
@@ -605,22 +634,38 @@ fi
 # Let's check that 'gdbserver' is properly installed on the device too. If this
 # is not the case, the user didn't install the proper package after rebuilding.
 #
-adb_var_shell2 DEVICE_GDBSERVER ls /data/data/$PACKAGE_NAME/lib/gdbserver
+adb_var_shell2 GDBSERVER_RESULT ls $DEVICE_GDBSERVER
 if [ $? != 0 ]; then
-    echo "ERROR: Non-debuggable application installed on the target device."
-    echo "       Please re-install the debuggable version!"
-    exit 1
+    # Push gdbserver for portable application if gdbserver is not found.
+    # Otherwise, it's an ERROR.
+
+    if [ $COMPAT_ABI == $PORTABLE_ABI ]; then
+        # Figure out what's the target-arch and uPsh gdbserver found in prebuilt.
+        TARGET_ARCH=none
+        for ANDROID_ARCH in $ANDROID_NDK_ROOT/prebuilt/android-*; do
+            ANDROID_ARCH=${ANDROID_ARCH#*android-}
+            if [ x"$CPU_ABIS" != x"${CPU_ABIS#$ANDROID_ARCH*}" ]; then
+                TARGET_ARCH=$ANDROID_ARCH
+                break;
+            fi
+        done
+
+        if [ $TARGET_ARCH != "none" ]; then
+	    adb shell mkdir -p /data/local/tmp
+            adb push ${ANDROID_NDK_ROOT}/prebuilt/android-${TARGET_ARCH}/gdbserver/gdbserver \
+                     $DEVICE_GDBSERVER
+            log "Push gdbserver in device"
+        else
+            echo "ERROR: Cannot find a usable gdbserver for debugging."
+            exit 1
+        fi
+    else
+        echo "ERROR: Non-debuggable application installed on the target device."
+        echo "       Please re-install the debuggable version!"
+        exit 1
+    fi
 fi
 log "Found device gdbserver: $DEVICE_GDBSERVER"
-
-# Find the <dataDir> of the package on the device
-adb_var_shell2 DATA_DIR run-as $PACKAGE_NAME /system/bin/sh -c pwd
-if [ $? != 0 -o -z "$DATA_DIR" ] ; then
-    echo "ERROR: Could not extract package's data directory. Are you sure that"
-    echo "       your installed application is debuggable?"
-    exit 1
-fi
-log "Found data directory: '$DATA_DIR'"
 
 # Launch the activity if needed
 if [ "$OPTION_START" = "yes" ] ; then
@@ -689,7 +734,7 @@ fi
 
 # Launch gdbserver now
 DEBUG_SOCKET=debug-socket
-run adb_cmd shell run-as $PACKAGE_NAME lib/gdbserver +$DEBUG_SOCKET --attach $PID &
+run adb_cmd shell run-as $PACKAGE_NAME $DEVICE_GDBSERVER +$DEBUG_SOCKET --attach $PID &
 if [ $? != 0 ] ; then
     echo "ERROR: Could not launch gdbserver on the device?"
     exit 1
@@ -725,6 +770,15 @@ if [ "$OPTION_START" = "yes" ] || [ -n "$OPTION_LAUNCH" ] ; then
         $JDB_CMD -connect com.sun.jdi.SocketAttach:hostname=localhost,port=$JDB_PORT &
         sleep 1
     fi
+fi
+
+# If we are debugging portable application, download compiled *.so from device.
+#
+if [ $COMPAT_ABI == $PORTABLE_ABI ]; then
+    for bc in $BCFILES; do
+        log "Pulled $(basename $bc .bc).so from device/emulator."
+        adb pull $DATA_DIR/lib/$(basename $bc .bc).so $PROJECT/obj/local/$PORTABLE_ABI/
+    done
 fi
 
 # Now launch the appropriate gdb client with the right init commands
