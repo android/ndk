@@ -39,7 +39,7 @@ COMPILER_RT_SUBDIR=sources/android/compiler-rt
 TOOLCHAIN_GIT_DATE=now
 
 # The space-separated list of all GCC versions we support in this NDK
-DEFAULT_GCC_VERSION_LIST="4.6 4.7 4.8"
+DEFAULT_GCC_VERSION_LIST="4.6 4.8"
 
 # The default GCC version for this NDK, i.e. the first item in
 # $DEFAULT_GCC_VERSION_LIST
@@ -80,7 +80,7 @@ DEFAULT_ARCH_TOOLCHAIN_NAME_mips=mipsel-linux-android
 DEFAULT_ARCH_TOOLCHAIN_PREFIX_mips=mipsel-linux-android
 
 # The space-separated list of all LLVM versions we support in NDK
-DEFAULT_LLVM_VERSION_LIST="3.3 3.2"
+DEFAULT_LLVM_VERSION_LIST="3.3"
 
 # The default LLVM version (first item in the list)
 DEFAULT_LLVM_VERSION=$(echo "$DEFAULT_LLVM_VERSION_LIST" | tr ' ' '\n' | head -n 1)
@@ -171,7 +171,7 @@ get_default_toolchain_prefix_for_arch ()
 
 # Get the list of all toolchain names for a given architecture
 # $1: architecture (e.g. 'arm')
-# Out: list of toolchain names for this arch (e.g. arm-linux-androideabi-4.6 arm-linux-androideabi-4.7)
+# Out: list of toolchain names for this arch (e.g. arm-linux-androideabi-4.6 arm-linux-androideabi-4.8)
 # Return empty for unknown arch
 get_toolchain_name_list_for_arch ()
 {
