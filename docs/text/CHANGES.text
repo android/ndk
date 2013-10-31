@@ -1,6 +1,148 @@
 Android NDK ChangeLog:
 
 ----------------------------------------------------------------------------
+android-ndk-r9b
+===
+
+IMPORTANT CHANGES:
+---
+
+- Updated include/android/*h and math.h for all API up to 18, add API level 13,
+  15, 16 and 17 in the process.
+  See commit message in https://android-review.googlesource.com/#/c/68012
+  and https://android-review.googlesource.com/#/c/68014 for added APIs.
+  Issues http://b.android.com/47150, http://b.android.com/58528, and
+  http://b.android.com/38423
+
+- Added API19 for Renderscript binding support
+
+- Supported -mhard-float in the existing "armeabi-v7a" ABI.  See
+  tests/device/hard-float/jni/Android.mk for details and current
+  restriction on Clang.
+
+- Rebased GCC 4.8 to 4.8.2, and add diagnostic color support.  To enable
+  it, set -fdiagnostics-color=auto or -fdiagnostics-color=always, or
+  simply export GCC_COLORS, eg.
+>    export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+
+>  See http://gcc.gnu.org/onlinedocs/gcc/Language-Independent-Options.html
+
+- Added two new samples to demostrate OpenGL ES3 features: Teapot and MoreTeapots.
+  Run on devices with API>=16 (Don't run on emulator)
+
+- Both GCC 4.7 and Clang 3.2 are deprecated, and will be removed from the next release.
+
+
+IMPORTANT BUG FIXES:
+---
+
+- Fixed ARM GCC 4.6 thumb2 fails to generate 16bit relative jump table.
+  See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=48328
+
+- Fixed GCC 4.8 ICE on g++.dg/cpp0x/lambda/lambda-defarg3.C
+  See https://android-review.googlesource.com/#/c/62770 and http://gcc.gnu.org/ml/gcc/2013-07/msg00424.html
+
+- Fixed Windows 32-bit *-gdb.exe fail to launch.
+  See http://b.android.com/58975
+
+- Fixed GCC 4.8 ICE when building bullet library with error message reads:
+>  internal compiler error: verify_flow_info failed
+
+>  See http://b.android.com/58916 and http://gcc.gnu.org/bugzilla/show_bug.cgi?id=58165
+
+- Fixed GDB/ARM to skip ARM.exidx data for unwinding in prologue code.
+  Add a command "set arm exidx-unwinding" to control exidx-based stack
+  unwinding.
+  See http://b.android.com/55826
+
+- Fixed Clang 3.3 MIPS where HI and LO registers are incorrectly reused.
+
+- Fixed MIPS 4.7 ICE with erro reads:
+>  external/icu4c/i18n/decimfmt.cpp:1322:1: internal compiler error: in dbx_reg_number, at dwarf2out.c:10185
+
+>  See http://gcc.gnu.org/ml/gcc-patches/2012-12/msg00830.html
+
+
+OTHER BUG FIXES:
+---
+
+- Fixed headers
+> 1. Fixed ARM's WCHAR_MIN / WCHAR_MAX to be unsigned according to spec.  (X86/MIPS'
+     are signed).  Define _WCHAR_IS_ALWAYS_SIGNED to restore old behavior.
+     See http://b.android.com/57749
+> 2. Fixed include/netinet/tcp.h to contain TCP_INFO state enum.
+     See http://b.android.com/38881
+> 3. Fixed cdefs_elh.h _C_LABEL_STRING macro which causes warnings with gcc 4.8 toolchain in c++11 mode.
+     See http://b.android.com/58135, http://b.android.com/58652
+> 4. Removed non-existence functions imaxabs and imaxdiv from header inttypes.h
+> 5. Marked pthread_exit() as __noreturn, and pthread_self() as __pure2.
+     See http://b.android.com/60686
+> 6. Added missing mkdtemp() already exists in bionic in stdlib.h
+
+- Fixed samples/gles3jni build with Clang at android-11
+
+- Fixed mclinker to allow mulitple occurrences of the following options: -gc-sections and --eh-frame-hdr.
+
+- Fixed mclinker to accept --no-warn-mismatch
+
+- Fixed cpu-features not to assume all VFPv4 devices support IDIV.
+  Now it only adds IDIV to white-listed devices (Nexus 4 at this moment)
+  b.android.com/57637
+
+- Fixed android_native_app_glue.c to stop errors being logged erroneously on event predispatch
+
+- Fixed all operations on gabi++ terminate and unexpected_handler to be thread-safe
+
+- More fixes on Clang -integrated-as to pass tests ssax-instructions and fenv
+
+- Fixed GCC 4.6/4.7/4.8 to pass linker option --eh-frame-hdr even for
+  static executable.  See http://gcc.gnu.org/ml/gcc-patches/2012-09/msg00969.html
+
+- Fixed extra apostrophe in docs/CPU-ARCH-ABIS.html
+  See docs/NDK-DEPENDS.html, http://b.android.com/60142
+
+- Fixed extra quotes in ndk-build output on Windows
+  See http://b.android.com/60649
+
+- Fixed Clang 3.3 to compile ARM atomic builtin __atomic_fetch_add/sub/or/...
+
+- Fixed Clang 3.3 ICE on customized vfprintf. See
+  http://llvm.org/bugs/show_bug.cgi?id=16344
+
+
+OTHER CHANGES:
+---
+
+- Enabled OpenMP for all GCC:  Add the following flags: "LOCAL_CFLAGS += -fopenmp"
+  and "LOCAL_LDFLAGS += -fopenmp".
+  Please find examples in tests/device/test-openmp
+
+- Significantly reduced the size of ld.mcld (1.5MB vs. ld.bfd 3.5MB and ld.gold 7.5MB)
+  and result in ~20% speed up too.
+
+- Added LOCAL_CONLYFLAGS and APP_CONLYFLAGS to specify options applicable to C only
+  but not C++.  The reason being that the existing LOCAL_CFLAGS and APP_CFLAGS are
+  also used for C++ compilation (to save trouble of specifying most options twice),
+  option like -std=gnu99 may fail g++ (warning) and clang++ (error).
+
+- Added gabi++ array helper functions
+
+- All libgcc.a in gcc are built with -funwind-tables to allow stack to unwind past __aeabi_idiv0
+  for example
+
+- Added Ingenic MXU support in MIPS GCC 4.6/4.7/4.8 with new option -mmxu
+
+- Extended MIPS GCC 4.6/4.7/4.8 -mldc1-sdc1 to control ldxc1/sdxc1 too
+
+- Added crazy linker. See sources/android/crazy_linker/README.TXT
+
+- Fixed bitmap-plasma to draw on full screen rather than 200x200
+
+- Reduced linux and darwin toolchain size by 25% (by symlink to
+  identical files)
+
+
+----------------------------------------------------------------------------
 android-ndk-r9
 ===
 
@@ -148,10 +290,10 @@ OTHER BUG FIXES:
 
 - Fixed ld.gold to enable "--sort-section=name" option
 
-- Fixed GCC4.4.3/4.6/4.7 to supress -export-dynamic for statically linked
+- Fixed GCC 4.4.3/4.6/4.7 to supress -export-dynamic for statically linked
   programs.  GCC no longer adds .interp section for statically linked programs.
 
-- Fixed GCC4.4.3 stlport compilation error about inconsistent typedef of
+- Fixed GCC 4.4.3 stlport compilation error about inconsistent typedef of
   _Unwind_Control_Block.
   See https://android-review.googlesource.com/#/c/54426
 

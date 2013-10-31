@@ -68,6 +68,13 @@ IMPORTANT NOTE:
   You won't be able to use any C++ STL (either STLport or
   the GNU libstdc++) with it. Also no exceptions and no RTTI.
 
+> For clang, you need to add correct "-target" for given architecture, and add
+  "-gcc-toolchain" to path of GNU-based toolchain for "as" and "ld", eg.
+
+  1. Add "-target armv7-none-linux-androideabi" for armeabi-v7a, "-target armv5te-none-linux-androideabi"
+     for armeabi, "-target i686-none-linux-android" for x86, "-target mipsel-none-linux-android" for mips, and
+  2. Add "-gcc-toolchain $NDK/toolchains/arm-linux-androideabi-4.8/prebuilt/linux-x86_64"
+
 
 4/ Invoking the compiler (the easy way):
 ----------------------------------------
@@ -167,6 +174,9 @@ subsequent option "`-march=armv7-a`" and/or "`-mthumb`".  ie.
 
 You may override with your own -target if you wish.
 
+There is no need for "-gcc-toolchain" because clang locates "as" and "ld" in
+predefined relative location in standalone package.
+
 Extra efforts have been made to make clang/clang++ easier drop-in
 replacements for gcc/g++ in Makefile.  When in doubt, use the following
 common techniques to check:
@@ -197,7 +207,8 @@ following flags are being used:
 Note: The first flag enables Thumb-2 instructions, and the second one
       enables H/W FPU instructions while ensuring that floating-point
       parameters are passed in core registers, which is critical for
-      ABI compatibility. Do *not* use these flags separately!
+      ABI compatibility. Do *not* use these flags separately before
+      NDK r9b!
 
 If you want to use Neon instructions, you will need to change the -mfpu
 compiler flag:
@@ -213,6 +224,12 @@ Also, make sure the following two flags are provided to linker:
 Note: The first flag instructs linker to pick libgcc.a, libgcov.a and
       crt*.o tailored for armv7-a.  The 2nd flag is *required* to route
       around a CPU bug in some Cortex-A8 implementations:
+
+Since NDK r9b, all Android native APIs taking or returning double/float
+has __attribute__((pcs("aapcs"))) for ARM.  It's possible to compile
+user code in -mhard-float (which implies -mfloat-abi=hard) and still
+link with Android native APIs which follow softfp ABI.  Please see
+tests/device/hard-float/jni/Android.mk for details.
 
 If none of the above makes sense to you, it's probably better not to use
 the standalone toolchain, and stick to the NDK build system instead, which

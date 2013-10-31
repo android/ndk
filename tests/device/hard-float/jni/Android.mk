@@ -29,16 +29,23 @@ ifeq (,$(filter clang%,$(NDK_TOOLCHAIN_VERSION)))
 # softfp ABI is still observed by compiler for Android native APIs.
 #
 # You also need to ensure that
-# 1. correct headers (eg. #include <math.h>) are always included, and there is no
+# 1. All code and library *must* be recompiled with consistent soft-abi.
+#    If your project use ndk-build and import other project, you may want to do
+#
+#    $NDK/ndk-build -B APP_ABI=armeabi-v7a APP_CFLAGS=-mhard-float APP_LDFLAGS=-Wl,--no-warn-mismatch
+#
+#    If your project use libraries compiled by others, it's likely those were built with
+#    -msoft-abi=softfp or evan -msoft-float (for armeabi).  Recompile them with -mhard-float
+#
+# 2. Correct headers (eg. #include <math.h>) are always included, and there is no
 #    declaration like "extern double sin(double)" w/o proper __attribute__ in
 #    your code instead of including math.h, etc.  See the end of sys/cdefs.h
 #    the conditions upon which __NDK_FPABI__ and __NDK_FPABI_MATH__ are defined
-#
-# 2. If you use undocumented APIs which takes/returns float/double, be careful
+# 3. If you use undocumented APIs which takes/returns float/double, be careful
 #    to add __attribute__((pcs("aapcs"))) for arm
 #
-# Note that "--no-warn-mismatch" is needed to suppress linker error
-# about not all functions use VFP register to pass argument, eg.
+# Note that "--no-warn-mismatch" is needed for linker (except mclinker which check correctly)
+# to suppress linker error about not all functions use VFP register to pass argument, eg.
 #
 #   .../arm-linux-androideabi/bin/ld: error: ..../test-float.o
 #           uses VFP register arguments, output does not
@@ -46,7 +53,9 @@ ifeq (,$(filter clang%,$(NDK_TOOLCHAIN_VERSION)))
 include $(CLEAR_VARS)
 LOCAL_MODULE := hard-float-softfp-abi
 LOCAL_CFLAGS += -mhard-float
+ifeq (,$(filter -fuse-ld=mcld,$(APP_LDFLAGS) $(LOCAL_LDFLAGS)))
 LOCAL_LDFLAGS += -Wl,--no-warn-mismatch
+endif
 LOCAL_SRC_FILES := test-float.c
 include $(BUILD_EXECUTABLE)
 
@@ -76,7 +85,10 @@ endif # check clang
 include $(CLEAR_VARS)
 LOCAL_MODULE := hard-float-hard-abi
 LOCAL_CFLAGS += -mhard-float -D_NDK_MATH_NO_SOFTFP=1
-LOCAL_LDFLAGS += -Wl,--no-warn-mismatch -lm_hard
+LOCAL_LDFLAGS += -lm_hard
+ifeq (,$(filter -fuse-ld=mcld,$(APP_LDFLAGS) $(LOCAL_LDFLAGS)))
+LOCAL_LDFLAGS += -Wl,--no-warn-mismatch
+endif
 LOCAL_SRC_FILES := test-float.c
 include $(BUILD_EXECUTABLE)
 
