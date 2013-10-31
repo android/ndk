@@ -23,7 +23,11 @@ TARGET_CC := $(TOOLCHAIN_PREFIX)clang$(HOST_EXEEXT)
 TARGET_CXX := $(TOOLCHAIN_PREFIX)clang++$(HOST_EXEEXT)
 TARGET_LD := $(TOOLCHAIN_PREFIX)clang++$(HOST_EXEEXT)
 TARGET_AR := $(TOOLCHAIN_PREFIX)llvm-ar$(HOST_EXEEXT)
-TARGET_STRIP := $(TOOLCHAIN_PREFIX)$(LLVM_TRIPLE)-strip$(HOST_EXEEXT)
+ifeq ($(APP_OPTIM),debug)
+  TARGET_STRIP := \# dont-strip-for-debugging-bitcode
+else
+  TARGET_STRIP := $(TOOLCHAIN_PREFIX)$(LLVM_TRIPLE)-strip$(HOST_EXEEXT)
+endif
 
 # Compiler runtime is determined in bc2native
 TARGET_LIBGCC :=
@@ -54,6 +58,12 @@ TARGET_LDFLAGS += \
     -target $(LLVM_TRIPLE) \
     -emit-llvm \
     -no-canonical-prefixes
+
+ifeq ($(APP_OPTIM),debug)
+  TARGET_LDFLAGS += -Wl,-O0 -Wl,--disable-opt
+else
+  TARGET_LDFLAGS += -Wl,-O2
+endif
 
 TARGET_C_INCLUDES := \
     $(SYSROOT_INC)/usr/include
