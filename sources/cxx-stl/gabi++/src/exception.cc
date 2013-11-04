@@ -76,11 +76,44 @@ const char* bad_typeid::what() const _GABIXX_NOEXCEPT {
   return "std::bad_typeid";
 }
 
-bool uncaught_exception() _GABIXX_NOEXCEPT {
-  using namespace __cxxabiv1;
+#ifndef GABIXX_LIBCXX
 
-  __cxa_eh_globals* globals = __cxa_get_globals();
-  return globals->uncaughtExceptions != 0;
+// std::exception_ptr
+
+using namespace __cxxabiv1;
+
+exception_ptr::exception_ptr(const exception_ptr& other) _GABIXX_NOEXCEPT
+    : _ptr(other._ptr) {
+  __cxa_increment_exception_refcount(_ptr);
 }
+
+exception_ptr& exception_ptr::operator=(const exception_ptr& other)
+      _GABIXX_NOEXCEPT {
+  if (_ptr != other._ptr) {
+    __cxa_increment_exception_refcount(other._ptr);
+    __cxa_decrement_exception_refcount(_ptr);
+    _ptr = other._ptr;
+  }
+  return *this;
+}
+
+exception_ptr::~exception_ptr() _GABIXX_NOEXCEPT {
+  __cxa_decrement_exception_refcount(_ptr);
+};
+
+// std::current_exception()
+
+exception_ptr current_exception() _GABIXX_NOEXCEPT {
+  return exception_ptr(__cxa_current_primary_exception());
+}
+
+// std::rethrow_exception()
+
+_GABIXX_NORETURN void rethrow_exception(exception_ptr ptr) {
+  __cxa_rethrow_primary_exception(ptr._ptr);
+  __gabixx::__fatal_error("Can't rethrow null exception!");
+}
+
+#endif // !defined(GABIXX_LIBCXX)
 
 }  // namespace std

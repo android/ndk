@@ -117,4 +117,11 @@ _GABIXX_NORETURN void unexpected() {
   __gabixx::__terminate(std::get_unexpected());
 }
 
+bool uncaught_exception() _GABIXX_NOEXCEPT {
+  using namespace __cxxabiv1;
+
+  __cxa_eh_globals* globals = __cxa_get_globals();
+  return globals->uncaughtExceptions != 0;
+}
+
 } // namespace std

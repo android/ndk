@@ -1,0 +1,119 @@
+Introduction
+------------
+
+This document explains how C++ exception support works, including support for
+the latest features like C++11 dependent exception (a.k.a. std::exception_ptr)
+which unfortunately do not have any spec at the moment.
+
+This summarizes the information found in the following reference material:
+
+  - "Itanium C++ ABI: Exception Handling"
+    http://mentorembedded.github.io/cxx-abi/abi-eh.html
+    This describes the generic documentation used by all platforms except ARM.
+
+  - "C++ ABI for the ARM Architecture"
+    http://infocenter.arm.com/help/topic/com.arm.doc.ihi0041d/IHI0041D_cppabi.pdf
+    This is the ARM-specific extension to the generic ABI document above.
+
+  - "Itanium Software Conventions & Runtime Architecture Guide"
+    http://www.intel.com/content/dam/www/public/us/en/documents/guides/itanium-software-runtime-architecture-guide.pdf
+    Chapter 11, titled "Stack Unwinding and Exception Handling" explains how
+    the compiler should generate unwind descriptors.
+
+  - "Exception Handling ABI for the ARM Architecture"
+    http://infocenter.arm.com/help/topic/com.arm.doc.ihi0038a/IHI0038A_ehabi.pdf
+    This document describes ARM-specific exception handling tables, similar
+    to the generic unwind descriptors.
+
+  - "N2179: Language Support for Transporting Exceptions between Threads"
+    http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2179.html
+    C++ proposal to implement std::exception_ptr. Note that this only describes
+    the feature at the language / standard library level, not the low-level
+    runtime implementation.
+
+  - "Implementing Exception Propagation (N2179)"
+    http://gcc.gnu.org/ml/libstdc++/2008-05/msg00079.html
+    http://gcc.gnu.org/ml/libstdc++/2008-08/msg00073.html
+    Threads on the libstdc++ mailing list about implementing N2179, note
+    that the final implementation was slightly different.
+
+  - GNU libsupc++
+    https://github.com/mirrors/gcc/tree/master/libstdc%2B%2B-v3/libsupc%2B%2B
+    GNU C++ runtime sources.
+
+  - libcxxabi
+    http://llvm.org/svn/llvm-project/libcxxabi/trunk/src/
+    LLVM's C++ runtime library sources.
+
+I. Stack unwinding:
+-------------------
+
+Stack unwinding is the ability to walk up the current stack of call-frames,
+this is useful during debugging to dump a stack trace, or to implement exception
+handling (e.g. find relevant 'catch' blocks or perform cleanups when an exception
+is thrown).
+
+For example, in the following C++ source fragment:
+
+  void do_stuff()
+  {
+    Foo foo;   // Allocate and construct Foo instance on the stack.
+    bar();     // call function bar().
+  }
+
+The compiler must generate code that satisfies the language requirements, which
+mandate that the 'foo' object is destroyed whenever execution leaves the scope.
+Assuming that the Foo::Foor() constructor doesn't throw, this means:
+
+  - After calling bar() succesfully and the function returns.
+  - When bar() throws an exception.
+
+When exceptions are disabled, the compiler will generate the following pseudo
+code to handle the first case:
+
+   void do_stuff()
+   {
+     char[sizeof(Foo)]  foo_object;  // Allocate object on the stack.
+     Foo::Foo(foo_object);           // Construct it.
+
+     bar();   // Call function bar();
+
+     Foo::~Foo(foo_object);    // Destroy the object.
+  }
+
+When exceptions are enabled, however, things get slightly more complicated. The
+compiler will generate machine code for the function that is very similar to the
+one shown above, but it will also build extra code and data that describes:
+
+  - How to unwind a stack frame associated with the function.
+
+  - How to perform any cleanups associated with the unwinding
+
+  - How to locate handlers associated with the function
+    (if it contains a 'catch' clause).
+
+  - A description of exception types not blocked by this function.
+    (if it contains a 'catch' clause).
+
+
+II. Exception objects:
+----------------------
+
+II.1. Exception object layout:
+- - - - - - - - - - - - - - -
+
+II.2. Primary exceptions:
+- - - - - - - - - - - - -
+
+II.3. Dependent exceptions:
+- - - - - - - - - - - - - -
+
+
+III. Implementing 'throw':
+-------------------------------
+
+
+IV. Implementing 'try {} catch {}':
+-----------------------------------
+
+

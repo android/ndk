@@ -78,10 +78,8 @@ namespace __cxxabiv1
 {
   extern "C" {
 
-    // TODO: Support dependent exception
-    // TODO: Support C++0x exception propagation
-    // http://sourcery.mentor.com/archives/cxx-abi-dev/msg01924.html
     struct __cxa_exception;
+    struct __cxa_dependent_expression;
     struct __cxa_eh_globals;
 
     __cxa_eh_globals* __cxa_get_globals() _GABIXX_NOEXCEPT ;

@@ -187,7 +187,7 @@ void unexpected_helper(std::unexpected_handler u_handler) {
   __cxa_call_unexpected(void* arg) {
     _Unwind_Exception* unwind_exception = static_cast<_Unwind_Exception*>(arg);
     __cxa_exception* header = reinterpret_cast<__cxa_exception*>(unwind_exception+1)-1;
-    bool native_exception = unwind_exception->exception_class == __gxx_exception_class;
+    bool native_exception = __gabixx::__is_our_exception(unwind_exception);
 
     if (!native_exception) {
       __cxa_begin_catch(unwind_exception);    // unexpected is also a handler
@@ -196,7 +196,6 @@ void unexpected_helper(std::unexpected_handler u_handler) {
       } catch (...) {
         std::terminate();
       }
-
       return;
     }
 
@@ -237,7 +236,6 @@ void unexpected_helper(std::unexpected_handler u_handler) {
 
       // If no other ones match, throw bad_exception.
       if (allow_bad_exception) {
-        __cxa_end_catch();
         __cxa_end_catch();
         throw std::bad_exception();
       }

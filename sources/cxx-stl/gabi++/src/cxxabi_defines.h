@@ -274,6 +274,8 @@ extern "C" {
 
 // Compatible with GNU C++
 const uint64_t __gxx_exception_class = 0x474E5543432B2B00LL; // GNUCC++\0
+const uint64_t __gxx_dependent_exception_class =
+    0x474E5543432B2B01LL; // GNUCC++\1
 
 struct __cxa_exception {
   size_t referenceCount;
@@ -303,6 +305,34 @@ struct __cxa_exception {
     _Unwind_Exception unwindHeader; // must be last
 };
 
+// This is a dependent exception. The exception_class field of its
+// unwindHeader record will be __gxx_dependent_exception_class, and
+// its primaryException field is a pointer to a primary exception
+// wrapped by the dependent one.
+struct __cxa_dependent_exception {
+    // Pointer to the primary exception that this dependent one is
+    // wrapping.
+    void* primaryException;
+
+  std::type_info* exceptionType;
+  void (*exceptionDestructor)(void*);
+    std::unexpected_handler unexpectedHandler;
+    std::terminate_handler terminateHandler;
+    __cxa_exception* nextException;
+    int handlerCount;
+#ifdef __arm__
+    __cxa_exception* nextCleanup;
+    int cleanupCount;
+#endif
+    int handlerSwitchValue;
+    const uint8_t* actionRecord;
+    const uint8_t* languageSpecificData;
+    void* catchTemp;
+    void* adjustedPtr;
+
+    _Unwind_Exception unwindHeader; // must be last
+};
+
 struct __cxa_eh_globals {
   __cxa_exception* caughtExceptions;
   unsigned int uncaughtExceptions;
@@ -315,6 +345,15 @@ struct __cxa_eh_globals {
 }  // namespace __cxxabiv1
 
 namespace __gabixx {
+
+inline bool __is_our_exception_class(const uint64_t clazz) {
+  return (clazz == __cxxabiv1::__gxx_exception_class) ||
+         (clazz == __cxxabiv1::__gxx_dependent_exception_class);
+}
+
+inline bool __is_our_exception(const _Unwind_Exception* ue) {
+  return __is_our_exception_class(ue->exception_class);
+}
 
 // Default terminate handler.
 _GABIXX_NORETURN void __default_terminate(void) _GABIXX_HIDDEN;

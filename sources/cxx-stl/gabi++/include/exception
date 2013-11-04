@@ -60,6 +60,67 @@ namespace std {
 
   bool uncaught_exception() _GABIXX_NOEXCEPT;
 
+  // exception_ptr is used to pass exception references from one thread
+  // to another. See 
+  class exception_ptr {
+    void* _ptr;
+
+    explicit exception_ptr(void* ptr) : _ptr(ptr) {}
+
+  public:
+    exception_ptr() _GABIXX_NOEXCEPT : _ptr(0) {}
+    exception_ptr(const exception_ptr&) _GABIXX_NOEXCEPT;
+    exception_ptr& operator=(const exception_ptr&) _GABIXX_NOEXCEPT;
+#if __cplusplus >= 201103L
+    exception_ptr(nullptr_t) _GABIXX_NOEXCEPT : _ptr(0) {}
+
+    exception_ptr(exception_ptr&& other) _GABIX_NOEXCEPT
+        : _ptr(other._ptr) {
+      other._ptr = NULL;
+    }
+#endif
+    ~exception_ptr() _GABIXX_NOEXCEPT;
+
+    operator bool() const _GABIXX_NOEXCEPT {
+      return _ptr != 0;
+    }
+
+    friend bool operator==(const exception_ptr& a, exception_ptr& b)
+        _GABIXX_NOEXCEPT {
+      return a._ptr == b._ptr;
+    }
+
+    friend bool operator!=(const exception_ptr& a, exception_ptr& b)
+        _GABIXX_NOEXCEPT {
+      return a._ptr != b._ptr;
+    }
+
+    friend exception_ptr current_exception() _GABIXX_NOEXCEPT;
+    friend void rethrow_exception(exception_ptr);
+  };
+
+  exception_ptr current_exception() _GABIXX_NOEXCEPT;
+  void rethrow_exception(exception_ptr) _GABIXX_NORETURN;
+
+#if _GABIXX_HAS_EXCEPTIONS
+  template <class E>
+  exception_ptr make_exception_ptr(E e) _GABIXX_NOEXCEPT {
+    try {
+      throw e;
+    }
+    catch (...) {
+      return current_exception();
+    }
+  }
+#else   // !_GABIXX_HAS_EXCEPTIONS
+  template <class E>
+  exception_ptr make_exception_ptr(E e) _GABIXX_NOEXCEPT {
+    return exception_ptr();
+  }
+#endif  // !_GABIXX_NO_EXCEPTIONS
+
+ // TODO(digit): Support nested_exception
+
 } // namespace std
 
 #endif  // !defined(GABIXX_LIBCXX)
