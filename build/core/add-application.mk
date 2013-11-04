@@ -94,8 +94,8 @@ ifneq (,$(filter 10 11 12,$(APP_PLATFORM_LEVEL)))
     APP_PLATFORM := android-9
     $(call ndk_log,  Adjusting APP_PLATFORM android-$(APP_PLATFORM_LEVEL) to $(APP_PLATFORM))
 endif
-ifneq (,$(call gt,$(APP_PLATFORM_LEVEL),18))
-    APP_PLATFORM := android-18
+ifneq (,$(call gt,$(APP_PLATFORM_LEVEL),19))
+    APP_PLATFORM := android-19
     $(call ndk_log,  Adjusting APP_PLATFORM android-$(APP_PLATFORM_LEVEL) to $(APP_PLATFORM))
 endif
 
@@ -239,6 +239,9 @@ endif
 
 APP_CFLAGS := $(strip $(APP_CFLAGS))
 APP_CONLYFLAGS := $(strip $(APP_CONLYFLAGS))
+APP_CPPFLAGS := $(strip $(APP_CPPFLAGS))
+APP_CXXFLAGS := $(strip $(APP_CXXFLAGS))
+APP_RENDERSCRIPT_FLAGS := $(strip $(APP_RENDERSCRIPT_FLAGS))
 APP_LDFLAGS := $(strip $(APP_LDFLAGS))
 
 # Check that APP_STL is defined. If not, use the default value (system)

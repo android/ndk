@@ -54,6 +54,21 @@ endif
 
 TARGET_GDB_SETUP := $(TARGET_OUT)/setup.gdb
 
+# RS triple
+ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
+  RS_TRIPLE := armv7-none-linux-gnueabi
+endif
+ifeq ($(TARGET_ARCH_ABI),armeabi)
+  RS_TRIPLE := arm-none-linux-gnueabi
+endif
+ifeq ($(TARGET_ARCH_ABI),mips)
+  RS_TRIPLE := mipsel-unknown-linux
+endif
+ifeq ($(TARGET_ARCH_ABI),x86)
+  RS_TRIPLE := i686-unknown-linux
+endif
+
+
 include $(BUILD_SYSTEM)/setup-toolchain.mk
 
 # Restore TARGET_PLATFORM, see above.

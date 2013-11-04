@@ -105,6 +105,15 @@ ifeq ($(NDK_APP.$(_app).cleaned_binaries),)
 	$(hide) $(call host-rm,$(NDK_ALL_ABIS:%=$(NDK_APP_LIBS_OUT)/%/gdb.setup))
 endif
 
+# Renderscript
+
+RENDERSCRIPT_TOOLCHAIN_ROOT   := $(NDK_ROOT)/toolchains/renderscript
+RENDERSCRIPT_TOOLCHAIN_PREBUILT_ROOT := $(call host-prebuilt-tag,$(RENDERSCRIPT_TOOLCHAIN_ROOT))
+RENDERSCRIPT_TOOLCHAIN_PREFIX := $(RENDERSCRIPT_TOOLCHAIN_PREBUILT_ROOT)/bin/
+RENDERSCRIPT_TOOLCHAIN_LIB    := $(RENDERSCRIPT_TOOLCHAIN_PREBUILT_ROOT)/lib
+RENDERSCRIPT_TOOLCHAIN_HEADER := $(RENDERSCRIPT_TOOLCHAIN_PREBUILT_ROOT)/lib/clang/3.3/include
+
+# Each ABI
 $(foreach _abi,$(NDK_APP_ABI),\
     $(eval TARGET_ARCH_ABI := $(_abi))\
     $(eval include $(BUILD_SYSTEM)/setup-abi.mk) \
