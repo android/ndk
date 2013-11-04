@@ -481,10 +481,15 @@ copy_stl_libs () {
     local ABI2=$2
     case $STL in
         gnustl)
+            # gnustl has thumb version of libraries.  Append ABI with basename($ABI2) if $ABI2 contain '/'
+            ABI1=$ABI
+            if [ "$ABI2" != "${ABI2%%/*}" ] ; then
+                ABI1=$ABI/`basename $ABI2`
+            fi
             copy_directory "$GNUSTL_LIBS/$ABI/include/bits" "$ABI_STL_INCLUDE_TARGET/$ABI2/bits"
-            copy_file_list "$GNUSTL_LIBS/$ABI" "$ABI_STL/lib/$ABI2" "libgnustl_shared.so"
-            copy_file_list "$GNUSTL_LIBS/$ABI" "$ABI_STL/lib/$ABI2" "libsupc++.a"
-            cp -p "$GNUSTL_LIBS/$ABI/libgnustl_static.a" "$ABI_STL/lib/$ABI2/libstdc++.a"
+            copy_file_list "$GNUSTL_LIBS/$ABI1" "$ABI_STL/lib/$ABI2" "libgnustl_shared.so"
+            copy_file_list "$GNUSTL_LIBS/$ABI1" "$ABI_STL/lib/$ABI2" "libsupc++.a"
+            cp -p "$GNUSTL_LIBS/$ABI1/libgnustl_static.a" "$ABI_STL/lib/$ABI2/libstdc++.a"
             ;;
         stlport)
             if [ "$ARCH_STL" != "$ARCH" ]; then
@@ -511,7 +516,7 @@ copy_stl_common_headers
 case $ARCH in
     arm)
         copy_stl_libs armeabi ""
-        copy_stl_libs armeabi "thumb"
+        copy_stl_libs armeabi "/thumb"
         copy_stl_libs armeabi-v7a "armv7-a"
         copy_stl_libs armeabi-v7a "armv7-a/thumb"
         ;;
