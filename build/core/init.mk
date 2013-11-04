@@ -564,13 +564,13 @@ endif
 # version number. Unlike NDK_TOOLCHAIN, this only changes the suffix of
 # the toolchain path we're using.
 #
-# For example, if GCC 4.6 is the default, defining NDK_TOOLCHAIN_VERSION=4.7
+# For example, if GCC 4.6 is the default, defining NDK_TOOLCHAIN_VERSION=4.8
 # will ensure that ndk-build uses the following toolchains, depending on
 # the target architecture:
 #
-#    arm -> arm-linux-androideabi-4.7
-#    x86 -> x86-android-linux-4.7
-#    mips -> mipsel-linux-android-4.7
+#    arm -> arm-linux-androideabi-4.8
+#    x86 -> x86-android-linux-4.8
+#    mips -> mipsel-linux-android-4.8
 #
 # This is used in setup-toolchain.mk
 #

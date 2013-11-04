@@ -24,21 +24,6 @@ index 94c5274..7256082 100644
  
  #define ANDROID_ASM_SPEC \
    "--noexecstack"
-diff --git a/gcc-4.7/gcc/config/linux-android.h b/gcc-4.7/gcc/config/linux-android.h
-index 94c5274..7256082 100644
---- a/gcc-4.7/gcc/config/linux-android.h
-+++ b/gcc-4.7/gcc/config/linux-android.h
-@@ -46,8 +46,8 @@
-   "%{!fno-pic:%{!fno-PIC:%{!fpic:%{!fPIC: " ANDROID_PIC_DEFAULT "}}}}"
- 
- #define ANDROID_CC1PLUS_SPEC						\
--  "%{!fexceptions:%{!fno-exceptions: -fno-exceptions}} "		\
--  "%{!frtti:%{!fno-rtti: -fno-rtti}}"
-+  "%{!fexceptions:%{!fno-exceptions: -fexceptions}} "		\
-+  "%{!frtti:%{!fno-rtti: -frtti}}"
- 
- #define ANDROID_ASM_SPEC \
-   "--noexecstack"
 diff --git a/gcc-4.8/gcc/config/linux-android.h b/gcc-4.8/gcc/config/linux-android.h
 index 2c87c84..47a3e7c 100644
 --- a/gcc-4.8/gcc/config/linux-android.h
