@@ -175,7 +175,7 @@ for ARCH in $(commas_to_spaces $DEFAULT_ARCHS); do
             dump "### [$TAG] Testing $ARCH gcc-$GCC_VERSION toolchain with --sysroot"
             (cd $NDK && \
                 ./tests/standalone/run.sh --prefix=$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION $TAG)-gcc)
-	    for STL in gnustl stlport; do
+            for STL in gnustl stlport libc++; do
                 GCC_TESTED=no
                 for LLVM_VERSION in $(commas_to_spaces $DEFAULT_LLVM_VERSION_LIST); do
                     dump "### [$TAG] Making $ARCH gcc-$GCC_VERSION/clang$LLVM_VERSION standalone toolchain STL=$STL"
