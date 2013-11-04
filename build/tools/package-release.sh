@@ -459,6 +459,11 @@ for SYSTEM in $SYSTEMS; do
     copy_directory "$REFERENCE" "$DSTDIR"
     fail_panic "Could not copy reference. Aborting."
 
+    # Remove tests containing duplicated files in case-insensitive file system
+    if [ "$SYSTEM" = "windows" -o "$SYSTEM" = "darwin-x86" ]; then
+        rm -rf $DSTDIR/tests/build/c++-stl-source-extensions
+    fi
+
     if [ "$PREBUILT_NDK" ]; then
         cd $UNZIP_DIR/android-ndk-* && cp -rP toolchains/* $DSTDIR/toolchains/
         fail_panic "Could not copy toolchain files from $PREBUILT_NDK"
@@ -542,7 +547,12 @@ for SYSTEM in $SYSTEMS; do
             unpack_prebuilt llvm-$LLVM_VERSION-$SYSTEM "$DSTDIR" "$DSTDIR64"
         done
 
+        # Unpack mclinker
         unpack_prebuilt ld.mcld-$SYSTEM "$DSTDIR" "$DSTDIR64"
+
+        # Unpack renderscript tools
+        unpack_prebuilt renderscript-$SYSTEM "$DSTDIR" "$DSTDIR64"
+        unpack_prebuilt renderscript "$DSTDIR" "$DSTDIR64"
 
         # Unpack prebuilt ndk-stack and other host tools
         unpack_prebuilt ndk-stack-$SYSTEM "$DSTDIR" "$DSTDIR64" "yes"

@@ -37,19 +37,6 @@ index 4e21112..025157f 100644
  
  /* Whether we have Bionic libc runtime */
  #undef TARGET_HAS_BIONIC
-diff --git a/gcc-4.7/gcc/config/linux.h b/gcc-4.7/gcc/config/linux.h
-index fb459e6..bf5993f 100644
---- a/gcc-4.7/gcc/config/linux.h
-+++ b/gcc-4.7/gcc/config/linux.h
-@@ -103,7 +103,7 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
- 
- /* Whether we have sincos that follows the GNU extension.  */
- #undef TARGET_HAS_SINCOS
--#define TARGET_HAS_SINCOS (OPTION_GLIBC || OPTION_BIONIC)
-+#define TARGET_HAS_SINCOS (OPTION_GLIBC)
- 
- /* Whether we have Bionic libc runtime */
- #undef TARGET_HAS_BIONIC
 diff --git a/gcc-4.8/gcc/config/linux.h b/gcc-4.8/gcc/config/linux.h
 index 2be1079..b83dc08 100644
 --- a/gcc-4.8/gcc/config/linux.h
