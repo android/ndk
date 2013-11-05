@@ -46,6 +46,8 @@ for VERSION in $DEFAULT_GCC_VERSION_LIST; do
 done
 rm -rf $DIR/$LIBPORTABLE_SUBDIR
 rm -rf $DIR/$COMPILER_RT_SUBDIR
+rm -rf $DIR/$GCCUNWIND_SUBDIR/libs
+rm -rf $DIR/$LIBCXX_SUBDIR/libs
 
 rm -f $DIR/ndk-stack*
 rm -f $DIR/ndk-depends*
