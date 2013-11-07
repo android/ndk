@@ -59,8 +59,13 @@ template <class __number>
 class _Numeric_limits_base {
 public:
 
+#if !defined(__ANDROID__)
   static __number (_STLP_CALL min)() _STLP_NOTHROW { return __number(); }
   static __number (_STLP_CALL max)() _STLP_NOTHROW { return __number(); }
+#else
+  static __number _STLP_CALL (min)() _STLP_NOTHROW { return __number(); }
+  static __number _STLP_CALL (max)() _STLP_NOTHROW { return __number(); }
+#endif
 
   _STLP_STATIC_CONSTANT(int, digits = 0);
   _STLP_STATIC_CONSTANT(int, digits10 = 0);
@@ -118,9 +123,13 @@ template <class _Int,
 class _Integer_limits : public _Numeric_limits_base<_Int> {
 public:
 
+#if !defined(__ANDROID__)
   static _Int (_STLP_CALL min) () _STLP_NOTHROW { return (_Int)__imin; }
   static _Int (_STLP_CALL max) () _STLP_NOTHROW { return (_Int)__imax; }
-
+#else
+  static _Int _STLP_CALL (min) () _STLP_NOTHROW { return (_Int)__imin; }
+  static _Int _STLP_CALL (max) () _STLP_NOTHROW { return (_Int)__imax; }
+#endif
   _STLP_STATIC_CONSTANT(int, digits = (__idigits < 0) ? ((int)((sizeof(_Int) * (CHAR_BIT))) - ((__imin == 0) ? 0 : 1)) : (__idigits));
   _STLP_STATIC_CONSTANT(int, digits10 = (digits * 301UL) / 1000);
   _STLP_STATIC_CONSTANT(int, radix = 2);
