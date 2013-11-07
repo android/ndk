@@ -3,6 +3,9 @@
 
 #define _STLP_PLATFORM "Android"
 
+#include <sys/cdefs.h>
+#define _STLP_CALL __NDK_FPABI__
+
 // Mostly Unix-like.
 #define _STLP_UNIX 1
 
