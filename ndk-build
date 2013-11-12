@@ -38,7 +38,7 @@
 #    ./ndk-build -C <project-path>
 #
 PROGDIR=`dirname $0`
-PROGDIR=`cd $PROGDIR && pwd`
+PROGDIR=`cd $PROGDIR && pwd -P`
 
 # Check if absolute NDK path contain space
 #
