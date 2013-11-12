@@ -25,7 +25,7 @@
 # after doing ndk-build && ant install && <start-application-on-device>
 #
 PROGDIR=`dirname $0`
-PROGDIR=`cd $PROGDIR && pwd`
+PROGDIR=`cd $PROGDIR && pwd -P`
 
 # Check if absolute NDK path contain space
 #
