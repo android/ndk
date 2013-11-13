@@ -34,6 +34,7 @@ imported_CONLYFLAGS := $(call module-get-listed-export,$(all_depends),CONLYFLAGS
 imported_CPPFLAGS   := $(call module-get-listed-export,$(all_depends),CPPFLAGS)
 imported_RENDERSCRIPT_FLAGS := $(call module-get-listed-export,$(all_depends),RENDERSCRIPT_FLAGS)
 imported_C_INCLUDES := $(call module-get-listed-export,$(all_depends),C_INCLUDES)
+imported_LDFLAGS     := $(call module-get-listed-export,$(all_depends),LDFLAGS)
 
 ifdef NDK_DEBUG_IMPORTS
     $(info Imports for module $(LOCAL_MODULE):)
@@ -42,6 +43,7 @@ ifdef NDK_DEBUG_IMPORTS
     $(info   CPPFLAGS='$(imported_CPPFLAGS)')
     $(info   RENDERSCRIPT_FLAGS='$(imported_RENDERSCRIPT_FLAGS)')
     $(info   C_INCLUDES='$(imported_C_INCLUDES)')
+    $(info   LDFLAGS='$(imported_LDFLAGS)')
     $(info All depends='$(all_depends)')
 endif
 
@@ -53,6 +55,7 @@ LOCAL_CFLAGS     := $(strip $(imported_CFLAGS) $(LOCAL_CFLAGS))
 LOCAL_CONLYFLAGS := $(strip $(imported_CONLYFLAGS) $(LOCAL_CONLYFLAGS))
 LOCAL_CPPFLAGS   := $(strip $(imported_CPPFLAGS) $(LOCAL_CPPFLAGS))
 LOCAL_RENDERSCRIPT_FLAGS := $(strip $(imported_RENDERSCRIPT_FLAGS) $(LOCAL_RENDERSCRIPT_FLAGS))
+LOCAL_LDFLAGS    := $(strip $(imported_LDFLAGS) $(LOCAL_LDFLAGS))
 
 #
 # The imported include directories are appended to their LOCAL_XXX value
