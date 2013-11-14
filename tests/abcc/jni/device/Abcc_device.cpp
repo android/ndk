@@ -128,8 +128,7 @@ void DeviceBitcodeCompiler::getBitcodeFiles() {
     unsigned char buffer[4];
     read(fd, buffer, 4);
     close(fd);
-    BitcodeInfo::swapEndian(buffer, 4);
-    int magic = BitcodeInfo::transferBytesToNum(buffer, 4);
+    int magic = BitcodeInfo::transferBytesToNumLe(buffer, 4);
 
     if (magic != 0x0b17c0de) {
       LOGV("Found file %s magic: %x, but we need a wrapped bitcode.", full_path.c_str(), magic);
