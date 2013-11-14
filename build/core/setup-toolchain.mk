@@ -155,7 +155,10 @@ $(call generate-file-dir,$(NDK_APP_GDBSERVER))
 $(NDK_APP_GDBSERVER): clean-installed-binaries
 	$(call host-echo-build-step,$(PRIVATE_ABI),Gdbserver) "[$(PRIVATE_NAME)] $(call pretty-dir,$(PRIVATE_DST))"
 	$(hide) $(call host-install,$(PRIVATE_SRC),$(PRIVATE_DST))
+endif
 
+# Install gdb.setup for both .so and .bc projects
+ifneq (,$(filter $(TARGET_SONAME_EXTENSION),.so .bc))
 installed_modules: $(NDK_APP_GDBSETUP)
 
 $(NDK_APP_GDBSETUP): PRIVATE_ABI := $(TARGET_ARCH_ABI)
