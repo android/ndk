@@ -145,7 +145,7 @@ endif
 # Because GNU Make makes the APP_ABI variable read-only (any assignments
 # to it will be ignored)
 #
-APP_ABI := $(strip $(APP_ABI))
+APP_ABI := $(subst $(comma),$(space),$(strip $(APP_ABI)))
 ifndef APP_ABI
     # Default ABI is 'armeabi'
     APP_ABI := armeabi

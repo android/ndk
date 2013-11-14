@@ -36,6 +36,13 @@ space  := $(empty) $(empty)
 space4 := $(space)$(space)$(space)$(space)
 
 # -----------------------------------------------------------------------------
+# Macro    : comma
+# Returns  : a single comma
+# Usage    : $(comma)
+# -----------------------------------------------------------------------------
+comma := ,
+
+# -----------------------------------------------------------------------------
 # Function : remove-duplicates
 # Arguments: a list
 # Returns  : the list with duplicate items removed, order is preserved.
