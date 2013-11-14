@@ -110,13 +110,17 @@ I.2. 'armeabi-v7a'
   building NEON-capable machine code too.
 
   IMPORTANT NOTE: This ABI enforces that all double values are passed during
-  function calls in 'core' register pairs, instead of dedicated FP ones.
-  However, all internal computations can be performed with the FP registers
-  and will be greatly sped up.
+  function calls in 'core' register pairs, instead of dedicated FP ones, via
+  switch -mfloat-abi=softfp.  However, all internal computations can be performed
+  with the FP registers and will be greatly sped up.
 
   This little constraint, while resulting in a slight decrease of
   performance, ensures binary compatibility with all existing 'armeabi'
   binaries.
+
+  Starting from r9b, it's possible to compile code in -mhard-float and still link
+  with Android native APIs which follow softfp.  Please see
+  tests/device/hard-float/jni/Android.mk for details
 
   IMPORTANT NOTE: The 'armeabi-v7a' machine code will *not* run on ARMv5 or
                   ARMv6 based devices.
@@ -285,6 +289,11 @@ in the  .apk, for example at:
         lib/armeabi-v7a/libfoo.so
         lib/x86/libfoo.so
         lib/mips/libfoo.so
+
+IMPORTANT NOTE: ARMv7-based Android device running 4.0.3 or before installs native
+library from the 'armeabi' directory instead of 'armeabi-v7a' directory if both
+exist and 'lib/armeabi' is listed after 'lib/armeabi-v7a' in apk.  This issue is
+fixed in 4.0.4 or later.
 
 
 III.2. Android Platform ABI support:
