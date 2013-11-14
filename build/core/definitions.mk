@@ -1285,12 +1285,13 @@ NDK_APP_VARS := $(NDK_APP_VARS_REQUIRED) \
 
 get-object-name = $(strip \
     $(subst ../,__/,\
+      $(subst :,_,\
         $(eval __obj := $1)\
         $(foreach __ext,.c .s .S $(LOCAL_CPP_EXTENSION) $(LOCAL_RS_EXTENSION),\
             $(eval __obj := $(__obj:%$(__ext)=%$(TARGET_OBJ_EXTENSION)))\
         )\
         $(__obj)\
-    ))
+    )))
 
 -test-get-object-name = \
   $(eval TARGET_OBJ_EXTENSION=.o)\
@@ -1304,30 +1305,33 @@ get-object-name = $(strip \
 
 get-rs-scriptc-name = $(strip \
     $(subst ../,__/,\
+      $(subst :,_,\
         $(eval __obj := $1)\
         $(foreach __ext,$(LOCAL_RS_EXTENSION),\
             $(eval __obj := $(__obj:%$(__ext)=%.cpp))\
         )\
         $(dir $(__obj))ScriptC_$(notdir $(__obj))\
-    ))
+    )))
 
 get-rs-bc-name = $(strip \
     $(subst ../,__/,\
+      $(subst :,_,\
         $(eval __obj := $1)\
         $(foreach __ext,$(LOCAL_RS_EXTENSION),\
             $(eval __obj := $(__obj:%$(__ext)=%.bc))\
         )\
         $(__obj)\
-    ))
+    )))
 
 get-rs-so-name = $(strip \
     $(subst ../,__/,\
+      $(subst :,_,\
         $(eval __obj := $1)\
         $(foreach __ext,$(LOCAL_RS_EXTENSION),\
             $(eval __obj := $(__obj:%$(__ext)=%$(TARGET_SONAME_EXTENSION)))\
         )\
         $(notdir $(__obj))\
-    ))
+    )))
 
 # -----------------------------------------------------------------------------
 # Macro    : hide

@@ -333,6 +333,7 @@ $(foreach _ext,$(all_source_extensions),\
 )
 LOCAL_OBJECTS := $(filter %$(TARGET_OBJ_EXTENSION),$(LOCAL_OBJECTS))
 LOCAL_OBJECTS := $(subst ../,__/,$(LOCAL_OBJECTS))
+LOCAL_OBJECTS := $(subst :,_,$(LOCAL_OBJECTS))
 LOCAL_OBJECTS := $(foreach _obj,$(LOCAL_OBJECTS),$(LOCAL_OBJS_DIR)/$(_obj))
 
 LOCAL_RS_OBJECTS := $(filter $(all_rs_patterns),$(LOCAL_SRC_FILES))
@@ -341,6 +342,7 @@ $(foreach _ext,$(LOCAL_RS_EXTENSION),\
 )
 LOCAL_RS_OBJECTS := $(filter %$(TARGET_OBJ_EXTENSION),$(LOCAL_RS_OBJECTS))
 LOCAL_RS_OBJECTS := $(subst ../,__/,$(LOCAL_RS_OBJECTS))
+LOCAL_RS_OBJECTS := $(subst :,_,$(LOCAL_RS_OBJECTS))
 LOCAL_RS_OBJECTS := $(foreach _obj,$(LOCAL_RS_OBJECTS),$(LOCAL_OBJS_DIR)/$(_obj))
 
 # If the module has any kind of C++ features, enable them in LOCAL_CPPFLAGS
