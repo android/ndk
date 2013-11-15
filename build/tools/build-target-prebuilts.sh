@@ -141,7 +141,8 @@ run $BUILDTOOLS/build-libportable.sh --abis="$ABIS" $FLAGS
 fail_panic "Could not build libportable!"
 
 dump "Building $ABIS compiler-rt binaries..."
-run $BUILDTOOLS/build-compiler-rt.sh --abis="$ABIS" $FLAGS --src-dir="$SRC_DIR/llvm-$DEFAULT_LLVM_VERSION/compiler-rt"
+run $BUILDTOOLS/build-compiler-rt.sh --abis="$ABIS" $FLAGS --src-dir="$SRC_DIR/llvm-$DEFAULT_LLVM_VERSION/compiler-rt" \
+   --llvm-version=$DEFAULT_LLVM_VERSION
 fail_panic "Could not build compiler-rt!"
 
 if [ "$PACKAGE_DIR" ]; then
