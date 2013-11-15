@@ -19,5 +19,10 @@
 APP_PROJECT_PATH := $(NDK_PROJECT_PATH)
 
 # We expect the build script to be located here
-APP_BUILD_SCRIPT := $(APP_PROJECT_PATH)/jni/Android.mk
-
+ifndef APP_BUILD_SCRIPT
+  ifeq (null,$(NDK_PROJECT_PATH))
+    $(call __ndk_info,NDK_PROJECT_PATH==null.  Please explicitly set APP_BUILD_SCRIPT.)
+    $(call __ndk_error,Aborting.)
+  endif
+  APP_BUILD_SCRIPT := $(APP_PROJECT_PATH)/jni/Android.mk
+endif

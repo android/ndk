@@ -52,6 +52,18 @@ include $(NDK_ROOT)/build/core/init.mk
 # It turns out that some people use ndk-build to generate static
 # libraries without a full Android project tree.
 #
+# If NDK_PROJECT_PATH=null, ndk-build make no attempt to look for it, but does
+# need the following variables depending on NDK_PROJECT_PATH to be explicitly
+# specified (from the default, if any):
+#
+#   NDK_OUT
+#   NDK_LIBS_OUT
+#   APP_BUILD_SCRIPT
+#   NDK_DEBUG (optional, default to 0)
+#   Other APP_* used to be in Application.mk
+#
+# This behavior may be useful in an integrated build system.
+#
 # ====================================================================
 
 ifeq ($(HOST_OS),windows)
@@ -100,6 +112,12 @@ find-project-dir-inner-2 = \
 
 NDK_PROJECT_PATH := $(strip $(NDK_PROJECT_PATH))
 
+ifeq (null,$(NDK_PROJECT_PATH))
+
+$(call ndk_log,Make no attempt to look for NDK_PROJECT_PATH.)
+
+else
+
 # To keep paths as short as possible during the build, we first look if the
 # current directory is the top of our project path. If this is the case, we
 # will define NDK_PROJECT_PATH to simply '.'
@@ -137,25 +155,38 @@ ifneq ($(words $(NDK_PROJECT_PATH)),1)
     $(call __ndk_error,Aborting.)
 endif
 
+$(call ndk_log,Found project path: $(NDK_PROJECT_PATH))
+
 NDK_APPLICATION_MK := $(strip $(wildcard $(NDK_PROJECT_PATH)/jni/Application.mk))
+
+endif # NDK_PROJECT_PATH == null
+
 ifndef NDK_APPLICATION_MK
     NDK_APPLICATION_MK := $(NDK_ROOT)/build/core/default-application.mk
 endif
 
-$(call ndk_log,Found project path: $(NDK_PROJECT_PATH))
 
 # Place all generated intermediate files here
 NDK_APP_OUT := $(strip $(NDK_OUT))
 ifndef NDK_APP_OUT
+  ifeq (null,$(NDK_PROJECT_PATH))
+    $(call __ndk_info,NDK_PROJECT_PATH==null.  Please explicitly set NDK_OUT to directory for all generated intermediate files.)
+    $(call __ndk_error,Aborting.)
+  endif
   NDK_APP_OUT := $(NDK_PROJECT_PATH)/obj
 endif
-$(call ndk_log,Ouput path: $(NDK_APP_OUT))
+$(call ndk_log,Ouput path for intermediate files: $(NDK_APP_OUT))
 
 # Place all generated library files here.  This is rarely changed since aapt expects the default libs/
 NDK_APP_LIBS_OUT := $(strip $(NDK_LIBS_OUT))
 ifndef NDK_APP_LIBS_OUT
+  ifeq (null,$(NDK_PROJECT_PATH))
+    $(call __ndk_info,NDK_PROJECT_PATH==null.  Please explicitly set NDK_LIBS_OUT to directory for generated library files.)
+    $(call __ndk_error,Aborting.)
+  endif
   NDK_APP_LIBS_OUT := $(NDK_PROJECT_PATH)/libs
 endif
+$(call ndk_log,Ouput path for generated library files: $(NDK_APP_LIBS_OUT))
 
 # Fake an application named 'local'
 _app            := local

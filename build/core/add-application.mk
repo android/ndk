@@ -60,6 +60,15 @@ ifndef APP_PROJECT_PATH
     APP_PROJECT_PATH := $(NDK_PROJECT_PATH)
 endif
 
+ifeq (null,$(APP_PROJECT_PATH))
+
+ifndef APP_PLATFORM
+    APP_PLATFORM := android-3
+    $(call ndk_log,  Defaulted to APP_PLATFORM=$(APP_PLATFORM))
+endif
+
+else
+
 # check whether APP_PLATFORM is defined. If not, look for project.properties in
 # the $(APP_PROJECT_PATH) and extract the value with awk's help. If nothing is here,
 # revert to the default value (i.e. "android-3").
@@ -79,6 +88,8 @@ ifndef APP_PLATFORM
         $(call ndk_log,  Defaulted to APP_PLATFORM=$(APP_PLATFORM))
     endif
 endif
+
+endif # APP_PROJECT_PATH == null
 
 # SPECIAL CASES:
 # 1) android-6 and android-7 are the same thing as android-5
@@ -122,6 +133,8 @@ ifdef _bad_platform
     $(call ndk_log,Switching to $(APP_PLATFORM))
 endif
 
+ifneq (null,$(APP_PROJECT_PATH))
+
 # Check platform level (after adjustment) against android:minSdkVersion in AndroidManifest.xml
 #
 APP_MANIFEST := $(strip $(wildcard $(APP_PROJECT_PATH)/AndroidManifest.xml))
@@ -134,6 +147,9 @@ ifdef APP_MANIFEST
     endif
   endif
 endif
+
+endif # APP_PROJECT_PATH == null
+
 
 # Check that the value of APP_ABI corresponds to known ABIs
 # 'all' is a special case that means 'all supported ABIs'
@@ -173,6 +189,11 @@ ifdef APP_BUILD_SCRIPT
     APP_BUILD_SCRIPT := $(_build_script)
     $(call ndk_log,  Using build script $(APP_BUILD_SCRIPT))
 else
+    ifeq (null,$(APP_PROJECT_PATH))
+      $(call __ndk_info,NDK_PROJECT_PATH==null.  Please explicitly set APP_BUILD_SCRIPT.)
+      $(call __ndk_error,Aborting.)
+    endif
+
     _build_script := $(strip $(wildcard $(APP_PROJECT_PATH)/jni/Android.mk))
     ifndef _build_script
         $(call __ndk_info,There is no Android.mk under $(APP_PROJECT_PATH)/jni)
