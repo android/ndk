@@ -351,6 +351,11 @@ libcxx/src/support/android/locale_android.cpp \
 ../../android/support/src/musl-stdio/swprintf.c \
 ../../android/support/src/musl-stdio/vwprintf.c \
 ../../android/support/src/musl-stdio/wprintf.c \
+../../android/support/src/musl-stdio/printf.c \
+../../android/support/src/musl-stdio/snprintf.c \
+../../android/support/src/musl-stdio/sprintf.c \
+../../android/support/src/musl-stdio/vprintf.c \
+../../android/support/src/musl-stdio/vsprintf.c \
 "
 
 # If the --no-makefile flag is not used, we're going to put all build
