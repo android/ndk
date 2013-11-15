@@ -43,7 +43,7 @@ all: ndk-app-$(_app)
 TARGET_PLATFORM := $(call get,$(_map),APP_PLATFORM)
 
 # The ABI(s) to use
-NDK_APP_ABI := $(strip $(NDK_APP_ABI))
+NDK_APP_ABI := $(subst $(comma),$(space),$(strip $(NDK_APP_ABI)))
 ifndef NDK_APP_ABI
     # the default ABI for now is armeabi
     NDK_APP_ABI := armeabi
