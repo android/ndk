@@ -148,7 +148,7 @@ LIBCXX_SRCDIR=$ANDROID_NDK_ROOT/$LIBCXX_SUBDIR
 
 LIBCXX_INCLUDES="-I$LIBCXX_SRCDIR/libcxx/include -I$ANDROID_NDK_ROOT/sources/android/support/include -I$GABIXX_SRCDIR/include"
 
-COMMON_CFLAGS="-fPIC -O2 -ffunction-sections -fdata-sections"
+COMMON_CFLAGS="-fPIC -O2 -g -ffunction-sections -fdata-sections"
 COMMON_CXXFLAGS="-fexceptions -frtti -fuse-cxa-atexit"
 
 # Determine GAbi++ build parameters. Note that GAbi++ is also built as part

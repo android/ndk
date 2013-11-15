@@ -163,8 +163,8 @@ build_gnustl_for_abi ()
     if [ -n "$THUMB" ] ; then
         EXTRA_FLAGS="-mthumb"
     fi
-    export CFLAGS="-fPIC $CFLAGS --sysroot=$SYSROOT -fexceptions -funwind-tables -D__BIONIC__ -O2 $EXTRA_FLAGS"
-    export CXXFLAGS="-fPIC $CXXFLAGS --sysroot=$SYSROOT -fexceptions -frtti -funwind-tables -D__BIONIC__ -O2 $EXTRA_FLAGS"
+    export CFLAGS="-fPIC $CFLAGS --sysroot=$SYSROOT -fexceptions -funwind-tables -D__BIONIC__ -O2 -g $EXTRA_FLAGS"
+    export CXXFLAGS="-fPIC $CXXFLAGS --sysroot=$SYSROOT -fexceptions -frtti -funwind-tables -D__BIONIC__ -O2 -g $EXTRA_FLAGS"
     export CPPFLAGS="$CPPFLAGS --sysroot=$SYSROOT"
 
     export CC=${BINPREFIX}gcc
