@@ -144,9 +144,7 @@ operator delete[] (void* ptr, const std::nothrow_t&) _NOEXCEPT
 namespace std
 {
 
-#ifndef GABIXX_LIBCXX
 const nothrow_t nothrow = {};
-#endif
 
 #if !defined(_LIBCPPABI_VERSION)
 
