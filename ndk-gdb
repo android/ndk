@@ -573,11 +573,11 @@ log "Using app out directory: $APP_OUT"
 DEBUGGABLE=`run_awk_manifest_script extract-debuggable.awk`
 log "Found debuggable flag: $DEBUGGABLE"
 if [ $? != 0 -o "$DEBUGGABLE" != "true" ] ; then
-    # If gdbserver exists, then we built with 'ndk-build NDK_DEBUG=1' and it's
+    # If gdb.setup exists, then we built with 'ndk-build NDK_DEBUG=1' and it's
     # ok to not have android:debuggable set to true in the original manifest.
     # However, if this is not the case, then complain!!
-    if [ -f $PROJECT/libs/$COMPAT_ABI/gdbserver ] ; then
-        log "Found gdbserver under libs/$COMPAT_ABI, assuming app was built with NDK_DEBUG=1"
+    if [ -f $PROJECT/libs/$COMPAT_ABI/gdb.setup ] ; then
+        log "Found gdb.setup under libs/$COMPAT_ABI, assuming app was built with NDK_DEBUG=1"
     else
         echo "ERROR: Package $PACKAGE_NAME is not debuggable ! You can fix that in two ways:"
         echo ""
@@ -592,8 +592,8 @@ if [ $? != 0 -o "$DEBUGGABLE" != "true" ] ; then
 else
     # DEBUGGABLE is true in the manifest. Let's check that the user didn't change the
     # debuggable flag in the manifest without calling ndk-build afterwards.
-    if [ ! -f $PROJECT/libs/$COMPAT_ABI/gdbserver ] ; then
-        echo "ERROR: Could not find gdbserver binary under $PROJECT/libs/$COMPAT_ABI"
+    if [ ! -f $PROJECT/libs/$COMPAT_ABI/gdb.setup ] ; then
+        echo "ERROR: Could not find gdb.setup under $PROJECT/libs/$COMPAT_ABI"
         echo "       This usually means you modified your AndroidManifest.xml to set"
         echo "       the android:debuggable flag to 'true' but did not rebuild the"
         echo "       native binaries. Please call 'ndk-build' to do so,"
@@ -601,17 +601,6 @@ else
         exit 1
     fi
 fi
-
-# Let's check that 'gdbserver' is properly installed on the device too. If this
-# is not the case, the user didn't install the proper package after rebuilding.
-#
-adb_var_shell2 DEVICE_GDBSERVER ls /data/data/$PACKAGE_NAME/lib/gdbserver
-if [ $? != 0 ]; then
-    echo "ERROR: Non-debuggable application installed on the target device."
-    echo "       Please re-install the debuggable version!"
-    exit 1
-fi
-log "Found device gdbserver: $DEVICE_GDBSERVER"
 
 # Find the <dataDir> of the package on the device
 adb_var_shell2 DATA_DIR run-as $PACKAGE_NAME /system/bin/sh -c pwd
@@ -621,6 +610,39 @@ if [ $? != 0 -o -z "$DATA_DIR" ] ; then
     exit 1
 fi
 log "Found data directory: '$DATA_DIR'"
+
+# Let's check that 'gdbserver' is properly installed on the device too. If 'gdbserver'
+# is not there, push 'gdbserver' found in prebuilt.
+#
+DEVICE_GDBSERVER=$DATA_DIR/lib/gdbserver
+adb_var_shell2 GDBSERVER_RESULT ls $DEVICE_GDBSERVER
+if [ $? != 0 ]; then
+
+    # Figure out what's the target-arch and find gdbserver in prebuilt.
+    TARGET_ARCH=none
+
+    for ANDROID_ARCH in $ANDROID_NDK_ROOT/prebuilt/android-*; do
+        ANDROID_ARCH=${ANDROID_ARCH#*android-}
+        if [ x"$CPU_ABIS" != x"${CPU_ABIS#$ANDROID_ARCH*}" ]; then
+            TARGET_ARCH=$ANDROID_ARCH
+            break;
+        fi
+    done
+
+    if [ $TARGET_ARCH != "none" ]; then
+        DEVICE_GDBSERVER=/data/local/tmp/gdbserver
+
+        adb shell mkdir -p /data/local/tmp
+        adb push ${ANDROID_NDK_ROOT}/prebuilt/android-${TARGET_ARCH}/gdbserver/gdbserver \
+                 $DEVICE_GDBSERVER
+        log "Push gdbserver in device"
+    else
+        echo "ERROR: Non-debuggable application installed on the target device."
+        echo "       Please re-install the debuggable version!"
+        exit 1
+    fi
+fi
+log "Found device gdbserver: $DEVICE_GDBSERVER"
 
 # Launch the activity if needed
 if [ "$OPTION_START" = "yes" ] ; then
@@ -689,7 +711,7 @@ fi
 
 # Launch gdbserver now
 DEBUG_SOCKET=debug-socket
-run adb_cmd shell run-as $PACKAGE_NAME lib/gdbserver +$DEBUG_SOCKET --attach $PID &
+run adb_cmd shell run-as $PACKAGE_NAME $DEVICE_GDBSERVER +$DEBUG_SOCKET --attach $PID &
 if [ $? != 0 ] ; then
     echo "ERROR: Could not launch gdbserver on the device?"
     exit 1
