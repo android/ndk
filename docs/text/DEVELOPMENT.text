@@ -30,14 +30,14 @@ II. Building the platforms tree:
 You need to do that once if you want to use the content of $NDK to build
 samples, tests or anything else:
 
-        $NDK/build/tools/build-platforms.sh
+        $NDK/build/tools/gen-platforms.sh
 
 What the script does is populate the $NDK/platforms and $NDK/samples
 directories from the content of development/ndk.
 
 What is under development/ndk is segregated by API level. This makes it
 easier to add a new platform to the tree, but is not well-suited to building
-stuff. The build-platforms.sh script will gather all files appropriately
+stuff. The gen-platforms.sh script will gather all files appropriately
 and place the result inside $NDK/platforms and $NDK/samples.
 
 Note: These directories are listed by $NDK/.gitignore, so they won't appear

@@ -156,14 +156,14 @@ ARCHS="$DEFAULT_ARCHS $ARCHS"
 # Build the platform
 echo
 echo "Build the ndk/platforms directory"
-logfile="$TOP/build-platforms.log"
+logfile="$TOP/gen-platforms.log"
 rotate_log $logfile
 $PROGDIR/gen-platforms.sh \
     $VERBOSE \
     --arch=$(spaces_to_commas $ARCHS)  \
     --minimal \
     --fast-copy > $logfile 2>&1
-fail_panic "build-platforms.sh failed. Logfile in $logfile"
+fail_panic "gen-platforms.sh failed. Logfile in $logfile"
 
 logfile="$TOP/rebuild-all.log"
 rotate_log $logfile
