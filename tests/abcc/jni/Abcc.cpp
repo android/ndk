@@ -22,7 +22,12 @@
 #include <unistd.h>
 #include "Abcc.h"
 
+#if !defined(_WIN32)
 #include <sys/mman.h>
+#else
+#include "mman.h"
+#endif
+
 #include <sys/types.h>
 #include <sys/stat.h>
 using namespace abcc;
