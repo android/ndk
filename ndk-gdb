@@ -35,6 +35,8 @@ case $PROGDIR in
         ;;
 esac
 
+NDK_BUILDTOOLS_PATH=$PROGDIR/build/tools
+. $PROGDIR/build/tools/prebuilt-common.sh
 . $PROGDIR/build/tools/ndk-common.sh
 
 force_32bit_binaries
@@ -78,6 +80,8 @@ AWK_CMD=${AWK_CMD:-$(find_program awk)}
 
 DEBUG_PORT=5039
 JDB_PORT=65534
+
+UNKNOWN_ABI=$(find_ndk_unknown_archs)
 
 # Delay in seconds between launching the activity and attaching gdbserver on it.
 # This is needed because there is no way to know when the activity has really
@@ -544,13 +548,18 @@ CPU_ABIS=$(echo $CPU_ABIS | tr ',' ' ')
 log "Device CPU ABIs: $CPU_ABIS"
 
 APP_ABIS=$APP_ABIS" "
-for CPU_ABI in $CPU_ABIS; do
-    if [ "$APP_ABIS" != "${APP_ABIS%$CPU_ABI *}" ] ; then
-        COMPAT_ABI=$CPU_ABI
-        break
-    fi
-done
 
+adb_var_shell BCFILES run-as $PACKAGE_NAME /system/bin/sh -c "ls lib/*.bc"
+if [ $? == 0 ]; then
+    COMPAT_ABI="$UNKNOWN_ABI"
+else
+    for CPU_ABI in $CPU_ABIS; do
+        if [ "$APP_ABIS" != "${APP_ABIS%$CPU_ABI *}" ] ; then
+            COMPAT_ABI=$CPU_ABI
+            break
+        fi
+    done
+fi
 if [ "$COMPAT_ABI" = none ] ; then
     echo "ERROR: The device does not support the application's targetted CPU ABIs!"
     echo "       Device supports:  $CPU_ABIS"
@@ -563,7 +572,13 @@ log "Compatible device ABI: $COMPAT_ABI"
 GDBSETUP_INIT=`get_build_var_for_abi NDK_APP_GDBSETUP $COMPAT_ABI`
 log "Using gdb setup init: $GDBSETUP_INIT"
 
-TOOLCHAIN_PREFIX=`get_build_var_for_abi TOOLCHAIN_PREFIX $COMPAT_ABI`
+# Find the prefix for gdb-client
+if [ "$COMPAT_ABI" != "$UNKNOWN_ABI" ]; then
+    TOOLCHAIN_PREFIX=`get_build_var_for_abi TOOLCHAIN_PREFIX $COMPAT_ABI`
+else
+    TOOLCHAIN_ABI=$(echo $CPU_ABIS | awk '{print $NF}')
+    TOOLCHAIN_PREFIX=`get_build_var_for_abi TOOLCHAIN_PREFIX $TOOLCHAIN_ABI`
+fi
 log "Using toolchain prefix: $TOOLCHAIN_PREFIX"
 
 APP_OUT=`get_build_var_for_abi TARGET_OUT $COMPAT_ABI`
@@ -747,6 +762,15 @@ if [ "$OPTION_START" = "yes" ] || [ -n "$OPTION_LAUNCH" ] ; then
         $JDB_CMD -connect com.sun.jdi.SocketAttach:hostname=localhost,port=$JDB_PORT &
         sleep 1
     fi
+fi
+
+# If we are debugging UNKNOWN_ABI, download compiled *.so from device.
+#
+if [ $COMPAT_ABI == $UNKNOWN_ABI ]; then
+    for bc in $BCFILES; do
+        log "Pulled $(basename $bc .bc).so from device/emulator."
+        adb pull $DATA_DIR/lib/$(basename $bc .bc).so $PROJECT/obj/local/$UNKNOWN_ABI/
+    done
 fi
 
 # Now launch the appropriate gdb client with the right init commands
