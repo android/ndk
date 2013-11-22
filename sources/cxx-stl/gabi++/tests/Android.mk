@@ -47,4 +47,15 @@ $(call do_test_simple,unwind_03)
 $(call do_test_simple,unwind_04)
 $(call do_test_simple,unwind_05)
 
+include $(CLEAR_VARS)
+LOCAL_MODULE := libtest_malloc_lockup
+LOCAL_SRC_FILES := libtest_malloc_lockup.cpp
+LOCAL_STATIC_LIBRARIES := gabi++_static
+include $(BUILD_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := malloc_lockup
+LOCAL_SRC_FILES := malloc_lockup.cpp
+include $(BUILD_EXECUTABLE)
+
 $(call import-module,cxx-stl/gabi++)
