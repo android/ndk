@@ -25,6 +25,9 @@
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 // SUCH DAMAGE.
 
+#include <limits.h>
+#include <sys/mman.h>
+
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
@@ -48,6 +51,142 @@ namespace {
     __cxa_free_exception(exc+1);
   }
 
+  // Helper class used to ensure a lock is acquire immediately, and released
+  // on scope exit. Usage example:
+  //
+  //     {
+  //       AutoLock lock(some_mutex);   // acquires the mutex.
+  //       ... do stuff
+  //       if (error)
+  //          return;                   // releases mutex before returning.
+  //       ... do other stuff.
+  //     }                              // releases mutex before exiting scope.
+  //
+  class AutoLock {
+  public:
+    AutoLock(pthread_mutex_t& lock) : lock_(lock) {
+      pthread_mutex_lock(&lock_);
+    }
+
+    ~AutoLock(void) {
+      pthread_mutex_unlock(&lock_);
+    }
+  private:
+    pthread_mutex_t& lock_;
+
+    AutoLock(const AutoLock&);
+    AutoLock& operator=(const AutoLock&);
+  };
+
+  // MMap-based memory allocator for fixed-sized items.
+  //
+  // IMPORTANT: This must be POD-struct compatible, which means:
+  //    - No constructor or destructor.
+  //    - No virtual methods.
+  //
+  // This allocates large blocks of memory, called 'slabs' that can contain
+  // several items of the same size. A slab contains an array of item slots,
+  // followed by a pointer, used to put all slabs in a single linked list.
+  class PageBasedAllocator {
+  public:
+    // Used to initialize this allocator to hold items of type |T|.
+    template <typename T>
+    void Init() {
+      InitExplicit(sizeof(T), __alignof__(T));
+    }
+
+    // Used to initialize this instance to hold items of |item_size| bytes,
+    // with alignment |align_size|.
+    void InitExplicit(size_t item_size, size_t align_size) {
+      const size_t ptr_size = sizeof(void*);
+      if (align_size < ptr_size)
+        align_size = ptr_size;
+      item_size_ = (item_size + align_size - 1) & ~(align_size - 1);
+      slab_next_offset_ = kSlabSize - ptr_size;
+      item_slab_count_ = slab_next_offset_ / item_size_;
+
+      pthread_mutex_init(&lock_, NULL);
+      free_items_ = NULL;
+      slab_list_ = NULL;
+    }
+
+    // Call this to deallocate this instance. This releases all pages directly.
+    // Ensure that all items are freed first, or bad things could happen.
+    void Deinit() {
+      pthread_mutex_lock(&lock_);
+      while (slab_list_) {
+        void* slab = slab_list_;
+        void* next_slab = *(void**)((char*)slab + slab_next_offset_);
+        slab_list_ = next_slab;
+        ::munmap(slab, PAGE_SIZE);
+      }
+      pthread_mutex_unlock(&lock_);
+      pthread_mutex_destroy(&lock_);
+    }
+
+    // Allocate a new item, or NULL in case of failure.
+    void* Alloc() {
+      AutoLock lock(lock_);
+
+      if (!free_items_ && !AllocateSlab())
+        return NULL;
+
+      FreeItem* item = free_items_;
+      free_items_ = item->next;
+      ::memset(item, 0, item_size_);
+      return item;
+    }
+
+    void Release(void* obj) {
+      if (!obj)
+        return;
+
+      AutoLock lock(lock_);
+      FreeItem* item = reinterpret_cast<FreeItem*>(obj);
+      item->next = free_items_;
+      free_items_ = item;
+    }
+
+  private:
+    static const size_t kSlabSize = PAGE_SIZE;
+
+    bool AllocateSlab() {
+      // No more free items, allocate a new slab with mmap().
+      void* new_slab = mmap(NULL, kSlabSize, PROT_READ|PROT_WRITE,
+                            MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
+      if (new_slab == MAP_FAILED)
+        return false;
+
+      // Prepend to the slab list.
+      *((void**)((char*)new_slab + slab_next_offset_)) = slab_list_;
+      slab_list_ = new_slab;
+
+      // Put all item slots in the new slab into the free item list.
+      FreeItem** pparent = &free_items_;
+      FreeItem* item = reinterpret_cast<FreeItem*>(new_slab);
+      for (size_t n = 0; n < item_slab_count_; ++n) {
+        *pparent = item;
+        pparent = &item->next;
+        item = reinterpret_cast<FreeItem*>((char*)item + item_size_);
+      }
+      *pparent = NULL;
+
+      // Done.
+      return true;
+    }
+
+    struct FreeItem {
+      FreeItem* next;
+    };
+
+    size_t item_size_;         // size of each item in bytes.
+    size_t item_slab_count_;   // number of items in each slab.
+    size_t slab_next_offset_;  // offset of pointer to next slab in list.
+    pthread_mutex_t lock_;     // mutex synchronizing access to data below.
+    void* slab_list_;          // Linked list of slabs.
+    FreeItem* free_items_;     // Linked list of free items.
+  };
+
   // Technical note:
   // Use a pthread_key_t to hold the key used to store our thread-specific
   // __cxa_eh_globals objects. The key is created and destroyed through
@@ -58,22 +197,25 @@ namespace {
   // static C++ destructor may be called with a value of NULL for the
   // 'this' pointer. As such, any attempt to access any field in the
   // object there will result in a crash. To work-around this, store
-  // the key object as a 'static' variable outside of the C++ object.
+  // the members of CxaThreadKey as static variables outside of the
+  // C++ object.
   static pthread_key_t __cxa_thread_key;
+  static PageBasedAllocator __cxa_eh_globals_allocator;
 
   class CxaThreadKey {
   public:
     // Called at program initialization time, or when the shared library
     // is loaded through dlopen().
     CxaThreadKey() {
-      if (pthread_key_create(&__cxa_thread_key, freeObject) != 0) {
+      if (pthread_key_create(&__cxa_thread_key, freeObject) != 0)
         __gabixx::__fatal_error("Can't allocate C++ runtime pthread_key_t");
-      }
+      __cxa_eh_globals_allocator.Init<__cxa_eh_globals>();
     }
 
     // Called at program exit time, or when the shared library is
     // unloaded through dlclose(). See note above.
     ~CxaThreadKey() {
+      __cxa_eh_globals_allocator.Deinit();
       pthread_key_delete(__cxa_thread_key);
     }
 
@@ -85,13 +227,20 @@ namespace {
     static __cxa_eh_globals* getSlow() {
       void* obj = pthread_getspecific(__cxa_thread_key);
       if (obj == NULL) {
-        obj = malloc(sizeof(__cxa_eh_globals));
+        // malloc() cannot be used here because this method is sometimes
+        // called from malloc() on Android, and this would dead-lock.
+        //
+        // More specifically, if the libc.debug.malloc system property is not 0
+        // on a userdebug or eng build of the platform, malloc() will call
+        // backtrace() to record stack traces of allocation. On ARM, this
+        // forces an unwinding operation which will call this function at
+        // some point.
+        obj = __cxa_eh_globals_allocator.Alloc();
         if (!obj) {
           // Shouldn't happen, but better be safe than sorry.
           __gabixx::__fatal_error(
               "Can't allocate thread-specific C++ runtime info block.");
         }
-        memset(obj, 0, sizeof(__cxa_eh_globals));
         pthread_setspecific(__cxa_thread_key, obj);
       }
       return reinterpret_cast<__cxa_eh_globals*>(obj);
@@ -100,7 +249,7 @@ namespace {
   private:
     // Called when a thread is destroyed.
     static void freeObject(void* obj) {
-      free(obj);
+      __cxa_eh_globals_allocator.Release(obj);
     }
 
   };
