@@ -47,6 +47,8 @@ ELFF_SOURCES := elff/dwarf_cu.cc \
                 elff/elff_api.cc \
                 elff/mapfile.c
 
+BINUTILS_SOURCES := binutils/addr2line.c
+
 REGEX_SOURCES := regex/regcomp.c \
                  regex/regerror.c \
                  regex/regexec.c \
@@ -55,7 +57,11 @@ REGEX_SOURCES := regex/regcomp.c \
 NDK_STACK_SOURCES := ndk-stack.c \
                      ndk-stack-parser.c
 
+ifdef WITH_LIBBFD
+SOURCES := $(NDK_STACK_SOURCES) $(BINUTILS_SOURCES) $(REGEX_SOURCES)
+else
 SOURCES := $(NDK_STACK_SOURCES) $(ELFF_SOURCES) $(REGEX_SOURCES)
+endif
 
 OBJECTS=
 
@@ -85,5 +91,5 @@ clean:
 	rm -f $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS)
-	$(CXX) $(LDFLAGS) $(OBJECTS) -o $@ $(EXTRA_LDFLAGS)
+	$(CXX) $(OBJECTS) $(LDFLAGS) -o $@ $(EXTRA_LDFLAGS)
 	$(call strip-cmd,$@)
