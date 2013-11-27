@@ -50,8 +50,8 @@ SYSTEMS=$DEFAULT_SYSTEMS
 register_var_option "--systems=<list>" SYSTEMS "Specify host systems"
 
 # ARCH to build for
-ARCHS=$(find_ndk_unknown_archs)
-ARCHS="$DEFAULT_ARCHS $ARCHS"
+UNKNOWN_ARCH=$(find_ndk_unknown_archs)
+ARCHS="$DEFAULT_ARCHS $UNKNOWN_ARCH"
 register_var_option "--arch=<arch>" ARCHS "Specify target architecture(s)"
 
 # set to 'yes' if we should use 'git ls-files' to list the files to
@@ -127,10 +127,7 @@ SYSTEMS=$(commas_to_spaces $SYSTEMS)
 
 # Detect unknown archs
 ARCHS=$(commas_to_spaces $ARCHS)
-UNKNOWN_ARCH=$(filter_out "$DEFAULT_ARCHS" "$ARCHS")
-if [ ! -z "$UNKNOWN_ARCH" ]; then
-    ARCHS=$(filter_out "$UNKNOWN_ARCH" "$ARCHS")
-fi
+ARCHS=$(exclude_unknown_archs "$ARCHS")
 
 # Do we need to support x86?
 

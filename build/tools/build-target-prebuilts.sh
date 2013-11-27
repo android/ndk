@@ -23,8 +23,8 @@ PROGDIR=$(dirname $0)
 NDK_DIR=$ANDROID_NDK_ROOT
 register_var_option "--ndk-dir=<path>" NDK_DIR "NDK installation directory"
 
-ARCHS=$(find_ndk_unknown_archs)
-ARCHS="$DEFAULT_ARCHS $ARCHS"
+UNKNOWN_ARCH=$(find_ndk_unknown_archs)
+ARCHS="$DEFAULT_ARCHS $UNKNOWN_ARCH"
 register_var_option "--arch=<list>" ARCHS "List of target archs to build for"
 
 PACKAGE_DIR=
@@ -60,13 +60,9 @@ fi
 run $BUILDTOOLS/gen-platforms.sh --samples --fast-copy --dst-dir=$NDK_DIR --ndk-dir=$NDK_DIR --arch=$(spaces_to_commas $ARCHS) $PACKAGE_FLAGS
 fail_panic "Could not generate platforms and samples directores!"
 
-ARCHS=$(commas_to_spaces $ARCHS)
-
 # Detect unknown arch
-UNKNOWN_ARCH=$(filter_out "$DEFAULT_ARCHS" "$ARCHS")
-if [ ! -z "$UNKNOWN_ARCH" ]; then
-    ARCHS=$(filter_out "$UNKNOWN_ARCH" "$ARCHS")
-fi
+ARCHS=$(commas_to_spaces $ARCHS)
+ARCHS=$(exclude_unknown_archs "$ARCHS")
 
 FLAGS=
 if [ "$VERBOSE" = "yes" ]; then
