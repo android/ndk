@@ -1198,9 +1198,18 @@ find_ndk_archs ()
 find_ndk_unknown_archs()
 {
     local FOUND_ARCHS=$(find_ndk_archs)
-    # TODO: aarch64, x86_64 is here just to be found as known arch.
+    # TODO: aarch64, x86_64, mips64 is here just to be found as known arch.
     # It can be removed as soon as it is added into $DEFAULT_ARCHS
     echo "$(filter_out "$DEFAULT_ARCHS aarch64 x86_64 mips64" "$FOUND_ARCHS")"
+}
+
+# Extract those "known" archs
+# Return arch names which are known
+exclude_unknown_archs()
+{
+    local ARCHs=$1
+    local UNKNOWN_ARCH=$(find_ndk_unknown_archs)
+    echo "$(filter_out "$UNKNOWN_ARCH" "$ARCHs")"
 }
 
 # Determine whether given arch is in unknown archs list
@@ -1237,14 +1246,14 @@ convert_abi_to_arch ()
     local RET
     local ABI=$1
     case $ABI in
+        aarch64-v8a)
+            RET=aarch64
+            ;;
         armeabi|armeabi-v7a)
             RET=arm
             ;;
-        x86)
-            RET=x86
-            ;;
-        mips)
-            RET=mips
+        x86|x86_64|mips|mips64)
+            RET=$ABI
             ;;
         *)
             if [ "$(arch_in_unknown_archs $ABI)" = "yes" ]; then
@@ -1267,14 +1276,14 @@ convert_arch_to_abi ()
     local RET
     local ARCH=$1
     case $ARCH in
+        aarch64)
+            RET=aarch64-v8a
+            ;;
         arm)
             RET=armeabi,armeabi-v7a
             ;;
-        x86)
-            RET=x86
-            ;;
-        mips)
-            RET=mips
+        x86|x86_64|mips|mips64)
+            RET=$ARCH
             ;;
         *)
             if [ "$(arch_in_unknown_archs $ARCH)" = "yes" ]; then
@@ -1344,7 +1353,13 @@ get_llvm_toolchain_binprefix ()
 # $2: optional, system name, defaults to $HOST_TAG
 get_default_toolchain_binprefix_for_arch ()
 {
-    get_toolchain_binprefix_for_arch $1 $DEFAULT_GCC_VERSION $2
+    # FIXME: Take out this when we don't regard gcc-4.6 as default
+    # aarch64, x86_64 toolchain is not supported in 4.6.
+    if [ "$1" = "aarch64" ] || [ "$1" = "x86_64" ]; then
+        get_toolchain_binprefix_for_arch $1 4.8 $2
+    else
+        get_toolchain_binprefix_for_arch $1 $DEFAULT_GCC_VERSION $2
+    fi
 }
 
 # Return default API level for a given arch

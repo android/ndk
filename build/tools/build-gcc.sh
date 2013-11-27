@@ -140,11 +140,12 @@ set_parameters ()
 
 set_parameters $PARAMETERS
 
-# Disable x86_64 build for toolchains older than 4.7
+# Disable aarch64, x86_64 build for toolchains older than 4.7
+# Return 0 instead of 1 since we don't want to break build-host-prebuilts flow.
 case "$TOOLCHAIN" in
-  x86_64-4.4.3|x86_64-4.6)
-    echo "ERROR: x86_64 toolchain is enabled in 4.7+. Please try to build newer version."
-    exit 1
+  aarch64*-4.6|x86_64-4.6)
+    echo "WARNING: aarch64, x86_64 toolchain is enabled in 4.7+. Please try to build newer version."
+    exit 0
     ;;
 esac
 
