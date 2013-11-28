@@ -73,26 +73,6 @@ set_parameters ()
     NDK_DIR="$2"
     TOOLCHAIN="$3"
 
-    # Check source directory
-    #
-    if [ -z "$SRC_DIR" ] ; then
-        echo "ERROR: Missing source directory parameter. See --help for details."
-        exit 1
-    fi
-
-    SRC_DIR2="$SRC_DIR/gdb/gdb-$GDB_VERSION/gdb/gdbserver"
-    if [ -d "$SRC_DIR2" ] ; then
-        SRC_DIR="$SRC_DIR2"
-        log "Found gdbserver source directory: $SRC_DIR"
-    fi
-
-    if [ ! -f "$SRC_DIR/gdbreplay.c" ] ; then
-        echo "ERROR: Source directory does not contain gdbserver sources: $SRC_DIR"
-        exit 1
-    fi
-
-    log "Using source directory: $SRC_DIR"
-
     # Check NDK installation directory
     #
     if [ -z "$NDK_DIR" ] ; then
@@ -115,7 +95,33 @@ set_parameters ()
     fi
 }
 
+check_source_directory ()
+{
+    if [ -z "$SRC_DIR" ] ; then
+        echo "ERROR: Missing source directory parameter. See --help for details."
+        exit 1
+    fi
+
+    SRC_DIR2="$SRC_DIR/gdb/gdb-$GDB_VERSION/gdb/gdbserver"
+    if [ -d "$SRC_DIR2" ] ; then
+        SRC_DIR="$SRC_DIR2"
+        log "Found gdbserver source directory: $SRC_DIR"
+    fi
+
+    if [ ! -f "$SRC_DIR/gdbreplay.c" ] ; then
+        echo "ERROR: Source directory does not contain gdbserver sources: $SRC_DIR"
+        exit 1
+    fi
+
+    log "Using source directory: $SRC_DIR"
+}
+
 set_parameters $PARAMETERS
+if [ "$GDB_VERSION" = "$DEFAULT_GDB_VERSION" ]; then
+    GDB_VERSION=$(get_default_gdb_version_for_gcc $TOOLCHAIN)
+fi
+# Delay this until we set gdb version
+check_source_directory
 
 if [ "$PACKAGE_DIR" ]; then
     mkdir -p "$PACKAGE_DIR"

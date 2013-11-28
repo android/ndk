@@ -521,11 +521,18 @@ builder_begin_android ()
 
     SYSROOT=$NDK_DIR/$(get_default_platform_sysroot_for_arch $ARCH)
 
-    CRTBEGIN_EXE_O=$SYSROOT/usr/lib/crtbegin_dynamic.o
-    CRTEND_EXE_O=$SYSROOT/usr/lib/crtend_android.o
-
-    CRTBEGIN_SO_O=$SYSROOT/usr/lib/crtbegin_so.o
-    CRTEND_SO_O=$SYSROOT/usr/lib/crtend_so.o
+    if [ "$ARCH" = "x86_64" ]; then
+        # x86_64 uses multi-lib, binaries under usr/lib are 32-bit.
+        CRTBEGIN_EXE_O=$SYSROOT/usr/lib64/crtbegin_dynamic.o
+        CRTEND_EXE_O=$SYSROOT/usr/lib64/crtend_android.o
+        CRTBEGIN_SO_O=$SYSROOT/usr/lib64/crtbegin_so.o
+        CRTEND_SO_O=$SYSROOT/usr/lib64/crtend_so.o
+    else
+        CRTBEGIN_EXE_O=$SYSROOT/usr/lib/crtbegin_dynamic.o
+        CRTEND_EXE_O=$SYSROOT/usr/lib/crtend_android.o
+        CRTBEGIN_SO_O=$SYSROOT/usr/lib/crtbegin_so.o
+        CRTEND_SO_O=$SYSROOT/usr/lib/crtend_so.o
+    fi
     if [ ! -f "$CRTBEGIN_SO_O" ]; then
         CRTBEGIN_SO_O=$CRTBEGIN_EXE_O
     fi
@@ -540,6 +547,9 @@ builder_begin_android ()
     else
         builder_set_binprefix_llvm "$BINPREFIX"
         case $ABI in
+            aarch64-v8a)
+                LLVM_TRIPLE=armv8a-none-linux-android
+                ;;
             armeabi)
                 LLVM_TRIPLE=armv5te-none-linux-androideabi
                 ;;
@@ -549,8 +559,14 @@ builder_begin_android ()
             x86)
                 LLVM_TRIPLE=i686-none-linux-android
                 ;;
+            x86_64)
+                LLVM_TRIPLE=x86_64-none-linux-android
+                ;;
             mips)
                 LLVM_TRIPLE=mipsel-none-linux-android
+                ;;
+            mips64)
+                LLVM_TRIPLE=mips64el-none-linux-android
                 ;;
             *)
                 LLVM_TRIPLE=le32-none-ndk

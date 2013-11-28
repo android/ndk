@@ -412,6 +412,9 @@ for ABI in $PREBUILT_ABIS; do
     ANALYZER="$ANALYZER_PATH/analyzer"
     mkdir -p "$ANALYZER_PATH"
     case "$ABI" in
+      aarch64-v8a)
+          LLVM_TARGET=armv8-none-linux-android
+          ;;
       armeabi)
           LLVM_TARGET=armv5te-none-linux-androideabi
           ;;
@@ -421,8 +424,14 @@ for ABI in $PREBUILT_ABIS; do
       x86)
           LLVM_TARGET=i686-none-linux-android
           ;;
+      x86_64)
+          LLVM_TARGET=x86_64-none-linux-android
+          ;;
       mips)
           LLVM_TARGET=mipsel-none-linux-android
+          ;;
+      mips64)
+          LLVM_TARGET=mips64el-none-linux-android
           ;;
       *)
         dump "ERROR: Unsupported NDK ABI: $ABI"
