@@ -9,7 +9,7 @@
 API_LEVELS="3 4 5 8 9 12 13 14 15 16 17 18 19"
 
 # Default ABIs for the target prebuilt binaries.
-PREBUILT_ABIS="armeabi armeabi-v7a x86 mips"
+PREBUILT_ABIS="armeabi armeabi-v7a x86 mips aarch64-v8a x86_64 mips64"
 
 # Location of the STLport sources, relative to the NDK root directory
 STLPORT_SUBDIR=sources/cxx-stl/stlport
@@ -147,7 +147,11 @@ get_default_abis_for_arch ()
 # Return empty for unknown arch
 get_toolchain_name_for_arch ()
 {
-    if [ ! -z "$2" ] ; then
+    # FIXME: Take out this when we don't regard gcc-4.6 as default
+    # aarch64, x86_64 toolchain is not supported in 4.6.
+    if [ "$1" = "aarch64" ] || [ "$1" = "x86_64" ]; then
+        eval echo \"\${DEFAULT_ARCH_TOOLCHAIN_NAME_$1}-4.8\"
+    elif [ ! -z "$2" ] ; then
         eval echo \"\${DEFAULT_ARCH_TOOLCHAIN_NAME_$1}-$2\"
     else
         eval echo \"\${DEFAULT_ARCH_TOOLCHAIN_NAME_$1}\"
@@ -160,7 +164,13 @@ get_toolchain_name_for_arch ()
 # Return empty for unknown arch
 get_default_toolchain_name_for_arch ()
 {
-    eval echo \"\${DEFAULT_ARCH_TOOLCHAIN_NAME_$1}-$DEFAULT_GCC_VERSION\"
+    # FIXME: Take out this when we don't regard gcc-4.6 as default
+    # aarch64, x86_64 toolchain is not supported in 4.6.
+    if [ "$1" = "aarch64" ] || [ "$1" = "x86_64" ]; then
+      eval echo \"\${DEFAULT_ARCH_TOOLCHAIN_NAME_$1}-4.8\"
+    else
+      eval echo \"\${DEFAULT_ARCH_TOOLCHAIN_NAME_$1}-$DEFAULT_GCC_VERSION\"
+    fi
 }
 
 # Return the default toolchain program prefix for a given architecture

@@ -148,14 +148,23 @@ build_gnustl_for_abi ()
     fi 
 
     case $ARCH in
+        aarch64)
+            BUILD_HOST=armv8-linux-android
+            ;;
         arm)
             BUILD_HOST=arm-linux-androideabi
             ;;
         x86)
             BUILD_HOST=i686-linux-android
             ;;
+        x86_64)
+            BUILD_HOST=x86_64-linux-android
+            ;;
         mips)
             BUILD_HOST=mipsel-linux-android
+            ;;
+        mips64)
+            BUILD_HOST=mips64el-linux-android
             ;;
     esac
 
