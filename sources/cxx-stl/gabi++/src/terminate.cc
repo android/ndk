@@ -87,11 +87,11 @@ _GABIXX_NORETURN void __terminate(std::terminate_handler handler) {
 
 namespace std {
 
-terminate_handler get_terminate() {
+terminate_handler get_terminate() _GABIXX_NOEXCEPT {
   return __gabixx_sync_load(&current_terminate);
 }
 
-terminate_handler set_terminate(terminate_handler f) {
+terminate_handler set_terminate(terminate_handler f) _GABIXX_NOEXCEPT {
   if (!f)
     f = __gabixx::__default_terminate;
 
@@ -102,11 +102,11 @@ _GABIXX_NORETURN void terminate() {
   __gabixx::__terminate(std::get_terminate());
 }
 
-unexpected_handler get_unexpected() {
+unexpected_handler get_unexpected() _GABIXX_NOEXCEPT {
   return __gabixx_sync_load(&current_unexpected);
 }
 
-unexpected_handler set_unexpected(unexpected_handler f) {
+unexpected_handler set_unexpected(unexpected_handler f) _GABIXX_NOEXCEPT {
   if (!f)
     f = __gabixx::__default_terminate;
 
@@ -114,8 +114,7 @@ unexpected_handler set_unexpected(unexpected_handler f) {
 }
 
 _GABIXX_NORETURN void unexpected() {
-  (*get_unexpected())();
-  terminate();
+  __gabixx::__terminate(std::get_unexpected());
 }
 
 } // namespace std

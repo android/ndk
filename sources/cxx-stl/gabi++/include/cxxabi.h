@@ -84,33 +84,45 @@ namespace __cxxabiv1
     struct __cxa_exception;
     struct __cxa_eh_globals;
 
-    __cxa_eh_globals* __cxa_get_globals();
-    __cxa_eh_globals* __cxa_get_globals_fast();
+    __cxa_eh_globals* __cxa_get_globals() _GABIXX_NOEXCEPT ;
+    __cxa_eh_globals* __cxa_get_globals_fast() _GABIXX_NOEXCEPT;
 
-    void* __cxa_allocate_exception(size_t thrown_size);
-    void __cxa_free_exception(void* thrown_exception);
+    void* __cxa_allocate_exception(size_t thrown_size) _GABIXX_NOEXCEPT;
+    void __cxa_free_exception(void* thrown_exception) _GABIXX_NOEXCEPT;
 
-    void __cxa_throw(void* thrown_exception, std::type_info* tinfo, void (*dest)(void*));
-    void __cxa_rethrow();
+    void __cxa_throw(void* thrown_exception,
+                     std::type_info* tinfo,
+                     void (*dest)(void*)) _GABIXX_NORETURN;
 
-    void* __cxa_begin_catch(void* exceptionObject);
-    void __cxa_end_catch();
+    void __cxa_rethrow() _GABIXX_NORETURN;
 
+    void* __cxa_begin_catch(void* exceptionObject) _GABIXX_NOEXCEPT;
+    void __cxa_end_catch() _GABIXX_NOEXCEPT;
+
+#ifdef __arm__
     bool __cxa_begin_cleanup(_Unwind_Exception*);
     void __cxa_end_cleanup();
+#endif
 
-    void __cxa_bad_cast();
-    void __cxa_bad_typeid();
+    void __cxa_bad_cast() _GABIXX_NORETURN;
+    void __cxa_bad_typeid() _GABIXX_NORETURN;
 
-    void* __cxa_get_exception_ptr(void* exceptionObject);
+    void* __cxa_get_exception_ptr(void* exceptionObject) _GABIXX_NOEXCEPT;
 
-    void __cxa_pure_virtual();
+    void __cxa_pure_virtual() _GABIXX_NORETURN;
+    void __cxa_deleted_virtual() _GABIXX_NORETURN;
 
     // Missing libcxxabi functions.
     bool __cxa_uncaught_exception() _GABIXX_NOEXCEPT;
-    void __cxa_decrement_exception_refcount(void* exceptionObject) _GABIXX_NOEXCEPT;
-    void __cxa_increment_exception_refcount(void* exceptionObject) _GABIXX_NOEXCEPT;
+
+    void __cxa_decrement_exception_refcount(void* exceptionObject)
+        _GABIXX_NOEXCEPT;
+
+    void __cxa_increment_exception_refcount(void* exceptionObject)
+        _GABIXX_NOEXCEPT;
+
     void __cxa_rethrow_primary_exception(void* exceptionObject);
+
     void* __cxa_current_primary_exception() _GABIXX_NOEXCEPT;
 
     // The ARM ABI mandates that constructors and destructors

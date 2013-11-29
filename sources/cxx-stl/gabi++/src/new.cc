@@ -52,10 +52,11 @@ namespace std {
   }
 
   new_handler set_new_handler(new_handler next_handler) _GABIXX_NOEXCEPT {
-    return __sync_lock_test_and_set(&cur_handler, next_handler);
+    return __gabixx_sync_swap(&cur_handler, next_handler);
   }
+
   new_handler get_new_handler() _GABIXX_NOEXCEPT {
-    return __sync_fetch_and_add(&cur_handler, (new_handler)0);
+    return __gabixx_sync_load(&cur_handler);
   }
 
 } // namespace std
@@ -68,7 +69,7 @@ void* operator new(std::size_t size) throw(std::bad_alloc) {
     if (space) {
       return space;
     }
-    new_handler handler = cur_handler;
+    new_handler handler = std::get_new_handler();
     if (handler == NULL) {
       throw std::bad_alloc();
     }
