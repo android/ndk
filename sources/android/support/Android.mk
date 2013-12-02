@@ -11,6 +11,7 @@ android_support_sources := \
     src/locale/localeconv.c \
     src/locale/newlocale.c \
     src/locale/uselocale.c \
+    src/stdio/vfprintf.c \
     src/stdio/vfwprintf.c \
     src/musl-multibyte/btowc.c \
     src/musl-multibyte/internal.c \
@@ -97,6 +98,14 @@ android_support_sources := \
     src/musl-locale/wcsxfrm_l.c \
     src/musl-locale/wctrans_l.c \
     src/musl-locale/wctype_l.c \
+    src/musl-math/frexp.c \
+    src/musl-math/frexpf.c \
+    src/musl-math/frexpl.c \
+    src/musl-stdio/printf.c \
+    src/musl-stdio/snprintf.c \
+    src/musl-stdio/sprintf.c \
+    src/musl-stdio/vprintf.c \
+    src/musl-stdio/vsprintf.c \
     src/musl-stdio/swprintf.c \
     src/musl-stdio/vwprintf.c \
     src/musl-stdio/wprintf.c \
