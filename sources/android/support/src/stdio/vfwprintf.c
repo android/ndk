@@ -23,7 +23,6 @@
   Modified in 2013 for the Android Open Source Project.
  */
 
-//#include "stdio_impl.h"
 #include <errno.h>
 #include <ctype.h>
 #include <limits.h>
@@ -32,95 +31,7 @@
 #include <wchar.h>
 #include <inttypes.h>
 
-// A wrapper around either a FILE* or a string buffer, used to output
-// the result of formatted expansion.
-typedef struct {
-  FILE*    file;
-  wchar_t* buffer;
-  size_t   buffer_pos;
-  size_t   buffer_size;
-} Out;
-
-void out_init_file(Out* out, FILE* f) {
-  memset(out, 0, sizeof(*out));
-  out->file = f;
-}
-
-void out_init_buffer(Out* out, wchar_t* buffer, size_t buffer_size) {
-  memset(out, 0, sizeof(*out));
-  out->buffer = buffer;
-  out->buffer_pos = 0;
-  out->buffer_size = buffer_size;
-}
-
-void out_write(Out* out, const wchar_t* text, size_t length) {
-  if (out->file != NULL) {
-    // Write into a file the UTF-8 encoded version.
-    // TODO(digit): Support locale-specific encoding.
-    size_t mb_len = wcstombs(NULL, text, length);
-    char* mb_buffer = malloc(mb_len);
-    wcstombs(mb_buffer, text, length);
-    fwrite(mb_buffer, 1, mb_len, out->file);
-    free(mb_buffer);
-  } else {
-    // Write into a bounded buffer.
-    size_t avail = out->buffer_size - out->buffer_pos;
-    if (length > avail)
-      length = avail;
-    memcpy((char*)(out->buffer + out->buffer_pos),
-           (const char*)text,
-           length * sizeof(wchar_t));
-    out->buffer_pos += length;
-  }
-}
-
-void out_putwc(Out* out, wchar_t wc) {
-  if (out->file)
-    fputwc(wc, out->file);
-  else {
-    if (out->buffer_pos < out->buffer_size)
-      out->buffer[out->buffer_pos++] = wc;
-  }
-}
-
-int out_printf(Out* out, const char* format, ...) {
-  va_list args;
-  va_start(args, format);
-  if (out->file)
-    return vfprintf(out->file, format, args);
-  else {
-    // TODO(digit): Make this faster.
-    // First, generate formatted byte output.
-    int mb_len = vsnprintf(NULL, 0, format, args);
-    char* mb_buffer = malloc(mb_len + 1);
-    vsnprintf(mb_buffer, mb_len + 1, format, args);
-    // Then convert to wchar_t buffer.
-    size_t wide_len = mbstowcs(NULL, mb_buffer, mb_len);
-    wchar_t* wide_buffer = malloc((wide_len + 1) * sizeof(wchar_t));
-    mbstowcs(wide_buffer, mb_buffer, mb_len);
-    // Add to buffer.
-    out_write(out, wide_buffer, wide_len);
-    // finished
-    free(wide_buffer);
-    free(mb_buffer);
-
-    return wide_len;
-  }
-  va_end(args);
-}
-int out_error(Out* out) {
-  if (out->file != NULL)
-    return ferror(out->file);
-
-  return 0;
-}
-
-int out_overflow(Out* out) {
-  if (out->file != NULL)
-    return feof(out->file);
-  else
-    return (out->buffer_pos >= out->buffer_size);
-}
+#include "stdio_impl.h"
 
 /* Convenient bit representation for modifier flags, which all fall
  * within 31 codepoints of the space character. */
@@ -262,6 +173,15 @@ static void pop_arg(union arg *arg, int type, va_list *ap)
 	}
 }
 
+static void out(FILE *f, const wchar_t *s, size_t l)
+{
+#if defined(__ANDROID__)
+        fake_file_outw(f, s, l);
+#else
+	while (l--) fputwc(*s++, f);
+#endif
+}
+
 static int getint(wchar_t **s) {
 	int i;
 	for (i=0; iswdigit(**s); (*s)++)
@@ -275,7 +195,7 @@ static const char sizeprefix['y'-'a'] = {
 ['p'-'a']='j'
 };
 
-static int wprintf_core(Out *out, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *nl_type)
+static int wprintf_core(FILE *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *nl_type)
 {
 	wchar_t *a, *z, *s=(wchar_t *)fmt, *s0;
 	unsigned l10n=0, litpct, fl;
@@ -294,7 +214,7 @@ static int wprintf_core(Out *out, const wchar_t *fmt, va_list *ap, union arg *nl
 		/* Update output count, end loop when fmt is exhausted */
 		if (cnt >= 0) {
 			if (l > INT_MAX - cnt) {
-				if (!out_error(out)) errno = EOVERFLOW;
+				if (!ferror(f)) errno = EOVERFLOW;
 				cnt = -1;
 			} else cnt += l;
 		}
@@ -306,7 +226,7 @@ static int wprintf_core(Out *out, const wchar_t *fmt, va_list *ap, union arg *nl
 		z = s+litpct;
 		s += 2*litpct;
 		l = z-a;
-		if (out) out_write(out, a, l);
+		if (f) out(f, a, l);
 		if (l) continue;
 
 		if (iswdigit(s[1]) && s[2]=='$') {
@@ -330,7 +250,7 @@ static int wprintf_core(Out *out, const wchar_t *fmt, va_list *ap, union arg *nl
 				w = nl_arg[s[1]-'0'].i;
 				s+=3;
 			} else if (!l10n) {
-				w = out ? va_arg(*ap, int) : 0;
+				w = f ? va_arg(*ap, int) : 0;
 				s++;
 			} else return -1;
 			if (w<0) fl|=LEFT_ADJ, w=-w;
@@ -343,7 +263,7 @@ static int wprintf_core(Out *out, const wchar_t *fmt, va_list *ap, union arg *nl
 				p = nl_arg[s[2]-'0'].i;
 				s+=4;
 			} else if (!l10n) {
-				p = out ? va_arg(*ap, int) : 0;
+				p = f ? va_arg(*ap, int) : 0;
 				s+=2;
 			} else return -1;
 		} else if (*s=='.') {
@@ -364,19 +284,20 @@ static int wprintf_core(Out *out, const wchar_t *fmt, va_list *ap, union arg *nl
 		/* Check validity of argument type (nl/normal) */
 		if (st==NOARG) {
 			if (argpos>=0) return -1;
-			else if (!out) continue;
+			else if (!f) continue;
 		} else {
 			if (argpos>=0) nl_type[argpos]=st, arg=nl_arg[argpos];
-			else if (out) pop_arg(&arg, st, ap);
+			else if (f) pop_arg(&arg, st, ap);
 			else return 0;
 		}
 
-		if (!out) continue;
+		if (!f) continue;
 		t = s[-1];
 		if (ps && (t&15)==3) t&=~32;
 
 		switch (t) {
 		case 'n':
+#ifndef __ANDROID__  /* Disabled on Android for security reasons. */
 			switch(ps) {
 			case BARE: *(int *)arg.p = cnt; break;
 			case LPRE: *(long *)arg.p = cnt; break;
@@ -386,13 +307,14 @@ static int wprintf_core(Out *out, const wchar_t *fmt, va_list *ap, union arg *nl
 			case ZTPRE: *(size_t *)arg.p = cnt; break;
 			case JPRE: *(uintmax_t *)arg.p = cnt; break;
 			}
+#endif  /* !__ANDROID__ */
 			continue;
 		case 'c':
-			out_putwc(out, btowc(arg.i));
+			fputwc(btowc(arg.i), f);
 			l = 1;
 			continue;
 		case 'C':
-			out_putwc(out, arg.i);
+			fputwc(arg.i, f);
 			l = 1;
 			continue;
 		case 'S':
@@ -401,9 +323,9 @@ static int wprintf_core(Out *out, const wchar_t *fmt, va_list *ap, union arg *nl
 			if (!z) z=a+p;
 			else p=z-a;
 			if (w<p) w=p;
-			if (!(fl&LEFT_ADJ)) out_printf(out, "%.*s", w-p, "");
-			out_write(out, a, p);
-			if ((fl&LEFT_ADJ)) out_printf(out, "%.*s", w-p, "");
+			if (!(fl&LEFT_ADJ)) fprintf(f, "%.*s", w-p, "");
+			out(f, a, p);
+			if ((fl&LEFT_ADJ)) fprintf(f, "%.*s", w-p, "");
 			l=w;
 			continue;
 		case 's':
@@ -413,14 +335,14 @@ static int wprintf_core(Out *out, const wchar_t *fmt, va_list *ap, union arg *nl
 			if (i<0) return -1;
 			p=l;
 			if (w<p) w=p;
-			if (!(fl&LEFT_ADJ)) out_printf(out, "%.*s", w-p, "");
+			if (!(fl&LEFT_ADJ)) fprintf(f, "%.*s", w-p, "");
 			bs = arg.p;
 			while (l--) {
 				i=mbtowc(&wc, bs, MB_LEN_MAX);
 				bs+=i;
-				out_putwc(out, wc);
+				fputwc(wc, f);
 			}
-			if ((fl&LEFT_ADJ)) out_printf(out, "%.*s", w-p, "");
+			if ((fl&LEFT_ADJ)) fprintf(f, "%.*s", w-p, "");
 			l=w;
 			continue;
 		}
@@ -435,15 +357,15 @@ static int wprintf_core(Out *out, const wchar_t *fmt, va_list *ap, union arg *nl
 
 		switch (t|32) {
 		case 'a': case 'e': case 'f': case 'g':
-			l = out_printf(out, charfmt, w, p, arg.f);
+			l = fprintf(f, charfmt, w, p, arg.f);
 			break;
 		case 'd': case 'i': case 'o': case 'u': case 'x': case 'p':
-			l = out_printf(out, charfmt, w, p, arg.i);
+			l = fprintf(f, charfmt, w, p, arg.i);
 			break;
 		}
 	}
 
-	if (out) return cnt;
+	if (f) return cnt;
 	if (!l10n) return 0;
 
 	for (i=1; i<=NL_ARGMAX && nl_type[i]; i++)
@@ -453,14 +375,16 @@ static int wprintf_core(Out *out, const wchar_t *fmt, va_list *ap, union arg *nl
 	return 1;
 }
 
+#ifdef __ANDROID__
+#undef FILE  /* no longer needed */
 int vfwprintf(FILE *restrict f, const wchar_t *restrict fmt, va_list ap)
 {
 	va_list ap2;
 	int nl_type[NL_ARGMAX] = {0};
 	union arg nl_arg[NL_ARGMAX];
 	int ret;
-        Out out[1];
-        out_init_file(out, f);
+        FakeFILE out[1];
+        fake_file_init_file(out, f);
 	va_copy(ap2, ap);
         // Check for error in format string before writing anything to file.
 	if (wprintf_core(0, fmt, &ap2, nl_arg, nl_type) < 0) {
@@ -478,11 +402,29 @@ int vswprintf(wchar_t *restrict s, size_t l, const wchar_t *restrict fmt, va_lis
   int nl_type[NL_ARGMAX] = {0};
   union arg nl_arg[NL_ARGMAX];
   int ret;
-  Out out[1];
-  out_init_buffer(out, s, l);
+  FakeFILE out[1];
+  fake_file_init_wbuffer(out, s, l);
   va_copy(ap2, ap);
   ret = wprintf_core(out, fmt, &ap2, nl_arg, nl_type);
   va_end(ap2);
-  if (out_overflow(out)) return -1;
+  if (fake_feof(out)) return -1;
   return ret;
 }
+#else  /* !__ANDROID__ */
+int vfwprintf(FILE *restrict f, const wchar_t *restrict fmt, va_list ap)
+{
+	va_list ap2;
+	int nl_type[NL_ARGMAX] = {0};
+	union arg nl_arg[NL_ARGMAX];
+	int ret;
+
+	va_copy(ap2, ap);
+	if (wprintf_core(0, fmt, &ap2, nl_arg, nl_type) < 0) return -1;
+
+	FLOCK(f);
+	ret = wprintf_core(f, fmt, &ap2, nl_arg, nl_type);
+	FUNLOCK(f);
+	va_end(ap2);
+	return ret;
+}
+#endif  /* !__ANDROID__ */
