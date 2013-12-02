@@ -16,6 +16,9 @@ TEST(stdio,snprintf) {
   EXPECT_EQ(L'\0', char_buff[11]);
   EXPECT_EQ(12, snprintf(char_buff, 1, "%s", kString));
   EXPECT_EQ(L'\0', char_buff[0]);
+
+  EXPECT_EQ(20, snprintf(char_buff, char_buff_len, "%a", 3.1415926535));
+  EXPECT_STREQ("0x1.921fb54411744p+1", char_buff);
 }
 
 TEST(stdio,swprintf) {
