@@ -92,6 +92,7 @@ if [ -z "$OPTION_BUILD_DIR" ]; then
 else
     BUILD_DIR=$OPTION_BUILD_DIR
 fi
+rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 fail_panic "Could not create build directory: $BUILD_DIR"
 
@@ -99,7 +100,8 @@ fail_panic "Could not create build directory: $BUILD_DIR"
 # $2: Build directory
 # $3: "static" or "shared"
 # $4: GCC version
-# $5: optional "thumb"
+# $5: optional armeabi-v7a hard-float: "hard" or else
+# $6: optional "thumb"
 build_gnustl_for_abi ()
 {
     local ARCH BINPREFIX SYSROOT GNUSTL_SRCDIR
@@ -107,15 +109,23 @@ build_gnustl_for_abi ()
     local BUILDDIR="$2"
     local LIBTYPE="$3"
     local GCC_VERSION="$4"
-    local THUMB="$5"
-    local DSTDIR=$NDK_DIR/$GNUSTL_SUBDIR/$GCC_VERSION/libs/$ABI/$THUMB
-    local SRC OBJ OBJECTS CFLAGS CXXFLAGS
+    local HARD="$5"
+    local THUMB="$6"
+    local DSTDIR SRC OBJ OBJECTS CFLAGS CXXFLAGS
+
+    DSTDIR=$NDK_DIR/$GNUSTL_SUBDIR/$GCC_VERSION/libs/$ABI/$THUMB
+
+    if [ "$HARD" != "hard" ]; then
+        HARD=
+        INSTALLDIR=$BUILDDIR/install-${ABI}-${GCC_VERSION}/${THUMB}
+    else
+        INSTALLDIR=$BUILDDIR/install-${ABI}-${GCC_VERSION}/hard/${THUMB}
+    fi
 
     prepare_target_build $ABI $PLATFORM $NDK_DIR
     fail_panic "Could not setup target build."
 
-    INSTALLDIR=$BUILDDIR/install-$ABI-$GCC_VERSION/$THUMB
-    BUILDDIR=$BUILDDIR/$LIBTYPE-${ABI}${THUMB}-$GCC_VERSION
+    BUILDDIR=$BUILDDIR/$LIBTYPE-${ABI}${HARD}${THUMB}-$GCC_VERSION
 
     mkdir -p $DSTDIR
 
@@ -159,13 +169,18 @@ build_gnustl_for_abi ()
             ;;
     esac
 
-    EXTRA_FLAGS=
+    EXTRA_FLAGS="-ffunction-sections -fdata-sections"
     if [ -n "$THUMB" ] ; then
         EXTRA_FLAGS="-mthumb"
     fi
-    export CFLAGS="-fPIC $CFLAGS --sysroot=$SYSROOT -fexceptions -funwind-tables -D__BIONIC__ -O2 -g $EXTRA_FLAGS"
-    export CXXFLAGS="-fPIC $CXXFLAGS --sysroot=$SYSROOT -fexceptions -frtti -funwind-tables -D__BIONIC__ -O2 -g $EXTRA_FLAGS"
-    export CPPFLAGS="$CPPFLAGS --sysroot=$SYSROOT"
+    CFLAGS="-fPIC $CFLAGS --sysroot=$SYSROOT -fexceptions -funwind-tables -D__BIONIC__ -O2 $EXTRA_FLAGS"
+    CXXFLAGS="-fPIC $CXXFLAGS --sysroot=$SYSROOT -fexceptions -frtti -funwind-tables -D__BIONIC__ -O2 $EXTRA_FLAGS"
+    CPPFLAGS="$CPPFLAGS --sysroot=$SYSROOT"
+    if [ "$WITH_DEBUGGING_INFO" ]; then
+        CFLAGS="$CFLAGS -g"
+        CXXFLAGS="$CXXFLAGS -g"
+    fi
+    export CFLAGS CXXFLAGS CPPFLAGS
 
     export CC=${BINPREFIX}gcc
     export CXX=${BINPREFIX}g++
@@ -182,6 +197,11 @@ build_gnustl_for_abi ()
     if [ "$ABI" = "armeabi-v7a" ]; then
         CXXFLAGS=$CXXFLAGS" -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16"
         LDFLAGS=$LDFLAGS" -Wl,--fix-cortex-a8"
+        if [ "$HARD" != "hard" ]; then
+            CXXFLAGS=$CXXFLAGS" -mfloat-abi=softfp"
+        else
+            CXXFLAGS=$CXXFLAGS" -mhard-float"
+        fi
     fi
 
     LIBTYPE_FLAGS=
@@ -199,10 +219,13 @@ build_gnustl_for_abi ()
         fi
     else
         LIBTYPE_FLAGS="--disable-static --enable-shared"
+        if [ "$HARD" = "hard" ]; then
+            LDFLAGS=$LDFLAGS" -Wl,--no-warn-mismatch"
+        fi
         #LDFLAGS=$LDFLAGS" -lsupc++"
     fi
 
-    PROJECT="gnustl_$LIBTYPE gcc-$GCC_VERSION $ABI $THUMB"
+    PROJECT="gnustl_$LIBTYPE gcc-$GCC_VERSION $ABI $HARD $THUMB"
     echo "$PROJECT: configuring"
     mkdir -p $BUILDDIR && rm -rf $BUILDDIR/* &&
     cd $BUILDDIR &&
@@ -227,7 +250,7 @@ build_gnustl_for_abi ()
 
     echo "$PROJECT: installing"
     run make install
-    fail_panic "Could not create $ABI $THUMB prebuilts for GNU libsupc++/libstdc++"
+    fail_panic "Could not create $ABI $HARD $THUMB prebuilts for GNU libsupc++/libstdc++"
 }
 
 
@@ -271,6 +294,15 @@ copy_gnustl_libs ()
         copy_file_list "$SDIR/thumb/lib" "$DDIR/libs/$ABI/thumb" libsupc++.a libgnustl_shared.so
         cp "$SDIR/thumb/lib/libgnustl_shared.a" "$DDIR/libs/$ABI/thumb/libgnustl_static.a"
     fi
+    if [ -d "$SDIR/hard" ] ; then
+        cp "$SDIR/hard/lib/libsupc++.a" "$DDIR/libs/$ABI/libsupc++_hard.a"
+        cp "$SDIR/hard/lib/libgnustl_shared.so" "$DDIR/libs/$ABI/libgnustl_shared_hard.so"
+        cp "$SDIR/hard/lib/libgnustl_shared.a" "$DDIR/libs/$ABI/libgnustl_static_hard.a"
+
+        cp "$SDIR/hard/thumb/lib/libsupc++.a" "$DDIR/libs/$ABI/thumb/libsupc++_hard.a"
+        cp "$SDIR/hard/thumb/lib/libgnustl_shared.so" "$DDIR/libs/$ABI/thumb/libgnustl_shared_hard.so"
+        cp "$SDIR/hard/thumb/lib/libgnustl_shared.a" "$DDIR/libs/$ABI/thumb/libgnustl_static_hard.a"
+    fi
 }
 
 GCC_VERSION_LIST=$(commas_to_spaces $GCC_VERSION_LIST)
@@ -279,8 +311,14 @@ for VERSION in $GCC_VERSION_LIST; do
         build_gnustl_for_abi $ABI "$BUILD_DIR" static $VERSION
         build_gnustl_for_abi $ABI "$BUILD_DIR" shared $VERSION
         if [ "$ABI" != "${ABI%%arm*}" ] ; then
-            build_gnustl_for_abi $ABI "$BUILD_DIR" static $VERSION thumb
-            build_gnustl_for_abi $ABI "$BUILD_DIR" shared $VERSION thumb
+            build_gnustl_for_abi $ABI "$BUILD_DIR" static $VERSION "" thumb
+            build_gnustl_for_abi $ABI "$BUILD_DIR" shared $VERSION "" thumb
+        fi
+        if [ "$ABI" = "armeabi-v7a" ] ; then
+            build_gnustl_for_abi $ABI "$BUILD_DIR" static $VERSION "hard"
+            build_gnustl_for_abi $ABI "$BUILD_DIR" shared $VERSION "hard"
+            build_gnustl_for_abi $ABI "$BUILD_DIR" static $VERSION "hard" thumb
+            build_gnustl_for_abi $ABI "$BUILD_DIR" shared $VERSION "hard" thumb
         fi
         copy_gnustl_libs $ABI "$BUILD_DIR" $VERSION
     done
@@ -304,6 +342,12 @@ if [ -n "$PACKAGE_DIR" ] ; then
                     FILES="$FILES $THUMB_FILE"
                 fi
             done
+            if [ "$ABI" = "armeabi-v7a" ]; then
+                for LIB in libsupc++_hard.a libgnustl_static_hard.a libgnustl_shared_hard.so; do
+                    FILES="$FILES $GNUSTL_SUBDIR/$VERSION/libs/$ABI/$LIB"
+                    FILES="$FILES $GNUSTL_SUBDIR/$VERSION/libs/$ABI/thumb/$LIB"
+                done
+            fi
             PACKAGE="$PACKAGE_DIR/gnu-libstdc++-libs-$VERSION-$ABI.tar.bz2"
             dump "Packaging: $PACKAGE"
             pack_archive "$PACKAGE" "$NDK_DIR" "$FILES"
