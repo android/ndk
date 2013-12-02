@@ -31,6 +31,9 @@ ARCHS=$(find_ndk_unknown_archs)
 ARCHS="$DEFAULT_ARCHS $ARCHS"
 register_var_option "--arch=<arch>" ARCHS "Specify target architectures"
 
+NO_GEN_PLATFORMS=
+register_var_option "--no-gen-platforms" NO_GEN_PLATFORMS "Don't generate platforms/ directory, use existing one"
+
 SYSTEMS=$HOST_TAG32
 if [ "$HOST_TAG32" = "linux-x86" ]; then
     SYSTEMS=$SYSTEMS",windows"
@@ -94,6 +97,10 @@ fi
 FLAGS=$FLAGS" --ndk-dir=$NDK_DIR"
 FLAGS=$FLAGS" --package-dir=$PACKAGE_DIR"
 FLAGS=$FLAGS" --arch=$(spaces_to_commas $ARCHS)"
+
+if [ ! -z "$NO_GEN_PLATFORMS" ]; then
+    FLAGS=$FLAGS" --no-gen-platforms"
+fi
 
 HOST_FLAGS=$FLAGS" --systems=$(spaces_to_commas $SYSTEMS)"
 if [ "$TRY64" = "yes" ]; then
