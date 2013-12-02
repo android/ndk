@@ -77,6 +77,9 @@ register_var_option "--no-makefile" NO_MAKEFILE "Do not use makefile to speed-up
 VISIBLE_STATIC=
 register_var_option "--visible-static" VISIBLE_STATIC "Do not use hidden visibility for the static library"
 
+WITH_DEBUG_INFO=
+register_var_option "--with-debug-info" WITH_DEBUG_INFO "Build with -g.  STL is still built with optimization but with debug info"
+
 EXPLICIT_COMPILER_VERSION=
 
 GCC_VERSION=$DEFAULT_GCC_VERSION
@@ -148,8 +151,12 @@ LIBCXX_SRCDIR=$ANDROID_NDK_ROOT/$LIBCXX_SUBDIR
 
 LIBCXX_INCLUDES="-I$LIBCXX_SRCDIR/libcxx/include -I$ANDROID_NDK_ROOT/sources/android/support/include -I$GABIXX_SRCDIR/include"
 
-COMMON_CFLAGS="-fPIC -O2 -g -ffunction-sections -fdata-sections"
+COMMON_CFLAGS="-fPIC -O2 -ffunction-sections -fdata-sections"
 COMMON_CXXFLAGS="-fexceptions -frtti -fuse-cxa-atexit"
+
+if [ "$WITH_DEBUG_INFO" ]; then
+    COMMON_CFLAGS="$COMMON_CFLAGS -g"
+fi
 
 # Determine GAbi++ build parameters. Note that GAbi++ is also built as part
 # of STLport and Libc++, in slightly different ways.
@@ -490,7 +497,11 @@ if [ -n "$PACKAGE_DIR" ] ; then
         for LIB in ${CXX_STL_LIB}_static.a ${CXX_STL_LIB}_shared${LIB_SUFFIX}; do
             FILES="$FILES $CXX_STL_SUBDIR/libs/$ABI/$LIB"
         done
-        PACKAGE="$PACKAGE_DIR/${CXX_STL_PACKAGE}-libs-$ABI.tar.bz2"
+        PACKAGE="$PACKAGE_DIR/${CXX_STL_PACKAGE}-libs-$ABI"
+        if [ "$WITH_DEBUG_INFO" ]; then
+            PACKAGE="${PACKAGE}-g"
+        fi
+        PACKAGE="${PACKAGE}.tar.bz2"
         log "Packaging: $PACKAGE"
         pack_archive "$PACKAGE" "$OUT_DIR" "$FILES"
         fail_panic "Could not package $ABI $CXX_STL binaries!"
