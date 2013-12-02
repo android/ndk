@@ -15,6 +15,7 @@
  * access to a log file.
  */
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -170,6 +171,7 @@ int
 ParseLine(NdkCrashParser* parser, const char* line)
 {
   regmatch_t match;
+  int found = 0;
 
   if (line == NULL || *line == '\0') {
     // Nothing to parse.
@@ -196,6 +198,7 @@ ParseLine(NdkCrashParser* parser, const char* line)
         fprintf(parser->out_handle, "%s\n",
                 strstr(line, _build_fingerprint_header));
         parser->state = EXPECTS_PID;
+        found = 1;
       }
       // Let it fall through to the EXPECTS_PID, in case the dump doesn't
       // contain build fingerprint.
@@ -205,13 +208,14 @@ ParseLine(NdkCrashParser* parser, const char* line)
         parser->state = EXPECTS_SIGNAL_OR_FRAME;
         return 0;
       } else {
-        return 1;
+        return !found;
       }
 
     case EXPECTS_SIGNAL_OR_FRAME:
       if (MatchRegex(line, &parser->re_sig_header, &match)) {
         fprintf(parser->out_handle, "%s\n", line + match.rm_so);
         parser->state = EXPECTS_FRAME;
+        found = 1;
       }
       // Let it fall through to the EXPECTS_FRAME, in case the dump doesn't
       // contain signal fingerprint.
@@ -220,7 +224,7 @@ ParseLine(NdkCrashParser* parser, const char* line)
         parser->state = EXPECTS_FRAME;
         return ParseFrame(parser, line + match.rm_so);
       } else {
-        return 1;
+        return !found;
       }
 
     default:
@@ -281,8 +285,14 @@ ParseFrame(NdkCrashParser* parser, const char* frame)
   char module_path[2048];
   char* module_name;
   char sym_file[2048];
+#if !defined(WITH_LIBBFD)
   ELFF_HANDLE elff_handle;
   Elf_AddressInfo pc_info;
+#else
+  const int ac = 5;
+  char *av[ac];
+  FILE *f;
+#endif
 
   fprintf(parser->out_handle, "Stack frame %s", frame);
 
@@ -326,6 +336,30 @@ ParseFrame(NdkCrashParser* parser, const char* frame)
   // Build path to the symbol file.
   snprintf(sym_file, sizeof(sym_file), "%s/%s", parser->sym_root, module_name);
 
+#if defined(WITH_LIBBFD)
+  if ((f=fopen(sym_file, "r")) == NULL) {
+    if (errno == ENOENT) {
+        printf("\n");
+    } else {
+        printf(": Unable to open symbol file %s. Error (%d): %s\n",
+                sym_file, errno, strerror(errno));
+    }
+    return -1;
+  }
+
+  // call addr2line if sym_file exist
+  extern int addr2line_main (int argc, char **argv);
+
+  av[0] = "ndk-stack";
+  av[1] = "-fpC";  // f:function, p:pretty-print, C:demangle
+  av[2] = "-e";    // e:exe-filename
+  av[3] = sym_file;
+  av[4] = pc_address;
+  (void)address;
+
+  printf(": Routine ");
+  return addr2line_main(ac, av);
+#else
   // Init ELFF wrapper for the symbol file.
   elff_handle = elff_init(sym_file);
   if (elff_handle == NULL) {
@@ -358,4 +392,5 @@ ParseFrame(NdkCrashParser* parser, const char* frame)
     elff_close(elff_handle);
     return -1;
   }
+#endif // WITH_LIBBFD
 }
