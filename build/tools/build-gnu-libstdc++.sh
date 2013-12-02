@@ -67,6 +67,9 @@ register_var_option "--no-makefile" NO_MAKEFILE "Do not use makefile to speed-up
 VISIBLE_LIBGNUSTL_STATIC=
 register_var_option "--visible-libgnustl-static" VISIBLE_LIBGNUSTL_STATIC "Do not use hidden visibility for libgnustl_static.a"
 
+WITH_DEBUGGING_INFO=
+register_var_option "--with-debugging-info" WITH_DEBUGGING_INFO "Build with -g.  STL is still built with optimization but with debugging info"
+
 register_jobs_option
 
 extract_parameters "$@"
@@ -163,9 +166,14 @@ build_gnustl_for_abi ()
     if [ -n "$THUMB" ] ; then
         EXTRA_FLAGS="-mthumb"
     fi
-    export CFLAGS="-fPIC $CFLAGS --sysroot=$SYSROOT -fexceptions -funwind-tables -D__BIONIC__ -O2 -g $EXTRA_FLAGS"
-    export CXXFLAGS="-fPIC $CXXFLAGS --sysroot=$SYSROOT -fexceptions -frtti -funwind-tables -D__BIONIC__ -O2 -g $EXTRA_FLAGS"
-    export CPPFLAGS="$CPPFLAGS --sysroot=$SYSROOT"
+    CFLAGS="-fPIC $CFLAGS --sysroot=$SYSROOT -fexceptions -funwind-tables -D__BIONIC__ -O2 $EXTRA_FLAGS"
+    CXXFLAGS="-fPIC $CXXFLAGS --sysroot=$SYSROOT -fexceptions -frtti -funwind-tables -D__BIONIC__ -O2 $EXTRA_FLAGS"
+    CPPFLAGS="$CPPFLAGS --sysroot=$SYSROOT"
+    if [ "$WITH_DEBUGGING_INFO" ]; then
+        CFLAGS="$CFLAGS -g"
+        CXXFLAGS="$CXXFLAGS -g"
+    fi
+    export CFLAGS CXXFLAGS CPPFLAGS
 
     export CC=${BINPREFIX}gcc
     export CXX=${BINPREFIX}g++
@@ -304,7 +312,11 @@ if [ -n "$PACKAGE_DIR" ] ; then
                     FILES="$FILES $THUMB_FILE"
                 fi
             done
-            PACKAGE="$PACKAGE_DIR/gnu-libstdc++-libs-$VERSION-$ABI.tar.bz2"
+            PACKAGE="$PACKAGE_DIR/gnu-libstdc++-libs-$VERSION-$ABI"
+            if [ "$WITH_DEBUGGING_INFO" ]; then
+                PACKAGE="${PACKAGE}-g"
+            fi
+            PACKAGE="${PACKAGE}.tar.bz2"
             dump "Packaging: $PACKAGE"
             pack_archive "$PACKAGE" "$NDK_DIR" "$FILES"
             fail_panic "Could not package $ABI STLport binaries!"

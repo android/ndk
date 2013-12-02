@@ -99,14 +99,20 @@ UNKNOWN_ABIS=$(convert_archs_to_abis $UNKNOWN_ARCH)
 dump "Building $ABIS gabi++ binaries..."
 run $BUILDTOOLS/build-cxx-stl.sh --stl=gabi++ --abis="$ABIS" $FLAGS
 fail_panic "Could not build gabi++!"
+run $BUILDTOOLS/build-cxx-stl.sh --stl=gabi++ --abis="$ABIS" $FLAGS --with-debugging-info
+fail_panic "Could not build gabi++ with debuging info!"
 
 dump "Building $ABIS $UNKNOWN_ABIS stlport binaries..."
 run $BUILDTOOLS/build-cxx-stl.sh --stl=stlport --abis="$ABIS,$UNKNOWN_ABIS" $FLAGS
 fail_panic "Could not build stlport!"
+run $BUILDTOOLS/build-cxx-stl.sh --stl=stlport --abis="$ABIS,$UNKNOWN_ABIS" $FLAGS --with-debugging-info
+fail_panic "Could not build stlport with debuging info!"
 
 dump "Building $ABIS $UNKNOWN_ABIS libc++ binaries..."
 run $BUILDTOOLS/build-cxx-stl.sh --stl=libc++ --abis="$ABIS,$UNKNOWN_ABIS" $FLAGS
 fail_panic "Could not build libc++!"
+run $BUILDTOOLS/build-cxx-stl.sh --stl=libc++ --abis="$ABIS,$UNKNOWN_ABIS" $FLAGS --with-debugging-info
+fail_panic "Could not build libc++ with debuging info!"
 
 if [ ! -z $VISIBLE_LIBGNUSTL_STATIC ]; then
     GNUSTL_STATIC_VIS_FLAG=--visible-libgnustl-static
@@ -115,6 +121,8 @@ fi
 dump "Building $ABIS gnustl binaries..."
 run $BUILDTOOLS/build-gnu-libstdc++.sh --abis="$ABIS" $FLAGS $GNUSTL_STATIC_VIS_FLAG "$SRC_DIR"
 fail_panic "Could not build gnustl!"
+run $BUILDTOOLS/build-gnu-libstdc++.sh --abis="$ABIS" $FLAGS $GNUSTL_STATIC_VIS_FLAG "$SRC_DIR" --with-debugging-info
+fail_panic "Could not build gnustl with debuging info!"
 
 dump "Building $ABIS libportable binaries..."
 run $BUILDTOOLS/build-libportable.sh --abis="$ABIS" $FLAGS
