@@ -500,6 +500,15 @@ copy_stl_libs () {
             copy_file_list "$GNUSTL_LIBS/$ABI1" "$ABI_STL/lib/$ABI2" "libgnustl_shared.so"
             copy_file_list "$GNUSTL_LIBS/$ABI1" "$ABI_STL/lib/$ABI2" "libsupc++.a"
             cp -p "$GNUSTL_LIBS/$ABI1/libgnustl_static.a" "$ABI_STL/lib/$ABI2/libstdc++.a"
+            if [ -f "$GNUSTL_LIBS/$ABI1/libgnustl_shared_hard.so" ]; then
+                copy_file_list "$GNUSTL_LIBS/$ABI1" "$ABI_STL/lib/$ABI2" "libgnustl_shared_hard.so"
+            fi
+            if [ -f "$GNUSTL_LIBS/$ABI1/libsupc++_hard.a" ]; then
+                copy_file_list "$GNUSTL_LIBS/$ABI1" "$ABI_STL/lib/$ABI2" "libsupc++_hard.a"
+            fi
+            if [ -f "$GNUSTL_LIBS/$ABI1/libgnustl_static_hard.a" ]; then
+                cp -p "$GNUSTL_LIBS/$ABI1/libgnustl_static_hard.a" "$ABI_STL/lib/$ABI2/libstdc++_hard.a"
+            fi
             ;;
         libcxx|libc++)
             copy_file_list "$COMPILER_RT_LIBS/$ABI" "$ABI_STL/lib/$ABI2" "libcompiler_rt_shared.so" "libcompiler_rt_static.a"
@@ -516,6 +525,12 @@ copy_stl_libs () {
             else
               copy_file_list "$STLPORT_LIBS/$ABI" "$ABI_STL/lib/$ABI2" "libstlport_shared.so"
               cp -p "$STLPORT_LIBS/$ABI/libstlport_static.a" "$ABI_STL/lib/$ABI2/libstdc++.a"
+              if [ -f "$STLPORT_LIBS/$ABI/libstlport_shared_hard.so" ]; then
+                  copy_file_list "$STLPORT_LIBS/$ABI" "$ABI_STL/lib/$ABI2" "libstlport_shared_hard.so"
+              fi
+              if [ -f "$STLPORT_LIBS/$ABI/libstlport_static_hard.a" ]; then
+                  cp -p "$STLPORT_LIBS/$ABI/libstlport_static_hard.a" "$ABI_STL/lib/$ABI2/libstdc++_hard.a"
+              fi
             fi
             ;;
         *)
