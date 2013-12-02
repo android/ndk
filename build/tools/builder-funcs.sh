@@ -304,11 +304,16 @@ builder_static_library ()
 {
     local lib libname
     libname=$1
+    armeabi_v7a_float_abi=$2
+    suffix=""
+    if [ "$armeabi_v7a_float_abi" = "hard" ]; then
+        suffix="_hard"
+    fi
     if [ -z "$_BUILD_DSTDIR" ]; then
         panic "Destination directory not set"
     fi
     lib=$_BUILD_DSTDIR/$libname
-    lib=${lib%%.a}.a
+    lib=${lib%%.a}${suffix}.a
     if [ "$_BUILD_MK" ]; then
         _BUILD_TARGETS=$_BUILD_TARGETS" $lib"
         echo "$lib: $_BUILD_OBJECTS" >> $_BUILD_MK
@@ -346,14 +351,22 @@ builder_host_static_library ()
 
 builder_shared_library ()
 {
-    local lib libname suffix
+    local lib libname ext suffix libm
     libname=$1
-    suffix=$2
-    if [ -z "$suffix" ]; then
-        suffix=".so"
+    ext=$2
+    armeabi_v7a_float_abi=$3
+
+    if [ -z "$ext" ]; then
+        ext=".so"
+    fi
+    suffix=""
+    libm="-lm"
+    if [ "$armeabi_v7a_float_abi" = "hard" ]; then
+        libm="-lm_hard"
+        suffix="_hard"
     fi
     lib=$_BUILD_DSTDIR/$libname
-    lib=${lib%%${suffix}}${suffix}
+    lib=${lib%%${ext}}${suffix}${ext}
     if [ "$_BUILD_MK" ]; then
         _BUILD_TARGETS=$_BUILD_TARGETS" $lib"
         echo "$lib: $_BUILD_OBJECTS" >> $_BUILD_MK
@@ -371,7 +384,7 @@ builder_shared_library ()
         $_BUILD_STATIC_LIBRARIES \
         -lgcc \
         $_BUILD_SHARED_LIBRARIES \
-        -lc -lm \
+        -lc $libm \
         $_BUILD_LDFLAGS \
         $_BUILD_LDFLAGS_END_SO \
         -o $lib
@@ -381,14 +394,14 @@ builder_shared_library ()
 # Same as builder_shared_library, but do not link the default libs
 builder_nostdlib_shared_library ()
 {
-    local lib libname suffix
+    local lib libname ext
     libname=$1
-    suffix=$2
-    if [ -z "$suffix" ]; then
-        suffix=".so"
+    ext=$2
+    if [ -z "$ext" ]; then
+        ext=".so"
     fi
     lib=$_BUILD_DSTDIR/$libname
-    lib=${lib%%${suffix}}${suffix}
+    lib=${lib%%${ext}}${ext}
     if [ "$_BUILD_MK" ]; then
         _BUILD_TARGETS=$_BUILD_TARGETS" $lib"
         echo "$lib: $_BUILD_OBJECTS" >> $_BUILD_MK
