@@ -20,7 +20,7 @@ void test1()
 
 void test2()
 {
-    static const uint64x1_t local_Mask2 = { 0xffffffff00000000ULL };
+    static const uint64_t local_Mask2 = { 0xffffffff00000000ULL };
     uint8x8_t v00FF8 = vcreate_u8(local_Mask2); //{ 0,0,0,0,0xff,0xff,0xff,0xff };
     dump_and_check(*(unsigned long long *)&v00FF8, 0xffffffff00000000ULL);
 }
