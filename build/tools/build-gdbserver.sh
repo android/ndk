@@ -160,7 +160,7 @@ if [ "$NOTHREADS" != "yes" ] ; then
     # with an .a suffix. The linker will handle that seamlessly.
     run cp $LIBTHREAD_DB_DIR/thread_db.h $BUILD_SYSROOT/usr/include/
     run $TOOLCHAIN_PREFIX-gcc --sysroot=$BUILD_SYSROOT -o $BUILD_SYSROOT/usr/lib/libthread_db.o -c $LIBTHREAD_DB_DIR/libthread_db.c
-    run $TOOLCHAIN_PREFIX-ar -r $BUILD_SYSROOT/usr/lib/libthread_db.a $BUILD_SYSROOT/usr/lib/libthread_db.o
+    run $TOOLCHAIN_PREFIX-ar -rD $BUILD_SYSROOT/usr/lib/libthread_db.a $BUILD_SYSROOT/usr/lib/libthread_db.o
     if [ $? != 0 ] ; then
         dump "ERROR: Could not compile libthread_db.c!"
         exit 1

@@ -459,7 +459,7 @@ create_unwind_library ()
         UNWIND_OBJS=$(unwind_library_for_abi $ABI)
         UNWIND_LIB_DIR="$NDK_DIR/$GCCUNWIND_SUBDIR/libs/$ABI/"
         run mkdir -p $UNWIND_LIB_DIR
-        run ar crs $UNWIND_LIB_DIR/libgccunwind.a $UNWIND_OBJS
+        run ar crsD $UNWIND_LIB_DIR/libgccunwind.a $UNWIND_OBJS
     done
 }
 
