@@ -1,0 +1,236 @@
+From 609816828a63399cdfee87b8147131e8e587d03b Mon Sep 17 00:00:00 2001
+From: Lai Wei-Chih <Robert.Lai@mediatek.com>
+Date: Fri, 25 Oct 2013 09:41:25 +0800
+Subject: [PATCH] Compile against llvm-3.4
+
+instead of against LLVM trunk@187732
+---
+ include/mcld/CodeGen/TargetMachine.h |   15 ++++++++-----
+ lib/CodeGen/MCLDTargetMachine.cpp    |   40 +++++++++++++++-------------------
+ test/lit.cfg                         |   35 ++++++++++++++++-------------
+ test/lit.site.cfg.in                 |    2 +-
+ 4 files changed, 47 insertions(+), 45 deletions(-)
+
+diff --git a/include/mcld/CodeGen/TargetMachine.h b/include/mcld/CodeGen/TargetMachine.h
+index 829774f..b70a49e 100644
+--- a/include/mcld/CodeGen/TargetMachine.h
++++ b/include/mcld/CodeGen/TargetMachine.h
+@@ -19,8 +19,11 @@ class TargetMachine;
+ class MCContext;
+ class raw_ostream;
+ class formatted_raw_ostream;
+-class PassManagerBase;
+ 
++// The old pass manager infrastructure is hidden in a legacy namespace now.
++namespace legacy {
++class PassManagerBase;
++} // namespace of legacy
+ } // namespace of llvm
+ 
+ namespace mcld {
+@@ -66,7 +69,7 @@ public:
+ 
+   /// appPassesToEmitFile - The target function which we has to modify as
+   /// upstreaming.
+-  bool addPassesToEmitFile(llvm::PassManagerBase &,
++  bool addPassesToEmitFile(llvm::legacy::PassManagerBase &,
+                            mcld::ToolOutputFile& pOutput,
+                            mcld::CodeGenFileType,
+                            llvm::CodeGenOpt::Level,
+@@ -77,21 +80,21 @@ public:
+ private:
+   /// addCommonCodeGenPasses - Add standard LLVM codegen passes used for
+   /// both emitting to assembly files or machine code output.
+-  bool addCommonCodeGenPasses(llvm::PassManagerBase &,
++  bool addCommonCodeGenPasses(llvm::legacy::PassManagerBase &,
+                               mcld::CodeGenFileType,
+                               llvm::CodeGenOpt::Level,
+                               bool DisableVerify,
+                               llvm::MCContext *&OutCtx);
+ 
+-  bool addCompilerPasses(llvm::PassManagerBase &pPM,
++  bool addCompilerPasses(llvm::legacy::PassManagerBase &pPM,
+                          llvm::formatted_raw_ostream &pOutput,
+                          llvm::MCContext *&OutCtx);
+ 
+-  bool addAssemblerPasses(llvm::PassManagerBase &pPM,
++  bool addAssemblerPasses(llvm::legacy::PassManagerBase &pPM,
+                           llvm::raw_ostream &pOutput,
+                           llvm::MCContext *&OutCtx);
+ 
+-  bool addLinkerPasses(llvm::PassManagerBase &pPM,
++  bool addLinkerPasses(llvm::legacy::PassManagerBase &pPM,
+                        mcld::LinkerConfig& pConfig,
+                        mcld::Module& pModule,
+                        mcld::MemoryArea& pOutput,
+diff --git a/lib/CodeGen/MCLDTargetMachine.cpp b/lib/CodeGen/MCLDTargetMachine.cpp
+index 964a5be..e95786c 100644
+--- a/lib/CodeGen/MCLDTargetMachine.cpp
++++ b/lib/CodeGen/MCLDTargetMachine.cpp
+@@ -277,8 +277,7 @@ bool mcld::MCLDTargetMachine::addPassesToEmitFile(PassManagerBase &pPM,
+ }
+ 
+ bool mcld::MCLDTargetMachine::addCompilerPasses(PassManagerBase &pPM,
+-                                                llvm::formatted_raw_ostream &pOutput,
+-                                                llvm::MCContext *&Context)
++  llvm::formatted_raw_ostream &pOutput, llvm::MCContext *&Context)
+ {
+   const MCAsmInfo &MAI = *getTM().getMCAsmInfo();
+   const MCInstrInfo &MII = *getTM().getInstrInfo();
+@@ -287,28 +286,27 @@ bool mcld::MCLDTargetMachine::addCompilerPasses(PassManagerBase &pPM,
+ 
+   MCInstPrinter *InstPrinter =
+     m_pLLVMTarget->createMCInstPrinter(MAI.getAssemblerDialect(), MAI,
+-                                           MII,
+-                                           *Context->getRegisterInfo(), STI);
++                                       MII, *Context->getRegisterInfo(), STI);
+ 
+   MCCodeEmitter* MCE = 0;
+   MCAsmBackend *MAB = 0;
+   if (ArgShowMCEncoding) {
+     MCE = m_pLLVMTarget->createMCCodeEmitter(MII, MRI, STI, *Context);
+-    MAB = m_pLLVMTarget->createMCAsmBackend(m_Triple,
+-                                                getTM().getTargetCPU());
++    MAB = m_pLLVMTarget->createMCAsmBackend(MRI, m_Triple,
++                                            getTM().getTargetCPU());
+   }
+ 
+ 
+   // now, we have MCCodeEmitter and MCAsmBackend, we can create AsmStreamer.
+   OwningPtr<MCStreamer> AsmStreamer(
+     m_pLLVMTarget->createAsmStreamer(*Context, pOutput,
+-                                         getVerboseAsm(),
+-                                         getTM().hasMCUseLoc(),
+-                                         getTM().hasMCUseCFI(),
+-                                         getTM().hasMCUseDwarfDirectory(),
+-                                         InstPrinter,
+-                                         MCE, MAB,
+-                                         ArgShowMCInst));
++                                     getVerboseAsm(),
++                                     getTM().hasMCUseLoc(),
++                                     getTM().hasMCUseCFI(),
++                                     getTM().hasMCUseDwarfDirectory(),
++                                     InstPrinter,
++                                     MCE, MAB,
++                                     ArgShowMCInst));
+ 
+   llvm::MachineFunctionPass* funcPass =
+     m_pLLVMTarget->createAsmPrinter(getTM(), *AsmStreamer.get());
+@@ -334,22 +332,18 @@ bool mcld::MCLDTargetMachine::addAssemblerPasses(PassManagerBase &pPM,
+ 
+   // MCAsmBackend
+   MCAsmBackend* MAB =
+-    m_pLLVMTarget->createMCAsmBackend(m_Triple,getTM().getTargetCPU());
++    m_pLLVMTarget->createMCAsmBackend(MRI, m_Triple, getTM().getTargetCPU());
+   if (MCE == 0 || MAB == 0)
+     return true;
+ 
+   // now, we have MCCodeEmitter and MCAsmBackend, we can create AsmStreamer.
+   OwningPtr<MCStreamer> AsmStreamer(m_pLLVMTarget->createMCObjectStreamer(
+-                                                              m_Triple,
+-                                                              *Context,
+-                                                              *MAB,
+-                                                              pOutput,
+-                                                              MCE,
+-                                                              getTM().hasMCRelaxAll(),
+-                                                              getTM().hasMCNoExecStack()));
++    m_Triple, *Context, *MAB, pOutput, MCE, getTM().hasMCRelaxAll(),
++    getTM().hasMCNoExecStack()));
++
+   AsmStreamer.get()->InitSections();
+-  MachineFunctionPass *funcPass = m_pLLVMTarget->createAsmPrinter(getTM(),
+-                                                                      *AsmStreamer.get());
++  MachineFunctionPass *funcPass =
++    m_pLLVMTarget->createAsmPrinter(getTM(), *AsmStreamer.get());
+   if (funcPass == 0)
+     return true;
+   // If successful, createAsmPrinter took ownership of AsmStreamer
+diff --git a/test/lit.cfg b/test/lit.cfg
+index 549d3ec..ebaacb8 100644
+--- a/test/lit.cfg
++++ b/test/lit.cfg
+@@ -3,6 +3,11 @@
+ 
+ # Configuration file for the 'lit' test runner.
+ 
++import os
++
++import lit.util
++import lit.formats
++
+ # name: The name of this test suite.
+ config.name = 'MCLinker'
+ 
+@@ -22,7 +27,7 @@ config.target_triple = 'foo'
+ # Get the bindir, and add to PATH.
+ llvm_config = config.llvm_config
+ if not llvm_config:
+-    lit.fatal('No llvm-config specific configuration available!')
++    lit_config.fatal('No llvm-config specific configuration available!')
+ 
+ llvm_bindir = lit.util.capture([llvm_config, '--bindir']).strip()
+ llvm_obj_root = lit.util.capture([llvm_config, '--obj-root']).strip()
+@@ -39,36 +44,36 @@ config.test_exec_root = os.path.join(config.mclinker_obj_root, 'test')
+ 
+ llc = config.llc
+ if not llc:
+-    lit.fatal('No MCLinker specific configuration available!')
+-if not lit.quiet:
+-    lit.note('using LLC: %r' % llc)
++    lit_config.fatal('No MCLinker specific configuration available!')
++if not lit_config.quiet:
++    lit_config.note('using LLC: %r' % llc)
+ config.substitutions.append(('%LLC', llc))
+ 
+ mcld = config.mcld
+ if not mcld:
+-    lit.fatal('No MCLinker specific configuration available!')
+-if not lit.quiet:
+-    lit.note('using MCLinker: %r' % mcld)
++    lit_config.fatal('No MCLinker specific configuration available!')
++if not lit_config.quiet:
++    lit_config.note('using MCLinker: %r' % mcld)
+ config.substitutions.append(('%MCLinker', mcld))
+ 
+ aloneld = config.aloneld
+ if not aloneld:
+-    lit.fatal('No MCLinker specific configuration available!')
+-if not lit.quiet:
+-    lit.note('using Alone Linker: %r' % aloneld)
++    lit_config.fatal('No MCLinker specific configuration available!')
++if not lit_config.quiet:
++    lit_config.note('using Alone Linker: %r' % aloneld)
+ config.substitutions.append(('%AloneLinker', aloneld))
+ 
+ fakeld = config.fakeld
+ if not fakeld:
+-    lit.fatal('No MCLinker specific configuration available!')
+-if not lit.quiet:
+-    lit.note('using Fake Linker: %r' % fakeld)
++    lit_config.fatal('No MCLinker specific configuration available!')
++if not lit_config.quiet:
++    lit_config.note('using Fake Linker: %r' % fakeld)
+ config.substitutions.append(('%FakeLinker', fakeld))
+ 
+ golden = config.golden_model_linker
+ if not golden:
+     golden = 'ld'
+-if not lit.quiet:
+-    lit.note('golden model linker: %r' % golden)
++if not lit_config.quiet:
++    lit_config.note('golden model linker: %r' % golden)
+ config.substitutions.append(('%GOLDLD', golden))
+ 
+diff --git a/test/lit.site.cfg.in b/test/lit.site.cfg.in
+index 0f50fa0..299a3d3 100644
+--- a/test/lit.site.cfg.in
++++ b/test/lit.site.cfg.in
+@@ -16,4 +16,4 @@ config.fakeld = "@FAKELD@"
+ config.llvm_config = "@LLVM_CONFIG@"
+ 
+ # Let the main config do the real work.
+-lit.load_config(config, "@MCLINKER_SOURCE_ROOT@/test/lit.cfg")
++lit_config.load_config(config, "@MCLINKER_SOURCE_ROOT@/test/lit.cfg")
+-- 
+1.7.9.5
+
