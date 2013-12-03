@@ -263,6 +263,8 @@ if [ "$USE_PYTHON" != "yes" ]; then
     export LLVM_TOOLS_FILTER="PARALLEL_DIRS:=\$\$(PARALLEL_DIRS:%=% ndk-bc2native)"
 fi
 
+BINUTILS_VERSION=$(get_default_binutils_version_for_llvm $TOOLCHAIN)
+
 run $SRC_DIR/$TOOLCHAIN/llvm/configure \
     --prefix=$TOOLCHAIN_BUILD_PREFIX \
     --host=$ABI_CONFIGURE_HOST \
@@ -270,7 +272,7 @@ run $SRC_DIR/$TOOLCHAIN/llvm/configure \
     --with-bug-report-url=$DEFAULT_ISSUE_TRACKER_URL \
     --enable-targets=arm,mips,x86 \
     --enable-optimized \
-    --with-binutils-include=$SRC_DIR/binutils/binutils-$DEFAULT_BINUTILS_VERSION/include \
+    --with-binutils-include=$SRC_DIR/binutils/binutils-$BINUTILS_VERSION/include \
     $EXTRA_CONFIG_FLAGS
 fail_panic "Couldn't configure llvm toolchain"
 
