@@ -28,7 +28,7 @@ PROGRAM_DESCRIPTION=\
 
 Where <src-dir> is the location of toolchain sources, <ndk-dir> is
 the top-level NDK installation path and <toolchain> is the name of
-the toolchain to use (e.g. llvm-3.3)."
+the toolchain to use (e.g. llvm-3.4)."
 
 RELEASE=`date +%Y%m%d`
 BUILD_OUT=/tmp/ndk-$USER/build/toolchain
@@ -263,6 +263,8 @@ if [ "$USE_PYTHON" != "yes" ]; then
     export LLVM_TOOLS_FILTER="PARALLEL_DIRS:=\$\$(PARALLEL_DIRS:%=% ndk-bc2native)"
 fi
 
+BINUTILS_VERSION=$(get_default_binutils_version_for_llvm $TOOLCHAIN)
+
 run $SRC_DIR/$TOOLCHAIN/llvm/configure \
     --prefix=$TOOLCHAIN_BUILD_PREFIX \
     --host=$ABI_CONFIGURE_HOST \
@@ -270,7 +272,7 @@ run $SRC_DIR/$TOOLCHAIN/llvm/configure \
     --with-bug-report-url=$DEFAULT_ISSUE_TRACKER_URL \
     --enable-targets=arm,mips,x86 \
     --enable-optimized \
-    --with-binutils-include=$SRC_DIR/binutils/binutils-$DEFAULT_BINUTILS_VERSION/include \
+    --with-binutils-include=$SRC_DIR/binutils/binutils-$BINUTILS_VERSION/include \
     $EXTRA_CONFIG_FLAGS
 fail_panic "Couldn't configure llvm toolchain"
 
@@ -386,7 +388,7 @@ UNUSED_LLVM_EXECUTABLES="
 bugpoint c-index-test clang-check clang-format clang-tblgen lli llvm-bcanalyzer
 llvm-config llvm-config-host llvm-cov llvm-diff llvm-dwarfdump llvm-extract llvm-ld
 llvm-mc llvm-nm llvm-mcmarkup llvm-objdump llvm-prof llvm-ranlib llvm-readobj llvm-rtdyld
-llvm-size llvm-stress llvm-stub llvm-symbolizer llvm-tblgen macho-dump cloog"
+llvm-size llvm-stress llvm-stub llvm-symbolizer llvm-tblgen macho-dump cloog lli-child-target"
 
 for i in $UNUSED_LLVM_EXECUTABLES; do
     rm -f $TOOLCHAIN_BUILD_PREFIX/bin/$i
