@@ -22,9 +22,12 @@ PROGRAM_DESCRIPTION=\
 "Generate a customized Android toolchain installation that includes
 a working sysroot. The result is something that can more easily be
 used as a standalone cross-compiler, e.g. to run configure and
-make scripts."
+make scripts.
 
-# For now, this is the only toolchain that works reliably.
+NOTE: For ARM toolchains, the default ABI is 'armeabi', use --abi=armeabi-v7a
+to generate a toolchain that generates ARMv7 binaries by default.
+"
+
 TOOLCHAIN_NAME=
 register_var_option "--toolchain=<name>" TOOLCHAIN_NAME "Specify toolchain name"
 
@@ -35,8 +38,12 @@ STL=gnustl
 register_var_option "--stl=<name>" STL "Specify C++ STL"
 
 ARCH=
-register_option "--arch=<name>" do_arch "Specify target architecture" "arm"
+register_option "--arch=<name>" do_arch "(Deprecated, use --abi) Set target architecture" "arm"
 do_arch () { ARCH=$1; }
+
+ABI=
+register_option "--abi=<name>" do_abi "Specify target ABI" "armeabi"
+do_abi () { ABI=$1; }
 
 NDK_DIR=`dirname $0`
 NDK_DIR=`dirname $NDK_DIR`
@@ -67,6 +74,42 @@ if [ ! -d "$NDK_DIR/build/core" ] ; then
     echo "Invalid source NDK directory: $NDK_DIR"
     echo "Please use --ndk-dir=<path> to specify the path of an installed NDK."
     exit 1
+fi
+
+# Check ARCH / ABI / TOOLCHAIN_NAME all at once.
+#
+# If ARCH and ABI are used together, their values must match.
+# If TOOLCHAIN_NAME is used, its name must match the target ARCH/ABI
+#
+if [ "$ARCH" -a "$ABI" ]; then
+  # Both --arch and --abi are being used, check for sanity.
+  ABI_MATCH=
+  if [ "$ABI" = "$ARCH" ]; then
+    ABI_MATCH=true
+  elif [ "$ARCH" = "arm" ]; then
+    if [ "$ABI" = "armeabi" -o "$ABI" = "armeabi-v7a" ]; then
+      ABI_MATCH=true
+    fi
+  fi
+  if [ -z "$ABI_MATCH" ]; then
+    panic "The options --arch=$ARCH and --abi=$ABI are not compatible!"
+  fi
+fi
+
+if [ "$ABI" -a -z "$ARCH" ]; then
+  # --abi is used, but not --arch, define ARCH to the appropriate value.
+  case $ABI in
+    armeabi-*)
+      ARCH=arm
+      ;;
+    x86|mips|x86_64)
+      ARCH=$ABI
+      ;;
+    *)
+      panic "Unsupported target ABI: $ABI"
+      ;;
+  esac
+  log "Auto-config: --arch=$ARCH"
 fi
 
 # Check ARCH
@@ -103,8 +146,22 @@ else
             ARCH=arm
             ;;
     esac
-
 fi
+
+# If --abi isn't used, compute default ABI from ARCH.
+if [ -z "$ABI" ]; then
+  case $ARCH in
+    arm)
+      ABI=armeabi
+      ;;
+    *)
+      ABI=$ARCH
+      ;;
+  esac
+  log "Auto-config: --abi=$ABI"
+fi
+
+echo "ABI=$ABI 11"
 
 ARCH_LIB=$ARCH
 ARCH_STL=$ARCH
@@ -181,8 +238,13 @@ if [ ! -d "$TOOLCHAIN_PATH" ] ; then
     exit 1
 fi
 
+# parse_toolchain_name changes $ABI, so save its value here.
+SAVED_ABI=$ABI
+
 # Extract architecture from platform name
 parse_toolchain_name $TOOLCHAIN_NAME
+
+ABI=$SAVED_ABI
 
 # Check that there are any platform files for it!
 (cd $NDK_DIR/platforms && ls -d */arch-$ARCH_INC >/dev/null 2>&1 )
@@ -425,6 +487,43 @@ EOF
   fi
 fi
 
+# For armeabi-v7a and armeabi-v7a-hard, create wrapper scripts to ensure that
+# the toolchain generates appropriate binaries without explicit use of
+# CFLAGS and LDFLAGS values like -march=armv7-a et al.
+case $ABI in
+  armeabi-v7a|armeabi-v7a-hard)
+    # This takes care of the GCC binaries.
+    OLD_PREFIX=$ABI_CONFIGURE_TARGET
+    NEW_PREFIX=$ABI_CONFIGURE_TARGET-orig
+    mv "$TMPDIR/bin/$OLD_PREFIX-gcc" "$TMPDIR/bin/$NEW_PREFIX-gcc"
+    mv "$TMPDIR/bin/$OLD_PREFIX-g++" "$TMPDIR/bin/$NEW_PREFIX-g++"
+    EXTRA_CFLAGS="-march=armv7-a -mfpu=vfpv3-d16 -Wl,--fix-cortex-a8"
+    case $ABI in
+      armeabi-v7a)
+        EXTRA_CFLAGS="$EXTRA_CFLAGS -mfloat-abi=softfp"
+        ;;
+      armeabi-v7a-hard)
+        EXTRA_CFLAGS="$EXTRA_CFLAGS -mfloat-abi=hard -D_NDK_MATH_NO_SOFTFP=1"
+        ;;
+      *)
+        panic "Invalid ARMv7 ABI: $ABI"
+    esac
+    cat > "$TMPDIR/bin/$OLD_PREFIX-gcc" <<EOF
+# !/bin/sh
+# Auto-generated, do not touch.
+\$(dirname \$0)/$NEW_PREFIX-gcc $EXTRA_CFLAGS "\$@"
+EOF
+    chmod +x "$TMPDIR/bin/$OLD_PREFIX-gcc"
+    cat > "$TMPDIR/bin/$OLD_PREFIX-g++" <<EOF
+# !/bin/sh
+# Auto-generated, do not touch.
+\$(dirname \$0)/$NEW_PREFIX-g++ $EXTRA_CFLAGS "\$@"
+EOF
+    chmod +x "$TMPDIR/bin/$OLD_PREFIX-g++"
+    ;;
+    # TODO: Handle the Clang binaries.
+esac
+
 dump "Copying sysroot headers and libraries..."
 # Copy the sysroot under $TMPDIR/sysroot. The toolchain was built to
 # expect the sysroot files to be placed there!
@@ -440,6 +539,16 @@ fi
 if [ "$ARCH_LIB" != "$ARCH" ]; then
     cp -a $NDK_DIR/platforms/$PLATFORM/arch-$ARCH/usr/lib/crt* $TMPDIR/sysroot/usr/lib
 fi
+
+# For armeabi-v7a-hard, remove libm.so from the sysroot, and replace it with
+# a copy of libm_hard.a renamed as libm.a, this ensures that using -lm at link
+# time always uses the 'hard' version of the library.
+if [ "$ABI" = armeabi-v7a-hard ]; then
+  rm -f $TMPDIR/sysroot/usr/lib/libm.so
+  mv $TMPDIR/sysroot/usr/lib/libm.a $TMPDIR/sysroot/usr/lib/libm_soft.a
+  mv $TMPDIR/sysroot/usr/lib/libm_hard.a $TMPDIR/sysroot/usr/lib/libm.a
+fi
+
 
 dump "Copying libstdc++ headers and libraries..."
 
@@ -528,18 +637,24 @@ copy_stl_libs () {
 mkdir -p "$ABI_STL_INCLUDE_TARGET"
 fail_panic "Can't create directory: $ABI_STL_INCLUDE_TARGET"
 copy_stl_common_headers
-case $ARCH in
-    arm)
+case $ABI in
+    armeabi|armeabi-v7a)
         copy_stl_libs armeabi ""
         copy_stl_libs armeabi "/thumb"
         copy_stl_libs armeabi-v7a "armv7-a"
         copy_stl_libs armeabi-v7a "armv7-a/thumb"
         ;;
+    armeabi-v7a-hard)
+        copy_stl_libs armeabi ""
+        copy_stl_libs armeabi "/thumb"
+        copy_stl_libs armeabi-v7a-hard "armv7-a"
+        copy_stl_libs armeabi-v7a-hard "armv7-a/thumb"
+        ;;
     x86|mips)
-        copy_stl_libs "$ARCH" ""
+        copy_stl_libs "$ABI" ""
         ;;
     *)
-        dump "ERROR: Unsupported NDK architecture: $ARCH"
+        dump "ERROR: Unsupported NDK architecture: $ABI"
         exit 1
         ;;
 esac
