@@ -1237,7 +1237,7 @@ convert_abi_to_arch ()
     local RET
     local ABI=$1
     case $ABI in
-        armeabi|armeabi-v7a)
+        armeabi|armeabi-v7a|armeabi-v7a-hard)
             RET=arm
             ;;
         x86)
@@ -1268,6 +1268,7 @@ convert_arch_to_abi ()
     local ARCH=$1
     case $ARCH in
         arm)
+            # TODO: Add armeabi-v7a-hard there.
             RET=armeabi,armeabi-v7a
             ;;
         x86)

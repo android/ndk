@@ -27,6 +27,10 @@
 
 CXX_STL_LIST="gabi++ stlport libc++"
 
+# TODO: Move this to dev-defaults.sh once all other scripts support
+# armeabi-v7a-hard.
+PREBUILT_ABIS="$PREBUILT_ABIS armeabi-v7a-hard"
+
 PROGRAM_PARAMETERS=""
 
 PROGRAM_DESCRIPTION=\

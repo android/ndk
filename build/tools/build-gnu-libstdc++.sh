@@ -22,6 +22,9 @@
 # include common function and variable definitions
 . `dirname $0`/prebuilt-common.sh
 
+# TODO(digit): Move this to dev-defaults once all other scripts support it.
+PREBUILT_ABIS="$PREBUILT_ABIS armeabi-v7a-hard"
+
 PROGRAM_PARAMETERS="<src-dir>"
 
 PROGRAM_DESCRIPTION=\
@@ -179,10 +182,16 @@ build_gnustl_for_abi ()
 
     export LDFLAGS="-L$SYSROOT/usr/lib -lc $EXTRA_FLAGS"
 
-    if [ "$ABI" = "armeabi-v7a" ]; then
-        CXXFLAGS=$CXXFLAGS" -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16"
-        LDFLAGS=$LDFLAGS" -Wl,--fix-cortex-a8"
-    fi
+    case $ABI in
+        armeabi-v7a)
+            CXXFLAGS=$CXXFLAGS" -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16"
+            LDFLAGS=$LDFLAGS" -march=armv7-a -Wl,--fix-cortex-a8"
+            ;;
+        armeabi-v7a-hard)
+            CXXFLAGS=$CXXFLAGS" -march=armv7-a -mfloat-abi=hard -mfpu=vfpv3-d16 -D_NDK_MATH_NO_SOFTP=1"
+            LDFLAGS=$LDFLAGS" -march=armv7-a -Wl,--fix-cortex-a8,--no-warn-mismatch"
+            ;;
+    esac
 
     LIBTYPE_FLAGS=
     if [ $LIBTYPE = "static" ]; then

@@ -543,7 +543,7 @@ builder_begin_android ()
             armeabi)
                 LLVM_TRIPLE=armv5te-none-linux-androideabi
                 ;;
-            armeabi-v7a)
+            armeabi-v7a|armeabi-v7a-hard)
                 LLVM_TRIPLE=armv7-none-linux-androideabi
                 ;;
             x86)
@@ -591,6 +591,11 @@ builder_begin_android ()
         armeabi-v7a)
             builder_cflags "-mthumb -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16"
             builder_ldflags "-march=armv7-a -Wl,--fix-cortex-a8"
+            ;;
+
+        armeabi-v7a-hard)
+            builder_cflags "-mthumb -march=armv7-a -mfloat-abi=hard -mfpu=vfpv3-d16 -D_NDK_MATH_NO_SOFTP=1"
+            builder_ldflags "-march=armv7-a -Wl,--fix-cortex-a8 -Wl,--no-warn-mismatch"
             ;;
     esac
 }
