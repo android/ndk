@@ -27,6 +27,9 @@ ARCHS=$(find_ndk_unknown_archs)
 ARCHS="$DEFAULT_ARCHS $ARCHS"
 register_var_option "--arch=<list>" ARCHS "List of target archs to build for"
 
+NO_GEN_PLATFORMS=
+register_var_option "--no-gen-platforms" NO_GEN_PLATFORMS "Don't generate platforms/ directory, use existing one"
+
 PACKAGE_DIR=
 register_var_option "--package-dir=<path>" PACKAGE_DIR "Package toolchain into this directory"
 
@@ -57,8 +60,16 @@ if [ "$PACKAGE_DIR" ]; then
     PACKAGE_FLAGS="--package-dir=$PACKAGE_DIR"
 fi
 
-run $BUILDTOOLS/gen-platforms.sh --samples --fast-copy --dst-dir=$NDK_DIR --ndk-dir=$NDK_DIR --arch=$(spaces_to_commas $ARCHS) $PACKAGE_FLAGS
-fail_panic "Could not generate platforms and samples directores!"
+if [ -z "$NO_GEN_PLATFORMS" ]; then
+    echo "Preparing the build..."
+    run $BUILDTOOLS/gen-platforms.sh --samples --fast-copy --dst-dir=$NDK_DIR --ndk-dir=$NDK_DIR --arch=$(spaces_to_commas $ARCHS) $PACKAGE_FLAGS
+    fail_panic "Could not generate platforms and samples directores!"
+else
+    if [ ! -d "$NDK_DIR/platforms" ]; then
+        echo "ERROR: --no-gen-platforms used but directory missing: $NDK_DIR/platforms"
+        exit 1
+    fi
+fi
 
 ARCHS=$(commas_to_spaces $ARCHS)
 
