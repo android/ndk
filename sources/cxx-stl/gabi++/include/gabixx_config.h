@@ -74,7 +74,7 @@
 
 // TODO(digit): Use __atomic_load_acq_rel when available.
 #define __gabixx_sync_load(address)  \
-    __sync_fetch_and_add((address), (typeof(*(address)))0)
+    __sync_fetch_and_add((address), (__typeof__(*(address)))0)
 
 // Clang provides __sync_swap(), but GCC does not.
 // IMPORTANT: For GCC, __sync_lock_test_and_set has acquire semantics only
@@ -85,7 +85,7 @@
 #else
 #  define __gabixx_sync_swap(address, value)  \
   __extension__ ({ \
-    typeof(*(address)) __ret = __sync_lock_test_and_set((address),(value)); \
+    __typeof__(*(address)) __ret = __sync_lock_test_and_set((address),(value)); \
     __sync_synchronize(); \
     __ret; \
   })

@@ -98,7 +98,7 @@ terminate_handler set_terminate(terminate_handler f) _GABIXX_NOEXCEPT {
   return __gabixx_sync_swap(&current_terminate, f);
 }
 
-_GABIXX_NORETURN void terminate() {
+_GABIXX_NORETURN void terminate() _GABIXX_NOEXCEPT {
   __gabixx::__terminate(std::get_terminate());
 }
 
