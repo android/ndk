@@ -38,12 +38,15 @@
 // qualifier at the end of function declarations.
 //
 // _GABIXX_NOEXCEPT_() only in C++11 mode to use the noexcept() operator.
+// _GABIXX_NOEXCEPT_CXX11_ONLY uses noexcept in C++11, nothing otherwise.
 #if __cplusplus >= 201103L
 #  define _GABIXX_NOEXCEPT noexcept
 #  define _GABIXX_NOEXCEPT_(x) noexcept(x)
+#  define _GABIXX_NOEXCEPT_CXX11_ONLY noexcept
 #else
 #  define _GABIXX_NOEXCEPT throw()
 #  define _GABIXX_NOEXCEPT_(x) /* nothing */
+#  define _GABIXX_NOEXCEPT_CXX11_ONLY /* nothing */
 #endif
 
 // Use _GABIXX_HIDDEN to declare internal functions of GAbi++ that should
