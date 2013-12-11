@@ -32,6 +32,9 @@ endif
 # Compiler runtime is determined in bc2native
 TARGET_LIBGCC :=
 
+# Override the ar flags, llvm-ar does not support D option
+TARGET_ARFLAGS := crs
+
 # Only use integrated binary if existed. Otherwise, use python version
 ifeq (,$(wildcard $(TOOLCHAIN_PREBUILT_ROOT)/bin/ndk-bc2native$(HOST_EXEEXT)))
 BC2NATIVE := $(HOST_PYTHON) $(TOOLCHAIN_PREBUILT_ROOT)/bin/ndk-bc2native.py
