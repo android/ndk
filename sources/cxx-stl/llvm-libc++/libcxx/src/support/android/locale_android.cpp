@@ -17,7 +17,7 @@
 // Note that the header does define a _B flag (as 0x80), but it
 // is only set on the space (32) character, and used to implement
 // isprint() properly. The implementation of isblank() relies on
-// direct comparisons with 7 and 32 instead.
+// direct comparisons with 9 and 32 instead.
 //
 // The following is a local copy of the Bionic _ctype_ array that has
 // been modified in the following way:
@@ -25,7 +25,7 @@
 //   - It stores 16-bit unsigned values, instead of 8-bit char ones.
 //
 //   - Bit flag _BLANK (0x100) is used to indicate blank characters.
-//     It is only set for indices 7 (TAB) and 32 (SPACE).
+//     It is only set for indices 9 (TAB) and 32 (SPACE).
 //
 //   - Support signed char properly for indexing.
 
