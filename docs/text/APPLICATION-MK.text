@@ -171,13 +171,17 @@ APP_ABI
 
               APP_ABI := x86
 
+>    Or to support the Intel64 instruction set, use:
+
+              APP_ABI := x86-64
+
 >    Or to support the MIPS instruction set, use:
 
               APP_ABI := mips
 
 >    Or to support all at the same time, use:
 
-              APP_ABI := armeabi armeabi-v7a x86 mips
+              APP_ABI := armeabi armeabi-v7a x86 mips x86-64
 
 >    Or even better, since NDK r7, you can also use the special value
 >    '`all`' which means "all ABIs supported by this NDK release":
