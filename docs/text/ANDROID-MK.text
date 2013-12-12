@@ -252,6 +252,9 @@ TARGET_ARCH_ABI
        x86
             For i686
 
+       x86_64
+            For x86-64
+
        mips
             For mips32 (r1)
 
