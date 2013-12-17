@@ -30,13 +30,11 @@
 
 // Get the system header first.
 #include_next <ctype.h>
+#include <xlocale.h>  // for locale_t
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-// Add missing declarations.
-typedef struct locale_struct* locale_t;
 
 int isalnum_l(int, locale_t);
 int isalpha_l(int, locale_t);

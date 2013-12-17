@@ -28,6 +28,7 @@
 #include <limits.h>
 #include <string.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include <wchar.h>
 #include <inttypes.h>
 

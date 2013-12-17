@@ -69,14 +69,10 @@ extern "C" {
 #include <stdio.h>   // for FILE
 #include <stddef.h>  // for size_t
 #include <wctype.h>
-
-typedef int wint_t;
+#include <xlocale.h> // for locale_t
 
 #define __need___wchar_t
 #include <stddef.h>
-
-typedef int wctype_t;
-typedef struct locale_struct* locale_t;
 
 // See http://b.android.com/This is tricky: <stdio.h> indirectly includes <stdint.h>, which will
 // already have defined WCHAR_MIN / WCHAR_MAX in the following cases:
