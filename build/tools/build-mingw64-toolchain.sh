@@ -429,8 +429,9 @@ if [ -z "$MINGW_W64_REVISION" ] ; then
 fi
 
 if [ ! -d $MINGW_W64_SRC ]; then
-    echo "Checking out https://mingw-w64.svn.sourceforge.net/svnroot/mingw-w64/trunk$MINGW_W64_REVISION $MINGW_W64_SRC"
-    run svn co https://mingw-w64.svn.sourceforge.net/svnroot/mingw-w64/trunk$MINGW_W64_REVISION $MINGW_W64_SRC
+    MINGW64_SVN_URL=https://svn.code.sf.net/p/mingw-w64/code/trunk$MINGW_W64_REVISION
+    echo "Checking out $MINGW64_SVN_URL $MINGW_W64_SRC"
+    run svn co $MINGW64_SVN_URL $MINGW_W64_SRC
     PATCHES_DIR="$PROGDIR/toolchain-patches-host/mingw-w64"
     if [ -d "$PATCHES_DIR" ] ; then
         PATCHES=$(find "$PATCHES_DIR" -name "*.patch" | sort)
