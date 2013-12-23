@@ -530,12 +530,10 @@ gen_crt_objects ()
         log "Generating $ARCH C runtime object: $DST_FILE"
         (cd "$SRC_DIR" && $CC \
                  -I$SRCDIR/../../bionic/libc/include \
-                 -I$SRCDIR/../../bionic/libc/private \
                  -I$SRCDIR/../../bionic/libc/arch-common/bionic \
                  -I$SRCDIR/../../bionic/libc/arch-$ARCH/include \
-                 -isystem $SRCDIR/../../bionic/libc/kernel/uapi \
-                 -isystem $SRCDIR/../../bionic/libc/kernel/uapi/linux \
-                 -O2 -fpic -Wl,-r -nostdlib -nostdinc -o "$DST_DIR/$DST_FILE" $SRC_FILE) 1>>$TMPL 2>&1
+                 -DPLATFORM_SDK_VERSION=$API \
+                 -O2 -fpic -Wl,-r -nostdlib -o "$DST_DIR/$DST_FILE" $SRC_FILE) 1>>$TMPL 2>&1
         if [ $? != 0 ]; then
             dump "ERROR: Could not generate $DST_FILE from $SRC_DIR/$SRC_FILE"
             dump "Please see the content of $TMPL for details!"
