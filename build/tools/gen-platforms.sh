@@ -533,6 +533,7 @@ gen_crt_objects ()
                  -I$SRCDIR/../../bionic/libc/private \
                  -I$SRCDIR/../../bionic/libc/arch-common/bionic \
                  -I$SRCDIR/../../bionic/libc/arch-$ARCH/include \
+                 -isystem $SRCDIR/../../ndk/build/tools/include-fixed \
                  -isystem $SRCDIR/../../bionic/libc/kernel/uapi \
                  -isystem $SRCDIR/../../bionic/libc/kernel/uapi/linux \
                  -O2 -fpic -Wl,-r -nostdlib -nostdinc -o "$DST_DIR/$DST_FILE" $SRC_FILE) 1>>$TMPL 2>&1
