@@ -29,6 +29,9 @@ is found under <patches-dir>/subdir/foo.patch will be applied with
 
 Patches are applied in the order they are found by 'find'."
 
+OPTION_REVERSE=no
+register_var_option "--reverse" OPTION_REVERSE "Reverse the patches applied previously"
+
 parse_parameters ()
 {
     SRC_DIR=$1
@@ -57,7 +60,13 @@ parse_parameters ()
 extract_parameters "$@"
 parse_parameters $PARAMETERS
 
-PATCHES=`(cd $PATCHES_DIR && find . -name "*.patch" | sort ) 2> /dev/null`
+if [ "$OPTION_REVERSE" = "yes" ]; then
+    SORT="-r"
+    REVERSE="-R"
+fi
+
+PATCHES=`(cd $PATCHES_DIR && find . -name "*.patch" | sort $SORT) 2> /dev/null`
+
 if [ -z "$PATCHES" ] ; then
     log "No patches files in $PATCHES_DIR"
     exit 0
@@ -67,7 +76,7 @@ for PATCH in $PATCHES; do
     PATCHDIR=`dirname $PATCH`
     PATCHNAME=`basename $PATCH`
     log "Applying $PATCHNAME into $SRC_DIR/$PATCHDIR"
-    cd $SRC_DIR/$PATCHDIR && patch -p1 < $PATCHES_DIR/$PATCH
+    cd $SRC_DIR/$PATCHDIR && patch $REVERSE -p1 < $PATCHES_DIR/$PATCH
     fail_panic "Patch failure with $PATCHES_DIR/$PATCH!! !! Please check your patches directory!"
 done
 
