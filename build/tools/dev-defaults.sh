@@ -85,7 +85,7 @@ DEFAULT_ARCH_TOOLCHAIN_NAME_mips=mipsel-linux-android
 DEFAULT_ARCH_TOOLCHAIN_PREFIX_mips=mipsel-linux-android
 
 # The space-separated list of all LLVM versions we support in NDK
-DEFAULT_LLVM_VERSION_LIST="3.3"
+DEFAULT_LLVM_VERSION_LIST="3.4 3.3"
 
 # The default LLVM version (first item in the list)
 DEFAULT_LLVM_VERSION=$(echo "$DEFAULT_LLVM_VERSION_LIST" | tr ' ' '\n' | head -n 1)
@@ -213,6 +213,22 @@ get_default_binutils_version_for_gcc ()
         *-4.4.3) echo "2.19";;
         x86*-4.7) echo "2.23";;  # Use 2.23 to get x32 support in ld.gold
         *-4.7) echo "2.22";;
+        *) echo "2.23";;
+    esac
+}
+
+# Return the binutils version to be used by default when
+# building a given version of llvm. For llvm-3.4 or later,
+# we use binutils-2.23 to ensure the LLVMgold.so could be
+# built properly. For llvm-3.3, we use binutils-2.21 as default.
+#
+# $1: toolchain with version numer (e.g. 'llvm-3.3')
+#
+get_default_binutils_version_for_llvm ()
+{
+    case $1 in
+        *-3.3|*-3.2) echo "2.21";;
+        *-3.4) echo "2.23";;
         *) echo "2.23";;
     esac
 }
