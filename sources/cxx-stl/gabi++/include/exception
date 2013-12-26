@@ -56,7 +56,7 @@ namespace std {
   typedef void (*unexpected_handler)();
   unexpected_handler get_unexpected() _GABIXX_NOEXCEPT;
   unexpected_handler set_unexpected(unexpected_handler f) _GABIXX_NOEXCEPT;
-  void unexpected() _GABIXX_NOEXCEPT_CXX11_ONLY _GABIXX_NORETURN;
+  void unexpected() _GABIXX_NORETURN;
 
   bool uncaught_exception() _GABIXX_NOEXCEPT;
 
