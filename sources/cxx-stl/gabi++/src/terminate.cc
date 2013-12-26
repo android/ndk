@@ -32,12 +32,20 @@
 namespace {
 
 std::terminate_handler current_terminate = __gabixx::__default_terminate;
-std::unexpected_handler current_unexpected = __gabixx::__default_terminate;
+std::unexpected_handler current_unexpected = __gabixx::__default_unexpected;
 
 }  // namespace
 
 
 namespace __gabixx {
+
+// The default std::unexpected() implementation will delegate to
+// std::terminate() so that the user-defined std::terminate() handler can
+// get the chance to be invoked.
+//
+_GABIXX_NORETURN void __default_unexpected(void) {
+  std::terminate();
+}
 
 // The default std::terminate() implementation will crash the process.
 // This is done to help debugging, i.e.:
