@@ -113,8 +113,13 @@ unexpected_handler set_unexpected(unexpected_handler f) _GABIXX_NOEXCEPT {
   return __gabixx_sync_swap(&current_unexpected, f);
 }
 
-_GABIXX_NORETURN void unexpected() _GABIXX_NOEXCEPT_CXX11_ONLY {
-  __gabixx::__terminate(std::get_unexpected());
+_GABIXX_NORETURN void unexpected() {
+  unexpected_handler handler = std::get_unexpected();
+  if (handler)
+    (*handler)();
+
+  // If the handler returns, then terminate the execution.
+  __default_terminate();
 }
 
 } // namespace std
