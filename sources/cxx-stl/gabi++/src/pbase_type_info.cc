@@ -37,8 +37,14 @@ namespace __cxxabiv1
 
   bool __pbase_type_info::can_catch(const __shim_type_info* thr_type,
                                     void*& adjustedPtr) const {
-    unsigned tracker = first_time_init;
-    return can_catch_typeinfo_wrapper(thr_type, adjustedPtr, tracker);
+    if (can_catch_typeinfo_wrapper(thr_type, adjustedPtr, first_time_init)) {
+      return true;
+    }
+
+    // In C++ 11, the type of nullptr is std::nullptr_t, but nullptr can be
+    // casted to every pointer types.  Thus, we can return true whenever
+    // the exception object is an instance of std::nullptr_t.
+    return (*thr_type == typeid(decltype(nullptr)));
   }
 
   bool __pbase_type_info::can_catch_typeinfo_wrapper(const __shim_type_info* thr_type,
