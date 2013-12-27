@@ -112,7 +112,11 @@ _LIBCPP_NORETURN _LIBCPP_FUNC_VIS void unexpected();
 typedef void (*terminate_handler)();
 _LIBCPP_FUNC_VIS terminate_handler set_terminate(terminate_handler) _NOEXCEPT;
 _LIBCPP_FUNC_VIS terminate_handler get_terminate() _NOEXCEPT;
+#if __cplusplus >= 201103L
 _LIBCPP_NORETURN _LIBCPP_FUNC_VIS void terminate() _NOEXCEPT;
+#else
+_LIBCPP_NORETURN _LIBCPP_FUNC_VIS void terminate();
+#endif
 
 _LIBCPP_FUNC_VIS bool uncaught_exception() _NOEXCEPT;
 
