@@ -316,6 +316,9 @@ struct __cxa_eh_globals {
 
 namespace __gabixx {
 
+// Default unexpected handler.
+_GABIXX_NORETURN void __default_unexpected(void) _GABIXX_HIDDEN;
+
 // Default terminate handler.
 _GABIXX_NORETURN void __default_terminate(void) _GABIXX_HIDDEN;
 
