@@ -162,6 +162,16 @@ if [ "$CXX_STL" = "libc++" ]; then
 else
   GABIXX_INCLUDES="-I$GABIXX_SRCDIR/include"
 fi
+if [ "$CXX_STL" = "gabi++" ]; then
+  if [ "$GCC_VERSION" = "4.6" ]; then
+    # GCC 4.6 is too old for std::nullptr_t, which is required by GAbi++.
+    # Override this to 4.8.
+    log "WARNING: Using GCC 4.8 to compile gabi++ instead"
+    GCC_VERSION="4.8"
+  fi
+  # Add -std=c++0x for nullptr and std::nullptr_t
+  COMMON_CXXFLAGS="$COMMON_CXXFLAGS -std=c++0x"
+fi
 GABIXX_CFLAGS="$COMMON_CFLAGS $GABIXX_INCLUDES"
 GABIXX_CXXFLAGS="$COMMON_CXXFLAGS"
 GABIXX_SOURCES=$(cd $ANDROID_NDK_ROOT/$GABIXX_SUBDIR && ls src/*.cc)
