@@ -26,23 +26,10 @@
  * SUCH DAMAGE.
  */
 
-#include <android/api-level.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/wait.h>
-#include <unistd.h>
-
-#if __ANDROID_API__ < 19 || defined(STATIC_LINK)
-/* wait4() was not defined by the C library before API level 19,
- * and libc.a is currently stuck at API level 9 */
-
-#include <asm/unistd.h>  /* For __NR_wait4 */
-
-pid_t wait4(pid_t pid, int* status, int options, struct rusage* rusage) {
-  return (pid_t)syscall(__NR_wait4, pid, status, options, rusage);
-}
-#endif
 
 #define CHILD_EXIT_CODE  111
 
