@@ -234,12 +234,6 @@ for LLVM_VERSION in $LLVM_VERSION_LIST; do
     (cd "$TMPDIR/llvm-$LLVM_VERSION/llvm" && \
         ln -s ../../clang tools && \
         test -d tools/polly && mv tools/polly ..)
-    if [ "$LLVM_VERSION" != "3.1" ]; then
-        # compiler-rt only exists on and after 3.2
-        toolchain_checkout "llvm-$LLVM_VERSION" $LLVM_BRANCH compiler-rt .
-        (cd "$TMPDIR/llvm-$LLVM_VERSION/llvm" && \
-            test -d ../compiler-rt && ln -s ../../compiler-rt projects)
-    fi
     # In polly/utils/cloog_src, touch Makefile.in, aclocal.m4, and configure to
     # make sure they are not regenerated.
     (test -d "$TMPDIR/llvm-$LLVM_VERSION/polly" && \
