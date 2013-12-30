@@ -41,7 +41,10 @@ ifeq (,$(filter clang%,$(NDK_TOOLCHAIN_VERSION)))
 #    declaration like "extern double sin(double)" w/o proper __attribute__ in
 #    your code instead of including math.h, etc.  See the end of sys/cdefs.h
 #    the conditions upon which __NDK_FPABI__ and __NDK_FPABI_MATH__ are defined
-# 3. If you use undocumented APIs which takes/returns float/double, be careful
+#
+# 3. All JNI functions should have JNICALL which is defined to __NDK_FPABI__ in jni.h.
+#
+# 4. If you use undocumented APIs which takes/returns float/double, be careful
 #    to add __attribute__((pcs("aapcs"))) for arm
 #
 # Note that "--no-warn-mismatch" is needed for linker (except mclinker which check correctly)
@@ -85,7 +88,7 @@ endif # check clang
 include $(CLEAR_VARS)
 LOCAL_MODULE := hard-float-hard-abi
 LOCAL_CFLAGS += -mhard-float -D_NDK_MATH_NO_SOFTFP=1
-LOCAL_LDFLAGS += -lm_hard
+LOCAL_LDLIBS += -lm_hard
 ifeq (,$(filter -fuse-ld=mcld,$(APP_LDFLAGS) $(LOCAL_LDFLAGS)))
 LOCAL_LDFLAGS += -Wl,--no-warn-mismatch
 endif

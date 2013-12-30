@@ -1,6 +1,94 @@
 Android NDK ChangeLog:
 
 ----------------------------------------------------------------------------
+android-ndk-r9c
+===
+
+IMPORTANT CHANGES:
+---
+
+- This is a bug-fix-only release.
+
+
+IMPORTANT BUG FIXES:
+---
+
+- Fixed GCC 4.8 ARM where stack pointer is restored too early than access
+  to varaible in stack frame via frame pointer.
+  See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=58854
+
+- Fixed GCC 4.8 libstdc++ where the generated code random segfault on std::nth_element
+  See https://code.google.com/p/android/issues/detail?id=62910
+
+- Fixed GCC 4.8 ICE in cc1/cc1plus with -fuse-ld=mcld.  Message reads:
+>  cc1: internal compiler error: in common_handle_option, at opts.c:1774
+
+- Fixed -mhard-float support for __builtin math functions.
+  See http://b.android.com/62496.  Please track comment of http://b.android.com/61784
+  for on-going fixes for -mhard-float with STL
+
+
+OTHER BUG FIXES:
+---
+
+- Fixed headers
+> 1. Fixed prototype of poll to poll(struct pollfd *, nfds_t, int); in poll.h
+> 2. Added utimensat and futimens to libc.so to API level >=12 and >=19, respectively.
+> 3. Added missing clock_settime() and clock_nanosleep() in time.h for API>=8.
+> 4. Added CLOCK_MONOTONIC_RAW, CLOCK_REALTIME_COARSE, CLOCK_MONOTONIC_COARSE,
+     CLOCK_BOOTTIME, CLOCK_REALTIME_ALARM, and CLOCK_BOOTTIME_ALARM in time.h.
+     Removed obsolete CLOCK_REALTIME_HR and CLOCK_MONOTONIC_HR.
+
+- Refactored samples Teapot, MoreTeapots and source/android/ndk_helper.
+  Use hard float-abi for armeabi-v7a, added immersive mode in android-19, etc.
+  Also fix crash on X86 device in  /system/lib/libdvm.so Check_ReleaseStringUTFChars
+
+- Fixed ndk-build fails in cygwin if NDK package is referenced via symlink
+
+- Fixed ndk-build.cmd fails in windows cmd.exe if LOCAL_SRC_FILES
+  contain absolute path.
+  See https://android-review.googlesource.com/#/c/69992
+
+- Fixed ndk-stack to proceed even when it can't parse a frame due to
+  unable to locate routine, filename, or line number, in which case "??"
+  is printed.
+
+- Fixed ndk-stack windows-x64_64 erroneously matches frame line with in "stack:"
+  section even when the line has no word "pc", "eip", or "ip" in it, eg.
+>     I/DEBUG   ( 1151):     #00  5f09db68  401f01c4  /system/lib/libc.so
+
+- Fixed gabi++ to not use malloc() to allocate C++ thread-local
+  objects, and avoid dead-lock in gabi++ when libc.debug.malloc is non-zero in
+  userdebug/eng Android platform builds
+
+
+OTHER CHANGES:
+---
+
+- Added LOCAL_EXPORT_LDFLAGS
+
+- Introducing NDK_PROJECT_PATH=null for use in an integrated build system
+  where options are explicitly passed to ndk-build.  With it ndk-build
+  make no attempt to look for NDK_PROJECT_PATH, and as a result the following
+  variables depending on NDK_PROJECT_PATH to be explicitly specified
+  (since they can on longer derive default value from NDK_PROJECT_PATH when it's null):
+  NDK_OUT, NDK_LIBS_OUT, APP_BUILD_SCRIPT, NDK_DEBUG (optional, default to 0),
+  and other APP_* used to be in Application.mk
+
+- Allow APP_ABI to be comma-delimited list, eg. APP_ABI := "armeabi,armeabi-v7a"
+
+- Rebuild all STL with debugging info (ie. "-g") in separate optional package
+  android-ndk-r9c-cxx-stl-libs-with-debugging-info.zip.
+  This helps ndk-stack to provide better stack dump across STL.
+  The code/size of the final stripped shouldn't be affected.
+
+- Enhanced hello-jni samples to report APP_ABI at compilation
+
+- Static libraries are built with Deterministic (option D) mode of ar
+  tool.  See http://b.android.com/60705
+
+
+----------------------------------------------------------------------------
 android-ndk-r9b
 ===
 
@@ -87,7 +175,7 @@ OTHER BUG FIXES:
 
 - Fixed cpu-features not to assume all VFPv4 devices support IDIV.
   Now it only adds IDIV to white-listed devices (Nexus 4 at this moment)
-  b.android.com/57637
+  http://b.android.com/57637
 
 - Fixed android_native_app_glue.c to stop errors being logged erroneously on event predispatch
 
