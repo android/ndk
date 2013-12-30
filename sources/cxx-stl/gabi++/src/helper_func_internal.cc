@@ -342,7 +342,8 @@ namespace __cxxabiv1 {
   }
 
   // lower-level runtime library API function that unwinds the frame
-  extern "C" bool __gnu_unwind_frame(_Unwind_Exception*, _Unwind_Context*);
+  extern "C" _Unwind_Reason_Code __gnu_unwind_frame(_Unwind_Exception*,
+                                                    _Unwind_Context*);
 
   void setRegisters(_Unwind_Exception* unwind_exception,
                     _Unwind_Context* context,
