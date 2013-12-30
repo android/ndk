@@ -180,7 +180,7 @@ for abi in $ABIS; do
     --stl=$STL \
     --arch=$arch \
     --system=$HOST_TAG \
-    --platform=android-9 \
+    --platform=android-19 \
     --install-dir=$BUILD_OUT/ndk-standalone-$arch
   fail_panic "Couldn't make standalone for $arch"
 
