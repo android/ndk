@@ -74,6 +74,12 @@
 #include <typeinfo>
 #include <unwind.h>
 
+// When LIBCXXABI, gabi++ should emulate libc++abi. _LIBCPPABI_VERSION must
+// be defined in cxxabi.h to complete this abstraction for libc++.
+#if defined(LIBCXXABI)
+#define _LIBCPPABI_VERSION 1001
+#endif
+
 namespace __cxxabiv1
 {
   extern "C" {

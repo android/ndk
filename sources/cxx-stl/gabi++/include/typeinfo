@@ -35,7 +35,7 @@
 #ifndef __GABIXX_TYPEINFO__
 #define __GABIXX_TYPEINFO__
 
-#if  !defined(GABIXX_LIBCXX)
+#if  !defined(LIBCXXABI)
 
 #include <exception>
 
@@ -93,6 +93,6 @@ namespace std
 
 } // namespace std
 
-#endif  // !defined(GABIXX_LIBCXX)
+#endif  // !defined(LIBCXXABI)
 
 #endif // _GABIXX_TYPEINFO_
