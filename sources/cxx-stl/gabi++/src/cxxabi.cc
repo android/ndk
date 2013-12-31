@@ -444,19 +444,19 @@ namespace __cxxabiv1 {
   }
 
   extern "C" void __cxa_rethrow_primary_exception(void* primary_exception) {
-#if defined(GABIXX_LIBCXX)
+#if defined(LIBCXXABI)
 // Only warn if we're building for libcxx since other libraries do not use
 // this.
 #warning "not implemented."
-#endif /* defined(GABIXX_LIBCXX) */
+#endif /* defined(LIBCXXABI) */
   }
 
   extern "C" void* __cxa_current_primary_exception() _GABIXX_NOEXCEPT {
-#if defined(GABIXX_LIBCXX)
+#if defined(LIBCXXABI)
 // Only warn if we're building for libcxx since other libraries do not use
 // this.
 #warning "not implemented."
-#endif /* defined(GABIXX_LIBCXX) */
+#endif /* defined(LIBCXXABI) */
     return NULL;
   }
 

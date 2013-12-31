@@ -44,20 +44,9 @@ llvm_libc++_cxxflags := $(llvm_libc++_export_cxxflags)
 #
 llvm_libc++_cxxflags += -fno-rtti
 
-# LIBCXXRT tells the library to support building against the libcxxrt
-# C++ runtime, instead of GNU libsupc++.
+# Gabi++ emulates libcxxabi when building libcxx.
 #
-llvm_libc++_cxxflags += -DLIBCXXRT=1
-
-# Since libcxxrt seems to hard to port to Android, use GAbi++ instead.
-# The GAbi++ sources are compiled with the GABIXX_LIBCXX macro defined
-# to tell them they'll be part of libc++.
-#
-# This is also used in a couple of places inside of libc++ to deal with
-# a few cases where GAbi++ doesn't support the libcxxrt ABI perfectly
-# yet.
-#
-llvm_libc++_cxxflags += -DGABIXX_LIBCXX
+llvm_libc++_cxxflags += -DLIBCXXABI=1
 
 # Find the GAbi++ sources to include them here.
 # The voodoo below is to allow building libc++ out of the NDK source
