@@ -365,7 +365,7 @@ builder_shared_library ()
     #            for other platforms.
     builder_command ${_BUILD_CXX} \
         -Wl,-soname,$(basename $lib) \
-        -Wl,-shared,-Bsymbolic \
+        -Wl,-shared \
         $_BUILD_LDFLAGS_BEGIN_SO \
         $_BUILD_OBJECTS \
         $_BUILD_STATIC_LIBRARIES \
