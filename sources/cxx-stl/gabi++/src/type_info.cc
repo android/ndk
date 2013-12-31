@@ -73,6 +73,26 @@ namespace std
     return this < &rhs;
 #endif
   }
-
 #endif // !defined(GABIXX_LIBCXX)
+
+bad_cast::bad_cast() _GABIXX_NOEXCEPT {
+}
+
+bad_cast::~bad_cast() _GABIXX_NOEXCEPT {
+}
+
+const char* bad_cast::what() const _GABIXX_NOEXCEPT {
+  return "std::bad_cast";
+}
+
+bad_typeid::bad_typeid() _GABIXX_NOEXCEPT {
+}
+
+bad_typeid::~bad_typeid() _GABIXX_NOEXCEPT {
+}
+
+const char* bad_typeid::what() const _GABIXX_NOEXCEPT {
+  return "std::bad_typeid";
+}
+
 } // end namespace std

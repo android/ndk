@@ -28,9 +28,9 @@
     #if defined(LIBCXXRT) || __has_include(<cxxabi.h>)
         #include <cxxabi.h>
     #endif  // __has_include(<cxxabi.h>)
-    #ifndef _LIBCPPABI_VERSION
+    #if !defined(_LIBCPPABI_VERSION) && !defined(GABIXX_LIBCXX)
         static std::new_handler __new_handler;
-    #endif  // _LIBCPPABI_VERSION
+    #endif  // !defined(_LIBCPPABI_VERSION) && !defined(GABIXX_LIBCXX)
 #endif
 
 // Implement all new and delete operators as weak definitions
@@ -144,13 +144,11 @@ operator delete[] (void* ptr, const std::nothrow_t&) _NOEXCEPT
 namespace std
 {
 
-#ifndef GABIXX_LIBCXX
+#if !defined(GABIXX_LIBCXX)
 const nothrow_t nothrow = {};
-#endif
 
 #if !defined(_LIBCPPABI_VERSION)
 
-#if !defined(GABIXX_LIBCXX)
 new_handler
 set_new_handler(new_handler handler) _NOEXCEPT
 {
@@ -162,7 +160,6 @@ get_new_handler() _NOEXCEPT
 {
     return __sync_fetch_and_add(&__new_handler, (new_handler)0);
 }
-#endif
 
 #if !defined(LIBCXXRT)
 
@@ -196,7 +193,9 @@ bad_array_new_length::what() const _NOEXCEPT
     return "bad_array_new_length";
 }
 
-#endif // !_LIBCPPABI_VERSION && !GABIXX_LIBCXX
+#endif // !_LIBCPPABI_VERSION
+
+#endif // !defined(GABIXX_LIBCXX)
 
 void
 __throw_bad_alloc()
