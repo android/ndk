@@ -37,9 +37,7 @@ namespace {
 
 namespace std {
 
-#if !defined(GABIXX_LIBCXX)
   const nothrow_t nothrow = {};
-#endif  // !defined(GABIXX_LIBCXX)
 
   bad_alloc::bad_alloc() _GABIXX_NOEXCEPT {
   }
@@ -61,6 +59,7 @@ namespace std {
 
 } // namespace std
 
+#if !defined(GABIXX_LIBCXX)
 _GABIXX_WEAK
 void* operator new(std::size_t size) throw(std::bad_alloc) {
   void* space;
@@ -98,3 +97,5 @@ void* operator new[](std::size_t size, const std::nothrow_t& no)
     _GABIXX_NOEXCEPT {
   return ::operator new(size, no);
 }
+
+#endif  // !defined(GABIXX_LIBCXX)
