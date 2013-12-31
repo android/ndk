@@ -216,7 +216,7 @@ src/cxa.c"
 
 # Determine Libc++ build parameters
 LIBCXX_CFLAGS="$COMMON_CFLAGS $LIBCXX_INCLUDES -Drestrict=__restrict__"
-LIBCXX_CXXFLAGS="$COMMON_CXXFLAGS -DLIBCXXRT=1 -DGABIXX_LIBCXX=1 -std=c++11"
+LIBCXX_CXXFLAGS="$COMMON_CXXFLAGS -fvisibility=hidden -DLIBCXXRT=1 -DGABIXX_LIBCXX=1 -std=c++11"
 LIBCXX_SOURCES=\
 "libcxx/src/algorithm.cpp \
 libcxx/src/bind.cpp \

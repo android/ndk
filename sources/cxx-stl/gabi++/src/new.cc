@@ -37,9 +37,7 @@ namespace {
 
 namespace std {
 
-#if !defined(GABIXX_LIBCXX)
   const nothrow_t nothrow = {};
-#endif  // !defined(GABIXX_LIBCXX)
 
   bad_alloc::bad_alloc() _GABIXX_NOEXCEPT {
   }
@@ -97,4 +95,8 @@ _GABIXX_WEAK
 void* operator new[](std::size_t size, const std::nothrow_t& no)
     _GABIXX_NOEXCEPT {
   return ::operator new(size, no);
+}
+
+extern "C" long double frexpl(long double x, int *exp) {
+  return 0;
 }
