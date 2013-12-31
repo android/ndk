@@ -24,11 +24,24 @@ double foo(double a, double b)
 
 double d1 = M_PI;
 double d2 = 2.0;
+double d3 = -0.007;
+double d4 = 0.5;
+
 
 int main()
 {
-    double d = foo(d1,d2);
-    const double expected = 4.483853;
-    printf("%lf\n", d);
-    return (fabs(d-expected) < 0.00001)? 0 : 1;
+    int fail_count = 0;
+    {
+        double d0 = foo(d1,d2);
+        const double expected0 = 4.483853;
+        printf("%lf\n", d0);
+        fail_count += !(fabs(d0-expected0) < 0.00001);
+    }
+    {
+        double d1 = __builtin_atan2(d3, d4);
+        const double expected1 = -0.013999;
+        printf("%lf\n", d1);
+        fail_count += !(fabs(d1-expected1) < 0.00001);
+    }
+    return fail_count;
 }
