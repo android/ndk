@@ -905,11 +905,16 @@ if is_testable device; then
         else
             ADB_DEVICES="$ADB_DEVICES "
             if [ -n "$ANDROID_SERIAL" ] ; then
-                ADB_SERIAL=$(echo "$ANDROID_SERIAL" | tr ' ' '#')  # turn ' ' into '#'
-                if [ "$ADB_DEVICES" = "${ADB_DEVICES%$ADB_SERIAL *}" ] ; then
-                    dump "WARNING: Device $ANDROID_SERIAL cannot be found or offline!"
-                    SKIP_TESTS=yes
-                else
+                # Expect ANDROID_SERIAL is comma-delimited of one or more devices
+                ANDROID_SERIAL=$(echo "$ANDROID_SERIAL" | tr ' ' '#')  # turn ' ' into '#'
+                ANDROID_SERIAL=$(commas_to_spaces $ANDROID_SERIAL)
+                for SERIAL in $ANDROID_SERIAL; do
+                    if [ "$ADB_DEVICES" = "${ADB_DEVICES%$SERIAL *}" ] ; then
+                        dump "WARNING: Device $SERIAL cannot be found or offline!"
+                        SKIP_TESTS=yes
+                    fi
+                done
+                if [ "$SKIP_TESTS" != "yes" ] ; then
                     ADB_DEVICES="$ANDROID_SERIAL"
                 fi
             fi
