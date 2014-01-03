@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 // PR c++/15097
 // { dg-do run }
 
@@ -18,8 +20,20 @@ void * operator new (size_t size)
 
 void operator delete (void *p)
 {
-  if (p != saved)
-    abort ();
+// Note that since STL is built w/o -Bsymbolic a lots of other code in STL
+// may use the customized new/delete in this file.  We only save one copy of
+// poitner in variable "saved", but because this testcase new and immediately
+// delete in single thread, this single-copy serves well, provided that we only
+// check saved==p once and set saved to NULL to prevent further comparison of
+// unrelated delete from within STL
+  if (saved) {
+     if (p == saved) {
+        saved = NULL;
+     } else {
+        abort ();
+     }
+  }
+
   free (p);
 }
 
