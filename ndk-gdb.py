@@ -215,9 +215,12 @@ Read ''' + NDK + '''/docs/NDK-GDB.html for complete usage instructions.''',
                          help='Do not wait for debugger to attach (may miss early JNI breakpoints)',
                          action='store_true', dest='nowait')
 
-    stdcxx_pypr_versions = [ 'gnustdcxx'+d.replace('gcc','')
-                             for d in os.listdir(PYPRPR_GNUSTDCXX_BASE)
-                             if os.path.isdir(os.path.join(PYPRPR_GNUSTDCXX_BASE, d)) ]
+    if os.path.isdir(PYPRPR_GNUSTDCXX_BASE):
+        stdcxx_pypr_versions = [ 'gnustdcxx'+d.replace('gcc','')
+                                 for d in os.listdir(PYPRPR_GNUSTDCXX_BASE)
+                                 if os.path.isdir(os.path.join(PYPRPR_GNUSTDCXX_BASE, d)) ]
+    else:
+        stdcxx_pypr_versions = []
 
     parser.add_argument( '--stdcxx-py-pr',
                          help='Specify stdcxx python pretty-printer',
