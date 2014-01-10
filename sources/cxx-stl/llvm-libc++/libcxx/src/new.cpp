@@ -25,7 +25,7 @@
         #define __new_handler __cxxabiapple::__cxa_new_handler
     #endif
 #else  // __APPLE__
-    #if defined(LIBCXXRT) || __has_include(<cxxabi.h>)
+    #if defined(LIBCXXRT) || __has_include(<cxxabi.h>) || defined(__ANDROID__)
         #include <cxxabi.h>
     #endif  // __has_include(<cxxabi.h>)
     #ifndef _LIBCPPABI_VERSION

@@ -14,7 +14,7 @@
 
 #ifdef __APPLE__
 #include <cxxabi.h>
-#elif defined(LIBCXXRT) || __has_include(<cxxabi.h>)
+#elif defined(LIBCXXRT) || __has_include(<cxxabi.h>) || defined(__ANDROID__)
 #include <cxxabi.h>
 #endif
 
