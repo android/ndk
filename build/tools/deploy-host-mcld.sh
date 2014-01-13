@@ -31,13 +31,15 @@ a drop-in replacement for ld.bfd and ld.gold in GCC.
 
 Running after completion of both build-llvm.sh and build-[host-]gcc.sh,
 this script copy toolchains/llvm-$DEFAULT_LLVM_VERSION/prebuilt/$SYSTEM/bin/ld.mcld[.exe]
-to be sibling of ld in all GCC directories with same HOST_OS and bitness,
+to be sibling of ld in all GCC and LLVM directories with same HOST_OS and bitness,
 ie. {linux, darwin, windows} x {64, 32}
 
 If --systems isn't specified, this script discovers all ld.mcld[.exe] in
 toolchains/llvm-$DEFAULT_LLVM_VERSION
 
-Note that one copy of ld.mcld serves all GCC {4.8, 4.7, 4.6, 4.4.3} x {arm, x86, mips}.
+Note that one copy of ld.mcld serves all GCC {4.8, 4.7, 4.6, 4.4.3} x {arm, x86, mips} and
+LLVM {3.3, 3.4}.
+
 GCC passes -m flag for ld.mcld to figure out the right target.
 "
 NDK_DIR=
@@ -89,10 +91,10 @@ for SYSTEM in $SYSTEMS; do
     MCLD=toolchains/llvm-$DEFAULT_LLVM_VERSION/prebuilt/$SYSTEM/bin/ld.mcld$HOST_EXE
     test -f "$MCLD" || fail_panic "Could not find $MCLD"
 
+    ALL_LD_MCLDS=
+
     # find all GNU ld with the same SYSTEM
     ALL_LDS=`find toolchains \( -name "*-ld" -o -name "ld" -o -name "*-ld.exe" -o -name "ld.exe" \) | egrep "/arm|/x86|/mips" | grep $SYSTEM/`
-
-    ALL_LD_MCLDS=
     for LD in $ALL_LDS; do
         LD_NOEXE=${LD%%.exe}
         LD_MCLD=${LD_NOEXE}.mcld$HOST_EXE
@@ -105,6 +107,16 @@ for SYSTEM in $SYSTEMS; do
             run ln -s "../../../../../$MCLD" "$LD_MCLD"
         fi
         ALL_LD_MCLDS=$ALL_LD_MCLDS" $LD_MCLD"
+    done
+
+    # find all llvm-* which isn't llvm-$DEFAULT_LLVM_VERSION
+    for LLVM in $DEFAULT_LLVM_VERSION_LIST; do
+        if [ "$LLVM" != "$DEFAULT_LLVM_VERSION" ]; then
+            LD_MCLD=toolchains/llvm-$LLVM/prebuilt/$SYSTEM/bin/ld.mcld$HOST_EXE
+            run rm -f "$LD_MCLD"
+            run ln -s "../../../../../$MCLD" "$LD_MCLD"
+            ALL_LD_MCLDS=$ALL_LD_MCLDS" $LD_MCLD"
+	fi
     done
 
     # package
