@@ -1,0 +1,22 @@
+From c2c44f326a82ffab6208edf08f7e4c91610a4607 Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Tue, 14 Jan 2014 14:45:54 -0800
+Subject: [PATCH 2/3] Compile only "lite" mclinker
+
+Change-Id: I91ccf3a2280bbb0cf56957da1552e7e59052a4b8
+---
+ tools/Makefile.am | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tools/Makefile.am b/tools/Makefile.am
+index fa91a8b..ebddaf4 100644
+--- a/tools/Makefile.am
++++ b/tools/Makefile.am
+@@ -1,3 +1,3 @@
+ AUTOMAKE_OPTIONS = foreign
+ 
+-SUBDIRS = lite mcld
++SUBDIRS = lite # mcld
+-- 
+1.8.5.2
+

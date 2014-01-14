@@ -1,19 +1,19 @@
-From 35896d8e00372e9c20ff54c29eb888fb9ffae430 Mon Sep 17 00:00:00 2001
+From db1cf96ebd1c8b8749b4c5b4461aac5af98558ea Mon Sep 17 00:00:00 2001
 From: Andrew Hsieh <andrewhsieh@google.com>
-Date: Sun, 22 Sep 2013 12:20:23 +0800
-Subject: [PATCH 2/3] Fixed darwin ld.mcld GNU -m emulation fail
+Date: Tue, 14 Jan 2014 14:45:14 -0800
+Subject: [PATCH 1/3] Fixed darwin ld.mcld GNU -m emulation fail
 
-Change-Id: Ie0bb6b40687052026b458d4beea35f5a4859a51b
+Change-Id: I95fb07db7b58db94328f24a46f8e6b292c38dd21
 ---
  tools/lite/lib/TripleOptions.cpp | 4 ++--
  tools/mcld/main.cpp              | 4 ++--
  2 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/tools/lite/lib/TripleOptions.cpp b/tools/lite/lib/TripleOptions.cpp
-index 3fbf069..5036e26 100644
+index 20ab3b1..3a20e2b 100644
 --- a/tools/lite/lib/TripleOptions.cpp
 +++ b/tools/lite/lib/TripleOptions.cpp
-@@ -84,12 +84,12 @@ ParseEmulation(llvm::Triple& pTriple, const std::string& pEmulation)
+@@ -85,12 +85,12 @@ ParseEmulation(llvm::Triple& pTriple, const std::string& pEmulation)
  {
    llvm::Triple triple = llvm::StringSwitch<llvm::Triple>(pEmulation)
      .Case("armelf_linux_eabi", llvm::Triple("arm", "", "linux", "gnueabi"))
@@ -29,10 +29,10 @@ index 3fbf069..5036e26 100644
  
    if (triple.getArch()        == llvm::Triple::UnknownArch &&
 diff --git a/tools/mcld/main.cpp b/tools/mcld/main.cpp
-index aceb0f4..f6a1e5f 100644
+index dcb8140..854aaa9 100644
 --- a/tools/mcld/main.cpp
 +++ b/tools/mcld/main.cpp
-@@ -1018,12 +1018,12 @@ static Triple ParseEmulation(const std::string& pEmulation)
+@@ -1037,12 +1037,12 @@ static Triple ParseEmulation(const std::string& pEmulation)
  {
    Triple result = StringSwitch<Triple>(pEmulation)
      .Case("armelf_linux_eabi", Triple("arm", "", "linux", "gnueabi"))
@@ -48,5 +48,5 @@ index aceb0f4..f6a1e5f 100644
  
    if (result.getArch()        == Triple::UnknownArch &&
 -- 
-1.8.4
+1.8.5.2
 

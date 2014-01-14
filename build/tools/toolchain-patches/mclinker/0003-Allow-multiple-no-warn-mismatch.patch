@@ -1,0 +1,38 @@
+From c3f91ccde6e77a4349c7fa0a67a95eebc0151a5c Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Tue, 14 Jan 2014 14:46:16 -0800
+Subject: [PATCH 3/3] Allow multiple --no-warn-mismatch
+
+Change-Id: I28eba502b7ff63bb5bb994eabe63cf75458ee4b4
+---
+ tools/lite/lib/OutputFormatOptions.cpp | 1 +
+ tools/mcld/main.cpp                    | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/tools/lite/lib/OutputFormatOptions.cpp b/tools/lite/lib/OutputFormatOptions.cpp
+index cfc6c04..f2cfb87 100644
+--- a/tools/lite/lib/OutputFormatOptions.cpp
++++ b/tools/lite/lib/OutputFormatOptions.cpp
+@@ -148,6 +148,7 @@ llvm::cl::opt<mcld::GeneralOptions::HashStyle> ArgHashStyle("hash-style",
+        clEnumValEnd));
+ 
+ llvm::cl::opt<bool> ArgNoWarnMismatch("no-warn-mismatch",
++  llvm::cl::ZeroOrMore,
+   llvm::cl::desc("Allow linking together mismatched input files."),
+   llvm::cl::init(false));
+ 
+diff --git a/tools/mcld/main.cpp b/tools/mcld/main.cpp
+index 854aaa9..38e2531 100644
+--- a/tools/mcld/main.cpp
++++ b/tools/mcld/main.cpp
+@@ -731,6 +731,7 @@ ArgARMCompatibility("p",
+ 
+ static cl::opt<bool>
+ ArgNoWarnMismatch("no-warn-mismatch",
++                  cl::ZeroOrMore,
+                   cl::desc("Allow linking together mismatched input files."),
+                   cl::init(false));
+ 
+-- 
+1.8.5.2
+
