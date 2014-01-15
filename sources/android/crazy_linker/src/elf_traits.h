@@ -8,7 +8,6 @@
 // NOTE: <stdint.h> is required here before <elf.h>. This is a NDK header bug.
 #include <stdint.h>
 #include <elf.h>
-#include <sys/exec_elf.h>
 
 // ELF is a traits structure used to provide convenient aliases for
 // 32/64 bit Elf types, depending on the target CPU bitness.
