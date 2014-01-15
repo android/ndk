@@ -12,34 +12,44 @@ DEVICE_mips=
 DEVICE_x86=
 
 ADB_CMD=`which adb`
-if [ -n $ADB_CMD ] ; then
-    # Get list of online devices, turn ' ' in device into '#'
-    DEVICES=`$ADB_CMD devices | grep -v offline | awk 'NR>1 {gsub(/[ \t]+device$/,""); print;}' | sed '/^$/d' | tr ' ' '#'`
-    for DEVICE in $DEVICES; do
-        # undo previous ' '-to-'#' translation
-        DEVICE=$(echo "$DEVICE" | tr '#' ' ')
-        # get arch
-        ARCH=`$ADB_CMD -s "$DEVICE" shell getprop ro.product.cpu.abi | tr -dc '[:print:]'`
-        case "$ARCH" in
-            armeabi*)
-                    DEVICE_arm=$DEVICE
-                    ;;
-            x86)
-                    DEVICE_x86=$DEVICE
-                    ;;
-            mips*)
-                    DEVICE_mips=$DEVICE
-                    ;;
-            *)
-                    echo "ERROR: Unsupported architecture: $ARCH"
-                    exit 1
-        esac
-    done
-fi
 
-echo "DEVICE_arm=$DEVICE_arm"
-echo "DEVICE_x86=$DEVICE_x86"
-echo "DEVICE_mips=$DEVICE_mips"
+if [ -n "$ANDROID_SERIAL" ] ; then
+    echo ANDROID_SERIAL=$ANDROID_SERIAL
+else
+    if [ -n $ADB_CMD  ] ; then
+        # Get list of online devices, turn ' ' in device into '#'
+        DEVICES=`$ADB_CMD devices | grep -v offline | awk 'NR>1 {gsub(/[ \t]+device$/,""); print;}' | sed '/^$/d' | tr ' ' '#'`
+        for DEVICE in $DEVICES; do
+            # undo previous ' '-to-'#' translation
+            DEVICE=$(echo "$DEVICE" | tr '#' ' ')
+            # get arch
+            ARCH=`$ADB_CMD -s "$DEVICE" shell getprop ro.product.cpu.abi | tr -dc '[:print:]'`
+            case "$ARCH" in
+                armeabi*)
+                        if [ -z "$DEVICE_arm" ]; then
+                            DEVICE_arm=$DEVICE
+                        fi
+                        ;;
+                x86)
+                        if [ -z "$DEVICE_x86" ]; then
+                            DEVICE_x86=$DEVICE
+                        fi
+                        ;;
+                mips*)
+                        if [ -z "$DEVICE_mips" ]; then
+                            DEVICE_mips=$DEVICE
+                        fi
+                        ;;
+                *)
+                        echo "ERROR: Unsupported architecture: $ARCH"
+                        exit 1
+            esac
+        done
+    fi
+    echo "DEVICE_arm=$DEVICE_arm"
+    echo "DEVICE_x86=$DEVICE_x86"
+    echo "DEVICE_mips=$DEVICE_mips"
+fi
 
 #
 # check if we need to also test 32-bit host toolchain
