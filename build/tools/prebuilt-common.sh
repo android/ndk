@@ -1015,7 +1015,7 @@ parse_toolchain_name ()
         ABI_CONFIGURE_EXTRA_FLAGS="--with-arch=armv5te --disable-gold --disable-libgomp"
         ;;
     aarch64-linux-android-*)
-        ARCH="aarch64"
+        ARCH="arm64"
         ABI="aarch64-v8a"
         ABI_CONFIGURE_TARGET="aarch64-linux-android"
         # Note:
@@ -1198,9 +1198,9 @@ find_ndk_archs ()
 find_ndk_unknown_archs()
 {
     local FOUND_ARCHS=$(find_ndk_archs)
-    # TODO: aarch64, x86_64 is here just to be found as known arch.
+    # TODO: arm64, x86_64 is here just to be found as known arch.
     # It can be removed as soon as it is added into $DEFAULT_ARCHS
-    echo "$(filter_out "$DEFAULT_ARCHS aarch64 x86_64 mips64" "$FOUND_ARCHS")"
+    echo "$(filter_out "$DEFAULT_ARCHS arm64 x86_64 mips64" "$FOUND_ARCHS")"
 }
 
 # Determine whether given arch is in unknown archs list
