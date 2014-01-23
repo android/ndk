@@ -144,10 +144,14 @@ fi
 mkdir -p "$BUILD_DIR"
 fail_panic "Could not create build directory: $BUILD_DIR"
 
-# Location of the various C++ runtime source trees.
-GABIXX_SRCDIR=$ANDROID_NDK_ROOT/$GABIXX_SUBDIR
-STLPORT_SRCDIR=$ANDROID_NDK_ROOT/$STLPORT_SUBDIR
-LIBCXX_SRCDIR=$ANDROID_NDK_ROOT/$LIBCXX_SUBDIR
+# Location of the various C++ runtime source trees.  Use symlink from
+# $BUILD_DIR instead of $NDK which may contain full path of builder's working dir
+
+ln -sf $ANDROID_NDK_ROOT $BUILD_DIR/ndk
+
+GABIXX_SRCDIR=$BUILD_DIR/ndk/$GABIXX_SUBDIR
+STLPORT_SRCDIR=$BUILD_DIR/ndk/$STLPORT_SUBDIR
+LIBCXX_SRCDIR=$BUILD_DIR/ndk/$LIBCXX_SUBDIR
 
 LIBCXX_INCLUDES="-I$LIBCXX_SRCDIR/libcxx/include -I$ANDROID_NDK_ROOT/sources/android/support/include -I$GABIXX_SRCDIR/include"
 
