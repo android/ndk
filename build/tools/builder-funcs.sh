@@ -346,11 +346,17 @@ builder_host_static_library ()
 
 builder_shared_library ()
 {
-    local lib libname suffix
+    local lib libname suffix libm
     libname=$1
     suffix=$2
+    armeabi_v7a_float_abi=$3
+
     if [ -z "$suffix" ]; then
         suffix=".so"
+    fi
+    libm="-lm"
+    if [ "$armeabi_v7a_float_abi" = "hard" ]; then
+        libm="-lm_hard"
     fi
     lib=$_BUILD_DSTDIR/$libname
     lib=${lib%%${suffix}}${suffix}
@@ -365,13 +371,13 @@ builder_shared_library ()
     #            for other platforms.
     builder_command ${_BUILD_CXX} \
         -Wl,-soname,$(basename $lib) \
-        -Wl,-shared,-Bsymbolic \
+        -Wl,-shared \
         $_BUILD_LDFLAGS_BEGIN_SO \
         $_BUILD_OBJECTS \
         $_BUILD_STATIC_LIBRARIES \
         -lgcc \
         $_BUILD_SHARED_LIBRARIES \
-        -lc -lm \
+        -lc $libm \
         $_BUILD_LDFLAGS \
         $_BUILD_LDFLAGS_END_SO \
         -o $lib
@@ -543,7 +549,7 @@ builder_begin_android ()
             armeabi)
                 LLVM_TRIPLE=armv5te-none-linux-androideabi
                 ;;
-            armeabi-v7a)
+            armeabi-v7a|armeabi-v7a-hard)
                 LLVM_TRIPLE=armv7-none-linux-androideabi
                 ;;
             x86)
@@ -588,9 +594,15 @@ builder_begin_android ()
                 builder_cflags "-mthumb"
             fi
             ;;
-        armeabi-v7a)
-            builder_cflags "-mthumb -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16"
+        armeabi-v7a|armeabi-v7a-hard)
+            builder_cflags "-mthumb -march=armv7-a -mfpu=vfpv3-d16"
             builder_ldflags "-march=armv7-a -Wl,--fix-cortex-a8"
+            if [ "$ABI" != "armeabi-v7a-hard" ]; then
+                builder_cflags "-mfloat-abi=softfp"
+            else
+                builder_cflags "-mhard-float -D_NDK_MATH_NO_SOFTFP=1"
+                builder_ldflags "-Wl,--no-warn-mismatch -lm_hard"
+            fi
             ;;
     esac
 }

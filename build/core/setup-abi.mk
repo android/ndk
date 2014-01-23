@@ -55,7 +55,7 @@ endif
 TARGET_GDB_SETUP := $(TARGET_OUT)/setup.gdb
 
 # RS triple
-ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
+ifneq ($(filter $(TARGET_ARCH_ABI), armeabi-v7a armeabi-v7a-hard),)
   RS_TRIPLE := armv7-none-linux-gnueabi
 endif
 ifeq ($(TARGET_ARCH_ABI),armeabi)

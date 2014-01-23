@@ -426,6 +426,13 @@ unwind_library_for_abi ()
           pr-support.o \
           unwind-c.o"
     ;;
+    armeabi-v7a-hard)
+    BASE_DIR="$BUILD_OUT/gcc-$GCC_VERSION/$ABI_CONFIGURE_TARGET/armv7-a/hard/libgcc/"
+    OBJS="unwind-arm.o \
+          libunwind.o \
+          pr-support.o \
+          unwind-c.o"
+    ;;
     x86)
     BASE_DIR="$BUILD_OUT/gcc-$GCC_VERSION/$ABI_CONFIGURE_TARGET/libgcc/"
     if [ "$GCC_VERSION" = "4.6" -o "$GCC_VERSION" = "4.4.3" ]; then

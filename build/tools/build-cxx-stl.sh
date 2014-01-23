@@ -420,13 +420,22 @@ build_stl_libs_for_abi ()
     local BUILDDIR="$2"
     local TYPE="$3"
     local DSTDIR="$4"
+    local FLOAT_ABI=""
     local DEFAULT_CFLAGS DEFAULT_CXXFLAGS
-    local SRC OBJ OBJECTS EXTRA_CXXFLAGS LIB_SUFFIX
+    local SRC OBJ OBJECTS EXTRA_CFLAGS EXTRA_CXXFLAGS EXTRA_LDFLAGS LIB_SUFFIX
 
     mkdir -p "$BUILDDIR"
 
     DSTDIR=$DSTDIR/$CXX_STL_SUBDIR/libs/$ABI
     LIB_SUFFIX="$(get_lib_suffix_for_abi $ABI)"
+
+    EXTRA_CFLAGS=""
+    EXTRA_LDFLAGS=""
+    if [ "$ABI" = "armeabi-v7a-hard" ]; then
+      EXTRA_CFLAGS="-mhard-float -D_NDK_MATH_NO_SOFTFP=1"
+      EXTRA_LDFLAGS="-Wl,--no-warn-mismatch -lm_hard"
+      FLOAT_ABI="hard"
+    fi
 
     if [ "$TYPE" = "static" -a -z "$VISIBLE_STATIC" ]; then
       EXTRA_CXXFLAGS="$STATIC_CXXFLAGS"
@@ -443,11 +452,11 @@ build_stl_libs_for_abi ()
     # Always rebuild GAbi++, except for unknown archs.
     builder_set_srcdir "$GABIXX_SRCDIR"
     builder_reset_cflags DEFAULT_CFLAGS
-    builder_cflags "$DEFAULT_CFLAGS $GABIXX_CFLAGS"
+    builder_cflags "$DEFAULT_CFLAGS $GABIXX_CFLAGS $EXTRA_CFLAGS"
 
     builder_reset_cxxflags DEFAULT_CXXFLAGS
     builder_cxxflags "$DEFAULT_CXXFLAGS $GABIXX_CXXFLAGS $EXTRA_CXXFLAGS"
-    builder_ldflags "$GABIXX_LDFLAGS"
+    builder_ldflags "$GABIXX_LDFLAGS $EXTRA_LDFLAGS"
     if [ "$(find_ndk_unknown_archs)" != "$ABI" ]; then
       builder_sources $GABIXX_SOURCES
     elif [ "$CXX_STL" = "gabi++" ]; then
@@ -461,10 +470,10 @@ build_stl_libs_for_abi ()
     if [ "$CXX_STL" != "gabi++" ]; then
       builder_set_srcdir "$CXX_STL_SRCDIR"
       builder_reset_cflags
-      builder_cflags "$DEFAULT_CFLAGS $CXX_STL_CFLAGS"
+      builder_cflags "$DEFAULT_CFLAGS $CXX_STL_CFLAGS $EXTRA_CFLAGS"
       builder_reset_cxxflags DEFAULT_CXXFLAGS
       builder_cxxflags "$DEFAULT_CXXFLAGS $CXX_STL_CXXFLAGS $EXTRA_CXXFLAGS"
-      builder_ldflags "$CXX_STL_LDFLAGS"
+      builder_ldflags "$CXX_STL_LDFLAGS $EXTRA_LDFLAGS"
       builder_sources $CXX_STL_SOURCES
     fi
 
@@ -474,7 +483,7 @@ build_stl_libs_for_abi ()
     else
         log "Building $DSTDIR/${CXX_STL_LIB}_shared${LIB_SUFFIX}"
         if [ "$(find_ndk_unknown_archs)" != "$ABI" ]; then
-            builder_shared_library ${CXX_STL_LIB}_shared $LIB_SUFFIX
+            builder_shared_library ${CXX_STL_LIB}_shared $LIB_SUFFIX "$FLOAT_ABI"
         else
             builder_ldflags "-lc -lm"
             builder_nostdlib_shared_library ${CXX_STL_LIB}_shared $LIB_SUFFIX # Don't use libgcc
