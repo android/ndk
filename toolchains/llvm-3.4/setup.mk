@@ -38,6 +38,19 @@ cmd-strip = $(TARGET_PREBUILT_ROOT)/bin/arm-linux-androideabi-strip$(HOST_EXEEXT
 include $(NDK_ROOT)/toolchains/llvm-3.4/setup-common.mk
 
 else
+ifneq ($(filter %bcarmeabi-v7a-hard,$(TARGET_ARCH_ABI)),)
+SYSROOT_LINK     := $(NDK_PLATFORMS_ROOT)/$(TARGET_PLATFORM)/arch-arm
+TARGET_GDBSERVER := $(NDK_ROOT)/prebuilt/android-arm/gdbserver/gdbserver
+TARGET_ARCH_ABI  := armeabi-v7a-hard
+TARGET_LDFLAGS   += -Wl,-link-native-binary
+NDK_APP_DST_DIR  := $(NDK_APP_PROJECT_PATH)/libs/$(TARGET_ARCH_ABI)
+
+TARGET_PREBUILT_ROOT = $(call host-prebuilt-tag,$(NDK_ROOT)/toolchains/arm-linux-androideabi-$(TOOLCHAIN_VERSION))
+cmd-strip = $(TARGET_PREBUILT_ROOT)/bin/arm-linux-androideabi-strip$(HOST_EXEEXT) --strip-unneeded $(call host-path,$1)
+
+include $(NDK_ROOT)/toolchains/llvm-3.4/setup-common.mk
+
+else
 ifneq ($(filter %bcarmeabi,$(TARGET_ARCH_ABI)),)
 SYSROOT_LINK     := $(NDK_PLATFORMS_ROOT)/$(TARGET_PLATFORM)/arch-arm
 TARGET_GDBSERVER := $(NDK_ROOT)/prebuilt/android-arm/gdbserver/gdbserver
@@ -89,6 +102,17 @@ TARGET_LDFLAGS   += -Wl,@$(NDK_ROOT)/sources/android/libportable/libs/armeabi-v7
 include $(NDK_ROOT)/toolchains/arm-linux-androideabi-clang3.4/setup.mk
 
 else
+ifneq ($(filter %armeabi-v7a-hard,$(TARGET_ARCH_ABI)),)
+
+SYSROOT_LINK     := $(NDK_PLATFORMS_ROOT)/$(TARGET_PLATFORM)/arch-arm
+TARGET_GDBSERVER := $(NDK_ROOT)/prebuilt/android-arm/gdbserver/gdbserver
+TARGET_ARCH_ABI  := armeabi-v7a-hard
+NDK_APP_DST_DIR  := $(NDK_APP_PROJECT_PATH)/libs/$(TARGET_ARCH_ABI)
+TARGET_LDLIBS    := $(NDK_ROOT)/sources/android/libportable/libs/armeabi-v7a-hard/libportable.a $(TARGET_LDLIBS)
+TARGET_LDFLAGS   += -Wl,@$(NDK_ROOT)/sources/android/libportable/libs/armeabi-v7a-hard/libportable.wrap
+include $(NDK_ROOT)/toolchains/arm-linux-androideabi-clang3.4/setup.mk
+
+else
 ifneq ($(filter %armeabi,$(TARGET_ARCH_ABI)),)
 
 SYSROOT_LINK     := $(NDK_PLATFORMS_ROOT)/$(TARGET_PLATFORM)/arch-arm
@@ -129,6 +153,8 @@ TARGET_SONAME_EXTENSION := .bc
 
 include $(NDK_ROOT)/toolchains/llvm-3.4/setup-common.mk
 
+endif
+endif
 endif
 endif
 endif
