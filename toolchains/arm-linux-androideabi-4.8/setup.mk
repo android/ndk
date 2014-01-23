@@ -35,13 +35,20 @@ TARGET_LDFLAGS := -no-canonical-prefixes
 TARGET_C_INCLUDES := \
     $(SYSROOT_INC)/usr/include
 
-ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
+ifneq ($(filter $(TARGET_ARCH_ABI), armeabi-v7a armeabi-v7a-hard),)
     TARGET_CFLAGS += -march=armv7-a \
-                     -mfloat-abi=softfp \
                      -mfpu=vfpv3-d16
-
     TARGET_LDFLAGS += -march=armv7-a \
                      -Wl,--fix-cortex-a8
+ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
+    TARGET_CFLAGS += -mfloat-abi=softfp
+else
+    TARGET_CFLAGS += -mhard-float \
+                     -D_NDK_MATH_NO_SOFTFP=1
+    TARGET_LDFLAGS += -Wl,--no-warn-mismatch \
+                     -lm_hard
+endif
+
 else
     TARGET_CFLAGS += -march=armv5te \
                             -mtune=xscale \

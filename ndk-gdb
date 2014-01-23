@@ -506,6 +506,8 @@ if [ "$APP_ABIS" != "${APP_ABIS%%all*}" ] ; then
   APP_ABIS_BACK="${APP_ABIS#*all}"
   APP_ABIS="${APP_ABIS_FRONT}${ALL_ABIS}${APP_ABIS_BACK}"
 fi
+# replace "armeabi-v7a-hard" with "armeabi-v7a"
+APP_ABIS=`echo $APP_ABIS | sed -e 's/armeabi-v7a-hard/armeabi-v7a/g'`
 log "ABIs targetted by application: $APP_ABIS"
 
 # Check the ADB command, and that we can connect to the device/emulator
