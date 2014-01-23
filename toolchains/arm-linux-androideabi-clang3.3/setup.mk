@@ -72,6 +72,20 @@ ifneq ($(filter %armeabi-v7a,$(TARGET_ARCH_ABI)),)
     TARGET_LDFLAGS += -target $(LLVM_TRIPLE) \
                       -Wl,--fix-cortex-a8
 else
+ifneq ($(filter %armeabi-v7a-hard,$(TARGET_ARCH_ABI)),)
+    LLVM_TRIPLE := armv7-none-linux-androideabi
+
+    TARGET_CFLAGS += -target $(LLVM_TRIPLE) \
+                     -march=armv7-a \
+                     -mfpu=vfpv3-d16 \
+                     -mhard-float \
+                     -D_NDK_MATH_NO_SOFTFP=1
+
+    TARGET_LDFLAGS += -target $(LLVM_TRIPLE) \
+                      -Wl,--fix-cortex-a8 \
+                      -Wl,--no-warn-mismatch \
+                      -lm_hard
+else
     LLVM_TRIPLE := armv5te-none-linux-androideabi
 
     TARGET_CFLAGS += -target $(LLVM_TRIPLE) \
@@ -80,6 +94,7 @@ else
                      -msoft-float
 
     TARGET_LDFLAGS += -target $(LLVM_TRIPLE)
+endif
 endif
 
 TARGET_CFLAGS.neon := -mfpu=neon

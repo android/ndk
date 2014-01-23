@@ -9,7 +9,7 @@
 API_LEVELS="3 4 5 8 9 12 13 14 15 16 17 18 19"
 
 # Default ABIs for the target prebuilt binaries.
-PREBUILT_ABIS="armeabi armeabi-v7a x86 mips"
+PREBUILT_ABIS="armeabi armeabi-v7a x86 mips armeabi-v7a-hard"
 
 # Location of the STLport sources, relative to the NDK root directory
 STLPORT_SUBDIR=sources/cxx-stl/stlport
@@ -129,7 +129,7 @@ get_default_abis_for_arch ()
     local RET
     case $1 in
         arm)
-            RET="armeabi armeabi-v7a"
+            RET="armeabi armeabi-v7a armeabi-v7a-hard"
             ;;
         x86|x86_64|mips)
             RET="$1"
