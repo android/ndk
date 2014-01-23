@@ -58,7 +58,7 @@ endif
 # Otherwise, check that we don't have an invalid value here.
 #
 ifeq ($(NDK_APP_ABI),all)
-    NDK_APP_ABI := $(NDK_KNOWN_ABIS)
+    NDK_APP_ABI := $(NDK_APP_ABI_ALL_EXPANDED)
 else
     # Plug in the unknown
     _unknown_abis := $(strip $(filter-out $(NDK_ALL_ABIS),$(NDK_APP_ABI)))

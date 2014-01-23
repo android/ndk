@@ -534,6 +534,8 @@ case $ARCH in
         copy_stl_libs armeabi "/thumb"
         copy_stl_libs armeabi-v7a "armv7-a"
         copy_stl_libs armeabi-v7a "armv7-a/thumb"
+        copy_stl_libs armeabi-v7a-hard "armv7-a/hard"
+        copy_stl_libs armeabi-v7a-hard "armv7-a/thumb/hard"
         ;;
     x86|mips)
         copy_stl_libs "$ARCH" ""

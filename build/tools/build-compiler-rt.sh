@@ -162,7 +162,7 @@ prepare_compiler_rt_source_for_abi ()
     local ABI=$1
     local ARCH_SOURCES GENERIC_SOURCES FOUND
 
-    if [ $ABI == "armeabi" -o $ABI == "armeabi-v7a" ]; then
+    if [ $ABI == "armeabi" -o $ABI == "armeabi-v7a" -o $ABI == "armeabi-v7a-hard" ]; then
         ARCH_SOURCES="$COMPILER_RT_ARM_SOURCES"
     elif [ $ABI == "x86" ]; then
         ARCH_SOURCES="$COMPILER_RT_X86_SOURCES"
@@ -211,11 +211,18 @@ build_compiler_rt_libs_for_abi ()
 
     builder_cflags "$COMPILER_RT_CFLAGS"
 
-    if [ $ABI == "armeabi" -o $ABI == "armeabi-v7a" ]; then
+    if [ $ABI == "armeabi" -o $ABI == "armeabi-v7a" -o $ABI == "armeabi-v7a-hard" ]; then
         builder_cflags "-D__ARM_EABI__"
+        if [ $ABI == "armeabi-v7a-hard" ]; then
+            builder_cflags "-mhard-float -D_NDK_MATH_NO_SOFTFP=1"
+        fi
     fi
 
     builder_ldflags "$COMPILER_RT_LDFLAGS"
+    if [ $ABI == "armeabi-v7a-hard" ]; then
+        builder_cflags "-Wl,--no-warn-mismatch -lm_hard"
+    fi
+
     builder_sources $(prepare_compiler_rt_source_for_abi $ABI)
 
     if [ "$TYPE" = "static" ]; then
@@ -223,7 +230,10 @@ build_compiler_rt_libs_for_abi ()
         builder_static_library libcompiler_rt_static
     else
         log "Building $DSTDIR/libcompiler_rt_shared.so"
-        builder_ldflags "-lc -lm"
+        builder_ldflags "-lc"
+        if [ $ABI != "armeabi-v7a-hard" ]; then
+            builder_ldflags "-lm"
+        fi
         builder_nostdlib_shared_library libcompiler_rt_shared
     fi
     builder_end
