@@ -42,7 +42,7 @@ OPTION_OUT_DIR=
 register_var_option "--out-dir=<path>" OPTION_OUT_DIR "On-device toolchain will be put at <path>"
 
 OPTION_ABIS=
-register_var_option "--abis=<armeabi,armeabi-v7a,x86,mips>" OPTION_ABIS "Default: $ABIS"
+register_var_option "--abis=<armeabi,armeabi-v7a,x86,mips,armeabi-v7a-hard>" OPTION_ABIS "Default: $ABIS"
 
 OPTION_GCC_VERSION=
 register_var_option "--gcc-version=<version>" OPTION_GCC_VERSION "Specify GCC toolchain version [Default: $DEFAULT_GCC_VERSION]"
@@ -167,8 +167,11 @@ for abi in $ABIS; do
       # code such as "stmdb sp!,{r0,r1,r2,r3,lr}" which doesn't support thumb1
       CFLAGS=$CFLAGS" -march=armv5te -msoft-float"
       ;;
-    armeabi-v7a)
+    armeabi-v7a|armeabi-v7a-hard)
       CFLAGS=$CFLAGS" -mthumb -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16"
+      if [ "$arbi" = "armeabi-v7a-hard" ]; then
+        CFLAGS=$CFLAGS" -mhard-float -D_NDK_MATH_NO_SOFTFP=1 -Wl,--no-warn-mismatch -lm_hard"
+      fi
       ;;
     mips)
       CFLAGS=$CFLAGS" -fmessage-length=0 -fno-inline-functions-called-once -fgcse-after-reload -frerun-cse-after-loop -frename-registers"

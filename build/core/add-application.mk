@@ -264,7 +264,7 @@ APP_CPPFLAGS := $(strip $(APP_CPPFLAGS))
 APP_CXXFLAGS := $(strip $(APP_CXXFLAGS))
 APP_RENDERSCRIPT_FLAGS := $(strip $(APP_RENDERSCRIPT_FLAGS))
 APP_ASMFLAGS := $(strip $(APP_ASMFLAGS))
-APP_LDFLAGS := $(strip $(APP_LDFLAGS))
+APP_LDFLAGS  := $(strip $(APP_LDFLAGS))
 
 # Check that APP_STL is defined. If not, use the default value (system)
 # otherwise, check that the name is correct.
