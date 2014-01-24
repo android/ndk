@@ -81,7 +81,7 @@ while [ -n "$1" ]; do
         --full)
             FULL_TESTS=yes;
             ;;
-        --test=*)  # Deprecated, but keep it just in case.
+        --test=*)
             RUN_TESTS="$RUN_TESTS $optarg"
             ;;
         --package=*)
@@ -420,7 +420,7 @@ gen_empty_archive() {
 case $ABI in
     default)  # Let the APP_ABI in jni/Application.mk decide what to build
         ;;
-    armeabi|armeabi-v7a|x86|mips)
+    armeabi|armeabi-v7a|x86|mips|armeabi-v7a-hard)
         NDK_BUILD_FLAGS="$NDK_BUILD_FLAGS APP_ABI=$ABI"
         ;;
     *)
@@ -924,6 +924,10 @@ if is_testable device; then
         dump "SKIPPING RUNNING TESTS ON DEVICE!"
     else
         AT_LEAST_CPU_ABI_MATCH=
+        REAL_ABI=$ABI
+        if [ "$REAL_ABI" = "armeabi-v7a-hard" ]; then
+            REAL_ABI=armeabi-v7a
+        fi
         for DEVICE in $ADB_DEVICES; do
             # undo earlier ' '-to-'#' translation
             DEVICE=$(echo "$DEVICE" | tr '#' ' ')
@@ -932,13 +936,19 @@ if is_testable device; then
             adb_var_shell_cmd "$DEVICE" CPU_ABI2 getprop ro.product.cpu.abi2
             CPU_ABIS="$CPU_ABI1,$CPU_ABI2"
             CPU_ABIS=$(commas_to_spaces $CPU_ABIS)
+            if [ "$_NDK_TESTING_ALL_" = "yes" ]; then
+                if [ "$CPU_ABI1" = "armeabi-v7a" -o "$CPU_ABI2" = "armeabi-v7a" ]; then
+                    CPU_ABIS="$CPU_ABIS armeabi-v7a-hard"
+                fi
+            fi
             if [ "$CPU_ABIS" = " " ]; then
               # Very old cupcake-based Android devices don't have these properties
               # defined. Fortunately, they are all armeabi-based.
               CPU_ABIS=armeabi
             fi
+            log "CPU_ABIS=$CPU_ABIS"
             for CPU_ABI in $CPU_ABIS; do
-                if [ "$ABI" = "default" -o "$ABI" = "$CPU_ABI" -o "$ABI" = "$(find_ndk_unknown_archs)" ] ; then
+                if [ "$REAL_ABI" = "default" -o "$REAL_ABI" = "$CPU_ABI" -o "$REAL_ABI" = "$(find_ndk_unknown_archs)" ] ; then
                     AT_LEAST_CPU_ABI_MATCH="yes"
                     for DIR in `ls -d $ROOTDIR/tests/device/*`; do
                         if is_buildable $DIR; then
