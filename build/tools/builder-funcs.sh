@@ -528,12 +528,13 @@ builder_begin_android ()
     fi
 
     SYSROOT=$NDK_DIR/$(get_default_platform_sysroot_for_arch $ARCH)
+    LDIR=$SYSROOT"/usr/"$(get_default_libdir_for_arch $ARCH)
 
-    CRTBEGIN_EXE_O=$SYSROOT/usr/lib/crtbegin_dynamic.o
-    CRTEND_EXE_O=$SYSROOT/usr/lib/crtend_android.o
+    CRTBEGIN_EXE_O=$LDIR/crtbegin_dynamic.o
+    CRTEND_EXE_O=$LDIR/crtend_android.o
 
-    CRTBEGIN_SO_O=$SYSROOT/usr/lib/crtbegin_so.o
-    CRTEND_SO_O=$SYSROOT/usr/lib/crtend_so.o
+    CRTBEGIN_SO_O=$LDIR/crtbegin_so.o
+    CRTEND_SO_O=$LDIR/crtend_so.o
     if [ ! -f "$CRTBEGIN_SO_O" ]; then
         CRTBEGIN_SO_O=$CRTBEGIN_EXE_O
     fi
@@ -556,6 +557,9 @@ builder_begin_android ()
                 ;;
             x86)
                 LLVM_TRIPLE=i686-none-linux-android
+                ;;
+            x86_64)
+                LLVM_TRIPLE=x86_64-none-linux-android
                 ;;
             mips)
                 LLVM_TRIPLE=mipsel-none-linux-android

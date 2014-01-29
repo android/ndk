@@ -1240,13 +1240,7 @@ convert_abi_to_arch ()
         armeabi|armeabi-v7a|armeabi-v7a-hard)
             RET=arm
             ;;
-        x86)
-            RET=x86
-            ;;
-        mips)
-            RET=mips
-            ;;
-        arm64|x86_64|mips64)
+        x86|mips|arm64|x86_64|mips64)
             RET=$ABI
             ;;
         aarch64)
@@ -1380,6 +1374,16 @@ get_default_platform_sysroot_for_arch ()
         LEVEL=20
     fi
     echo "platforms/android-$LEVEL/arch-$ARCH"
+}
+
+# Return the default libs dir corresponding to a given architecture
+# $1: Architecture name
+get_default_libdir_for_arch ()
+{
+    case $1 in
+      x86_64) echo "lib64" ;;
+      *) echo "lib" ;;
+    esac
 }
 
 # Guess what?
