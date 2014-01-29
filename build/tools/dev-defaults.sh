@@ -241,7 +241,7 @@ get_default_binutils_version_for_llvm ()
 get_default_gdb_version_for_gcc ()
 {
     case $1 in
-        aarch64-*) echo "7.6";;
+        x86*|aarch64-*) echo "7.6";;
         *) echo "$DEFAULT_GDB_VERSION";;
     esac
 }
