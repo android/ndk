@@ -1240,11 +1240,8 @@ convert_abi_to_arch ()
         armeabi|armeabi-v7a)
             RET=arm
             ;;
-        x86)
-            RET=x86
-            ;;
-        mips)
-            RET=mips
+        x86|x86_64|mips)
+            RET=$ABI
             ;;
         *)
             if [ "$(arch_in_unknown_archs $ABI)" = "yes" ]; then
@@ -1270,11 +1267,8 @@ convert_arch_to_abi ()
         arm)
             RET=armeabi,armeabi-v7a
             ;;
-        x86)
-            RET=x86
-            ;;
-        mips)
-            RET=mips
+        x86|x86_64|mips)
+            RET=$ARCH
             ;;
         *)
             if [ "$(arch_in_unknown_archs $ARCH)" = "yes" ]; then
@@ -1368,6 +1362,16 @@ get_default_platform_sysroot_for_arch ()
 {
     local LEVEL=$(get_default_api_level_for_arch $1)
     echo "platforms/android-$LEVEL/arch-$1"
+}
+
+# Return the default libs dir corresponding to a given architecture
+# $1: Architecture name
+get_default_libdir_for_arch ()
+{
+    case $1 in
+      x86_64) echo "lib64" ;;
+      *) echo "lib" ;;
+    esac
 }
 
 # Guess what?
