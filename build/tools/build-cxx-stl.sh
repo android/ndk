@@ -451,7 +451,7 @@ build_stl_libs_for_abi ()
     if [ "$(find_ndk_unknown_archs)" != "$ABI" ]; then
       builder_sources $GABIXX_SOURCES
     elif [ "$CXX_STL" = "gabi++" ]; then
-      log "Could not build gabi++ with unknown arch!"
+      log "Could not build gabi++ with unknown arch $ABI."
       exit 1
     else
       builder_sources src/delete.cc src/new.cc
