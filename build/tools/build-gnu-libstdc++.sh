@@ -113,7 +113,7 @@ build_gnustl_for_abi ()
     local GCC_VERSION="$4"
     local THUMB="$5"
     local DSTDIR=$NDK_DIR/$GNUSTL_SUBDIR/$GCC_VERSION/libs/$ABI/$THUMB
-    local SRC OBJ OBJECTS CFLAGS CXXFLAGS
+    local SRC OBJ OBJECTS CFLAGS CXXFLAGS CPPFLAGS
 
     prepare_target_build $ABI $PLATFORM $NDK_DIR
     fail_panic "Could not setup target build."
