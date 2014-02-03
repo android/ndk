@@ -608,6 +608,15 @@ fi
 for ARCH in $ARCHS; do
     # Find first platform for this arch
     PREV_SYSROOT_DST=
+    CLEANUP=true
+    # For 64-bit we inherit all changes made for 32-bit counterpart, but
+    # remove corresponding 64-bit dirs later if 64-bit is not enabled for particular
+    # platform.
+    if [ $ARCH = "x86_64" ]; then
+        ARCH32=x86
+    else
+        ARCH32=$ARCH
+    fi
     for PLATFORM in $PLATFORMS; do
         PLATFORM_DST=platforms/android-$PLATFORM   # Relative to $DSTDIR
         PLATFORM_SRC=$PLATFORM_DST                 # Relative to $SRCDIR
@@ -616,7 +625,7 @@ for ARCH in $ARCHS; do
         # and no destination platform directory was created. This is needed
         # because x86 and MIPS don't have files for API levels 3-8.
         if [ -z "$PREV_SYSROOT_DST" -a \
-           ! -d "$SRCDIR/$PLATFORM_SRC/arch-$ARCH" ]; then
+           ! -d "$SRCDIR/$PLATFORM_SRC/arch-$ARCH32" ]; then
             log "Skipping: \$SRC/$PLATFORM_SRC/arch-$ARCH"
             continue
         fi
@@ -632,6 +641,11 @@ for ARCH in $ARCHS; do
             else
                 log "Symlink-copying \$DST/$PREV_SYSROOT_DST to \$DST/$SYSROOT_DST"
                 symlink_src_directory $PREV_SYSROOT_DST $SYSROOT_DST
+            fi
+            # We should remove arch if it's not available for particular platform
+            if [ -d "$CLEANUP" ]; then
+              log "Cleanup: $CLEANUP"
+              rm -rf "$CLEANUP"
             fi
         fi
 
@@ -652,7 +666,7 @@ for ARCH in $ARCHS; do
 
         # Now copy over all non-arch specific include files
         copy_src_directory $PLATFORM_SRC/include $SYSROOT_DST/include "common system headers"
-        copy_src_directory $PLATFORM_SRC/arch-$ARCH/include $SYSROOT_DST/include "$ARCH system headers"
+        copy_src_directory $PLATFORM_SRC/arch-$ARCH32/include $SYSROOT_DST/include "$ARCH system headers"
 
         generate_api_level "$PLATFORM" "$ARCH" "$DSTDIR"
 
@@ -661,15 +675,15 @@ for ARCH in $ARCHS; do
             # Copy the prebuilt static libraries.
             if [ "$ARCH" = "x86_64" ]; then
             # We need full set for multilib compiler
-                copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib $SYSROOT_DST/lib "x86 sysroot libs"
-                copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib64 $SYSROOT_DST/lib64 "x86_64 sysroot libs"
-                copy_src_directory $PLATFORM_SRC/arch-$ARCH/libx32 $SYSROOT_DST/libx32 "x32 sysroot libs"
+                copy_src_directory $PLATFORM_SRC/arch-$ARCH32/lib $SYSROOT_DST/lib "x86 sysroot libs"
+                copy_src_directory $PLATFORM_SRC/arch-$ARCH32/lib64 $SYSROOT_DST/lib64 "x86_64 sysroot libs"
+                copy_src_directory $PLATFORM_SRC/arch-$ARCH32/libx32 $SYSROOT_DST/libx32 "x32 sysroot libs"
             else
-                copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib $SYSROOT_DST/lib "$ARCH sysroot libs"
+                copy_src_directory $PLATFORM_SRC/arch-$ARCH32/lib $SYSROOT_DST/lib "$ARCH sysroot libs"
             fi
 
             # Generate C runtime object files when available
-            PLATFORM_SRC_ARCH=$PLATFORM_SRC/arch-$ARCH/src
+            PLATFORM_SRC_ARCH=$PLATFORM_SRC/arch-$ARCH32/src
             if [ ! -d "$SRCDIR/$PLATFORM_SRC_ARCH" ]; then
                 PLATFORM_SRC_ARCH=$PREV_PLATFORM_SRC_ARCH
             else
@@ -691,9 +705,9 @@ for ARCH in $ARCHS; do
             # Generate shared libraries from symbol files
             if [ "$ARCH" = "x86_64" ]; then
                # We need full set for multilib compiler
-               gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $SYSROOT_DST/lib "-m32"
-               gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $SYSROOT_DST/lib64 "-m64"
-               gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $SYSROOT_DST/libx32 "-mx32"
+               gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH32/symbols $SYSROOT_DST/lib "-m32"
+               gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH32/symbols $SYSROOT_DST/lib64 "-m64"
+               gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH32/symbols $SYSROOT_DST/libx32 "-mx32"
             else
                gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $SYSROOT_DST/lib
             fi
@@ -701,12 +715,17 @@ for ARCH in $ARCHS; do
             # Copy the prebuilt binaries to bootstrap GCC
             if [ "$ARCH" = "x86_64" ]; then
                # We need full set for multilib compiler
-               copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib-bootstrap/lib $SYSROOT_DST/lib "x86 sysroot libs (boostrap)"
-               copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib-bootstrap/lib64 $SYSROOT_DST/lib64 "x86_64 sysroot libs (boostrap)"
-               copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib-bootstrap/libx32 $SYSROOT_DST/libx32 "x32 sysroot libs (boostrap)"
+               copy_src_directory $PLATFORM_SRC/arch-$ARCH32/lib-bootstrap/lib $SYSROOT_DST/lib "x86 sysroot libs (boostrap)"
+               copy_src_directory $PLATFORM_SRC/arch-$ARCH32/lib-bootstrap/lib64 $SYSROOT_DST/lib64 "x86_64 sysroot libs (boostrap)"
+               copy_src_directory $PLATFORM_SRC/arch-$ARCH32/lib-bootstrap/libx32 $SYSROOT_DST/libx32 "x32 sysroot libs (boostrap)"
             else
                copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib-bootstrap $SYSROOT_DST/lib "$ARCH sysroot libs (boostrap)"
             fi
+        fi
+        if [ ! -z "$CLEANUP" -a ! -d "$SRCDIR/$PLATFORM_SRC/arch-$ARCH" -a $ARCH != $ARCH32 ]; then
+            CLEANUP="$DSTDIR/$PLATFORM_DST/arch-$ARCH"
+        else
+            CLEANUP=
         fi
         PREV_SYSROOT_DST=$SYSROOT_DST
     done

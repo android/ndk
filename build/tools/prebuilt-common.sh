@@ -1356,8 +1356,10 @@ get_default_api_level_for_arch ()
     # For now, always build the toolchain against API level 9
     # (We have local toolchain patches under build/tools/toolchain-patches
     # to ensure that the result works on previous platforms properly).
-    local LEVEL=9
-    echo $LEVEL
+    case $1 in
+       x86_64) echo 19 ;;
+       *) echo 9 ;;
+    esac
 }
 
 # Return the default platform sysroot corresponding to a given architecture
