@@ -616,6 +616,7 @@ fi
 for ARCH in $ARCHS; do
     # Find first platform for this arch
     PREV_SYSROOT_DST=
+    PREV_PLATFORM_SRC_ARCH=
     for PLATFORM in $PLATFORMS; do
         PLATFORM_DST=platforms/android-$PLATFORM   # Relative to $DSTDIR
         PLATFORM_SRC=$PLATFORM_DST                 # Relative to $SRCDIR
