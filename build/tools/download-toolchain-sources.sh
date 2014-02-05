@@ -205,6 +205,7 @@ toolchain_clone clang
 toolchain_clone llvm
 toolchain_clone compiler-rt
 toolchain_clone mclinker
+toolchain_clone yasm
 
 toolchain_checkout "" $BRANCH build .
 toolchain_checkout "" $BRANCH gmp .
@@ -220,6 +221,7 @@ toolchain_checkout "" $BRANCH gdb gdb-7.3.x gdb-7.6
 toolchain_checkout "" $BRANCH python Python-2.7.5
 toolchain_checkout "" $BRANCH perl perl-5.16.2
 toolchain_checkout "" $BRANCH mclinker .
+toolchain_checkout "" $BRANCH yasm .
 
 for LLVM_VERSION in $LLVM_VERSION_LIST; do
     # Check-out and Adjust directory structure a bit
