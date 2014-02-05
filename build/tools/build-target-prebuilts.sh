@@ -97,8 +97,9 @@ FLAGS=$FLAGS" -j$NUM_JOBS"
 for ARCH in $ARCHS; do
     GDB_TOOLCHAINS=$(get_default_toolchain_name_for_arch $ARCH)
     for GDB_TOOLCHAIN in $GDB_TOOLCHAINS; do
+        GDB_VERSION="--gdb-version="$(get_default_gdb_version_for_gcc $GDB_TOOLCHAIN)
         dump "Building $GDB_TOOLCHAIN gdbserver binaries..."
-        run $BUILDTOOLS/build-gdbserver.sh "$SRC_DIR" "$NDK_DIR" "$GDB_TOOLCHAIN" $FLAGS
+        run $BUILDTOOLS/build-gdbserver.sh "$SRC_DIR" "$NDK_DIR" "$GDB_TOOLCHAIN" "$GDB_VERSION" $FLAGS
         fail_panic "Could not build $GDB_TOOLCHAIN gdb-server!"
     done
 done
