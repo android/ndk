@@ -562,6 +562,7 @@ for SYSTEM in $SYSTEMS; do
         unpack_prebuilt ndk-awk-$SYSTEM "$DSTDIR" "$DSTDIR64"
         unpack_prebuilt ndk-perl-$SYSTEM "$DSTDIR" "$DSTDIR64"
         unpack_prebuilt ndk-python-$SYSTEM "$DSTDIR" "$DSTDIR64"
+        unpack_prebuilt ndk-yasm-$SYSTEM "$DSTDIR" "$DSTDIR64"
 
         if [ "$SYSTEM" = "windows" ]; then
             unpack_prebuilt toolbox-$SYSTEM "$DSTDIR" "$DSTDIR64"
