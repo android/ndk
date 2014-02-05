@@ -483,6 +483,11 @@ EOF
     fi
 done
 
+# copy SOURCES file if present
+if [ -f "$SRC_DIR/SOURCES" ]; then
+    cp "$SRC_DIR/SOURCES" "$TOOLCHAIN_PATH/SOURCES"
+fi
+
 if [ "$PACKAGE_DIR" ]; then
     ARCHIVE="$TOOLCHAIN-$HOST_TAG.tar.bz2"
     SUBDIR=$(get_toolchain_install_subdir $TOOLCHAIN $HOST_TAG)
