@@ -384,6 +384,7 @@ modules-LOCALS := \
     CONLYFLAGS \
     CXXFLAGS \
     CPPFLAGS \
+    ASMFLAGS \
     STATIC_LIBRARIES \
     WHOLE_STATIC_LIBRARIES \
     SHARED_LIBRARIES \
@@ -397,6 +398,7 @@ modules-LOCALS := \
     EXPORT_CFLAGS \
     EXPORT_CONLYFLAGS \
     EXPORT_CPPFLAGS \
+    EXPORT_ASMFLAGS \
     EXPORT_LDFLAGS \
     EXPORT_LDLIBS \
     EXPORT_C_INCLUDES \
@@ -833,7 +835,8 @@ module-filter-out-compiler-flags = \
     $(eval __ndk_modules.$1.CFLAGS     := $(filter-out $2,$(__ndk_modules.$1.CFLAGS)))\
     $(eval __ndk_modules.$1.CONLYFLAGS := $(filter-out $2,$(__ndk_modules.$1.CONLYFLAGS)))\
     $(eval __ndk_modules.$1.CPPFLAGS   := $(filter-out $2,$(__ndk_modules.$1.CPPFLAGS)))\
-    $(eval __ndk_modules.$1.CXXFLAGS   := $(filter-out $2,$(__ndk_modules.$1.CXXFLAGS)))
+    $(eval __ndk_modules.$1.CXXFLAGS   := $(filter-out $2,$(__ndk_modules.$1.CXXFLAGS)))\
+    $(eval __ndk_modules.$1.ASMFLAGS   := $(filter-out $2,$(__ndk_modules.$1.ASMFLAGS)))
 
 # Return true if a module's compiler flags enable rtti
 # We just look at -frtti and -fno-rtti on the command-line
@@ -1287,7 +1290,7 @@ get-object-name = $(strip \
     $(subst ../,__/,\
       $(subst :,_,\
         $(eval __obj := $1)\
-        $(foreach __ext,.c .s .S $(LOCAL_CPP_EXTENSION) $(LOCAL_RS_EXTENSION),\
+        $(foreach __ext,.c .s .S .asm $(LOCAL_CPP_EXTENSION) $(LOCAL_RS_EXTENSION),\
             $(eval __obj := $(__obj:%$(__ext)=%$(TARGET_OBJ_EXTENSION)))\
         )\
         $(__obj)\
@@ -1301,7 +1304,8 @@ get-object-name = $(strip \
   $(call test-expect,bar.o,$(call get-object-name,bar.s))\
   $(call test-expect,zoo.o,$(call get-object-name,zoo.S))\
   $(call test-expect,tot.o,$(call get-object-name,tot.cpp))\
-  $(call test-expect,RS.o,$(call get-object-name,RS.rs))
+  $(call test-expect,RS.o,$(call get-object-name,RS.rs))\
+  $(call test-expect,goo.o,$(call get-object-name,goo.asm))
 
 get-rs-scriptc-name = $(strip \
     $(subst ../,__/,\
@@ -1603,6 +1607,47 @@ $$(eval $$(call ev-build-source-file))
 endef
 
 # -----------------------------------------------------------------------------
+# Template  : ev-compile-asm-source
+# Arguments : 1: single ASM source file name (relative to LOCAL_PATH)
+#             2: target object file (without path)
+# Returns   : None
+# Usage     : $(eval $(call ev-compile-asm-source,<srcfile>,<objfile>)
+# Rationale : Internal template evaluated by compile-asm-source
+# -----------------------------------------------------------------------------
+define  ev-compile-asm-source
+_SRC:=$$(call local-source-file-path,$(1))
+_OBJ:=$$(LOCAL_OBJS_DIR:%/=%)/$(2)
+
+_FLAGS := $$(call host-c-includes,$$(LOCAL_C_INCLUDES) $$(LOCAL_PATH)) \
+          $$(LOCAL_ASMFLAGS) \
+          $$(NDK_APP_ASMFLAGS) \
+          $$(call host-c-includes,$$($(my)C_INCLUDES)) \
+	  -f elf32 -m x86
+
+_TEXT := Assemble $$(call get-src-file-text,$1)
+_CC   := $$(NDK_CCACHE) $$(TARGET_ASM)
+
+$$(_OBJ): PRIVATE_ABI      := $$(TARGET_ARCH_ABI)
+$$(_OBJ): PRIVATE_SRC      := $$(_SRC)
+$$(_OBJ): PRIVATE_OBJ      := $$(_OBJ)
+$$(_OBJ): PRIVATE_MODULE   := $$(LOCAL_MODULE)
+$$(_OBJ): PRIVATE_TEXT     := $$(_TEXT)
+$$(_OBJ): PRIVATE_CC       := $$(_CC)
+$$(_OBJ): PRIVATE_CFLAGS   := $$(_FLAGS)
+ifeq ($$(LOCAL_SHORT_COMMANDS),true)
+_OPTIONS_LISTFILE := $$(_OBJ).cflags
+$$(_OBJ): $$(call generate-list-file,$$(_FLAGS),$$(_OPTIONS_LISTFILE))
+$$(_OBJ): PRIVATE_CFLAGS := @$$(call host-path,$$(_OPTIONS_LISTFILE))
+$$(_OBJ): $$(_OPTIONS_LISTFILE)
+endif
+
+$$(call generate-file-dir,$$(_OBJ))
+$$(_OBJ): $$(_SRC) $$(LOCAL_MAKEFILE) $$(NDK_APP_APPLICATION_MK) $$(NDK_DEPENDENCIES_CONVERTER) $(LOCAL_RS_OBJECTS)
+	$$(call host-echo-build-step,$$(PRIVATE_ABI),$$(PRIVATE_TEXT)) "$$(PRIVATE_MODULE) <= $$(notdir $$(PRIVATE_SRC))"
+	$$(hide) $$(PRIVATE_CC) $$(PRIVATE_CFLAGS) $$(call host-path,$$(PRIVATE_SRC)) -o $$(call host-path,$$(PRIVATE_OBJ))
+endef
+
+# -----------------------------------------------------------------------------
 # Function  : compile-c-source
 # Arguments : 1: single C source file name (relative to LOCAL_PATH)
 #             2: object file
@@ -1622,6 +1667,15 @@ compile-c-source = $(eval $(call ev-compile-c-source,$1,$2))
 # -----------------------------------------------------------------------------
 compile-s-source = $(eval $(call ev-compile-c-source,$1,$2))
 
+# -----------------------------------------------------------------------------
+# Function  : compile-asm-source
+# Arguments : 1: single Assembly source file name (relative to LOCAL_PATH)
+#             2: object file
+# Returns   : None
+# Usage     : $(call compile-asm-source,<srcfile>,<objfile>)
+# Rationale : Setup everything required to build a single Assembly source file
+# -----------------------------------------------------------------------------
+compile-asm-source = $(eval $(call ev-compile-asm-source,$1,$2))
 
 # -----------------------------------------------------------------------------
 # Template  : ev-compile-cpp-source
