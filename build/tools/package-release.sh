@@ -351,6 +351,8 @@ if [ "$PREBUILT_DIR" ]; then
     echo "Unpacking samples files" &&
     unpack_archive "$PREBUILT_DIR/samples.tar.bz2" "$REFERENCE"
     fail_panic "Could not unpack platform and sample files"
+    # Remove experimental api levels
+    rm -rf $REFERENCE/platforms/android-20
 elif [ "$PREBUILT_NDK" ]; then
     echo "ERROR: NOT IMPLEMENTED!"
     exit 1
@@ -420,12 +422,6 @@ if [ -z "$PREBUILT_NDK" ]; then
         unpack_prebuilt libportable-libs-$ABI "$REFERENCE"
         unpack_prebuilt compiler-rt-libs-$ABI "$REFERENCE"
         unpack_prebuilt libgccunwind-libs-$ABI "$REFERENCE"
-    done
-    for ABI in $UNKNOWN_ABIS; do
-        unpack_prebuilt stlport-libs-$ABI "$REFERENCE"
-        if [ "$WITH_LIBCXX" ]; then
-            unpack_prebuilt libcxx-libs-$ABI "$REFERENCE"
-        fi
     done
 fi
 
@@ -571,6 +567,11 @@ for SYSTEM in $SYSTEMS; do
 
     # Unpack other host tools
     unpack_prebuilt scan-build-view "$DSTDIR" "$DSTDIR64"
+
+    # Remove experimental stuffs
+    rm -rf $DSTDIR/toolchains/aarch64*
+    rm -rf $DSTDIR/toolchains/mips64el*
+    rm -rf $DSTDIR/toolchains/x86_64*
 
     # Create an archive for the final package. Extension depends on the
     # host system.

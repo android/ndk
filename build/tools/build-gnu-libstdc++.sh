@@ -95,7 +95,6 @@ if [ -z "$OPTION_BUILD_DIR" ]; then
 else
     BUILD_DIR=$OPTION_BUILD_DIR
 fi
-rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 fail_panic "Could not create build directory: $BUILD_DIR"
 
@@ -149,17 +148,26 @@ build_gnustl_for_abi ()
         echo "ERROR: Sysroot misses shared libraries! you probably need to run gen-platforms.sh"
         echo "*without* the --minimal flag before running this script."
         exit 1
-    fi 
+    fi
 
     case $ARCH in
         arm)
             BUILD_HOST=arm-linux-androideabi
             ;;
+        arm64)
+            BUILD_HOST=aarch64-linux-android
+            ;;
         x86)
             BUILD_HOST=i686-linux-android
             ;;
+        x86_64)
+            BUILD_HOST=x86_64-linux-android
+            ;;
         mips)
             BUILD_HOST=mipsel-linux-android
+            ;;
+        mips64)
+            BUILD_HOST=mips64el-linux-android
             ;;
     esac
 
