@@ -75,6 +75,9 @@ DEFAULT_ARCHS="arm x86 mips"
 DEFAULT_ARCH_TOOLCHAIN_NAME_arm=arm-linux-androideabi
 DEFAULT_ARCH_TOOLCHAIN_PREFIX_arm=arm-linux-androideabi
 
+DEFAULT_ARCH_TOOLCHAIN_NAME_arm64=aarch64-linux-android
+DEFAULT_ARCH_TOOLCHAIN_PREFIX_arm64=aarch64-linux-android
+
 DEFAULT_ARCH_TOOLCHAIN_NAME_x86=x86
 DEFAULT_ARCH_TOOLCHAIN_PREFIX_x86=i686-linux-android
 
@@ -83,6 +86,9 @@ DEFAULT_ARCH_TOOLCHAIN_PREFIX_x86_64=x86_64-linux-android
 
 DEFAULT_ARCH_TOOLCHAIN_NAME_mips=mipsel-linux-android
 DEFAULT_ARCH_TOOLCHAIN_PREFIX_mips=mipsel-linux-android
+
+DEFAULT_ARCH_TOOLCHAIN_NAME_mips64=mips64el-linux-android
+DEFAULT_ARCH_TOOLCHAIN_PREFIX_mips64=mips64el-linux-android
 
 # The space-separated list of all LLVM versions we support in NDK
 DEFAULT_LLVM_VERSION_LIST="3.4 3.3"
