@@ -1246,6 +1246,12 @@ convert_abi_to_arch ()
         mips)
             RET=mips
             ;;
+        arm64|x86_64|mips64)
+            RET=$ABI
+            ;;
+        aarch64)
+            RET=arm64
+            ;;
         *)
             if [ "$(arch_in_unknown_archs $ABI)" = "yes" ]; then
                 RET=$ABI
@@ -1270,11 +1276,8 @@ convert_arch_to_abi ()
         arm)
             RET=armeabi,armeabi-v7a,armeabi-v7a-hard
             ;;
-        x86)
-            RET=x86
-            ;;
-        mips)
-            RET=mips
+        x86|x86_64|mips|mips64|arm64)
+            RET=$ARCH
             ;;
         *)
             if [ "$(arch_in_unknown_archs $ARCH)" = "yes" ]; then
@@ -1366,8 +1369,17 @@ get_default_api_level_for_arch ()
 # $1: Architecture name
 get_default_platform_sysroot_for_arch ()
 {
-    local LEVEL=$(get_default_api_level_for_arch $1)
-    echo "platforms/android-$LEVEL/arch-$1"
+    local ARCH=$1
+    local LEVEL=$(get_default_api_level_for_arch $ARCH)
+
+    if [ "$ARCH" = "aarch64" ]; then
+        ARCH=arm64
+    fi
+    if [ "$ARCH" != "${ARCH%%64}" ] ; then
+        # Hack to use new 64-bit headers only available at, say LEVEL 20
+        LEVEL=20
+    fi
+    echo "platforms/android-$LEVEL/arch-$ARCH"
 }
 
 # Guess what?

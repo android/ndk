@@ -70,6 +70,8 @@ OPTION_ARCH=
 OPTION_ABI=
 OPTION_DEBUG_LIBS=
 OPTION_OVERLAY=
+OPTION_GCC_VERSION=$DEFAULT_GCC_VERSION
+OPTION_LLVM_VERSION=$DEFAULT_LLVM_VERSION
 PACKAGE_DIR=
 
 VERBOSE=no
@@ -358,7 +360,7 @@ get_default_compiler_for_arch()
     local ARCH=$1
     local TOOLCHAIN_PREFIX EXTRA_CFLAGS CC
 
-    if [ "$(arch_in_unknown_archs $ARCH)" = "yes" ]; then
+    if [ "$ARCH" = "${ARCH%%64*}" -a "$(arch_in_unknown_archs $ARCH)" = "yes" ]; then
         TOOLCHAIN_PREFIX="$NDK_DIR/$(get_llvm_toolchain_binprefix $DEFAULT_LLVM_VERSION)"
         CC="$TOOLCHAIN_PREFIX/clang"
         EXTRA_CFLAGS="-emit-llvm -target le32-none-ndk"
