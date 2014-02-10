@@ -158,6 +158,7 @@ void BitcodeCompiler::translate() {
   for (std::vector<BitcodeInfo>::const_iterator i = mBitcodeFiles.begin(),
        e = mBitcodeFiles.end(); i != e; ++i) {
     const BitcodeInfo &bc = *i;
+    LOGV("Translate bitcode: %s -> %s", bc.mBCPath.c_str(), bc.mTargetBCPath.c_str());
     std::string cmd = mExecutableToolsPath[(unsigned)CMD_TRANSLATE];
     cmd += std::string(" -arch=") + kGlobalTargetAttrs[mAbi].mArch;
     cmd += " " + bc.mBCPath + " -o " + bc.mTargetBCPath;
@@ -175,6 +176,7 @@ void BitcodeCompiler::compile() {
   for (std::vector<BitcodeInfo>::const_iterator i = mBitcodeFiles.begin(),
        e = mBitcodeFiles.end(); i != e; ++i) {
     const BitcodeInfo &bc = *i;
+    LOGV("Compile bitcode: %s -> %s", bc.mTargetBCPath.c_str(), bc.mObjPath.c_str());
     std::ostringstream os;
 
     os << mExecutableToolsPath[(unsigned)CMD_COMPILE]
@@ -210,7 +212,7 @@ void BitcodeCompiler::link() {
 
       if (bc.mLDLibs.empty()) {
         // No internal dependency for this bitcode
-        LOGV("Process bitcode: %s -> %s", bc.mBCPath.c_str(), bc.mSOName.c_str());
+        LOGV("Link: %s -> %s", bc.mObjPath.c_str(), bc.mSOName.c_str());
         std::string cmd = mExecutableToolsPath[(unsigned)CMD_LINK];
         cmd += " " + mGlobalLDFlags;
         cmd += " " + bc.mLDFlags;

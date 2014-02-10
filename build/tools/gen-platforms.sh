@@ -70,6 +70,8 @@ OPTION_ARCH=
 OPTION_ABI=
 OPTION_DEBUG_LIBS=
 OPTION_OVERLAY=
+OPTION_GCC_VERSION=$DEFAULT_GCC_VERSION
+OPTION_LLVM_VERSION=$DEFAULT_LLVM_VERSION
 PACKAGE_DIR=
 
 VERBOSE=no
@@ -122,6 +124,12 @@ for opt do
     ;;
   --overlay)
     OPTION_OVERLAY=true
+    ;;
+  --gcc-version=*)
+    OPTION_GCC_VERSION=$optarg
+    ;;
+  --llvm-version=*)
+    OPTION_LLVM_VERSION=$optarg
     ;;
   *)
     echo "unknown option '$opt', use --help"
@@ -359,11 +367,11 @@ get_default_compiler_for_arch()
     local TOOLCHAIN_PREFIX EXTRA_CFLAGS CC
 
     if [ "$(arch_in_unknown_archs $ARCH)" = "yes" ]; then
-        TOOLCHAIN_PREFIX="$NDK_DIR/$(get_llvm_toolchain_binprefix $DEFAULT_LLVM_VERSION)"
+        TOOLCHAIN_PREFIX="$NDK_DIR/$(get_llvm_toolchain_binprefix $OPTION_LLVM_VERSION)"
         CC="$TOOLCHAIN_PREFIX/clang"
         EXTRA_CFLAGS="-emit-llvm -target le32-none-ndk"
     else
-        TOOLCHAIN_PREFIX="$NDK_DIR/$(get_default_toolchain_binprefix_for_arch $1)"
+        TOOLCHAIN_PREFIX="$NDK_DIR/$(get_toolchain_binprefix_for_arch $ARCH $OPTION_GCC_VERSION)"
         TOOLCHAIN_PREFIX=${TOOLCHAIN_PREFIX%-}
         CC="$TOOLCHAIN_PREFIX-gcc"
         EXTRA_CFLAGS=
