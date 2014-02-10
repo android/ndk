@@ -7,6 +7,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if defined(LIBCXXABI)
+
 #include "stdexcept"
 #include "new"
 #include <cstdlib>
@@ -167,3 +169,5 @@ overflow_error::~overflow_error() _NOEXCEPT {}
 underflow_error::~underflow_error() _NOEXCEPT {}
 
 }  // std
+
+#endif // LIBCXXABI

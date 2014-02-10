@@ -23,6 +23,7 @@ libgabi++_src_files := \
         src/pointer_to_member_type_info.cc \
         src/call_unexpected.cc \
         src/si_class_type_info.cc \
+        src/stdexcept.cc \
         src/terminate.cc \
         src/type_info.cc \
         src/vmi_class_type_info.cc
