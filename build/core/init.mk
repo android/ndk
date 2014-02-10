@@ -519,7 +519,7 @@ ADD_TOOLCHAIN := $(BUILD_SYSTEM)/add-toolchain.mk
 
 # the list of known abis and archs
 NDK_KNOWN_DEVICE_ABIS := armeabi-v7a armeabi x86 mips
-NDK_KNOWN_ABIS     := $(NDK_KNOWN_DEVICE_ABIS) armeabi-v7a-hard
+NDK_KNOWN_ABIS     := armeabi-v7a-hard $(NDK_KNOWN_DEVICE_ABIS)
 NDK_KNOWN_ARCHS    := arm x86 mips arm64 x86_64 mips64
 _archs := $(sort $(strip $(notdir $(wildcard $(NDK_PLATFORMS_ROOT)/android-*/arch-*))))
 NDK_FOUND_ARCHS    := $(_archs:arch-%=%)
