@@ -32,10 +32,10 @@
 
 namespace std {
 
-#if !defined(GABIXX_LIBCXX)
+#if !defined(LIBCXXABI)
 exception::exception() _GABIXX_NOEXCEPT {
 }
-#endif // !defined(GABIXX_LIBCXX)
+#endif // !defined(LIBCXXABI)
 
 exception::~exception() _GABIXX_NOEXCEPT {
 }
@@ -44,9 +44,10 @@ const char* exception::what() const _GABIXX_NOEXCEPT {
   return "std::exception";
 }
 
-#if !defined(GABIXX_LIBCXX)
+#if !defined(LIBCXXABI)
 bad_exception::bad_exception() _GABIXX_NOEXCEPT {
 }
+#endif // !defined(LIBCXXABI)
 
 bad_exception::~bad_exception() _GABIXX_NOEXCEPT {
 }
@@ -54,33 +55,14 @@ bad_exception::~bad_exception() _GABIXX_NOEXCEPT {
 const char* bad_exception::what() const _GABIXX_NOEXCEPT {
   return "std::bad_exception";
 }
-#endif // !defined(GABIXX_LIBCXX)
 
-bad_cast::bad_cast() _GABIXX_NOEXCEPT {
-}
-
-bad_cast::~bad_cast() _GABIXX_NOEXCEPT {
-}
-
-const char* bad_cast::what() const _GABIXX_NOEXCEPT {
-  return "std::bad_cast";
-}
-
-bad_typeid::bad_typeid() _GABIXX_NOEXCEPT {
-}
-
-bad_typeid::~bad_typeid() _GABIXX_NOEXCEPT {
-}
-
-const char* bad_typeid::what() const _GABIXX_NOEXCEPT {
-  return "std::bad_typeid";
-}
-
+#if !defined(LIBCXXABI)
 bool uncaught_exception() _GABIXX_NOEXCEPT {
   using namespace __cxxabiv1;
 
   __cxa_eh_globals* globals = __cxa_get_globals();
   return globals->uncaughtExceptions != 0;
 }
+#endif // !defined(LIBCXXABI)
 
 }  // namespace std

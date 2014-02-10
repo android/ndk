@@ -30,7 +30,7 @@
 
 #include "gabixx_config.h"
 
-#if !defined(GABIXX_LIBCXX)
+#if !defined(LIBCXXABI)
 
 namespace std {
 
@@ -62,6 +62,6 @@ namespace std {
 
 } // namespace std
 
-#endif  // !defined(GABIXX_LIBCXX)
+#endif  // !defined(LIBCXXABI)
 
 #endif // __GABIXX_EXCEPTION__

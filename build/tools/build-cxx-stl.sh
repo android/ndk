@@ -178,7 +178,7 @@ GABIXX_CXXFLAGS="$COMMON_CXXFLAGS"
 GABIXX_SOURCES=$(cd $ANDROID_NDK_ROOT/$GABIXX_SUBDIR && ls src/*.cc)
 GABIXX_LDFLAGS="-ldl"
 if [ "$CXX_STL" = "libc++" ]; then
-  GABIXX_CXXFLAGS="$GABIXX_CXXFLAGS -DGABIXX_LIBCXX=1"
+  GABIXX_CXXFLAGS="$GABIXX_CXXFLAGS -DLIBCXXABI=1"
 fi
 
 # Determine STLport build parameters
@@ -220,7 +220,7 @@ src/cxa.c"
 
 # Determine Libc++ build parameters
 LIBCXX_CFLAGS="$COMMON_CFLAGS $LIBCXX_INCLUDES -Drestrict=__restrict__"
-LIBCXX_CXXFLAGS="$COMMON_CXXFLAGS -DLIBCXXRT=1 -DGABIXX_LIBCXX=1 -std=c++11"
+LIBCXX_CXXFLAGS="$COMMON_CXXFLAGS -DLIBCXXABI=1 -std=c++11"
 LIBCXX_SOURCES=\
 "libcxx/src/algorithm.cpp \
 libcxx/src/bind.cpp \
@@ -345,6 +345,9 @@ libcxx/src/support/android/locale_android.cpp \
 ../../android/support/src/musl-locale/wcsxfrm_l.c \
 ../../android/support/src/musl-locale/wctrans_l.c \
 ../../android/support/src/musl-locale/wctype_l.c \
+../../android/support/src/musl-math/frexpf.c \
+../../android/support/src/musl-math/frexpl.c \
+../../android/support/src/musl-math/frexp.c \
 ../../android/support/src/musl-stdio/swprintf.c \
 ../../android/support/src/musl-stdio/vwprintf.c \
 ../../android/support/src/musl-stdio/wprintf.c \
