@@ -420,6 +420,7 @@ rem target/triple already spelled out.
 if ERRORLEVEL 1 exit /b 1
 :done
 EOF
+    chmod 0755 "$TMPDIR/bin/clang.cmd" "$TMPDIR/bin/clang++.cmd"
     cp -a "$TMPDIR/bin/clang.cmd" "$TMPDIR/bin/$TOOLCHAIN_PREFIX-clang.cmd"
     cp -a "$TMPDIR/bin/clang++.cmd" "$TMPDIR/bin/$TOOLCHAIN_PREFIX-clang++.cmd"
   fi
