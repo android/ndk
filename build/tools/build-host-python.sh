@@ -407,6 +407,8 @@ install_host_python ()
         run copy_directory "$SRCDIR/lib"     "$DSTDIR/lib"
         run copy_directory "$SRCDIR/share"   "$DSTDIR/share"
         run copy_directory "$SRCDIR/include" "$DSTDIR/include"
+        # remove unneeded files
+        run rm -rf "$DSTDIR/share/man"
     fi
 }
 
