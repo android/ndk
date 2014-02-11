@@ -480,6 +480,7 @@ rem target/triple already spelled out.
 if ERRORLEVEL 1 exit /b 1
 :done
 EOF
+        chmod 0755 "${ANALYZER}.cmd" "${ANALYZER}++.cmd"
     fi
 done
 
