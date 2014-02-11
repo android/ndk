@@ -486,37 +486,47 @@ copy_stl_common_headers () {
 }
 
 # $1: Source ABI (e.g. 'armeabi')
-# $2: Optional extra ABI variant, or empty (e.g. "", "thumb", "armv7-a/thumb")
+# $2: Optional destination directory, default to empty (e.g. "", "thumb", "armv7-a/thumb")
+# $3: Optional source directory, default to empty (e.g. "", "thumb", "armv7-a/thumb")
+# $4: Optional "yes" (default) or "no" about whether to copy additional header (eg. include/bits)
 copy_stl_libs () {
     local ABI=$1
-    local ABI2=$2
+    local DEST_DIR=$2
+    local SRC_DIR=$3
+    local COPY_ADDITIONAL_HEADER=yes
     case $STL in
         gnustl)
-            # gnustl has thumb version of libraries.  Append ABI with basename($ABI2) if $ABI2 contain '/'
-            ABI1=$ABI
-            if [ "$ABI2" != "${ABI2%%/*}" ] ; then
-                ABI1=$ABI/`basename $ABI2`
+            # gnustl has thumb version of libraries.  Append ABI with basename($DEST_DIR) if $DEST_DIR contain '/'
+            ABI_SRC_DIR=$ABI
+            if [ -n "$SRC_DIR" ]; then
+                ABI_SRC_DIR=$ABI/$SRC_DIR
+            else
+                if [ "$DEST_DIR" != "${DEST_DIR%%/*}" ] ; then
+                    ABI_SRC_DIR=$ABI/`basename $DEST_DIR`
+                fi
+	    fi
+            if [ "$COPY_ADDITIONAL_HEADER" != "no" ]; then
+                copy_directory "$GNUSTL_LIBS/$ABI/include/bits" "$ABI_STL_INCLUDE_TARGET/$DEST_DIR/bits"
             fi
-            copy_directory "$GNUSTL_LIBS/$ABI/include/bits" "$ABI_STL_INCLUDE_TARGET/$ABI2/bits"
-            copy_file_list "$GNUSTL_LIBS/$ABI1" "$ABI_STL/lib/$ABI2" "libgnustl_shared.so"
-            copy_file_list "$GNUSTL_LIBS/$ABI1" "$ABI_STL/lib/$ABI2" "libsupc++.a"
-            cp -p "$GNUSTL_LIBS/$ABI1/libgnustl_static.a" "$ABI_STL/lib/$ABI2/libstdc++.a"
+            copy_file_list "$GNUSTL_LIBS/$ABI_SRC_DIR" "$ABI_STL/lib/$DEST_DIR" "libgnustl_shared.so"
+            copy_file_list "$GNUSTL_LIBS/$ABI_SRC_DIR" "$ABI_STL/lib/$DEST_DIR" "libsupc++.a"
+            cp -p "$GNUSTL_LIBS/$ABI_SRC_DIR/libgnustl_static.a" "$ABI_STL/lib/$DEST_DIR/libstdc++.a"
             ;;
         libcxx|libc++)
-            copy_file_list "$COMPILER_RT_LIBS/$ABI" "$ABI_STL/lib/$ABI2" "libcompiler_rt_shared.so" "libcompiler_rt_static.a"
-            copy_file_list "$LIBCXX_LIBS/$ABI" "$ABI_STL/lib/$ABI2" "libc++_shared.so"
-            cp -p "$LIBCXX_LIBS/$ABI/libc++_static.a" "$ABI_STL/lib/$ABI2/libstdc++.a"
+            copy_file_list "$COMPILER_RT_LIBS/$ABI" "$ABI_STL/lib/$DEST_DIR" "libcompiler_rt_shared.so" "libcompiler_rt_static.a"
+            copy_file_list "$LIBCXX_LIBS/$ABI" "$ABI_STL/lib/$DEST_DIR" "libc++_shared.so"
+            cp -p "$LIBCXX_LIBS/$ABI/libc++_static.a" "$ABI_STL/lib/$DEST_DIR/libstdc++.a"
             ;;
         stlport)
             if [ "$ARCH_STL" != "$ARCH" ]; then
               tmp_lib_dir=$TMPDIR/stl
               $NDK_DIR/build/tools/build-cxx-stl.sh --stl=stlport --out-dir=$tmp_lib_dir --abis=unknown
-              cp -p "`ls $tmp_lib_dir/sources/cxx-stl/stlport/libs/*/libstlport_static.a`" "$ABI_STL/lib/$ABI2/libstdc++.a"
-              cp -p "`ls $tmp_lib_dir/sources/cxx-stl/stlport/libs/*/libstlport_shared.bc`" "$ABI_STL/lib/$ABI2/libstlport_shared.so"
+              cp -p "`ls $tmp_lib_dir/sources/cxx-stl/stlport/libs/*/libstlport_static.a`" "$ABI_STL/lib/$DEST_DIR/libstdc++.a"
+              cp -p "`ls $tmp_lib_dir/sources/cxx-stl/stlport/libs/*/libstlport_shared.bc`" "$ABI_STL/lib/$DEST_DIR/libstlport_shared.so"
               rm -rf $tmp_lib_dir
             else
-              copy_file_list "$STLPORT_LIBS/$ABI" "$ABI_STL/lib/$ABI2" "libstlport_shared.so"
-              cp -p "$STLPORT_LIBS/$ABI/libstlport_static.a" "$ABI_STL/lib/$ABI2/libstdc++.a"
+              copy_file_list "$STLPORT_LIBS/$ABI" "$ABI_STL/lib/$DEST_DIR" "libstlport_shared.so"
+              cp -p "$STLPORT_LIBS/$ABI/libstlport_static.a" "$ABI_STL/lib/$DEST_DIR/libstdc++.a"
             fi
             ;;
         *)
@@ -535,6 +545,8 @@ case $ARCH in
         copy_stl_libs armeabi "/thumb"
         copy_stl_libs armeabi-v7a "armv7-a"
         copy_stl_libs armeabi-v7a "armv7-a/thumb"
+        copy_stl_libs armeabi-v7a-hard "armv7-a/hard" "." "no"
+        copy_stl_libs armeabi-v7a-hard "armv7-a/thumb/hard" "thumb" "no"
         ;;
     x86|mips)
         copy_stl_libs "$ARCH" ""

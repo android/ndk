@@ -95,6 +95,7 @@ if [ -z "$OPTION_BUILD_DIR" ]; then
 else
     BUILD_DIR=$OPTION_BUILD_DIR
 fi
+rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 fail_panic "Could not create build directory: $BUILD_DIR"
 
@@ -162,7 +163,7 @@ build_gnustl_for_abi ()
             ;;
     esac
 
-    EXTRA_FLAGS=
+    EXTRA_FLAGS="-ffunction-sections -fdata-sections"
     if [ -n "$THUMB" ] ; then
         EXTRA_FLAGS="-mthumb"
     fi
@@ -187,9 +188,15 @@ build_gnustl_for_abi ()
 
     export LDFLAGS="-L$SYSROOT/usr/lib -lc $EXTRA_FLAGS"
 
-    if [ "$ABI" = "armeabi-v7a" ]; then
-        CXXFLAGS=$CXXFLAGS" -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16"
+    if [ "$ABI" = "armeabi-v7a" -o "$ABI" = "armeabi-v7a-hard" ]; then
+        CXXFLAGS=$CXXFLAGS" -march=armv7-a -mfpu=vfpv3-d16"
         LDFLAGS=$LDFLAGS" -Wl,--fix-cortex-a8"
+        if [ "$ABI" != "armeabi-v7a-hard" ]; then
+            CXXFLAGS=$CXXFLAGS" -mfloat-abi=softfp"
+        else
+            CXXFLAGS=$CXXFLAGS" -mhard-float -D_NDK_MATH_NO_SOFTFP=1"
+            LDFLAGS=$LDFLAGS" -Wl,--no-warn-mismatch -lm_hard"
+        fi
     fi
 
     LIBTYPE_FLAGS=

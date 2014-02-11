@@ -517,11 +517,19 @@ $(call ndk_log,Found max platform level: $(NDK_MAX_PLATFORM_LEVEL))
 # the build script to include in each toolchain config.mk
 ADD_TOOLCHAIN := $(BUILD_SYSTEM)/add-toolchain.mk
 
-# the list of known values
-NDK_KNOWN_ABIS     := armeabi-v7a armeabi x86 mips
+# the list of known abis and archs
+NDK_KNOWN_DEVICE_ABIS := armeabi-v7a armeabi x86 mips
+NDK_KNOWN_ABIS     := $(NDK_KNOWN_DEVICE_ABIS) armeabi-v7a-hard
 NDK_KNOWN_ARCHS    := arm x86 mips
 _archs := $(sort $(strip $(notdir $(wildcard $(NDK_PLATFORMS_ROOT)/android-*/arch-*))))
 NDK_FOUND_ARCHS    := $(_archs:arch-%=%)
+
+# the list of abis 'APP_ABI=all' is expanded to
+ifeq ($(_NDK_TESTING_ALL_),yes)
+NDK_APP_ABI_ALL_EXPANDED := $(NDK_KNOWN_ABIS)
+else
+NDK_APP_ABI_ALL_EXPANDED := $(NDK_KNOWN_DEVICE_ABIS)
+endif
 
 # the list of all toolchains in this NDK
 NDK_ALL_TOOLCHAINS :=

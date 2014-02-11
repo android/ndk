@@ -423,7 +423,7 @@ for ABI in $PREBUILT_ABIS; do
       armeabi)
           LLVM_TARGET=armv5te-none-linux-androideabi
           ;;
-      armeabi-v7a)
+      armeabi-v7a|armeabi-v7a-hard)
           LLVM_TARGET=armv7-none-linux-androideabi
           ;;
       x86)
