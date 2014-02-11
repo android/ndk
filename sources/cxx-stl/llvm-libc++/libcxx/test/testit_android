@@ -229,17 +229,6 @@ OPTIONS="$OPTIONS -I$LIBCXX_ROOT/test/support"
 # llvm-libc++/libcxx/test/lit.cfg line #294 defineds the following for testing on Linux
 OPTIONS="$OPTIONS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS"
 
-if [ -z "$HEADER_INCLUDE" ]
-then
-  HEADER_INCLUDE="-I$LIBCXX_ROOT/include -I$ANDROID_SUPPORT/include"
-fi
-
-if [ -z "$SOURCE_LIB" ]
-then
-  SOURCE_LIB="-L$LIBCXX_LIBS"
-fi
-SOURCE_LIB="$SOURCE_LIB -L$LIBCOMPILER_RT_LIBS"
-
 if [ -z "$ADB" ]
 then
   ADB=adb
@@ -289,7 +278,7 @@ adb_shell "mkdir -p $TARGET_PATH"
 
 if [ "$DO_STATIC" ]; then
   # Statically link to ensure the executable can be run easily through ADB
-  LIBS="-lc++_static -lcompiler_rt_static -latomic"
+  LIBS="-lcompiler_rt_static -latomic"
 else
   run2 $ADB push $LIBCXX_LIBS/libc++_shared.so $TARGET_PATH 2>/dev/null
   if [ $? != 0 ]; then
@@ -301,7 +290,7 @@ else
     echo "ERROR: Can't push shared libcompiler_rt to target device!"
     exit 1
   fi
-  LIBS="-nodefaultlibs -lc++_shared -lcompiler_rt_shared -latomic -ldl -lc -lm"
+  LIBS="-lc++_shared -lcompiler_rt_shared -latomic"
 fi
 
 case $TRIPLE in
