@@ -32,6 +32,12 @@ NDK_BUILDTOOLS_PATH=$ROOTDIR/build/tools
 . $NDK_BUILDTOOLS_PATH/ndk-common.sh
 . $NDK_BUILDTOOLS_PATH/prebuilt-common.sh
 
+# Defining _NDK_TESTING_ALL_=yes to put armeabi-v7a-hard in its own libs/armeabi-v7a-hard
+# directoy and tested separately from armeabi-v7a.  Some tests are now compiled with both
+# APP_ABI=armeabi-v7a and APP_ABI=armeabi-v7a-hard. Without _NDK_TESTING_ALL_=yes, tests
+# may fail to install due to race condition on the same libs/armeabi-v7a
+_NDK_TESTING_ALL_=yes
+
 # The list of tests that are too long to be part of a normal run of
 # run-tests.sh. Most of these do not run properly at the moment.
 LONG_TESTS="prebuild-stlport test-stlport test-gnustl-full \
