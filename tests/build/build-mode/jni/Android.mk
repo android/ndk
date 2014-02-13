@@ -38,7 +38,7 @@ endif # TARGET_ARCH == arm
 
 # We build 8 armeabi-v7a binaries because we need to check neon as well
 #
-ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
+ifneq ($(filter $(TARGET_ARCH_ABI), armeabi-v7a armeabi-v7a-hard),)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := test_build_mode_thumb2
@@ -108,7 +108,7 @@ LOCAL_ARM_MODE := arm
 LOCAL_ARM_NEON := true
 include $(BUILD_EXECUTABLE)
 
-endif # TARGET_ARCH_ABI == armeabi-v7a
+endif # TARGET_ARCH_ABI == armeabi-v7a || armeabi-v7a-hard
 
 # We only build a single binary for x86
 #

@@ -33,7 +33,7 @@ else
   done
 
   if [ -z "$ABIS" ]; then
-    ABIS="armeabi armeabi-v7a x86 mips"
+    ABIS="armeabi armeabi-v7a x86 mips armeabi-v7a-hard"
   fi
 fi
 
