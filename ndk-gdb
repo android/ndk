@@ -768,7 +768,7 @@ fi
 
 # If we are debugging UNKNOWN_ABI, download compiled *.so from device.
 #
-if [ $COMPAT_ABI == $UNKNOWN_ABI ]; then
+if [ "$COMPAT_ABI" == "$UNKNOWN_ABI" ]; then
     for bc in $BCFILES; do
         log "Pulled $(basename $bc .bc).so from device/emulator."
         adb pull $DATA_DIR/lib/$(basename $bc .bc).so $PROJECT/obj/local/$UNKNOWN_ABI/
