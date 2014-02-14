@@ -114,7 +114,12 @@ run ./configure $CONFIGURE_FLAGS --build=$ABI_CONFIGURE_BUILD
 fail_panic "Failed to configure the $BUILD_OUT/yasm!"
 
 log "Building yasm"
-run make -j $NUM_JOBS
+# build yasm in -j1 to avoid a race condition not well understood at this moment
+# which causes failure with error message reads:
+#   perfect.c: Duplicates keys!
+#   make: *** [x86insn_nasm.c] Error 1
+#   make: *** Waiting for unfinished jobs....
+run make -j1 # -j$NUM_JOBS
 fail_panic "Failed to build the $BUILD_OUT/yasm!"
 
 log "Installing yasm"
