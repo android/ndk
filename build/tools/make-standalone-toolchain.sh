@@ -560,7 +560,7 @@ esac
 # Install or Package
 if [ -n "$INSTALL_DIR" ] ; then
     dump "Copying files to: $INSTALL_DIR"
-    run copy_directory "$TMPDIR" "$INSTALL_DIR"
+    run move_directory "$TMPDIR" "$INSTALL_DIR"
 else
     PACKAGE_FILE="$PACKAGE_DIR/$TOOLCHAIN_NAME.tar.bz2"
     dump "Creating package file: $PACKAGE_FILE"
