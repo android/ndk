@@ -20,7 +20,7 @@
 #include <iterator>
 #include <cassert>
 
-#include "../../min_allocator.h"
+#include "min_allocator.h"
 
 int main()
 {
@@ -42,6 +42,25 @@ int main()
     C::const_iterator j;
     j = c.cbegin();
     assert(i == j);
+    }
+#endif
+#if _LIBCPP_STD_VER > 11
+    { // N3644 testing
+        std::deque<int>::iterator ii1{}, ii2{};
+        std::deque<int>::iterator ii4 = ii1;
+        std::deque<int>::const_iterator cii{};
+        assert ( ii1 == ii2 );
+        assert ( ii1 == ii4 );
+        assert ( ii1 == cii );
+
+        assert ( !(ii1 != ii2 ));
+        assert ( !(ii1 != cii ));
+
+//         std::deque<int> c;
+//         assert ( ii1 != c.cbegin());
+//         assert ( cii != c.begin());
+//         assert ( cii != c.cend());
+//         assert ( ii1 != c.end());
     }
 #endif
 }

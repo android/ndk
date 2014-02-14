@@ -29,7 +29,7 @@
 #include <set>
 #include <cassert>
 
-#include "../../min_allocator.h"
+#include "min_allocator.h"
 
 int main()
 {
@@ -189,6 +189,20 @@ int main()
         i = m.begin();
         for (int j = 1; j <= m.size(); ++j, ++i)
             assert(*i == j);
+    }
+#endif
+#if _LIBCPP_STD_VER > 11
+    { // N3644 testing
+        typedef std::set<int> C;
+        C::iterator ii1{}, ii2{};
+        C::iterator ii4 = ii1;
+        C::const_iterator cii{};
+        assert ( ii1 == ii2 );
+        assert ( ii1 == ii4 );
+        assert ( ii1 == cii );
+
+        assert ( !(ii1 != ii2 ));
+        assert ( !(ii1 != cii ));
     }
 #endif
 }

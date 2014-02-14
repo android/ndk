@@ -11,12 +11,14 @@
 #ifndef _LIBCPP_SUPPORT_WIN32_MATH_WIN32_H
 #define _LIBCPP_SUPPORT_WIN32_MATH_WIN32_H
 
-#if !defined(_MSC_VER)
-#error "This header is MSVC specific, Clang and GCC should not include it"
+#if !defined(_LIBCPP_MSVCRT)
+#error "This header complements Microsoft's C Runtime library, and should not be included otherwise."
 #else
 
 #include <math.h>
+#include <float.h> // _FPCLASS_PN etc.
 
+// Necessary?
 typedef float float_t;
 typedef double double_t;
 
@@ -108,6 +110,6 @@ _LIBCPP_ALWAYS_INLINE int fpclassify( double num )
     return _fpclass(num);
 }
 
-#endif // _MSC_VER
+#endif // _LIBCPP_MSVCRT
 
 #endif // _LIBCPP_SUPPORT_WIN32_MATH_WIN32_H

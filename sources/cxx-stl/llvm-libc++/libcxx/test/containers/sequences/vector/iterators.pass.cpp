@@ -20,7 +20,7 @@
 #include <cassert>
 #include <iterator>
 
-#include "../../min_allocator.h"
+#include "min_allocator.h"
 
 struct A
 {
@@ -133,6 +133,19 @@ int main()
         i->first = 3;
         C::const_iterator j = i;
         assert(j->first == 3);
+    }
+#endif
+#if _LIBCPP_STD_VER > 11
+    { // N3644 testing
+        typedef std::vector<int> C;
+        C::iterator ii1{}, ii2{};
+        C::iterator ii4 = ii1;
+        C::const_iterator cii{};
+        assert ( ii1 == ii2 );
+        assert ( ii1 == ii4 );
+        assert ( ii1 == cii );
+        assert ( !(ii1 != ii2 ));
+        assert ( !(ii1 != cii ));
     }
 #endif
 }

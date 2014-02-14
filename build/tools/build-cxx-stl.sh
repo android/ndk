@@ -236,8 +236,10 @@ libcxx/src/locale.cpp \
 libcxx/src/memory.cpp \
 libcxx/src/mutex.cpp \
 libcxx/src/new.cpp \
+libcxx/src/optional.cpp \
 libcxx/src/random.cpp \
 libcxx/src/regex.cpp \
+libcxx/src/shared_mutex.cpp \
 libcxx/src/stdexcept.cpp \
 libcxx/src/string.cpp \
 libcxx/src/strstream.cpp \
