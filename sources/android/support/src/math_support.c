@@ -29,28 +29,21 @@
 #include <math.h>
 #include <assert.h>
 
-double log2(double d) {
-#warning Not implemented
-  assert(0);
-  return 0;
-}
+/*
+ * On Android, long double and double are identical, hence nexttoward is the
+ * same as nextafter.
+ */
 
 double nexttoward(double d, long double td) {
-#warning Not implemented
-  assert(0);
-  return 0;
+  return nextafter(d, (double)td);
 }
 
 float nexttowardf(float f, long double td) {
-#warning Not implemented
-  assert(0);
-  return 0;
+  return nextafterf(f, (float)td);
 }
 
 long double nexttowardl(long double ld, long double td) {
-#warning Not implemented
-  assert(0);
-  return 0;
+  return nextafter((double)ld, (double)td);
 }
 
 long double acosl(long double x) { return acos((double)x); }
