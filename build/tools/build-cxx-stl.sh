@@ -418,10 +418,12 @@ else
 fi
 SHARED_CXXFLAGS=
 
-UNKNOWN_ABIS="$(filter_out "$PREBUILT_ABIS" "$ABIS")"
-if [ -n "$UNKNOWN_ABIS" ] && [ -n "$(find_ndk_unknown_archs)" ]; then
-  ABIS="$(filter_out "$UNKNOWN_ABIS" "$ABIS")"
-  ABIS="$ABIS $(find_ndk_unknown_archs)"
+if [ "$ABIS" = "${ABIS%%64*}" ]; then
+    UNKNOWN_ABIS="$(filter_out "$PREBUILT_ABIS" "$ABIS" )"
+    if [ -n "$UNKNOWN_ABIS" ] && [ -n "$(find_ndk_unknown_archs)" ]; then
+      ABIS="$(filter_out "$UNKNOWN_ABIS" "$ABIS")"
+      ABIS="$ABIS $(find_ndk_unknown_archs)"
+    fi
 fi
 
 # build_stl_libs_for_abi
