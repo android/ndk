@@ -81,10 +81,16 @@ $(PRIVATE_CXX) \
 endef
 
 define cmd-build-executable
+# The following -rpath-link= are needed for ld.bfd (default for MIPS) when
+# linking executable to supress warning about missing symbol by *so not directly needed.
+# ld.gold (default for ARM and X86) and ld.mcld don't emulate this buggy behavior,
+# and ignore -rpath-link completely.
 $(PRIVATE_CXX) \
     -Wl,--gc-sections \
     -Wl,-z,nocopyreloc \
     --sysroot=$(call host-path,$(PRIVATE_SYSROOT_LINK)) \
+    -Wl,-rpath-link=$(call host-path,$(PRIVATE_SYSROOT_LINK)/usr/lib) \
+    -Wl,-rpath-link=$(call host-path,$(TARGET_OUT)) \
     $(PRIVATE_LINKER_OBJECTS_AND_LIBRARIES) \
     $(PRIVATE_LDFLAGS) \
     $(PRIVATE_LDLIBS) \
