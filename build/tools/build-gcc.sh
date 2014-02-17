@@ -457,6 +457,12 @@ unwind_library_for_abi ()
           unwind-dw2.o"
     fi
     ;;
+    arm64)
+    BASE_DIR="$BUILD_OUT/gcc-$GCC_VERSION/$ABI_CONFIGURE_TARGET/libgcc/"
+    OBJS="unwind-c.o \
+          unwind-dw2-fde-dip.o \
+          unwind-dw2.o"
+    ;;
     esac
 
     for OBJ in $OBJS; do
