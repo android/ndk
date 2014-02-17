@@ -70,8 +70,8 @@ Public Member Functions</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classandroid_1_1RSC_1_1Allocation.html#acfc9d84ddfbbc02bdba706a1b63afd6b">copy3DRangeFrom</a> (uint32_t xoff, uint32_t yoff, uint32_t zoff, uint32_t w, uint32_t h, uint32_t d, sp&lt; const <a class="el" href="classandroid_1_1RSC_1_1Allocation.html">Allocation</a> &gt; data, uint32_t dataXoff, uint32_t dataYoff, uint32_t dataZoff)</td></tr>
 <tr><td colspan="2"><h2><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">static sp&lt; <a class="el" href="classandroid_1_1RSC_1_1Allocation.html">Allocation</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classandroid_1_1RSC_1_1Allocation.html#a005a8f8186dd6b4565ea90094161a64b">createTyped</a> (sp&lt; <a class="el" href="classandroid_1_1RSC_1_1RS.html">RS</a> &gt; rs, sp&lt; const <a class="el" href="classandroid_1_1RSC_1_1Type.html">Type</a> &gt; type, RsAllocationMipmapControl mips, uint32_t usage)</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">static sp&lt; <a class="el" href="classandroid_1_1RSC_1_1Allocation.html">Allocation</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classandroid_1_1RSC_1_1Allocation.html#a73bf9d9ddf038e60024fb40287b71438">createTyped</a> (sp&lt; <a class="el" href="classandroid_1_1RSC_1_1RS.html">RS</a> &gt; rs, sp&lt; const <a class="el" href="classandroid_1_1RSC_1_1Type.html">Type</a> &gt; type, RsAllocationMipmapControl mips, uint32_t usage, void *pointer)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">static sp&lt; <a class="el" href="classandroid_1_1RSC_1_1Allocation.html">Allocation</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classandroid_1_1RSC_1_1Allocation.html#a983b914efa208763b4b58db62586f138">createTyped</a> (sp&lt; <a class="el" href="classandroid_1_1RSC_1_1RS.html">RS</a> &gt; rs, sp&lt; const <a class="el" href="classandroid_1_1RSC_1_1Type.html">Type</a> &gt; type, RsAllocationMipmapControl mipmaps, uint32_t usage)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">static sp&lt; <a class="el" href="classandroid_1_1RSC_1_1Allocation.html">Allocation</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classandroid_1_1RSC_1_1Allocation.html#a8951e64fcb95241504a445fa293380e3">createTyped</a> (sp&lt; <a class="el" href="classandroid_1_1RSC_1_1RS.html">RS</a> &gt; rs, sp&lt; const <a class="el" href="classandroid_1_1RSC_1_1Type.html">Type</a> &gt; type, RsAllocationMipmapControl mipmaps, uint32_t usage, void *pointer)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">static sp&lt; <a class="el" href="classandroid_1_1RSC_1_1Allocation.html">Allocation</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classandroid_1_1RSC_1_1Allocation.html#ae0c87f83e692ade1abba9a8db6d40aae">createTyped</a> (sp&lt; <a class="el" href="classandroid_1_1RSC_1_1RS.html">RS</a> &gt; rs, sp&lt; const <a class="el" href="classandroid_1_1RSC_1_1Type.html">Type</a> &gt; type, uint32_t usage=RS_ALLOCATION_USAGE_SCRIPT)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">static sp&lt; <a class="el" href="classandroid_1_1RSC_1_1Allocation.html">Allocation</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classandroid_1_1RSC_1_1Allocation.html#afd281c4fccca4bf1f69dd2cbdfafb96c">createSized</a> (sp&lt; <a class="el" href="classandroid_1_1RSC_1_1RS.html">RS</a> &gt; rs, sp&lt; const <a class="el" href="classandroid_1_1RSC_1_1Element.html">Element</a> &gt; e, size_t count, uint32_t usage=RS_ALLOCATION_USAGE_SCRIPT)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">static sp&lt; <a class="el" href="classandroid_1_1RSC_1_1Allocation.html">Allocation</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classandroid_1_1RSC_1_1Allocation.html#aa20d012e4df254a06c595527e9203e75">createSized2D</a> (sp&lt; <a class="el" href="classandroid_1_1RSC_1_1RS.html">RS</a> &gt; rs, sp&lt; const <a class="el" href="classandroid_1_1RSC_1_1Element.html">Element</a> &gt; e, size_t x, size_t y, uint32_t usage=RS_ALLOCATION_USAGE_SCRIPT)</td></tr>
@@ -80,7 +80,7 @@ Static Public Member Functions</h2></td></tr>
 <div class="textblock"><p>This class provides the primary method through which data is passed to and from RenderScript kernels. An <a class="el" href="classandroid_1_1RSC_1_1Allocation.html">Allocation</a> provides the backing store for a given <a class="el" href="classandroid_1_1RSC_1_1Type.html">Type</a>.</p>
 <p>An <a class="el" href="classandroid_1_1RSC_1_1Allocation.html">Allocation</a> also contains a set of usage flags that denote how the <a class="el" href="classandroid_1_1RSC_1_1Allocation.html">Allocation</a> could be used. For example, an <a class="el" href="classandroid_1_1RSC_1_1Allocation.html">Allocation</a> may have usage flags specifying that it can be used from a script as well as input to a <a class="el" href="classandroid_1_1RSC_1_1Sampler.html">Sampler</a>. A developer must synchronize across these different usages using syncAll(int) in order to ensure that different users of the <a class="el" href="classandroid_1_1RSC_1_1Allocation.html">Allocation</a> have a consistent view of memory. For example, in the case where an <a class="el" href="classandroid_1_1RSC_1_1Allocation.html">Allocation</a> is used as the output of one kernel and as <a class="el" href="classandroid_1_1RSC_1_1Sampler.html">Sampler</a> input in a later kernel, a developer must call syncAll(RS_ALLOCATION_USAGE_SCRIPT) prior to launching the second kernel to ensure correctness. </p>
 
-<p>Definition at line <a class="el" href="rsCppStructs_8h_source.html#l00288">288</a> of file <a class="el" href="rsCppStructs_8h_source.html">rsCppStructs.h</a>.</p>
+<p>Definition at line <a class="el" href="rsCppStructs_8h_source.html#l00293">293</a> of file <a class="el" href="rsCppStructs_8h_source.html">rsCppStructs.h</a>.</p>
 </div><hr/><h2>Member Function Documentation</h2>
 <a class="anchor" id="ab3c6154ae194a83c7f639012d256d62d"></a><!-- doxytag: member="android::RSC::Allocation::copy1DFrom" ref="ab3c6154ae194a83c7f639012d256d62d" args="(const void *data)" -->
 <div class="memitem">
@@ -909,7 +909,7 @@ Static Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a005a8f8186dd6b4565ea90094161a64b"></a><!-- doxytag: member="android::RSC::Allocation::createTyped" ref="a005a8f8186dd6b4565ea90094161a64b" args="(sp&lt; RS &gt; rs, sp&lt; const Type &gt; type, RsAllocationMipmapControl mips, uint32_t usage)" -->
+<a class="anchor" id="a983b914efa208763b4b58db62586f138"></a><!-- doxytag: member="android::RSC::Allocation::createTyped" ref="a983b914efa208763b4b58db62586f138" args="(sp&lt; RS &gt; rs, sp&lt; const Type &gt; type, RsAllocationMipmapControl mipmaps, uint32_t usage)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -929,7 +929,7 @@ Static Public Member Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">RsAllocationMipmapControl&#160;</td>
-          <td class="paramname"><em>mips</em>, </td>
+          <td class="paramname"><em>mipmaps</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -950,7 +950,7 @@ Static Public Member Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">rs</td><td>Context to which the <a class="el" href="classandroid_1_1RSC_1_1Allocation.html">Allocation</a> will belong </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">type</td><td><a class="el" href="classandroid_1_1RSC_1_1Type.html">Type</a> of the <a class="el" href="classandroid_1_1RSC_1_1Allocation.html">Allocation</a> </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">mips</td><td>desired mipmap behavior for the <a class="el" href="classandroid_1_1RSC_1_1Allocation.html">Allocation</a> </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">mipmaps</td><td>desired mipmap behavior for the <a class="el" href="classandroid_1_1RSC_1_1Allocation.html">Allocation</a> </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">usage</td><td>usage for the <a class="el" href="classandroid_1_1RSC_1_1Allocation.html">Allocation</a> </td></tr>
   </table>
   </dd>
@@ -959,7 +959,7 @@ Static Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a73bf9d9ddf038e60024fb40287b71438"></a><!-- doxytag: member="android::RSC::Allocation::createTyped" ref="a73bf9d9ddf038e60024fb40287b71438" args="(sp&lt; RS &gt; rs, sp&lt; const Type &gt; type, RsAllocationMipmapControl mips, uint32_t usage, void *pointer)" -->
+<a class="anchor" id="a8951e64fcb95241504a445fa293380e3"></a><!-- doxytag: member="android::RSC::Allocation::createTyped" ref="a8951e64fcb95241504a445fa293380e3" args="(sp&lt; RS &gt; rs, sp&lt; const Type &gt; type, RsAllocationMipmapControl mipmaps, uint32_t usage, void *pointer)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -979,7 +979,7 @@ Static Public Member Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">RsAllocationMipmapControl&#160;</td>
-          <td class="paramname"><em>mips</em>, </td>
+          <td class="paramname"><em>mipmaps</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -1006,7 +1006,7 @@ Static Public Member Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">rs</td><td>Context to which the <a class="el" href="classandroid_1_1RSC_1_1Allocation.html">Allocation</a> will belong </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">type</td><td><a class="el" href="classandroid_1_1RSC_1_1Type.html">Type</a> of the <a class="el" href="classandroid_1_1RSC_1_1Allocation.html">Allocation</a> </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">mips</td><td>desired mipmap behavior for the <a class="el" href="classandroid_1_1RSC_1_1Allocation.html">Allocation</a> </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">mipmaps</td><td>desired mipmap behavior for the <a class="el" href="classandroid_1_1RSC_1_1Allocation.html">Allocation</a> </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">usage</td><td>usage for the <a class="el" href="classandroid_1_1RSC_1_1Allocation.html">Allocation</a> </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">pointer</td><td>existing backing store to use for this <a class="el" href="classandroid_1_1RSC_1_1Allocation.html">Allocation</a> if possible </td></tr>
   </table>
@@ -1092,7 +1092,7 @@ Static Public Member Functions</h2></td></tr>
 <p>Return <a class="el" href="classandroid_1_1RSC_1_1Type.html">Type</a> for the allocation. </p>
 <dl class="return"><dt><b>Returns:</b></dt><dd>pointer to underlying <a class="el" href="classandroid_1_1RSC_1_1Type.html">Type</a> </dd></dl>
 
-<p>Definition at line <a class="el" href="rsCppStructs_8h_source.html#l00333">333</a> of file <a class="el" href="rsCppStructs_8h_source.html">rsCppStructs.h</a>.</p>
+<p>Definition at line <a class="el" href="rsCppStructs_8h_source.html#l00338">338</a> of file <a class="el" href="rsCppStructs_8h_source.html">rsCppStructs.h</a>.</p>
 
 </div>
 </div>
