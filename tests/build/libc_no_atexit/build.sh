@@ -1,7 +1,18 @@
 # Check that the libc.so for all platforms, and all architectures
 # Does not export 'atexit' and '__dso_handle' symbols.
 #
-LIBRARIES=$(cd $NDK && find platforms -name "libc.so" | sed -e 's!^!'$NDK'/!')
+export ANDROID_NDK_ROOT=$NDK
+
+NDK_BUILDTOOLS_PATH=$NDK/build/tools
+. $NDK/build/tools/prebuilt-common.sh
+echo DEFAULT_ARCHS=$DEFAULT_ARCHS
+
+LIBRARIES=
+for ARCH in $DEFAULT_ARCHS; do
+  LIB=$(cd $NDK && find platforms -name "libc.so" | sed -e 's!^!'$NDK'/!' | grep arch-$ARCH)
+  LIBRARIES=$LIBRARIES" $LIB"
+done
+
 FAILURE=
 COUNT=0
 for LIB in $LIBRARIES; do
