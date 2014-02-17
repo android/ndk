@@ -10,7 +10,7 @@ LOCAL_MODULE := test_stlport_arm
 LOCAL_SRC_FILES := test_stlport.cpp.arm
 include $(BUILD_EXECUTABLE)
 
-ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
+ifneq ($(filter $(TARGET_ARCH_ABI), armeabi-v7a armeabi-v7a-hard),)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := test_stlport_neon
