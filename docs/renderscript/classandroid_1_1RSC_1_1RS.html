@@ -41,7 +41,7 @@
 <table class="memberdecls">
 <tr><td colspan="2"><h2><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classandroid_1_1RSC_1_1RS.html#a8b790133307190917f7a009895bf2879">init</a> (uint32_t flags=0)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classandroid_1_1RSC_1_1RS.html#a04fd7161619e7b2ede4e54a14064097f">init</a> (std::string name, uint32_t flags=0)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classandroid_1_1RSC_1_1RS.html#a3e91e22835c85d230eba3ff1d20455a5">setErrorHandler</a> (ErrorHandlerFunc_t func)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">ErrorHandlerFunc_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classandroid_1_1RSC_1_1RS.html#aeb1f7ac6b745b64d56ea07f92d4003b1">getErrorHandler</a> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classandroid_1_1RSC_1_1RS.html#a37d0314f4a5f861da12355b4ca5ffee6">setMessageHandler</a> (MessageHandlerFunc_t func)</td></tr>
@@ -105,7 +105,7 @@ Public Member Functions</h2></td></tr>
 <p>Returns the current error handler function for this context.</p>
 <dl class="return"><dt><b>Returns:</b></dt><dd>pointer to current error handler function or NULL if not set </dd></dl>
 
-<p>Definition at line <a class="el" href="rsCppStructs_8h_source.html#l00111">111</a> of file <a class="el" href="rsCppStructs_8h_source.html">rsCppStructs.h</a>.</p>
+<p>Definition at line <a class="el" href="rsCppStructs_8h_source.html#l00113">113</a> of file <a class="el" href="rsCppStructs_8h_source.html">rsCppStructs.h</a>.</p>
 
 </div>
 </div>
@@ -125,20 +125,30 @@ Public Member Functions</h2></td></tr>
 <p>Returns the current message handler function for this context.</p>
 <dl class="return"><dt><b>Returns:</b></dt><dd>pointer to current message handler function or NULL if not set </dd></dl>
 
-<p>Definition at line <a class="el" href="rsCppStructs_8h_source.html#l00126">126</a> of file <a class="el" href="rsCppStructs_8h_source.html">rsCppStructs.h</a>.</p>
+<p>Definition at line <a class="el" href="rsCppStructs_8h_source.html#l00128">128</a> of file <a class="el" href="rsCppStructs_8h_source.html">rsCppStructs.h</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="a8b790133307190917f7a009895bf2879"></a><!-- doxytag: member="android::RSC::RS::init" ref="a8b790133307190917f7a009895bf2879" args="(uint32_t flags=0)" -->
+<a class="anchor" id="a04fd7161619e7b2ede4e54a14064097f"></a><!-- doxytag: member="android::RSC::RS::init" ref="a04fd7161619e7b2ede4e54a14064097f" args="(std::string name, uint32_t flags=0)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">bool android::RSC::RS::init </td>
           <td>(</td>
-          <td class="paramtype">uint32_t&#160;</td>
-          <td class="paramname"><em>flags</em> = <code>0</code></td><td>)</td>
+          <td class="paramtype">std::string&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>flags</em> = <code>0</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div>
@@ -146,6 +156,7 @@ Public Member Functions</h2></td></tr>
 <p>Initializes a RenderScript context. A context must be initialized before it can be used. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>Directory name to be used by this context. This should be equivalent to Context.getCacheDir(). </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">flags</td><td>Optional flags for this context. </td></tr>
   </table>
   </dd>
