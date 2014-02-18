@@ -2021,6 +2021,8 @@ $(call ndk-stl-register,\
     \
     )
 
+# Register the 'gnustl_shared' STL implementation
+#
 $(call ndk-stl-register,\
     gnustl_shared,\
     cxx-stl/gnu-libstdc++,\
@@ -2028,20 +2030,40 @@ $(call ndk-stl-register,\
     gnustl_shared\
     )
 
-# Register the static version of the GAbi++ C++ runtime
+# Register the 'gabi++_static' STL implementation
 #
 $(call ndk-stl-register,\
     gabi++_static,\
     cxx-stl/gabi++,\
     gabi++_static,\
+    \
     )
 
-# Register the shared version of the GAbi++ C++ runtime
+# Register the 'gabi++_shared' STL implementation
 #
 $(call ndk-stl-register,\
     gabi++_shared,\
     cxx-stl/gabi++,\
-    gabi++_shared,\
+    ,\
+    gabi++_shared\
+    )
+
+# Register the 'c++_static' STL implementation
+#
+$(call ndk-stl-register,\
+    c++_static,\
+    cxx-stl/llvm-libc++,\
+    c++_static,\
+    \
+    )
+
+# Register the 'c++_shared' STL implementation
+#
+$(call ndk-stl-register,\
+    c++_shared,\
+    cxx-stl/llvm-libc++,\
+    ,\
+    c++_shared\
     )
 
 # The 'none' APP_STL value corresponds to no C++ support at
