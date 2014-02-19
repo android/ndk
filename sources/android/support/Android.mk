@@ -4,6 +4,7 @@ android_support_c_includes := $(LOCAL_PATH)/include
 
 android_support_sources := \
     src/locale_support.c \
+    src/math_support.c \
     src/stdlib_support.c \
     src/wchar_support.c \
     src/locale/duplocale.c \
@@ -16,6 +17,7 @@ android_support_sources := \
     src/stdio/vfwprintf.c \
     src/msun/e_log2.c \
     src/msun/e_log2f.c \
+    src/msun/s_nan.c \
     src/musl-multibyte/btowc.c \
     src/musl-multibyte/internal.c \
     src/musl-multibyte/mblen.c \
