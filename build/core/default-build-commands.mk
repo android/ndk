@@ -80,11 +80,11 @@ $(PRIVATE_CXX) \
     -o $(call host-path,$(LOCAL_BUILT_MODULE))
 endef
 
-define cmd-build-executable
 # The following -rpath-link= are needed for ld.bfd (default for MIPS) when
 # linking executable to supress warning about missing symbol by *so not directly needed.
 # ld.gold (default for ARM and X86) and ld.mcld don't emulate this buggy behavior,
 # and ignore -rpath-link completely.
+define cmd-build-executable
 $(PRIVATE_CXX) \
     -Wl,--gc-sections \
     -Wl,-z,nocopyreloc \
