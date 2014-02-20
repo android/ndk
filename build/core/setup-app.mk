@@ -63,7 +63,11 @@ else
     # Plug in the unknown
     _unknown_abis := $(strip $(filter-out $(NDK_ALL_ABIS),$(NDK_APP_ABI)))
     ifneq ($(_unknown_abis),)
-        ifeq (1,$(words $(filter-out $(NDK_KNOWN_ARCHS),$(NDK_FOUND_ARCHS))))
+        _unknown_arch := $(strip $(filter-out $(NDK_KNOWN_ARCHS),$(NDK_FOUND_ARCHS)))
+        ifeq (2,$(words $(_unknown_arch)))
+            _unknown_arch := $(strip $(sort $(patsubst %64,%,$(_unknown_arch))))
+        endif
+        ifeq (1,$(words $(_unknown_arch)))
             ifneq ($(filter %bcall,$(_unknown_abis)),)
                  _unknown_abis_prefix := $(_unknown_abis:%bcall=%)
                  NDK_APP_ABI := $(NDK_KNOWN_ABIS:%=$(_unknown_abis_prefix)bc%)
@@ -79,7 +83,7 @@ else
                 endif
             endif
             ifeq (1,$(words $(_unknown_abis_prefix)))
-                NDK_APP_ABI := $(subst $(_unknown_abis_prefix),$(filter-out $(NDK_KNOWN_ARCHS),$(NDK_FOUND_ARCHS)),$(NDK_APP_ABI))
+                NDK_APP_ABI := $(subst $(_unknown_abis_prefix),$(_unknown_arch),$(NDK_APP_ABI))
             endif
         endif
     endif
@@ -90,6 +94,14 @@ else
         $(call __ndk_info,Please fix the APP_ABI definition in $(NDK_APP_APPLICATION_MK))
         $(call __ndk_error,Aborting)
     endif
+endif
+
+ifeq (1,$(words $(NDK_APP_ABI)))
+ifeq ($(strip $(NDK_APP_ABI)),$(_unknown_arch))
+ifneq (,$(wildcard $(NDK_PLATFORMS_ROOT)/android-*/arch-$(_unknown_arch)64))
+NDK_APP_ABI := $(_unknown_arch) $(_unknown_arch)64
+endif
+endif
 endif
 
 # Clear all installed binaries for this application

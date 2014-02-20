@@ -34,7 +34,7 @@
 #include "i386/_fpmath.h"
 #elif defined(__mips__)
 #include "mips/_fpmath.h"
-#elif !defined(__le32__)
+#elif !defined(__le32__) && !defined(__le64__)
 #error Unknown arch!
 #endif
 

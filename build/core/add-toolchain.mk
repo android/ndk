@@ -36,9 +36,13 @@ include $(_config_mk)
 
 # Plug in the undefined
 ifeq ($(TOOLCHAIN_ABIS)$(TOOLCHAIN_ARCH),)
-ifeq (1,$(words $(filter-out $(NDK_KNOWN_ARCHS),$(NDK_FOUND_ARCHS))))
-TOOLCHAIN_ARCH := $(filter-out $(NDK_KNOWN_ARCHS),$(NDK_FOUND_ARCHS))
-TOOLCHAIN_ABIS := $(TOOLCHAIN_ARCH) $(NDK_KNOWN_ABIS:%=$(TOOLCHAIN_ARCH)%) $(NDK_KNOWN_ABIS:%=$(TOOLCHAIN_ARCH)bc%)
+_unknown_archs := $(strip $(filter-out $(NDK_KNOWN_ARCHS),$(NDK_FOUND_ARCHS)))
+ifeq (2,$(words $(_unknown_archs)))
+    _unknown_archs := $(sort $(patsubst %64,%,$(_unknown_archs)))
+endif
+ifeq (1,$(words $(_unknown_archs)))
+TOOLCHAIN_ARCH := $(_unknown_archs)
+TOOLCHAIN_ABIS := $(TOOLCHAIN_ARCH) $(TOOLCHAIN_ARCH)64 $(NDK_KNOWN_ABIS:%=$(TOOLCHAIN_ARCH)%) $(NDK_KNOWN_ABIS:%=$(TOOLCHAIN_ARCH)bc%)
 endif
 endif
 
