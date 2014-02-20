@@ -118,7 +118,7 @@ int main(int argc, char **argv) {
 
   std::auto_ptr<BitcodeCompiler> compiler;
   if (ndk_dir.empty())
-    compiler.reset(new HostBitcodeCompiler(abi, sysroot,
+    compiler.reset(new HostBitcodeCompiler(abi, sysroot, toolchain_bin,
                                            input, output,
                                            working_dir, platform, savetemps));
   else

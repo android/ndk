@@ -20,17 +20,17 @@ using namespace abcc;
 
 bool kVerbose = false;
 
-HostBitcodeCompiler::HostBitcodeCompiler(const std::string &abi, const std::string &sysroot,
+HostBitcodeCompiler::HostBitcodeCompiler(const std::string &abi, const std::string &sysroot, const std::string &toolchain_bin,
                                          const std::string &input, const std::string &output, const std::string &working_dir,
-                                         const std::string &platform, const bool savetemps)
+                                         const std::string &platform, const bool savetemps, bool bit32)
   : BitcodeCompiler(abi, sysroot, working_dir, savetemps), mIn(input), mOut(output),
-    mNDKDir(""), mPlatform(platform) {
+    mNDKDir(""), mPlatform(platform), mToolchainBinPath(toolchain_bin) {
   initRuntimePath();
 }
 
 HostBitcodeCompiler::HostBitcodeCompiler(const std::string &abi, const std::string &sysroot, const std::string &ndk_dir, const std::string &toolchain_bin,
                                          const std::string &input, const std::string &output, const std::string &working_dir,
-                                         const std::string &platform, const bool savetemps)
+                                         const std::string &platform, const bool savetemps, bool bit32)
   : BitcodeCompiler(abi, sysroot, working_dir, savetemps), mIn(input), mOut(output),
     mNDKDir(ndk_dir), mPlatform(platform), mToolchainBinPath(toolchain_bin) {
   initRuntimePath();
@@ -78,14 +78,24 @@ int HostBitcodeCompiler::parseLDFlags(BitcodeInfo &info, const std::string &orig
 
     if (str.size() > 2 &&
         str.substr(str.size() - 2) == ".a") {
-      info.mLDLibs.push_back(str);
-      info.mLDLibsStr += " " + str;
+      if (str.size() > 6 &&
+          str.substr(0, /*leng*/6) == "./obj/") {
+        info.mLDLocalLibsStr += " " + str;
+      } else {
+        info.mLDLibs.push_back(str);
+        info.mLDLibsStr += " " + str;
+      }
       continue;
     }
     if (str.size() > 3 &&
         str.substr(str.size() - 3) == ".so") {
-      info.mLDLibs.push_back(str);
-      info.mLDLibsStr += " " + str;
+      if (str.size() > 6 &&
+          str.substr(0, /*leng*/6) == "./obj/") {
+        info.mLDLocalLibsStr += " " + str;
+      } else {
+        info.mLDLibs.push_back(str);
+        info.mLDLibsStr += " " + str;
+      }
       continue;
     }
 
@@ -106,6 +116,9 @@ int HostBitcodeCompiler::parseLDFlags(BitcodeInfo &info, const std::string &orig
     // Some other flags, like --no-undefined, -z now, -z noexecstack, ...
     info.mLDFlags += str + " ";
   } // while
+
+  // Follow traditional clang/gcc use, add -lgccunwind (-lgcc) after local libs
+  info.mLDLocalLibsStr += " " + getRuntimePath("gccunwind");
   return 0;
 }
 
@@ -122,8 +135,13 @@ void HostBitcodeCompiler::getBitcodeFiles() {
 }
 
 void HostBitcodeCompiler::prepareToolchain() {
+  std::string cmd;
   // le32-none-ndk-translate
-  std::string cmd = getToolchainBinPath() + "/le32-none-ndk-translate";
+  if (mAbi == TargetAbi::ARM64 || mAbi == TargetAbi::X86_64 ||
+      mAbi == TargetAbi::MIPS64)
+    cmd = getToolchainBinPath() + "/le64-none-ndk-translate";
+  else
+    cmd = getToolchainBinPath() + "/le32-none-ndk-translate";
   mExecutableToolsPath[(unsigned)CMD_TRANSLATE] = cmd;
 
   // llc
@@ -151,10 +169,7 @@ void HostBitcodeCompiler::removeIntermediateFile(const std::string &path) {
 }
 
 const std::string HostBitcodeCompiler::getToolchainBinPath() const {
-  if (!mNDKDir.empty())
-    return mToolchainBinPath;
-  else
-    return mSysroot + "/usr/bin";
+  return mToolchainBinPath;
 }
 
 const std::string HostBitcodeCompiler::getCompilerRTPath() const {
