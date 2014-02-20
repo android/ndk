@@ -76,7 +76,7 @@ long double log2l(long double x) { return log2((double)x); }
 long double logbl(long double x) { return logb((double)x); }
 long double log10l(long double x) { return log10((double)x); }
 long double nanl(const char* s) { return nan(s); }
-long double nearbyintl(long double x) { return nearbyint((double)x); }
+__attribute__((weak)) long double nearbyintl(long double x) { return nearbyint((double)x); }
 long double remainderl(long double x, long double y) { return remainder((double)x, (double)y); }
 long double remquol(long double x, long double y, int* i) { return remquo((double)x, (double)y, i); }
 long double rintl(long double x) { return rint((double)x); }

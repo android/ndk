@@ -3,6 +3,20 @@
 
 LOCAL_PATH := $(call my-dir)
 
+# Normally, we distribute the NDK with prebuilt binaries of libc++
+# in $LOCAL_PATH/libs/<abi>/. However,
+#
+
+LIBCXX_FORCE_REBUILD := $(strip $(LIBCXX_FORCE_REBUILD))
+ifndef LIBCXX_FORCE_REBUILD
+  ifeq (,$(strip $(wildcard $(LOCAL_PATH)/libs/$(TARGET_ARCH_ABI)/libc++_static$(TARGET_LIB_EXTENSION))))
+    $(call __ndk_info,WARNING: Rebuilding libc++ libraries from sources!)
+    $(call __ndk_info,You might want to use $$NDK/build/tools/build-cxx-stl.sh --stl=libc++)
+    $(call __ndk_info,in order to build prebuilt versions to speed up your builds!)
+    LIBCXX_FORCE_REBUILD := true
+  endif
+endif
+
 llvm_libc++_includes := $(LOCAL_PATH)/libcxx/include
 llvm_libc++_export_includes := $(llvm_libc++_includes)
 llvm_libc++_sources := \
@@ -41,11 +55,6 @@ llvm_libc++_export_cxxflags := -std=c++11
 
 llvm_libc++_cxxflags := $(llvm_libc++_export_cxxflags)
 
-# Building this library with -fno-rtti is not supported, though using it
-# without RTTI is ok.
-#
-llvm_libc++_cxxflags += -fno-rtti
-
 # Gabi++ emulates libcxxabi when building libcxx.
 #
 llvm_libc++_cxxflags += -DLIBCXXABI=1
@@ -70,8 +79,37 @@ llvm_libc++_sources += $(addprefix $(libgabi++_sources_prefix:%/=%)/,$(libgabi++
 llvm_libc++_includes += $(libgabi++_c_includes)
 llvm_libc++_export_includes += $(libgabi++_c_includes)
 
+ifneq ($(LIBCXX_FORCE_REBUILD),true)
+        
+$(call ndk_log,Using prebuilt libc++ libraries)
+
+android_support_c_includes := $(LOCAL_PATH)/../../android/support/include
+
 include $(CLEAR_VARS)
-LOCAL_MODULE := libc++_static
+LOCAL_MODULE := c++_static
+LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE)$(TARGET_LIB_EXTENSION)
+LOCAL_CPP_FEATURES := rtti exceptions
+LOCAL_EXPORT_C_INCLUDES := $(llvm_libc++_export_includes) $(android_support_c_includes)
+LOCAL_EXPORT_CPPFLAGS := $(llvm_libc++_export_cxxflags)
+#LOCAL_STATIC_LIBRARIES := android_support compiler_rt_static
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := c++_shared
+LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE)$(TARGET_SONAME_EXTENSION)
+LOCAL_CPP_FEATURES := rtti exceptions
+LOCAL_EXPORT_C_INCLUDES := $(llvm_libc++_export_includes) $(android_support_c_includes)
+LOCAL_EXPORT_CPPFLAGS := $(llvm_libc++_export_cxxflags)
+#LOCAL_STATIC_LIBRARIES := android_support
+#LOCAL_SHARED_LIBRARIES := compiler_rt_shared
+include $(PREBUILT_SHARED_LIBRARY)
+
+else # LIBCXX_FORCE_REBUILD == true
+
+$(call ndk_log,Rebuilding libc++ libraries from sources)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := c++_static
 LOCAL_SRC_FILES := $(llvm_libc++_sources)
 LOCAL_C_INCLUDES := $(llvm_libc++_includes)
 LOCAL_CPPFLAGS := $(llvm_libc++_cxxflags)
@@ -82,7 +120,7 @@ LOCAL_STATIC_LIBRARIES := android_support compiler_rt_static
 include $(BUILD_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE := libc++_shared
+LOCAL_MODULE := c++_shared
 LOCAL_SRC_FILES := $(llvm_libc++_sources)
 LOCAL_C_INCLUDES := $(llvm_libc++_includes)
 LOCAL_CPPFLAGS := $(llvm_libc++_cxxflags)
@@ -92,6 +130,8 @@ LOCAL_EXPORT_CPPFLAGS := $(llvm_libc++_export_cxxflags)
 LOCAL_STATIC_LIBRARIES := android_support
 LOCAL_SHARED_LIBRARIES := compiler_rt_shared
 include $(BUILD_SHARED_LIBRARY)
+
+endif # LIBCXX_FORCE_REBUILD == true
 
 $(call import-module, android/support)
 $(call import-module, android/compiler-rt)
