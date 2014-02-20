@@ -42,12 +42,12 @@ class HostBitcodeCompiler : public BitcodeCompiler {
   std::map<std::string, std::string> mRuntimePath; // mappings of library name and full path
 
 public:
-  HostBitcodeCompiler(const std::string &abi, const std::string &sysroot,
+  HostBitcodeCompiler(const std::string &abi, const std::string &sysroot, const std::string &toolchain_bin,
                       const std::string &input, const std::string &output, const std::string &working_dir,
-                      const std::string &platform, const bool savetemps);
+                      const std::string &platform, const bool savetemps, bool bit32 = true);
   HostBitcodeCompiler(const std::string &abi, const std::string &sysroot, const std::string &ndk_dir, const std::string &toolchain_bin,
                       const std::string &input, const std::string &output, const std::string &working_dir,
-                      const std::string &platform, const bool savetemps);
+                      const std::string &platform, const bool savetemps, bool bit32 = true);
 
 public:
   virtual int parseLDFlags(BitcodeInfo &info, const std::string &str);

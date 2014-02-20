@@ -265,7 +265,8 @@ namespace {
     header->terminateHandler = std::get_terminate();
     globals->uncaughtExceptions += 1;
 
-    _Unwind_RaiseException(&header->unwindHeader);
+    _Unwind_Reason_Code code = _Unwind_RaiseException(&header->unwindHeader);
+    fprintf(stderr, "_Unwind_RaiseException return unexpectly: %d\n", code);
 
     // Should not be here
     call_terminate(&header->unwindHeader);
