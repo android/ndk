@@ -441,6 +441,17 @@ if [ "$ABIS" = "${ABIS%%64*}" ]; then
     fi
 fi
 
+is_known_abi ()
+{
+    local ABI=$1
+    local unknown_archs=$(find_ndk_unknown_archs)
+    if [ -z "`echo $unknown_archs | grep $ABI`" ]; then
+      echo true
+    else
+      echo false
+    fi
+}
+
 # build_stl_libs_for_abi
 # $1: ABI
 # $2: build directory
@@ -490,7 +501,7 @@ build_stl_libs_for_abi ()
     builder_reset_cxxflags DEFAULT_CXXFLAGS
     builder_cxxflags "$DEFAULT_CXXFLAGS $GABIXX_CXXFLAGS $EXTRA_CXXFLAGS"
     builder_ldflags "$GABIXX_LDFLAGS $EXTRA_LDFLAGS"
-    if [ "$(find_ndk_unknown_archs)" != "$ABI" ]; then
+    if [ "$(is_known_abi "$ABI")" = "true" ]; then
       builder_sources $GABIXX_SOURCES
     elif [ "$CXX_STL" = "gabi++" ]; then
       log "Could not build gabi++ with unknown arch!"
@@ -515,7 +526,7 @@ build_stl_libs_for_abi ()
         builder_static_library ${CXX_STL_LIB}_static
     else
         log "Building $DSTDIR/${CXX_STL_LIB}_shared${LIB_SUFFIX}"
-        if [ "$(find_ndk_unknown_archs)" != "$ABI" ]; then
+        if [ "$(is_known_abi "$ABI")" = "true" ]; then
             builder_shared_library ${CXX_STL_LIB}_shared $LIB_SUFFIX "$FLOAT_ABI"
         else
             builder_ldflags "-lc -lm"

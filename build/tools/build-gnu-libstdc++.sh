@@ -142,8 +142,8 @@ build_gnustl_for_abi ()
     SYSROOT=$NDK_DIR/$(get_default_platform_sysroot_for_arch $ARCH)
     # Sanity check
     if [ ! -f "$SYSROOT/usr/lib/libc.a" ]; then
-	echo "ERROR: Empty sysroot! you probably need to run gen-platforms.sh before this script."
-	exit 1
+        echo "ERROR: Empty sysroot! you probably need to run gen-platforms.sh before this script."
+        exit 1
     fi
     if [ ! -f "$SYSROOT/usr/lib/libc.so" ]; then
         echo "ERROR: Sysroot misses shared libraries! you probably need to run gen-platforms.sh"
@@ -277,7 +277,7 @@ copy_gnustl_libs ()
     if [ -z `var_value HAS_COMMON_HEADERS_$GCC_VERSION_NO_DOT` ]; then
         copy_directory "$SDIR/include/c++/$GCC_VERSION" "$DDIR/include"
         rm -rf "$DDIR/include/$PREFIX"
-	eval HAS_COMMON_HEADERS_$GCC_VERSION_NO_DOT=true
+        eval HAS_COMMON_HEADERS_$GCC_VERSION_NO_DOT=true
     fi
 
     rm -rf "$DDIR/libs/$ABI" &&
