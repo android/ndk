@@ -18,6 +18,8 @@ void f() {}
 
 int main()
 {
+#ifdef _LIBCPP_HAS_QUICK_EXIT
     std::at_quick_exit(f);
     quick_exit(0);
+#endif
 }
