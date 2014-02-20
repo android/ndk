@@ -51,6 +51,37 @@ namespace std {
     return "std::bad_alloc";
   }
 
+  bad_array_new_length::bad_array_new_length() _GABIXX_NOEXCEPT
+  {
+  }
+
+  bad_array_new_length::~bad_array_new_length() _GABIXX_NOEXCEPT
+  {
+  }
+
+  const char*
+  bad_array_new_length::what() const _GABIXX_NOEXCEPT
+  {
+    return "bad_array_new_length";
+  }
+
+#if __cplusplus > 201103L
+// C++14 stuff
+  bad_array_length::bad_array_length() _GABIXX_NOEXCEPT
+  {
+  }
+
+  bad_array_length::~bad_array_length() _GABIXX_NOEXCEPT
+  {
+  }
+
+  const char*
+  bad_array_length::what() const _GABIXX_NOEXCEPT
+  {
+    return "bad_array_length";
+  }
+#endif
+
   new_handler set_new_handler(new_handler next_handler) _GABIXX_NOEXCEPT {
     return __gabixx_sync_swap(&cur_handler, next_handler);
   }
