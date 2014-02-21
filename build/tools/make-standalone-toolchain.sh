@@ -270,6 +270,13 @@ if [ "$HOST_TAG32" = "windows" ]; then
   copy_file_list "$NDK_DIR/prebuilt/$SYSTEM/bin" "$TMPDIR/bin" lib$PYTHON_xdotx.dll
 fi
 
+# Copy yasm for x86
+if [ "$ARCH" = "x86" ]; then
+  copy_file_list "$NDK_DIR/prebuilt/$SYSTEM/bin" "$TMPDIR/bin" "yasm$HOST_EXE"
+fi
+
+# Clang stuff
+
 dump_extra_compile_commands () {
   if [ "$NEED_BC2NATIVE" != "yes" ]; then
     return
