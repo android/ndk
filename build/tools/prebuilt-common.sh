@@ -1099,7 +1099,7 @@ parse_toolchain_name ()
         ;;
     x86_64-*)
         GDBSERVER_HOST=x86_64-linux-android
-        GDBSERVER_CFLAGS=
+        GDBSERVER_CFLAGS=-DUAPI_HEADERS
         GDBSERVER_LDFLAGS=
         ;;
     mips*)
