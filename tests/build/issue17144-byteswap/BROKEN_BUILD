@@ -1,0 +1,4 @@
+# Note that "clang -target mipsel-none-linux-android" doesn't define
+# __mips_isa_rev at all, let alone __mips_isa_rev=2 given -mips32r2
+# for this test to succeed
+clang3.3 clang3.4
