@@ -48,6 +48,23 @@ public:
   virtual const char* what() const throw();
 };
 
+class bad_array_new_length : public bad_alloc {
+public:
+  bad_array_new_length() throw();
+  virtual ~bad_array_new_length() throw();
+  virtual const char* what() const throw();
+};
+
+#if __cplusplus > 201103L
+// C++14 stuff
+class bad_array_length : public bad_alloc {
+public:
+  bad_array_length() throw();
+  virtual ~bad_array_length() throw();
+  virtual const char* what() const throw();
+};
+#endif
+
 typedef void (*new_handler)();
 new_handler set_new_handler(new_handler) throw();
 new_handler get_new_handler() throw();
