@@ -463,7 +463,7 @@ ABI_STL_INCLUDE_TARGET="$ABI_STL_INCLUDE/$ABI_CONFIGURE_TARGET"
 # $1: filenames of headers
 copy_gabixx_headers () {
   for header in $@; do
-    (cd $ABI_STL_INCLUDE && ln -s ../../gabi++/include/$header $header)
+    (cd $ABI_STL_INCLUDE && cp -a ../../gabi++/include/$header $header)
   done
 }
 
