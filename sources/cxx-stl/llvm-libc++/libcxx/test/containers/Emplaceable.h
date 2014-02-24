@@ -14,6 +14,11 @@
 
 class Emplaceable
 {
+#if !defined(__clang__)
+// GCC 4.8 when compile ccontainers/unord/unord.map/unorder.map.modifiers/emplace_hint.pass.cpp, etc,
+// complains about the following being private
+public:
+#endif
     Emplaceable(const Emplaceable&);
     Emplaceable& operator=(const Emplaceable&);
 
