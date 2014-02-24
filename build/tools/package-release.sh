@@ -381,7 +381,8 @@ rm -rf $REFERENCE/tests/device/*/{obj,libs}
 if [ "$WITH_LIBCXX" ]; then
     # Remove the libc++ test suite, it's large (28 MiB) and not useful for
     # developers using the NDK.
-    rm -rf $REFERENCE/sources/cxx-stl/llvm-libc++/libcxx/test
+    #rm -rf $REFERENCE/sources/cxx-stl/llvm-libc++/libcxx/test
+    true;
 else
     # Remove the libc++ sources, they're not ready for release.
     # http://b.android.com/36496

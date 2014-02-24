@@ -77,7 +77,8 @@ system_libs := \
     RScpp_static \
     RS \
     ui \
-    utils
+    utils \
+    atomic
 
 libs_in_ldflags := $(filter-out $(addprefix -l,$(system_libs)), $(libs_in_ldflags))
 

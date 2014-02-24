@@ -88,6 +88,9 @@ for OPT; do
     --static)
       DO_STATIC=true
       ;;
+    --shared)
+      DO_STATIC=
+      ;;
     --cxx=*)
       CXX=${OPT##--cxx=}
       ;;
@@ -220,11 +223,11 @@ CC=$CXX
 
 if [ -z "$OPTIONS" ]
 then
-  OPTIONS="-std=c++11 -O0 -g"
+  OPTIONS="-std=c++11 -O2 -g"
 fi
 OPTIONS="$OPTIONS $TOOLCHAIN_CFLAGS $TOOLCHAIN_LDFLAGS"
 OPTIONS="$OPTIONS -I$LIBCXX_ROOT/test/support"
-# llvm-libc++/libcxx/test/lit.cfg line #294 defineds the following for testing on Linux
+# llvm-libc++/libcxx/test/lit.cfg line #278 defineds the following for testing only on Linux
 OPTIONS="$OPTIONS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS"
 
 if [ -z "$ADB" ]
@@ -276,8 +279,9 @@ adb_shell "mkdir -p $TARGET_PATH"
 
 if [ "$DO_STATIC" ]; then
   # Statically link to ensure the executable can be run easily through ADB
+  # Note that in standalone toolchain libc++_static is renamed to libstdc++, and
+  # compiler adds -lstdc++ implicitly
   LIBS="-lcompiler_rt_static -latomic"
-#LIBS="-lc++_static -lcompiler_rt_static -latomic"
 else
   run2 $ADB push $LIBCXX_LIBS/libc++_shared.so $TARGET_PATH 2>/dev/null
   if [ $? != 0 ]; then
