@@ -16,7 +16,11 @@
 #endif
 
 #ifndef FLT_EVAL_METHOD
+#if !defined(__clang__) && !defined(__FLT_EVAL_METHOD__)
+// GCC defines __FLT_EVAL_METHOD__ in lib/gcc/arm-linux-androideabi/4.8/include/float.h.
+// In libc++ include/cfloat define FLT_EVAL_METHOD to __FLT_EVAL_METHOD__
 #error FLT_EVAL_METHOD not defined
+#endif
 #endif
 
 #ifndef FLT_RADIX
@@ -36,7 +40,11 @@
 #endif
 
 #ifndef DECIMAL_DIG
+#if !defined(__clang__) && !defined(__DECIMAL_DIG__)
+// GCC defines __DECIMAL_DIG__ in lib/gcc/arm-linux-androideabi/4.8/include/float.h.
+// In libc++ include/cfloat define DECIMAL_DIG to __DECIMAL_DIG__
 #error DECIMAL_DIG not defined
+#endif
 #endif
 
 #ifndef FLT_DIG
