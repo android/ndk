@@ -6,6 +6,7 @@
 TEST(stdio,snprintf) {
   char char_buff[32];
   size_t char_buff_len = sizeof(char_buff) / sizeof(char);
+
   EXPECT_EQ(2, snprintf(char_buff, char_buff_len, "ab"));
   EXPECT_EQ(5, snprintf(char_buff, char_buff_len, "%s", "abcde"));
   static const char kString[] = "Hello, World";
@@ -19,6 +20,17 @@ TEST(stdio,snprintf) {
 
   EXPECT_EQ(20, snprintf(char_buff, char_buff_len, "%a", 3.1415926535));
   EXPECT_STREQ("0x1.921fb54411744p+1", char_buff);
+}
+
+TEST(stdio,sscanf) {
+  double d;
+  float f;
+
+  EXPECT_EQ(1, sscanf("0x1p-2", "%a", &f));
+  EXPECT_EQ(0.25f, f);
+
+  EXPECT_EQ(1, sscanf("0x1p-2", "%la", &d));
+  EXPECT_EQ(0.25, f);
 }
 
 TEST(stdio,swprintf) {
