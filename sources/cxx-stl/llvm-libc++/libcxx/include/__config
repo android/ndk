@@ -424,7 +424,11 @@ using namespace _LIBCPP_NAMESPACE __attribute__((__strong__));
 // Emulation of clang's __has_feature() for GCC on known cases
 #ifndef __has_feature
 
-#define __gxx__cxx_access_control_sfinae          (!_LIBCPP_HAS_NO_TRAILING_RETURN || !_LIBCPP_HAS_NO_ADVANCED_SFINAE)  // Also see usage in 7 tests
+#if !defined(_LIBCPP_HAS_NO_TRAILING_RETURN) || !defined(_LIBCPP_HAS_NO_ADVANCED_SFINAE)
+#define __gxx__cxx_access_control_sfinae          1 // Also see usage in 7 tests
+#else
+#define __gxx__cxx_access_control_sfinae          0
+#endif
 #define __gxx__cxx_alias_templates                !_LIBCPP_HAS_NO_TEMPLATE_ALIASES
 #define __gxx__cxx_alignas                        0  // Not sure, doesn't matter.
 #define __gxx__cxx_atomic                         0  // In c11-atomic branch targeted for GCC 4.9.  Also see usages in 20+ places
@@ -441,7 +445,11 @@ using namespace _LIBCPP_NAMESPACE __attribute__((__strong__));
 #define __gxx__cxx_noexcept                       0  // Not sure, doesn't matter.
 #define __gxx__cxx_nullptr                        !_LIBCPP_HAS_NO_NULLPTR
 #define __gxx__cxx_reference_qualified_functions  (_GNUC_VER >= 408)  // Not if 4.7 work. 4.6 certainly not.  Also see usage in libcxx/include/type_traits
-#define __gxx__cxx_rtti                           (!_LIBCPP_NO_RTTI && __GXX_RTTI)
+#ifdef _LIBCPP_NO_RTTI
+#define __gxx__cxx_rtti                           0
+#else
+#define __gxx__cxx_rtti                           __GXX_RTTI
+#endif
 #define __gxx__cxx_rvalue_references              !_LIBCPP_HAS_NO_RVALUE_REFERENCES
 #define __gxx__cxx_static_assert                  !_LIBCPP_HAS_NO_STATIC_ASSERT
 #define __gxx__cxx_strong_enums                   !_LIBCPP_HAS_NO_STRONG_ENUMS  // See usage in libcxx/test/utilities/meta/meta.trans/meta.trans.other/underlying_type.pass.cpp
