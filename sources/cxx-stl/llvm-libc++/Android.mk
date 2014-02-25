@@ -80,7 +80,7 @@ llvm_libc++_includes += $(libgabi++_c_includes)
 llvm_libc++_export_includes += $(libgabi++_c_includes)
 
 ifneq ($(LIBCXX_FORCE_REBUILD),true)
-        
+
 $(call ndk_log,Using prebuilt libc++ libraries)
 
 android_support_c_includes := $(LOCAL_PATH)/../../android/support/include
