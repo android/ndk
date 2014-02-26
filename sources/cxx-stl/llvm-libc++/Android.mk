@@ -80,7 +80,7 @@ llvm_libc++_includes += $(libgabi++_c_includes)
 llvm_libc++_export_includes += $(libgabi++_c_includes)
 
 ifneq ($(LIBCXX_FORCE_REBUILD),true)
-        
+
 $(call ndk_log,Using prebuilt libc++ libraries)
 
 android_support_c_includes := $(LOCAL_PATH)/../../android/support/include
@@ -88,20 +88,15 @@ android_support_c_includes := $(LOCAL_PATH)/../../android/support/include
 include $(CLEAR_VARS)
 LOCAL_MODULE := c++_static
 LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE)$(TARGET_LIB_EXTENSION)
-LOCAL_CPP_FEATURES := rtti exceptions
 LOCAL_EXPORT_C_INCLUDES := $(llvm_libc++_export_includes) $(android_support_c_includes)
 LOCAL_EXPORT_CPPFLAGS := $(llvm_libc++_export_cxxflags)
-#LOCAL_STATIC_LIBRARIES := android_support compiler_rt_static
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := c++_shared
 LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE)$(TARGET_SONAME_EXTENSION)
-LOCAL_CPP_FEATURES := rtti exceptions
 LOCAL_EXPORT_C_INCLUDES := $(llvm_libc++_export_includes) $(android_support_c_includes)
 LOCAL_EXPORT_CPPFLAGS := $(llvm_libc++_export_cxxflags)
-#LOCAL_STATIC_LIBRARIES := android_support
-#LOCAL_SHARED_LIBRARIES := compiler_rt_shared
 include $(PREBUILT_SHARED_LIBRARY)
 
 else # LIBCXX_FORCE_REBUILD == true

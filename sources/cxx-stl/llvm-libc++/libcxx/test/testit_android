@@ -198,6 +198,11 @@ if [ -z "$TOOLCHAIN_PREFIX" ]; then
       TOOLCHAIN_CFLAGS="-march=armv7-a -mthumb -mfpu=vfpv3-d16"
       TOOLCHAIN_LDFLAGS="-march=armv7-a -mthumb -Wl,--fix-cortex-a8"
       ;;
+    armeabi-v7a-hard)
+      TOOLCHAIN_PREFIX=arm-linux-androideabi
+      TOOLCHAIN_CFLAGS="-march=armv7-a -mthumb -mfpu=vfpv3-d16 -mhard-float -D_NDK_MATH_NO_SOFTFP=1"
+      TOOLCHAIN_LDFLAGS="-march=armv7-a -mthumb -Wl,--fix-cortex-a8 -Wl,--no-warn-mismatch -lm_hard"
+      ;;
     x86)
       TOOLCHAIN_PREFIX=i686-linux-android
       ;;
