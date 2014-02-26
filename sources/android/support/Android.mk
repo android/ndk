@@ -113,6 +113,7 @@ android_support_sources := \
     src/musl-math/frexp.c \
     src/musl-math/frexpf.c \
     src/musl-math/frexpl.c \
+    src/musl-math/s_scalbln.c \
     src/musl-stdio/printf.c \
     src/musl-stdio/snprintf.c \
     src/musl-stdio/sprintf.c \
