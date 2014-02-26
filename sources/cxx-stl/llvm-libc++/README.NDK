@@ -1,5 +1,5 @@
 This is a copy of LLVM's libc++ project, slightly modified to build
-with this NDK. *EXPERIMENTAL* *BROKEN* *DO* *NOT* *USE*.
+with this NDK. It's currently *EXPERIMENTAL*.
 
 Upstream: See 'upstream.config' file in this directory.
 Patches: see patches.android/
@@ -65,7 +65,7 @@ Android support files:
 
 Toolchain selection:
   By default, ndk-build tries to build with GCC 4.6, however, experimental
-  versions of GCC 4.7 and Clang 3.1 are available with recent NDK releases.
+  versions of GCC 4.8 and Clang 3.4 are available with recent NDK releases.
 
   Use the NDK_TOOLCHAIN_VERSION environment variable to switch to a
   different one, valid examples:
@@ -74,11 +74,11 @@ Toolchain selection:
     export NDK_TOOLCHAIN_VERSION=4.6    # this is the default
     $NDK/ndk-build -C android/test
 
-    # This is equivalent, but for GCC 4.7
-    $NDK/ndk-build -C android/test NDK_TOOLCHAIN_VERSION=4.7
+    # This is equivalent, but for GCC 4.8
+    $NDK/ndk-build -C android/test NDK_TOOLCHAIN_VERSION=4.8
 
-    # Also equivalent, but for Clang 3.1
-    NDK_TOOLCHAIN_VERSION=Clang3.1 $NDK/ndk-build -C android/test
+    # Also equivalent, but for Clang 3.4
+    NDK_TOOLCHAIN_VERSION=Clang3.4 $NDK/ndk-build -C android/test
 
 
 Updating the sources to a newer revision:
