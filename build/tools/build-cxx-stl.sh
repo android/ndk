@@ -360,6 +360,7 @@ libcxx/src/support/android/locale_android.cpp \
 ../../android/support/src/musl-math/frexpf.c \
 ../../android/support/src/musl-math/frexpl.c \
 ../../android/support/src/musl-math/frexp.c \
+../../android/support/src/musl-math/s_scalbln.c \
 ../../android/support/src/musl-stdio/swprintf.c \
 ../../android/support/src/musl-stdio/vwprintf.c \
 ../../android/support/src/musl-stdio/wprintf.c \
