@@ -1,0 +1,22 @@
+# run-tests.sh looks for this file to check if additional data is needed to run tests in this project
+# Format:
+#   <test-pattern> <datapath-pattern-relative-to-$NDK>
+#
+input.output___file.streams___fstreams___ifstream.cons___move    sources/cxx-stl/llvm-libc++/libcxx/test/input.output/file.streams/fstreams/ifstream.cons/test.dat
+input.output___file.streams___fstreams___ifstream.cons___pointer sources/cxx-stl/llvm-libc++/libcxx/test/input.output/file.streams/fstreams/ifstream.cons/test.dat
+input.output___file.streams___fstreams___ifstream.cons___string  sources/cxx-stl/llvm-libc++/libcxx/test/input.output/file.streams/fstreams/ifstream.cons/test.dat
+
+input.output___file.streams___fstreams___filebuf.virtuals___pbackfail sources/cxx-stl/llvm-libc++/libcxx/test/input.output/file.streams/fstreams/filebuf.virtuals/underflow.dat
+input.output___file.streams___fstreams___filebuf.virtuals___underflow sources/cxx-stl/llvm-libc++/libcxx/test/input.output/file.streams/fstreams/filebuf.virtuals/underflow*.dat
+
+input.output___file.streams___fstreams___ifstream.members___close        sources/cxx-stl/llvm-libc++/libcxx/test/input.output/file.streams/fstreams/ifstream.members/test.dat
+input.output___file.streams___fstreams___ifstream.members___open_pointer sources/cxx-stl/llvm-libc++/libcxx/test/input.output/file.streams/fstreams/ifstream.members/test.dat
+input.output___file.streams___fstreams___ifstream.members___open_string  sources/cxx-stl/llvm-libc++/libcxx/test/input.output/file.streams/fstreams/ifstream.members/test.dat
+input.output___file.streams___fstreams___ifstream.members___rdbuf        sources/cxx-stl/llvm-libc++/libcxx/test/input.output/file.streams/fstreams/ifstream.members/test.dat
+
+input.output___file.streams___fstreams___ifstream.assign___member_swap    sources/cxx-stl/llvm-libc++/libcxx/test/input.output/file.streams/fstreams/ifstream.assign/*.dat
+input.output___file.streams___fstreams___ifstream.assign___move_assign    sources/cxx-stl/llvm-libc++/libcxx/test/input.output/file.streams/fstreams/ifstream.assign/test.dat
+input.output___file.streams___fstreams___ifstream.assign___nonmember_swap sources/cxx-stl/llvm-libc++/libcxx/test/input.output/file.streams/fstreams/ifstream.assign/*.dat
+
+localization___locales___locale.convenience___conversions___conversions.buffer__pbackfail sources/cxx-stl/llvm-libc++/libcxx/test/localization/locales/locale.convenience/conversions/conversions.buffer/underflow.dat
+localization___locales___locale.convenience___conversions___conversions.buffer__underflow sources/cxx-stl/llvm-libc++/libcxx/test/localization/locales/locale.convenience/conversions/conversions.buffer/*.dat
