@@ -48,6 +48,10 @@ DEFAULT_GCC_VERSION_LIST="4.6 4.8"
 # $DEFAULT_GCC_VERSION_LIST
 #
 DEFAULT_GCC_VERSION=$(echo "$DEFAULT_GCC_VERSION_LIST" | tr ' ' '\n' | head -n 1)
+# The default GCC version for "clang -gcc-toolchain", the latest item in
+# $DEFAULT_GCC_VERSION_LIST
+#
+DEFAULT_LLVM_GCC_VERSION=$(echo "$DEFAULT_GCC_VERSION_LIST" | tr ' ' '\n' | tail -n 1)
 
 DEFAULT_BINUTILS_VERSION=2.21
 DEFAULT_GDB_VERSION=7.3.x
