@@ -69,8 +69,12 @@ int main()
         // any leading 0x like prefix.
         // In that format, we assume a null pointer will yield 2 '0' hex digits
         // for each 8 bits of address space.
+#if !defined(__ANDROID__)
         assert(sb.str() == "0x0" || sb.str() == "(nil)" ||
                                   sb.str() == std::string(sizeof(void*)*2,'0'));
+#else
+        assert(sb.str() == "0");
+#endif
     }
     {
         testbuf<char> sb;
