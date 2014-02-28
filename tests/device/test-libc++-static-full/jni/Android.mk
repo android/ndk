@@ -1,19 +1,25 @@
 LOCAL_PATH := $(call my-dir)
 
-libcxx-test-path := $(abspath $(LOCAL_PATH)/../../../../sources/cxx-stl/llvm-libc++/libcxx/test)
+libcxx-test-path := $(abspath $(NDK)/sources/cxx-stl/llvm-libc++/libcxx/test)
 
 define ev-gen-test
 __test := $1
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(libcxx-test-path)/$$(__test).pass.cpp
 LOCAL_MODULE := $$(subst /,___,$$(__test))
-LOCAL_STATIC_LIBRARIES := compiler_rt_static
+LOCAL_SHARED_LIBRARIES := compiler_rt_shared
 LOCAL_LDLIBS += -latomic
 LOCAL_CPP_FEATURES := rtti exceptions
 
-# The following are for testing only
+# The following are for compiling libc++ tests only.  Regular code doesn't need them
 LOCAL_C_INCLUDES += $(libcxx-test-path)/support
 LOCAL_CPPFLAGS += -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS
+# Add -UNDEBUG because some libc++ tests use assert() which become nothing when -DNDEBUG
+# (defined in toolchains/*clang*/setup.mk for release build).  Unfortunately adding -UNDEBUG
+# crashes both clang3.4 and clang3.3 for test like libcxx/test/atomics/atomics.types.generic/address.pass.cpp.
+ifeq (,$(filter clang%,$(NDK_TOOLCHAIN_VERSION)))
+LOCAL_CPPFLAGS += -UNDEBUG
+endif
 
 include $(BUILD_EXECUTABLE)
 endef
@@ -132,7 +138,6 @@ endif
 # Function  gen-test
 gen-test = \
     $(if $(strip $(filter-out $(black_list), $1)), $(eval $(call ev-gen-test, $1)))
-
 
 # All tests
 
