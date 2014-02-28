@@ -1,0 +1,500 @@
+# This is living doc about remaining libc++ tests which fails to run correctly
+# Please see black_list* jni/Android.mk for tests fail to compile under various configuration
+#
+# Script run-tests.sh "grep" this file and skip test when name of executable can be found in this file
+# A bit of comments would be found, especially in this porject all executable are named after
+# relative path to $NDK thus quite long.  Prefix "FAIL:" doesn't mean anything
+#
+# Although run-tests.sh produces "---> TEST FAILED!!" when test fail to run, some of the following
+# may hang device and ruin weekly testing
+#
+# Fail case will be removed when fixed. Fail can be reproduced with symlink ~/libcxx-test to
+# $NDK/sources/cxx-stl/llvm-libc++/libcxx/test and the following alias
+#
+#  alias nalibcxxg++="/tmp/ndk-$USER/android-ndk-api14-arm-4.8-clang3.4-libc++/bin/arm-linux-androideabi-g++ -std=c++11 -O2 -g -march=armv7-a -mthumb -mfpu=vfpv3-d16 -march=armv7-a -mthumb -Wl,--fix-cortex-a8 -I$NDK/sources/cxx-stl/llvm-libc++/libcxx/test/support -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS"
+#
+
+FAIL: containers___sequences___vector___vector.capacity___shrink_to_fit
+  cd ~/libcxx-test/containers/sequences/vector/vector.capacity  # fail: armeabi-v7a  pass: x86, gcc4.8
+    nalibcxxg++  shrink_to_fit.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51):     #00  pc 00035e66  /data/local/tmp/libc++_shared.so (__gabixx::__default_terminate()+13)
+      I/DEBUG   (   51):     #01  pc 00035e7d  /data/local/tmp/libc++_shared.so (__gabixx::__terminate(void (*)())+16)
+
+FAIL: input.output___file.streams___fstreams___filebuf.virtuals___seekoff
+  cd ~/libcxx-test/input.output/file.streams/fstreams/filebuf.virtuals
+    nalibcxxg++  seekoff.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51):     #00  pc 000645ac  /data/local/tmp/libc++_shared.so (std::__1::codecvt<wchar_t, char, mbstate_t>::do_out(mbstate_t&, wchar_t const*, wchar_t const*, wchar_t const*&, char*, char*, char*&) const+39)
+      $NDK/sources/cxx-stl/llvm-libc++/libcxx/src/locale.cpp:1535
+         codecvt<wchar_t, char, mbstate_t>::do_out(state_type& st,
+             const intern_type* frm, const intern_type* frm_end, const intern_type*& frm_nxt,
+             extern_type* to, extern_type* to_end, extern_type*& to_nxt) const
+         frm = NULL
+
+FAIL: input.output___iostream.format___output.streams___ostream_sentry___destruct
+  cd ~/libcxx-test/input.output/iostream.format/output.streams/ostream_sentry
+    nalibcxxg++  destruct.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'destruct.pass.cpp:59: int main(): assertion "sync_called == 1" failed'
+
+FAIL: language.support___support.exception___except.nested___assign
+  cd ~/libcxx-test/language.support/support.exception/except.nested
+    nalibcxxg++  assign.pass.cpp -lc++_shared -latomic
+      F/libc    (15332): assign.pass.cpp:47: int main(): assertion "e.nested_ptr() != nullptr" failed
+
+FAIL: language.support___support.exception___except.nested___ctor_copy
+  cd ~/libcxx-test/language.support/support.exception/except.nested
+    nalibcxxg++  ctor_copy.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'ctor_copy.pass.cpp:45: int main(): assertion "e.nested_ptr() != nullptr" failed'
+
+FAIL: language.support___support.exception___except.nested___ctor_default
+  cd ~/libcxx-test/language.support/support.exception/except.nested
+    nalibcxxg++  ctor_default.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'ctor_default.pass.cpp:43: int main(): assertion "e.nested_ptr() != nullptr" failed'
+
+FAIL: language.support___support.exception___except.nested___rethrow_if_nested
+  cd ~/libcxx-test/language.support/support.exception/except.nested
+    nalibcxxg++  rethrow_if_nested.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51):     #00  pc 00035e66  /data/local/tmp/libc++_shared.so (__gabixx::__default_terminate()+13)
+      I/DEBUG   (   51):     #01  pc 00035e7d  /data/local/tmp/libc++_shared.so (__gabixx::__terminate(void (*)())+16)
+
+FAIL: language.support___support.exception___except.nested___rethrow_nested
+  cd ~/libcxx-test/language.support/support.exception/except.nested
+    nalibcxxg++  rethrow_nested.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'rethrow_nested.pass.cpp:45: int main(): assertion "e.nested_ptr() != nullptr" failed'
+
+FAIL: language.support___support.exception___propagation___current_exception
+  cd ~/libcxx-test/language.support/support.exception/propagation
+    nalibcxxg++  current_exception.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'current_exception.pass.cpp:60: int main(): assertion "p != nullptr" failed'
+
+FAIL: language.support___support.exception___propagation___make_exception_ptr
+  cd ~/libcxx-test/language.support/support.exception/propagation
+    nalibcxxg++  make_exception_ptr.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51):     #00  pc 00035e66  /data/local/tmp/libc++_shared.so (__gabixx::__default_terminate()+13)
+      I/DEBUG   (   51):     #01  pc 00035e7d  /data/local/tmp/libc++_shared.so (__gabixx::__terminate(void (*)())+16)
+
+FAIL: language.support___support.exception___propagation___rethrow_exception
+  cd ~/libcxx-test/language.support/support.exception/propagation
+    nalibcxxg++  rethrow_exception.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51):     #00  pc 00035e66  /data/local/tmp/libc++_shared.so (__gabixx::__default_terminate()+13)
+      I/DEBUG   (   51):     #01  pc 00035e7d  /data/local/tmp/libc++_shared.so (__gabixx::__terminate(void (*)())+16)
+
+FAIL: language.support___support.exception___uncaught___uncaught_exception
+  cd ~/libcxx-test/language.support/support.exception/uncaught
+    nalibcxxg++  uncaught_exception.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'uncaught_exception.pass.cpp:37: int main(): assertion "!std::uncaught_exception()" failed'
+
+FAIL: localization___locale.categories___category.collate___locale.collate.bynam___transform
+  cd ~/libcxx-test/localization/locale.categories/category.collate/locale.collate.byname
+    nalibcxxg++  transform.pass.cpp -lc++_shared -latomic
+      F/libc    (23516): transform.pass.cpp:33: int main(): assertion "f.transform(x.data(), x.data() + x.size()) != x" failed
+
+FAIL: localization___locale.categories___category.ctype___locale.codecvt___locale.codecvt.members___wchar_t_out
+  cd ~/libcxx-test/localization/locale.categories/category.ctype/locale.codecvt/locale.codecvt.members
+    nalibcxxg++  wchar_t_out.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'wchar_t_out.pass.cpp:65: int main(): assertion "from_next - from.data() == to.size()-1" failed'
+
+FAIL: localization___locale.categories___category.ctype___locale.ctype.byname___is_1
+  cd ~/libcxx-test/localization/locale.categories/category.ctype/locale.ctype.byname
+    nalibcxxg++  is_1.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'is_1.pass.cpp:40: int main(): assertion "!f.is(F::upper, L'a')" failed'
+
+FAIL: localization___locale.categories___category.ctype___locale.ctype.byname___is_many
+  cd ~/libcxx-test/localization/locale.categories/category.ctype/locale.ctype.byname
+    nalibcxxg++  is_many.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'is_many.pass.cpp:42: int main(): assertion "!(m[0] & F::lower)" failed'
+
+FAIL: localization___locale.categories___category.ctype___locale.ctype.byname___narrow_1
+  cd ~/libcxx-test/localization/locale.categories/category.ctype/locale.ctype.byname
+    nalibcxxg++  narrow_1.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'narrow_1.pass.cpp:35: int main(): assertion "f.narrow(L'\xDA', '*') == '\xDA'" failed
+
+FAIL: localization___locale.categories___category.ctype___locale.ctype.byname___narrow_many
+  cd ~/libcxx-test/localization/locale.categories/category.ctype/locale.ctype.byname
+    nalibcxxg++  narrow_many.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'narrow_many.pass.cpp:40: int main(): assertion "v[6] == '\xDA'" failed'
+
+FAIL: localization___locale.categories___category.ctype___locale.ctype.byname___scan_is
+  cd ~/libcxx-test/localization/locale.categories/category.ctype/locale.ctype.byname
+    nalibcxxg++  scan_is.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'scan_is.pass.cpp:38: int main(): assertion "f.scan_is(F::lower, in.data(), in.data() + in.size()) - in.data() == 5" failed'
+
+FAIL: localization___locale.categories___category.ctype___locale.ctype.byname___scan_not
+  cd ~/libcxx-test/localization/locale.categories/category.ctype/locale.ctype.byname
+    nalibcxxg++  scan_not.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'scan_not.pass.cpp:37: int main(): assertion "f.scan_not(F::upper, in.data(), in.data() + in.size()) - in.data() == 1" failed'
+
+FAIL: localization___locale.categories___category.ctype___locale.ctype.byname___tolower_1
+  cd ~/libcxx-test/localization/locale.categories/category.ctype/locale.ctype.byname
+    nalibcxxg++  tolower_1.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'tolower_1.pass.cpp:38: int main(): assertion "f.tolower('\xDA') == '\xFA'" failed'
+
+FAIL: localization___locale.categories___category.ctype___locale.ctype.byname___tolower_many
+  cd ~/libcxx-test/localization/locale.categories/category.ctype/locale.ctype.byname
+    nalibcxxg++  tolower_many.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'tolower_many.pass.cpp:35: int main(): assertion "in[0] == '\xFA'" failed'
+
+FAIL: localization___locale.categories___category.ctype___locale.ctype.byname___toupper_1
+  cd ~/libcxx-test/localization/locale.categories/category.ctype/locale.ctype.byname
+    nalibcxxg++  toupper_1.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'toupper_1.pass.cpp:39: int main(): assertion "f.toupper('\xFA') == '\xDA'" failed'
+
+FAIL: localization___locale.categories___category.ctype___locale.ctype.byname___toupper_many
+  cd ~/libcxx-test/localization/locale.categories/category.ctype/locale.ctype.byname
+    nalibcxxg++  toupper_many.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'toupper_many.pass.cpp:35: int main(): assertion "in[0] == '\xDA'" failed'
+
+FAIL: localization___locale.categories___category.ctype___locale.ctype.byname___widen_1
+  cd ~/libcxx-test/localization/locale.categories/category.ctype/locale.ctype.byname
+    nalibcxxg++  widen_1.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'widen_1.pass.cpp:53: int main(): assertion "f.widen(char(-5)) == wchar_t(251)" failed'
+
+FAIL: localization___locale.categories___category.ctype___locale.ctype.byname___widen_many
+  cd ~/libcxx-test/localization/locale.categories/category.ctype/locale.ctype.byname
+    nalibcxxg++  widen_many.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'widen_many.pass.cpp:60: int main(): assertion "v[6] == wchar_t(133)" failed'
+
+FAIL: localization___locale.categories___category.monetary___locale.money.get___locale.money.get.members___get_long_double_en_US
+  cd ~/libcxx-test/localization/locale.categories/category.monetary/locale.money.get/locale.money.get.members
+    nalibcxxg++  get_long_double_en_US.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'get_long_double_en_US.pass.cpp:67: int main(): assertion "iter.base() == v.data() + v.size()" failed'
+
+FAIL: localization___locale.categories___category.monetary___locale.money.get___locale.money.get.members___get_long_double_fr_FR
+  cd ~/libcxx-test/localization/locale.categories/category.monetary/locale.money.get/locale.money.get.members
+    nalibcxxg++  get_long_double_fr_FR.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'get_long_double_fr_FR.pass.cpp:69: int main(): assertion "iter.base() == v.data() + v.size()" failed'
+
+FAIL: localization___locale.categories___category.monetary___locale.money.get___locale.money.get.members___get_long_double_ru_RU
+  cd ~/libcxx-test/localization/locale.categories/category.monetary/locale.money.get/locale.money.get.members
+    nalibcxxg++  get_long_double_ru_RU.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'get_long_double_ru_RU.pass.cpp:69: int main(): assertion "iter.base() == v.data() + v.size()" failed'
+
+FAIL: localization___locale.categories___category.monetary___locale.money.get___locale.money.get.members___get_long_double_zh_CN
+  cd ~/libcxx-test/localization/locale.categories/category.monetary/locale.money.get/locale.money.get.members
+    nalibcxxg++  get_long_double_zh_CN.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'get_long_double_zh_CN.pass.cpp:67: int main(): assertion "iter.base() == v.data() + v.size()" failed'
+
+FAIL: localization___locale.categories___category.monetary___locale.money.get___locale.money.get.members___get_string_en_US
+  cd ~/libcxx-test/localization/locale.categories/category.monetary/locale.money.get/locale.money.get.members
+    nalibcxxg++  get_string_en_US.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'get_string_en_US.pass.cpp:67: int main(): assertion "iter.base() == v.data() + v.size()" failed'
+
+FAIL: localization___locale.categories___category.monetary___locale.moneypunct.byname___curr_symbol
+  cd ~/libcxx-test/localization/locale.categories/category.monetary/locale.moneypunct.byname
+    nalibcxxg++  curr_symbol.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'curr_symbol.pass.cpp:77: int main(): assertion "f.curr_symbol() == "$"" failed'
+
+FAIL: localization___locale.categories___category.monetary___locale.moneypunct.byname___decimal_point
+  cd ~/libcxx-test/localization/locale.categories/category.monetary/locale.moneypunct.byname
+    nalibcxxg++  decimal_point.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'decimal_point.pass.cpp:75: int main(): assertion "f.decimal_point() == '.'" failed'
+
+FAIL: localization___locale.categories___category.monetary___locale.moneypunct.byname___frac_digits
+  cd ~/libcxx-test/localization/locale.categories/category.monetary/locale.moneypunct.byname
+    nalibcxxg++  frac_digits.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'frac_digits.pass.cpp:75: int main(): assertion "f.frac_digits() == 2" failed'
+
+FAIL: localization___locale.categories___category.monetary___locale.moneypunct.byname___grouping
+  cd ~/libcxx-test/localization/locale.categories/category.monetary/locale.moneypunct.byname
+    nalibcxxg++  grouping.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'grouping.pass.cpp:80: int main(): assertion "f.grouping() == "\3\3"" failed'
+
+FAIL: localization___locale.categories___category.monetary___locale.moneypunct.byname___negative_sign
+  cd ~/libcxx-test/localization/locale.categories/category.monetary/locale.moneypunct.byname
+    nalibcxxg++  negative_sign.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'negative_sign.pass.cpp:75: int main(): assertion "f.negative_sign() == "-"" failed'
+
+FAIL: localization___locale.categories___category.monetary___locale.moneypunct.byname___neg_format
+  cd ~/libcxx-test/localization/locale.categories/category.monetary/locale.moneypunct.byname
+    nalibcxxg++  neg_format.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'neg_format.pass.cpp:94: int main(): assertion "p.field[0] == std::money_base::sign" failed'
+
+FAIL: localization___locale.categories___category.monetary___locale.moneypunct.byname___pos_format
+  cd ~/libcxx-test/localization/locale.categories/category.monetary/locale.moneypunct.byname
+    nalibcxxg++  pos_format.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'pos_format.pass.cpp:94: int main(): assertion "p.field[0] == std::money_base::sign" failed'
+
+FAIL: localization___locale.categories___category.monetary___locale.moneypunct.byname___thousands_sep
+  cd ~/libcxx-test/localization/locale.categories/category.monetary/locale.moneypunct.byname
+    nalibcxxg++  thousands_sep.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'thousands_sep.pass.cpp:75: int main(): assertion "f.thousands_sep() == ','" failed'
+
+FAIL: localization___locale.categories___category.monetary___locale.money.put___locale.money.put.members___put_long_double_en_US
+  cd ~/libcxx-test/localization/locale.categories/category.monetary/locale.money.put/locale.money.put.members
+    nalibcxxg++  put_long_double_en_US.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'put_long_double_fr_FR.pass.cpp:68: int main(): assertion "ex == "0,00"" failed'
+
+FAIL: localization___locale.categories___category.monetary___locale.money.put___locale.money.put.members___put_long_double_fr_FR
+  cd ~/libcxx-test/localization/locale.categories/category.monetary/locale.money.put/locale.money.put.members
+    nalibcxxg++  put_long_double_fr_FR.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'put_long_double_fr_FR.pass.cpp:68: int main(): assertion "ex == "0,00"" failed'
+
+FAIL: localization___locale.categories___category.monetary___locale.money.put___locale.money.put.members___put_long_double_ru_RU
+  cd ~/libcxx-test/localization/locale.categories/category.monetary/locale.money.put/locale.money.put.members
+    nalibcxxg++  put_long_double_ru_RU.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'put_long_double_ru_RU.pass.cpp:68: int main(): assertion "ex == "0,00 "" failed'
+
+FAIL: localization___locale.categories___category.monetary___locale.money.put___locale.money.put.members___put_long_double_zh_CN
+  cd ~/libcxx-test/localization/locale.categories/category.monetary/locale.money.put/locale.money.put.members
+    nalibcxxg++  put_long_double_zh_CN.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'put_long_double_zh_CN.pass.cpp:66: int main(): assertion "ex == "0.00"" failed'
+
+FAIL: localization___locale.categories___category.monetary___locale.money.put___locale.money.put.members___put_string_en_US
+  cd ~/libcxx-test/localization/locale.categories/category.monetary/locale.money.put/locale.money.put.members
+    nalibcxxg++  put_string_en_US.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'put_string_en_US.pass.cpp:66: int main(): assertion "ex == "0.00"" failed'
+
+FAIL: localization___locale.categories___category.numeric___locale.nm.put___facet.num.put.members___put_double
+  cd ~/libcxx-test/localization/locale.categories/category.numeric/locale.nm.put/facet.num.put.members
+    nalibcxxg++  put_double.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'put_double.pass.cpp:8643: void test3(): assertion "ex == "0.000000000000000000000000000000000000000000000000000000000000"" failed'
+
+FAIL: localization___locale.categories___category.numeric___locale.nm.put___facet.num.put.members___put_long_double
+  cd ~/libcxx-test/localization/locale.categories/category.numeric/locale.nm.put/facet.num.put.members
+    nalibcxxg++  put_long_double.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'put_long_double.pass.cpp:5459: void test2(): assertion "ex == "-0.00000000000000000000000000000000000000000000000000000000000"" failed'
+
+FAIL: localization___locale.categories___category.numeric___locale.nm.put___facet.num.put.members___put_pointer
+  cd ~/libcxx-test/localization/locale.categories/category.numeric/locale.nm.put/facet.num.put.members
+    nalibcxxg++  put_pointer.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'put_pointer.pass.cpp:41: int main(): assertion "ex == "0x0" || ex == "(nil)"" failed'
+
+FAIL: localization___locale.categories___category.numeric___locale.num.get___facet.num.get.members___get_pointer
+  cd ~/libcxx-test/localization/locale.categories/category.numeric/locale.num.get/facet.num.get.members
+    nalibcxxg++  get_pointer.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'get_pointer.pass.cpp:59: int main(): assertion "p == (void*)0x73" failed'
+
+FAIL: localization___locale.categories___category.time___locale.time.get.byname___date_order
+  cd ~/libcxx-test/localization/locale.categories/category.time/locale.time.get.byname
+    nalibcxxg++  date_order.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'date_order.pass.cpp:40: int main(): assertion "f.date_order() == std::time_base::dmy" failed'
+
+FAIL: localization___locale.categories___category.time___locale.time.get.byname___date_order_wide
+  cd ~/libcxx-test/localization/locale.categories/category.time/locale.time.get.byname
+    nalibcxxg++  date_order_wide.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'date_order_wide.pass.cpp:36: int main(): assertion "f.date_order() == std::time_base::mdy" failed'
+
+FAIL: localization___locale.categories___category.time___locale.time.get.byname___get_date
+  cd ~/libcxx-test/localization/locale.categories/category.time/locale.time.get.byname
+    nalibcxxg++  get_date.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'get_date.pass.cpp:59: int main(): assertion "i.base() == in+sizeof(in)/sizeof(in[0])-1" failed'
+
+FAIL: localization___locale.categories___category.time___locale.time.get.byname___get_date_wide
+  cd ~/libcxx-test/localization/locale.categories/category.time/locale.time.get.byname
+    nalibcxxg++  get_date_wide.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'get_date_wide.pass.cpp:47: int main(): assertion "i.base() == in+sizeof(in)/sizeof(in[0])-1" failed'
+
+FAIL: localization___locale.categories___category.time___locale.time.get.byname___get_monthname
+  cd ~/libcxx-test/localization/locale.categories/category.time/locale.time.get.byname
+    nalibcxxg++  get_monthname.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'get_monthname.pass.cpp:57: int main(): assertion "i.base() == in+sizeof(in)/sizeof(in[0])-1" failed'
+
+FAIL: localization___locale.categories___category.time___locale.time.get.byname___get_monthname_wide
+  cd ~/libcxx-test/localization/locale.categories/category.time/locale.time.get.byname
+    nalibcxxg++  get_monthname_wide.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'get_monthname_wide.pass.cpp:66: int main(): assertion "i.base() == in+sizeof(in)/sizeof(in[0])-1" failed'
+
+FAIL: localization___locale.categories___category.time___locale.time.get.byname___get_one
+  cd ~/libcxx-test/localization/locale.categories/category.time/locale.time.get.byname
+    nalibcxxg++  get_one.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'get_one.pass.cpp:74: int main(): assertion "i.base() == in+sizeof(in)/sizeof(in[0])-1" failed'
+
+FAIL: localization___locale.categories___category.time___locale.time.get.byname___get_one_wide
+  cd ~/libcxx-test/localization/locale.categories/category.time/locale.time.get.byname
+    nalibcxxg++  get_one_wide.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'get_one_wide.pass.cpp:47: int main(): assertion "t.tm_sec == 59" failed'
+
+FAIL: localization___locale.categories___category.time___locale.time.get.byname___get_weekday
+  cd ~/libcxx-test/localization/locale.categories/category.time/locale.time.get.byname
+    nalibcxxg++  get_weekday.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'get_weekday.pass.cpp:57: int main(): assertion "i.base() == in+sizeof(in)/sizeof(in[0])-1" failed'
+
+FAIL: localization___locale.categories___category.time___locale.time.get.byname___get_weekday_wide
+  cd ~/libcxx-test/localization/locale.categories/category.time/locale.time.get.byname
+    nalibcxxg++  get_weekday_wide.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'get_weekday_wide.pass.cpp:57: int main(): assertion "i.base() == in+sizeof(in)/sizeof(in[0])-1" failed'
+
+FAIL: localization___locale.categories___category.time___locale.time.put.byname___put1
+  cd ~/libcxx-test/localization/locale.categories/category.time/locale.time.put.byname
+    nalibcxxg++  put1.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'put1.pass.cpp:70: int main(): assertion "(ex == "Today is Samedi which is abreviated Sam.")|| (ex == "Today is samedi which is abreviated sam." )" failed'
+
+FAIL: localization___locale.categories___facet.numpunct___locale.numpunct.byname___decimal_point
+  cd ~/libcxx-test/localization/locale.categories/facet.numpunct/locale.numpunct.byname
+    nalibcxxg++  decimal_point.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'decimal_point.pass.cpp:54: int main(): assertion "np.decimal_point() == ','" failed'
+
+FAIL: localization___locale.categories___facet.numpunct___locale.numpunct.byname___grouping
+  cd ~/libcxx-test/localization/locale.categories/facet.numpunct/locale.numpunct.byname
+    nalibcxxg++  grouping.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'grouping.pass.cpp:41: int main(): assertion "np.grouping() == "\3\3"" failed'
+
+FAIL: localization___locales___locale___locale.cons___char_pointer
+  cd ~/libcxx-test/localization/locales/locale/locale.cons
+    nalibcxxg++  char_pointer.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'char_pointer.pass.cpp:92: int main(): assertion "false" failed'
+
+FAIL: localization___locales___locale.convenience___conversions___conversions.buffer___seekoff
+  cd ~/libcxx-test/localization/locales/locale.convenience/conversions/conversions.buffer
+    nalibcxxg++  seekoff.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51):     #00  pc 00064598  /data/local/tmp/libc++_shared.so (std::__1::codecvt<wchar_t, char, mbstate_t>::do_out(mbstate_t&, wchar_t const*, wchar_t const*, wchar_t const*&, char*, char*, char*&) const+39)
+
+FAIL: re___re.alg___re.alg.match___basic
+  cd ~/libcxx-test/re/re.alg/re.alg.match
+    nalibcxxg++  basic.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'basic.pass.cpp:622: int main(): assertion "std::regex_match(s, m, std::regex("[a[=M=]z]", std::regex_constants::basic))" failed'
+
+FAIL: re___re.alg___re.alg.match___ecma
+  cd ~/libcxx-test/re/re.alg/re.alg.match
+    nalibcxxg++  ecma.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'ecma.pass.cpp:583: int main(): assertion "std::regex_match(s, m, std::regex("[a[=M=]z]"))" failed'
+
+FAIL: re___re.alg___re.alg.match___extended
+  cd ~/libcxx-test/re/re.alg/re.alg.match
+    nalibcxxg++  extended.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'ecma.pass.cpp:583: int main(): assertion "std::regex_match(s, m, std::regex("[a[=M=]z]"))" failed'
+
+FAIL: re___re.alg___re.alg.search___awk -lcompiler_rt_static -latomic
+  cd ~/libcxx-test/re/re.alg/re.alg.search
+    nalibcxxg++  awk.pass.cpp -lcompiler_rt_static -latomic
+      I/DEBUG   (   51): Abort message: 'awk.pass.cpp:692: int main(): assertion "std::regex_search(s, m, std::regex("[a[=M=]z]", std::regex_constants::awk))" failed'
+
+FAIL: re___re.alg___re.alg.search___basic
+  cd ~/libcxx-test/re/re.alg/re.alg.search
+    nalibcxxg++  basic.pass.cpp -lc++_shared -latomic
+      /libc    (16185): basic.pass.cpp:694: int main(): assertion "std::regex_search(s, m, std::regex("[a[=M=]z]", std::regex_
+
+FAIL: re___re.alg___re.alg.search___ecma
+  cd ~/libcxx-test/re/re.alg/re.alg.search
+    nalibcxxg++  ecma.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'ecma.pass.cpp:673: int main(): assertion "std::regex_search(s, m, std::regex("[a[=M=]z]"))" failed'
+
+FAIL: re___re.alg___re.alg.search___extended
+  cd ~/libcxx-test/re/re.alg/re.alg.search
+    nalibcxxg++  extended.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'extended.pass.cpp:692: int main(): assertion "std::regex_search(s, m, std::regex("[a[=M=]z]", std::regex_constants::extended))" failed'
+
+FAIL: re___re.traits___isctype
+  cd ~/libcxx-test/re/re.traits
+    nalibcxxg++  isctype.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'isctype.pass.cpp:29: int main(): assertion "!t.isctype(' ', t.lookup_classname(s.begin(), s.end()))" failed'
+
+FAIL: re___re.traits___lookup_collatename
+  cd ~/libcxx-test/re/re.traits
+    nalibcxxg++  lookup_collatename.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'lookup_collatename.pass.cpp:29: void test(const char_type *, const std::basic_string<char_type> &) [char_type = char]: assertion "t.lookup_collatename(F(A), F(A + t.length(A))) == expected" failed'
+
+FAIL: re___re.traits___transform
+  cd ~/libcxx-test/re/re.traits
+    nalibcxxg++  transform.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'transform.pass.cpp:31: int main(): assertion "t.transform(F(a), F(a+1)) < t.transform(F(B), F(B+1))" failed'
+
+FAIL: re___re.traits___transform_primary
+  cd ~/libcxx-test/re/re.traits
+    nalibcxxg++  transform_primary.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'transform_primary.pass.cpp:34: int main(): assertion "t.transform_primary(F(A), F(A+1)) == t.transform_primary(F(Aacute), F(Aacute+1))" failed'
+
+FAIL: re___re.traits___translate_nocase
+  cd ~/libcxx-test/re/re.traits
+    nalibcxxg++  translate_nocase.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'translate_nocase.pass.cpp:44: int main(): assertion "t.translate_nocase('\xDA') == '\xFA'" failed'
+
+FAIL: strings___string.conversions___stod
+  cd ~/libcxx-test/strings/string.conversions
+    nalibcxxg++  stod.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51):     #00  pc 00035e66  /data/local/tmp/libc++_shared.so (__gabixx::__default_terminate()+13)
+      I/DEBUG   (   51):     #01  pc 00035e7d  /data/local/tmp/libc++_shared.so (__gabixx::__terminate(void (*)())+16)
+
+FAIL: strings___string.conversions___stof
+  cd ~/libcxx-test/strings/string.conversions
+    nalibcxxg++  stof.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: '/tmp/ndk-andrewhsieh/tmp/build-10543/build-libc++/ndk/sources/cxx-stl/llvm-libc++/../../android/support/src/wchar_support.c:355: wcstof: assertion "0" failed'
+
+FAIL: strings___string.conversions___stoi
+  cd ~/libcxx-test/strings/string.conversions
+    nalibcxxg++  stoi.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: '/tmp/ndk-andrewhsieh/tmp/build-10543/build-libc++/ndk/sources/cxx-stl/llvm-libc++/../../android/support/src/wchar_support.c:361: wcstol: assertion "0" failed'
+
+FAIL: strings___string.conversions___stold
+  cd ~/libcxx-test/strings/string.conversions
+    nalibcxxg++  stold.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: '/tmp/ndk-andrewhsieh/tmp/build-10543/build-libc++/ndk/sources/cxx-stl/llvm-libc++/../../android/support/src/wchar_support.c:367: wcstold: assertion "0" failed'
+
+FAIL: strings___string.conversions___stoll
+  cd ~/libcxx-test/strings/string.conversions
+    nalibcxxg++  stoll.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: '/tmp/ndk-andrewhsieh/tmp/build-10543/build-libc++/ndk/sources/cxx-stl/llvm-libc++/../../android/support/src/wchar_support.c:373: wcstoll: assertion "0" failed'
+
+FAIL: strings___string.conversions___stol
+  cd ~/libcxx-test/strings/string.conversions
+    nalibcxxg++  stol.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: '/tmp/ndk-andrewhsieh/tmp/build-10543/build-libc++/ndk/sources/cxx-stl/llvm-libc++/../../android/support/src/wchar_support.c:361: wcstol: assertion "0" failed'
+
+FAIL: strings___string.conversions___stoull
+  cd ~/libcxx-test/strings/string.conversions
+    nalibcxxg++  stoull.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: '/tmp/ndk-andrewhsieh/tmp/build-10543/build-libc++/ndk/sources/cxx-stl/llvm-libc++/../../android/support/src/wchar_support.c:379: wcstoull: assertion "0" failed'
+
+FAIL: strings___string.conversions___stoul
+  cd ~/libcxx-test/strings/string.conversions
+    nalibcxxg++  stoul.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: '/tmp/ndk-andrewhsieh/tmp/build-10543/build-libc++/ndk/sources/cxx-stl/llvm-libc++/../../android/support/src/wchar_support.c:379: wcstoull: assertion "0" failed'
+
+FAIL: thread___futures___futures.promise___dtor
+  cd ~/libcxx-test/thread/futures/futures.promise
+    nalibcxxg++  dtor.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51):     #00  pc 00035e66  /data/local/tmp/libc++_shared.so (__gabixx::__default_terminate()+13)
+      I/DEBUG   (   51):     #01  pc 00035e7d  /data/local/tmp/libc++_shared.so (__gabixx::__terminate(void (*)())+16)
+
+FAIL: thread___futures___futures.promise___set_exception_at_thread_exit
+  cd ~/libcxx-test/thread/futures/futures.promise
+    nalibcxxg++  set_exception_at_thread_exit.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51):     #00  pc 00035e66  /data/local/tmp/libc++_shared.so (__gabixx::__default_terminate()+13)
+      I/DEBUG   (   51):     #01  pc 00035e7d  /data/local/tmp/libc++_shared.so (__gabixx::__terminate(void (*)())+16)
+
+FAIL: thread___futures___futures.promise___set_exception
+  cd ~/libcxx-test/thread/futures/futures.promise
+    nalibcxxg++  set_exception.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51):     #00  pc 00035e66  /data/local/tmp/libc++_shared.so (__gabixx::__default_terminate()+13)
+      I/DEBUG   (   51):     #01  pc 00035e7d  /data/local/tmp/libc++_shared.so (__gabixx::__terminate(void (*)())+16)
+
+FAIL: thread___futures___futures.shared_future___dtor
+  cd ~/libcxx-test/thread/futures/futures.shared_future  # gcc4.8 works fine
+    nalibcxxg++  dtor.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51):     #00  pc 00035e66  /data/local/tmp/libc++_shared.so (__gabixx::__default_terminate()+13)
+      I/DEBUG   (   51):     #01  pc 00035e7d  /data/local/tmp/libc++_shared.so (__gabixx::__terminate(void (*)())+16)
+
+FAIL: thread___futures___futures.shared_future___get
+  cd ~/libcxx-test/thread/futures/futures.shared_future
+    nalibcxxg++  get.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51):     #00  pc 00035e66  /data/local/tmp/libc++_shared.so (__gabixx::__default_terminate()+13)
+      I/DEBUG   (   51):     #01  pc 00035e7d  /data/local/tmp/libc++_shared.so (__gabixx::__terminate(void (*)())+16)
+
+FAIL: thread___futures___futures.tas___futures.task.members___dtor
+  cd ~/libcxx-test/thread/futures/futures.tas/futures.task.members
+    nalibcxxg++  dtor.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51):     #00  pc 00035e66  /data/local/tmp/libc++_shared.so (__gabixx::__default_terminate()+13)
+      I/DEBUG   (   51):     #01  pc 00035e7d  /data/local/tmp/libc++_shared.so (__gabixx::__terminate(void (*)())+16)
+
+FAIL: thread___futures___futures.tas___futures.task.members___make_ready_at_thread_exit
+  cd ~/libcxx-test/thread/futures/futures.tas/futures.task.members
+    nalibcxxg++  make_ready_at_thread_exit.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51):     #00  pc 00035e66  /data/local/tmp/libc++_shared.so (__gabixx::__default_terminate()+13)
+      I/DEBUG   (   51):     #01  pc 00035e7d  /data/local/tmp/libc++_shared.so (__gabixx::__terminate(void (*)())+16)
+
+FAIL: thread___futures___futures.tas___futures.task.members___operator
+  cd ~/libcxx-test/thread/futures/futures.tas/futures.task.members
+    nalibcxxg++  operator.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: 'operator.pass.cpp:86: int main(): assertion "false" failed'
+
+FAIL: thread___futures___futures.unique_future___dtor
+  cd ~/libcxx-test/thread/futures/futures.unique_future  # gcc4.8 works fine
+    nalibcxxg++  dtor.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51):     #00  pc 00035e66  /data/local/tmp/libc++_shared.so (__gabixx::__default_terminate()+13)
+      I/DEBUG   (   51):     #01  pc 00035e7d  /data/local/tmp/libc++_shared.so (__gabixx::__terminate(void (*)())+16)
+
+FAIL: thread___futures___futures.unique_future___get
+  cd ~/libcxx-test/thread/futures/futures.unique_future
+    nalibcxxg++  get.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51):     #00  pc 00035e66  /data/local/tmp/libc++_shared.so (__gabixx::__default_terminate()+13)
+      I/DEBUG   (   51):     #01  pc 00035e7d  /data/local/tmp/libc++_shared.so (__gabixx::__terminate(void (*)())+16)
+

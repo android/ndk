@@ -57,6 +57,7 @@ find_program ADB_CMD adb
 TESTABLES="samples build device awk"
 FULL_TESTS=no
 RUN_TESTS=
+RUN_TESTS_FILTERED=
 NDK_PACKAGE=
 WINE=
 CONTINUE_ON_BUILD_FAIL=
@@ -89,6 +90,11 @@ while [ -n "$1" ]; do
             ;;
         --test=*)
             RUN_TESTS="$RUN_TESTS $optarg"
+            ;;
+        --test-filtered=*)
+            # same as --test but apply BROKEN_RUN too. Useful for projects with tons of test some of them can't run
+            RUN_TESTS="$RUN_TESTS $optarg"
+            RUN_TESTS_FILTERED="yes"
             ;;
         --package=*)
             NDK_PACKAGE="$optarg"
@@ -836,15 +842,15 @@ if is_testable device; then
             if [ $? != 0 ] ; then
                 continue
             fi
-            SRCFILE="$SRCDIR/$SRCFILE"
+            SRCPATH="$SRCDIR/$SRCFILE"
             if [ $HOST_OS = cygwin ]; then
-                SRCFILE=`cygpath -m $SRCFILE`
+                SRCPATH=`cygpath -m $SRCPATH`
             fi
-            DSTFILE="$DSTDIR/$DSTFILE"
-            run $ADB_CMD -s "$DEVICE" push "$SRCFILE" "$DSTFILE" &&
-            run $ADB_CMD -s "$DEVICE" shell chmod 0755 $DSTFILE
+            DSTPATH="$DSTDIR/$DSTFILE"
+            run $ADB_CMD -s "$DEVICE" push "$SRCPATH" "$DSTPATH" &&
+            run $ADB_CMD -s "$DEVICE" shell chmod 0755 $DSTPATH
             if [ $? != 0 ] ; then
-                dump "ERROR: Could not install $SRCFILE to device $DEVICE!"
+                dump "ERROR: Could not install $SRCPATH to device $DEVICE!"
                 exit 1
             fi
         done
@@ -858,29 +864,45 @@ if is_testable device; then
             if [ $? = 0 ] ; then
               continue
             fi
-            if [ -z "$RUN_TESTS" -a -f "$TEST/BROKEN_RUN" ]; then
-                grep -q -w -e "$DSTFILE" "$TEST/BROKEN_RUN"
-                if [ $? = 0 ] ; then
-                    continue
+            if [ -z "$RUN_TESTS" -o "$RUN_TESTS_FILTERED" = "yes" ]; then
+                if [ -f "$TEST/BROKEN_RUN" ]; then
+                    grep -q -w -e "$DSTFILE" "$TEST/BROKEN_RUN"
+                    if [ $? = 0 ] ; then
+                        continue
+                    fi
                 fi
             fi
-            SRCFILE="$SRCDIR/$SRCFILE"
+            SRCPATH="$SRCDIR/$SRCFILE"
             if [ $HOST_OS = cygwin ]; then
-                SRCFILE=`cygpath -m $SRCFILE`
+                SRCPATH=`cygpath -m $SRCPATH`
             fi
-            DSTFILE="$DSTDIR/$DSTFILE"
-            run $ADB_CMD -s "$DEVICE" push "$SRCFILE" "$DSTFILE" &&
-            run $ADB_CMD -s "$DEVICE" shell chmod 0755 $DSTFILE
+            DSTPATH="$DSTDIR/$DSTFILE"
+            run $ADB_CMD -s "$DEVICE" push "$SRCPATH" "$DSTPATH" &&
+            run $ADB_CMD -s "$DEVICE" shell chmod 0755 $DSTPATH
+            DATAPATHS=
+            if [ -f "$TEST/DATA" ]; then
+                if grep -q -e "$DSTFILE" "$TEST/DATA"; then
+                    DATAPATHS=`grep -e "$DSTFILE" "$TEST/DATA" | awk '{print $2}'`
+                    DATAPATHS=$NDK/$DATAPATHS
+                    for DATA in $(ls $DATAPATHS); do
+                        run $ADB_CMD -s "$DEVICE" push "$DATA" "$DSTDIR"
+                    done
+                fi
+            fi
             if [ $? != 0 ] ; then
-                dump "ERROR: Could not install $SRCFILE to device $DEVICE!"
+                dump "ERROR: Could not install $SRCPATH to device $DEVICE!"
                 exit 1
             fi
-            PROGRAM="`basename $DSTFILE`"
+            PROGRAM="`basename $DSTPATH`"
             dump "Running device test [$CPU_ABI]: $TEST_NAME (`basename $PROGRAM`)"
             adb_var_shell_cmd "$DEVICE" "" "cd $DSTDIR && LD_LIBRARY_PATH=$DSTDIR ./$PROGRAM"
             if [ $? != 0 ] ; then
                 dump "   ---> TEST FAILED!!"
             fi
+            adb_var_shell_cmd "$DEVICE" "" "rm -f $DSTPATH"
+            for DATA in $(ls $DATAPATHS); do
+                adb_var_shell_cmd "$DEVICE" "" "rm -f $DSTDIR/`basename $DATA`"
+            done
         done
         # Cleanup
         adb_var_shell_cmd "$DEVICE" "" rm -r $DSTDIR
