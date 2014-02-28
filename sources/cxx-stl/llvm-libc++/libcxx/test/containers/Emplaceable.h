@@ -18,8 +18,10 @@ class Emplaceable
 // GCC 4.8 when compile ccontainers/unord/unord.map/unorder.map.modifiers/emplace_hint.pass.cpp, etc,
 // complains about the following being private
 public:
-#endif
+    Emplaceable(const Emplaceable&) {}
+#else
     Emplaceable(const Emplaceable&);
+#endif
     Emplaceable& operator=(const Emplaceable&);
 
     int int_;

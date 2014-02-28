@@ -46,41 +46,41 @@ long double nexttowardl(long double ld, long double td) {
   return nextafter((double)ld, (double)td);
 }
 
-long double acosl(long double x) { return acos((double)x); }
-long double asinl(long double x) { return asin((double)x); }
-long double atanl(long double x) { return atan((double)x); }
-long double atan2l(long double x, long double y) { return atan2((double)x, (double)y); }
-long double cosl(long double x) { return cos((double)x); }
-long double coshl(long double x) { return cosh((double)x); }
-long double expl(long double x) { return exp((double)x); }
-long double fmodl(long double x, long double y) { return fmod((double)x, (double)y); }
-long double powl(long double x, long double y) { return pow((double)x, (double)y); }
-long double sinl(long double x) { return sin((double)x); }
-long double sinhl(long double x) { return sinh((double)x); }
-long double sqrtl(long double x) { return sqrt((double)x); }
-long double tanl(long double x) { return tan((double)x); }
-long double tanhl(long double x) { return tanh((double)x); }
-long double acoshl(long double x) { return acosh((double)x); }
-long double asinhl(long double x) { return asinh((double)x); }
-long double atanhl(long double x) { return atanh((double)x); }
-long double cbrtl(long double x) { return cbrt((double)x); }
-long double erfl(long double x) { return erf((double)x); }
-long double erfcl(long double x) { return erfc((double)x); }
-long double expm1l(long double x) { return expm1((double)x); }
-long double hypotl(long double x, long double y) { return hypot((double)x, (double)y); }
-long double lgammal(long double x) { return lgamma((double)x); }
-long long int llrintl(long double x) { return llrint((double)x); }
-long double logl(long double x) { return log((double)x); }
-long double log1pl(long double x) { return log1p((double)x); }
-long double log2l(long double x) { return log2((double)x); }
-long double logbl(long double x) { return logb((double)x); }
-long double log10l(long double x) { return log10((double)x); }
-long double nanl(const char* s) { return nan(s); }
+__attribute__((weak)) long double acosl(long double x) { return acos((double)x); }
+__attribute__((weak)) long double asinl(long double x) { return asin((double)x); }
+__attribute__((weak)) long double atanl(long double x) { return atan((double)x); }
+__attribute__((weak)) long double atan2l(long double x, long double y) { return atan2((double)x, (double)y); }
+__attribute__((weak)) long double cosl(long double x) { return cos((double)x); }
+__attribute__((weak)) long double coshl(long double x) { return cosh((double)x); }
+__attribute__((weak)) long double expl(long double x) { return exp((double)x); }
+__attribute__((weak)) long double fmodl(long double x, long double y) { return fmod((double)x, (double)y); }
+__attribute__((weak)) long double powl(long double x, long double y) { return pow((double)x, (double)y); }
+__attribute__((weak)) long double sinl(long double x) { return sin((double)x); }
+__attribute__((weak)) long double sinhl(long double x) { return sinh((double)x); }
+__attribute__((weak)) long double sqrtl(long double x) { return sqrt((double)x); }
+__attribute__((weak)) long double tanl(long double x) { return tan((double)x); }
+__attribute__((weak)) long double tanhl(long double x) { return tanh((double)x); }
+__attribute__((weak)) long double acoshl(long double x) { return acosh((double)x); }
+__attribute__((weak)) long double asinhl(long double x) { return asinh((double)x); }
+__attribute__((weak)) long double atanhl(long double x) { return atanh((double)x); }
+__attribute__((weak)) long double cbrtl(long double x) { return cbrt((double)x); }
+__attribute__((weak)) long double erfl(long double x) { return erf((double)x); }
+__attribute__((weak)) long double erfcl(long double x) { return erfc((double)x); }
+__attribute__((weak)) long double expm1l(long double x) { return expm1((double)x); }
+__attribute__((weak)) long double hypotl(long double x, long double y) { return hypot((double)x, (double)y); }
+__attribute__((weak)) long double lgammal(long double x) { return lgamma((double)x); }
+__attribute__((weak)) long long int llrintl(long double x) { return llrint((double)x); }
+__attribute__((weak)) long double logl(long double x) { return log((double)x); }
+__attribute__((weak)) long double log1pl(long double x) { return log1p((double)x); }
+__attribute__((weak)) long double log2l(long double x) { return log2((double)x); }
+__attribute__((weak)) long double logbl(long double x) { return logb((double)x); }
+__attribute__((weak)) long double log10l(long double x) { return log10((double)x); }
+__attribute__((weak)) long double nanl(const char* s) { return nan(s); }
 __attribute__((weak)) long double nearbyintl(long double x) { return nearbyint((double)x); }
-long double remainderl(long double x, long double y) { return remainder((double)x, (double)y); }
-long double remquol(long double x, long double y, int* i) { return remquo((double)x, (double)y, i); }
-long double rintl(long double x) { return rint((double)x); }
-long int lrintl(long double x) { return lrint((double)x); }
-long double tgammal(long double x) { return tgamma((double)x); }
-long double modfl(long double x, long double* y) { return modf((double)x, (double *)y); }
-long double exp2l(long double x) { return exp2((double)x); }
+__attribute__((weak)) long double remainderl(long double x, long double y) { return remainder((double)x, (double)y); }
+__attribute__((weak)) long double remquol(long double x, long double y, int* i) { return remquo((double)x, (double)y, i); }
+__attribute__((weak)) long double rintl(long double x) { return rint((double)x); }
+__attribute__((weak)) long int lrintl(long double x) { return lrint((double)x); }
+__attribute__((weak)) long double tgammal(long double x) { return tgamma((double)x); }
+__attribute__((weak)) long double modfl(long double x, long double* y) { return modf((double)x, (double *)y); }
+__attribute__((weak)) long double exp2l(long double x) { return exp2((double)x); }
