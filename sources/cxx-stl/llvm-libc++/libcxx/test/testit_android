@@ -77,6 +77,7 @@ TARGET_ABI=
 TARGET_ARCH=
 TARGET_PATH=/data/local/tmp/libcxx
 CXX=
+WITH_COMPILER_RT=
 for OPT; do
   case $OPT in
     --help|-?)
@@ -96,6 +97,9 @@ for OPT; do
       ;;
     --verbose)
       VERBOSE=$(( $VERBOSE + 1 ))
+      ;;
+    --with-compiler-rt)
+      WITH_COMPILER_RT=yes
       ;;
     -*)
       echo "Unknown option: $OPT. See --help."
@@ -173,14 +177,16 @@ for LIB in libc++_static.a libc++_shared.so; do
 done
 
 LIBCOMPILER_RT_LIBS=$(cd "$LIBCXX_ROOT"/../../../android/compiler-rt && pwd)/libs/$TARGET_ABI
-for LIB in libcompiler_rt_static.a libcompiler_rt_shared.so; do
-  if [ ! -f "$LIBCOMPILER_RT_LIBS/$LIB" ]; then
-    echo "ERROR: Missing prebuilt library: $LIBCOMPILER_RT_LIBS/$LIB"
-    echo "Please run: build/tools/build-compiler-rt.sh --ndk-dir=$NDK \
+if [ "$WITH_COMPILER_RT" = "yes" ]; then
+  for LIB in libcompiler_rt_static.a libcompiler_rt_shared.so; do
+    if [ ! -f "$LIBCOMPILER_RT_LIBS/$LIB" ]; then
+      echo "ERROR: Missing prebuilt library: $LIBCOMPILER_RT_LIBS/$LIB"
+      echo "Please run: build/tools/build-compiler-rt.sh --ndk-dir=$NDK \
 --src-dir=/tmp/ndk-$USER/src/llvm-3.3/compiler-rt --llvm-version=3.3"
-    exit 1
-  fi
-done
+      exit 1
+    fi
+  done
+fi
 
 # Check or detect C++ toolchain.
 TOOLCHAIN_CFLAGS=
@@ -286,20 +292,28 @@ if [ "$DO_STATIC" ]; then
   # Statically link to ensure the executable can be run easily through ADB
   # Note that in standalone toolchain libc++_static is renamed to libstdc++, and
   # compiler adds -lstdc++ implicitly
-  LIBS="-lcompiler_rt_static -latomic"
+  if [ "$WITH_COMPILER_RT" = "yes" ]; then
+    LIBS="-lcompiler_rt_static -latomic"
+  else
+    LIBS="-latomic"
+  fi
 else
   run2 $ADB push $LIBCXX_LIBS/libc++_shared.so $TARGET_PATH 2>/dev/null
   if [ $? != 0 ]; then
     echo "ERROR: Can't push shared libc++ to target device!"
     exit 1
   fi
-  run2 $ADB push $LIBCOMPILER_RT_LIBS/libcompiler_rt_shared.so $TARGET_PATH 2>/dev/null
-  if [ $? != 0 ]; then
-    echo "ERROR: Can't push shared libcompiler_rt to target device!"
-    exit 1
+  if [ "$WITH_COMPILER_RT" = "yes" ]; then
+    run2 $ADB push $LIBCOMPILER_RT_LIBS/libcompiler_rt_shared.so $TARGET_PATH 2>/dev/null
+    if [ $? != 0 ]; then
+      echo "ERROR: Can't push shared libcompiler_rt to target device!"
+      exit 1
+    fi
+    LIBS="-lc++_shared -lcompiler_rt_shared -latomic"
+    #LIBS="-nodefaultlibs -lc++_shared -lcompiler_rt_shared -latomic -ldl -lc -lm"
+  else
+    LIBS="-lc++_shared -latomic"
   fi
-  LIBS="-lc++_shared -lcompiler_rt_shared -latomic"
-#LIBS="-nodefaultlibs -lc++_shared -lcompiler_rt_shared -latomic -ldl -lc -lm"
 fi
 
 case $TRIPLE in

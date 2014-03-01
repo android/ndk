@@ -7,8 +7,11 @@ __test := $1
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(libcxx-test-path)/$$(__test).pass.cpp
 LOCAL_MODULE := $$(subst /,___,$$(__test))
-LOCAL_STATIC_LIBRARIES := compiler_rt_static
+
+# armeabi and mips needs libatomic to provide __atomic_is_lock_free, for example
 LOCAL_LDLIBS += -latomic
+
+# Enable RTTI and exception handling for some tests
 LOCAL_CPP_FEATURES := rtti exceptions
 
 # The following are for testing only
@@ -17,9 +20,6 @@ LOCAL_CPPFLAGS += -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT
 
 include $(BUILD_EXECUTABLE)
 endef
-
-$(call import-module, android/compiler-rt)
-
 
 # The following black list contain test can't be compiled under various
 # configuration
