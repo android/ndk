@@ -370,6 +370,12 @@ libcxx/src/support/android/locale_android.cpp \
 ../../android/support/src/musl-stdio/vprintf.c \
 ../../android/support/src/musl-stdio/vsprintf.c \
 "
+# libc++ built with clang (for ABI armeabi-only) produces
+# libc++_shared.so and libc++_static.a with undefined __atomic_fetch_add_4
+# Add -latomic
+if [ -n "$LLVM_VERSION" ]; then
+    LIBCXX_LDFLAGS="-latomic"
+fi
 
 # If the --no-makefile flag is not used, we're going to put all build
 # commands in a temporary Makefile that we will be able to invoke with
