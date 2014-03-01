@@ -192,7 +192,7 @@ fi
 TOOLCHAIN_CFLAGS=
 TOOLCHAIN_LDFLAGS=
 if [ -z "$TOOLCHAIN_PREFIX" ]; then
-  # Compute 
+  # Compute
   case $TARGET_ABI in
     armeabi)
       TOOLCHAIN_PREFIX=arm-linux-androideabi
@@ -235,6 +235,14 @@ CC=$CXX
 if [ -z "$OPTIONS" ]
 then
   OPTIONS="-std=c++11 -O2 -g"
+  # Note that some tests use assert() to check condition but -O2 defines assert() to nothing,
+  # unless we specify -UNDEBUG to bring assert() back.
+  # But currently adding -UNDEBUG crashes both clang3.4 and clang3.3 for test
+  # like libcxx/test/atomics/atomics.types.generic/address.pass.cpp.  Define -UNDEBUG
+  # only when we are not using clang.  ToDo
+  if [ "$CXX" = "${CXX%%*clang++*}" ] ; then
+    OPTIONS="$OPTIONS -UNDEBUG"
+  fi
 fi
 OPTIONS="$OPTIONS $TOOLCHAIN_CFLAGS $TOOLCHAIN_LDFLAGS"
 OPTIONS="$OPTIONS -I$LIBCXX_ROOT/test/support"
@@ -247,9 +255,11 @@ then
 fi
 
 # Run a shell command through ADB, return its status.
+# Variable ERR contains output if $RET is non-zero
 adb_shell () {
   # We need a temporary file to store the output of our command
-  local CMD_OUT RET OUTPUT
+  local CMD_OUT RET
+  ERR=
   CMD_OUT=$(mktemp /tmp/testit_android-cmdout-XXXXXX)
   # Run the command, while storing the standard output to CMD_OUT
   # and appending the exit code as the last line.
@@ -261,10 +271,13 @@ adb_shell () {
   RET=$(sed -e '$!d' $CMD_OUT)
   # Get output, which corresponds to everything except the last line
   OUT=$(sed -e '$d' $CMD_OUT)
-  rm -f $CMD_OUT
+  if [ "$RET" != "0" ]; then
+    ERR=$OUT
+  fi
   if [ "$VERBOSE" -gt 2 ]; then
     printf "%s" "$OUT"
   fi
+  rm -f $CMD_OUT
   return $RET
 }
 
@@ -281,8 +294,29 @@ adb_push () {
 adb_run () {
   local EXECUTABLE=$1
   local EXECUTABLE_BASENAME=$(basename "$EXECUTABLE")
-  run2 $ADB push $EXECUTABLE $TARGET_PATH/$EXECUTABLE_BASENAME 2>/dev/null &&
-  adb_shell "LD_LIBRARY_PATH=$TARGET_PATH; cd $TARGET_PATH; ./$EXECUTABLE_BASENAME"
+  run2 $ADB push $EXECUTABLE $TARGET_PATH/$EXECUTABLE_BASENAME 2>/dev/null
+  if [ "$?" != 0 ]; then
+    return 1;
+  fi
+  # Retry up to 10 times if fail is due to "Text file busy"
+  for i in 1 2 3 4 5 6 7 8 9 10; do
+    adb_shell "LD_LIBRARY_PATH=$TARGET_PATH; cd $TARGET_PATH; ./$EXECUTABLE_BASENAME"
+    if [ "$?" = "0" ]; then
+      return 0
+    fi
+    if ! $(echo $ERR | grep -iq "Text file busy"); then
+      if [ "$i" != "1" ]; then
+        ## Dump error message to help diagnostics
+        echo "ERR=$ERR"
+      fi
+      break;
+    fi
+    echo "Text file busy.  Re-try $i"
+    sleep 1
+    run2 $ADB push $EXECUTABLE $TARGET_PATH/$EXECUTABLE_BASENAME 2>/dev/null
+    sleep 2  # try again
+  done
+  return 1
 }
 
 adb_shell "rm -rf $TARGET_PATH"
@@ -333,12 +367,25 @@ UNIMPLEMENTED=0
 IMPLEMENTED_FAIL=0
 IMPLEMENTED_PASS=0
 
+# Run tests in current directory, recursively
+#
+# Note that file path containing EQ are symlink to the existing tests whose path contain '=',
+# to workaround an issue in ndk-build which doesn't handle LOCAL_SRC_FILES with '='.
+# See tests/device/test-libc++-static-full/jni/Android.mk  We need to filter out path containing
+# EQ such that we don't run same tests twice
+#
+# An alternative is to do "find . -type f", but this doesn't work in NDK windows package
+# where zip turns symlink into physical file it points to.
+#
+# We also sort the test to make the test report comparable to previous test
+#
+
 afunc() {
 	fail=0
 	pass=0
 	if (ls *.fail.cpp > /dev/null 2>&1)
 	then
-		for FILE in $(ls *.fail.cpp); do
+		for FILE in $(ls *.fail.cpp | tr ' ' '\n' | grep -v EQ | sort); do
 			if run $CC $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS -o $TEST_EXE > /dev/null 2>&1
 			then
 				rm $TEST_EXE
@@ -354,8 +401,8 @@ afunc() {
 	then
 		if (ls *.dat > /dev/null 2>&1)
 		then
-			adb_shell "rm $TARGET_PATH/*.dat"
-			for FILE in $(ls *.dat); do
+			adb_shell "rm -f $TARGET_PATH/*.dat"
+			for FILE in $(ls *.dat | tr ' ' '\n' | grep -v EQ | sort); do
 	                      if [ "$VERBOSE" -gt 1 ]; then
 	                          echo "Pushing data: " $FILE
 			      fi
@@ -365,7 +412,7 @@ afunc() {
 	                      fi
 			done
 		fi
-		for FILE in $(ls *.pass.cpp); do
+		for FILE in $(ls *.pass.cpp | tr ' ' '\n' | grep -v EQ | sort); do
                       if [ "$VERBOSE" -gt 1 ]; then
                           echo "Running test: " $FILE
                       fi
@@ -412,7 +459,7 @@ afunc() {
 	FAIL=$(($FAIL+$fail))
 	PASS=$(($PASS+$pass))
 
-	for FILE in *
+	for FILE in $(ls | tr ' ' '\n' | grep -v EQ | sort)
 	do
 		if [ -d "$FILE" ];
 		then
