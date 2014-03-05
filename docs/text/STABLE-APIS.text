@@ -423,7 +423,7 @@ Not all devices support OpenGL ES 3.0, developers should thus query the
 implementation's version and extension strings, and put a `<uses-feature>`
 tag in their Android manifest. See Section III above for details.
 
-The "hello-gl3" sample application demonstrate this.
+The "gles3jni" sample application demonstrate this.
 
 IMPORTANT NOTE:
 > The Android emulator does not support OpenGL ES 3.0 hardware emulation

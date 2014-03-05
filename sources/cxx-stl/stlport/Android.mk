@@ -1,14 +1,14 @@
 LOCAL_PATH := $(call my-dir)
 
 # Normally, we distribute the NDK with prebuilt binaries of STLport
-# in $LOCAL_PATH/<abi>/. However,
+# in $LOCAL_PATH/libs/<abi>/. However,
 #
 
 STLPORT_FORCE_REBUILD := $(strip $(STLPORT_FORCE_REBUILD))
 ifndef STLPORT_FORCE_REBUILD
   ifeq (,$(strip $(wildcard $(LOCAL_PATH)/libs/$(TARGET_ARCH_ABI)/libstlport_static$(TARGET_LIB_EXTENSION))))
     $(call __ndk_info,WARNING: Rebuilding STLport libraries from sources!)
-    $(call __ndk_info,You might want to use $$NDK/build/tools/build-stlport.sh)
+    $(call __ndk_info,You might want to use $$NDK/build/tools/build-cxx-stl.sh --stl=stlport)
     $(call __ndk_info,in order to build prebuilt versions to speed up your builds!)
     STLPORT_FORCE_REBUILD := true
   endif
