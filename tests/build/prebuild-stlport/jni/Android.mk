@@ -1,4 +1,3 @@
-# See README to understand what this project does.
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)

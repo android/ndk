@@ -65,7 +65,7 @@ As you can see, this is rather verbose, but it works!
 IMPORTANT NOTE:
 
 > Using the NDK toolchain directly has a serious limitation:
-  You won't be able to use any C++ STL (either STLport or
+  You won't be able to use any C++ STL (STLport, libc++,
   the GNU libstdc++) with it. Also no exceptions and no RTTI.
 
 > For clang, you need to add correct "-target" for given architecture, and add
@@ -109,6 +109,9 @@ You may specify --stl=stlport to copy libstlport instead of libgnustl. Note that
 to link against the shared library, you will have to explicitely use -lstlport_shared
 in this case, just like you need to use -lgnustl_shared for the GNU libstdc++ case.
 Static linking doesn't require anything special.
+
+Likewise you may specify --stl=libc++ to copy LLVM libc++ headers and libraries. Note that
+to link against the shared library, you will have to explicitely use -lc++_shared.
 
 You can later use it directly with something like:
 
@@ -286,13 +289,13 @@ linking binaries, as in:
 
           arm-linux-androideabi-g++ .... -lsupc++
 
-This is not needed when using the STLport library.
+This is not needed when using the STLport or libc++ library.
 
 
 ### 7.4/ C++ STL support:
 
 The standalone toolchain includes a copy of a C++ Standard Template Library
-implementation, either the GNU libstdc++, or STLport, determined by your
+implementation, either the GNU libstdc++, STLport, or libc++, determined by your
 use of the --stl=<name> option described previously. To use this STL
 implementation, you however need to link your project with the proper
 library:
@@ -321,7 +324,7 @@ library:
 > If you cannot comply with its requirements, i.e. you cannot redistribute
   the shared library, do not use it in your project.
 
-  * Use -stlport_shared to link against the _shared_ library version of
+  * Use -lstlport_shared to link against the _shared_ library version of
     STLport. If you use this option, you need to ensure that
     `libstlport_shared.so` is also copied to your device for your code
     to load properly. They are found at the same locations than those
