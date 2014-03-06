@@ -1341,7 +1341,7 @@ build_host_binutils ()
         run2 make -j$NUM_JOBS &&
         run2 make -j$NUM_INSTALL_JOBS install &&
         # We need to take care of something weird, binutils-2.21 on mips
-        # doesn't seem to build gold, and the Makefile script forgets to
+        # does not seem to build gold, and the Makefile script forgets to
         # copy it to $INSTALL/bin/mipsel-linux-android-ld. Take care of this
         # here with a symlink, which will be enough for now.
         if [ ! -f "$INSTALL_DIR/bin/$TARGET-ld" ]; then
@@ -1425,10 +1425,16 @@ build_host_gcc_core ()
             ARGS=$ARGS" --with-arch=armv5te --with-float=soft --with-fpu=vfpv3-d16"
             ;;
         x86)
-            ARGS=$ARGS" --with-arch=i686 --with-tune=atom --with-fpmath=sse"
+            case "$GCC_VERSION" in
+               4.4.3|4.7) ARGS=$ARGS" --with-arch=i686 --with-tune=atom --with-fpmath=sse" ;;
+               *)         ARGS=$ARGS" --with-arch=i686 --with-tune=intel --with-fpmath=sse" ;;
+            esac
             ;;
         x86_64)
-            ARGS=$ARGS" --with-arch=x86-64 --with-tune=atom --with-fpmath=sse --with-multilib-list=m32,m64,mx32"
+            case "$GCC_VERSION" in
+               4.4.3|4.7) ARGS=$ARGS" --with-arch=x86-64 --with-tune=atom --with-fpmath=sse --with-multilib-list=m32,m64,mx32" ;;
+               *)         ARGS=$ARGS" --with-arch=x86-64 --with-tune=intel --with-fpmath=sse --with-multilib-list=m32,m64,mx32" ;;
+            esac
             ;;
         mips)
             # Add --disable-fixed-point to disable fixed-point support
