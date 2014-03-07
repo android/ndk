@@ -101,6 +101,14 @@ register_jobs_option
 extract_parameters "$@"
 
 ABIS=$(commas_to_spaces $ABIS)
+UNKNOWN_ABIS=
+if [ "$ABIS" = "${ABIS%%64*}" ]; then
+    UNKNOWN_ABIS="$(filter_out "$PREBUILT_ABIS" "$ABIS" )"
+    if [ -n "$UNKNOWN_ABIS" ] && [ -n "$(find_ndk_unknown_archs)" ]; then
+        ABIS="$(filter_out "$UNKNOWN_ABIS" "$ABIS")"
+        ABIS="$ABIS $(find_ndk_unknown_archs)"
+    fi
+fi
 
 # Handle NDK_DIR
 if [ -z "$NDK_DIR" ] ; then
@@ -373,7 +381,7 @@ libcxx/src/support/android/locale_android.cpp \
 # libc++ built with clang (for ABI armeabi-only) produces
 # libc++_shared.so and libc++_static.a with undefined __atomic_fetch_add_4
 # Add -latomic
-if [ -n "$LLVM_VERSION" ]; then
+if [ -n "$LLVM_VERSION" -a -z "$UNKNOWN_ABIS" ]; then
     LIBCXX_LDFLAGS="-latomic"
 fi
 
@@ -432,14 +440,6 @@ else
   STATIC_CXXFLAGS=
 fi
 SHARED_CXXFLAGS=
-
-if [ "$ABIS" = "${ABIS%%64*}" ]; then
-    UNKNOWN_ABIS="$(filter_out "$PREBUILT_ABIS" "$ABIS" )"
-    if [ -n "$UNKNOWN_ABIS" ] && [ -n "$(find_ndk_unknown_archs)" ]; then
-      ABIS="$(filter_out "$UNKNOWN_ABIS" "$ABIS")"
-      ABIS="$ABIS $(find_ndk_unknown_archs)"
-    fi
-fi
 
 # build_stl_libs_for_abi
 # $1: ABI
