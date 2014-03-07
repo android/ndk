@@ -1,16 +1,16 @@
 From f82d0f1b47ea7ae0d20c00b4f29cfd694ab66a07 Mon Sep 17 00:00:00 2001
 From: David 'Digit' Turner <digit@google.com>
 Date: Tue, 21 Feb 2012 15:07:59 +0100
-Subject: Disable libstdc++ versioning
+Subject: Rename libstdc++.so to libgnustl_shared.so
 
 This patch ensure that the generated library is called libgnustl_shared.so
 instead of libstdc++.so.3 (or some similar number-versioned name).
 
 Change-Id: I63fb5be818115c6d0c7e96b937ba39f225b475cf
 ---
- gcc-4.6/libstdc++-v3/src/Makefile.am   |    2 +-
- gcc-4.6/libstdc++-v3/src/Makefile.in   |    7 +++++--
- 4 files changed, 12 insertions(+), 6 deletions(-)
+ gcc-4.6/libstdc++-v3/src/Makefile.in | 5 ++++-
+ gcc-4.8/libstdc++-v3/src/Makefile.in | 5 ++++-
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
 diff --git a/gcc-4.6/libstdc++-v3/src/Makefile.in b/gcc-4.6/libstdc++-v3/src/Makefile.in
 index 146ec3f..99f0f56 100644
