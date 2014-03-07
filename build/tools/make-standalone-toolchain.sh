@@ -365,7 +365,7 @@ if [ -n "$LLVM_VERSION" ]; then
   if [ -h "$TMPDIR/bin/clang++${HOST_EXE}" ] ; then
     ## clang++ is a link to clang.  Remove it and reconstruct
     rm "$TMPDIR/bin/clang++${HOST_EXE}"
-    ln -s "clang${LLVM_VERSION_WITHOUT_DOT}${HOST_EXE}" "$TMPDIR/bin/clang${LLVM_VERSION_WITHOUT_DOT}++${HOST_EXE}"
+    ln -sf "clang${LLVM_VERSION_WITHOUT_DOT}${HOST_EXE}" "$TMPDIR/bin/clang${LLVM_VERSION_WITHOUT_DOT}++${HOST_EXE}"
   else
     mv "$TMPDIR/bin/clang++${HOST_EXE}" "$TMPDIR/bin/clang$LLVM_VERSION_WITHOUT_DOT++${HOST_EXE}"
   fi
