@@ -53,6 +53,9 @@
 // never be exposed to client code.
 #define _GABIXX_HIDDEN  __attribute__((__visibility__("hidden")))
 
+// Use _GABIXX_DEFAULT to prevent user command -fvisibility=hidden
+#define _GABIXX_DEFAULT __attribute__((__visibility__("default")))
+
 // Use _GABIXX_WEAK to define a symbol with weak linkage.
 #define _GABIXX_WEAK  __attribute__((__weak__))
 
