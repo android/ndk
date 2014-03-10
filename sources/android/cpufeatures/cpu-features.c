@@ -57,12 +57,12 @@
  * NDK r4: Initial release
  */
 
-#if defined(__le32__)
+#if defined(__le32__) || defined(__le64__)
 
 // When users enter this, we should only provide interface and
 // libportable will give the implementations.
 
-#else // !__le32__
+#else // !__le32__ && !__le64__
 
 #include <sys/system_properties.h>
 #include <pthread.h>
@@ -1084,4 +1084,4 @@ android_setCpuArm(int cpu_count, uint64_t cpu_features, uint32_t cpu_id)
  *
  */
 
-#endif // defined(__le32__)
+#endif // defined(__le32__) || defined(__le64__)
