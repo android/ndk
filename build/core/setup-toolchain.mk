@@ -93,10 +93,15 @@ TARGET_ABI := $(TARGET_PLATFORM)-$(TARGET_ARCH_ABI)
 # setup sysroot variable.
 # SYSROOT_INC points to a directory that contains all public header
 # files for a given platform, and
-# SYSROOT_LIB points to libraries and object files used for linking
+# SYSROOT_LINK points to libraries and object files used for linking
 # the generated target files properly.
 #
 SYSROOT_INC := $(NDK_PLATFORMS_ROOT)/$(TARGET_PLATFORM)/arch-$(TARGET_ARCH)
+ifneq (,$(strip $(filter-out $(NDK_KNOWN_ARCHS),$(TARGET_ARCH))))
+ifneq ($(TARGET_ARCH_ABI),$(TARGET_ARCH_ABI:%64=%))
+SYSROOT_INC := $(NDK_PLATFORMS_ROOT)/$(TARGET_PLATFORM)/arch-$(TARGET_ARCH)64
+endif
+endif
 SYSROOT_LINK := $(SYSROOT_INC)
 
 TARGET_PREBUILT_SHARED_LIBRARIES :=

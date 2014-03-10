@@ -119,7 +119,7 @@ get_default_abi_for_arch ()
         arm)
             RET="armeabi"
             ;;
-        x86|x86_64|mips)
+        x86|mips|arm64|x86_64|mips64)
             RET="$1"
             ;;
         *)
@@ -141,7 +141,7 @@ get_default_abis_for_arch ()
         arm)
             RET="armeabi armeabi-v7a armeabi-v7a-hard"
             ;;
-        x86|x86_64|mips)
+        x86|mips|arm64|x86_64|mips64)
             RET="$1"
             ;;
         *)

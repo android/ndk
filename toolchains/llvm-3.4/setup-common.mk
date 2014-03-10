@@ -14,7 +14,11 @@
 
 TOOLCHAIN_NAME   := clang-3.4
 TOOLCHAIN_PREFIX := $(TOOLCHAIN_PREBUILT_ROOT)/bin/
+ifneq ($(UNKNOWN_ABI_64),)
+LLVM_TRIPLE := le64-none-ndk
+else
 LLVM_TRIPLE := le32-none-ndk
+endif
 
 # For sources/cxx-stl/gnu-libstdc++/$(TOOLCHAIN_VERSION)/libs/*/libsupc++.a
 TOOLCHAIN_VERSION := 4.8

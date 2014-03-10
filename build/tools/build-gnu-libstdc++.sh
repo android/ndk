@@ -277,7 +277,7 @@ copy_gnustl_libs ()
     if [ -z `var_value HAS_COMMON_HEADERS_$GCC_VERSION_NO_DOT` ]; then
         copy_directory "$SDIR/include/c++/$GCC_VERSION" "$DDIR/include"
         rm -rf "$DDIR/include/$PREFIX"
-	eval HAS_COMMON_HEADERS_$GCC_VERSION_NO_DOT=true
+        eval HAS_COMMON_HEADERS_$GCC_VERSION_NO_DOT=true
     fi
 
     rm -rf "$DDIR/libs/$ABI" &&

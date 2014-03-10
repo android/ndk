@@ -370,6 +370,10 @@ get_default_compiler_for_arch()
         TOOLCHAIN_PREFIX="$NDK_DIR/$(get_llvm_toolchain_binprefix $OPTION_LLVM_VERSION)"
         CC="$TOOLCHAIN_PREFIX/clang"
         EXTRA_CFLAGS="-emit-llvm -target le32-none-ndk"
+    elif [ "$(arch_in_unknown_archs $ARCH)" = "yes" ]; then
+        TOOLCHAIN_PREFIX="$NDK_DIR/$(get_llvm_toolchain_binprefix $DEFAULT_LLVM_VERSION)"
+        CC="$TOOLCHAIN_PREFIX/clang"
+        EXTRA_CFLAGS="-emit-llvm -target le64-none-ndk"
     else
         TOOLCHAIN_PREFIX="$NDK_DIR/$(get_toolchain_binprefix_for_arch $ARCH $OPTION_GCC_VERSION)"
         TOOLCHAIN_PREFIX=${TOOLCHAIN_PREFIX%-}
