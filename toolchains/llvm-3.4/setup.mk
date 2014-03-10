@@ -90,7 +90,48 @@ cmd-strip = $(TARGET_PREBUILT_ROOT)/bin/mipsel-linux-android-strip$(HOST_EXEEXT)
 include $(NDK_ROOT)/toolchains/llvm-3.4/setup-common.mk
 
 else
+ifneq ($(filter %bcarm64,$(TARGET_ARCH_ABI)),)
+SYSROOT_LINK     := $(NDK_PLATFORMS_ROOT)/$(TARGET_PLATFORM)/arch-arm64
+TARGET_GDBSERVER := $(NDK_ROOT)/prebuilt/android-arm64/gdbserver/gdbserver
+TARGET_ARCH_ABI  := arm64
+TARGET_LDFLAGS   += -Wl,-link-native-binary
+NDK_APP_DST_DIR  := $(NDK_APP_PROJECT_PATH)/libs/$(TARGET_ARCH_ABI)
 
+TARGET_PREBUILT_ROOT = $(call host-prebuilt-tag,$(NDK_ROOT)/toolchains/aarch64-linux-android-$(TOOLCHAIN_VERSION))
+cmd-strip = $(TARGET_PREBUILT_ROOT)/bin/aarch64-linux-android-strip$(HOST_EXEEXT) --strip-unneeded $(call host-path,$1)
+UNKNOWN_ABI_64   := true
+
+include $(NDK_ROOT)/toolchains/llvm-3.4/setup-common.mk
+
+else
+ifneq ($(filter %bcx86_64,$(TARGET_ARCH_ABI)),)
+SYSROOT_LINK     := $(NDK_PLATFORMS_ROOT)/$(TARGET_PLATFORM)/arch-x86_64
+TARGET_GDBSERVER := $(NDK_ROOT)/prebuilt/android-x86_64/gdbserver/gdbserver
+TARGET_ARCH_ABI  := x86_64
+TARGET_LDFLAGS   += -Wl,-link-native-binary
+NDK_APP_DST_DIR  := $(NDK_APP_PROJECT_PATH)/libs/$(TARGET_ARCH_ABI)
+
+TARGET_PREBUILT_ROOT = $(call host-prebuilt-tag,$(NDK_ROOT)/toolchains/x86_64-$(TOOLCHAIN_VERSION))
+cmd-strip = $(TARGET_PREBUILT_ROOT)/bin/x86_64-linux-android-strip$(HOST_EXEEXT) --strip-unneeded $(call host-path,$1)
+UNKNOWN_ABI_64   := true
+
+include $(NDK_ROOT)/toolchains/llvm-3.4/setup-common.mk
+
+else
+ifneq ($(filter %bcmips64,$(TARGET_ARCH_ABI)),)
+SYSROOT_LINK     := $(NDK_PLATFORMS_ROOT)/$(TARGET_PLATFORM)/arch-mips64
+TARGET_GDBSERVER := $(NDK_ROOT)/prebuilt/android-mips64/gdbserver/gdbserver
+TARGET_ARCH_ABI  := mips64
+TARGET_LDFLAGS   += -Wl,-link-native-binary
+NDK_APP_DST_DIR  := $(NDK_APP_PROJECT_PATH)/libs/$(TARGET_ARCH_ABI)
+
+TARGET_PREBUILT_ROOT = $(call host-prebuilt-tag,$(NDK_ROOT)/toolchains/mips64el-linux-android-$(TOOLCHAIN_VERSION))
+cmd-strip = $(TARGET_PREBUILT_ROOT)/bin/mips64el-linux-android-strip$(HOST_EXEEXT) --strip-unneeded $(call host-path,$1)
+UNKNOWN_ABI_64   := true
+
+include $(NDK_ROOT)/toolchains/llvm-3.4/setup-common.mk
+
+else
 ifneq ($(filter %armeabi-v7a,$(TARGET_ARCH_ABI)),)
 
 SYSROOT_LINK     := $(NDK_PLATFORMS_ROOT)/$(TARGET_PLATFORM)/arch-arm
@@ -146,6 +187,39 @@ TARGET_LDFLAGS   += -Wl,@$(NDK_ROOT)/sources/android/libportable/libs/mips/libpo
 include $(NDK_ROOT)/toolchains/mipsel-linux-android-clang3.4/setup.mk
 
 else
+ifneq ($(filter %arm64,$(TARGET_ARCH_ABI)),)
+
+SYSROOT_LINK     := $(NDK_PLATFORMS_ROOT)/$(TARGET_PLATFORM)/arch-arm64
+TARGET_GDBSERVER := $(NDK_ROOT)/prebuilt/android-arm64/gdbserver/gdbserver
+TARGET_ARCH_ABI  := arm64
+NDK_APP_DST_DIR  := $(NDK_APP_PROJECT_PATH)/libs/$(TARGET_ARCH_ABI)
+TARGET_LDLIBS    := $(NDK_ROOT)/sources/android/libportable/libs/arm64/libportable.a $(TARGET_LDLIBS)
+TARGET_LDFLAGS   += -Wl,@$(NDK_ROOT)/sources/android/libportable/libs/arm64/libportable.wrap
+include $(NDK_ROOT)/toolchains/aarch64-linux-android-clang3.4/setup.mk
+
+else
+ifneq ($(filter %x86_64,$(TARGET_ARCH_ABI)),)
+
+SYSROOT_LINK     := $(NDK_PLATFORMS_ROOT)/$(TARGET_PLATFORM)/arch-x86_64
+TARGET_GDBSERVER := $(NDK_ROOT)/prebuilt/android-x86_64/gdbserver/gdbserver
+TARGET_ARCH_ABI  := x86_64
+NDK_APP_DST_DIR  := $(NDK_APP_PROJECT_PATH)/libs/$(TARGET_ARCH_ABI)
+TARGET_LDLIBS    := $(NDK_ROOT)/sources/android/libportable/libs/x86_64/libportable.a $(TARGET_LDLIBS)
+TARGET_LDFLAGS   += -Wl,@$(NDK_ROOT)/sources/android/libportable/libs/x86_64/libportable.wrap
+include $(NDK_ROOT)/toolchains/x86_64-clang3.4/setup.mk
+
+else
+ifneq ($(filter %mips64,$(TARGET_ARCH_ABI)),)
+
+SYSROOT_LINK     := $(NDK_PLATFORMS_ROOT)/$(TARGET_PLATFORM)/arch-mips64
+TARGET_GDBSERVER := $(NDK_ROOT)/prebuilt/android-mips64/gdbserver/gdbserver
+TARGET_ARCH_ABI  := mips64
+NDK_APP_DST_DIR  := $(NDK_APP_PROJECT_PATH)/libs/$(TARGET_ARCH_ABI)
+TARGET_LDLIBS    := $(NDK_ROOT)/sources/android/libportable/libs/mips64/libportable.a $(TARGET_LDLIBS)
+TARGET_LDFLAGS   += -Wl,@$(NDK_ROOT)/sources/android/libportable/libs/mips64/libportable.wrap
+include $(NDK_ROOT)/toolchains/mips64el-linux-android-clang3.4/setup.mk
+
+else
 
 TARGET_OBJ_EXTENSION := .bc
 TARGET_LIB_EXTENSION := .a
@@ -153,6 +227,12 @@ TARGET_SONAME_EXTENSION := .bc
 
 include $(NDK_ROOT)/toolchains/llvm-3.4/setup-common.mk
 
+endif
+endif
+endif
+endif
+endif
+endif
 endif
 endif
 endif

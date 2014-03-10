@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <cassert>
 #include <cstdlib>
 #include <fcntl.h>
 #include <fstream>
@@ -33,14 +34,22 @@
 using namespace abcc;
 
 TargetAbi::TargetAbi(const std::string &abi) {
-  if (abi == "armeabi")
+  if (abi == "armeabi-v7a")
+    mAbi = ARMEABI_V7A;
+  else if (abi == "armeabi")
     mAbi = ARMEABI;
   else if (abi == "x86")
     mAbi = X86;
   else if (abi == "mips")
     mAbi = MIPS;
+  else if (abi == "arm64")
+    mAbi = ARM64;
+  else if (abi == "x86_64")
+    mAbi = X86_64;
+  else if (abi == "mips64")
+    mAbi = MIPS64;
   else
-    mAbi = ARMEABI_V7A;  // Default
+    assert (false && "No abi found");
 }
 
 
@@ -139,19 +148,26 @@ BitcodeCompiler::BitcodeCompiler(const std::string &abi, const std::string &sysr
   mGlobalCFlags = kGlobalTargetAttrs[mAbi].mBaseCFlags;
   mGlobalCFlags += std::string(" -mtriple=") + kGlobalTargetAttrs[mAbi].mTriple;
   mGlobalCFlags += " -filetype=obj -relocation-model=pic -code-model=small";
-  mGlobalCFlags += " -use-init-array -mc-relax-all";
+  mGlobalCFlags += " -use-init-array -mc-relax-all -ffunction-sections";
 
   if (mAbi == TargetAbi::ARMEABI || mAbi == TargetAbi::ARMEABI_V7A)
     mGlobalCFlags += std::string(" ") + "-arm-enable-ehabi -arm-enable-ehabi-descriptors -float-abi=soft";
+  if (mAbi == TargetAbi::X86 || mAbi == TargetAbi::X86_64)
+    mGlobalCFlags += std::string(" ") + "-disable-fp-elim -force-align-stack";
 
   // LDFlags
   mGlobalLDFlags = kGlobalTargetAttrs[mAbi].mBaseLDFlags;
   mGlobalLDFlags += std::string(" -Bsymbolic -X -m ") + kGlobalTargetAttrs[mAbi].mLinkEmulation;
   mGlobalLDFlags += std::string(" --sysroot=") + mSysroot;
-  mGlobalLDFlags += " -eh-frame-hdr -dynamic-linker /system/bin/linker";
+  mGlobalLDFlags += " --build-id --eh-frame-hdr";
+  if (mAbi == TargetAbi::ARM64 || mAbi == TargetAbi::X86_64 ||
+      mAbi == TargetAbi::MIPS64)
+    mGlobalLDFlags += " -dynamic-linker /system/bin/linker64";
+  else
+    mGlobalLDFlags += " -dynamic-linker /system/bin/linker";
 
   // LDLibs
-  mGlobalLDLibs += "";
+  mGlobalLDLibs = " ";
 }
 
 void BitcodeCompiler::translate() {
@@ -225,6 +241,7 @@ void BitcodeCompiler::link() {
           cmd += " " + bc.mObjPath + " -o " + bc.mOutPath;
         }
         // Add ldlibs
+        cmd += " " + bc.mLDLocalLibsStr;
         cmd += " " + mGlobalLDLibs;
         cmd += " " + bc.mLDLibsStr;
         cmd += " " + mExecutableToolsPath[(unsigned)CMD_LINK_RUNTIME];
