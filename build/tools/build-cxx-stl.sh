@@ -102,7 +102,8 @@ extract_parameters "$@"
 
 ABIS=$(commas_to_spaces $ABIS)
 UNKNOWN_ABIS=
-if [ "$ABIS" = "${ABIS%%64*}" ]; then
+KNOWN_ABIS=$(filter_out "$(find_ndk_unknown_archs)" "$ABIS")
+if [ "$KNOWN_ABIS" = "${KNOWN_ABIS%%64*}" ]; then
     UNKNOWN_ABIS="$(filter_out "$PREBUILT_ABIS" "$ABIS" )"
     if [ -n "$UNKNOWN_ABIS" ] && [ -n "$(find_ndk_unknown_archs)" ]; then
         ABIS="$(filter_out "$UNKNOWN_ABIS" "$ABIS")"
@@ -490,7 +491,7 @@ build_stl_libs_for_abi ()
     builder_reset_cxxflags DEFAULT_CXXFLAGS
     builder_cxxflags "$DEFAULT_CXXFLAGS $GABIXX_CXXFLAGS $EXTRA_CXXFLAGS"
     builder_ldflags "$GABIXX_LDFLAGS $EXTRA_LDFLAGS"
-    if [ "$(find_ndk_unknown_archs)" != "$ABI" ]; then
+    if [ "$(filter_out "$KNOWN_ABIS" "$ABI")" != "$ABI" ]; then
       builder_sources $GABIXX_SOURCES
     elif [ "$CXX_STL" = "gabi++" ]; then
       log "Could not build gabi++ with unknown arch!"
@@ -515,7 +516,7 @@ build_stl_libs_for_abi ()
         builder_static_library ${CXX_STL_LIB}_static
     else
         log "Building $DSTDIR/${CXX_STL_LIB}_shared${LIB_SUFFIX}"
-        if [ "$(find_ndk_unknown_archs)" != "$ABI" ]; then
+        if [ "$(filter_out "$KNOWN_ABIS" "$ABI")" != "$ABI" ]; then
             builder_shared_library ${CXX_STL_LIB}_shared $LIB_SUFFIX "$FLOAT_ABI"
         else
             builder_ldflags "-lc -lm"
