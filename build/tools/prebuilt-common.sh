@@ -1016,7 +1016,7 @@ parse_toolchain_name ()
         ;;
     aarch64-linux-android-*)
         ARCH="arm64"
-        ABI="aarch64-v8a"
+        ABI="arm64"
         ABI_CONFIGURE_TARGET="aarch64-linux-android"
         # Note:
         # --disable-libgomp because libgomp/configure tries to link when we don't have crt*.o for aarch64 yet.

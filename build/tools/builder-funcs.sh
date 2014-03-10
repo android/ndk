@@ -564,6 +564,24 @@ builder_begin_android ()
             mips)
                 LLVM_TRIPLE=mipsel-none-linux-android
                 ;;
+            arm64)
+                LLVM_TRIPLE=aarch64-linux-android
+                ;;
+            x86_64)
+                LLVM_TRIPLE=x86_64-none-linux-android
+                ;;
+            mips64)
+                LLVM_TRIPLE=mips64el-none-linux-android
+                ;;
+            *64)
+                LLVM_TRIPLE=le64-none-ndk
+                GCC_TOOLCHAIN=
+                CRTBEGIN_SO_O=
+                CRTEND_SO_O=
+                CRTBEGIN_EXE_O=
+                CRTEND_EXE_O=
+                FLAGS=-emit-llvm
+                ;;
             *)
                 LLVM_TRIPLE=le32-none-ndk
                 GCC_TOOLCHAIN=
