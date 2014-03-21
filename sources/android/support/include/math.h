@@ -36,7 +36,7 @@ extern "C" {
 
 // TODO(digit): Check that this is not needed for Clang.
 typedef double      double_t;
-typedef double      float_t;
+typedef float       float_t;
 
 // Missing long double functions. Note that 'long double' is the same
 // than 'double' on Android, so this will define stubs.
