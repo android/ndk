@@ -109,6 +109,10 @@ ABIS=$(convert_archs_to_abis $ARCHS)
 UNKNOWN_ABIS=$(convert_archs_to_abis $UNKNOWN_ARCH)
 
 dump "Building $ABIS gabi++ binaries..."
+run $BUILDTOOLS/build-cxx-stl.sh --stl=gabi++ --abis="$ABIS" $FLAGS --visible-static
+for ABI in $ABIS; do
+    cp $NDK_DIR/$GABIXX_SUBDIR/libs/$ABI/libgabi++_static.a $NDK_DIR/$GABIXX_SUBDIR/libs/$ABI/libgabi++_static_nonhidden.a
+done
 run $BUILDTOOLS/build-cxx-stl.sh --stl=gabi++ --abis="$ABIS" $FLAGS
 fail_panic "Could not build gabi++!"
 run $BUILDTOOLS/build-cxx-stl.sh --stl=gabi++ --abis="$ABIS" $FLAGS --with-debug-info
