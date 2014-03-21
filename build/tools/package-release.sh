@@ -140,6 +140,15 @@ if [ $? = 0 ] ; then
 else
     TRY_X86=no
 fi
+# Do we need to support x86_64?
+
+echo "$ARCHS" | tr ' ' '\n' | grep -q x86_64
+if [ $? = 0 ] ; then
+    TRY_X86_64=yes
+else
+    TRY_X86_64=no
+fi
+
 # Do we need to support mips?
 echo "$ARCHS" | tr ' ' '\n' | grep -q mips
 if [ $? = 0 ] ; then
@@ -178,6 +187,9 @@ else
     fi
     if [ "$TRY_mips" = "yes" ]; then
         TOOLCHAINS=$TOOLCHAINS" "$(get_toolchain_name_list_for_arch mips)
+    fi
+    if [ "$TRY_X86_64" = "yes" ]; then
+        TOOLCHAINS=$TOOLCHAINS" "$(get_toolchain_name_list_for_arch x86_64)
     fi
     TOOLCHAINS=$(commas_to_spaces $TOOLCHAINS)
 fi
