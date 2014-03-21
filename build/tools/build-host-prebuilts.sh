@@ -325,7 +325,7 @@ for SYSTEM in $SYSTEMS; do
 
         for TOOLCHAIN_NAME in $TOOLCHAIN_NAMES; do
             echo "Building $SYSNAME toolchain for $ARCH architecture: $TOOLCHAIN_NAME"
-            run $BUILDTOOLS/build-gcc.sh "$SRC_DIR" "$NDK_DIR" $TOOLCHAIN_NAME $TOOLCHAIN_FLAGS --with-python=prebuilt
+            run $BUILDTOOLS/build-gcc.sh "$SRC_DIR" "$NDK_DIR" $TOOLCHAIN_NAME $TOOLCHAIN_FLAGS --with-python=prebuilt -j24
             fail_panic "Could not build $TOOLCHAIN_NAME-$SYSNAME!"
         done
     done
@@ -337,7 +337,7 @@ for SYSTEM in $SYSTEMS; do
     fi
     for LLVM_VERSION in $LLVM_VERSION_LIST; do
         echo "Building $SYSNAME clang/llvm-$LLVM_VERSION"
-        run $BUILDTOOLS/build-llvm.sh "$SRC_DIR" "$NDK_DIR" "llvm-$LLVM_VERSION" $TOOLCHAIN_FLAGS $POLLY_FLAGS $CHECK_FLAG
+        run $BUILDTOOLS/build-llvm.sh "$SRC_DIR" "$NDK_DIR" "llvm-$LLVM_VERSION" $TOOLCHAIN_FLAGS $POLLY_FLAGS $CHECK_FLAG -j24
         fail_panic "Could not build llvm for $SYSNAME"
     done
 

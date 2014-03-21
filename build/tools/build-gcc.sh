@@ -371,10 +371,10 @@ dump "Building : $TOOLCHAIN toolchain [this can take a long time]."
 cd $BUILD_OUT
 export CC CXX
 export ABI=$HOST_GMP_ABI
-JOBS=$NUM_JOBS
+export NUM_JOBS
 
 while [ -n "1" ]; do
-    run make -j$JOBS
+    run make -j$NUM_JOBS
     if [ $? = 0 ] ; then
         break
     else
@@ -383,12 +383,12 @@ while [ -n "1" ]; do
             # parallel mingw/darwin canadian cross builds to work properly on some
             # multi-core machines (but not all, sounds like a race condition). Detect
             # this and restart in less parallelism, until -j1 also fail
-            JOBS=$((JOBS/2))
-            if [ $JOBS -lt 1 ] ; then
+            NUM_JOBS=$((NUM_JOBS/2))
+            if [ $NUM_JOBS -lt 1 ] ; then
                 echo "Error while building mingw/darwin toolchain. See $TMPLOG"
                 exit 1
             fi
-            dump "Parallel canadian build failed - continuing in less parallelism -j$JOBS"
+            dump "Parallel canadian build failed - continuing in less parallelism -j$NUM_JOBS"
         else
             echo "Error while building toolchain. See $TMPLOG"
             exit 1
