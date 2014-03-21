@@ -43,6 +43,62 @@
 //
 extern "C" const unsigned short* const _ctype_android;
 
+#ifdef __LP64__
+static const unsigned short ctype_android_tab[256+128] = {
+       /* -128..-1 */
+        _CTYPE_C,     _CTYPE_C,           _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C, /* 80 */
+        _CTYPE_C,     _CTYPE_C,           _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C, /* 88 */
+        _CTYPE_C,     _CTYPE_C,           _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C, /* 90 */
+        _CTYPE_C,     _CTYPE_C,           _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C, /* 98 */
+        _CTYPE_P,     _CTYPE_P,           _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P, /* A0 */
+        _CTYPE_P,     _CTYPE_P,           _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P, /* A8 */
+        _CTYPE_P,     _CTYPE_P,           _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P, /* B0 */
+        _CTYPE_P,     _CTYPE_P,           _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P, /* B8 */
+        _CTYPE_P,     _CTYPE_P,           _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P, /* C0 */
+        _CTYPE_P,     _CTYPE_P,           _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P, /* C8 */
+        _CTYPE_P,     _CTYPE_P,           _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P, /* D0 */
+        _CTYPE_P,     _CTYPE_P,           _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P, /* D8 */
+        _CTYPE_P,     _CTYPE_P,           _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P, /* E0 */
+        _CTYPE_P,     _CTYPE_P,           _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P, /* E8 */
+        _CTYPE_P,     _CTYPE_P,           _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P, /* F0 */
+        _CTYPE_P,     _CTYPE_P,           _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P, /* F8 */
+       /* 0..127 */
+        _CTYPE_C,     _CTYPE_C,           _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C,
+        _CTYPE_C,     _CTYPE_C|_CTYPE_S|_BLANK, _CTYPE_C|_CTYPE_S,  _CTYPE_C|_CTYPE_S,  _CTYPE_C|_CTYPE_S,  _CTYPE_C|_CTYPE_S,  _CTYPE_C,     _CTYPE_C,
+        _CTYPE_C,     _CTYPE_C,           _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C,
+        _CTYPE_C,     _CTYPE_C,           _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C,
+  _CTYPE_S|_CTYPE_B|_BLANK, _CTYPE_P,           _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,
+        _CTYPE_P,     _CTYPE_P,           _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,
+        _CTYPE_N,     _CTYPE_N,           _CTYPE_N,     _CTYPE_N,     _CTYPE_N,     _CTYPE_N,     _CTYPE_N,     _CTYPE_N,
+        _CTYPE_N,     _CTYPE_N,           _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,
+        _CTYPE_P,     _CTYPE_U|_CTYPE_X,        _CTYPE_U|_CTYPE_X,  _CTYPE_U|_CTYPE_X,  _CTYPE_U|_CTYPE_X,  _CTYPE_U|_CTYPE_X,  _CTYPE_U|_CTYPE_X,  _CTYPE_U,
+        _CTYPE_U,     _CTYPE_U,           _CTYPE_U,     _CTYPE_U,     _CTYPE_U,     _CTYPE_U,     _CTYPE_U,     _CTYPE_U,
+        _CTYPE_U,     _CTYPE_U,           _CTYPE_U,     _CTYPE_U,     _CTYPE_U,     _CTYPE_U,     _CTYPE_U,     _CTYPE_U,
+        _CTYPE_U,     _CTYPE_U,           _CTYPE_U,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,
+        _CTYPE_P,     _CTYPE_L|_CTYPE_X,        _CTYPE_L|_CTYPE_X,  _CTYPE_L|_CTYPE_X,  _CTYPE_L|_CTYPE_X,  _CTYPE_L|_CTYPE_X,  _CTYPE_L|_CTYPE_X,  _CTYPE_L,
+        _CTYPE_L,     _CTYPE_L,           _CTYPE_L,     _CTYPE_L,     _CTYPE_L,     _CTYPE_L,     _CTYPE_L,     _CTYPE_L,
+        _CTYPE_L,     _CTYPE_L,           _CTYPE_L,     _CTYPE_L,     _CTYPE_L,     _CTYPE_L,     _CTYPE_L,     _CTYPE_L,
+        /* determine printability based on the IS0 8859 8-bit standard */
+        _CTYPE_L,     _CTYPE_L,           _CTYPE_L,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_C,
+        /* 128..255, same as -128..127 */
+        _CTYPE_C,     _CTYPE_C,           _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C, /* 80 */
+        _CTYPE_C,     _CTYPE_C,           _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C, /* 88 */
+        _CTYPE_C,     _CTYPE_C,           _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C, /* 90 */
+        _CTYPE_C,     _CTYPE_C,           _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C,     _CTYPE_C, /* 98 */
+        _CTYPE_P,     _CTYPE_P,           _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P, /* A0 */
+        _CTYPE_P,     _CTYPE_P,           _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P, /* A8 */
+        _CTYPE_P,     _CTYPE_P,           _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P, /* B0 */
+        _CTYPE_P,     _CTYPE_P,           _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P, /* B8 */
+        _CTYPE_P,     _CTYPE_P,           _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P, /* C0 */
+        _CTYPE_P,     _CTYPE_P,           _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P, /* C8 */
+        _CTYPE_P,     _CTYPE_P,           _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P, /* D0 */
+        _CTYPE_P,     _CTYPE_P,           _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P, /* D8 */
+        _CTYPE_P,     _CTYPE_P,           _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P, /* E0 */
+        _CTYPE_P,     _CTYPE_P,           _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P, /* E8 */
+        _CTYPE_P,     _CTYPE_P,           _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P, /* F0 */
+        _CTYPE_P,     _CTYPE_P,           _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P,     _CTYPE_P, /* F8 */
+};
+#else
 static const unsigned short ctype_android_tab[256+128] = {
        /* -128..-1 */
         _C,     _C,           _C,     _C,     _C,     _C,     _C,     _C, /* 80 */
@@ -97,5 +153,6 @@ static const unsigned short ctype_android_tab[256+128] = {
         _P,     _P,           _P,     _P,     _P,     _P,     _P,     _P, /* F0 */
         _P,     _P,           _P,     _P,     _P,     _P,     _P,     _P, /* F8 */
 };
+#endif
 
 const unsigned short* const _ctype_android = ctype_android_tab + 128;
