@@ -43,6 +43,20 @@
 //
 extern "C" const unsigned short* const _ctype_android;
 
+#if !defined(_U)
+#  if !defined(_CTYPE_U)
+#   error Bionic header ctype.h does not define either _U nor _CTYPE_U
+#  endif
+#  define _U _CTYPE_U
+#  define _L _CTYPE_L
+#  define _N _CTYPE_N
+#  define _S _CTYPE_S
+#  define _P _CTYPE_P
+#  define _C _CTYPE_C
+#  define _X _CTYPE_X
+#  define _B _CTYPE_B
+#endif
+
 static const unsigned short ctype_android_tab[256+128] = {
        /* -128..-1 */
         _C,     _C,           _C,     _C,     _C,     _C,     _C,     _C, /* 80 */
