@@ -72,6 +72,15 @@ fi
 # Check ARCH
 if [ -z "$ARCH" ]; then
     case $TOOLCHAIN_NAME in
+        aarch64-*)
+            ARCH=arm64
+            ;;
+        x86_64-*)
+            ARCH=x86_64
+            ;;
+        mips64*)  # Must exist before mips*
+            ARCH=mips64
+            ;;
         arm-*)
             ARCH=arm
             ;;
@@ -90,6 +99,15 @@ if [ -z "$ARCH" ]; then
 else
     ARCH_INC=$ARCH
     case $ARCH in
+        *arm64)
+            ARCH=arm64
+            ;;
+        *x86_64)
+            ARCH=x86_64
+            ;;
+        *mips64)
+            ARCH=mips64
+            ;;
         *arm)
             ARCH=arm
             ;;
@@ -111,7 +129,10 @@ ARCH_STL=$ARCH
 if [ "$ARCH_INC" != "$ARCH" ]; then
     test -n "`echo $ARCH_INC | grep bc$ARCH`" && NEED_BC2NATIVE=yes
     test -z "`echo $ARCH_INC | grep $ARCH`" && NEED_BC_LIB=yes
-    ARCH_INC=$(find_ndk_unknown_archs)
+    ARCH_INC=$(find_ndk_unknown_archs_base)
+    if [ "$ARCH" != "${ARCH%%64}" ]; then
+        ARCH_INC=${ARCH_INC}64
+    fi
     test -z "$ARCH_INC" && ARCH_INC="$ARCH"
     test "$NEED_BC_LIB" = "yes" && ARCH_LIB=$ARCH_INC
     test "$NEED_BC_LIB" = "yes" -o "$NEED_BC2NATIVE" = "yes" && ARCH_STL=$ARCH_INC
@@ -133,6 +154,7 @@ fi
 if [ "$ARCH_INC" != "$ARCH" ]; then
     TARGET_ABI=$(convert_arch_to_abi $ARCH | tr ',' '\n' | tail -n 1)
     if [ -z "$LLVM_VERSION" ]; then
+        echo "Force-config: --llvm-version=$DEFAULT_LLVM_VERSION"
         LLVM_VERSION=$DEFAULT_LLVM_VERSION
     fi
 fi
@@ -194,8 +216,10 @@ if [ $? != 0 ] ; then
 fi
 
 # Compute source sysroot
+LIB=lib
+test "$ARCH" = "x86_64" && LIB=lib64
 SRC_SYSROOT_INC="$NDK_DIR/platforms/$PLATFORM/arch-$ARCH_INC/usr/include"
-SRC_SYSROOT_LIB="$NDK_DIR/platforms/$PLATFORM/arch-$ARCH_LIB/usr/lib"
+SRC_SYSROOT_LIB="$NDK_DIR/platforms/$PLATFORM/arch-$ARCH_LIB/usr/$LIB"
 if [ ! -d "$SRC_SYSROOT_INC" -o ! -d "$SRC_SYSROOT_LIB" ] ; then
     echo "No platform files ($PLATFORM) for this architecture: $ARCH"
     exit 1
@@ -354,6 +378,14 @@ if [ -n "$LLVM_VERSION" ]; then
           LLVM_TARGET=mipsel-none-linux-android
           TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_mips
           ;;
+      arm64)
+          LLVM_TARGET=aarch64-linux-android
+          TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_arm64
+          ;;
+      x86_64)
+          LLVM_TARGET=x86_64-linux-android
+          TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_x86_64
+          ;;
       *)
         dump "ERROR: Unsupported NDK architecture!"
   esac
@@ -373,7 +405,11 @@ if [ -n "$LLVM_VERSION" ]; then
   EXTRA_CLANG_FLAGS=
   EXTRA_CLANGXX_FLAGS=
   if [ "$ARCH_STL" != "$ARCH" ]; then
-    LLVM_TARGET=le32-none-ndk
+    if [ "$ARCH_STL" = "$(find_ndk_unknown_archs_base)" ]; then
+        LLVM_TARGET=le32-none-ndk
+    else
+        LLVM_TARGET=le64-none-ndk
+    fi
     EXTRA_CLANG_FLAGS="-emit-llvm"
     EXTRA_CLANGXX_FLAGS="$EXTRA_CLANG_FLAGS -I\`dirname \$0\`/../include/c++/$GCC_BASE_VERSION"
   fi
@@ -437,7 +473,7 @@ dump "Copying sysroot headers and libraries..."
 # Copy the sysroot under $TMPDIR/sysroot. The toolchain was built to
 # expect the sysroot files to be placed there!
 run copy_directory_nolinks "$SRC_SYSROOT_INC" "$TMPDIR/sysroot/usr/include"
-run copy_directory_nolinks "$SRC_SYSROOT_LIB" "$TMPDIR/sysroot/usr/lib"
+run copy_directory_nolinks "$SRC_SYSROOT_LIB" "$TMPDIR/sysroot/usr/$LIB"
 if [ "$ARCH_INC" != "$ARCH" ]; then
     cp -a $NDK_DIR/$LIBPORTABLE_SUBDIR/libs/$ABI/* $TMPDIR/sysroot/usr/lib
     cp -a $NDK_DIR/$GABIXX_SUBDIR/libs/$ABI/* $TMPDIR/sysroot/usr/lib
@@ -446,7 +482,7 @@ if [ "$ARCH_INC" != "$ARCH" ]; then
 fi
 
 if [ "$ARCH_LIB" != "$ARCH" ]; then
-    cp -a $NDK_DIR/platforms/$PLATFORM/arch-$ARCH/usr/lib/crt* $TMPDIR/sysroot/usr/lib
+    cp -a $NDK_DIR/platforms/$PLATFORM/arch-$ARCH/usr/lib/crt* $TMPDIR/sysroot/usr/$LIB
 fi
 
 dump "Copying libstdc++ headers and libraries..."
@@ -511,7 +547,7 @@ copy_stl_libs () {
                 if [ "$DEST_DIR" != "${DEST_DIR%%/*}" ] ; then
                     ABI_SRC_DIR=$ABI/`basename $DEST_DIR`
                 fi
-	    fi
+            fi
             if [ "$COPY_ADDITIONAL_HEADER" != "no" ]; then
                 copy_directory "$GNUSTL_LIBS/$ABI/include/bits" "$ABI_STL_INCLUDE_TARGET/$DEST_DIR/bits"
             fi
@@ -527,7 +563,7 @@ copy_stl_libs () {
         stlport)
             if [ "$ARCH_STL" != "$ARCH" ]; then
               tmp_lib_dir=$TMPDIR/stl
-              $NDK_DIR/build/tools/build-cxx-stl.sh --stl=stlport --out-dir=$tmp_lib_dir --abis=unknown
+              $NDK_DIR/build/tools/build-cxx-stl.sh --stl=stlport --out-dir=$tmp_lib_dir --abis=$ARCH_STL
               cp -p "`ls $tmp_lib_dir/sources/cxx-stl/stlport/libs/*/libstlport_static.a`" "$ABI_STL/lib/$DEST_DIR/libstdc++.a"
               cp -p "`ls $tmp_lib_dir/sources/cxx-stl/stlport/libs/*/libstlport_shared.bc`" "$ABI_STL/lib/$DEST_DIR/libstlport_shared.so"
               rm -rf $tmp_lib_dir
@@ -555,7 +591,7 @@ case $ARCH in
         copy_stl_libs armeabi-v7a-hard "armv7-a/hard" "." "no"
         copy_stl_libs armeabi-v7a-hard "armv7-a/thumb/hard" "thumb" "no"
         ;;
-    x86|mips)
+    x86|mips|arm64|x86_64|mips64)
         copy_stl_libs "$ARCH" ""
         ;;
     *)

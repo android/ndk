@@ -1203,6 +1203,14 @@ find_ndk_unknown_archs()
     echo "$(filter_out "$DEFAULT_ARCHS arm64 x86_64 mips64" "$FOUND_ARCHS")"
 }
 
+# Find unknown archs from $NDK_DIR/platforms that it only return the base name
+# for example, we have arch, arch64, then it only prints "arch"
+find_ndk_unknown_archs_base()
+{
+  local ARCHS=$(find_ndk_unknown_archs)
+  echo "`echo $ARCHS | sed 's/64//g' | tr ' ' '\n' | sort -u | xargs`"
+}
+
 # Determine whether given arch is in unknown archs list
 # $1: arch
 # Return: yes or no
