@@ -101,6 +101,7 @@ register_jobs_option
 extract_parameters "$@"
 
 ABIS=$(commas_to_spaces $ABIS)
+ORIG_ABIS=$ABIS
 UNKNOWN_ABIS=
 if [ "$ABIS" = "${ABIS%%64*}" ]; then
     UNKNOWN_ABIS="$(filter_out "$PREBUILT_ABIS" "$ABIS" )"
@@ -108,6 +109,12 @@ if [ "$ABIS" = "${ABIS%%64*}" ]; then
         ABIS="$(filter_out "$UNKNOWN_ABIS" "$ABIS")"
         ABIS="$ABIS $(find_ndk_unknown_archs)"
     fi
+fi
+
+if [ "$ORIG_ABIS" = "$(find_ndk_unknown_archs_base)" -o \
+     "$ORIG_ABIS" = "$(find_ndk_unknown_archs_base)64" ]; then
+    # If command line specify we want to use unknown arch, then just build it!
+    ABIS=$ORIG_ABIS
 fi
 
 # Handle NDK_DIR
