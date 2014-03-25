@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <float.h>
 
+#ifndef __LP64__
 #if LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384
 
 /* This version is for 80-bit little endian long double */
@@ -35,3 +36,4 @@ long double frexpl(long double x, int *e)
 }
 
 #endif
+#endif /* __LP64__ */
