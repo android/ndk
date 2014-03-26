@@ -39,7 +39,7 @@ HostBitcodeCompiler::HostBitcodeCompiler(const std::string &abi, const std::stri
 void HostBitcodeCompiler::initRuntimePath() {
   mRuntimePath.clear();
 
-  mRuntimePath.insert(std::make_pair("gabi++_static", getGAbixxPath() + "/libgabi++_static.a"));
+  mRuntimePath.insert(std::make_pair("gabi++_static", getGAbixxPath() + "/libgabi++_static_nonhidden.a"));
   mRuntimePath.insert(std::make_pair("gabi++_shared", getGAbixxPath() + "/libgabi++_shared.so"));
   mRuntimePath.insert(std::make_pair("compiler_rt_static", getCompilerRTPath() + "/libcompiler_rt_static.a"));
   mRuntimePath.insert(std::make_pair("portable", getLibPortablePath() + "/libportable.a"));
