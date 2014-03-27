@@ -43,9 +43,16 @@ Two functions are provided for now:
 
         AndroidCpuFamily android_getCpuFamily();
 
-Returns the target device's CPU Family as an enum. For now, the only
-supported family is ANDROID_CPU_FAMILY_ARM.
+Returns the target device's CPU Family as an enum.
+Currently, the following families are defined:
 
+  * `ANDROID_CPU_FAMILY_ARM`
+
+  * `ANDROID_CPU_FAMILY_X86`
+
+  * `ANDROID_CPU_FAMILY_MIPS`
+
+Secondly:
 
         uint64_t android_getCpuFeatures();
 
