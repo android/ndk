@@ -26,31 +26,48 @@
  * $FreeBSD: src/lib/libc/aarch64/_fpmath.h $
  */
 
+// ANDROID changed
+// Android uses 128 bits long doubles for LP64, so the structure and the macros
+// were reworked for the quad precision ieee representation.
+
 union IEEEl2bits {
 	long double	e;
 	struct {
 #ifndef __AARCH64EB__
-		unsigned int	manl	:32;
-		unsigned int	manh	:20;
-		unsigned int	exp	:11;
+		unsigned long	manl	:64;
+		unsigned long	manh	:48;
+		unsigned int	exp	  :15;
 		unsigned int	sign	:1;
 #else
-		unsigned int		sign	:1;
-		unsigned int		exp	:11;
-		unsigned int		manh	:20;
-		unsigned int		manl	:32;
+		unsigned int	sign	:1;
+		unsigned int	exp	  :15;
+		unsigned long	manh	:48;
+		unsigned long	manl	:64;
 #endif
 	} bits;
+	struct {
+#ifndef __AARCH64EB__
+		unsigned long	manl	:64;
+		unsigned long	manh	:48;
+		unsigned int	expsign	:16;
+#else
+		unsigned int	expsign	:16;
+		unsigned long	manh	:48;
+		unsigned long	manl	:64;
+#endif
+	} xbits;
 };
 
 #define	LDBL_NBIT	0
 #define	LDBL_IMPLICIT_NBIT
 #define	mask_nbit_l(u)	((void)0)
 
-#define	LDBL_MANH_SIZE	32
-#define	LDBL_MANL_SIZE	32
+#define	LDBL_MANH_SIZE	48
+#define	LDBL_MANL_SIZE	64
 
 #define	LDBL_TO_ARRAY32(u, a) do {			\
 	(a)[0] = (uint32_t)(u).bits.manl;		\
-	(a)[1] = (uint32_t)(u).bits.manh;		\
+	(a)[1] = (uint32_t)((u).bits.manl >> 32);      	\
+	(a)[2] = (uint32_t)(u).bits.manh;		\
+	(a)[3] = (uint32_t)((u).bits.manh >> 32);	\
 } while(0)
