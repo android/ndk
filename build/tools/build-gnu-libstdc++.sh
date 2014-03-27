@@ -271,6 +271,10 @@ copy_gnustl_libs ()
 
     local SDIR="$BUILDDIR/install-$ABI-$GCC_VERSION"
     local DDIR="$NDK_DIR/$GNUSTL_SUBDIR/$GCC_VERSION"
+    local LIB=lib
+    if [ "$ABI" != "${ABI%%64}" ] ; then
+        LIB=lib64
+    fi
 
     local GCC_VERSION_NO_DOT=$(echo $GCC_VERSION|sed 's/\./_/g')
     # Copy the common headers only once per gcc version
@@ -288,12 +292,12 @@ copy_gnustl_libs ()
 
     # Copy the ABI-specific libraries
     # Note: the shared library name is libgnustl_shared.so due our custom toolchain patch
-    copy_file_list "$SDIR/lib" "$DDIR/libs/$ABI" libsupc++.a libgnustl_shared.so
+    copy_file_list "$SDIR/$LIB" "$DDIR/libs/$ABI" libsupc++.a libgnustl_shared.so
     # Note: we need to rename libgnustl_shared.a to libgnustl_static.a
-    cp "$SDIR/lib/libgnustl_shared.a" "$DDIR/libs/$ABI/libgnustl_static.a"
+    cp "$SDIR/$LIB/libgnustl_shared.a" "$DDIR/libs/$ABI/libgnustl_static.a"
     if [ -d "$SDIR/thumb" ] ; then
-        copy_file_list "$SDIR/thumb/lib" "$DDIR/libs/$ABI/thumb" libsupc++.a libgnustl_shared.so
-        cp "$SDIR/thumb/lib/libgnustl_shared.a" "$DDIR/libs/$ABI/thumb/libgnustl_static.a"
+        copy_file_list "$SDIR/thumb/$LIB" "$DDIR/libs/$ABI/thumb" libsupc++.a libgnustl_shared.so
+        cp "$SDIR/thumb/$LIB/libgnustl_shared.a" "$DDIR/libs/$ABI/thumb/libgnustl_static.a"
     fi
 }
 
@@ -302,7 +306,8 @@ for VERSION in $GCC_VERSION_LIST; do
     for ABI in $ABIS; do
         build_gnustl_for_abi $ABI "$BUILD_DIR" static $VERSION
         build_gnustl_for_abi $ABI "$BUILD_DIR" shared $VERSION
-        if [ "$ABI" != "${ABI%%arm*}" ] ; then
+        # build thumb version of libraries for 32-bit arm
+        if [ "$ABI" != "${ABI%%arm*}" -a "$ABI" = "${ABI%%64}" ] ; then
             build_gnustl_for_abi $ABI "$BUILD_DIR" static $VERSION thumb
             build_gnustl_for_abi $ABI "$BUILD_DIR" shared $VERSION thumb
         fi
