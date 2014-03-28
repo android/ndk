@@ -424,45 +424,41 @@ using namespace _LIBCPP_NAMESPACE __attribute__((__strong__));
 // Emulation of clang's __has_feature() for GCC on known cases
 #ifndef __has_feature
 
-#if !defined(_LIBCPP_HAS_NO_TRAILING_RETURN) || !defined(_LIBCPP_HAS_NO_ADVANCED_SFINAE)
-#define __gxx__cxx_access_control_sfinae          1 // Also see usage in 7 tests
-#else
-#define __gxx__cxx_access_control_sfinae          0
-#endif
-#define __gxx__cxx_alias_templates                !_LIBCPP_HAS_NO_TEMPLATE_ALIASES
+#define __gxx__cxx_access_control_sfinae          !defined(_LIBCPP_HAS_NO_TRAILING_RETURN) || !defined(_LIBCPP_HAS_NO_ADVANCED_SFINAE) // Also see usage in 7 tests
+#define __gxx__cxx_alias_templates                !defined(_LIBCPP_HAS_NO_TEMPLATE_ALIASES)
 #define __gxx__cxx_alignas                        0  // Not sure, doesn't matter.
 #define __gxx__cxx_atomic                         0  // In c11-atomic branch targeted for GCC 4.9.  Also see usages in 20+ places
 #define __gxx__cxx_attributes                     0  // Not sure. Also see usage in libcxx/test/utilities/meta/meta.unary/meta.unary.prop/is_polymorphic.pass.cpp
-#define __gxx__cxx_auto_type                      !_LIBCPP_HAS_NO_AUTO_TYPE
-#define __gxx__cxx_constexpr                      !_LIBCPP_HAS_NO_CONSTEXPR
-#define __gxx__cxx_decltype                       !_LIBCPP_HAS_NO_DECLTYPE
-#define __gxx__cxx_defaulted_functions            !_LIBCPP_HAS_NO_DEFAULTED_FUNCTIONS  // libcxx/test/utilities/meta/meta.unary/meta.unary.prop/is_trivially_move_constructible.pass.cpp
-#define __gxx__cxx_deleted_functions              !_LIBCPP_HAS_NO_DELETED_FUNCTIONS
-#define __gxx__cxx_exceptions                     !_LIBCPP_NO_EXCEPTIONS
+#define __gxx__cxx_auto_type                      !deinfed(_LIBCPP_HAS_NO_AUTO_TYPE)
+#define __gxx__cxx_constexpr                      !defined(_LIBCPP_HAS_NO_CONSTEXPR)
+#define __gxx__cxx_decltype                       !defined(_LIBCPP_HAS_NO_DECLTYPE)
+#define __gxx__cxx_defaulted_functions            !defined(_LIBCPP_HAS_NO_DEFAULTED_FUNCTIONS)  // libcxx/test/utilities/meta/meta.unary/meta.unary.prop/is_trivially_move_constructible.pass.cpp
+#define __gxx__cxx_deleted_functions              !defined(_LIBCPP_HAS_NO_DELETED_FUNCTIONS)
+#define __gxx__cxx_exceptions                     !defined(_LIBCPP_NO_EXCEPTIONS)
 #define __gxx__cxx_explicit_conversions           (_GNUC_VER >= 405)
-#define __gxx__cxx_generalized_initializers       !_LIBCPP_HAS_NO_GENERALIZED_INITIALIZERS
-#define __gxx__cxx_lambdas                        !_LIBCPP_HAS_NO_LAMBDAS
+#define __gxx__cxx_generalized_initializers       !defined(_LIBCPP_HAS_NO_GENERALIZED_INITIALIZERS)
+#define __gxx__cxx_lambdas                        !defined(_LIBCPP_HAS_NO_LAMBDAS)
 #define __gxx__cxx_noexcept                       0  // Not sure, doesn't matter.
-#define __gxx__cxx_nullptr                        !_LIBCPP_HAS_NO_NULLPTR
+#define __gxx__cxx_nullptr                        !defined(_LIBCPP_HAS_NO_NULLPTR)
 #define __gxx__cxx_reference_qualified_functions  (_GNUC_VER >= 408)  // Not if 4.7 work. 4.6 certainly not.  Also see usage in libcxx/include/type_traits
 #ifdef _LIBCPP_NO_RTTI
 #define __gxx__cxx_rtti                           0
 #else
 #define __gxx__cxx_rtti                           __GXX_RTTI
 #endif
-#define __gxx__cxx_rvalue_references              !_LIBCPP_HAS_NO_RVALUE_REFERENCES
-#define __gxx__cxx_static_assert                  !_LIBCPP_HAS_NO_STATIC_ASSERT
-#define __gxx__cxx_strong_enums                   !_LIBCPP_HAS_NO_STRONG_ENUMS  // See usage in libcxx/test/utilities/meta/meta.trans/meta.trans.other/underlying_type.pass.cpp
-#define __gxx__cxx_trailing_return                !_LIBCPP_HAS_NO_TRAILING_RETURN
+#define __gxx__cxx_rvalue_references              !defined(_LIBCPP_HAS_NO_RVALUE_REFERENCES)
+#define __gxx__cxx_static_assert                  !defined(_LIBCPP_HAS_NO_STATIC_ASSERT)
+#define __gxx__cxx_strong_enums                   !defined(_LIBCPP_HAS_NO_STRONG_ENUMS)  // See usage in libcxx/test/utilities/meta/meta.trans/meta.trans.other/underlying_type.pass.cpp
+#define __gxx__cxx_trailing_return                !defined(_LIBCPP_HAS_NO_TRAILING_RETURN)
 #define __gxx__cxx_unrestricted_unions            1  // Not sure.  Also See usage in libcxx/test/utilities/meta/meta.unary/meta.unary.prop/is_nothrow_destructible.pass.cpp
-#define __gxx__cxx_variadic_templates             !_LIBCPP_HAS_NO_VARIADICS
+#define __gxx__cxx_variadic_templates             !defined(_LIBCPP_HAS_NO_VARIADICS)
 #define __gxx__has_nothrow_assign                 (_GNUC_VER >= 403)  // See usage in libcxx/include/type_traits
 #define __gxx__has_nothrow_constructor            (_GNUC_VER >= 403)  // See usage in libcxx/include/type_traits
 #define __gxx__has_nothrow_copy                   (_GNUC_VER >= 403)  // See usage in libcxx/include/type_traits
 #define __gxx__has_trivial_constructor            (_GNUC_VER >= 403)  // See usage in libcxx/include/type_traits
 #define __gxx__has_trivial_destructor             (_GNUC_VER >= 403)  // See usage in libcxx/include/type_traits
 #define __gxx__has_virtual_destructor             (_GNUC_VER >= 403)  // See usage in libcxx/include/type_traits
-#define __gxx__is_base_of                         !_LIBCPP_HAS_IS_BASE_OF  // See usage in libcxx/include/type_traits
+#define __gxx__is_base_of                         !defined(_LIBCPP_HAS_IS_BASE_OF)  // See usage in libcxx/include/type_traits
 #define __gxx__is_class                           (_GNUC_VER >= 403)  // See usage in libcxx/include/type_traits
 #define __gxx__is_convertible_to                  0  // Not supported in GCC 4.8.  Also see usage in libcxx/include/type_traits
 #define __gxx__is_empty                           1  // Not sure.  Also see usage in libcxx/include/type_traits
@@ -476,8 +472,8 @@ using namespace _LIBCPP_NAMESPACE __attribute__((__strong__));
 #define __gxx__is_trivially_constructible         0  // Not supported in GCC 4.8.  Also see usage in libcxx/include/type_traits
 #define __gxx__is_trivially_copyable              0  // Not supported in GCC 4.8.  Also see usage in libcxx/include/type_traits
 #define __gxx__is_union                           (_GNUC_VER >= 403)  // See usage in libcxx/include/type_traits
-#define __gxx__objc_arc                           _LIBCPP_HAS_OBJC_ARC
-#define __gxx__objc_arc_weak                      _LIBCPP_HAS_OBJC_ARC_WEAK
+#define __gxx__objc_arc                           defined(_LIBCPP_HAS_OBJC_ARC)
+#define __gxx__objc_arc_weak                      defined(_LIBCPP_HAS_OBJC_ARC_WEAK)
 #define __gxx__underlying_type                    1  // Not sure.  Also see usage in libcxx/include/type_traits
 
 #define __has_feature(__x) __gxx__ ## __x
