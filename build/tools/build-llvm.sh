@@ -152,12 +152,13 @@ TOOLCHAIN_BUILD_PREFIX=$BUILD_OUT/prefix
 
 ARCH=$HOST_ARCH
 
-# Note that the following 2 flags only apply for BUILD_CC in canadian cross build
-CFLAGS_FOR_BUILD="-O2 -I$TOOLCHAIN_BUILD_PREFIX/include"
+# Disable futimens@GLIBC_2.6 not available in system on server with very old libc.so
+CFLAGS_FOR_BUILD="-O2 -I$TOOLCHAIN_BUILD_PREFIX/include -DDISABLE_FUTIMENS"
 LDFLAGS_FOR_BUILD="-L$TOOLCHAIN_BUILD_PREFIX/lib"
 
-# Eliminate dependency on libgcc_s_sjlj-1.dll and libstdc++-6.dll on cross builds
-if [ "$MINGW" = "yes" ]; then
+# Statically link stdc++ to eliminate dependency on outdated libctdc++.so in old 32-bit
+# linux system, and libgcc_s_sjlj-1.dll and libstdc++-6.dll on windows
+if [ "$MINGW" = "yes" -o "$HOST_TAG" = "linux-x86" ]; then
     LDFLAGS_FOR_BUILD=$LDFLAGS_FOR_BUILD" -static-libgcc -static-libstdc++"
 fi
 
