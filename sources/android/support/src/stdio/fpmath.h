@@ -30,7 +30,7 @@
 #include <endian.h>
 #if defined(__arm__)
 #include "arm/_fpmath.h"
-#elif defined(__arm64__)
+#elif defined(__aarch64__)
 #include "arm64/_fpmath.h"
 #elif defined(__i386__)
 #include "i386/_fpmath.h"
