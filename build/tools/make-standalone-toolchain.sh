@@ -483,6 +483,8 @@ copy_stl_common_headers () {
         libcxx|libc++)
             copy_directory "$LIBCXX_DIR/libcxx/include" "$ABI_STL_INCLUDE"
             copy_directory "$SUPPORT_SUBDIR/include" "$ABI_STL_INCLUDE"
+            copy_directory "$STLPORT_DIR/../gabi++/include" "$ABI_STL_INCLUDE/../../gabi++/include"
+            copy_gabixx_headers cxxabi.h unwind.h unwind-arm.h unwind-itanium.h
             ;;
         stlport)
             copy_directory "$STLPORT_DIR/stlport" "$ABI_STL_INCLUDE"
