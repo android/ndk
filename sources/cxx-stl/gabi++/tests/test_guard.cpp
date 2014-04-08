@@ -32,7 +32,7 @@ static pthread_t  sThreads[MAX_THREADS];
 
 static void* thread_run(void* arg)
 {
-    int index = reinterpret_cast<int>(arg);
+    int index = (int)(intptr_t)arg;
     sInstances[index] = getInstance();
     return NULL;
 }

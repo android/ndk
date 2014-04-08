@@ -75,7 +75,7 @@ static bool g_can_exit = false;
 // are not reused.
 static void* my_thread(void* param) {
   // Get thread-specific object pointer, store it in global array.
-  int id = (int)param;
+  int id = (int)(intptr_t)param;
   g_thread_objects[id] = (*g_get_globals)();
 
   // Increment global thread counter and tell the main thread about this.
