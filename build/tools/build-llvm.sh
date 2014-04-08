@@ -271,7 +271,7 @@ run $SRC_DIR/$TOOLCHAIN/llvm/configure \
     --host=$ABI_CONFIGURE_HOST \
     --build=$ABI_CONFIGURE_BUILD \
     --with-bug-report-url=$DEFAULT_ISSUE_TRACKER_URL \
-    --enable-targets=arm,mips,x86 \
+    --enable-targets=arm,mips,x86,aarch64 \
     --enable-optimized \
     --with-binutils-include=$SRC_DIR/binutils/binutils-$BINUTILS_VERSION/include \
     $EXTRA_CONFIG_FLAGS
@@ -401,6 +401,14 @@ find $TOOLCHAIN_BUILD_PREFIX/bin -maxdepth 1 -type f -exec $STRIP {} \;
 # Note that MacOSX strip generate the follow error on .dylib:
 # "symbols referenced by indirect symbol table entries that can't be stripped "
 find $TOOLCHAIN_BUILD_PREFIX/lib -maxdepth 1 -type f \( -name "*.dll" -o -name "*.so" \) -exec $STRIP {} \;
+
+# For now, le64-tools is just like le32 ones
+run ln -s ndk-link $TOOLCHAIN_BUILD_PREFIX/bin/le32-none-ndk-link
+run ln -s ndk-link $TOOLCHAIN_BUILD_PREFIX/bin/le64-none-ndk-link
+run ln -s ndk-strip $TOOLCHAIN_BUILD_PREFIX/bin/le32-none-ndk-strip
+run ln -s ndk-strip $TOOLCHAIN_BUILD_PREFIX/bin/le64-none-ndk-strip
+run ln -s ndk-translate $TOOLCHAIN_BUILD_PREFIX/bin/le32-none-ndk-translate
+run ln -s ndk-translate $TOOLCHAIN_BUILD_PREFIX/bin/le64-none-ndk-translate
 
 # install script
 if [ "$USE_PYTHON" != "yes" ]; then

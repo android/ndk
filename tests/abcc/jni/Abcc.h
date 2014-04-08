@@ -49,7 +49,10 @@ public:
     ARMEABI = 0,
     ARMEABI_V7A,
     X86,
-    MIPS
+    MIPS,
+    ARM64,
+    X86_64,
+    MIPS64
   };
 
 private:
@@ -63,12 +66,18 @@ public:
     if (mAbi == ARMEABI_V7A)  return "armeabi-v7a";
     if (mAbi == X86)  return "x86";
     if (mAbi == MIPS)  return "mips";
+    if (mAbi == ARM64)  return "arm64";
+    if (mAbi == X86_64)  return "x86_64";
+    if (mAbi == MIPS64)  return "mips64";
     return 0;
   }
   const char* getArch() const {
     if (mAbi == ARMEABI || mAbi == ARMEABI_V7A)  return "arm";
     if (mAbi == X86)  return "x86";
     if (mAbi == MIPS) return "mips";
+    if (mAbi == ARM64)  return "arm64";
+    if (mAbi == X86_64)  return "x86_64";
+    if (mAbi == MIPS64)  return "mips64";
     return 0;
   }
 };
@@ -82,14 +91,17 @@ struct TargetAttributes {
 };
 
 const TargetAttributes kGlobalTargetAttrs[] = {
-  {"arm", "armv5te-linux-androideabi", "armelf_linux_eabi", "", ""},
+  {"arm", "armv5te-linux-androideabi", "armelf_linux_eabi", "-arm-enable-ehabi -arm-enable-ehabi-descriptors -float-abi=soft", "-dynamic-linker /system/bin/linker"},
 #ifdef FORCE_ARM
-  {"arm", "armv7-linux-androideabi", "armelf_linux_eabi", "", ""},
+  {"arm", "armv7-linux-androideabi", "armelf_linux_eabi", "-arm-enable-ehabi -arm-enable-ehabi-descriptors -float-abi=soft", "-dynamic-linker /system/bin/linker"},
 #else
-  {"arm", "thumbv7-linux-androideabi", "armelf_linux_eabi", "", ""},
+  {"arm", "thumbv7-linux-androideabi", "armelf_linux_eabi", "-arm-enable-ehabi -arm-enable-ehabi-descriptors -float-abi=soft", "-dynamic-linker /system/bin/linker"},
 #endif
-  {"x86", "i686-linux-android", "elf_i386", "-disable-fp-elim -force-align-stack -mattr=-ssse3,-sse41,-sse42,-sse4a,-popcnt", ""},
-  {"mips", "mipsel-linux-android", "elf32ltsmip", "", ""},
+  {"x86", "i686-linux-android", "elf_i386", "-disable-fp-elim -force-align-stack -mattr=-ssse3,-sse41,-sse42,-sse4a,-popcnt", "-dynamic-linker /system/bin/linker"},
+  {"mips", "mipsel-linux-android", "elf32ltsmip", "", "-dynamic-linker /system/bin/linker"},
+  {"arm64", "aarch64-linux-android", "aarch64linux", "", "-dynamic-linker /system/bin/linker64"},
+  {"x86_64", "x86_64-linux-android", "elf_x86_64", "-disable-fp-elim -force-align-stack", "-dynamic-linker /system/bin/linker64"},
+  {"mips64", "mips64el-linux-android", "elf64ltsmip", "", "-dynamic-linker /system/bin/linker64"},
 };
 
 // Used when computing mutual dependency
@@ -112,6 +124,7 @@ public:
   std::string mOutPath;
   std::string mSOName;
   std::string mLDFlags; // --no-undefined, ...
+  std::string mLDLocalLibsStr;  // i.e.: ./obj/local/.../libxxx.a
   std::list<std::string> mLDLibs;  // -lxxx, will be removed one-by-one until empty
   std::string mLDLibsStr; // Immutable once read in
 

@@ -20,17 +20,17 @@ using namespace abcc;
 
 bool kVerbose = false;
 
-HostBitcodeCompiler::HostBitcodeCompiler(const std::string &abi, const std::string &sysroot,
+HostBitcodeCompiler::HostBitcodeCompiler(const std::string &abi, const std::string &sysroot, const std::string &toolchain_bin,
                                          const std::string &input, const std::string &output, const std::string &working_dir,
-                                         const std::string &platform, const bool savetemps)
+                                         const std::string &platform, const bool savetemps, bool bit32)
   : BitcodeCompiler(abi, sysroot, working_dir, savetemps), mIn(input), mOut(output),
-    mNDKDir(""), mPlatform(platform) {
+    mNDKDir(""), mPlatform(platform), mToolchainBinPath(toolchain_bin) {
   initRuntimePath();
 }
 
 HostBitcodeCompiler::HostBitcodeCompiler(const std::string &abi, const std::string &sysroot, const std::string &ndk_dir, const std::string &toolchain_bin,
                                          const std::string &input, const std::string &output, const std::string &working_dir,
-                                         const std::string &platform, const bool savetemps)
+                                         const std::string &platform, const bool savetemps, bool bit32)
   : BitcodeCompiler(abi, sysroot, working_dir, savetemps), mIn(input), mOut(output),
     mNDKDir(ndk_dir), mPlatform(platform), mToolchainBinPath(toolchain_bin) {
   initRuntimePath();
@@ -55,6 +55,9 @@ const std::string HostBitcodeCompiler::getRuntimePath(const std::string &libname
 }
 
 int HostBitcodeCompiler::parseLDFlags(BitcodeInfo &info, const std::string &orig_str) {
+  // Follow traditional clang/gcc use, add -lgccunwind (-lgcc) before local libs
+  info.mLDLocalLibsStr += " " + getRuntimePath("gccunwind");
+
   std::stringstream ss(orig_str);
   std::string str;
   while (ss >> str) {
@@ -78,14 +81,24 @@ int HostBitcodeCompiler::parseLDFlags(BitcodeInfo &info, const std::string &orig
 
     if (str.size() > 2 &&
         str.substr(str.size() - 2) == ".a") {
-      info.mLDLibs.push_back(str);
-      info.mLDLibsStr += " " + str;
+      if (str.size() > 6 &&
+          str.substr(0, /*leng*/6) == "./obj/") {
+        info.mLDLocalLibsStr += " " + str;
+      } else {
+        info.mLDLibs.push_back(str);
+        info.mLDLibsStr += " " + str;
+      }
       continue;
     }
     if (str.size() > 3 &&
         str.substr(str.size() - 3) == ".so") {
-      info.mLDLibs.push_back(str);
-      info.mLDLibsStr += " " + str;
+      if (str.size() > 6 &&
+          str.substr(0, /*leng*/6) == "./obj/") {
+        info.mLDLocalLibsStr += " " + str;
+      } else {
+        info.mLDLibs.push_back(str);
+        info.mLDLibsStr += " " + str;
+      }
       continue;
     }
 
@@ -106,6 +119,18 @@ int HostBitcodeCompiler::parseLDFlags(BitcodeInfo &info, const std::string &orig
     // Some other flags, like --no-undefined, -z now, -z noexecstack, ...
     info.mLDFlags += str + " ";
   } // while
+
+  size_t first_dash_l = info.mLDLibsStr.find(" -l");
+  if (first_dash_l == 0u) {
+    info.mLDLibsStr += " " + getRuntimePath("gccunwind");
+  } else if (first_dash_l == std::string::npos) {
+    info.mLDLibsStr = getRuntimePath("gccunwind") + info.mLDLibsStr;
+  } else {
+    info.mLDLibsStr = info.mLDLibsStr.substr(0, first_dash_l)
+                      + " " + getRuntimePath("gccunwind")
+                      + info.mLDLibsStr.substr(first_dash_l,
+                                               info.mLDLibsStr.size() - first_dash_l);
+  }
   return 0;
 }
 
@@ -122,8 +147,13 @@ void HostBitcodeCompiler::getBitcodeFiles() {
 }
 
 void HostBitcodeCompiler::prepareToolchain() {
+  std::string cmd;
   // le32-none-ndk-translate
-  std::string cmd = getToolchainBinPath() + "/le32-none-ndk-translate";
+  if (mAbi == TargetAbi::ARM64 || mAbi == TargetAbi::X86_64 ||
+      mAbi == TargetAbi::MIPS64)
+    cmd = getToolchainBinPath() + "/le64-none-ndk-translate";
+  else
+    cmd = getToolchainBinPath() + "/le32-none-ndk-translate";
   mExecutableToolsPath[(unsigned)CMD_TRANSLATE] = cmd;
 
   // llc
@@ -132,7 +162,15 @@ void HostBitcodeCompiler::prepareToolchain() {
 
   // ld.mcld
   cmd = getToolchainBinPath() + "/ld.mcld";
-  cmd += " -L" + mSysroot + "/usr/lib";
+  if (mAbi == TargetAbi::MIPS64) {
+    cmd = getToolchainBinPath() + "/../../../../mips64el-linux-android-4.8/prebuilt/linux-x86/bin/mips64el-linux-android-ld";
+  }
+
+  if (mAbi == TargetAbi::X86_64) {
+    cmd += " -L" + mSysroot + "/usr/lib64";
+  } else {
+    cmd += " -L" + mSysroot + "/usr/lib";
+  }
   mExecutableToolsPath[(unsigned)CMD_LINK] = cmd;
 
   cmd = " @" + getRuntimePath("portable.wrap") + " " + getRuntimePath("portable");
@@ -151,10 +189,7 @@ void HostBitcodeCompiler::removeIntermediateFile(const std::string &path) {
 }
 
 const std::string HostBitcodeCompiler::getToolchainBinPath() const {
-  if (!mNDKDir.empty())
-    return mToolchainBinPath;
-  else
-    return mSysroot + "/usr/bin";
+  return mToolchainBinPath;
 }
 
 const std::string HostBitcodeCompiler::getCompilerRTPath() const {
