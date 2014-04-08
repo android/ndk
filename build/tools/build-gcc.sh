@@ -433,19 +433,7 @@ unwind_library_for_abi ()
           pr-support.o \
           unwind-c.o"
     ;;
-    x86)
-    BASE_DIR="$BUILD_OUT/gcc-$GCC_VERSION/$ABI_CONFIGURE_TARGET/libgcc/"
-    if [ "$GCC_VERSION" = "4.6" -o "$GCC_VERSION" = "4.4.3" ]; then
-       OBJS="unwind-c.o \
-          unwind-dw2-fde-glibc.o \
-          unwind-dw2.o"
-    else
-       OBJS="unwind-c.o \
-          unwind-dw2-fde-dip.o \
-          unwind-dw2.o"
-    fi
-    ;;
-    mips)
+    x86|mips|arm64|x86_64|mips64)
     BASE_DIR="$BUILD_OUT/gcc-$GCC_VERSION/$ABI_CONFIGURE_TARGET/libgcc/"
     if [ "$GCC_VERSION" = "4.6" -o "$GCC_VERSION" = "4.4.3" ]; then
        OBJS="unwind-c.o \
