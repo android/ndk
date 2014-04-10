@@ -432,7 +432,7 @@ gen_empty_archive() {
 case $ABI in
     default)  # Let the APP_ABI in jni/Application.mk decide what to build
         ;;
-    armeabi|armeabi-v7a|x86|mips|armeabi-v7a-hard)
+    armeabi|armeabi-v7a|x86|x86_64|mips|armeabi-v7a-hard)
         NDK_BUILD_FLAGS="$NDK_BUILD_FLAGS APP_ABI=$ABI"
         ;;
     *)

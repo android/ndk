@@ -36,6 +36,14 @@ $(foreach _plat,3 4 5 8,\
 )
 endif
 
+# The minimal platform for x86_64 is android-20
+TARGET_PLATFORM_SAVED := $(TARGET_PLATFORM)
+ifneq ($(filter %x86_64,$(TARGET_ARCH_ABI)),)
+$(foreach _plat,3 4 5 8 9 10 11 12 13 14 15 16 17 18 19,\
+    $(eval TARGET_PLATFORM := $$(subst android-$(_plat),android-20,$$(TARGET_PLATFORM)))\
+)
+endif
+
 # The minimal platform for mips is android-9
 ifneq ($(filter %mips,$(TARGET_ARCH_ABI)),)
 $(foreach _plat,3 4 5 8,\

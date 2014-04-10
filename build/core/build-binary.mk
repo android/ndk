@@ -418,6 +418,7 @@ CLEAN_OBJS_DIRS     += $(LOCAL_OBJS_DIR)
 #
 ifneq ($(filter -l%,$(LOCAL_LDLIBS)),)
     LOCAL_LDLIBS := -L$(call host-path,$(SYSROOT_LINK)/usr/lib) $(LOCAL_LDLIBS)
+    LOCAL_LDLIBS := -L$(call host-path,$(SYSROOT_LINK)/usr/lib64) $(LOCAL_LDLIBS)
 endif
 
 # When LOCAL_SHORT_COMMANDS is defined to 'true' we are going to write the
