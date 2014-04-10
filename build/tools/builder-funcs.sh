@@ -562,6 +562,9 @@ builder_begin_android ()
             mips)
                 LLVM_TRIPLE=mipsel-none-linux-android
                 ;;
+            mips64)
+                LLVM_TRIPLE=mips64el-none-linux-android
+                ;;
             *)
                 LLVM_TRIPLE=le32-none-ndk
                 GCC_TOOLCHAIN=

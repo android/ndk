@@ -1016,7 +1016,7 @@ parse_toolchain_name ()
         ;;
     aarch64-linux-android-*)
         ARCH="arm64"
-        ABI="aarch64-v8a"
+        ABI="arm64-v8a"
         ABI_CONFIGURE_TARGET="aarch64-linux-android"
         # Note:
         # --disable-libgomp because libgomp/configure tries to link when we don't have crt*.o for aarch64 yet.
@@ -1086,10 +1086,16 @@ parse_toolchain_name ()
     log "Using GCC version: $GCC_VERSION"
 
     # Determine --host value when building gdbserver
+
     case "$TOOLCHAIN" in
     arm-*)
         GDBSERVER_HOST=arm-eabi-linux
         GDBSERVER_CFLAGS="-fno-short-enums"
+        GDBSERVER_LDFLAGS=
+        ;;
+    aarch64-*)
+        GDBSERVER_HOST=aarch64-eabi-linux
+        GDBSERVER_CFLAGS="-fno-short-enums -DUAPI_HEADERS"
         GDBSERVER_LDFLAGS=
         ;;
     x86-*)
@@ -1102,13 +1108,20 @@ parse_toolchain_name ()
         GDBSERVER_CFLAGS=-DUAPI_HEADERS
         GDBSERVER_LDFLAGS=
         ;;
-    mips*)
+    mipsel-*)
         GDBSERVER_HOST=mipsel-linux-android
         GDBSERVER_CFLAGS=
         GDBSERVER_LDFLAGS=
         ;;
+    mips64el-*)
+        GDBSERVER_HOST=mips64el-linux-android
+        GDBSERVER_CFLAGS=-DUAPI_HEADERS
+        GDBSERVER_LDFLAGS=
+        ;;
+    *)
+        echo "Unknown TOOLCHAIN=$TOOLCHAIN"
+        exit
     esac
-
 }
 
 # Return the host "tag" used to identify prebuilt host binaries.
@@ -1240,10 +1253,10 @@ convert_abi_to_arch ()
         armeabi|armeabi-v7a|armeabi-v7a-hard)
             RET=arm
             ;;
-        x86|mips|arm64|x86_64|mips64)
+        x86|mips|x86_64|mips64)
             RET=$ABI
             ;;
-        aarch64)
+        arm64-v8a)
             RET=arm64
             ;;
         *)
@@ -1270,8 +1283,11 @@ convert_arch_to_abi ()
         arm)
             RET=armeabi,armeabi-v7a,armeabi-v7a-hard
             ;;
-        x86|x86_64|mips|mips64|arm64)
+        x86|x86_64|mips|mips64)
             RET=$ARCH
+            ;;
+        arm64)
+            RET=arm64-v8a
             ;;
         *)
             if [ "$(arch_in_unknown_archs $ARCH)" = "yes" ]; then
@@ -1368,10 +1384,7 @@ get_default_platform_sysroot_for_arch ()
     local ARCH=$1
     local LEVEL=$(get_default_api_level_for_arch $ARCH)
 
-    if [ "$ARCH" = "aarch64" ]; then
-        ARCH=arm64
-    fi
-    if [ "$ARCH" != "${ARCH%%64}" ] ; then
+    if [ "$ARCH" != "${ARCH%%64*}" ] ; then
         # Hack to use new 64-bit headers only available at, say LEVEL 20
         LEVEL=20
     fi
