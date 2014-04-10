@@ -36,7 +36,6 @@ OPTION_BUILD_OUT=
 register_var_option "--build-out=<path>" OPTION_BUILD_OUT "Set temporary build directory"
 
 # Note: platform API level 9 or higher is needed for proper C++ support
-PLATFORM=$DEFAULT_PLATFORM
 register_var_option "--platform=<name>"  PLATFORM "Specify platform name"
 
 GMP_VERSION=$DEFAULT_GMP_VERSION
@@ -125,6 +124,10 @@ set_parameters ()
 }
 
 set_parameters $PARAMETERS
+
+if [ -z "$PLATFORM" ]; then
+   PLATFORM="android-"$(get_default_api_level_for_arch $ARCH)
+fi
 
 prepare_target_build
 
