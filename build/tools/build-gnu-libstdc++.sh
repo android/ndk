@@ -140,12 +140,13 @@ build_gnustl_for_abi ()
     fi
 
     SYSROOT=$NDK_DIR/$(get_default_platform_sysroot_for_arch $ARCH)
+    LDIR=$SYSROOT"/usr/"$(get_default_libdir_for_arch $ARCH)
     # Sanity check
-    if [ ! -f "$SYSROOT/usr/lib/libc.a" ]; then
+    if [ ! -f "$LDIR/libc.a" ]; then
 	echo "ERROR: Empty sysroot! you probably need to run gen-platforms.sh before this script."
 	exit 1
     fi
-    if [ ! -f "$SYSROOT/usr/lib/libc.so" ]; then
+    if [ ! -f "$LDIR/libc.so" ]; then
         echo "ERROR: Sysroot misses shared libraries! you probably need to run gen-platforms.sh"
         echo "*without* the --minimal flag before running this script."
         exit 1
@@ -195,7 +196,7 @@ build_gnustl_for_abi ()
 
     setup_ccache
 
-    export LDFLAGS="-L$SYSROOT/usr/lib -lc $EXTRA_FLAGS"
+    export LDFLAGS="-L$LDIR -lc $EXTRA_FLAGS"
 
     if [ "$ABI" = "armeabi-v7a" -o "$ABI" = "armeabi-v7a-hard" ]; then
         CXXFLAGS=$CXXFLAGS" -march=armv7-a -mfpu=vfpv3-d16"
@@ -271,10 +272,6 @@ copy_gnustl_libs ()
 
     local SDIR="$BUILDDIR/install-$ABI-$GCC_VERSION"
     local DDIR="$NDK_DIR/$GNUSTL_SUBDIR/$GCC_VERSION"
-    local LIB=lib
-    if [ "$ABI" != "${ABI%%64}" ] ; then
-        LIB=lib64
-    fi
 
     local GCC_VERSION_NO_DOT=$(echo $GCC_VERSION|sed 's/\./_/g')
     # Copy the common headers only once per gcc version
@@ -290,14 +287,15 @@ copy_gnustl_libs ()
     # Copy the ABI-specific headers
     copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/bits" "$DDIR/libs/$ABI/include/bits"
 
+    local LDIR=$(get_default_libdir_for_arch $ARCH)
     # Copy the ABI-specific libraries
     # Note: the shared library name is libgnustl_shared.so due our custom toolchain patch
-    copy_file_list "$SDIR/$LIB" "$DDIR/libs/$ABI" libsupc++.a libgnustl_shared.so
+    copy_file_list "$SDIR/$LDIR" "$DDIR/libs/$ABI" libsupc++.a libgnustl_shared.so
     # Note: we need to rename libgnustl_shared.a to libgnustl_static.a
-    cp "$SDIR/$LIB/libgnustl_shared.a" "$DDIR/libs/$ABI/libgnustl_static.a"
+    cp "$SDIR/$LDIR/libgnustl_shared.a" "$DDIR/libs/$ABI/libgnustl_static.a"
     if [ -d "$SDIR/thumb" ] ; then
-        copy_file_list "$SDIR/thumb/$LIB" "$DDIR/libs/$ABI/thumb" libsupc++.a libgnustl_shared.so
-        cp "$SDIR/thumb/$LIB/libgnustl_shared.a" "$DDIR/libs/$ABI/thumb/libgnustl_static.a"
+        copy_file_list "$SDIR/thumb/$LDIR" "$DDIR/libs/$ABI/thumb" libsupc++.a libgnustl_shared.so
+        cp "$SDIR/thumb/$LDIR/libgnustl_shared.a" "$DDIR/libs/$ABI/thumb/libgnustl_static.a"
     fi
 }
 
