@@ -369,7 +369,7 @@ get_default_compiler_for_arch()
     if [ "$ARCH" = "${ARCH%%64*}" -a "$(arch_in_unknown_archs $ARCH)" = "yes" ]; then
         TOOLCHAIN_PREFIX="$NDK_DIR/$(get_llvm_toolchain_binprefix $OPTION_LLVM_VERSION)"
         CC="$TOOLCHAIN_PREFIX/clang"
-        EXTRA_CFLAGS="-emit-llvm -target le32-none-ndk"
+        EXTRA_CFLAGS="-emit-llvm"
     else
         TOOLCHAIN_PREFIX="$NDK_DIR/$(get_toolchain_binprefix_for_arch $ARCH $OPTION_GCC_VERSION)"
         TOOLCHAIN_PREFIX=${TOOLCHAIN_PREFIX%-}
@@ -697,7 +697,10 @@ for ARCH in $ARCHS; do
             fi
 
             # Generate shared libraries from symbol files
-            if [ "$ARCH" = "x86_64" ]; then
+            if [ "$(arch_in_unknown_archs $ARCH)" = "yes" ]; then
+               gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $SYSROOT_DST/lib "-target le32-none-ndk"
+               gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $SYSROOT_DST/lib64 "-target le64-none-ndk"
+            elif [ "$ARCH" = "x86_64" ]; then
                # We need full set for multilib compiler
                gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $SYSROOT_DST/lib "-m32"
                gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $SYSROOT_DST/lib64 "-m64"
