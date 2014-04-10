@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 
-# this file is used to prepare the NDK to build with the x86_64 gcc-4.8
+# this file is used to prepare the NDK to build with the arm64 gcc-4.8
 # toolchain any number of source files
 #
 # its purpose is to define (or re-define) templates used to build
@@ -23,10 +23,11 @@
 # revisions of the NDK.
 #
 
-TOOLCHAIN_NAME   := x86_64-4.8
-TOOLCHAIN_PREFIX := $(TOOLCHAIN_PREBUILT_ROOT)/bin/x86_64-linux-android-
+TOOLCHAIN_NAME   := aarch64-linux-android-4.8
+TOOLCHAIN_PREFIX := $(TOOLCHAIN_PREBUILT_ROOT)/bin/aarch64-linux-android-
 
 TARGET_CFLAGS := \
+    -fpic \
     -ffunction-sections \
     -funwind-tables \
     -fstack-protector \
@@ -37,19 +38,19 @@ TARGET_C_INCLUDES := \
 
 TARGET_LDFLAGS := -no-canonical-prefixes
 
-TARGET_x86_64_release_CFLAGS := -O2 \
-                             -g \
-                             -DNDEBUG \
-                             -fomit-frame-pointer \
-                             -fstrict-aliasing    \
-                             -funswitch-loops     \
-                             -finline-limit=300
+TARGET_arm64_release_CFLAGS := -O2 \
+                               -g \
+                               -DNDEBUG \
+                               -fomit-frame-pointer \
+                               -fstrict-aliasing    \
+                               -funswitch-loops     \
+                               -finline-limit=300
 
-TARGET_x86_64_debug_CFLAGS := $(TARGET_x86_64_release_CFLAGS) \
-                           -O0 \
-                           -UNDEBUG \
-                           -fno-omit-frame-pointer \
-                           -fno-strict-aliasing
+TARGET_arm64_debug_CFLAGS := $(TARGET_arm64_release_CFLAGS) \
+                             -O0 \
+                             -UNDEBUG \
+                             -fno-omit-frame-pointer \
+                             -fno-strict-aliasing
 
 # This function will be called to determine the target CFLAGS used to build
 # a C or Assembler source file, based on its tags.
@@ -59,7 +60,3 @@ $(eval __debug_sources := $(call get-src-files-with-tag,debug)) \
 $(eval __release_sources := $(call get-src-files-without-tag,debug)) \
 $(call set-src-files-target-cflags, $(__debug_sources), $(TARGET_x86_64_debug_CFLAGS)) \
 $(call set-src-files-target-cflags, $(__release_sources),$(TARGET_x86_64_release_CFLAGS)) \
-
-# The ABI-specific sub-directory that the SDK tools recognize for
-# this toolchain's generated binaries
-TARGET_ABI_SUBDIR := x86_64
