@@ -83,9 +83,6 @@ register_var_option "--development-root=<path>" DEVELOPMENT_ROOT "Specify platfo
 LLVM_VERSION_LIST=$DEFAULT_LLVM_VERSION_LIST
 register_var_option "--llvm=<versions>" LLVM_VERSION_LIST "List of LLVM release versions"
 
-WITH_LIBCXX=
-register_var_option "--with-libcxx" WITH_LIBCXX "Package experimental Libc++ sources"
-
 register_try64_option
 
 SEPARATE_64=no
@@ -127,34 +124,36 @@ SYSTEMS=$(commas_to_spaces $SYSTEMS)
 
 # Detect unknown archs
 ARCHS=$(commas_to_spaces $ARCHS)
-UNKNOWN_ARCH=$(filter_out "$DEFAULT_ARCHS" "$ARCHS")
+# FIXME after 64-bit arch become DEFAULT_ARCHS
+UNKNOWN_ARCH=$(filter_out "$DEFAULT_ARCHS arm64 x86_64 mips64" "$ARCHS")
 if [ ! -z "$UNKNOWN_ARCH" ]; then
     ARCHS=$(filter_out "$UNKNOWN_ARCH" "$ARCHS")
 fi
 
-# Do we need to support x86?
-
+TRY_x86=
+TRY_mips=
+TRY_arm64=
+TRY_x86_64=
+TRY_mips64=
 echo "$ARCHS" | tr ' ' '\n' | grep -q x86
 if [ $? = 0 ] ; then
-    TRY_X86=yes
-else
-    TRY_X86=no
+    TRY_x86=yes
 fi
-# Do we need to support x86_64?
-
-echo "$ARCHS" | tr ' ' '\n' | grep -q x86_64
-if [ $? = 0 ] ; then
-    TRY_X86_64=yes
-else
-    TRY_X86_64=no
-fi
-
-# Do we need to support mips?
 echo "$ARCHS" | tr ' ' '\n' | grep -q mips
 if [ $? = 0 ] ; then
     TRY_mips=yes
-else
-    TRY_mips=no
+fi
+echo "$ARCHS" | tr ' ' '\n' | grep -q arm64
+if [ $? = 0 ] ; then
+    TRY_arm64=yes
+fi
+echo "$ARCHS" | tr ' ' '\n' | grep -q x86_64
+if [ $? = 0 ] ; then
+    TRY_x86_64=yes
+fi
+echo "$ARCHS" | tr ' ' '\n' | grep -q mips64
+if [ $? = 0 ] ; then
+    TRY_mips64=yes
 fi
 
 # Compute ABIS from ARCHS
@@ -182,14 +181,20 @@ LLVM_VERSION_LIST=$(commas_to_spaces $LLVM_VERSION_LIST)
 if [ "$OPTION_TOOLCHAINS" != "$TOOLCHAINS" ]; then
     TOOLCHAINS=$(commas_to_spaces $OPTION_TOOLCHAINS)
 else
-    if [ "$TRY_X86" = "yes" ]; then
+    if [ "$TRY_x86" = "yes" ]; then
         TOOLCHAINS=$TOOLCHAINS" "$(get_toolchain_name_list_for_arch x86)
     fi
     if [ "$TRY_mips" = "yes" ]; then
         TOOLCHAINS=$TOOLCHAINS" "$(get_toolchain_name_list_for_arch mips)
     fi
-    if [ "$TRY_X86_64" = "yes" ]; then
+    if [ "$TRY_arm64" = "yes" ]; then
+        TOOLCHAINS=$TOOLCHAINS" "$(get_toolchain_name_list_for_arch arm64)
+    fi
+    if [ "$TRY_x86_64" = "yes" ]; then
         TOOLCHAINS=$TOOLCHAINS" "$(get_toolchain_name_list_for_arch x86_64)
+    fi
+    if [ "$TRY_mips64" = "yes" ]; then
+        TOOLCHAINS=$TOOLCHAINS" "$(get_toolchain_name_list_for_arch mips64)
     fi
     TOOLCHAINS=$(commas_to_spaces $TOOLCHAINS)
 fi
@@ -363,8 +368,6 @@ if [ "$PREBUILT_DIR" ]; then
     echo "Unpacking samples files" &&
     unpack_archive "$PREBUILT_DIR/samples.tar.bz2" "$REFERENCE"
     fail_panic "Could not unpack platform and sample files"
-    # Remove experimental api levels
-    rm -rf $REFERENCE/platforms/android-20
 elif [ "$PREBUILT_NDK" ]; then
     echo "ERROR: NOT IMPLEMENTED!"
     exit 1
@@ -389,17 +392,6 @@ rm -rf $REFERENCE/sources/host-tools
 rm -rf $REFERENCE/samples/*/{obj,libs,build.xml,local.properties,Android.mk} &&
 rm -rf $REFERENCE/tests/build/*/{obj,libs} &&
 rm -rf $REFERENCE/tests/device/*/{obj,libs}
-
-if [ "$WITH_LIBCXX" ]; then
-    # Remove the libc++ test suite, it's large (28 MiB) and not useful for
-    # developers using the NDK.
-    #rm -rf $REFERENCE/sources/cxx-stl/llvm-libc++/libcxx/test
-    true;
-else
-    # Remove the libc++ sources, they're not ready for release.
-    # http://b.android.com/36496
-    rm -rf $REFERENCE/sources/cxx-stl/llvm-libc++
-fi
 
 # Regenerate HTML documentation, place the files under .../docs/
 $NDK_ROOT_DIR/build/tools/build-docs.sh \
@@ -426,9 +418,7 @@ if [ -z "$PREBUILT_NDK" ]; then
     for ABI in $ABIS; do
         unpack_prebuilt gabixx-libs-$ABI "$REFERENCE"
         unpack_prebuilt stlport-libs-$ABI "$REFERENCE"
-        if [ "$WITH_LIBCXX" ]; then
-            unpack_prebuilt libcxx-libs-$ABI "$REFERENCE"
-        fi
+        unpack_prebuilt libcxx-libs-$ABI "$REFERENCE"
         for VERSION in $DEFAULT_GCC_VERSION_LIST; do
             unpack_prebuilt gnu-libstdc++-libs-$VERSION-$ABI "$REFERENCE"
         done
@@ -495,15 +485,13 @@ for SYSTEM in $SYSTEMS; do
             echo "WARNING: Could not find STLport source tree!"
         fi
 
-        if [ "$WITH_LIBCXX" ]; then
-            if [ -d "$DSTDIR/$LIBCXX_SUBDIR" ]; then
-                LIBCXX_ABIS=$PREBUILT_ABIS $UNKNOWN_ABIS
-                for STL_ABI in $LIBCXX_ABIS; do
-                    copy_prebuilt "$LIBCXX_SUBDIR/libs/$STL_ABI" "$LIBCXX_SUBDIR/libs"
-                done
-            else
-                echo "WARNING: Could not find Libc++ source tree!"
-            fi
+        if [ -d "$DSTDIR/$LIBCXX_SUBDIR" ]; then
+            LIBCXX_ABIS=$PREBUILT_ABIS $UNKNOWN_ABIS
+            for STL_ABI in $LIBCXX_ABIS; do
+                copy_prebuilt "$LIBCXX_SUBDIR/libs/$STL_ABI" "$LIBCXX_SUBDIR/libs"
+            done
+        else
+            echo "WARNING: Could not find Libc++ source tree!"
         fi
 
         for VERSION in $DEFAULT_GCC_VERSION_LIST; do
@@ -561,8 +549,7 @@ for SYSTEM in $SYSTEMS; do
 
         # Unpack renderscript tools
         unpack_prebuilt renderscript-$SYSTEM "$DSTDIR" "$DSTDIR64"
-        unpack_prebuilt renderscript "$DSTDIR" "$DSTDIR64"
-
+	
         # Unpack prebuilt ndk-stack and other host tools
         unpack_prebuilt ndk-stack-$SYSTEM "$DSTDIR" "$DSTDIR64" "yes"
         unpack_prebuilt ndk-depends-$SYSTEM "$DSTDIR" "$DSTDIR64" "yes"
@@ -581,10 +568,8 @@ for SYSTEM in $SYSTEMS; do
     # Unpack other host tools
     unpack_prebuilt scan-build-view "$DSTDIR" "$DSTDIR64"
 
-    # Remove experimental stuffs
-    rm -rf $DSTDIR/toolchains/aarch64*
-    rm -rf $DSTDIR/toolchains/mips64el*
-    rm -rf $DSTDIR/toolchains/x86_64*
+    # Unpack renderscript headers/libs
+    unpack_prebuilt renderscript "$DSTDIR" "$DSTDIR64"
 
     # Create an archive for the final package. Extension depends on the
     # host system.

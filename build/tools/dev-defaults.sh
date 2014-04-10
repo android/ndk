@@ -141,7 +141,10 @@ get_default_abis_for_arch ()
         arm)
             RET="armeabi armeabi-v7a armeabi-v7a-hard"
             ;;
-        x86|x86_64|mips)
+        arm64)
+            RET="arm64-v8a"
+            ;;
+        x86|x86_64|mips|mips64)
             RET="$1"
             ;;
         *)
@@ -251,7 +254,7 @@ get_default_binutils_version_for_llvm ()
 get_default_gdb_version_for_gcc ()
 {
     case $1 in
-        x86*|aarch64-*) echo "7.6";;
+        x86*|aarch64-*|mips64el-*) echo "7.6";;
         *) echo "$DEFAULT_GDB_VERSION";;
     esac
 }
