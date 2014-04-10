@@ -78,8 +78,17 @@ if [ -z "$ARCH" ]; then
         x86-*)
             ARCH=x86
             ;;
-        mips*)
+        mipsel-*)
             ARCH=mips
+            ;;
+        aarch64-*)
+            ARCH=arm64
+            ;;
+        x86_64-*)
+            ARCH=x86_64
+            ;;
+        mips64el-*)
+            ARCH=mips64
             ;;
         *)
             ARCH=arm
@@ -98,6 +107,15 @@ else
             ;;
         *mips)
             ARCH=mips
+            ;;
+        *arm64)
+            ARCH=arm64
+            ;;
+        *x86_64)
+            ARCH=x86_64
+            ;;
+        *mips64)
+            ARCH=mips64
             ;;
         *)
             ARCH=arm
@@ -354,6 +372,18 @@ if [ -n "$LLVM_VERSION" ]; then
           LLVM_TARGET=mipsel-none-linux-android
           TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_mips
           ;;
+      arm64)
+          LLVM_TARGET=aarch64-none-linux-androideabi
+          TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_arm64
+          ;;
+      x86_64)
+          LLVM_TARGET=x86_64-none-linux-android
+          TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_x86_64
+          ;;
+      mips64)
+          LLVM_TARGET=mips64el-none-linux-android
+          TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_mips64
+          ;;
       *)
         dump "ERROR: Unsupported NDK architecture!"
   esac
@@ -439,10 +469,12 @@ dump "Copying sysroot headers and libraries..."
 run copy_directory_nolinks "$SRC_SYSROOT_INC" "$TMPDIR/sysroot/usr/include"
 run copy_directory_nolinks "$SRC_SYSROOT_LIB" "$TMPDIR/sysroot/usr/lib"
 if [ "$ARCH_INC" != "$ARCH" ]; then
-    cp -a $NDK_DIR/$LIBPORTABLE_SUBDIR/libs/$ABI/* $TMPDIR/sysroot/usr/lib
     cp -a $NDK_DIR/$GABIXX_SUBDIR/libs/$ABI/* $TMPDIR/sysroot/usr/lib
-    cp -a $NDK_DIR/$COMPILER_RT_SUBDIR/libs/$ABI/* $TMPDIR/sysroot/usr/lib
-    cp -a $NDK_DIR/$GCCUNWIND_SUBDIR/libs/$ABI/* $TMPDIR/sysroot/usr/lib
+    if [ "$ARCH" = "${ARCH%%64*}" ]; then
+        cp -a $NDK_DIR/$LIBPORTABLE_SUBDIR/libs/$ABI/* $TMPDIR/sysroot/usr/lib
+        cp -a $NDK_DIR/$COMPILER_RT_SUBDIR/libs/$ABI/* $TMPDIR/sysroot/usr/lib
+        cp -a $NDK_DIR/$GCCUNWIND_SUBDIR/libs/$ABI/* $TMPDIR/sysroot/usr/lib
+    fi
 fi
 
 if [ "$ARCH_LIB" != "$ARCH" ]; then
@@ -520,7 +552,9 @@ copy_stl_libs () {
             cp -p "$GNUSTL_LIBS/$ABI_SRC_DIR/libgnustl_static.a" "$ABI_STL/lib/$DEST_DIR/libstdc++.a"
             ;;
         libcxx|libc++)
-            copy_file_list "$COMPILER_RT_LIBS/$ABI" "$ABI_STL/lib/$DEST_DIR" "libcompiler_rt_shared.so" "libcompiler_rt_static.a"
+            if [ "$ARCH" = "${ARCH%%64*}" ]; then
+                copy_file_list "$COMPILER_RT_LIBS/$ABI" "$ABI_STL/lib/$DEST_DIR" "libcompiler_rt_shared.so" "libcompiler_rt_static.a"
+            fi
             copy_file_list "$LIBCXX_LIBS/$ABI" "$ABI_STL/lib/$DEST_DIR" "libc++_shared.so"
             cp -p "$LIBCXX_LIBS/$ABI/libc++_static.a" "$ABI_STL/lib/$DEST_DIR/libstdc++.a"
             ;;
@@ -555,7 +589,10 @@ case $ARCH in
         copy_stl_libs armeabi-v7a-hard "armv7-a/hard" "." "no"
         copy_stl_libs armeabi-v7a-hard "armv7-a/thumb/hard" "thumb" "no"
         ;;
-    x86|mips)
+    arm64)
+        copy_stl_libs arm64-v8a ""
+        ;;
+    x86|mips|mips64|x86_64)
         copy_stl_libs "$ARCH" ""
         ;;
     *)

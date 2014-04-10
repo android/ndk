@@ -43,6 +43,13 @@ $(foreach _plat,3 4 5 8,\
 )
 endif
 
+# The minimal platform for 64-bit is android-20
+ifneq ($(filter %arm64-v8a %x86_64 %mips64,$(TARGET_ARCH_ABI)),)
+$(foreach _plat,3 4 5 8 9 10 11 12 13 14 15 16 17 18 19,\
+    $(eval TARGET_PLATFORM := $$(subst android-$(_plat),android-20,$$(TARGET_PLATFORM)))\
+)
+endif
+
 # Separate the debug and release objects. This prevents rebuilding
 # everything when you switch between these two modes. For projects
 # with lots of C++ sources, this can be a considerable time saver.

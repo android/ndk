@@ -272,7 +272,7 @@ copy_gnustl_libs ()
     local SDIR="$BUILDDIR/install-$ABI-$GCC_VERSION"
     local DDIR="$NDK_DIR/$GNUSTL_SUBDIR/$GCC_VERSION"
     local LIB=lib
-    if [ "$ABI" != "${ABI%%64}" ] ; then
+    if [ "$ABI" != "${ABI%%64*}" ] ; then
         LIB=lib64
     fi
 
@@ -307,7 +307,7 @@ for VERSION in $GCC_VERSION_LIST; do
         build_gnustl_for_abi $ABI "$BUILD_DIR" static $VERSION
         build_gnustl_for_abi $ABI "$BUILD_DIR" shared $VERSION
         # build thumb version of libraries for 32-bit arm
-        if [ "$ABI" != "${ABI%%arm*}" -a "$ABI" = "${ABI%%64}" ] ; then
+        if [ "$ABI" != "${ABI%%arm*}" -a "$ABI" = "${ABI%%64*}" ] ; then
             build_gnustl_for_abi $ABI "$BUILD_DIR" static $VERSION thumb
             build_gnustl_for_abi $ABI "$BUILD_DIR" shared $VERSION thumb
         fi

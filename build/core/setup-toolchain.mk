@@ -33,8 +33,11 @@ ifndef NDK_TOOLCHAIN
     $(foreach _ver,$(LLVM_VERSION_LIST), \
         $(eval TARGET_TOOLCHAIN_LIST := \
             $(filter-out %-clang$(_ver),$(TARGET_TOOLCHAIN_LIST))))
-    # Filter out 4.7 and 4.8 which is considered experimental at this moment
-    TARGET_TOOLCHAIN_LIST := $(filter-out %4.7 %4.8,$(TARGET_TOOLCHAIN_LIST))
+
+    ifeq (,$(findstring 64,$(TARGET_ARCH_ABI)))
+      # Filter out 4.7 and 4.8 which is considered experimental at this moment
+      TARGET_TOOLCHAIN_LIST := $(filter-out %4.7 %4.8,$(TARGET_TOOLCHAIN_LIST))
+    endif
 
     ifndef TARGET_TOOLCHAIN_LIST
         $(call __ndk_info,There is no toolchain that supports the $(TARGET_ARCH_ABI) ABI.)
