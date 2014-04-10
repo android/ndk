@@ -460,6 +460,8 @@ STLPORT_LIBS=$STLPORT_DIR/libs
 LIBCXX_DIR=$NDK_DIR/$LIBCXX_SUBDIR
 LIBCXX_LIBS=$LIBCXX_DIR/libs
 
+SUPPORT_DIR=$NDK_DIR/$SUPPORT_SUBDIR
+
 COMPILER_RT_DIR=$NDK_DIR/$COMPILER_RT_SUBDIR
 COMPILER_RT_LIBS=$COMPILER_RT_DIR/libs
 
@@ -482,7 +484,7 @@ copy_stl_common_headers () {
             ;;
         libcxx|libc++)
             copy_directory "$LIBCXX_DIR/libcxx/include" "$ABI_STL_INCLUDE"
-            copy_directory "$SUPPORT_SUBDIR/include" "$ABI_STL_INCLUDE"
+            copy_directory "$SUPPORT_DIR/include" "$ABI_STL_INCLUDE"
             copy_directory "$STLPORT_DIR/../gabi++/include" "$ABI_STL_INCLUDE/../../gabi++/include"
             copy_gabixx_headers cxxabi.h unwind.h unwind-arm.h unwind-itanium.h
             ;;
