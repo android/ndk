@@ -47,7 +47,6 @@ TARGET_x86_release_CFLAGS := -O2 \
                              -funswitch-loops     \
                              -finline-limit=300
 
-# When building for debug, compile everything as x86.
 TARGET_x86_debug_CFLAGS := $(TARGET_x86_release_CFLAGS) \
                            -O0 \
                            -UNDEBUG \

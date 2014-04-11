@@ -305,7 +305,7 @@ for VERSION in $GCC_VERSION_LIST; do
         build_gnustl_for_abi $ABI "$BUILD_DIR" static $VERSION
         build_gnustl_for_abi $ABI "$BUILD_DIR" shared $VERSION
         # build thumb version of libraries for 32-bit arm
-        if [ "$ABI" != "${ABI%%arm*}" -a "$ABI" = "${ABI%%64}" ] ; then
+        if [ "$ABI" != "${ABI%%arm*}" -a "$ABI" = "${ABI%%64*}" ] ; then
             build_gnustl_for_abi $ABI "$BUILD_DIR" static $VERSION thumb
             build_gnustl_for_abi $ABI "$BUILD_DIR" shared $VERSION thumb
         fi
