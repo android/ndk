@@ -46,15 +46,12 @@ do_build_out () { OPTION_BUILD_OUT="$1"; }
 register_var_option "--platform=<name>"  PLATFORM "Target specific platform"
 
 SYSROOT=
-if [ -d $TOOLCHAIN_PATH/sysroot ] ; then
-  SYSROOT=$TOOLCHAIN_PATH/sysroot
-fi
 register_var_option "--sysroot=<path>" SYSROOT "Specify sysroot directory directly"
 
 NOTHREADS=no
 register_var_option "--disable-threads" NOTHREADS "Disable threads support"
 
-GDB_VERSION=$DEFAULT_GDB_VERSION
+GDB_VERSION=
 register_var_option "--gdb-version=<name>" GDB_VERSION "Use specific gdb version."
 
 PACKAGE_DIR=
@@ -71,6 +68,7 @@ set_parameters ()
     SRC_DIR="$1"
     NDK_DIR="$2"
     TOOLCHAIN="$3"
+    GDBVER=
 
     # Check source directory
     #
@@ -79,7 +77,13 @@ set_parameters ()
         exit 1
     fi
 
-    SRC_DIR2="$SRC_DIR/gdb/gdb-$GDB_VERSION/gdb/gdbserver"
+    if [ -n "$GDB_VERSION" ]; then
+        GDBVER=$GDB_VERSION
+    else
+        GDBVER=$(get_default_gdb_version_for_gcc $TOOLCHAIN)
+    fi
+
+    SRC_DIR2="$SRC_DIR/gdb/gdb-$GDBVER/gdb/gdbserver"
     if [ -d "$SRC_DIR2" ] ; then
         SRC_DIR="$SRC_DIR2"
         log "Found gdbserver source directory: $SRC_DIR"
@@ -139,6 +143,7 @@ if [ -n "$OPTION_BUILD_OUT" ] ; then
     BUILD_OUT="$OPTION_BUILD_OUT"
 fi
 log "Using build directory: $BUILD_OUT"
+run rm -rf "$BUILD_OUT"
 run mkdir -p "$BUILD_OUT"
 
 # Copy the sysroot to a temporary build directory
@@ -146,15 +151,17 @@ BUILD_SYSROOT="$BUILD_OUT/sysroot"
 run mkdir -p "$BUILD_SYSROOT"
 run cp -RHL "$SYSROOT"/* "$BUILD_SYSROOT"
 
+LIBDIR=$(get_default_libdir_for_arch $ARCH)
+
 # Remove libthread_db to ensure we use exactly the one we want.
-rm -f $BUILD_SYSROOT/usr/lib/libthread_db*
+rm -f $BUILD_SYSROOT/usr/$LIBDIR/libthread_db*
 rm -f $BUILD_SYSROOT/usr/include/thread_db.h
 
 if [ "$NOTHREADS" != "yes" ] ; then
     # We're going to rebuild libthread_db.o from its source
     # that is under sources/android/libthread_db and place its header
     # and object file into the build sysroot.
-    LIBTHREAD_DB_DIR=$ANDROID_NDK_ROOT/sources/android/libthread_db/gdb-$GDB_VERSION
+    LIBTHREAD_DB_DIR=$ANDROID_NDK_ROOT/sources/android/libthread_db/gdb-$GDBVER
     if [ ! -d "$LIBTHREAD_DB_DIR" ] ; then
         dump "ERROR: Missing directory: $LIBTHREAD_DB_DIR"
         exit 1
@@ -162,8 +169,8 @@ if [ "$NOTHREADS" != "yes" ] ; then
     # Small trick, to avoid calling ar, we store the single object file
     # with an .a suffix. The linker will handle that seamlessly.
     run cp $LIBTHREAD_DB_DIR/thread_db.h $BUILD_SYSROOT/usr/include/
-    run $TOOLCHAIN_PREFIX-gcc --sysroot=$BUILD_SYSROOT -o $BUILD_SYSROOT/usr/lib/libthread_db.o -c $LIBTHREAD_DB_DIR/libthread_db.c
-    run $TOOLCHAIN_PREFIX-ar -rD $BUILD_SYSROOT/usr/lib/libthread_db.a $BUILD_SYSROOT/usr/lib/libthread_db.o
+    run $TOOLCHAIN_PREFIX-gcc --sysroot=$BUILD_SYSROOT -o $BUILD_SYSROOT/usr/$LIBDIR/libthread_db.o -c $LIBTHREAD_DB_DIR/libthread_db.c
+    run $TOOLCHAIN_PREFIX-ar -rD $BUILD_SYSROOT/usr/$LIBDIR/libthread_db.a $BUILD_SYSROOT/usr/$LIBDIR/libthread_db.o
     if [ $? != 0 ] ; then
         dump "ERROR: Could not compile libthread_db.c!"
         exit 1
@@ -173,9 +180,9 @@ fi
 log "Using build sysroot: $BUILD_SYSROOT"
 
 # configure the gdbserver build now
-dump "Configure: $TOOLCHAIN gdbserver-$GDB_VERSION build."
+dump "Configure: $TOOLCHAIN gdbserver-$GDBVER build."
 
-case "$GDB_VERSION" in
+case "$GDBVER" in
     6.6)
         CONFIGURE_FLAGS="--with-sysroot=$BUILD_SYSROOT"
         ;;
@@ -184,13 +191,13 @@ case "$GDB_VERSION" in
         # gdbserver binary. Otherwise, the program will try to dlopen()
         # the threads binary, which is not possible since we build a
         # static executable.
-        CONFIGURE_FLAGS="--with-libthread-db=$BUILD_SYSROOT/usr/lib/libthread_db.a"
+        CONFIGURE_FLAGS="--with-libthread-db=$BUILD_SYSROOT/usr/$LIBDIR/libthread_db.a"
         # Disable libinproctrace.so which needs crtbegin_so.o and crtbend_so.o instead of
         # CRTBEGIN/END above.  Clean it up and re-enable it in the future.
         CONFIGURE_FLAGS=$CONFIGURE_FLAGS" --disable-inprocess-agent"
         ;;
     7.6)
-        CONFIGURE_FLAGS="--with-libthread-db=$BUILD_SYSROOT/usr/lib/libthread_db.a"
+        CONFIGURE_FLAGS="--with-libthread-db=$BUILD_SYSROOT/usr/$LIBDIR/libthread_db.a"
         CONFIGURE_FLAGS=$CONFIGURE_FLAGS" --disable-inprocess-agent"
         ;;
     *)

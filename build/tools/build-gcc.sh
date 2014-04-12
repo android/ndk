@@ -480,6 +480,7 @@ create_unwind_library ()
 }
 
 # Only create libgccunwind.a when building default version of gcc
+DEFAULT_GCC_VERSION=$(get_default_gcc_version_for_arch $ARCH)
 if [ "$HOST_OS" = "linux" -a "$GCC_VERSION" = "$DEFAULT_GCC_VERSION" ]; then # or latest gcc ie 4.8?
     run create_unwind_library $ARCH $NDK_DIR
 fi

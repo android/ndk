@@ -553,6 +553,9 @@ builder_begin_android ()
             armeabi-v7a|armeabi-v7a-hard)
                 LLVM_TRIPLE=armv7-none-linux-androideabi
                 ;;
+            arm64-v8a)
+                LLVM_TRIPLE=aarch64-none-linux-android
+                ;;
             x86)
                 LLVM_TRIPLE=i686-none-linux-android
                 ;;
