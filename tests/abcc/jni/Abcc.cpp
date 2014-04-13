@@ -42,8 +42,8 @@ TargetAbi::TargetAbi(const std::string &abi) {
     mAbi = X86;
   else if (abi == "mips")
     mAbi = MIPS;
-  else if (abi == "arm64")
-    mAbi = ARM64;
+  else if (abi == "arm64-v8a")
+    mAbi = ARM64_V8A;
   else if (abi == "x86_64")
     mAbi = X86_64;
   else if (abi == "mips64")
@@ -160,6 +160,9 @@ BitcodeCompiler::BitcodeCompiler(const std::string &abi, const std::string &sysr
 
   // LDLibs
   mGlobalLDLibs = " ";
+}
+
+BitcodeCompiler::~BitcodeCompiler() {
 }
 
 void BitcodeCompiler::translate() {

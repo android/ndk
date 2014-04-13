@@ -149,7 +149,7 @@ void HostBitcodeCompiler::getBitcodeFiles() {
 void HostBitcodeCompiler::prepareToolchain() {
   std::string cmd;
   // le32-none-ndk-translate
-  if (mAbi == TargetAbi::ARM64 || mAbi == TargetAbi::X86_64 ||
+  if (mAbi == TargetAbi::ARM64_V8A || mAbi == TargetAbi::X86_64 ||
       mAbi == TargetAbi::MIPS64)
     cmd = getToolchainBinPath() + "/le64-none-ndk-translate";
   else

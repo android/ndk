@@ -50,7 +50,7 @@ public:
     ARMEABI_V7A,
     X86,
     MIPS,
-    ARM64,
+    ARM64_V8A,
     X86_64,
     MIPS64
   };
@@ -66,7 +66,7 @@ public:
     if (mAbi == ARMEABI_V7A)  return "armeabi-v7a";
     if (mAbi == X86)  return "x86";
     if (mAbi == MIPS)  return "mips";
-    if (mAbi == ARM64)  return "arm64";
+    if (mAbi == ARM64_V8A)  return "arm64-v8a";
     if (mAbi == X86_64)  return "x86_64";
     if (mAbi == MIPS64)  return "mips64";
     return 0;
@@ -75,7 +75,7 @@ public:
     if (mAbi == ARMEABI || mAbi == ARMEABI_V7A)  return "arm";
     if (mAbi == X86)  return "x86";
     if (mAbi == MIPS) return "mips";
-    if (mAbi == ARM64)  return "arm64";
+    if (mAbi == ARM64_V8A)  return "arm64";
     if (mAbi == X86_64)  return "x86_64";
     if (mAbi == MIPS64)  return "mips64";
     return 0;
@@ -151,6 +151,7 @@ protected:
 
 public:
   BitcodeCompiler(const std::string &abi, const std::string &sysroot, const std::string &working_dir, const bool savetemps);
+  virtual ~BitcodeCompiler();
   const ReturnCode returnCode() const { return mRet; }
   virtual void cleanupPre() {}
   virtual void cleanupPost() {}
