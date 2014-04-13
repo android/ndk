@@ -151,6 +151,7 @@ protected:
 
 public:
   BitcodeCompiler(const std::string &abi, const std::string &sysroot, const std::string &working_dir, const bool savetemps);
+  virtual ~BitcodeCompiler();
   const ReturnCode returnCode() const { return mRet; }
   virtual void cleanupPre() {}
   virtual void cleanupPost() {}

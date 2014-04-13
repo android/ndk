@@ -229,8 +229,10 @@ for abi in $ABIS; do
   if [ "$SHARED" = "yes" ]; then
     run cp -f $LLVM_BUILD_OUT/Release/lib/libLLVM-${DEFAULT_LLVM_VERSION}.so $TOOLCHAIN_BUILD_PREFIX/$abi
   fi
-  run cp -f $LLVM_BUILD_OUT/Release/bin/le32-none-ndk-translate $TOOLCHAIN_BUILD_PREFIX/$abi
+  run cp -f $LLVM_BUILD_OUT/Release/bin/ndk-translate $TOOLCHAIN_BUILD_PREFIX/$abi
   run cp -f $LLVM_BUILD_OUT/Release/bin/llc $TOOLCHAIN_BUILD_PREFIX/$abi
+  run cd $TOOLCHAIN_BUILD_PREFIX/$abi && ln -s ndk-translate le32-none-ndk-translate
+  run cd $TOOLCHAIN_BUILD_PREFIX/$abi && ln -s ndk-translate le64-none-ndk-translate
 
   # build mclinker only against default the LLVM version, once
   dump "Configure: mclinker against $TOOLCHAIN"
