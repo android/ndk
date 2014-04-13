@@ -162,6 +162,9 @@ BitcodeCompiler::BitcodeCompiler(const std::string &abi, const std::string &sysr
   mGlobalLDLibs = " ";
 }
 
+BitcodeCompiler::~BitcodeCompiler() {
+}
+
 void BitcodeCompiler::translate() {
   for (std::vector<BitcodeInfo>::const_iterator i = mBitcodeFiles.begin(),
        e = mBitcodeFiles.end(); i != e; ++i) {
