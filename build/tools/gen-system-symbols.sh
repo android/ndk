@@ -108,10 +108,11 @@ reset_symbol_excludes ()
     # By default, do not export C++ mangled symbol, which all start with _Z
     echo '^_Z' > $SYMBOL_EXCLUDES
 
-    # __INIT_ARRAY__ and __FINI_ARRAY__ are special symbols that should
-    # normally be hidden.
+    # __INIT_ARRAY__, __FINI_ARRAY__ and _GLOBAL_OFFSET_TABLE_ are special symbols
+    # that should normally be hidden.
     echo "^__INIT_ARRAY__" >> $SYMBOL_EXCLUDES
     echo "^__FINI_ARRAY__" >> $SYMBOL_EXCLUDES
+    echo "^_GLOBAL_OFFSET_TABLE_" >> $SYMBOL_EXCLUDES
     > $SYMBOL_INCLUDES
 }
 
