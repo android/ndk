@@ -84,9 +84,10 @@ if [ ! -d "$SRC_DIR" ]; then
     exit 1
 fi
 
-if [ ! -f "$SRC_DIR/build/configure" -o ! -d "$SRC_DIR/gcc/gcc-$DEFAULT_GCC_VERSION" ]; then
+if [ ! -f "$SRC_DIR/build/configure" -o ! -d "$SRC_DIR/gcc/gcc-$DEFAULT_GCC32_VERSION" -o ! -d "$SRC_DIR/gcc/gcc-$DEFAULT_GCC64_VERSION" ]; then
     echo "ERROR: The file $SRC_DIR/build/configure or"
-    echo "       the directory $SRC_DIR/gcc/gcc-$DEFAULT_GCC_VERSION does not exist"
+    echo "       the directory $SRC_DIR/gcc/gcc-$DEFAULT_GCC32_VERSION or"
+    echo "       $SRC_DIR/gcc/gcc-$DEFAULT_GCC64_VERSION does not exist"
     echo "This is not the top of a toolchain tree: $SRC_DIR"
     echo "You must give the path to a copy of the toolchain source directories"
     echo "created by 'download-toolchain-sources.sh."

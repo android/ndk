@@ -56,7 +56,7 @@ register_var_option "--abis=<list>" ABIS "Specify list of target ABIs."
 NO_MAKEFILE=
 register_var_option "--no-makefile" NO_MAKEFILE "Do not use makefile to speed-up build"
 
-GCC_VERSION=$DEFAULT_GCC_VERSION
+GCC_VERSION=
 register_var_option "--gcc-version=<ver>" GCC_VERSION "Specify GCC version"
 
 LLVM_VERSION=
@@ -195,6 +195,7 @@ build_compiler_rt_libs_for_abi ()
     local BUILDDIR="$2"
     local TYPE="$3"
     local DSTDIR="$4"
+    local GCCVER
 
     mkdir -p "$BUILDDIR"
 
@@ -205,7 +206,13 @@ build_compiler_rt_libs_for_abi ()
 
     mkdir -p "$DSTDIR"
 
-    builder_begin_android $ABI "$BUILDDIR" "$GCC_VERSION" "$LLVM_VERSION" "$MAKEFILE"
+    if [ -n "$GCC_VERSION" ]; then
+        GCCVER=$GCC_VERSION
+    else
+        GCCVER=$(get_default_gcc_version_for_arch $ARCH)
+    fi
+
+    builder_begin_android $ABI "$BUILDDIR" "$GCCVER" "$LLVM_VERSION" "$MAKEFILE"
     builder_set_srcdir "$SRC_DIR"
     builder_set_dstdir "$DSTDIR"
 

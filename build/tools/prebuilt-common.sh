@@ -1357,7 +1357,8 @@ get_llvm_toolchain_binprefix ()
 # $2: optional, system name, defaults to $HOST_TAG
 get_default_toolchain_binprefix_for_arch ()
 {
-    get_toolchain_binprefix_for_arch $1 $DEFAULT_GCC_VERSION $2
+    local GCCVER=$(get_default_gcc_version_for_arch $ARCH)
+    get_toolchain_binprefix_for_arch $1 $GCCVER $2
 }
 
 # Return default API level for a given arch
@@ -1366,9 +1367,8 @@ get_default_toolchain_binprefix_for_arch ()
 # $1: Architecture name
 get_default_api_level_for_arch ()
 {
-    # For now, always build the toolchain against API level 9
-    # (We have local toolchain patches under build/tools/toolchain-patches
-    # to ensure that the result works on previous platforms properly).
+    # For now, always build the toolchain against API level 9 for 32-bit arch
+    # and API level 20 for 64-bit arch
     case $1 in
        *64) echo 20 ;;
        *) echo 9 ;;
@@ -1396,7 +1396,8 @@ get_default_platform_sysroot_for_arch ()
 get_default_libdir_for_arch ()
 {
     case $1 in
-      *64) echo "lib64" ;;
+      x86_64) echo "lib64" ;;
+      arm64|mips64) echo "lib" ;; # return "lib" until aarch64 and mips64 compilers are built to look for sysroot/usr/lib64
       *) echo "lib" ;;
     esac
 }

@@ -70,7 +70,7 @@ OPTION_ARCH=
 OPTION_ABI=
 OPTION_DEBUG_LIBS=
 OPTION_OVERLAY=
-OPTION_GCC_VERSION=$DEFAULT_GCC_VERSION
+OPTION_GCC_VERSION=
 OPTION_LLVM_VERSION=$DEFAULT_LLVM_VERSION
 PACKAGE_DIR=
 
@@ -364,14 +364,20 @@ remove_unwanted_variable_symbols ()
 get_default_compiler_for_arch()
 {
     local ARCH=$1
-    local TOOLCHAIN_PREFIX EXTRA_CFLAGS CC
+    local TOOLCHAIN_PREFIX EXTRA_CFLAGS CC GCC_VERSION
 
     if [ "$ARCH" = "${ARCH%%64*}" -a "$(arch_in_unknown_archs $ARCH)" = "yes" ]; then
         TOOLCHAIN_PREFIX="$NDK_DIR/$(get_llvm_toolchain_binprefix $OPTION_LLVM_VERSION)"
         CC="$TOOLCHAIN_PREFIX/clang"
         EXTRA_CFLAGS="-emit-llvm"
     else
-        TOOLCHAIN_PREFIX="$NDK_DIR/$(get_toolchain_binprefix_for_arch $ARCH $OPTION_GCC_VERSION)"
+        if [ -n "$OPTION_GCC_VERSION" ]; then
+            GCC_VERSION=$OPTION_GCC_VERSION
+        else
+            GCC_VERSION=$(get_default_gcc_version_for_arch $ARCH)
+        fi
+
+        TOOLCHAIN_PREFIX="$NDK_DIR/$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION)"
         TOOLCHAIN_PREFIX=${TOOLCHAIN_PREFIX%-}
         CC="$TOOLCHAIN_PREFIX-gcc"
         EXTRA_CFLAGS=
@@ -617,6 +623,8 @@ for ARCH in $ARCHS; do
     # Find first platform for this arch
     PREV_SYSROOT_DST=
     PREV_PLATFORM_SRC_ARCH=
+    LIBDIR=$(get_default_libdir_for_arch $ARCH)
+
     for PLATFORM in $PLATFORMS; do
         PLATFORM_DST=platforms/android-$PLATFORM   # Relative to $DSTDIR
         PLATFORM_SRC=$PLATFORM_DST                 # Relative to $SRCDIR
@@ -674,7 +682,7 @@ for ARCH in $ARCHS; do
                 copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib64 $SYSROOT_DST/lib64 "x86_64 sysroot libs"
                 copy_src_directory $PLATFORM_SRC/arch-$ARCH/libx32 $SYSROOT_DST/libx32 "x32 sysroot libs"
             else
-                copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib $SYSROOT_DST/lib "$ARCH sysroot libs"
+                copy_src_directory $PLATFORM_SRC/arch-$ARCH/$LIBDIR $SYSROOT_DST/$LIBDIR "$ARCH sysroot libs"
             fi
 
             # Generate C runtime object files when available
@@ -693,7 +701,7 @@ for ARCH in $ARCHS; do
                  gen_crt_objects $PLATFORM $ARCH platforms/common/src $PLATFORM_SRC_ARCH $SYSROOT_DST/lib64 "-m64"
                  gen_crt_objects $PLATFORM $ARCH platforms/common/src $PLATFORM_SRC_ARCH $SYSROOT_DST/libx32 "-mx32"
                else
-                 gen_crt_objects $PLATFORM $ARCH platforms/common/src $PLATFORM_SRC_ARCH $SYSROOT_DST/lib
+                 gen_crt_objects $PLATFORM $ARCH platforms/common/src $PLATFORM_SRC_ARCH $SYSROOT_DST/$LIBDIR
                fi
             fi
 
@@ -707,7 +715,7 @@ for ARCH in $ARCHS; do
                gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $SYSROOT_DST/lib64 "-m64"
                gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $SYSROOT_DST/libx32 "-mx32"
             else
-               gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $SYSROOT_DST/lib
+               gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $SYSROOT_DST/$LIBDIR
             fi
         else
             # Copy the prebuilt binaries to bootstrap GCC
@@ -717,7 +725,7 @@ for ARCH in $ARCHS; do
                copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib-bootstrap/lib64 $SYSROOT_DST/lib64 "x86_64 sysroot libs (boostrap)"
                copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib-bootstrap/libx32 $SYSROOT_DST/libx32 "x32 sysroot libs (boostrap)"
             else
-               copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib-bootstrap $SYSROOT_DST/lib "$ARCH sysroot libs (boostrap)"
+               copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib-bootstrap $SYSROOT_DST/$LIBDIR "$ARCH sysroot libs (boostrap)"
             fi
         fi
         PREV_SYSROOT_DST=$SYSROOT_DST

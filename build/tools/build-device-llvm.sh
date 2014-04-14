@@ -155,11 +155,13 @@ for abi in $ABIS; do
   fail_panic "Couldn't cd into llvm build path: $LLVM_BUILD_OUT"
 
   arch="$(convert_abi_to_arch $abi)"
-  toolchain_prefix=`get_default_toolchain_prefix_for_arch $arch`
-  toolchain_name=`get_default_toolchain_name_for_arch $arch`
   if [ -n "$OPTION_GCC_VERSION" ]; then
-    toolchain_name="${toolchain_name//${DEFAULT_GCC_VERSION}/${OPTION_GCC_VERSION}}"
+    GCCVER=$OPTION_GCC_VERSION
+  else
+    GCCVER=$(get_default_gcc_version_for_arch $arch)
   fi
+  toolchain_prefix=`get_default_toolchain_prefix_for_arch $arch`
+  toolchain_name=`get_toolchain_name_for_arch $arch $GCCVER`
   CFLAGS="-fomit-frame-pointer -fstrict-aliasing -ffunction-sections -fdata-sections"
   case $abi in
     armeabi)

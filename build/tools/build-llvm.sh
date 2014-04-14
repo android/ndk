@@ -427,7 +427,13 @@ fi
 run copy_directory "$TOOLCHAIN_BUILD_PREFIX" "$TOOLCHAIN_PATH"
 
 # create analyzer/++ scripts
-for ABI in $PREBUILT_ABIS; do
+ABIS=$PREBUILT_ABIS
+# temp hack before 64-bit ABIs are part of PREBUILT_ABIS
+if [ "$ABIS" != "${ABIS%%64*}" ]; then
+    ABIS="$PREBUILT_ABIS arm64-v8a x86_64 mips64"
+fi
+ABIS=$ABIS
+for ABI in $ABIS; do
     ANALYZER_PATH="$TOOLCHAIN_PATH/bin/$ABI"
     ANALYZER="$ANALYZER_PATH/analyzer"
     mkdir -p "$ANALYZER_PATH"
@@ -438,11 +444,20 @@ for ABI in $PREBUILT_ABIS; do
       armeabi-v7a|armeabi-v7a-hard)
           LLVM_TARGET=armv7-none-linux-androideabi
           ;;
+      arm64-v8a)
+          LLVM_TARGET=aarch64-none-linux-android
+          ;;
       x86)
           LLVM_TARGET=i686-none-linux-android
           ;;
+      x86_64)
+          LLVM_TARGET=x86_64-none-linux-android
+          ;;
       mips)
           LLVM_TARGET=mipsel-none-linux-android
+          ;;
+      mips64)
+          LLVM_TARGET=mips64el-none-linux-android
           ;;
       *)
         dump "ERROR: Unsupported NDK ABI: $ABI"

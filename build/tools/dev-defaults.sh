@@ -44,14 +44,14 @@ TOOLCHAIN_GIT_DATE=now
 # The space-separated list of all GCC versions we support in this NDK
 DEFAULT_GCC_VERSION_LIST="4.6 4.8"
 
-# The default GCC version for this NDK, i.e. the first item in
-# $DEFAULT_GCC_VERSION_LIST
-#
-DEFAULT_GCC_VERSION=$(echo "$DEFAULT_GCC_VERSION_LIST" | tr ' ' '\n' | head -n 1)
-# The default GCC version for "clang -gcc-toolchain", the latest item in
-# $DEFAULT_GCC_VERSION_LIST
-#
-DEFAULT_LLVM_GCC_VERSION=$(echo "$DEFAULT_GCC_VERSION_LIST" | tr ' ' '\n' | tail -n 1)
+# The default GCC version for 32-bit NDK is the first item in $DEFAULT_GCC_VERSION_LIST
+DEFAULT_GCC32_VERSION=$(echo "$DEFAULT_GCC_VERSION_LIST" | tr ' ' '\n' | head -n 1)
+
+# The default GCC version for 64-bit is the second item in $DEFAULT_GCC_VERSION_LIST
+DEFAULT_GCC64_VERSION=$(echo "$DEFAULT_GCC_VERSION_LIST" | tr ' ' '\n' | head -n 2 | tail -n 1)
+
+# The default GCC version for "clang -gcc-toolchain", is also the second item in $DEFAULT_GCC_VERSION_LIST
+DEFAULT_LLVM_GCC_VERSION=$(echo "$DEFAULT_GCC_VERSION_LIST" | tr ' ' '\n' | head -n 2 | tail -n 1)
 
 DEFAULT_BINUTILS_VERSION=2.21
 DEFAULT_GDB_VERSION=7.3.x
@@ -108,6 +108,17 @@ DEFAULT_SYSTEMS="linux-x86 windows darwin-x86"
 
 # The default issue tracker URL
 DEFAULT_ISSUE_TRACKER_URL="http://source.android.com/source/report-bugs.html"
+
+# Return the default gcc version for a given architecture
+# $1: Architecture name (e.g. 'arm')
+# Out: default arch-specific gcc version
+get_default_gcc_version_for_arch ()
+{
+    case $1 in
+       *64) echo $DEFAULT_GCC64_VERSION ;;
+       *) echo $DEFAULT_GCC32_VERSION ;;
+    esac
+}
 
 # Return default NDK ABI for a given architecture name
 # $1: Architecture name
@@ -174,11 +185,12 @@ get_toolchain_name_for_arch ()
 
 # Return the default toolchain name for a given architecture
 # $1: Architecture name (e.g. 'arm')
-# Out: default arch-specific toolchain name (e.g. 'arm-linux-androideabi-$DEFAULT_GCC_VERSION')
+# Out: default arch-specific toolchain name (e.g. 'arm-linux-androideabi-$GCCVER')
 # Return empty for unknown arch
 get_default_toolchain_name_for_arch ()
 {
-    eval echo \"\${DEFAULT_ARCH_TOOLCHAIN_NAME_$1}-$DEFAULT_GCC_VERSION\"
+    local GCCVER=$(get_default_gcc_version_for_arch $1)
+    eval echo \"\${DEFAULT_ARCH_TOOLCHAIN_NAME_$1}-$GCCVER\"
 }
 
 # Return the default toolchain program prefix for a given architecture
