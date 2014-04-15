@@ -1,0 +1,28 @@
+From 7acd0d5c1b01ca2813a6eb477afc697e0b7465b4 Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Mon, 14 Apr 2014 16:58:02 -0700
+Subject: [PATCH 10/33] [4.9] Enable _GLIBCXX_HAS_GTHREADS in GCC 4.9
+
+See e830d092a4da90315a8c7bbe886582fc6357606d
+
+Change-Id: I378448992bc5ca2b2de59369ea3c475dea01cfc5
+---
+ gcc-4.9/libstdc++-v3/configure | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/gcc-4.9/libstdc++-v3/configure b/gcc-4.9/libstdc++-v3/configure
+index 16e09f0..9328b09 100755
+--- a/gcc-4.9/libstdc++-v3/configure
++++ b/gcc-4.9/libstdc++-v3/configure
+@@ -78657,7 +78657,7 @@ $as_echo_n "checking for gthreads library... " >&6; }
+ 
+   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+-#include "gthr.h"
++#include "gthr-$target_thread_file.h"
+ int
+ main ()
+ {
+-- 
+1.9.1.423.g4596e3a
+

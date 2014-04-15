@@ -1,0 +1,27 @@
+From 1b2a862c26661b2ed3bf0f30d5dcc151e74cf4e3 Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Fri, 18 Apr 2014 09:40:41 -0700
+Subject: [PATCH 32/33] [4.9] Disable sincos
+
+Change-Id: Ic0fc6346e446f7e69706570a8ae0b4fe11b24f2c
+---
+ gcc-4.9/gcc/config/linux.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/gcc-4.9/gcc/config/linux.c b/gcc-4.9/gcc/config/linux.c
+index 6242e11..6162675 100644
+--- a/gcc-4.9/gcc/config/linux.c
++++ b/gcc-4.9/gcc/config/linux.c
+@@ -38,8 +38,7 @@ linux_libc_has_function (enum function_class fn_class)
+     return true;
+   if (OPTION_BIONIC)
+     if (fn_class == function_c94
+-	|| fn_class == function_c99_misc
+-	|| fn_class == function_sincos)
++	|| fn_class == function_c99_misc)
+ 	return true;
+ 
+   return false;
+-- 
+1.9.1.423.g4596e3a
+

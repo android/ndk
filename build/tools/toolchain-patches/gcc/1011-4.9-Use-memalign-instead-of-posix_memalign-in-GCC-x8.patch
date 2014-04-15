@@ -1,0 +1,51 @@
+From 7ed833c8c2ae349c566c2277848331ad01d10fed Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Mon, 14 Apr 2014 17:08:26 -0700
+Subject: [PATCH 12/33] [4.9] Use memalign instead of posix_memalign in GCC x86
+ mm_malloc.h
+
+See feb0a69677101f361aaf5dbfcdd8b5a7a827900f
+
+Change-Id: Icf882ff2441ef88ef5e3c5d4131011d8ef5348cd
+---
+ gcc-4.9/gcc/config/i386/pmm_malloc.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/gcc-4.9/gcc/config/i386/pmm_malloc.h b/gcc-4.9/gcc/config/i386/pmm_malloc.h
+index 3be2f35..67b88a8 100644
+--- a/gcc-4.9/gcc/config/i386/pmm_malloc.h
++++ b/gcc-4.9/gcc/config/i386/pmm_malloc.h
+@@ -26,6 +26,7 @@
+ 
+ #include <stdlib.h>
+ 
++#if !defined(__ANDROID__) || defined(HAVE_POSIX_MEMALIGN)
+ /* We can't depend on <stdlib.h> since the prototype of posix_memalign
+    may not be visible.  */
+ #ifndef __cplusplus
+@@ -33,6 +34,7 @@ extern int posix_memalign (void **, size_t, size_t);
+ #else
+ extern "C" int posix_memalign (void **, size_t, size_t) throw ();
+ #endif
++#endif
+ 
+ static __inline void *
+ _mm_malloc (size_t size, size_t alignment)
+@@ -42,10 +44,14 @@ _mm_malloc (size_t size, size_t alignment)
+     return malloc (size);
+   if (alignment == 2 || (sizeof (void *) == 8 && alignment == 4))
+     alignment = sizeof (void *);
++#if !defined(__ANDROID__) || defined(HAVE_POSIX_MEMALIGN)
+   if (posix_memalign (&ptr, alignment, size) == 0)
+     return ptr;
+   else
+     return NULL;
++#else
++  return memalign(alignment, size);
++#endif
+ }
+ 
+ static __inline void
+-- 
+1.9.1.423.g4596e3a
+

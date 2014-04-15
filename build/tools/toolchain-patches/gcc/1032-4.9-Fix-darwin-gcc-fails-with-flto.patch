@@ -1,0 +1,75 @@
+From a103c1630669ec3cf32a50a8b65e7478cd387890 Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Sun, 20 Apr 2014 15:20:31 -0700
+Subject: [PATCH 33/33] [4.9] Fix darwin gcc fails with -flto
+
+Since since 4.9 "-flto" is the default, but with it error reads:
+
+  .../ld: error: .../libexec/gcc/arm-linux-androideabi/4.9/liblto_plugin.so
+    Symbol not found: _environ
+
+Replace "environ" with "*_NSGetEnviron()"
+
+Change-Id: I7f76f938f5b492458a8324a7b68ae42c0c688db6
+---
+ gcc-4.9/libiberty/pex-unix.c | 8 ++++++++
+ gcc-4.9/libiberty/xmalloc.c  | 8 ++++++++
+ 2 files changed, 16 insertions(+)
+
+diff --git a/gcc-4.9/libiberty/pex-unix.c b/gcc-4.9/libiberty/pex-unix.c
+index addf8ee..1b9fa11 100644
+--- a/gcc-4.9/libiberty/pex-unix.c
++++ b/gcc-4.9/libiberty/pex-unix.c
+@@ -59,6 +59,10 @@ extern int errno;
+ #include <process.h>
+ #endif
+ 
++#ifdef __APPLE__
++#include <crt_externs.h>
++#endif
++
+ #ifdef vfork /* Autoconf may define this to fork for us. */
+ # define VFORK_STRING "fork"
+ #else
+@@ -389,7 +393,11 @@ pex_child_error (struct pex_obj *obj, const char *executable,
+ 
+ /* Execute a child.  */
+ 
++#ifdef __APPLE__
++#define environ (*_NSGetEnviron())
++#else
+ extern char **environ;
++#endif
+ 
+ #if defined(HAVE_SPAWNVE) && defined(HAVE_SPAWNVPE)
+ /* Implementation of pex->exec_child using the Cygwin spawn operation.  */
+diff --git a/gcc-4.9/libiberty/xmalloc.c b/gcc-4.9/libiberty/xmalloc.c
+index 3e97aab..726ef64 100644
+--- a/gcc-4.9/libiberty/xmalloc.c
++++ b/gcc-4.9/libiberty/xmalloc.c
+@@ -70,6 +70,10 @@ function will be called to print an error message and terminate execution.
+ 
+ #include <stddef.h>
+ 
++#ifdef __APPLE__
++#include <crt_externs.h>
++#endif
++
+ #if VMS
+ #include <stdlib.h>
+ #include <unixlib.h>
+@@ -117,7 +121,11 @@ void
+ xmalloc_failed (size_t size)
+ {
+ #ifdef HAVE_SBRK
++#ifdef __APPLE__
++  #define environ (*_NSGetEnviron())
++#else
+   extern char **environ;
++#endif
+   size_t allocated;
+ 
+   if (first_break != NULL)
+-- 
+1.9.1.423.g4596e3a
+

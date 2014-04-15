@@ -1,0 +1,63 @@
+From 8c5f53ed3b1e644c4b26ca1f13074a98452a191a Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Mon, 14 Apr 2014 20:41:18 -0700
+Subject: [PATCH 17/33] [4.9] GNU libstdc++ --enable-linux-futex
+
+See bf7fbbea63a8ec70c0cf36969af6d9ded9583d16
+
+Change-Id: I8ab5c14fa486c53d7c6abf4c2ca333469632d459
+---
+ gcc-4.9/libstdc++-v3/configure          | 12 ++++++++++++
+ gcc-4.9/libstdc++-v3/libsupc++/guard.cc |  5 +++++
+ 2 files changed, 17 insertions(+)
+
+diff --git a/gcc-4.9/libstdc++-v3/configure b/gcc-4.9/libstdc++-v3/configure
+index 9328b09..0f6a766 100755
+--- a/gcc-4.9/libstdc++-v3/configure
++++ b/gcc-4.9/libstdc++-v3/configure
+@@ -77192,6 +77192,12 @@ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ #include <sys/syscall.h>
+ 	   int lk;
++#if !defined(SYS_gettid)
++#define SYS_gettid __NR_gettid
++#endif
++#if !defined(SYS_futex)
++#define SYS_futex __NR_futex
++#endif
+ int
+ main ()
+ {
+@@ -77250,6 +77256,12 @@ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ #include <sys/syscall.h>
+ 	   int lk;
++#if !defined(SYS_gettid)
++#define SYS_gettid __NR_gettid
++#endif
++#if !defined(SYS_futex)
++#define SYS_futex __NR_futex
++#endif
+ int
+ main ()
+ {
+diff --git a/gcc-4.9/libstdc++-v3/libsupc++/guard.cc b/gcc-4.9/libstdc++-v3/libsupc++/guard.cc
+index 54f7458..45de1bb 100644
+--- a/gcc-4.9/libstdc++-v3/libsupc++/guard.cc
++++ b/gcc-4.9/libstdc++-v3/libsupc++/guard.cc
+@@ -33,7 +33,12 @@
+ #if defined(__GTHREADS) && defined(__GTHREAD_HAS_COND) \
+   && (ATOMIC_INT_LOCK_FREE > 1) && defined(_GLIBCXX_HAVE_LINUX_FUTEX)
+ # include <climits>
++#if defined(__ANDROID__)
++# include <sys/syscall.h>
++# define SYS_futex __NR_futex
++#else
+ # include <syscall.h>
++#endif
+ # include <unistd.h>
+ # define _GLIBCXX_USE_FUTEX
+ # define _GLIBCXX_FUTEX_WAIT 0
+-- 
+1.9.1.423.g4596e3a
+

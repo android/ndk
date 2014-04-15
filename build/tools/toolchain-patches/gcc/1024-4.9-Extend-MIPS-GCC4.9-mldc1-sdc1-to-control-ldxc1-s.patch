@@ -1,0 +1,52 @@
+From dd139a857827415ce1f2f1cb960ea70e8711716c Mon Sep 17 00:00:00 2001
+From: Iceberg Fu <Chao-Ying.Fu@imgtec.com>
+Date: Mon, 14 Apr 2014 21:23:25 -0700
+Subject: [PATCH 25/33] [4.9] Extend MIPS GCC4.9 -mldc1-sdc1 to control
+ ldxc1/sdxc1 too
+
+See 79ba8bc76c0534e9f2544af2d1943b1581c84c77
+
+Change-Id: I79a7c1cb378ca3f75d55ca4303a17ecbf7ecff1b
+---
+ gcc-4.9/gcc/config/mips/mips.md  | 4 ++--
+ gcc-4.9/gcc/config/mips/mips.opt | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/gcc-4.9/gcc/config/mips/mips.md b/gcc-4.9/gcc/config/mips/mips.md
+index 1e3e9e6..9bf8cb7 100644
+--- a/gcc-4.9/gcc/config/mips/mips.md
++++ b/gcc-4.9/gcc/config/mips/mips.md
+@@ -4531,7 +4531,7 @@
+   [(set (match_operand:ANYF 0 "register_operand" "=f")
+ 	(mem:ANYF (plus:P (match_operand:P 1 "register_operand" "d")
+ 			  (match_operand:P 2 "register_operand" "d"))))]
+-  "ISA_HAS_LXC1_SXC1"
++  "ISA_HAS_LXC1_SXC1 && (<MODE>mode == SFmode || TARGET_LDC1_SDC1)"
+   "<ANYF:loadx>\t%0,%1(%2)"
+   [(set_attr "type" "fpidxload")
+    (set_attr "mode" "<ANYF:UNITMODE>")])
+@@ -4540,7 +4540,7 @@
+   [(set (mem:ANYF (plus:P (match_operand:P 1 "register_operand" "d")
+ 			  (match_operand:P 2 "register_operand" "d")))
+ 	(match_operand:ANYF 0 "register_operand" "f"))]
+-  "ISA_HAS_LXC1_SXC1"
++  "ISA_HAS_LXC1_SXC1 && (<MODE>mode == SFmode || TARGET_LDC1_SDC1)"
+   "<ANYF:storex>\t%0,%1(%2)"
+   [(set_attr "type" "fpidxstore")
+    (set_attr "mode" "<ANYF:UNITMODE>")])
+diff --git a/gcc-4.9/gcc/config/mips/mips.opt b/gcc-4.9/gcc/config/mips/mips.opt
+index 6a1221f..dd8aff4 100644
+--- a/gcc-4.9/gcc/config/mips/mips.opt
++++ b/gcc-4.9/gcc/config/mips/mips.opt
+@@ -269,7 +269,7 @@ Use MIPS-3D instructions
+ 
+ mldc1-sdc1
+ Target Report Var(TARGET_LDC1_SDC1) Init(1)
+-Use ldc1 and sdc1 instruction
++Use ldc1/ldxc1 and sdc1/sdxc1 instruction
+ 
+ mllsc
+ Target Report Mask(LLSC)
+-- 
+1.9.1.423.g4596e3a
+

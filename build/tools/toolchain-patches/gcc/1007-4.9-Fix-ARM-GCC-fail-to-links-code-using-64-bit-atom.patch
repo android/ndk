@@ -1,0 +1,32 @@
+From 0b8250df9ddbb304efe2b6454191d632e4e2fb3d Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Mon, 14 Apr 2014 16:54:08 -0700
+Subject: [PATCH 08/33] [4.9] Fix ARM GCC fail to links code using 64-bit
+ atomic built-in
+
+See 18f0873ec950f1496e55c2bd68b9debd1b0bb4ce
+
+Change-Id: Ibfadd5a581a7002752902ace324c96d9415bc64a
+---
+ gcc-4.9/libgcc/config/arm/linux-atomic-64bit.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/gcc-4.9/libgcc/config/arm/linux-atomic-64bit.c b/gcc-4.9/libgcc/config/arm/linux-atomic-64bit.c
+index 5b8c6e2..5c1f970 100644
+--- a/gcc-4.9/libgcc/config/arm/linux-atomic-64bit.c
++++ b/gcc-4.9/libgcc/config/arm/linux-atomic-64bit.c
+@@ -56,7 +56,11 @@ static void __check_for_sync8_kernelhelper (void)
+ 	 for the user - I'm not sure I can rely on much else being
+ 	 available at this point, so do the same as generic-morestack.c
+ 	 write () and abort ().  */
++#if !defined(__ANDROID__)
+       __write (2 /* stderr.  */, err, sizeof (err));
++#else
++      write (2 /* stderr.  */, err, sizeof (err));
++#endif
+       abort ();
+     }
+ };
+-- 
+1.9.1.423.g4596e3a
+
