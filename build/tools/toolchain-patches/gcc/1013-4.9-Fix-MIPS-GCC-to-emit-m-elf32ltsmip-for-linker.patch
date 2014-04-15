@@ -1,0 +1,27 @@
+From db5a251d39871f250552ba8f50b8c029113a4051 Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Mon, 14 Apr 2014 17:26:29 -0700
+Subject: [PATCH 14/32] [4.9] Fix MIPS GCC to emit -m elf32ltsmip for linker
+
+See 8648b5263208a4e894d9ceaacedb72d48be70c55
+
+Change-Id: I658234d073de514e4aa40fdb8087d5467d8ee9f5
+---
+ gcc-4.9/gcc/config/mips/gnu-user.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/gcc-4.9/gcc/config/mips/gnu-user.h b/gcc-4.9/gcc/config/mips/gnu-user.h
+index bbe7888..02c6a3f 100644
+--- a/gcc-4.9/gcc/config/mips/gnu-user.h
++++ b/gcc-4.9/gcc/config/mips/gnu-user.h
+@@ -58,6 +58,7 @@ along with GCC; see the file COPYING3.  If not see
+ #define GNU_USER_TARGET_LINK_SPEC \
+  "%(endian_spec) \
+   %{shared:-shared} \
++  %{!EB:%{!meb:-m elf32ltsmip}} %{EB|meb:-m elf32btsmip} \
+   %{!shared: \
+     %{!static: \
+       %{rdynamic:-export-dynamic} \
+-- 
+1.9.1.423.g4596e3a
+

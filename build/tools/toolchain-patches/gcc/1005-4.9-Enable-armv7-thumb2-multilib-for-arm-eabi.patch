@@ -1,0 +1,59 @@
+From 8927bb9049083925a254f23bd189294211e87ca7 Mon Sep 17 00:00:00 2001
+From: Ben Cheng <bccheng@android.com>
+Date: Mon, 14 Apr 2014 16:48:38 -0700
+Subject: [PATCH 06/32] [4.9] Enable armv7/thumb2 multilib for arm-eabi.
+
+See f541ff89c2d66197e371ed6f85174bd732afd8db
+
+Change-Id: Id642af0523d7af414a906836936b41554b730e98
+---
+ gcc-4.9/gcc/config/arm/t-arm-elf | 29 +++++++++++++++++------------
+ 1 file changed, 17 insertions(+), 12 deletions(-)
+
+diff --git a/gcc-4.9/gcc/config/arm/t-arm-elf b/gcc-4.9/gcc/config/arm/t-arm-elf
+index 8ef6b04..5e39868 100644
+--- a/gcc-4.9/gcc/config/arm/t-arm-elf
++++ b/gcc-4.9/gcc/config/arm/t-arm-elf
+@@ -25,22 +25,27 @@ MULTILIB_MATCHES     =
+ #MULTILIB_DIRNAMES    += fa526 fa626 fa606te fa626te fmp626 fa726te
+ #MULTILIB_EXCEPTIONS  += *mthumb*/*mcpu=fa526 *mthumb*/*mcpu=fa626
+ 
+-#MULTILIB_OPTIONS      += march=armv7
+-#MULTILIB_DIRNAMES     += thumb2
+-#MULTILIB_EXCEPTIONS   += march=armv7* marm/*march=armv7*
+-#MULTILIB_MATCHES      += march?armv7=march?armv7-a
+-#MULTILIB_MATCHES      += march?armv7=march?armv7-r
+-#MULTILIB_MATCHES      += march?armv7=march?armv7-m
+-#MULTILIB_MATCHES      += march?armv7=mcpu?cortex-a8
+-#MULTILIB_MATCHES      += march?armv7=mcpu?cortex-r4
+-#MULTILIB_MATCHES      += march?armv7=mcpu?cortex-m3
++# Enable these for ANDROID arm-eabi toolchain
++MULTILIB_OPTIONS      += march=armv7
++MULTILIB_DIRNAMES     += thumb2
++MULTILIB_EXCEPTIONS   += march=armv7* marm/*march=armv7*
++MULTILIB_MATCHES      += march?armv7=march?armv7-a
++MULTILIB_MATCHES      += march?armv7=march?armv7-r
++MULTILIB_MATCHES      += march?armv7=march?armv7-m
++MULTILIB_MATCHES      += march?armv7=mcpu?cortex-a8
++MULTILIB_MATCHES      += march?armv7=mcpu?cortex-r4
++MULTILIB_MATCHES      += march?armv7=mcpu?cortex-m3
++MULTILIB_MATCHES      += march?armv7=mcpu?cortex-m4
+ 
+ # Not quite true.  We can support hard-vfp calling in Thumb2, but how do we
+ # express that here?  Also, we really need architecture v5e or later
+ # (mcrr etc).
+-MULTILIB_OPTIONS       += mfloat-abi=hard
+-MULTILIB_DIRNAMES      += fpu
+-MULTILIB_EXCEPTIONS    += *mthumb/*mfloat-abi=hard*
++
++# Disable these for ANDROID arm-eabi toolchain
++#MULTILIB_OPTIONS       += mfloat-abi=hard
++#MULTILIB_DIRNAMES      += fpu
++#MULTILIB_EXCEPTIONS    += *mthumb/*mfloat-abi=hard*
++
+ #MULTILIB_EXCEPTIONS    += *mcpu=fa526/*mfloat-abi=hard*
+ #MULTILIB_EXCEPTIONS    += *mcpu=fa626/*mfloat-abi=hard*
+ 
+-- 
+1.9.1.423.g4596e3a
+

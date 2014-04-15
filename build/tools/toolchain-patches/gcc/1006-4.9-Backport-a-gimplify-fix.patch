@@ -1,0 +1,35 @@
+From 5e2b04d1716c10f81711ddd85a4c8b3638446c58 Mon Sep 17 00:00:00 2001
+From: Ben Cheng <bccheng@android.com>
+Date: Mon, 14 Apr 2014 16:50:28 -0700
+Subject: [PATCH 07/32] [4.9] Backport a gimplify fix.
+
+See eceb576ea5b15a7f8f179f131b665afeeba1c6ad
+
+Change-Id: Ifd1dec97b9ceed460d10eaaaf4aa923d02ad2c29
+---
+ gcc-4.9/gcc/gimplify.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/gcc-4.9/gcc/gimplify.c b/gcc-4.9/gcc/gimplify.c
+index ad2178d..035aa26 100644
+--- a/gcc-4.9/gcc/gimplify.c
++++ b/gcc-4.9/gcc/gimplify.c
+@@ -1940,6 +1940,15 @@
+ 	  if (TREE_OPERAND (t, 3) == NULL_TREE)
+ 	    {
+ 	      tree elmt_type = TREE_TYPE (TREE_TYPE (TREE_OPERAND (t, 0)));
++	      /* FIXME google - In some edge cases, ELMT_TYPE may
++		 not have been laid out.  This causes an ICE later
++		 (PR 55245).  We call layout_type if ELMT_TYPE is not
++		 yet complete, but this is not where this bug should
++		 be fixed.  The FE should have laid out all the types
++		 before gimplification.  When a proper fix for PR
++		 55245 is available, remove this.  */
++	      if (!COMPLETE_TYPE_P (elmt_type))
++		layout_type (elmt_type);
+ 	      tree elmt_size = unshare_expr (array_ref_element_size (t));
+ 	      tree factor = size_int (TYPE_ALIGN_UNIT (elmt_type));
+ 
+-- 
+1.9.1.423.g4596e3a
+

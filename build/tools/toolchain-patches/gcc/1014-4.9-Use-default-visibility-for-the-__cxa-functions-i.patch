@@ -1,0 +1,44 @@
+From e5f887908917d4aec27be0c548f1df59a831fcc1 Mon Sep 17 00:00:00 2001
+From: Ben Cheng <bccheng@google.com>
+Date: Mon, 14 Apr 2014 20:26:44 -0700
+Subject: [PATCH 15/32] [4.9] Use default visibility for the __cxa functions in
+ eh_arm.cc.
+
+See 4e9989f243cd0a5d51f76e6ce98828c7cb6b9246
+
+Change-Id: Icd8571e9e23b5dd23ae52db71019ecc4b5deb8e3
+---
+ gcc-4.9/libstdc++-v3/libsupc++/eh_arm.cc | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/gcc-4.9/libstdc++-v3/libsupc++/eh_arm.cc b/gcc-4.9/libstdc++-v3/libsupc++/eh_arm.cc
+index aa453dd..859a713 100644
+--- a/gcc-4.9/libstdc++-v3/libsupc++/eh_arm.cc
++++ b/gcc-4.9/libstdc++-v3/libsupc++/eh_arm.cc
+@@ -29,6 +29,16 @@
+ 
+ using namespace __cxxabiv1;
+ 
++// The GCC command-line option "-fvisibility=hidden" apparently fails to hide
++// the visibility of the inline assembly function "__cxa_end_cleanup".
++// We need to keep the visibility of the __cxa_* functions coherent otherwise
++// linking eh_arm.o to resolve __cxa_end_cleanup (eg needed by -frtti
++// -fexceptions) will disappoint the linker by exposing __cxa_type_match and
++// __cxa_begin_cleanup (eg needed by __aeabi_idiv from libgcc.a).
++// Therefore as a simple workaround we just force the visibility to default for
++// all these __cxa functions in this module.
++
++#pragma GCC visibility push(default)
+ 
+ // Given the thrown type THROW_TYPE, exception object UE_HEADER and a
+ // type CATCH_TYPE to compare against, return whether or not there is
+@@ -224,4 +234,6 @@ asm ("  .pushsection .text.__cxa_end_cleanup\n"
+ #endif
+ #endif
+ 
++#pragma GCC visibility pop
++
+ #endif
+-- 
+1.9.1.423.g4596e3a
+
