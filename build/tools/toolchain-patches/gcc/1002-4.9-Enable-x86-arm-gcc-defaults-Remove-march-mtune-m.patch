@@ -1,0 +1,68 @@
+From e86e3ac6a688ef973621c90a99035d95a2c8d594 Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Mon, 14 Apr 2014 16:36:15 -0700
+Subject: [PATCH 03/33] [4.9] Enable x86/arm gcc defaults; Remove
+ march/mtune/mfpmath/-m32 hardcoded values
+
+See 8ca3ada77e50f58668ed31fac0d0b929a96ae40a and
+19cf682fd52c042ec6b988ef294dacc45fa50944
+
+Change-Id: Ibc672343710b4b414d11c600fe069ed60692c90b
+---
+ gcc-4.9/gcc/config/arm/linux-eabi.h    | 2 +-
+ gcc-4.9/gcc/config/i386/linux-common.h | 9 ++++++++-
+ gcc-4.9/gcc/config/linux-android.h     | 4 ++--
+ 3 files changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/gcc-4.9/gcc/config/arm/linux-eabi.h b/gcc-4.9/gcc/config/arm/linux-eabi.h
+index c0204b0..4d42cbf 100644
+--- a/gcc-4.9/gcc/config/arm/linux-eabi.h
++++ b/gcc-4.9/gcc/config/arm/linux-eabi.h
+@@ -91,7 +91,7 @@
+ #define CC1_SPEC							\
+   LINUX_OR_ANDROID_CC (GNU_USER_TARGET_CC1_SPEC " " ASAN_CC1_SPEC,	\
+ 		       GNU_USER_TARGET_CC1_SPEC " " ASAN_CC1_SPEC " "	\
+-		       ANDROID_CC1_SPEC)
++		       ANDROID_CC1_SPEC("-fpic"))
+ 
+ #define CC1PLUS_SPEC \
+   LINUX_OR_ANDROID_CC ("", ANDROID_CC1PLUS_SPEC)
+diff --git a/gcc-4.9/gcc/config/i386/linux-common.h b/gcc-4.9/gcc/config/i386/linux-common.h
+index 1eaf024..9301322 100644
+--- a/gcc-4.9/gcc/config/i386/linux-common.h
++++ b/gcc-4.9/gcc/config/i386/linux-common.h
+@@ -30,7 +30,14 @@ along with GCC; see the file COPYING3.  If not see
+ #undef CC1_SPEC
+ #define CC1_SPEC \
+   LINUX_OR_ANDROID_CC (GNU_USER_TARGET_CC1_SPEC, \
+-		       GNU_USER_TARGET_CC1_SPEC " " ANDROID_CC1_SPEC)
++                       GNU_USER_TARGET_CC1_SPEC \
++                       " -mstackrealign -msse3" \
++                       " -fno-short-enums" \
++                       " " \
++                       ANDROID_CC1_SPEC("-fPIC"))
++
++#define CC1PLUS_SPEC \
++  LINUX_OR_ANDROID_CC ("", ANDROID_CC1PLUS_SPEC)
+ 
+ #undef	LINK_SPEC
+ #define LINK_SPEC \
+diff --git a/gcc-4.9/gcc/config/linux-android.h b/gcc-4.9/gcc/config/linux-android.h
+index 42e0617..070f969 100644
+--- a/gcc-4.9/gcc/config/linux-android.h
++++ b/gcc-4.9/gcc/config/linux-android.h
+@@ -40,9 +40,9 @@
+ #define ANDROID_LINK_SPEC \
+   "%{shared: -Bsymbolic} -z noexecstack -z relro -z now"
+ 
+-#define ANDROID_CC1_SPEC						\
++#define ANDROID_CC1_SPEC(ANDROID_PIC_DEFAULT)				\
+   "%{!mglibc:%{!muclibc:%{!mbionic: -mbionic}}} "			\
+-  "%{!fno-pic:%{!fno-PIC:%{!fpic:%{!fPIC: -fPIC}}}}"
++  "%{!fno-pic:%{!fno-PIC:%{!fpic:%{!fPIC: " ANDROID_PIC_DEFAULT "}}}}"
+ 
+ #define ANDROID_CC1PLUS_SPEC						\
+   "%{!fexceptions:%{!fno-exceptions: -fexceptions}} "		\
+-- 
+1.9.1.423.g4596e3a
+

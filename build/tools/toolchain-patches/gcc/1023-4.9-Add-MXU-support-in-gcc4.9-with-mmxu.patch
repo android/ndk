@@ -1,0 +1,43 @@
+From 89e4dbe9890ae598a3a4b2bb8b2c3949e39b8255 Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Mon, 14 Apr 2014 21:17:41 -0700
+Subject: [PATCH 24/33] [4.9] Add MXU support in gcc4.9 with -mmxu
+
+See 793e263d62bb7f85426899cd7a86e821dd38d12a
+
+Change-Id: I51aed0f36c14417647bcd651eb5da622b2fb55a6
+---
+ gcc-4.9/gcc/config/mips/mips.h   | 1 +
+ gcc-4.9/gcc/config/mips/mips.opt | 4 ++++
+ 2 files changed, 5 insertions(+)
+
+diff --git a/gcc-4.9/gcc/config/mips/mips.h b/gcc-4.9/gcc/config/mips/mips.h
+index 7e2d890..bedc45b 100644
+--- a/gcc-4.9/gcc/config/mips/mips.h
++++ b/gcc-4.9/gcc/config/mips/mips.h
+@@ -1178,6 +1178,7 @@ struct mips_cpu_info {
+ %{mvirt} %{mno-virt} \
+ %{msmartmips} %{mno-smartmips} \
+ %{mmt} %{mno-mt} \
++%{mmxu} %{mno-mxu} \
+ %{mfix-rm7000} %{mno-fix-rm7000} \
+ %{mfix-vr4120} %{mfix-vr4130} \
+ %{mfix-24k} \
+diff --git a/gcc-4.9/gcc/config/mips/mips.opt b/gcc-4.9/gcc/config/mips/mips.opt
+index 835f611..6a1221f 100644
+--- a/gcc-4.9/gcc/config/mips/mips.opt
++++ b/gcc-4.9/gcc/config/mips/mips.opt
+@@ -307,6 +307,10 @@ mmt
+ Target Report Var(TARGET_MT)
+ Allow the use of MT instructions
+ 
++mmxu
++Target Report Var(TARGET_MXU)
++Allow the use of MXU instructions
++
+ mno-float
+ Target Report RejectNegative Var(TARGET_NO_FLOAT) Condition(TARGET_SUPPORTS_NO_FLOAT)
+ Prevent the use of all floating-point operations
+-- 
+1.9.1.423.g4596e3a
+

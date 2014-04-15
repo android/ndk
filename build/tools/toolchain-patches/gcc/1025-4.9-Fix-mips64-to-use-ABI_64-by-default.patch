@@ -1,0 +1,36 @@
+From f877d02d9073e41e90f9e4df7e3c040c8862ab12 Mon Sep 17 00:00:00 2001
+From: Iceberg Fu <Chao-Ying.Fu@imgtec.com>
+Date: Mon, 14 Apr 2014 21:29:06 -0700
+Subject: [PATCH 26/33] [4.9] Fix mips64 to use ABI_64 by default
+
+See 1c712bf7621f3859c33fd3afaa61fdcaf3fdfd76
+
+Change-Id: I50488b4fe61380d174ec508a9fdbdde19c519917
+---
+ gcc-4.9/gcc/config.gcc | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/gcc-4.9/gcc/config.gcc b/gcc-4.9/gcc/config.gcc
+index af05ada..2ad81ea 100644
+--- a/gcc-4.9/gcc/config.gcc
++++ b/gcc-4.9/gcc/config.gcc
+@@ -1962,7 +1962,15 @@ mips64*-*-linux* | mipsisa64*-*-linux*)
+ 	tm_file="dbxelf.h elfos.h gnu-user.h linux.h linux-android.h glibc-stdint.h ${tm_file} mips/gnu-user.h mips/gnu-user64.h mips/linux64.h mips/linux-common.h"
+ 	extra_options="${extra_options} linux-android.opt"
+ 	tmake_file="${tmake_file} mips/t-linux64"
+-	tm_defines="${tm_defines} MIPS_ABI_DEFAULT=ABI_N32"
++	case ${target} in
++		*android*)
++			# Default to ABI_64 for MIPS64 Android
++			tm_defines="${tm_defines} MIPS_ABI_DEFAULT=ABI_64"
++			;;
++		*)
++			tm_defines="${tm_defines} MIPS_ABI_DEFAULT=ABI_N32"
++			;;
++	esac
+ 	case ${target} in
+ 		mips64el-st-linux-gnu)
+ 			tm_file="${tm_file} mips/st.h"
+-- 
+1.9.1.423.g4596e3a
+
