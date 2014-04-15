@@ -374,7 +374,7 @@ if [ -n "$LLVM_VERSION" ]; then
           TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_mips
           ;;
       arm64)
-          LLVM_TARGET=aarch64-none-linux-android
+          LLVM_TARGET=aarch64-linux-android
           TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_arm64
           ;;
       x86_64)

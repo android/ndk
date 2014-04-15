@@ -873,10 +873,10 @@ prepare_common_build ()
             if [ "$__USE_OLD_LINUX_HOST_GCC" = "yes" ]; then
                 LEGACY_TOOLCHAIN_DIR="$ANDROID_NDK_ROOT/../prebuilts/tools/gcc-sdk"
                 LEGACY_TOOLCHAIN_PREFIX="$LEGACY_TOOLCHAIN_DIR/"
-	    else
+            else
                 LEGACY_TOOLCHAIN_DIR="$ANDROID_NDK_ROOT/../prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.11-4.6/bin"
                 LEGACY_TOOLCHAIN_PREFIX="$LEGACY_TOOLCHAIN_DIR/x86_64-linux-"
-	    fi
+            fi
         elif [ "$HOST_OS" = "darwin" ]; then
             LEGACY_TOOLCHAIN_DIR="$ANDROID_NDK_ROOT/../prebuilts/gcc/darwin-x86/host/i686-apple-darwin-4.2.1/bin"
             LEGACY_TOOLCHAIN_PREFIX="$LEGACY_TOOLCHAIN_DIR/i686-apple-darwin10-"

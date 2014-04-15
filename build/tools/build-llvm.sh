@@ -445,7 +445,7 @@ for ABI in $ABIS; do
           LLVM_TARGET=armv7-none-linux-androideabi
           ;;
       arm64-v8a)
-          LLVM_TARGET=aarch64-none-linux-android
+          LLVM_TARGET=aarch64-linux-android
           ;;
       x86)
           LLVM_TARGET=i686-none-linux-android
