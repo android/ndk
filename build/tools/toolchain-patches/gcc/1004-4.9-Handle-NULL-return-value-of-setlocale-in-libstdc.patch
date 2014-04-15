@@ -1,0 +1,134 @@
+From 063746c61afaadf32172a9868f1d9ed2d537d1e8 Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Mon, 14 Apr 2014 16:44:56 -0700
+Subject: [PATCH 04/30] [4.9] Handle NULL return value of setlocale() in
+ libstdc++
+
+See 9fc377fd2c2dce50298e33e578d7065e285171e0
+
+Change-Id: I3cf4b8efe75fa45c5743fd7c1f6fc8170597c0a7
+---
+ .../libstdc++-v3/config/locale/generic/c_locale.cc | 36 ++++++++++++++--------
+ .../libstdc++-v3/config/locale/generic/c_locale.h  |  2 +-
+ .../config/locale/generic/time_members.cc          | 24 ++++++++++-----
+ 3 files changed, 41 insertions(+), 21 deletions(-)
+
+diff --git a/gcc-4.9/libstdc++-v3/config/locale/generic/c_locale.cc b/gcc-4.9/libstdc++-v3/config/locale/generic/c_locale.cc
+index abf8727..6ce0441 100644
+--- a/gcc-4.9/libstdc++-v3/config/locale/generic/c_locale.cc
++++ b/gcc-4.9/libstdc++-v3/config/locale/generic/c_locale.cc
+@@ -51,10 +51,14 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
+     {
+       // Assumes __s formatted for "C" locale.
+       char* __old = setlocale(LC_ALL, 0);
+-      const size_t __len = strlen(__old) + 1;
+-      char* __sav = new char[__len];
+-      memcpy(__sav, __old, __len);
+-      setlocale(LC_ALL, "C");
++      char* __sav = 0;
++      if (__old)
++        {
++          const size_t __len = strlen(__old) + 1;
++          __sav = new char[__len];
++          memcpy(__sav, __old, __len);
++          setlocale(LC_ALL, "C");
++        }
+       char* __sanity;
+       bool __overflow = false;
+ 
+@@ -116,10 +120,14 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
+     {
+       // Assumes __s formatted for "C" locale.
+       char* __old = setlocale(LC_ALL, 0);
+-      const size_t __len = strlen(__old) + 1;
+-      char* __sav = new char[__len];
+-      memcpy(__sav, __old, __len);
+-      setlocale(LC_ALL, "C");
++      char* __sav = 0;
++      if (__old)
++        {
++          const size_t __len = strlen(__old) + 1;
++          __sav = new char[__len];
++          memcpy(__sav, __old, __len);
++          setlocale(LC_ALL, "C");
++        }
+       char* __sanity;
+ 
+ #if !__DBL_HAS_INFINITY__
+@@ -161,10 +169,14 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
+     {
+       // Assumes __s formatted for "C" locale.
+       char* __old = setlocale(LC_ALL, 0);
+-      const size_t __len = strlen(__old) + 1;
+-      char* __sav = new char[__len];
+-      memcpy(__sav, __old, __len);
+-      setlocale(LC_ALL, "C");
++      char* __sav = 0;
++      if (__old)
++        {
++          const size_t __len = strlen(__old) + 1;
++          __sav = new char[__len];
++          memcpy(__sav, __old, __len);
++          setlocale(LC_ALL, "C");
++        }
+ 
+ #if !__LDBL_HAS_INFINITY__
+       errno = 0;
+diff --git a/gcc-4.9/libstdc++-v3/config/locale/generic/c_locale.h b/gcc-4.9/libstdc++-v3/config/locale/generic/c_locale.h
+index e934ffc..aedb13f 100644
+--- a/gcc-4.9/libstdc++-v3/config/locale/generic/c_locale.h
++++ b/gcc-4.9/libstdc++-v3/config/locale/generic/c_locale.h
+@@ -59,7 +59,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
+   {
+     char* __old = std::setlocale(LC_NUMERIC, 0);
+     char* __sav = 0;
+-    if (__builtin_strcmp(__old, "C"))
++    if (__old && __builtin_strcmp(__old, "C"))
+       {
+ 	const size_t __len = __builtin_strlen(__old) + 1;
+ 	__sav = new char[__len];
+diff --git a/gcc-4.9/libstdc++-v3/config/locale/generic/time_members.cc b/gcc-4.9/libstdc++-v3/config/locale/generic/time_members.cc
+index f660c94..2ed10f5 100644
+--- a/gcc-4.9/libstdc++-v3/config/locale/generic/time_members.cc
++++ b/gcc-4.9/libstdc++-v3/config/locale/generic/time_members.cc
+@@ -44,10 +44,14 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
+ 	   const tm* __tm) const throw()
+     {
+       char* __old = setlocale(LC_ALL, 0);
+-      const size_t __llen = strlen(__old) + 1;
+-      char* __sav = new char[__llen];
+-      memcpy(__sav, __old, __llen);
+-      setlocale(LC_ALL, _M_name_timepunct);
++      char* __sav = 0;
++      if (__old)
++        {
++          const size_t __llen = strlen(__old) + 1;
++          __sav = new char[__llen];
++          memcpy(__sav, __old, __llen);
++          setlocale(LC_ALL, _M_name_timepunct);
++        }
+       const size_t __len = strftime(__s, __maxlen, __format, __tm);
+       setlocale(LC_ALL, __sav);
+       delete [] __sav;
+@@ -129,10 +133,14 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
+ 	   const tm* __tm) const throw()
+     {
+       char* __old = setlocale(LC_ALL, 0);
+-      const size_t __llen = strlen(__old) + 1;
+-      char* __sav = new char[__llen];
+-      memcpy(__sav, __old, __llen);
+-      setlocale(LC_ALL, _M_name_timepunct);
++      char* __sav = 0;
++      if (__old)
++        {
++          const size_t __llen = strlen(__old) + 1;
++          __sav = new char[__llen];
++          memcpy(__sav, __old, __llen);
++          setlocale(LC_ALL, _M_name_timepunct);
++        }
+       const size_t __len = wcsftime(__s, __maxlen, __format, __tm);
+       setlocale(LC_ALL, __sav);
+       delete [] __sav;
+-- 
+1.9.1.423.g4596e3a
+

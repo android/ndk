@@ -1,0 +1,56 @@
+From bc710b95d9c46a92b7fe4d3e24df51b32346176d Mon Sep 17 00:00:00 2001
+From: Ben Cheng <bccheng@google.com>
+Date: Mon, 14 Apr 2014 21:15:30 -0700
+Subject: [PATCH 21/30] [4.9] Add stack unwinding directives for __aeabi_idiv0
+ in libgcc.a
+
+See e85b9ca2afe8edbb9fa99c6ce2cc4e52dce18c21
+
+Change-Id: Ic62d25125387a48412c99fbb16e509b79091559d
+---
+ gcc-4.9/libgcc/Makefile.in            | 2 ++
+ gcc-4.9/libgcc/config/arm/lib1funcs.S | 6 ++++++
+ 2 files changed, 8 insertions(+)
+
+diff --git a/gcc-4.9/libgcc/Makefile.in b/gcc-4.9/libgcc/Makefile.in
+index 7fe4aae..06b3c88 100644
+--- a/gcc-4.9/libgcc/Makefile.in
++++ b/gcc-4.9/libgcc/Makefile.in
+@@ -224,11 +224,13 @@ DECNUMINC =
+ endif
+ 
+ # Options to use when compiling libgcc2.a.
++# Adding -funwind-tables to debug idiv0 cases for Android
+ #
+ LIBGCC2_DEBUG_CFLAGS = -g
+ LIBGCC2_CFLAGS = -O2 $(LIBGCC2_INCLUDES) $(GCC_CFLAGS) $(HOST_LIBGCC2_CFLAGS) \
+ 		 $(LIBGCC2_DEBUG_CFLAGS) -DIN_LIBGCC2 \
+ 		 -fbuilding-libgcc -fno-stack-protector \
++		 -funwind-tables \
+ 		 $(INHIBIT_LIBC_CFLAGS)
+ 
+ # Additional options to use when compiling libgcc2.a.
+diff --git a/gcc-4.9/libgcc/config/arm/lib1funcs.S b/gcc-4.9/libgcc/config/arm/lib1funcs.S
+index b617137..762b0ec 100644
+--- a/gcc-4.9/libgcc/config/arm/lib1funcs.S
++++ b/gcc-4.9/libgcc/config/arm/lib1funcs.S
+@@ -1326,10 +1326,16 @@ LSYM(Lover12):
+ 	ARM_FUNC_START div0
+ #endif
+ 
++	/* ANDROID LOCAL BEGIN */
++	/* Adding stack unwinding directives to debug divide-by-0 errors */
++	.fnstart
++	.save   {r1, lr}
+ 	do_push	{r1, lr}
+ 	mov	r0, #SIGFPE
+ 	bl	SYM(raise) __PLT__
+ 	RETLDM	r1
++	.fnend
++	/* ANDROID LOCAL END */
+ 
+ #ifdef __ARM_EABI__
+ 	FUNC_END aeabi_ldiv0
+-- 
+1.9.1.423.g4596e3a
+

@@ -1,0 +1,28 @@
+From 6f3d61ccbcae19241ad1e2ebc07ac2881d2ddee1 Mon Sep 17 00:00:00 2001
+From: Ben Cheng <bccheng@google.com>
+Date: Mon, 14 Apr 2014 21:43:57 -0700
+Subject: [PATCH 26/30] [4.9] Fix aarch64 to use Android specs.
+
+See bb9a7de92c3a7a4ae8a47536e36559673dd886e9
+
+Change-Id: Id96f2d455699a125e773829cb95939438c242aa6
+---
+ gcc-4.9/gcc/config/aarch64/aarch64-linux.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/gcc-4.9/gcc/config/aarch64/aarch64-linux.h b/gcc-4.9/gcc/config/aarch64/aarch64-linux.h
+index 4eacdb2..f32d19f 100644
+--- a/gcc-4.9/gcc/config/aarch64/aarch64-linux.h
++++ b/gcc-4.9/gcc/config/aarch64/aarch64-linux.h
+@@ -52,7 +52,7 @@
+ #undef  CC1_SPEC
+ #define CC1_SPEC							\
+   LINUX_OR_ANDROID_CC (GNU_USER_TARGET_CC1_SPEC,			\
+-		       GNU_USER_TARGET_CC1_SPEC " " ANDROID_CC1_SPEC)
++		      GNU_USER_TARGET_CC1_SPEC " " ANDROID_CC1_SPEC("-fpic"))
+ 
+ #define CC1PLUS_SPEC \
+   LINUX_OR_ANDROID_CC ("", ANDROID_CC1PLUS_SPEC)
+-- 
+1.9.1.423.g4596e3a
+

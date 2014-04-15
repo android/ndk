@@ -1,0 +1,125 @@
+From 48726f85662d10d3e3c5859b1910937b265a62ad Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Mon, 14 Apr 2014 17:13:32 -0700
+Subject: [PATCH 12/30] [4.9] Add mclinker support: -fuse-ld=mcld
+
+See 06b207c97dfb0d70f1f2ef91b93b665dceae0d27,
+04288e6d5db307539ffc86eff17dc7fd5a2eb973 and
+6914eb3758e3c3db5f50f89da12193c22a0531c4
+
+Change-Id: I94f901d9187c9bc3a9f2f4e24795c4bf0f3a62c0
+---
+ gcc-4.9/gcc/collect2.c      | 8 ++++++--
+ gcc-4.9/gcc/common.opt      | 8 ++++++--
+ gcc-4.9/gcc/doc/invoke.texi | 4 ++++
+ gcc-4.9/gcc/gcc.c           | 2 +-
+ gcc-4.9/gcc/opts.c          | 1 +
+ 5 files changed, 18 insertions(+), 5 deletions(-)
+
+diff --git a/gcc-4.9/gcc/collect2.c b/gcc-4.9/gcc/collect2.c
+index f0ab6b8..5a2ec0b 100644
+--- a/gcc-4.9/gcc/collect2.c
++++ b/gcc-4.9/gcc/collect2.c
+@@ -861,6 +861,7 @@ main (int argc, char **argv)
+       USE_PLUGIN_LD,
+       USE_GOLD_LD,
+       USE_BFD_LD,
++      USE_MCLD_LD,
+       USE_LD_MAX
+     } selected_linker = USE_DEFAULT_LD;
+   static const char *const ld_suffixes[USE_LD_MAX] =
+@@ -868,7 +869,8 @@ main (int argc, char **argv)
+       "ld",
+       PLUGIN_LD_SUFFIX,
+       "ld.gold",
+-      "ld.bfd"
++      "ld.bfd",
++      "ld.mcld"
+     };
+   static const char *const real_ld_suffix = "real-ld";
+   static const char *const collect_ld_suffix = "collect-ld";
+@@ -1034,6 +1036,8 @@ main (int argc, char **argv)
+ 	  selected_linker = USE_BFD_LD;
+ 	else if (strcmp (argv[i], "-fuse-ld=gold") == 0)
+ 	  selected_linker = USE_GOLD_LD;
++	else if (strcmp (argv[i], "-fuse-ld=mcld") == 0)
++	  selected_linker = USE_MCLD_LD;
+ 
+ #ifdef COLLECT_EXPORT_LIST
+ 	/* These flags are position independent, although their order
+@@ -1337,7 +1341,7 @@ main (int argc, char **argv)
+ 	      else if (!use_collect_ld
+ 		       && strncmp (arg, "-fuse-ld=", 9) == 0)
+ 		{
+-		  /* Do not pass -fuse-ld={bfd|gold} to the linker. */
++		  /* Do not pass -fuse-ld={bfd|gold|mcld} to the linker. */
+ 		  ld1--;
+ 		  ld2--;
+ 		}
+diff --git a/gcc-4.9/gcc/common.opt b/gcc-4.9/gcc/common.opt
+index 62c72f0..69ba4e7 100644
+--- a/gcc-4.9/gcc/common.opt
++++ b/gcc-4.9/gcc/common.opt
+@@ -2250,13 +2250,17 @@ Common Report Var(flag_unwind_tables) Optimization
+ Just generate unwind tables for exception handling
+ 
+ fuse-ld=bfd
+-Common Driver Negative(fuse-ld=gold)
++Common Negative(fuse-ld=gold)
+ Use the bfd linker instead of the default linker
+ 
+ fuse-ld=gold
+-Common Driver Negative(fuse-ld=bfd)
++Common Negative(fuse-ld=mcld)
+ Use the gold linker instead of the default linker
+ 
++fuse-ld=mcld
++Common Negative(fuse-ld=bfd)
++Use the mcld linker instead of the default linker
++
+ fuse-linker-plugin
+ Common Undocumented Var(flag_use_linker_plugin)
+ 
+diff --git a/gcc-4.9/gcc/doc/invoke.texi b/gcc-4.9/gcc/doc/invoke.texi
+index 78ddde0..126e5ca 100644
+--- a/gcc-4.9/gcc/doc/invoke.texi
++++ b/gcc-4.9/gcc/doc/invoke.texi
+@@ -8808,6 +8808,10 @@ Use the @command{bfd} linker instead of the default linker.
+ @opindex fuse-ld=gold
+ Use the @command{gold} linker instead of the default linker.
+ 
++@item -fuse-ld=mcld
++@opindex fuse-ld=mcld
++Use the @command{mcld} linker instead of the default linker.
++
+ @item -fcprop-registers
+ @opindex fcprop-registers
+ After register allocation and post-register allocation instruction splitting,
+diff --git a/gcc-4.9/gcc/gcc.c b/gcc-4.9/gcc/gcc.c
+index 84ca317..b075e54 100644
+--- a/gcc-4.9/gcc/gcc.c
++++ b/gcc-4.9/gcc/gcc.c
+@@ -534,7 +534,7 @@ proper position among the other output files.  */
+    shared library ordering, and we keep the wrapper function in
+    libgcc.  This is not yet a real spec, though it could become one;
+    it is currently just stuffed into LINK_SPEC.  FIXME: This wrapping
+-   only works with GNU ld and gold.  */
++   only works with GNU ld, gold and mcld.  */
+ #define STACK_SPLIT_SPEC " %{fsplit-stack: --wrap=pthread_create}"
+ 
+ #ifndef LIBASAN_SPEC
+diff --git a/gcc-4.9/gcc/opts.c b/gcc-4.9/gcc/opts.c
+index fdc903f..d6c2548 100644
+--- a/gcc-4.9/gcc/opts.c
++++ b/gcc-4.9/gcc/opts.c
+@@ -1900,6 +1900,7 @@ common_handle_option (struct gcc_options *opts,
+ 
+     case OPT_fuse_ld_bfd:
+     case OPT_fuse_ld_gold:
++    case OPT_fuse_ld_mcld:
+     case OPT_fuse_linker_plugin:
+       /* No-op. Used by the driver and passed to us because it starts with f.*/
+       break;
+-- 
+1.9.1.423.g4596e3a
+

@@ -1,0 +1,32 @@
+From 386be2f3019638b76a4571c3d0760765026969ce Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Mon, 14 Apr 2014 21:40:20 -0700
+Subject: [PATCH 25/30] [4.9] Add additional multilib option: mfloat-abi=hard
+
+See 5be615df32ce970fcccda93cf577e9ce35b1d397
+
+Change-Id: Iabbfcf0080d966e809e1a8521e93de7fcabd03a4
+---
+ gcc-4.9/gcc/config/arm/t-linux-androideabi | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/gcc-4.9/gcc/config/arm/t-linux-androideabi b/gcc-4.9/gcc/config/arm/t-linux-androideabi
+index 8f1307c..cbbec5b 100644
+--- a/gcc-4.9/gcc/config/arm/t-linux-androideabi
++++ b/gcc-4.9/gcc/config/arm/t-linux-androideabi
+@@ -1,8 +1,9 @@
+-MULTILIB_OPTIONS     = march=armv7-a mthumb
+-MULTILIB_DIRNAMES    = armv7-a thumb
+-MULTILIB_EXCEPTIONS  =
++MULTILIB_OPTIONS     = march=armv7-a mthumb mfloat-abi=hard
++MULTILIB_DIRNAMES    = armv7-a thumb hard
++MULTILIB_EXCEPTIONS  = mfloat-abi=hard* mthumb/mfloat-abi=hard*
+ MULTILIB_MATCHES     =
+ MULTILIB_OSDIRNAMES  =
++MULTILIB_EXTRA_OPTS  = Wl,--no-warn-mismatch
+ 
+ # The "special" multilib can be used to build native applications for Android,
+ # as opposed to native shared libraries that are then called via JNI.
+-- 
+1.9.1.423.g4596e3a
+

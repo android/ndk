@@ -1,0 +1,42 @@
+From c8b1b7254795feaaedb5f5d7f44331c76b4389d6 Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Mon, 14 Apr 2014 17:06:48 -0700
+Subject: [PATCH 10/30] [4.9] Disable libstdc versioning
+
+See f50a81165e305c7339bec78bd3c9cf8a35e1f233
+
+Change-Id: I55451042ed0fe1517e95283c1fefacd0ada63b0b
+---
+ gcc-4.9/libstdc++-v3/src/Makefile.am | 2 +-
+ gcc-4.9/libstdc++-v3/src/Makefile.in | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/gcc-4.9/libstdc++-v3/src/Makefile.am b/gcc-4.9/libstdc++-v3/src/Makefile.am
+index 6c2d228..3040404 100644
+--- a/gcc-4.9/libstdc++-v3/src/Makefile.am
++++ b/gcc-4.9/libstdc++-v3/src/Makefile.am
+@@ -69,7 +69,7 @@ libstdc___la_DEPENDENCIES = \
+ 	$(top_builddir)/src/c++11/libc++11convenience.la
+ 
+ libstdc___la_LDFLAGS = \
+-	-version-info $(libtool_VERSION) ${version_arg} -lm
++	-avoid-version ${version_arg} -lm
+ 
+ libstdc___la_LINK = $(CXXLINK) $(libstdc___la_LDFLAGS)
+ 
+diff --git a/gcc-4.9/libstdc++-v3/src/Makefile.in b/gcc-4.9/libstdc++-v3/src/Makefile.in
+index cd3943b..1e18c5f 100644
+--- a/gcc-4.9/libstdc++-v3/src/Makefile.in
++++ b/gcc-4.9/libstdc++-v3/src/Makefile.in
+@@ -375,7 +375,7 @@ libstdc___la_DEPENDENCIES = \
+ 	$(top_builddir)/src/c++11/libc++11convenience.la
+ 
+ libstdc___la_LDFLAGS = \
+-	-version-info $(libtool_VERSION) ${version_arg} -lm
++	-avoid-version ${version_arg} -lm
+ 
+ libstdc___la_LINK = $(CXXLINK) $(libstdc___la_LDFLAGS)
+ 
+-- 
+1.9.1.423.g4596e3a
+
