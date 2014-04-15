@@ -1,0 +1,79 @@
+From 1ed6b95c772f62ba997ad322650ab7f828a89ffd Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Mon, 14 Apr 2014 16:41:52 -0700
+Subject: [PATCH 04/32] [4.9] Port MIPS Android support to GCC-4.9
+
+See 75b9f722caccc5276fc9c236b9ccb3f7888a86f8
+
+Change-Id: Ia941c59bb94ab943c6ccc188b050daf1894d31d2
+---
+ gcc-4.9/gcc/config.gcc                  | 6 ++++++
+ gcc-4.9/gcc/config/mips/gnu-user.h      | 3 ++-
+ gcc-4.9/gcc/config/mips/linux-common.h  | 2 +-
+ gcc-4.9/gcc/config/mips/t-linux-android | 3 +++
+ 4 files changed, 12 insertions(+), 2 deletions(-)
+ create mode 100644 gcc-4.9/gcc/config/mips/t-linux-android
+
+diff --git a/gcc-4.9/gcc/config.gcc b/gcc-4.9/gcc/config.gcc
+index 7e51940..af05ada 100644
+--- a/gcc-4.9/gcc/config.gcc
++++ b/gcc-4.9/gcc/config.gcc
+@@ -1994,6 +1994,12 @@ mips*-*-linux*)				# Linux MIPS, either endian.
+         mipsisa32*)
+ 		tm_defines="${tm_defines} MIPS_ISA_DEFAULT=32"
+         esac
++	case ${target} in
++	*android*)
++		# Default to little-endian for MIPS Android
++		# tm_defines="${tm_defines} TARGET_ENDIAN_DEFAULT=0"
++		tmake_file="$tmake_file mips/t-linux-android"
++        esac
+ 	;;
+ mips*-mti-elf*)
+ 	tm_file="elfos.h newlib-stdint.h ${tm_file} mips/elf.h mips/n32-elf.h mips/sde.h mips/mti-elf.h"
+diff --git a/gcc-4.9/gcc/config/mips/gnu-user.h b/gcc-4.9/gcc/config/mips/gnu-user.h
+index 1a5b0de..bbe7888 100644
+--- a/gcc-4.9/gcc/config/mips/gnu-user.h
++++ b/gcc-4.9/gcc/config/mips/gnu-user.h
+@@ -36,6 +36,7 @@ along with GCC; see the file COPYING3.  If not see
+     /* The GNU C++ standard library requires this.  */		\
+     if (c_dialect_cxx ())					\
+       builtin_define ("_GNU_SOURCE");				\
++    ANDROID_TARGET_OS_CPP_BUILTINS();				\
+   } while (0)
+ 
+ #undef SUBTARGET_CPP_SPEC
+@@ -117,7 +118,7 @@ extern const char *host_detect_local_cpu (int argc, const char **argv);
+ #endif
+ 
+ #define LINUX_DRIVER_SELF_SPECS \
+-  NO_SHARED_SPECS							\
++  LINUX_OR_ANDROID_CC(NO_SHARED_SPECS, "")                              \
+   MARCH_MTUNE_NATIVE_SPECS,						\
+   /* -mplt has no effect without -mno-shared.  Simplify later		\
+      specs handling by removing a redundant option.  */			\
+diff --git a/gcc-4.9/gcc/config/mips/linux-common.h b/gcc-4.9/gcc/config/mips/linux-common.h
+index e1e977e..c0ecf9d 100644
+--- a/gcc-4.9/gcc/config/mips/linux-common.h
++++ b/gcc-4.9/gcc/config/mips/linux-common.h
+@@ -35,7 +35,7 @@ along with GCC; see the file COPYING3.  If not see
+ #undef  SUBTARGET_CC1_SPEC
+ #define SUBTARGET_CC1_SPEC						\
+   LINUX_OR_ANDROID_CC (GNU_USER_TARGET_CC1_SPEC,			\
+-		       GNU_USER_TARGET_CC1_SPEC " " ANDROID_CC1_SPEC)
++		       GNU_USER_TARGET_CC1_SPEC " " ANDROID_CC1_SPEC("-fpic"))
+ 
+ #undef  CC1PLUS_SPEC
+ #define CC1PLUS_SPEC							\
+diff --git a/gcc-4.9/gcc/config/mips/t-linux-android b/gcc-4.9/gcc/config/mips/t-linux-android
+new file mode 100644
+index 0000000..298cad9
+--- /dev/null
++++ b/gcc-4.9/gcc/config/mips/t-linux-android
+@@ -0,0 +1,3 @@
++MULTILIB_OPTIONS = mips32r2
++MULTILIB_DIRNAMES = mips-r2
++MULTILIB_EXCLUSIONS :=
+-- 
+1.9.1.423.g4596e3a
+

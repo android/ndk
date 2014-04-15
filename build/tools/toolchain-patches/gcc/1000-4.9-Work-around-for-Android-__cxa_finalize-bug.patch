@@ -1,0 +1,32 @@
+From 8adb9149da2916988dfb40de507d4756ef3d50bd Mon Sep 17 00:00:00 2001
+From: 'Digit' Turner <digit@android.com>
+Date: Tue, 15 Apr 2014 13:04:52 -0700
+Subject: [PATCH 01/32] [4.9] Work-around for Android __cxa_finalize bug
+
+Change-Id: Ib479124867ee2c81a761fdb01a80d9cfc681213b
+---
+ gcc-4.9/libstdc++-v3/libsupc++/eh_globals.cc | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/gcc-4.9/libstdc++-v3/libsupc++/eh_globals.cc b/gcc-4.9/libstdc++-v3/libsupc++/eh_globals.cc
+index a0f3dff..12e48db 100644
+--- a/gcc-4.9/libstdc++-v3/libsupc++/eh_globals.cc
++++ b/gcc-4.9/libstdc++-v3/libsupc++/eh_globals.cc
+@@ -100,6 +100,14 @@ struct __eh_globals_init
+ 
+   ~__eh_globals_init()
+   {
++    /* Work-around for an Android-specific bug, where this destructor
++     * is called with a NULL object pointer. This is due to a bug in the
++     * __cxa_finalize() implementation that was only fixed in 2.2.
++     */
++#ifdef __ANDROID__
++    if (this == NULL)
++        return;
++#endif
+     if (_M_init)
+       __gthread_key_delete(_M_key);
+     _M_init = false;
+-- 
+1.9.1.423.g4596e3a
+

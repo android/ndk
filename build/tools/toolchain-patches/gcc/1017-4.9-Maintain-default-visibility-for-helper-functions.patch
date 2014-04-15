@@ -1,0 +1,41 @@
+From 95606a54a926d370f676a9a311daf36e534ee998 Mon Sep 17 00:00:00 2001
+From: Ben Cheng <bccheng@google.com>
+Date: Mon, 14 Apr 2014 20:44:56 -0700
+Subject: [PATCH 18/32] [4.9] Maintain default visibility for helper functions
+ in libgcc.a.
+
+See 68330d08ea4b3e32dbadcfae109508f386177e68
+
+Change-Id: Icd2f323e66d689f62b61c9819b983f4a3bb13984
+---
+ gcc-4.9/libgcc/Makefile.in | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/gcc-4.9/libgcc/Makefile.in b/gcc-4.9/libgcc/Makefile.in
+index e86e98d..7fe4aae 100644
+--- a/gcc-4.9/libgcc/Makefile.in
++++ b/gcc-4.9/libgcc/Makefile.in
+@@ -368,10 +368,20 @@ ifeq ($(enable_shared),yes)
+   endif
+ endif
+ 
++ifneq ($(enable_shared),yes)
++# Some prebuilt libraries for Android link libc.so before libgcc.a, and they
++# rely on libgcc.a to provide those symbols with default visibility to resolve
++# them eventually. The linker order has been fixed in JB maintain releases but
++# may take a while to trickle down to partners to refresh their prebuilt
++# libraries. Therefore we need to maintain the same visibility as older GCC
++# for now.
++vis_hide =
++else
+ # For -fvisibility=hidden.  We need both a -fvisibility=hidden on
+ # the command line, and a #define to prevent libgcc2.h etc from
+ # overriding that with #pragmas.
+ vis_hide = @vis_hide@
++endif
+ 
+ ifneq (,$(vis_hide))
+ 
+-- 
+1.9.1.423.g4596e3a
+

@@ -1,0 +1,47 @@
+From 98f47e13a71446bb29ff88ccb8044f7486f099fb Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Mon, 14 Apr 2014 21:03:03 -0700
+Subject: [PATCH 19/32] [4.9] Add new GCC/MIPS option -mldc1-sdc1
+
+See 6e6510c702f12bc6320681075cc0ba8dc2c814a7
+
+Change-Id: Ic0d11dc74396785a73ae8477e4d5ce46c031f091
+---
+ gcc-4.9/gcc/config/mips/mips.h   | 4 ++--
+ gcc-4.9/gcc/config/mips/mips.opt | 4 ++++
+ 2 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/gcc-4.9/gcc/config/mips/mips.h b/gcc-4.9/gcc/config/mips/mips.h
+index a786d4c..7e2d890 100644
+--- a/gcc-4.9/gcc/config/mips/mips.h
++++ b/gcc-4.9/gcc/config/mips/mips.h
+@@ -864,9 +864,9 @@ struct mips_cpu_info {
+ 				 || TARGET_LOONGSON_2EF)
+ 
+ /* ISA has LDC1 and SDC1.  */
+-#define ISA_HAS_LDC1_SDC1	(!ISA_MIPS1				\
++#define ISA_HAS_LDC1_SDC1	((!ISA_MIPS1				\
+ 				 && !TARGET_MIPS5900			\
+-				 && !TARGET_MIPS16)
++				 && !TARGET_MIPS16) && TARGET_LDC1_SDC1)
+ 
+ /* ISA has the mips4 FP condition code instructions: FP-compare to CC,
+    branch on CC, and move (both FP and non-FP) on CC.  */
+diff --git a/gcc-4.9/gcc/config/mips/mips.opt b/gcc-4.9/gcc/config/mips/mips.opt
+index 6ee5398..835f611 100644
+--- a/gcc-4.9/gcc/config/mips/mips.opt
++++ b/gcc-4.9/gcc/config/mips/mips.opt
+@@ -267,6 +267,10 @@ mips3d
+ Target Report RejectNegative Var(TARGET_MIPS3D)
+ Use MIPS-3D instructions
+ 
++mldc1-sdc1
++Target Report Var(TARGET_LDC1_SDC1) Init(1)
++Use ldc1 and sdc1 instruction
++
+ mllsc
+ Target Report Mask(LLSC)
+ Use ll, sc and sync instructions
+-- 
+1.9.1.423.g4596e3a
+

@@ -1,0 +1,28 @@
+From 5b4f7b61412aca87b10d63cff094f3b375ce858b Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Mon, 14 Apr 2014 16:55:29 -0700
+Subject: [PATCH 09/32] [4.9] Patch GCC libstdc++ to work with Clang in C++11
+
+See 0e1e4c378ef579441c3815c6213422f1df530f9b
+
+Change-Id: I74314f368c202436ddef80639d7096e943d7fb5d
+---
+ gcc-4.9/libstdc++-v3/include/std/type_traits | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/gcc-4.9/libstdc++-v3/include/std/type_traits b/gcc-4.9/libstdc++-v3/include/std/type_traits
+index 4b434a6..0261c7d 100644
+--- a/gcc-4.9/libstdc++-v3/include/std/type_traits
++++ b/gcc-4.9/libstdc++-v3/include/std/type_traits
+@@ -1938,7 +1938,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
+     struct __common_type_impl
+     : private __do_common_type_impl
+     {
+-      typedef decltype(_S_test<_Tp, _Up>(0)) type;
++      typedef typename decay<decltype(_S_test<_Tp, _Up>(0))>::type type;
+     };
+ 
+   struct __do_member_type_wrapper
+-- 
+1.9.1.423.g4596e3a
+

@@ -1,0 +1,28 @@
+From f0f452b5695882e208246fdf9577b1bd7401482f Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Mon, 14 Apr 2014 21:50:32 -0700
+Subject: [PATCH 31/32] [4.9] Fix mips64el-linux-android-4.8 build with new
+ android-20 headers
+
+See 4c35ba7730db5b95bd1404e8a334b7c8e2a9834b
+
+Change-Id: I8633259421152fa4347c6ac85b628a5d7191d0e8
+---
+ gcc-4.9/libgcc/config/mips/linux-unwind.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/gcc-4.9/libgcc/config/mips/linux-unwind.h b/gcc-4.9/libgcc/config/mips/linux-unwind.h
+index 9cf7c80..33507de 100644
+--- a/gcc-4.9/libgcc/config/mips/linux-unwind.h
++++ b/gcc-4.9/libgcc/config/mips/linux-unwind.h
+@@ -27,6 +27,7 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+    state data appropriately.  See unwind-dw2.c for the structs.  */
+ 
+ #include <signal.h>
++#include <asm/sigcontext.h>
+ #include <asm/unistd.h>
+ 
+ /* The third parameter to the signal handler points to something with
+-- 
+1.9.1.423.g4596e3a
+

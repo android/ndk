@@ -1,0 +1,78 @@
+From c76389e041ab81b150f1138c52280050aec813aa Mon Sep 17 00:00:00 2001
+From: Lai Wei-Chih <Robert.Lai@mediatek.com>
+Date: Mon, 14 Apr 2014 21:12:48 -0700
+Subject: [PATCH 21/32] [4.9] Add an internal switch -minline-thumb1-jumptable
+ to ARM gcc4.9
+
+See a3529b2d6b2bcc7136fd67e00e539301942e74d1
+
+Change-Id: Ie1e6f08d437f661096e0ca14b89cb15b7b2dd538
+---
+ gcc-4.9/gcc/config/arm/arm.h   | 3 ++-
+ gcc-4.9/gcc/config/arm/arm.md  | 2 +-
+ gcc-4.9/gcc/config/arm/arm.opt | 4 ++++
+ gcc-4.9/gcc/config/arm/elf.h   | 3 ++-
+ 4 files changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/gcc-4.9/gcc/config/arm/arm.h b/gcc-4.9/gcc/config/arm/arm.h
+index 7ca47a7..a0bf84f 100644
+--- a/gcc-4.9/gcc/config/arm/arm.h
++++ b/gcc-4.9/gcc/config/arm/arm.h
+@@ -1999,10 +1999,11 @@ enum arm_auto_incmodes
+ 
+ #define CASE_VECTOR_PC_RELATIVE (TARGET_THUMB2				\
+ 				 || (TARGET_THUMB1			\
++				     && !inline_thumb1_jump_table	\
+ 				     && (optimize_size || flag_pic)))
+ 
+ #define CASE_VECTOR_SHORTEN_MODE(min, max, body)			\
+-  (TARGET_THUMB1							\
++  (TARGET_THUMB1 && !inline_thumb1_jump_table				\
+    ? (min >= 0 && max < 512						\
+       ? (ADDR_DIFF_VEC_FLAGS (body).offset_unsigned = 1, QImode)	\
+       : min >= -256 && max < 256					\
+diff --git a/gcc-4.9/gcc/config/arm/arm.md b/gcc-4.9/gcc/config/arm/arm.md
+index 2ddda02..01db59b 100644
+--- a/gcc-4.9/gcc/config/arm/arm.md
++++ b/gcc-4.9/gcc/config/arm/arm.md
+@@ -9773,7 +9773,7 @@
+    (match_operand:SI 2 "const_int_operand" "")	; total range
+    (match_operand:SI 3 "" "")			; table label
+    (match_operand:SI 4 "" "")]			; Out of range label
+-  "TARGET_32BIT || optimize_size || flag_pic"
++  "TARGET_32BIT || ((optimize_size || flag_pic) && !inline_thumb1_jump_table)"
+   "
+   {
+     enum insn_code code;
+diff --git a/gcc-4.9/gcc/config/arm/arm.opt b/gcc-4.9/gcc/config/arm/arm.opt
+index d80f1f1..d8b19cc 100644
+--- a/gcc-4.9/gcc/config/arm/arm.opt
++++ b/gcc-4.9/gcc/config/arm/arm.opt
+@@ -193,6 +193,10 @@ mthumb-interwork
+ Target Report Mask(INTERWORK)
+ Support calls between Thumb and ARM instruction sets
+ 
++minline-thumb1-jumptable
++Target Report Var(inline_thumb1_jump_table)
++Inline Thumb1 Jump table code
++
+ mtls-dialect=
+ Target RejectNegative Joined Enum(tls_type) Var(target_tls_dialect) Init(TLS_GNU)
+ Specify thread local storage scheme
+diff --git a/gcc-4.9/gcc/config/arm/elf.h b/gcc-4.9/gcc/config/arm/elf.h
+index 15d53ee..2edf520 100644
+--- a/gcc-4.9/gcc/config/arm/elf.h
++++ b/gcc-4.9/gcc/config/arm/elf.h
+@@ -101,7 +101,8 @@
+    the code more efficient, but for Thumb-1 it's better to put them out of
+    band unless we are generating compressed tables.  */
+ #define JUMP_TABLES_IN_TEXT_SECTION					\
+-   (TARGET_32BIT || (TARGET_THUMB && (optimize_size || flag_pic)))
++   (TARGET_32BIT || (TARGET_THUMB && !inline_thumb1_jump_table		\
++                    && (optimize_size || flag_pic)))
+ 
+ #ifndef LINK_SPEC
+ #define LINK_SPEC "%{mbig-endian:-EB} %{mlittle-endian:-EL} -X"
+-- 
+1.9.1.423.g4596e3a
+
