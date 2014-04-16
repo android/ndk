@@ -305,8 +305,19 @@ copy_gnustl_libs ()
 }
 
 GCC_VERSION_LIST=$(commas_to_spaces $GCC_VERSION_LIST)
-for VERSION in $GCC_VERSION_LIST; do
-    for ABI in $ABIS; do
+for ABI in $ABIS; do
+    ARCH=$(convert_abi_to_arch $ABI)
+    DEFAULT_GCC_VERSION=$(get_default_gcc_version_for_arch $ARCH)
+    BUILD_IT=
+    for VERSION in $GCC_VERSION_LIST; do
+        # Only build for this GCC version if it on or after DEFAULT_GCC_VERSION
+        if [ -z "$BUILD_IT" -a "$VERSION" = "$DEFAULT_GCC_VERSION" ]; then
+	    BUILD_IT=yes
+	fi
+	if [ -z "$BUILD_IT" ]; then
+            continue
+	fi
+
         build_gnustl_for_abi $ABI "$BUILD_DIR" static $VERSION
         build_gnustl_for_abi $ABI "$BUILD_DIR" shared $VERSION
         # build thumb version of libraries for 32-bit arm
@@ -328,6 +339,9 @@ if [ -n "$PACKAGE_DIR" ] ; then
 
         # Then, one package per version/ABI for libraries
         for ABI in $ABIS; do
+            if [ ! -d "$NDK_DIR/$GNUSTL_SUBDIR/$VERSION/libs/$ABI" ]; then
+                continue
+            fi
             FILES=""
             for LIB in include/bits libsupc++.a libgnustl_static.a libgnustl_shared.so; do
                 FILES="$FILES $GNUSTL_SUBDIR/$VERSION/libs/$ABI/$LIB"

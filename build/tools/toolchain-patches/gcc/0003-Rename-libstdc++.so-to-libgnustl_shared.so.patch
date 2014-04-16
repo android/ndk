@@ -10,10 +10,11 @@ Change-Id: I63fb5be818115c6d0c7e96b937ba39f225b475cf
 ---
  gcc-4.6/libstdc++-v3/src/Makefile.in | 5 ++++-
  gcc-4.8/libstdc++-v3/src/Makefile.in | 5 ++++-
- 2 files changed, 8 insertions(+), 2 deletions(-)
+ gcc-4.9/libstdc++-v3/src/Makefile.in | 5 ++++-
+ 3 files changed, 12 insertions(+), 3 deletions(-)
 
 diff --git a/gcc-4.6/libstdc++-v3/src/Makefile.in b/gcc-4.6/libstdc++-v3/src/Makefile.in
-index 146ec3f..99f0f56 100644
+index d03acd5..5abd1d2 100644
 --- a/gcc-4.6/libstdc++-v3/src/Makefile.in
 +++ b/gcc-4.6/libstdc++-v3/src/Makefile.in
 @@ -340,7 +340,7 @@ WARN_CXXFLAGS = \
@@ -36,7 +37,7 @@ index 146ec3f..99f0f56 100644
  	-rm -f *.$(OBJEXT)
  
 diff --git a/gcc-4.8/libstdc++-v3/src/Makefile.in b/gcc-4.8/libstdc++-v3/src/Makefile.in
-index 69001b4..e875539 100644
+index 9721ebb..dd3d426 100644
 --- a/gcc-4.8/libstdc++-v3/src/Makefile.in
 +++ b/gcc-4.8/libstdc++-v3/src/Makefile.in
 @@ -336,7 +336,7 @@ AM_CPPFLAGS = $(GLIBCXX_INCLUDES)
@@ -58,6 +59,29 @@ index 69001b4..e875539 100644
  mostlyclean-compile:
  	-rm -f *.$(OBJEXT)
  
+diff --git a/gcc-4.9/libstdc++-v3/src/Makefile.in b/gcc-4.9/libstdc++-v3/src/Makefile.in
+index cd3943b..ec04005 100644
+--- a/gcc-4.9/libstdc++-v3/src/Makefile.in
++++ b/gcc-4.9/libstdc++-v3/src/Makefile.in
+@@ -342,7 +342,7 @@ AM_CPPFLAGS = $(GLIBCXX_INCLUDES)
+ SUBDIRS = c++98 c++11
+ 
+ # Cross compiler support.
+-toolexeclib_LTLIBRARIES = libstdc++.la
++toolexeclib_LTLIBRARIES = libgnustl_shared.la
+ @GLIBCXX_LDBL_COMPAT_FALSE@ldbl_compat_sources = 
+ @GLIBCXX_LDBL_COMPAT_TRUE@ldbl_compat_sources = compatibility-ldbl.cc
+ parallel_compat_sources = \
+@@ -552,6 +552,9 @@ clean-toolexeclibLTLIBRARIES:
+ libstdc++.la: $(libstdc___la_OBJECTS) $(libstdc___la_DEPENDENCIES) 
+ 	$(libstdc___la_LINK) -rpath $(toolexeclibdir) $(libstdc___la_OBJECTS) $(libstdc___la_LIBADD) $(LIBS)
+ 
++libgnustl_shared.la: $(libstdc___la_OBJECTS) $(libstdc___la_DEPENDENCIES)
++	$(libstdc___la_LINK) -rpath $(toolexeclibdir) $(libstdc___la_OBJECTS) $(libstdc___la_LIBADD) $(LIBS)
++
+ mostlyclean-compile:
+ 	-rm -f *.$(OBJEXT)
+ 
 -- 
-1.7.6.rc0
+1.9.1.423.g4596e3a
 

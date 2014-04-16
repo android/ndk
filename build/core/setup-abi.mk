@@ -26,24 +26,17 @@ endif
 
 TARGET_OUT := $(NDK_APP_OUT)/$(_app)/$(TARGET_ARCH_ABI)
 
-# Special handling for x86: The minimal platform is android-9 here
+# Special handling for x86 and mips: The minimal platform is android-9 here
 # For now, handle this with a simple substitution. We may want to implement
 # more general filtering in the future when introducing other ABIs.
 TARGET_PLATFORM_SAVED := $(TARGET_PLATFORM)
-ifneq ($(filter %x86,$(TARGET_ARCH_ABI)),)
+ifneq ($(filter %x86 %mips,$(TARGET_ARCH_ABI)),)
 $(foreach _plat,3 4 5 8,\
     $(eval TARGET_PLATFORM := $$(subst android-$(_plat),android-9,$$(TARGET_PLATFORM)))\
 )
 endif
 
-# The minimal platform for mips is android-9
-ifneq ($(filter %mips,$(TARGET_ARCH_ABI)),)
-$(foreach _plat,3 4 5 8,\
-    $(eval TARGET_PLATFORM := $$(subst android-$(_plat),android-9,$$(TARGET_PLATFORM)))\
-)
-endif
-
-# The minimal platform for 64-bit is android-20
+# The minimal platform for 64-bit ABIs is android-20
 ifneq ($(filter %arm64-v8a %x86_64 %mips64,$(TARGET_ARCH_ABI)),)
 $(foreach _plat,3 4 5 8 9 10 11 12 13 14 15 16 17 18 19,\
     $(eval TARGET_PLATFORM := $$(subst android-$(_plat),android-20,$$(TARGET_PLATFORM)))\

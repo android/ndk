@@ -315,6 +315,11 @@ case "$TOOLCHAIN" in
     *) EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-libgomp" ;;
 esac
 
+# Disable libcilkrts which needs C++ for now, because libstdlibc++ in NDK is built separately...
+case "$TOOLCHAIN" in
+    x86*-4.9) EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --disable-libcilkrts"
+esac
+
 # Disable libsanitizer (which depends on libstdc++ built separately) for now
 EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --disable-libsanitizer"
 
@@ -481,7 +486,7 @@ create_unwind_library ()
 
 # Only create libgccunwind.a when building default version of gcc
 DEFAULT_GCC_VERSION=$(get_default_gcc_version_for_arch $ARCH)
-if [ "$HOST_OS" = "linux" -a "$GCC_VERSION" = "$DEFAULT_GCC_VERSION" ]; then # or latest gcc ie 4.8?
+if [ "$HOST_OS" = "linux" -a "$GCC_VERSION" = "$DEFAULT_GCC_VERSION" ]; then
     run create_unwind_library $ARCH $NDK_DIR
 fi
 
