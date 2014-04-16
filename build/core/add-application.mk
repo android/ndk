@@ -94,19 +94,19 @@ endif # APP_PROJECT_PATH == null
 # SPECIAL CASES:
 # 1) android-6 and android-7 are the same thing as android-5
 # 2) android-10 and 11 are the same thing as android-9
-# 3) android-19 and up are the same thing as android-19
+# 3) android-20 and up are the same thing as android-20
 #
 APP_PLATFORM_LEVEL := $(strip $(subst android-,,$(APP_PLATFORM)))
 ifneq (,$(filter 6 7,$(APP_PLATFORM_LEVEL)))
     APP_PLATFORM := android-5
-    $(call ndk_log,  Adjusting APP_PLATFORM android-$(APP_PLATFORM_LEVEL) to $(APP_PLATFORM))
 endif
 ifneq (,$(filter 10 11,$(APP_PLATFORM_LEVEL)))
     APP_PLATFORM := android-9
-    $(call ndk_log,  Adjusting APP_PLATFORM android-$(APP_PLATFORM_LEVEL) to $(APP_PLATFORM))
 endif
-ifneq (,$(call gt,$(APP_PLATFORM_LEVEL),19))
-    APP_PLATFORM := android-19
+ifneq (,$(call gt,$(APP_PLATFORM_LEVEL),20))
+    APP_PLATFORM := android-20
+endif
+ifneq ($(APP_PLATFORM),$(APP_PLATFORM_LEVEL))
     $(call ndk_log,  Adjusting APP_PLATFORM android-$(APP_PLATFORM_LEVEL) to $(APP_PLATFORM))
 endif
 
