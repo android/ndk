@@ -9,7 +9,7 @@
 API_LEVELS="3 4 5 8 9 12 13 14 15 16 17 18 19"
 
 # Default ABIs for the target prebuilt binaries.
-PREBUILT_ABIS="armeabi armeabi-v7a x86 mips armeabi-v7a-hard"
+PREBUILT_ABIS="armeabi armeabi-v7a x86 mips armeabi-v7a-hard arm64-v8a x86_64 mips64"
 
 # Location of the STLport sources, relative to the NDK root directory
 STLPORT_SUBDIR=sources/cxx-stl/stlport
@@ -42,7 +42,7 @@ SUPPORT_SUBDIR=sources/android/support
 TOOLCHAIN_GIT_DATE=now
 
 # The space-separated list of all GCC versions we support in this NDK
-DEFAULT_GCC_VERSION_LIST="4.6 4.8"
+DEFAULT_GCC_VERSION_LIST="4.6 4.8 4.9"
 
 # The default GCC version for 32-bit NDK is the first item in $DEFAULT_GCC_VERSION_LIST
 DEFAULT_GCC32_VERSION=$(echo "$DEFAULT_GCC_VERSION_LIST" | tr ' ' '\n' | head -n 1)
@@ -70,7 +70,7 @@ RECENT_BINUTILS_VERSION=2.23
 DEFAULT_PLATFORM=android-9
 
 # The list of default CPU architectures we support
-DEFAULT_ARCHS="arm x86 mips"
+DEFAULT_ARCHS="arm x86 mips arm64 x86_64 mips64"
 
 # Default toolchain names and prefix
 #
@@ -241,7 +241,7 @@ get_default_binutils_version_for_gcc ()
         *-4.4.3) echo "2.19";;
         x86*-4.7) echo "2.23";;  # Use 2.23 to get x32 support in ld.gold
         *-4.7) echo "2.22";;
-        *) echo "2.23";;
+        *) echo "2.24";;
     esac
 }
 
@@ -269,7 +269,7 @@ get_default_binutils_version_for_llvm ()
 get_default_gdb_version_for_gcc ()
 {
     case $1 in
-        x86*|aarch64-*|mips64el-*) echo "7.6";;
+        x86*|aarch64-*|mips64el-*|*-4.9) echo "7.6";;
         *) echo "$DEFAULT_GDB_VERSION";;
     esac
 }

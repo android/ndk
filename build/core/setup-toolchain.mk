@@ -50,7 +50,7 @@ ifndef NDK_TOOLCHAIN
     endif
     # Select the last toolchain from the sorted list.
     # For now, this is enough to select armeabi-4.6 by default for ARM
-    TARGET_TOOLCHAIN := $(lastword $(TARGET_TOOLCHAIN_LIST))
+    TARGET_TOOLCHAIN := $(firstword $(TARGET_TOOLCHAIN_LIST))
 
     # If NDK_TOOLCHAIN_VERSION is defined, we replace the toolchain version
     # suffix with it.
