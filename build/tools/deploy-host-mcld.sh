@@ -37,7 +37,7 @@ ie. {linux, darwin, windows} x {64, 32}
 If --systems isn't specified, this script discovers all ld.mcld[.exe] in
 toolchains/llvm-$DEFAULT_LLVM_VERSION
 
-Note that one copy of ld.mcld serves all GCC {4.8, 4.7, 4.6, 4.4.3} x {arm, x86, mips} and
+Note that one copy of ld.mcld serves all GCC {4.9, 4.8, 4.7, 4.6, 4.4.3} x {arm, x86, mips} and
 LLVM {3.3, 3.4}.
 
 GCC passes -m flag for ld.mcld to figure out the right target.
@@ -94,7 +94,7 @@ for SYSTEM in $SYSTEMS; do
     ALL_LD_MCLDS=
 
     # find all GNU ld with the same SYSTEM
-    ALL_LDS=`find toolchains \( -name "*-ld" -o -name "ld" -o -name "*-ld.exe" -o -name "ld.exe" \) | egrep "/arm|/x86|/mips" | grep $SYSTEM/`
+    ALL_LDS=`find toolchains \( -name "*-ld" -o -name "ld" -o -name "*-ld.exe" -o -name "ld.exe" \) | egrep "/arm|/x86|/mips|/aarch64" | grep $SYSTEM/`
     for LD in $ALL_LDS; do
         LD_NOEXE=${LD%%.exe}
         LD_MCLD=${LD_NOEXE}.mcld$HOST_EXE

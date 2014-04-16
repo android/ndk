@@ -519,7 +519,7 @@ builder_begin_android ()
         BINPREFIX=$NDK_DIR/$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION)
     else
         BINPREFIX=$NDK_DIR/$(get_llvm_toolchain_binprefix $LLVM_VERSION)
-        # override GCC_VERSION to pick 4.8 instead of the default
+        # override GCC_VERSION to pick $DEFAULT_LLVM_GCC_VERSION instead
         GCC_VERSION=$DEFAULT_LLVM_GCC_VERSION
         GCC_TOOLCHAIN=`dirname $NDK_DIR/$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION)`
         GCC_TOOLCHAIN=`dirname $GCC_TOOLCHAIN`
