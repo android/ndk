@@ -538,6 +538,10 @@ run rm -rf $TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/lib/libiberty.a
 run rm -rf $TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/lib/*/libiberty.a
 run rm -rf $TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/lib/*/*/libiberty.a
 find $TOOLCHAIN_PATH -name "*.la" -exec rm -f {} \;
+# Remove host install in cross compilation
+if [ "$ABI_CONFIGURE_HOST" != "$ABI_CONFIGURE_TARGET" ]; then
+    run rm -rf "$TOOLCHAIN_PATH/$ABI_CONFIGURE_HOST"
+fi
 
 # Remove libstdc++ for now (will add it differently later)
 # We had to build it to get libsupc++ which we keep.
