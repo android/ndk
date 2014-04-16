@@ -1,19 +1,19 @@
-From c3f91ccde6e77a4349c7fa0a67a95eebc0151a5c Mon Sep 17 00:00:00 2001
+From 1f7116320843169cc9ea4b4a65a5e4c66db1bd10 Mon Sep 17 00:00:00 2001
 From: Andrew Hsieh <andrewhsieh@google.com>
-Date: Tue, 14 Jan 2014 14:46:16 -0800
+Date: Mon, 14 Apr 2014 11:15:08 -0700
 Subject: [PATCH 3/3] Allow multiple --no-warn-mismatch
 
-Change-Id: I28eba502b7ff63bb5bb994eabe63cf75458ee4b4
+Change-Id: I72ab8f2aa28d94e53d429e9d3e9c6fae91518082
 ---
  tools/lite/lib/OutputFormatOptions.cpp | 1 +
  tools/mcld/main.cpp                    | 1 +
  2 files changed, 2 insertions(+)
 
 diff --git a/tools/lite/lib/OutputFormatOptions.cpp b/tools/lite/lib/OutputFormatOptions.cpp
-index cfc6c04..f2cfb87 100644
+index 40ac2dc..902fac1 100644
 --- a/tools/lite/lib/OutputFormatOptions.cpp
 +++ b/tools/lite/lib/OutputFormatOptions.cpp
-@@ -148,6 +148,7 @@ llvm::cl::opt<mcld::GeneralOptions::HashStyle> ArgHashStyle("hash-style",
+@@ -149,6 +149,7 @@ llvm::cl::opt<mcld::GeneralOptions::HashStyle> ArgHashStyle("hash-style",
         clEnumValEnd));
  
  llvm::cl::opt<bool> ArgNoWarnMismatch("no-warn-mismatch",
@@ -22,10 +22,10 @@ index cfc6c04..f2cfb87 100644
    llvm::cl::init(false));
  
 diff --git a/tools/mcld/main.cpp b/tools/mcld/main.cpp
-index 854aaa9..38e2531 100644
+index 6a28c91..b8795dd 100644
 --- a/tools/mcld/main.cpp
 +++ b/tools/mcld/main.cpp
-@@ -731,6 +731,7 @@ ArgARMCompatibility("p",
+@@ -734,6 +734,7 @@ ArgARMCompatibility("p",
  
  static cl::opt<bool>
  ArgNoWarnMismatch("no-warn-mismatch",
@@ -34,5 +34,5 @@ index 854aaa9..38e2531 100644
                    cl::init(false));
  
 -- 
-1.8.5.2
+1.9.1.423.g4596e3a
 

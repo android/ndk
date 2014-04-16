@@ -1,9 +1,9 @@
-From c2c44f326a82ffab6208edf08f7e4c91610a4607 Mon Sep 17 00:00:00 2001
+From 4c86cbb6f8108c06c4ec57be120fc1fcb050866a Mon Sep 17 00:00:00 2001
 From: Andrew Hsieh <andrewhsieh@google.com>
-Date: Tue, 14 Jan 2014 14:45:54 -0800
+Date: Mon, 14 Apr 2014 11:14:41 -0700
 Subject: [PATCH 2/3] Compile only "lite" mclinker
 
-Change-Id: I91ccf3a2280bbb0cf56957da1552e7e59052a4b8
+Change-Id: I20be83e0418af331ea752e2c1dfe5b83aa53958c
 ---
  tools/Makefile.am | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
@@ -18,5 +18,5 @@ index fa91a8b..ebddaf4 100644
 -SUBDIRS = lite mcld
 +SUBDIRS = lite # mcld
 -- 
-1.8.5.2
+1.9.1.423.g4596e3a
 
