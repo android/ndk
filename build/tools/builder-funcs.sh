@@ -498,7 +498,7 @@ builder_begin_android ()
     local ABI BUILDDIR LLVM_VERSION MAKEFILE
     local ARCH SYSROOT FLAGS
     local CRTBEGIN_SO_O CRTEND_SO_O CRTBEGIN_EXE_SO CRTEND_SO_O
-    local BINPREFIX GCC_TOOLCHAIN LLVM_TRIPLE
+    local BINPREFIX GCC_TOOLCHAIN LLVM_TRIPLE GCC_VERSION
     if [ -z "$NDK_DIR" ]; then
         panic "NDK_DIR is not defined!"
     elif [ ! -d "$NDK_DIR/platforms" ]; then
@@ -519,7 +519,7 @@ builder_begin_android ()
         BINPREFIX=$NDK_DIR/$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION)
     else
         BINPREFIX=$NDK_DIR/$(get_llvm_toolchain_binprefix $LLVM_VERSION)
-        # override GCC_VERSION to pick 4.8 instead of the default
+        # override GCC_VERSION to pick $DEFAULT_LLVM_GCC_VERSION instead
         GCC_VERSION=$DEFAULT_LLVM_GCC_VERSION
         GCC_TOOLCHAIN=`dirname $NDK_DIR/$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION)`
         GCC_TOOLCHAIN=`dirname $GCC_TOOLCHAIN`
