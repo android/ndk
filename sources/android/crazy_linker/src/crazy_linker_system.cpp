@@ -96,7 +96,7 @@ bool IsSystemLibrary(const char* lib_name) {
       "libEGL.so",       "libGLESv1_CM.so", "libGLESv2.so", "libGLESv3.so",
       "libOpenMAXAL.so", "libOpenSLES.so", };
   const size_t kSize = sizeof(kSystemLibs) / sizeof(kSystemLibs[0]);
-  const char* base_name = ::strchr(lib_name, '/');
+  const char* base_name = ::strrchr(lib_name, '/');
   if (!base_name)
     base_name = lib_name;
   else
