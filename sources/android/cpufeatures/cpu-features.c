@@ -28,6 +28,8 @@
 
 /* ChangeLog for this library:
  *
+ * NDK r9?: Support for 64-bit CPUs (Intel, ARM & MIPS).
+ *
  * NDK r8d: Add android_setCpu().
  *
  * NDK r8c: Add new ARM CPU features: VFPv2, VFP_D32, VFP_FP16,
@@ -82,15 +84,7 @@ static  int                g_cpuCount;
 static  uint32_t           g_cpuIdArm;
 #endif
 
-static const int  android_cpufeatures_debug = 0;
-
-#ifdef __arm__
-#  define DEFAULT_CPU_FAMILY  ANDROID_CPU_FAMILY_ARM
-#elif defined __i386__
-#  define DEFAULT_CPU_FAMILY  ANDROID_CPU_FAMILY_X86
-#else
-#  define DEFAULT_CPU_FAMILY  ANDROID_CPU_FAMILY_UNKNOWN
-#endif
+static const int android_cpufeatures_debug = 0;
 
 #define  D(...) \
     do { \
@@ -433,6 +427,8 @@ cpulist_read_from(CpuList* list, const char* filename)
     cpulist_parse(list, file, filelen);
 }
 
+#if defined(__arm__)
+
 // See <asm/hwcap.h> kernel header.
 #define HWCAP_VFP       (1 << 6)
 #define HWCAP_IWMMXT    (1 << 9)
@@ -443,39 +439,40 @@ cpulist_read_from(CpuList* list, const char* filename)
 #define HWCAP_IDIVA     (1 << 17)
 #define HWCAP_IDIVT     (1 << 18)
 
+// This is the list of 32-bit ARMv7 optional features that are _always_
+// supported by ARMv8 CPUs, as mandated by the ARM Architecture Reference
+// Manual.
+#define HWCAP_SET_FOR_ARMV8  \
+  ( HWCAP_VFP | \
+    HWCAP_NEON | \
+    HWCAP_VFPv3 | \
+    HWCAP_VFPv4 | \
+    HWCAP_IDIVA | \
+    HWCAP_IDIVT )
+
 #define AT_HWCAP 16
 
-#if defined(__arm__)
-/* Compute the ELF HWCAP flags.
- */
-static uint32_t
-get_elf_hwcap(const char* cpuinfo, int cpuinfo_len)
-{
-  /* IMPORTANT:
-   *   Accessing /proc/self/auxv doesn't work anymore on all
-   *   platform versions. More specifically, when running inside
-   *   a regular application process, most of /proc/self/ will be
-   *   non-readable, including /proc/self/auxv. This doesn't
-   *   happen however if the application is debuggable, or when
-   *   running under the "shell" UID, which is why this was not
-   *   detected appropriately.
-   */
-#if 0
-    uint32_t result = 0;
+// Parse /proc/self/auxv to extract the ELF HW capabilities bitmap for the
+// current CPU. Note that this file is not accessible from regular
+// application processes on some Android platform releases.
+// On success, return 0 and sets |*elf_hwcap| to the appropriate value,
+// On failure, return -errno code.
+static int
+get_elf_hwcap_from_proc_self_auxv(uint32_t *elf_hwcap) {
     const char filepath[] = "/proc/self/auxv";
-    int fd = open(filepath, O_RDONLY);
+    int fd = TEMP_FAILURE_RETRY(open(filepath, O_RDONLY));
     if (fd < 0) {
-        D("Could not open %s: %s\n", filepath, strerror(errno));
-        return 0;
+        int ret = -errno;
+        D("Could not open %s: %s\n", filepath, strerror(-ret));
+        return ret;
     }
 
     struct { uint32_t tag; uint32_t value; } entry;
 
+    uint32_t result = 0;
     for (;;) {
-        int ret = read(fd, (char*)&entry, sizeof entry);
+        int ret = TEMP_FAILURE_RETRY(read(fd, (char*)&entry, sizeof entry));
         if (ret < 0) {
-            if (errno == EINTR)
-                continue;
             D("Error while reading %s: %s\n", filepath, strerror(errno));
             break;
         }
@@ -487,14 +484,36 @@ get_elf_hwcap(const char* cpuinfo, int cpuinfo_len)
           break;
         }
     }
+    *elf_hwcap = result;
     close(fd);
-    return result;
-#else
-    // Recreate ELF hwcaps by parsing /proc/cpuinfo Features tag.
+    return 0;
+}
+
+/* Compute the ELF HWCAP flags from the content of /proc/cpuinfo.
+ * This works by parsing the 'Features' line, which lists which optional
+ * features the device's CPU supports, on top of its reference
+ * architecture.
+ */
+static uint32_t
+get_elf_hwcap_from_proc_cpuinfo(const char* cpuinfo, int cpuinfo_len) {
     uint32_t hwcaps = 0;
+    long architecture = 0;
+    char* cpuArch = extract_cpuinfo_field(cpuinfo, cpuinfo_len, "CPU architecture");
+    if (cpuArch) {
+        architecture = strtol(cpuArch, NULL, 10);
+        free(cpuArch);
+
+        if (architecture >= 8L) {
+            // This is a 32-bit ARM binary running on a 64-bit ARM64 kernel.
+            // The 'Features' line only lists the optional features that the
+            // device's CPU supports, compared to its reference architecture
+            // which are of no use for this process.
+            D("Faking 32-bit ARM HWCaps on ARMv%ld CPU\n", architecture);
+            return HWCAP_SET_FOR_ARMV8;
+        }
+    }
 
     char* cpuFeatures = extract_cpuinfo_field(cpuinfo, cpuinfo_len, "Features");
-
     if (cpuFeatures != NULL) {
         D("Found cpuFeatures = '%s'\n", cpuFeatures);
 
@@ -520,7 +539,6 @@ get_elf_hwcap(const char* cpuinfo, int cpuinfo_len)
         free(cpuFeatures);
     }
     return hwcaps;
-#endif
 }
 #endif  /* __arm__ */
 
@@ -609,9 +627,6 @@ android_cpuInit(void)
 
 #ifdef __arm__
     {
-        char*  features = NULL;
-        char*  architecture = NULL;
-
         /* Extract architecture from the "CPU Architecture" field.
          * The list is well-known, unlike the the output of
          * the 'Processor' field which can vary greatly.
@@ -632,10 +647,7 @@ android_cpuInit(void)
             /* read the initial decimal number, ignore the rest */
             archNumber = strtol(cpuArch, &end, 10);
 
-            /* Here we assume that ARMv8 will be upwards compatible with v7
-             * in the future. Unfortunately, there is no 'Features' field to
-             * indicate that Thumb-2 is supported.
-             */
+            /* Note that ARMv8 is upwards compatible with ARMv7. */
             if (end > cpuArch && archNumber >= 7) {
                 hasARMv7 = 1;
             }
@@ -676,7 +688,14 @@ android_cpuInit(void)
         }
 
         /* Extract the list of CPU features from ELF hwcaps */
-        uint32_t hwcaps = get_elf_hwcap(cpuinfo, cpuinfo_len);
+        uint32_t hwcaps = 0;
+        if (get_elf_hwcap_from_proc_self_auxv(&hwcaps) < 0) {
+            // Parsing /proc/self/auxv will fail from regular application
+            // processes on some Android platform versions, when this happens
+            // parse proc/cpuinfo instead.
+            D("Parsing /proc/cpuinfo to extract ELF hwcaps!\n");
+            hwcaps = get_elf_hwcap_from_proc_cpuinfo(cpuinfo, cpuinfo_len);
+        }
 
         if (hwcaps != 0) {
             int has_vfp = (hwcaps & HWCAP_VFP);
