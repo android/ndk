@@ -518,12 +518,12 @@ copy_stl_common_headers () {
             copy_directory "$LIBCXX_DIR/libcxx/include" "$ABI_STL_INCLUDE"
             copy_directory "$SUPPORT_DIR/include" "$ABI_STL_INCLUDE"
             copy_directory "$STLPORT_DIR/../gabi++/include" "$ABI_STL_INCLUDE/../../gabi++/include"
-            copy_gabixx_headers cxxabi.h unwind.h unwind-arm.h unwind-itanium.h
+            copy_gabixx_headers cxxabi.h unwind.h unwind-arm.h unwind-itanium.h gabixx_config.h
             ;;
         stlport)
             copy_directory "$STLPORT_DIR/stlport" "$ABI_STL_INCLUDE"
             copy_directory "$STLPORT_DIR/../gabi++/include" "$ABI_STL_INCLUDE/../../gabi++/include"
-            copy_gabixx_headers cxxabi.h unwind.h unwind-arm.h unwind-itanium.h
+            copy_gabixx_headers cxxabi.h unwind.h unwind-arm.h unwind-itanium.h gabixx_config.h
             ;;
     esac
 }
