@@ -81,7 +81,6 @@ WITH_DEBUG_INFO=
 register_var_option "--with-debug-info" WITH_DEBUG_INFO "Build with -g.  STL is still built with optimization but with debug info"
 
 EXPLICIT_COMPILER_VERSION=
-AUTO_CONFIG_LLVM_VERSION=
 
 GCC_VERSION=
 register_var_option "--gcc-version=<ver>" GCC_VERSION "Specify GCC version" "$GCC_VERSION"
@@ -174,7 +173,6 @@ if [ "$CXX_STL" = "libc++" ]; then
   # Use clang to build libc++ by default
   if [ "$EXPLICIT_COMPILER_VERSION" != "true" ]; then
     LLVM_VERSION=$DEFAULT_LLVM_VERSION
-    AUTO_CONFIG_LLVM_VERSION=yes
   fi
 else
   GABIXX_INCLUDES="-I$GABIXX_SRCDIR/include"
@@ -446,7 +444,7 @@ build_stl_libs_for_abi ()
     local DSTDIR="$4"
     local FLOAT_ABI=""
     local DEFAULT_CFLAGS DEFAULT_CXXFLAGS
-    local SRC OBJ OBJECTS EXTRA_CFLAGS EXTRA_CXXFLAGS EXTRA_LDFLAGS LIB_SUFFIX GCCVER
+    local SRC OBJ OBJECTS EXTRA_CFLAGS EXTRA_CXXFLAGS EXTRA_LDFLAGS LIB_SUFFIX GCCVER LLVMVER
 
     mkdir -p "$BUILDDIR"
 
@@ -476,11 +474,11 @@ build_stl_libs_for_abi ()
         GCCVER=$(get_default_gcc_version_for_arch $ARCH)
     fi
     LLVMVER=$LLVM_VERSION
-    if [ "$AUTO_CONFIG_LLVM_VERSION" = "yes" ]; then
-        # clang/llvm for arm64-v8a and mips64 aren't ready yet
-        if [ "$ABI" = "arm64-v8a" -o "$ABI" = "mips64" ]; then
-            LLVMVER=
-        fi
+    # Hack: clang/llvm for arm64-v8a and mips64 aren't ready yet.  Use GCC instead
+    if [ "$ABI" = "arm64-v8a" -o "$ABI" = "mips64" ]; then
+        log "Auto-hack: Use GCC-$GCCVER instead of llvm-$LLVMVER for arm64-v8a and mips64"
+        LLVMVER=
+        GCCVER=$(get_default_gcc_version_for_arch $ARCH)
     fi
 
     # libc++ built with clang (for ABI armeabi-only) produces

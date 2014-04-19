@@ -195,7 +195,7 @@ build_compiler_rt_libs_for_abi ()
     local BUILDDIR="$2"
     local TYPE="$3"
     local DSTDIR="$4"
-    local GCCVER
+    local GCCVER LLVMVER
 
     mkdir -p "$BUILDDIR"
 
@@ -209,10 +209,18 @@ build_compiler_rt_libs_for_abi ()
     if [ -n "$GCC_VERSION" ]; then
         GCCVER=$GCC_VERSION
     else
+        ARCH=$(convert_abi_to_arch $ABI)
+        GCCVER=$(get_default_gcc_version_for_arch $ARCH)
+    fi
+    LLVMVER=$LLVM_VERSION
+    # Hack: clang/llvm for arm64-v8a and mips64 aren't ready yet.  Use GCC instead
+    if [ "$ABI" = "arm64-v8a" -o "$ABI" = "mips64" ]; then
+        log "Auto-hack: Use GCC-$GCCVER instead of llvm-$LLVMVER for arm64-v8a and mips64"
+        LLVMVER=
         GCCVER=$(get_default_gcc_version_for_arch $ARCH)
     fi
 
-    builder_begin_android $ABI "$BUILDDIR" "$GCCVER" "$LLVM_VERSION" "$MAKEFILE"
+    builder_begin_android $ABI "$BUILDDIR" "$GCCVER" "$LLVMVER" "$MAKEFILE"
     builder_set_srcdir "$SRC_DIR"
     builder_set_dstdir "$DSTDIR"
 
