@@ -36,7 +36,7 @@ NDK_BUILDTOOLS_PATH=$ROOTDIR/build/tools
 # directoy and tested separately from armeabi-v7a.  Some tests are now compiled with both
 # APP_ABI=armeabi-v7a and APP_ABI=armeabi-v7a-hard. Without _NDK_TESTING_ALL_=yes, tests
 # may fail to install due to race condition on the same libs/armeabi-v7a
-_NDK_TESTING_ALL_=yes
+export _NDK_TESTING_ALL_=yes
 
 # The list of tests that are too long to be part of a normal run of
 # run-tests.sh. Most of these do not run properly at the moment.
@@ -432,7 +432,7 @@ gen_empty_archive() {
 case $ABI in
     default)  # Let the APP_ABI in jni/Application.mk decide what to build
         ;;
-    armeabi|armeabi-v7a|x86|x86_64|mips|armeabi-v7a-hard|arm64-v8a|x86_64|mips64)
+    armeabi|armeabi-v7a|arm64-v8a|x86|x86_64|mips|mips64|armeabi-v7a-hard)
         NDK_BUILD_FLAGS="$NDK_BUILD_FLAGS APP_ABI=$ABI"
         ;;
     *)
@@ -952,10 +952,6 @@ if is_testable device; then
         dump "SKIPPING RUNNING TESTS ON DEVICE!"
     else
         AT_LEAST_CPU_ABI_MATCH=
-        REAL_ABI=$ABI
-        if [ "$REAL_ABI" = "armeabi-v7a-hard" ]; then
-            REAL_ABI=armeabi-v7a
-        fi
         for DEVICE in $ADB_DEVICES; do
             # undo earlier ' '-to-'#' translation
             DEVICE=$(echo "$DEVICE" | tr '#' ' ')
@@ -976,7 +972,7 @@ if is_testable device; then
             fi
             log "CPU_ABIS=$CPU_ABIS"
             for CPU_ABI in $CPU_ABIS; do
-                if [ "$REAL_ABI" = "default" -o "$REAL_ABI" = "$CPU_ABI" -o "$REAL_ABI" = "$(find_ndk_unknown_archs)" ] ; then
+                if [ "$ABI" = "default" -o "$ABI" = "$CPU_ABI" -o "$ABI" = "$(find_ndk_unknown_archs)" ] ; then
                     AT_LEAST_CPU_ABI_MATCH="yes"
                     for DIR in `ls -d $ROOTDIR/tests/device/*`; do
                         if is_buildable $DIR; then

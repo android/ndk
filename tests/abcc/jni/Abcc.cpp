@@ -34,7 +34,7 @@
 using namespace abcc;
 
 TargetAbi::TargetAbi(const std::string &abi) {
-  if (abi == "armeabi-v7a")
+  if (abi == "armeabi-v7a" || abi == "armeabi-v7a-hard") //ToDo: support armeabi-v7a-hard
     mAbi = ARMEABI_V7A;
   else if (abi == "armeabi")
     mAbi = ARMEABI;

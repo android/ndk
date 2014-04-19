@@ -306,7 +306,7 @@ adb_run () {
     fi
     if ! $(echo $ERR | grep -iq "Text file busy"); then
       if [ "$i" != "1" ]; then
-        ## Dump error message to help diagnostics
+        # Dump error message to help diagnostics
         echo "ERR=$ERR"
       fi
       break;

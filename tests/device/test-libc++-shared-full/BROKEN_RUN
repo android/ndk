@@ -414,6 +414,11 @@ FAIL: strings___string.conversions___stoi
     nalibcxxg++  stoi.pass.cpp -lc++_shared -latomic
       I/DEBUG   (   51): Abort message: '/tmp/ndk-andrewhsieh/tmp/build-10543/build-libc++/ndk/sources/cxx-stl/llvm-libc++/../../android/support/src/wchar_support.c:361: wcstol: assertion "0" failed'
 
+FAIL: strings___string.conversions___stol
+  cd ~/libcxx-test/strings/string.conversions
+    nalibcxxg++  stol.pass.cpp -lc++_shared -latomic
+      I/DEBUG   (   51): Abort message: '/tmp/ndk-andrewhsieh/tmp/build-10543/build-libc++/ndk/sources/cxx-stl/llvm-libc++/../../android/support/src/wchar_support.c:361: wcstol: assertion "0" failed'
+
 FAIL: strings___string.conversions___stold
   cd ~/libcxx-test/strings/string.conversions
     nalibcxxg++  stold.pass.cpp -lc++_shared -latomic
@@ -423,11 +428,6 @@ FAIL: strings___string.conversions___stoll
   cd ~/libcxx-test/strings/string.conversions
     nalibcxxg++  stoll.pass.cpp -lc++_shared -latomic
       I/DEBUG   (   51): Abort message: '/tmp/ndk-andrewhsieh/tmp/build-10543/build-libc++/ndk/sources/cxx-stl/llvm-libc++/../../android/support/src/wchar_support.c:373: wcstoll: assertion "0" failed'
-
-FAIL: strings___string.conversions___stol
-  cd ~/libcxx-test/strings/string.conversions
-    nalibcxxg++  stol.pass.cpp -lc++_shared -latomic
-      I/DEBUG   (   51): Abort message: '/tmp/ndk-andrewhsieh/tmp/build-10543/build-libc++/ndk/sources/cxx-stl/llvm-libc++/../../android/support/src/wchar_support.c:361: wcstol: assertion "0" failed'
 
 FAIL: strings___string.conversions___stoull
   cd ~/libcxx-test/strings/string.conversions

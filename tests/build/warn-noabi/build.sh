@@ -11,7 +11,7 @@ VERSION=4.6
 
 if [ -n "$NDK_TOOLCHAIN_VERSION" ];  then
     case "$NDK_TOOLCHAIN_VERSION" in
-        4.4.3|4.6|4.7*|4.8*)
+        4.4.3|4.6|4.7*|4.8*|4.9*)
            VERSION=$NDK_TOOLCHAIN_VERSION
             ;;
         clang*)
