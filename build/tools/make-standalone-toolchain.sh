@@ -170,13 +170,14 @@ if [ -z "$PLATFORM" -a "$ARCH_INC" = "$ARCH" ] ; then
     case $ARCH in
         arm) PLATFORM=android-3
             ;;
-        x86)
+        x86|mips)
             PLATFORM=android-9
             ;;
-        mips)
-            # Set it to android-9
-            PLATFORM=android-9
+        arm64|x86_64|mips64)
+            PLATFORM=android-20
             ;;
+        *)
+            dump "ERROR: Unsupported NDK architecture $ARCH!"
     esac
     log "Auto-config: --platform=$PLATFORM"
 elif [ -z "$PLATFORM" ] ; then
@@ -385,7 +386,7 @@ if [ -n "$LLVM_VERSION" ]; then
           TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_mips64
           ;;
       *)
-        dump "ERROR: Unsupported NDK architecture!"
+        dump "ERROR: Unsupported NDK architecture $ARCH!"
   esac
   # Need to remove '.' from LLVM_VERSION when constructing new clang name,
   # otherwise clang3.3++ may still compile *.c code as C, not C++, which
