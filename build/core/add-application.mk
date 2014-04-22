@@ -98,15 +98,15 @@ endif # APP_PROJECT_PATH == null
 #
 APP_PLATFORM_LEVEL := $(strip $(subst android-,,$(APP_PLATFORM)))
 ifneq (,$(filter 6 7,$(APP_PLATFORM_LEVEL)))
-    APP_PLATFORM := android-5
+    override APP_PLATFORM := android-5
 endif
 ifneq (,$(filter 10 11,$(APP_PLATFORM_LEVEL)))
-    APP_PLATFORM := android-9
+    override APP_PLATFORM := android-9
 endif
 ifneq (,$(call gt,$(APP_PLATFORM_LEVEL),20))
-    APP_PLATFORM := android-20
+    override APP_PLATFORM := android-20
 endif
-ifneq ($(APP_PLATFORM),$(APP_PLATFORM_LEVEL))
+ifneq ($(APP_PLATFORM),android-$(APP_PLATFORM_LEVEL))
     $(call ndk_log,  Adjusting APP_PLATFORM android-$(APP_PLATFORM_LEVEL) to $(APP_PLATFORM))
 endif
 
@@ -129,7 +129,7 @@ endif
 _bad_platform := $(strip $(filter-out $(NDK_ALL_PLATFORMS),$(APP_PLATFORM)))
 ifdef _bad_platform
     $(call ndk_log,Application $(_app) targets unknown platform '$(_bad_platform)')
-    APP_PLATFORM := android-$(NDK_MAX_PLATFORM_LEVEL)
+    override APP_PLATFORM := android-$(NDK_MAX_PLATFORM_LEVEL)
     $(call ndk_log,Switching to $(APP_PLATFORM))
 endif
 

@@ -427,7 +427,7 @@ using namespace _LIBCPP_NAMESPACE __attribute__((__strong__));
 #define __gxx__cxx_access_control_sfinae          !defined(_LIBCPP_HAS_NO_TRAILING_RETURN) || !defined(_LIBCPP_HAS_NO_ADVANCED_SFINAE) // Also see usage in 7 tests
 #define __gxx__cxx_alias_templates                !defined(_LIBCPP_HAS_NO_TEMPLATE_ALIASES)
 #define __gxx__cxx_alignas                        0  // Not sure, doesn't matter.
-#define __gxx__cxx_atomic                         0  // In c11-atomic branch targeted for GCC 4.9.  Also see usages in 20+ places
+#define __gxx__cxx_atomic                         0  // (_GNUC_VER >= 409) seems to support _Atomic in -std=c11 not -std=c++11 !
 #define __gxx__cxx_attributes                     0  // Not sure. Also see usage in libcxx/test/utilities/meta/meta.unary/meta.unary.prop/is_polymorphic.pass.cpp
 #define __gxx__cxx_auto_type                      !deinfed(_LIBCPP_HAS_NO_AUTO_TYPE)
 #define __gxx__cxx_constexpr                      !defined(_LIBCPP_HAS_NO_CONSTEXPR)
