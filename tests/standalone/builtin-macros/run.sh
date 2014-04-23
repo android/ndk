@@ -99,11 +99,7 @@ macro_multi_check () {
 
 # Check that a given macro is undefined
 macro_check_undef () {
-    if [ -n "$2" ]; then
-        echo -n "Checking undefined $1 ($2): "
-    else
-        echo -n "Checking undefined $1: "
-    fi
+    echo -n "Checking undefined $1: "
     local VAL="$(macro_val $1)"
     if [ -n "$VAL" ]; then
         echo "KO: Unexpected value '$VAL' encounteded"
@@ -133,8 +129,9 @@ case $ABI in
 esac
 
 case $ABI in
-    armeabi|armeabi-v7a)
+    armeabi|armeabi-v7a|armeabi-v7a-hard)
         macro_check __arm__ 1              "ARM CPU architecture"
+	macro_check_undef __LP64__         "LP64 data model"
         macro_check __ARM_EABI__ 1         "ARM EABI runtime"
         macro_check __ARMEL__ 1            "ARM little-endian"
         macro_check __THUMB_INTERWORK__ 1  "ARM thumb-interwork"
@@ -146,7 +143,7 @@ case $ABI in
         case $ABI in
             armeabi)
                 macro_check __ARM_ARCH_5TE__ 1   "ARMv5TE instructions (for armeabi)"
-                macro_check __SOFTFP__ 1         "ARM Soft-floating point"
+                macro_check __SOFTFP__ 1         "ARM soft-floating point"
                 ;;
             armeabi-v7a)
                 macro_check __ARM_ARCH_7A__ 1    "ARMv7-A instructions (for armeabi-v7a)"
@@ -161,13 +158,19 @@ case $ABI in
                 # values are passsed in core registers between function calls,
                 # which is mandated by the armeabi-v7a definition.
                 #
-                macro_check_undef __SOFTFP__ 1   "ARM soft-floating point"
+                macro_check_undef __SOFTFP__      "ARM soft-floating point"
+                ;;
+            armeabi-v7a-hard)
+                macro_check __ARM_ARCH_7A__ 1     "ARMv7-A instructions (for armeabi-v7a)"
+                macro_check __ARM_PCS_VFP__ 1     "ARM hard-floating point"
+                macro_check_undef __SOFTFP__      "ARM soft-floating point"
                 ;;
         esac
         ;;
 
     x86)
         macro_check __i386__ 1       "x86 CPU architecture"
+        macro_check_undef __LP64__   "LP64 data model"
         macro_check __i686__ 1       "i686 instruction set"
         macro_check __PIC__ 2        "Position independent code (-fPIC)"
         macro_check __MMX__  1       "MMX instruction set"
@@ -184,12 +187,47 @@ case $ABI in
 
     mips)
         macro_check __mips__ 1          "Mips CPU architecture"
+        macro_check_undef __LP64__      "LP64 data model"
         macro_check _MIPS_ARCH_MIPS32 1 "Mips 32-bit ABI"
         macro_check __MIPSEL__ 1        "Mips little-endian"
         macro_check __PIC__ 1           "Position independent code (-fpic)"
         # GCC defines it as "signed int", and Clang as "int"
         macro_multi_check __WCHAR_TYPE__   "signed int" "int"
         macro_check __WCHAR_MAX__       "2147483647"
+        ;;
+    arm64-v8a)
+        macro_check __aarch64__ 1          "ARM CPU architecture"
+        macro_check __LP64__ 1             "LP64 data model"
+        macro_check __AARCH64EL__ 1        "ARM AARCH64 little-endian runtime"
+        macro_check __PIC__ 1              "Position independent code (-fpic)"
+        macro_check __WCHAR_TYPE__         "unsigned"
+        macro_check __WCHAR_MAX__          "4294967295U"
+        # Clang doesn't define __WCHAR_MIN__ so don't check it"
+        ;;
+
+    x86_64)
+        macro_check __x86_64__ 1     "x86_64 CPU architecture"
+        macro_check __LP64__ 1       "LP64 data model"
+        macro_check __PIC__ 2        "Position independent code (-fPIC)"
+        macro_check __MMX__  1       "MMX instruction set"
+        macro_check __SSE__ 1        "SSE instruction set"
+        macro_check __SSE2__ 1       "SSE2 instruction set"
+        macro_check __SSE3__ 1       "SSE3 instruction set"
+        macro_check __SSE_MATH__ 1   "Use SSE for math operations"
+        macro_check __SSE2_MATH__ 1  "Use SSE2 for math operations"
+        #macro_check __SSSE3__ 1     "SSSE3 instruction set"
+        macro_check __WCHAR_TYPE__   "int"
+        macro_check __WCHAR_MAX__    "2147483647"
+        ;;
+
+    mips64)
+        macro_check __mips__ 1            "Mips CPU architecture"
+        macro_check __mips64 1            "Mips 64-bit CPU architecture"
+        macro_check __LP64__ 1            "LP64 data model"
+        macro_check __MIPSEL__ 1          "Mips little-endian"
+        macro_check __PIC__ 1             "Position independent code (-fpic)"
+        macro_check __WCHAR_TYPE__        "int"
+        macro_check __WCHAR_MAX__         "2147483647"
         ;;
     *)
         echo "Unknown ABI: $ABI"
@@ -200,9 +238,14 @@ macro_check "__SIZEOF_SHORT__"       "2"   "short is 16-bit"
 macro_check "__SIZEOF_INT__"         "4"   "int is 32-bit"
 macro_check "__SIZEOF_FLOAT__"       "4"   "float is 32-bit"
 macro_check "__SIZEOF_DOUBLE__"      "8"   "double is 64-bit"
-macro_check "__SIZEOF_LONG_DOUBLE__" "8"   "long double is 64-bit"
+if [ "$ABI" = "${ABI%%64*}" ]; then
+    macro_check "__SIZEOF_LONG_DOUBLE__" "8"   "long double is 64-bit"
+    macro_check "__SIZEOF_POINTER__"     "4"   "pointers are 32-bit"
+else
+    macro_check "__SIZEOF_LONG_DOUBLE__" "16"   "long double is 128-bit"
+    macro_check "__SIZEOF_POINTER__"     "8"   "pointers are 64-bit"
+fi
 macro_check "__SIZEOF_LONG_LONG__"   "8"   "long long is 64-bit"
-macro_check "__SIZEOF_POINTER__"     "4"   "pointers are 32-bit"
 macro_check "__SIZEOF_WCHAR_T__"     "4"   "wchar_t is 32-bit"
 
 if [ "$FAILURES" = 0 ]; then

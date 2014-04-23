@@ -178,9 +178,25 @@ make_standalone ()
         --stl=$STL)
 }
 
-API=14
+API32=14
+API64=20
 for ARCH in $(commas_to_spaces $DEFAULT_ARCHS); do
+    if [ "$ARCH" = "${ARCH%%64*}" ]; then
+        API=$API32
+    else
+        API=$API64
+    fi
+    DEFAULT_GCC_VERSION=$(get_default_gcc_version_for_arch $ARCH)
+    MAKE_IT=
     for GCC_VERSION in $(commas_to_spaces $DEFAULT_GCC_VERSION_LIST); do
+        # Only process GCC_VERSION from DEFAULT_GCC_VERSION
+        if [ -z "$MAKE_IT" -a "$GCC_VERSION" = "$DEFAULT_GCC_VERSION" ]; then
+	    MAKE_IT=yes
+        fi
+        if [ -z "$MAKE_IT" ]; then
+            continue
+        fi
+
         for TAG in $TAGS; do
             dump "### [$TAG] Testing $ARCH gcc-$GCC_VERSION toolchain with --sysroot"
             (cd $NDK && \
@@ -196,6 +212,10 @@ for ARCH in $(commas_to_spaces $DEFAULT_ARCHS); do
                             ./tests/standalone/run.sh --no-sysroot \
                                 --prefix=$(standalone_path $TAG $API $ARCH $GCC_VERSION $STL)/bin/$(get_default_toolchain_prefix_for_arch $ARCH)-gcc)
                         GCC_TESTED=yes
+                    fi
+                    # only Run clang test for 64-bit on DEFAULT_LLVM_VERSION
+                    if [ "$ARCH" != "${ARCH%%64*}" -a "$LLVM_VERSION" != "$DEFAULT_LLVM_VERSION" ]; then
+                        continue
                     fi
                     dump "### [$TAG] Testing clang$LLVM_VERSION in $ARCH gcc-$GCC_VERSION standalone toolchain STL=$STL"
                     (cd $NDK && \
