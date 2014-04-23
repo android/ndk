@@ -31,7 +31,8 @@
 PROGNAME=$(basename "$0")
 PROGDIR=$(dirname "$0")
 NDK_ROOT=$(cd "$PROGDIR/../.." && pwd)
-. $NDK_ROOT/build/tools/ndk-common.sh
+NDK_BUILDTOOLS_PATH=$NDK_ROOT/build/tools
+. $NDK_ROOT/build/tools/prebuilt-common.sh
 
 panic () {
     echo "ERROR: $@" >&2; exit 1
@@ -337,6 +338,18 @@ if [ -z "$ABI" ]; then
             ABI=mips
             ARCH=mips
             ;;
+        aarch64*-linux-android)
+            ABI=arm64-v8a
+            ARCH=arm64
+            ;;
+        x86_64*-linux-android)
+            ABI=x86_64
+            ARCH=x86_64
+            ;;
+        mips64el*-linux-android)
+            ABI=mips64
+            ARCH=mips64
+            ;;
         *)
             panic "Unknown target architecture '$CC_TARGET', please use --abi=<name> to manually specify ABI."
     esac
@@ -361,7 +374,8 @@ elif [ -n "$SYSROOT" ]; then
     COMMON_FLAGS=$COMMON_FLAGS" --sysroot=$SYSROOT"
 else
     # Auto-detect sysroot
-    SYSROOT=$NDK_ROOT/platforms/android-9/arch-$ARCH
+    PLATFORM="android-"$(get_default_api_level_for_arch $ARCH)
+    SYSROOT=$NDK_ROOT/platforms/$PLATFORM/arch-$ARCH
     if [ ! -d "$SYSROOT" ]; then
         panic "Can't find sysroot file, use --sysroot to point to valid one: $SYSROOT"
     fi
