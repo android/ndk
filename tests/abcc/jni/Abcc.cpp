@@ -149,8 +149,9 @@ BitcodeCompiler::BitcodeCompiler(const std::string &abi, const std::string &sysr
   // CFlags
   mGlobalCFlags = kGlobalTargetAttrs[mAbi].mBaseCFlags;
   mGlobalCFlags += std::string(" -mtriple=") + kGlobalTargetAttrs[mAbi].mTriple;
-  mGlobalCFlags += " -filetype=obj -relocation-model=pic -code-model=small";
-  mGlobalCFlags += " -use-init-array -mc-relax-all -ffunction-sections";
+  mGlobalCFlags += " -filetype=obj -mc-relax-all";
+  mGlobalCFlags += " -relocation-model=pic -code-model=small -use-init-array";
+  mGlobalCFlags += " -ffunction-sections";
 
   // LDFlags
   mGlobalLDFlags = kGlobalTargetAttrs[mAbi].mBaseLDFlags;
@@ -195,6 +196,9 @@ void BitcodeCompiler::compile() {
        << " -O" << bc.mOptimizationLevel
        << " " << bc.mTargetBCPath
        << " -o " << bc.mObjPath;
+
+    if (bc.mLDFlags.find("-pie") != std::string::npos)
+      os << " -enable-pie";
 
 #if ON_DEVICE && VERBOSE
     Timer t_llc;
