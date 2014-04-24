@@ -21,8 +21,9 @@ Into machine code that does:
 
 Change-Id: I332bf5788267dd56e93b8cdb0cefa04b970eca88
 ---
- gcc-4.6/gcc/config/linux.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ gcc-4.6/gcc/config/linux.h | 2 +-
+ gcc-4.8/gcc/config/linux.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/gcc-4.6/gcc/config/linux.h b/gcc-4.6/gcc/config/linux.h
 index 4e21112..025157f 100644
