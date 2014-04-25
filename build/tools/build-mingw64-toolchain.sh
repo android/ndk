@@ -16,15 +16,7 @@
 #
 # Rebuild the mingw64 cross-toolchain from scratch
 #
-# Sample (recommended for compatibility reasons) command line:
-#
-# GOOGLE_PREBUILT=<some folder>
-# git clone https://android.googlesource.com/platform/prebuilt $GOOGLE_PREBUILT
-# export PATH=$GOOGLE_PREBUILT/linux-x86/toolchain/i686-linux-glibc2.7-4.6/bin:$PATH
-# build-mingw64-toolchain.sh --target-arch=i686                       \
-#                            --package-dir=i686-w64-mingw32-toolchain \
-#                            --binprefix=i686-linux
-#
+# See --help for usage example.
 
 PROGNAME=$(basename $0)
 PROGDIR=$(dirname $0)
@@ -190,31 +182,62 @@ done
 
 
 if [ "$HELP" ]; then
-    echo "Usage: $PROGNAME [options]"
-    echo ""
-    echo "This program is used to rebuild a mingw64 cross-toolchain from scratch."
-    echo ""
-    echo "Valid options:"
-    echo "  -h|-?|--help                 Print this message."
-    echo "  --verbose                    Increase verbosity."
-    echo "  --quiet                      Decrease verbosity."
-    echo "  --gcc-version=<version>      Select gcc version [$GCC_VERSION]."
-    echo "  --binutil-version=<version>  Select binutils version [$BINUTILS_VERSION]."
-    echo "  --gmp-version=<version>      Select libgmp version [$GMP_VERSION]."
-    echo "  --mpfr-version=<version>     Select libmpfr version [$MPFR_VERSION]."
-    echo "  --mpc-version=<version>      Select libmpc version [$MPC_VERSION]."
-    echo "  --mingw-version=<version>    Select mingw-w64 version [$MINGW_W64_VERSION]."
-    echo "  --jobs=<num>                 Run <num> build tasks in parallel [$JOBS]."
-    echo "  -j<num>                      Same as --jobs=<num>."
-    echo "  --binprefix=<prefix>         Specify bin prefix for host toolchain."
-    echo "  --no-multilib                Disable multilib toolchain build."
-    echo "  --target-arch=<arch>         Select default target architecture [$TARGET_ARCH]."
-    echo "  --force-all                  Redo everything from scratch."
-    echo "  --force-build                Force a rebuild (keep sources)."
-    echo "  --cleanup                    Remove all temp files after build."
-    echo "  --work-dir=<path>            Specify work/build directory [$TEMP_DIR]."
-    echo "  --package-dir=<path>         Package toolchain to directory."
-    echo ""
+    cat <<EOF
+Usage: $PROGNAME [options]
+
+This program is used to rebuild a mingw64 cross-toolchain from scratch.
+
+It uses your host 'gcc' by default to generate a cross-toolchain named
+either x86_64-w64-mingw32 or i686-w64-mingw32, depending on your compiler's
+target bitness. For example:
+
+    /path/to/build-mingw64-toolchain.sh
+
+All toolchain binaries can generate both Win32 and Win64 executables.
+The default target is Win64, but you can change this to Win32 by using
+the '--target-arch=i686' option. Otherwise, use -m32 or -m64 at compile/link
+time to select a specific target.
+
+It is possible to use --binprefix=<prefix> to specify an alternative host
+toolchain prefix, e.g. <prefix>-gcc to compile. For example, to generate
+64-bit binaries that can run on older Linux distributions, using the Android
+SDK's compatibility Linux toolchain, one can do the following:
+
+    SDK_TOOLCHAIN=<some-dir>
+    PREBUILTS=https://android.googlesource.com/platform/prebuilts
+    git clone \$PREBUILTS/gcc/linux-x86/host/x86_64-linux-glibc2.11-4.8 \\
+        \$SDK_TOOLCHAIN
+    PATH=\$SDK_TOOLCHAIN/bin:\$PATH \\
+    /path/to/build-mingw64-toolchain.sh --binprefix=x86_64-linux
+
+In the example above, the script will use 'x86_64-linux-gcc' and related
+tools to build the final binaries.
+
+It is recommended to use --package-dir=<path> to generate tarballs of the
+generated toolchains under <path>/, for easier redistribution.
+
+Valid options:
+  -h|-?|--help                 Print this message."
+  --verbose                    Increase verbosity."
+  --quiet                      Decrease verbosity."
+  --gcc-version=<version>      Select gcc version [$GCC_VERSION]."
+  --binutil-version=<version>  Select binutils version [$BINUTILS_VERSION]."
+  --gmp-version=<version>      Select libgmp version [$GMP_VERSION]."
+  --mpfr-version=<version>     Select libmpfr version [$MPFR_VERSION]."
+  --mpc-version=<version>      Select libmpc version [$MPC_VERSION]."
+  --mingw-version=<version>    Select mingw-w64 version [$MINGW_W64_VERSION]."
+  --jobs=<num>                 Run <num> build tasks in parallel [$JOBS]."
+  -j<num>                      Same as --jobs=<num>."
+  --binprefix=<prefix>         Specify bin prefix for host toolchain."
+  --no-multilib                Disable multilib toolchain build."
+  --target-arch=<arch>         Select default target architecture [$TARGET_ARCH]."
+  --force-all                  Redo everything from scratch."
+  --force-build                Force a rebuild (keep sources)."
+  --cleanup                    Remove all temp files after build."
+  --work-dir=<path>            Specify work/build directory [$TEMP_DIR]."
+  --package-dir=<path>         Package toolchain to directory."
+
+EOF
     exit 0
 fi
 
