@@ -429,7 +429,7 @@ using namespace _LIBCPP_NAMESPACE __attribute__((__strong__));
 #define __gxx__cxx_alignas                        0  // Not sure, doesn't matter.
 #define __gxx__cxx_atomic                         0  // (_GNUC_VER >= 409) seems to support _Atomic in -std=c11 not -std=c++11 !
 #define __gxx__cxx_attributes                     0  // Not sure. Also see usage in libcxx/test/utilities/meta/meta.unary/meta.unary.prop/is_polymorphic.pass.cpp
-#define __gxx__cxx_auto_type                      !deinfed(_LIBCPP_HAS_NO_AUTO_TYPE)
+#define __gxx__cxx_auto_type                      !defined(_LIBCPP_HAS_NO_AUTO_TYPE)
 #define __gxx__cxx_constexpr                      !defined(_LIBCPP_HAS_NO_CONSTEXPR)
 #define __gxx__cxx_decltype                       !defined(_LIBCPP_HAS_NO_DECLTYPE)
 #define __gxx__cxx_defaulted_functions            !defined(_LIBCPP_HAS_NO_DEFAULTED_FUNCTIONS)  // libcxx/test/utilities/meta/meta.unary/meta.unary.prop/is_trivially_move_constructible.pass.cpp
