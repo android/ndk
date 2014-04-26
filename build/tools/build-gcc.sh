@@ -547,6 +547,8 @@ find $TOOLCHAIN_PATH -name "*.la" -exec rm -f {} \;
 if [ "$ABI_CONFIGURE_HOST" != "$ABI_CONFIGURE_TARGET" ]; then
     run rm -rf "$TOOLCHAIN_PATH/$ABI_CONFIGURE_HOST"
 fi
+# remove sysroot
+run rm -rf "$TOOLCHAIN_PATH/sysroot"
 
 # Remove libstdc++ for now (will add it differently later)
 # We had to build it to get libsupc++ which we keep.

@@ -444,7 +444,7 @@ build_stl_libs_for_abi ()
     local DSTDIR="$4"
     local FLOAT_ABI=""
     local DEFAULT_CFLAGS DEFAULT_CXXFLAGS
-    local SRC OBJ OBJECTS EXTRA_CFLAGS EXTRA_CXXFLAGS EXTRA_LDFLAGS LIB_SUFFIX GCCVER LLVMVER
+    local SRC OBJ OBJECTS EXTRA_CFLAGS EXTRA_CXXFLAGS EXTRA_LDFLAGS LIB_SUFFIX GCCVER
 
     mkdir -p "$BUILDDIR"
 
@@ -473,22 +473,15 @@ build_stl_libs_for_abi ()
         ARCH=$(convert_abi_to_arch $ABI)
         GCCVER=$(get_default_gcc_version_for_arch $ARCH)
     fi
-    LLVMVER=$LLVM_VERSION
-    # Hack: clang/llvm for arm64-v8a and mips64 aren't ready yet.  Use GCC instead
-    if [ "$ABI" = "arm64-v8a" -o "$ABI" = "mips64" ]; then
-        log "Auto-hack: Use GCC-$GCCVER instead of llvm-$LLVMVER for arm64-v8a and mips64"
-        LLVMVER=
-        GCCVER=$(get_default_gcc_version_for_arch $ARCH)
-    fi
 
     # libc++ built with clang (for ABI armeabi-only) produces
     # libc++_shared.so and libc++_static.a with undefined __atomic_fetch_add_4
     # Add -latomic
-    if [ -n "$LLVMVER" -a "$CXX_STL_LIB" = "libc++" ]; then
+    if [ -n "$LLVM_VERSION" -a "$CXX_STL_LIB" = "libc++" -a "$ABI" = "armeabi" ]; then
         EXTRA_LDFLAGS="$EXTRA_LDFLAGS -latomic"
     fi
 
-    builder_begin_android $ABI "$BUILDDIR" "$GCCVER" "$LLVMVER" "$MAKEFILE"
+    builder_begin_android $ABI "$BUILDDIR" "$GCCVER" "$LLVM_VERSION" "$MAKEFILE"
 
     builder_set_dstdir "$DSTDIR"
 
