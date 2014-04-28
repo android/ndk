@@ -440,7 +440,7 @@ using namespace _LIBCPP_NAMESPACE __attribute__((__strong__));
 #define __gxx__cxx_lambdas                        !defined(_LIBCPP_HAS_NO_LAMBDAS)
 #define __gxx__cxx_noexcept                       0  // Not sure, doesn't matter.
 #define __gxx__cxx_nullptr                        !defined(_LIBCPP_HAS_NO_NULLPTR)
-#define __gxx__cxx_reference_qualified_functions  (_GNUC_VER >= 408)  // Not if 4.7 work. 4.6 certainly not.  Also see usage in libcxx/include/type_traits
+#define __gxx__cxx_reference_qualified_functions  (_GNUC_VER > 408) || ((_GNUC_VER == 408) && (__GNUC_PATCHLEVEL__ >= 1))  // See usage in libcxx/include/type_traits
 #ifdef _LIBCPP_NO_RTTI
 #define __gxx__cxx_rtti                           0
 #else
