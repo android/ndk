@@ -32,9 +32,11 @@ endef
 black_list_all := \
     utilities/meta/meta.trans/meta.trans.other/aligned_storage
 
-black_list_clang3_4 :=
+black_list_clang3_4 := \
+    utilities/tuple/tuple.tuple/TupleFunction
 
 black_list_clang3_3 := \
+    utilities/tuple/tuple.tuple/TupleFunction \
     utilities/meta/meta.unary/meta.unary.prop/is_trivialially_copyable
 
 black_list_gcc4_8 := \
@@ -173,7 +175,6 @@ black_list_gcc4_9 := \
     utilities/function.objects/func.wrap/func.wrap.func/func.wrap.func.con/F \
     utilities/function.objects/func.wrap/func.wrap.func/func.wrap.func.con/F_assign \
     utilities/function.objects/func.wrap/func.wrap.func/func.wrap.func.inv/invoke \
-    utilities/function.objects/func.wrap/func.wrap.func/func.wrap.func.inv/invoke_int_0 \
     utilities/function.objects/refwrap/refwrap.invoke/invoke \
     utilities/memory/unique.ptr/unique.ptr.runtime/unique.ptr.runtime.ctor/default02 \
     utilities/memory/unique.ptr/unique.ptr.runtime/unique.ptr.runtime.ctor/pointer02 \
@@ -194,12 +195,17 @@ black_list_gcc4_9 := \
     utilities/meta/meta.unary/meta.unary.prop/is_trivially_copy_constructible \
     utilities/meta/meta.unary/meta.unary.prop/is_trivially_move_assignable \
     utilities/meta/meta.unary/meta.unary.prop/is_trivially_move_constructible \
+    utilities/tuple/tuple.tuple/TupleFunction \
     utilities/utility/pairs/pairs.pair/copy_ctor \
     utilities/utility/pairs/pairs.pair/rv_pair_U_V \
     utilities/utility/pairs/pairs.spec/make_pair
 
 black_list_x86 := \
     language.support/support.types/max_align_t
+
+black_list_gcc4_9_armeabi := \
+    strings/basic.string/string.modifiers/string_replace/size_size_string_size_size \
+    strings/basic.string/string.ops/string_compare/size_size_string_size_size   # sometime
 
 # Compute the back_list in this particular configuration: "all | compiler | arch"
 
@@ -213,9 +219,13 @@ black_list += $(black_list_clang3_3)
 else
 ifeq (4.8,$(NDK_TOOLCHAIN_VERSION))
 black_list += $(black_list_gcc4_8)
-endif
+else
 ifeq (4.9,$(NDK_TOOLCHAIN_VERSION))
 black_list += $(black_list_gcc4_9)
+ifeq ($(TARGET_ARCH_ABI),armeabi)
+black_list += $(black_list_gcc4_9_armeabi)
+endif
+endif
 endif
 endif
 endif
@@ -1027,6 +1037,7 @@ $(call gen-test, containers/sequences/vector/vector.cons/construct_size_value)
 $(call gen-test, containers/sequences/vector/vector.cons/copy_alloc)
 $(call gen-test, containers/sequences/vector/vector.cons/copy)
 $(call gen-test, containers/sequences/vector/vector.cons/default_noexcept)
+$(call gen-test, containers/sequences/vector/vector.cons/default.recursive) # new
 $(call gen-test, containers/sequences/vector/vector.cons/dtor_noexcept)
 $(call gen-test, containers/sequences/vector/vector.cons/initializer_list_alloc)
 $(call gen-test, containers/sequences/vector/vector.cons/initializer_list)
@@ -1543,6 +1554,8 @@ $(call gen-test, diagnostics/syserr/syserr.syserr/syserr.syserr.members/ctor_int
 $(call gen-test, diagnostics/syserr/syserr.syserr/syserr.syserr.members/ctor_int_error_category_string)
 $(call gen-test, diagnostics/syserr/syserr.syserr/syserr.syserr.overview/nothing_to_do)
 $(call gen-test, diagnostics/syserr/version)
+$(call gen-test, extensions/hash/specializations) # new
+$(call gen-test, extensions/nothing_to_do) # new
 $(call gen-test, input.output/file.streams/c.files/cinttypes)
 $(call gen-test, input.output/file.streams/c.files/cstdio)
 $(call gen-test, input.output/file.streams/c.files/version_ccstdio)
@@ -1992,6 +2005,7 @@ $(call gen-test, iterators/predef.iterators/reverse.iterators/reverse.iter.ops/r
 $(call gen-test, iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.cons/iter)
 $(call gen-test, iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.cons/reverse_iterator)
 $(call gen-test, iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.conv/tested_elsewhere)
+$(call gen-test, iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.make/make_reverse_iterator) # new
 $(call gen-test, iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.op-/difference_type)
 $(call gen-test, iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.op+/difference_type)
 $(call gen-test, iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.opdiff/test)
@@ -3786,6 +3800,8 @@ $(call gen-test, thread/thread.condition/thread.condition.condvarany/default)
 $(call gen-test, thread/thread.condition/thread.condition.condvarany/destructor)
 $(call gen-test, thread/thread.condition/thread.condition.condvarany/notify_all)
 $(call gen-test, thread/thread.condition/thread.condition.condvarany/notify_one)
+$(call gen-test, thread/thread.condition/thread.condition.condvarany/wait.exception) # new
+$(call gen-test, thread/thread.condition/thread.condition.condvarany/wait_for.exception) # new
 $(call gen-test, thread/thread.condition/thread.condition.condvarany/wait_for)
 $(call gen-test, thread/thread.condition/thread.condition.condvarany/wait_for_pred)
 $(call gen-test, thread/thread.condition/thread.condition.condvarany/wait)
@@ -3864,16 +3880,16 @@ $(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.mutex.requ
 $(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.mutex.requirements.mutex/thread.mutex.recursive/lock)
 $(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.mutex.requirements.mutex/thread.mutex.recursive/native_handle)
 $(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.mutex.requirements.mutex/thread.mutex.recursive/try_lock)
-$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/nothing_to_do)
-$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/thread.sharedmutex.class/default)
-$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/thread.sharedmutex.class/lock)
-$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/thread.sharedmutex.class/lock_shared)
-$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/thread.sharedmutex.class/try_lock_for)
-$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/thread.sharedmutex.class/try_lock)
-$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/thread.sharedmutex.class/try_lock_shared_for)
-$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/thread.sharedmutex.class/try_lock_shared)
-$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/thread.sharedmutex.class/try_lock_shared_until)
-$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/thread.sharedmutex.class/try_lock_until)
+$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/nothing_to_do) # path-change
+$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/thread.sharedmutex.class/default) # path-change
+$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/thread.sharedmutex.class/lock) # path-change
+$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/thread.sharedmutex.class/lock_shared) # path-change
+$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/thread.sharedmutex.class/try_lock_for) # path-change
+$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/thread.sharedmutex.class/try_lock) # path-change
+$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/thread.sharedmutex.class/try_lock_shared_for) # path-change
+$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/thread.sharedmutex.class/try_lock_shared) # path-change
+$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/thread.sharedmutex.class/try_lock_shared_until) # path-change
+$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/thread.sharedmutex.class/try_lock_until) # path-change
 $(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.timedmutex.requirements/nothing_to_do)
 $(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.timedmutex.requirements/thread.timedmutex.class/default)
 $(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.timedmutex.requirements/thread.timedmutex.class/lock)
@@ -3939,6 +3955,7 @@ $(call gen-test, utilities/allocator.adaptor/allocator.adaptor.members/inner_all
 $(call gen-test, utilities/allocator.adaptor/allocator.adaptor.members/max_size)
 $(call gen-test, utilities/allocator.adaptor/allocator.adaptor.members/outer_allocator)
 $(call gen-test, utilities/allocator.adaptor/allocator.adaptor.members/select_on_container_copy_construction)
+$(call gen-test, utilities/allocator.adaptor/allocator.adaptor.types/allocator_pointers) # new
 $(call gen-test, utilities/allocator.adaptor/allocator.adaptor.types/inner_allocator_type)
 $(call gen-test, utilities/allocator.adaptor/allocator.adaptor.types/propagate_on_container_copy_assignment)
 $(call gen-test, utilities/allocator.adaptor/allocator.adaptor.types/propagate_on_container_move_assignment)
@@ -4074,6 +4091,7 @@ $(call gen-test, utilities/memory/default.allocator/allocator.members/address)
 $(call gen-test, utilities/memory/default.allocator/allocator.members/allocate)
 $(call gen-test, utilities/memory/default.allocator/allocator.members/construct)
 $(call gen-test, utilities/memory/default.allocator/allocator.members/max_size)
+$(call gen-test, utilities/memory/default.allocator/allocator_pointers) # new
 $(call gen-test, utilities/memory/default.allocator/allocator_types)
 $(call gen-test, utilities/memory/default.allocator/allocator_void)
 $(call gen-test, utilities/memory/pointer.traits/difference_type)
@@ -4324,6 +4342,7 @@ $(call gen-test, utilities/meta/meta.unary/meta.unary.prop/is_copy_constructible
 $(call gen-test, utilities/meta/meta.unary/meta.unary.prop/is_default_constructible)
 $(call gen-test, utilities/meta/meta.unary/meta.unary.prop/is_destructible)
 $(call gen-test, utilities/meta/meta.unary/meta.unary.prop/is_empty)
+$(call gen-test, utilities/meta/meta.unary/meta.unary.prop/is_final) # new
 $(call gen-test, utilities/meta/meta.unary/meta.unary.prop/is_literal_type)
 $(call gen-test, utilities/meta/meta.unary/meta.unary.prop/is_move_assignable)
 $(call gen-test, utilities/meta/meta.unary/meta.unary.prop/is_move_constructible)
@@ -4535,7 +4554,9 @@ $(call gen-test, utilities/time/time.traits/time.traits.specializations/duration
 $(call gen-test, utilities/time/time.traits/time.traits.specializations/time_point)
 $(call gen-test, utilities/time/version)
 $(call gen-test, utilities/tuple/tuple.general/nothing_to_do)
+$(call gen-test, utilities/tuple/tuple.general/tuple.smartptr) # new
 $(call gen-test, utilities/tuple/tuple.tuple/empty_member)
+$(call gen-test, utilities/tuple/tuple.tuple/TupleFunction) # new
 $(call gen-test, utilities/tuple/tuple.tuple/tuple.assign/const_pair)
 $(call gen-test, utilities/tuple/tuple.tuple/tuple.assign/convert_copy)
 $(call gen-test, utilities/tuple/tuple.tuple/tuple.assign/convert_move)

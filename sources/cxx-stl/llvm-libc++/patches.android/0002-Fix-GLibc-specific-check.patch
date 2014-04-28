@@ -1,17 +1,17 @@
-From b8acf6ff623ad7ef404ba0c91f67b621558b678d Mon Sep 17 00:00:00 2001
+From b5d0458cda92a61df092de47b8ba14bcea8d00b4 Mon Sep 17 00:00:00 2001
 From: David 'Digit' Turner <digit@google.com>
 Date: Wed, 12 Feb 2014 20:06:02 +0800
-Subject: [PATCH 2/6] Fix GLibc-specific check.
+Subject: [PATCH 02/11] Fix GLibc-specific check.
 
 ---
  include/__config | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/include/__config b/include/__config
-index f33e25b..c479fee 100644
+index fb775c6..b54fb41 100644
 --- a/include/__config
 +++ b/include/__config
-@@ -312,7 +312,7 @@ typedef __char32_t char32_t;
+@@ -317,7 +317,7 @@ typedef __char32_t char32_t;
  #if defined(__FreeBSD__)
  #define _LIBCPP_HAS_QUICK_EXIT
  #define _LIBCPP_HAS_C11_FEATURES
@@ -21,5 +21,5 @@ index f33e25b..c479fee 100644
  #if __GLIBC_PREREQ(2, 15)
  #define _LIBCPP_HAS_QUICK_EXIT
 -- 
-1.9.0.rc1.175.g0b1dcb5
+1.9.1.423.g4596e3a
 

@@ -74,7 +74,7 @@ const unspecified ignore;
 
 template <class... T> tuple<V...>  make_tuple(T&&...); // constexpr in C++14
 template <class... T> tuple<ATypes...> forward_as_tuple(T&&...) noexcept; // constexpr in C++14
-template <class... T> tuple<T&...> tie(T&...) noexcept;
+template <class... T> tuple<T&...> tie(T&...) noexcept; // constexpr in C++14
 template <class... Tuples> tuple<CTypes...> tuple_cat(Tuples&&... tpls); // constexpr in C++14
   
 // 20.4.1.4, tuple helper classes:
@@ -82,13 +82,15 @@ template <class T> class tuple_size; // undefined
 template <class... T> class tuple_size<tuple<T...>>;
 template <intsize_t I, class T> class tuple_element; // undefined
 template <intsize_t I, class... T> class tuple_element<I, tuple<T...>>;
+template <size_t _Ip, class ..._Tp>
+  using tuple_element_t = typename tuple_element <_Ip, _Tp...>::type; // C++14
 
 // 20.4.1.5, element access:
 template <intsize_t I, class... T>
     typename tuple_element<I, tuple<T...>>::type&
     get(tuple<T...>&) noexcept; // constexpr in C++14
 template <intsize_t I, class... T>
-    typename tuple_element<I, tuple<T...>>::type const&
+    typename const tuple_element<I, tuple<T...>>::type &
     get(const tuple<T...>&) noexcept; // constexpr in C++14
 template <intsize_t I, class... T>
     typename tuple_element<I, tuple<T...>>::type&&
@@ -151,6 +153,11 @@ class _LIBCPP_TYPE_VIS_ONLY tuple_element<_Ip, tuple<_Tp...> >
 public:
     typedef typename tuple_element<_Ip, __tuple_types<_Tp...> >::type type;
 };
+
+#if _LIBCPP_STD_VER > 11
+template <size_t _Ip, class ..._Tp>
+using tuple_element_t = typename tuple_element <_Ip, _Tp...>::type;
+#endif
 
 // __tuple_leaf
 
@@ -261,17 +268,8 @@ public:
                                 >::value)),
        "Attempted to construct a reference element in a tuple with an rvalue");}
 
-    _LIBCPP_INLINE_VISIBILITY
-    _LIBCPP_CONSTEXPR_AFTER_CXX11
-    __tuple_leaf(const __tuple_leaf& __t) _NOEXCEPT_(is_nothrow_copy_constructible<_Hp>::value)
-        : value(__t.get())
-        {static_assert(!is_rvalue_reference<_Hp>::value, "Can not copy a tuple with rvalue reference member");}
-
-    _LIBCPP_INLINE_VISIBILITY
-    _LIBCPP_CONSTEXPR_AFTER_CXX11
-    __tuple_leaf(__tuple_leaf&& __t) _NOEXCEPT_(is_nothrow_move_constructible<_Hp>::value)
-        : value(_VSTD::forward<_Hp>(__t.get()))
-        {}
+    __tuple_leaf(const __tuple_leaf& __t) = default;
+    __tuple_leaf(__tuple_leaf&& __t) = default;
 
     template <class _Tp>
         _LIBCPP_INLINE_VISIBILITY
@@ -796,7 +794,7 @@ constexpr _T1&& get(tuple<_Args...>&& __tup) noexcept
 // tie
 
 template <class ..._Tp>
-inline _LIBCPP_INLINE_VISIBILITY
+inline _LIBCPP_INLINE_VISIBILITY _LIBCPP_CONSTEXPR_AFTER_CXX11
 tuple<_Tp&...>
 tie(_Tp&... __t) _NOEXCEPT
 {

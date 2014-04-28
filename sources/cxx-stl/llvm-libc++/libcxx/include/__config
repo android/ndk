@@ -203,6 +203,11 @@
 
 #if defined(__clang__)
 
+#if defined(__APPLE__) && !defined(__i386__) && !defined(__x86_64__) &&        \
+    !defined(__arm__)
+#define _LIBCPP_ALTERNATE_STRING_LAYOUT
+#endif
+
 #if __has_feature(cxx_alignas)
 #  define _ALIGNAS_TYPE(x) alignas(x)
 #  define _ALIGNAS(x) alignas(x)
@@ -215,7 +220,7 @@
 #define _LIBCPP_HAS_NO_TEMPLATE_ALIASES
 #endif
 
-#ifndef __GXX_EXPERIMENTAL_CXX0X__
+#if __cplusplus < 201103L
 #ifdef __linux__
 #define _LIBCPP_HAS_NO_UNICODE_CHARS
 #else
@@ -347,7 +352,12 @@ namespace std {
   }
 }
 
+#if !defined(_LIBCPP_HAS_NO_ASAN) && !__has_feature(address_sanitizer)
+#define _LIBCPP_HAS_NO_ASAN
+#endif
+
 #elif defined(__GNUC__)
+
 
 #define _ALIGNAS(x) __attribute__((__aligned__(x)))
 #define _ALIGNAS_TYPE(x) __attribute__((__aligned__(__alignof(x))))
@@ -421,11 +431,16 @@ namespace _LIBCPP_NAMESPACE {
 using namespace _LIBCPP_NAMESPACE __attribute__((__strong__));
 }
 
+#if !defined(_LIBCPP_HAS_NO_ASAN) && !defined(__SANITIZE_ADDRESS__)
+#define _LIBCPP_HAS_NO_ASAN
+#endif
+
 // Emulation of clang's __has_feature() for GCC on known cases
 #ifndef __has_feature
 
 #define __gxx__cxx_access_control_sfinae          !defined(_LIBCPP_HAS_NO_TRAILING_RETURN) || !defined(_LIBCPP_HAS_NO_ADVANCED_SFINAE) // Also see usage in 7 tests
 #define __gxx__cxx_alias_templates                !defined(_LIBCPP_HAS_NO_TEMPLATE_ALIASES)
+#define __gxx__cxx_address_sanitizer              !defined(_LIBCPP_HAS_NO_ASAN)
 #define __gxx__cxx_alignas                        0  // Not sure, doesn't matter.
 #define __gxx__cxx_atomic                         0  // (_GNUC_VER >= 409) seems to support _Atomic in -std=c11 not -std=c++11 !
 #define __gxx__cxx_attributes                     0  // Not sure. Also see usage in libcxx/test/utilities/meta/meta.unary/meta.unary.prop/is_polymorphic.pass.cpp
@@ -440,7 +455,7 @@ using namespace _LIBCPP_NAMESPACE __attribute__((__strong__));
 #define __gxx__cxx_lambdas                        !defined(_LIBCPP_HAS_NO_LAMBDAS)
 #define __gxx__cxx_noexcept                       0  // Not sure, doesn't matter.
 #define __gxx__cxx_nullptr                        !defined(_LIBCPP_HAS_NO_NULLPTR)
-#define __gxx__cxx_reference_qualified_functions  (_GNUC_VER > 408) || ((_GNUC_VER == 408) && (__GNUC_PATCHLEVEL__ >= 1))  // See usage in libcxx/include/type_traits
+#define __gxx__cxx_reference_qualified_functions  (_GNUC_VER >= 408)  // Since 4.8.1
 #ifdef _LIBCPP_NO_RTTI
 #define __gxx__cxx_rtti                           0
 #else
@@ -493,7 +508,7 @@ using namespace _LIBCPP_NAMESPACE __attribute__((__strong__));
 #define _ALIGNAS(x) __declspec(align(x))
 #define _LIBCPP_HAS_NO_VARIADICS
 
-#define _NOEXCEPT throw()
+#define _NOEXCEPT throw ()
 #define _NOEXCEPT_(x)
 #define _NOEXCEPT_OR_FALSE(x) false
 
@@ -504,6 +519,8 @@ using namespace _LIBCPP_NAMESPACE __attribute__((__strong__));
 #  define _LIBCPP_WEAK
 namespace std {
 }
+
+#define _LIBCPP_HAS_NO_ASAN
 
 #elif defined(__IBMCPP__)
 
@@ -537,12 +554,18 @@ namespace std {
   }
 }
 
+#define _LIBCPP_HAS_NO_ASAN
+
 #endif // __clang__ || __GNUC__ || _MSC_VER || __IBMCPP__
 
 #ifdef _LIBCPP_HAS_NO_UNICODE_CHARS
 typedef unsigned short char16_t;
 typedef unsigned int   char32_t;
 #endif  // _LIBCPP_HAS_NO_UNICODE_CHARS
+
+#ifndef __SIZEOF_INT128__
+#define _LIBCPP_HAS_NO_INT128
+#endif
 
 #ifdef _LIBCPP_HAS_NO_STATIC_ASSERT
 
@@ -617,6 +640,10 @@ template <unsigned> struct __static_assert_check {};
 
 #ifndef _LIBCPP_EXTERN_TEMPLATE2
 #define _LIBCPP_EXTERN_TEMPLATE2(...) extern template __VA_ARGS__;
+#endif
+
+#if defined(__APPLE__) && defined(__LP64__) && !defined(__x86_64__)
+#define _LIBCPP_NONUNIQUE_RTTI_BIT (1ULL << 63)
 #endif
 
 #if defined(__APPLE__) || defined(__FreeBSD__) || defined(_WIN32) || defined(__sun__) || defined(__NetBSD__)
