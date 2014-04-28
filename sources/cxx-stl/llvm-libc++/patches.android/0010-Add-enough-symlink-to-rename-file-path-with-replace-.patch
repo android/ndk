@@ -1,0 +1,293 @@
+From febadb8541ea84d2d054a04733ec20b48619ccb4 Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Sun, 27 Apr 2014 22:28:18 -0700
+Subject: [PATCH 10/12] Add enough symlink to rename file/path with '='
+ (replace it with 'EQ')
+
+ndk-build dislikes file path with '='
+---
+ .../insert.iterators/back.insert.iter.ops/back.insert.iter.opEQ          | 1 +
+ .../insert.iterators/front.insert.iter.ops/front.insert.iter.opEQ        | 1 +
+ .../predef.iterators/insert.iterators/insert.iter.ops/insert.iter.opEQ   | 1 +
+ .../predef.iterators/move.iterators/move.iter.ops/move.iter.op.+EQ       | 1 +
+ .../predef.iterators/move.iterators/move.iter.ops/move.iter.op.-EQ       | 1 +
+ .../predef.iterators/move.iterators/move.iter.ops/move.iter.opEQ         | 1 +
+ .../reverse.iterators/reverse.iter.ops/reverse.iter.op!EQ                | 1 +
+ .../reverse.iterators/reverse.iter.ops/reverse.iter.op+EQ                | 1 +
+ .../reverse.iterators/reverse.iter.ops/reverse.iter.op-EQ                | 1 +
+ .../reverse.iterators/reverse.iter.ops/reverse.iter.opEQ                 | 1 +
+ .../reverse.iterators/reverse.iter.ops/reverse.iter.opEQEQ               | 1 +
+ .../reverse.iterators/reverse.iter.ops/reverse.iter.opgtEQ               | 1 +
+ .../reverse.iterators/reverse.iter.ops/reverse.iter.opltEQ               | 1 +
+ .../stream.iterators/istreambuf.iterator/istreambuf.iterator_op!EQ       | 1 +
+ .../stream.iterators/istreambuf.iterator/istreambuf.iterator_opEQEQ      | 1 +
+ test/strings/basic.string/string.nonmembers/string_op!EQ                 | 1 +
+ test/strings/basic.string/string.nonmembers/string_operatorEQEQ          | 1 +
+ test/strings/basic.string/string.nonmembers/string_opgtEQ                | 1 +
+ test/strings/basic.string/string.nonmembers/string_opltEQ                | 1 +
+ .../func.wrap.func/func.wrap.func.nullptr/operator_EQEQ.pass.cpp         | 1 +
+ .../time/time.duration/time.duration.arithmetic/op_+EQ.pass.cpp          | 1 +
+ .../time/time.duration/time.duration.arithmetic/op_-EQ.pass.cpp          | 1 +
+ .../time/time.duration/time.duration.arithmetic/op_divideEQ.pass.cpp     | 1 +
+ .../time.duration/time.duration.arithmetic/op_modEQduration.pass.cpp     | 1 +
+ .../time/time.duration/time.duration.arithmetic/op_modEQrep.pass.cpp     | 1 +
+ .../time/time.duration/time.duration.arithmetic/op_timesEQ.pass.cpp      | 1 +
+ test/utilities/time/time.point/time.point.arithmetic/op_+EQ.pass.cpp     | 1 +
+ test/utilities/time/time.point/time.point.arithmetic/op_-EQ.pass.cpp     | 1 +
+ 28 files changed, 28 insertions(+)
+ create mode 120000 test/iterators/predef.iterators/insert.iterators/back.insert.iter.ops/back.insert.iter.opEQ
+ create mode 120000 test/iterators/predef.iterators/insert.iterators/front.insert.iter.ops/front.insert.iter.opEQ
+ create mode 120000 test/iterators/predef.iterators/insert.iterators/insert.iter.ops/insert.iter.opEQ
+ create mode 120000 test/iterators/predef.iterators/move.iterators/move.iter.ops/move.iter.op.+EQ
+ create mode 120000 test/iterators/predef.iterators/move.iterators/move.iter.ops/move.iter.op.-EQ
+ create mode 120000 test/iterators/predef.iterators/move.iterators/move.iter.ops/move.iter.opEQ
+ create mode 120000 test/iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.op!EQ
+ create mode 120000 test/iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.op+EQ
+ create mode 120000 test/iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.op-EQ
+ create mode 120000 test/iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.opEQ
+ create mode 120000 test/iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.opEQEQ
+ create mode 120000 test/iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.opgtEQ
+ create mode 120000 test/iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.opltEQ
+ create mode 120000 test/iterators/stream.iterators/istreambuf.iterator/istreambuf.iterator_op!EQ
+ create mode 120000 test/iterators/stream.iterators/istreambuf.iterator/istreambuf.iterator_opEQEQ
+ create mode 120000 test/strings/basic.string/string.nonmembers/string_op!EQ
+ create mode 120000 test/strings/basic.string/string.nonmembers/string_operatorEQEQ
+ create mode 120000 test/strings/basic.string/string.nonmembers/string_opgtEQ
+ create mode 120000 test/strings/basic.string/string.nonmembers/string_opltEQ
+ create mode 120000 test/utilities/function.objects/func.wrap/func.wrap.func/func.wrap.func.nullptr/operator_EQEQ.pass.cpp
+ create mode 120000 test/utilities/time/time.duration/time.duration.arithmetic/op_+EQ.pass.cpp
+ create mode 120000 test/utilities/time/time.duration/time.duration.arithmetic/op_-EQ.pass.cpp
+ create mode 120000 test/utilities/time/time.duration/time.duration.arithmetic/op_divideEQ.pass.cpp
+ create mode 120000 test/utilities/time/time.duration/time.duration.arithmetic/op_modEQduration.pass.cpp
+ create mode 120000 test/utilities/time/time.duration/time.duration.arithmetic/op_modEQrep.pass.cpp
+ create mode 120000 test/utilities/time/time.duration/time.duration.arithmetic/op_timesEQ.pass.cpp
+ create mode 120000 test/utilities/time/time.point/time.point.arithmetic/op_+EQ.pass.cpp
+ create mode 120000 test/utilities/time/time.point/time.point.arithmetic/op_-EQ.pass.cpp
+
+diff --git a/test/iterators/predef.iterators/insert.iterators/back.insert.iter.ops/back.insert.iter.opEQ b/test/iterators/predef.iterators/insert.iterators/back.insert.iter.ops/back.insert.iter.opEQ
+new file mode 120000
+index 0000000..98ce721
+--- /dev/null
++++ b/test/iterators/predef.iterators/insert.iterators/back.insert.iter.ops/back.insert.iter.opEQ
+@@ -0,0 +1 @@
++back.insert.iter.op=
+\ No newline at end of file
+diff --git a/test/iterators/predef.iterators/insert.iterators/front.insert.iter.ops/front.insert.iter.opEQ b/test/iterators/predef.iterators/insert.iterators/front.insert.iter.ops/front.insert.iter.opEQ
+new file mode 120000
+index 0000000..03b53c7
+--- /dev/null
++++ b/test/iterators/predef.iterators/insert.iterators/front.insert.iter.ops/front.insert.iter.opEQ
+@@ -0,0 +1 @@
++front.insert.iter.op=
+\ No newline at end of file
+diff --git a/test/iterators/predef.iterators/insert.iterators/insert.iter.ops/insert.iter.opEQ b/test/iterators/predef.iterators/insert.iterators/insert.iter.ops/insert.iter.opEQ
+new file mode 120000
+index 0000000..40c327e
+--- /dev/null
++++ b/test/iterators/predef.iterators/insert.iterators/insert.iter.ops/insert.iter.opEQ
+@@ -0,0 +1 @@
++insert.iter.op=
+\ No newline at end of file
+diff --git a/test/iterators/predef.iterators/move.iterators/move.iter.ops/move.iter.op.+EQ b/test/iterators/predef.iterators/move.iterators/move.iter.ops/move.iter.op.+EQ
+new file mode 120000
+index 0000000..1dfb35c
+--- /dev/null
++++ b/test/iterators/predef.iterators/move.iterators/move.iter.ops/move.iter.op.+EQ
+@@ -0,0 +1 @@
++move.iter.op.+=
+\ No newline at end of file
+diff --git a/test/iterators/predef.iterators/move.iterators/move.iter.ops/move.iter.op.-EQ b/test/iterators/predef.iterators/move.iterators/move.iter.ops/move.iter.op.-EQ
+new file mode 120000
+index 0000000..92e9198
+--- /dev/null
++++ b/test/iterators/predef.iterators/move.iterators/move.iter.ops/move.iter.op.-EQ
+@@ -0,0 +1 @@
++move.iter.op.-=
+\ No newline at end of file
+diff --git a/test/iterators/predef.iterators/move.iterators/move.iter.ops/move.iter.opEQ b/test/iterators/predef.iterators/move.iterators/move.iter.ops/move.iter.opEQ
+new file mode 120000
+index 0000000..0781f06
+--- /dev/null
++++ b/test/iterators/predef.iterators/move.iterators/move.iter.ops/move.iter.opEQ
+@@ -0,0 +1 @@
++move.iter.op=
+\ No newline at end of file
+diff --git a/test/iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.op!EQ b/test/iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.op!EQ
+new file mode 120000
+index 0000000..2f7a580
+--- /dev/null
++++ b/test/iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.op!EQ
+@@ -0,0 +1 @@
++reverse.iter.op!=
+\ No newline at end of file
+diff --git a/test/iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.op+EQ b/test/iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.op+EQ
+new file mode 120000
+index 0000000..711980c
+--- /dev/null
++++ b/test/iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.op+EQ
+@@ -0,0 +1 @@
++reverse.iter.op+=
+\ No newline at end of file
+diff --git a/test/iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.op-EQ b/test/iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.op-EQ
+new file mode 120000
+index 0000000..18ebdc9
+--- /dev/null
++++ b/test/iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.op-EQ
+@@ -0,0 +1 @@
++reverse.iter.op-=
+\ No newline at end of file
+diff --git a/test/iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.opEQ b/test/iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.opEQ
+new file mode 120000
+index 0000000..0ecaeb2
+--- /dev/null
++++ b/test/iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.opEQ
+@@ -0,0 +1 @@
++reverse.iter.op=
+\ No newline at end of file
+diff --git a/test/iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.opEQEQ b/test/iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.opEQEQ
+new file mode 120000
+index 0000000..db5b027
+--- /dev/null
++++ b/test/iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.opEQEQ
+@@ -0,0 +1 @@
++reverse.iter.op==
+\ No newline at end of file
+diff --git a/test/iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.opgtEQ b/test/iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.opgtEQ
+new file mode 120000
+index 0000000..3692943
+--- /dev/null
++++ b/test/iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.opgtEQ
+@@ -0,0 +1 @@
++reverse.iter.opgt=
+\ No newline at end of file
+diff --git a/test/iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.opltEQ b/test/iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.opltEQ
+new file mode 120000
+index 0000000..3d11e24
+--- /dev/null
++++ b/test/iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.opltEQ
+@@ -0,0 +1 @@
++reverse.iter.oplt=
+\ No newline at end of file
+diff --git a/test/iterators/stream.iterators/istreambuf.iterator/istreambuf.iterator_op!EQ b/test/iterators/stream.iterators/istreambuf.iterator/istreambuf.iterator_op!EQ
+new file mode 120000
+index 0000000..44f46b8
+--- /dev/null
++++ b/test/iterators/stream.iterators/istreambuf.iterator/istreambuf.iterator_op!EQ
+@@ -0,0 +1 @@
++istreambuf.iterator_op!=
+\ No newline at end of file
+diff --git a/test/iterators/stream.iterators/istreambuf.iterator/istreambuf.iterator_opEQEQ b/test/iterators/stream.iterators/istreambuf.iterator/istreambuf.iterator_opEQEQ
+new file mode 120000
+index 0000000..98e7342
+--- /dev/null
++++ b/test/iterators/stream.iterators/istreambuf.iterator/istreambuf.iterator_opEQEQ
+@@ -0,0 +1 @@
++istreambuf.iterator_op==
+\ No newline at end of file
+diff --git a/test/strings/basic.string/string.nonmembers/string_op!EQ b/test/strings/basic.string/string.nonmembers/string_op!EQ
+new file mode 120000
+index 0000000..01bb35a
+--- /dev/null
++++ b/test/strings/basic.string/string.nonmembers/string_op!EQ
+@@ -0,0 +1 @@
++string_op!=
+\ No newline at end of file
+diff --git a/test/strings/basic.string/string.nonmembers/string_operatorEQEQ b/test/strings/basic.string/string.nonmembers/string_operatorEQEQ
+new file mode 120000
+index 0000000..4d58d63
+--- /dev/null
++++ b/test/strings/basic.string/string.nonmembers/string_operatorEQEQ
+@@ -0,0 +1 @@
++string_operator==
+\ No newline at end of file
+diff --git a/test/strings/basic.string/string.nonmembers/string_opgtEQ b/test/strings/basic.string/string.nonmembers/string_opgtEQ
+new file mode 120000
+index 0000000..f7145c1
+--- /dev/null
++++ b/test/strings/basic.string/string.nonmembers/string_opgtEQ
+@@ -0,0 +1 @@
++string_opgt=
+\ No newline at end of file
+diff --git a/test/strings/basic.string/string.nonmembers/string_opltEQ b/test/strings/basic.string/string.nonmembers/string_opltEQ
+new file mode 120000
+index 0000000..5d0419e
+--- /dev/null
++++ b/test/strings/basic.string/string.nonmembers/string_opltEQ
+@@ -0,0 +1 @@
++string_oplt=
+\ No newline at end of file
+diff --git a/test/utilities/function.objects/func.wrap/func.wrap.func/func.wrap.func.nullptr/operator_EQEQ.pass.cpp b/test/utilities/function.objects/func.wrap/func.wrap.func/func.wrap.func.nullptr/operator_EQEQ.pass.cpp
+new file mode 120000
+index 0000000..1d7eafb
+--- /dev/null
++++ b/test/utilities/function.objects/func.wrap/func.wrap.func/func.wrap.func.nullptr/operator_EQEQ.pass.cpp
+@@ -0,0 +1 @@
++operator_==.pass.cpp
+\ No newline at end of file
+diff --git a/test/utilities/time/time.duration/time.duration.arithmetic/op_+EQ.pass.cpp b/test/utilities/time/time.duration/time.duration.arithmetic/op_+EQ.pass.cpp
+new file mode 120000
+index 0000000..bdc2b67
+--- /dev/null
++++ b/test/utilities/time/time.duration/time.duration.arithmetic/op_+EQ.pass.cpp
+@@ -0,0 +1 @@
++op_+=.pass.cpp
+\ No newline at end of file
+diff --git a/test/utilities/time/time.duration/time.duration.arithmetic/op_-EQ.pass.cpp b/test/utilities/time/time.duration/time.duration.arithmetic/op_-EQ.pass.cpp
+new file mode 120000
+index 0000000..805c6d3
+--- /dev/null
++++ b/test/utilities/time/time.duration/time.duration.arithmetic/op_-EQ.pass.cpp
+@@ -0,0 +1 @@
++op_-=.pass.cpp
+\ No newline at end of file
+diff --git a/test/utilities/time/time.duration/time.duration.arithmetic/op_divideEQ.pass.cpp b/test/utilities/time/time.duration/time.duration.arithmetic/op_divideEQ.pass.cpp
+new file mode 120000
+index 0000000..c11a105
+--- /dev/null
++++ b/test/utilities/time/time.duration/time.duration.arithmetic/op_divideEQ.pass.cpp
+@@ -0,0 +1 @@
++op_divide=.pass.cpp
+\ No newline at end of file
+diff --git a/test/utilities/time/time.duration/time.duration.arithmetic/op_modEQduration.pass.cpp b/test/utilities/time/time.duration/time.duration.arithmetic/op_modEQduration.pass.cpp
+new file mode 120000
+index 0000000..479f97c
+--- /dev/null
++++ b/test/utilities/time/time.duration/time.duration.arithmetic/op_modEQduration.pass.cpp
+@@ -0,0 +1 @@
++op_mod=duration.pass.cpp
+\ No newline at end of file
+diff --git a/test/utilities/time/time.duration/time.duration.arithmetic/op_modEQrep.pass.cpp b/test/utilities/time/time.duration/time.duration.arithmetic/op_modEQrep.pass.cpp
+new file mode 120000
+index 0000000..f0a32e7
+--- /dev/null
++++ b/test/utilities/time/time.duration/time.duration.arithmetic/op_modEQrep.pass.cpp
+@@ -0,0 +1 @@
++op_mod=rep.pass.cpp
+\ No newline at end of file
+diff --git a/test/utilities/time/time.duration/time.duration.arithmetic/op_timesEQ.pass.cpp b/test/utilities/time/time.duration/time.duration.arithmetic/op_timesEQ.pass.cpp
+new file mode 120000
+index 0000000..a4a9beb
+--- /dev/null
++++ b/test/utilities/time/time.duration/time.duration.arithmetic/op_timesEQ.pass.cpp
+@@ -0,0 +1 @@
++op_times=.pass.cpp
+\ No newline at end of file
+diff --git a/test/utilities/time/time.point/time.point.arithmetic/op_+EQ.pass.cpp b/test/utilities/time/time.point/time.point.arithmetic/op_+EQ.pass.cpp
+new file mode 120000
+index 0000000..bdc2b67
+--- /dev/null
++++ b/test/utilities/time/time.point/time.point.arithmetic/op_+EQ.pass.cpp
+@@ -0,0 +1 @@
++op_+=.pass.cpp
+\ No newline at end of file
+diff --git a/test/utilities/time/time.point/time.point.arithmetic/op_-EQ.pass.cpp b/test/utilities/time/time.point/time.point.arithmetic/op_-EQ.pass.cpp
+new file mode 120000
+index 0000000..805c6d3
+--- /dev/null
++++ b/test/utilities/time/time.point/time.point.arithmetic/op_-EQ.pass.cpp
+@@ -0,0 +1 @@
++op_-=.pass.cpp
+\ No newline at end of file
+-- 
+1.9.1.423.g4596e3a
+

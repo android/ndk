@@ -12,6 +12,8 @@
 #include "system_error"
 #include "cassert"
 
+#if !_LIBCPP_SINGLE_THREADED
+
 _LIBCPP_BEGIN_NAMESPACE_STD
 
 condition_variable::~condition_variable()
@@ -32,7 +34,7 @@ condition_variable::notify_all() _NOEXCEPT
 }
 
 void
-condition_variable::wait(unique_lock<mutex>& lk)
+condition_variable::wait(unique_lock<mutex>& lk) _NOEXCEPT
 {
     if (!lk.owns_lock())
         __throw_system_error(EPERM,
@@ -44,7 +46,7 @@ condition_variable::wait(unique_lock<mutex>& lk)
 
 void
 condition_variable::__do_timed_wait(unique_lock<mutex>& lk,
-               chrono::time_point<chrono::system_clock, chrono::nanoseconds> tp)
+     chrono::time_point<chrono::system_clock, chrono::nanoseconds> tp) _NOEXCEPT
 {
     using namespace chrono;
     if (!lk.owns_lock())
@@ -79,3 +81,6 @@ notify_all_at_thread_exit(condition_variable& cond, unique_lock<mutex> lk)
 }
 
 _LIBCPP_END_NAMESPACE_STD
+
+#endif // !_LIBCPP_SINGLE_THREADED
+

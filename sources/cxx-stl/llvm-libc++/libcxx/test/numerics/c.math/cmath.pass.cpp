@@ -190,8 +190,8 @@ void test_fabs()
     static_assert((std::is_same<decltype(std::fabs((unsigned long long)0)), double>::value), "");
     static_assert((std::is_same<decltype(std::fabs((double)0)), double>::value), "");
     static_assert((std::is_same<decltype(std::fabs((long double)0)), long double>::value), "");
-    static_assert((std::is_same<decltype(std::fabsf(0)), float>::value), "");
-    static_assert((std::is_same<decltype(std::fabsl(0)), long double>::value), "");
+    static_assert((std::is_same<decltype(std::fabsf(0.0f)), float>::value), "");
+    static_assert((std::is_same<decltype(std::fabsl(0.0L)), long double>::value), "");
     assert(std::fabs(-1) == 1);
 }
 
@@ -481,7 +481,10 @@ void test_isinf()
 #error isinf defined
 #endif
     static_assert((std::is_same<decltype(std::isinf((float)0)), bool>::value), "");
+#if !(defined(__ANDROID__) && (__LP64__ || __ANDROID_API__ >= 20))
+ // bionic isnan(double) returns int.
     static_assert((std::is_same<decltype(std::isinf((double)0)), bool>::value), "");
+#endif
     static_assert((std::is_same<decltype(std::isinf(0)), bool>::value), "");
     static_assert((std::is_same<decltype(std::isinf((long double)0)), bool>::value), "");
     assert(std::isinf(-1.0) == false);

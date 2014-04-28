@@ -119,7 +119,7 @@ __shared_weak_count::__get_deleter(const type_info&) const _NOEXCEPT
 
 #endif  // _LIBCPP_NO_RTTI
 
-#if __has_feature(cxx_atomic)
+#if __has_feature(cxx_atomic) && !_LIBCPP_SINGLE_THREADED
 
 static const std::size_t __sp_mut_count = 16;
 static pthread_mutex_t mut_back_imp[__sp_mut_count] =
@@ -172,7 +172,7 @@ __get_sp_mut(const void* p)
     return muts[hash<const void*>()(p) & (__sp_mut_count-1)];
 }
 
-#endif // __has_feature(cxx_atomic)
+#endif // __has_feature(cxx_atomic) && LIBCPP_HAS_PTHREADS
 
 void
 declare_reachable(void*)

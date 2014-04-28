@@ -10,6 +10,8 @@
 #include "future"
 #include "string"
 
+#if !_LIBCPP_SINGLE_THREADED
+
 _LIBCPP_BEGIN_NAMESPACE_STD
 
 class _LIBCPP_HIDDEN __future_error_category
@@ -298,3 +300,7 @@ shared_future<void>::operator=(const shared_future& __rhs)
 }
 
 _LIBCPP_END_NAMESPACE_STD
+
+#endif // !_LIBCPP_SINGLE_THREADED
+
+

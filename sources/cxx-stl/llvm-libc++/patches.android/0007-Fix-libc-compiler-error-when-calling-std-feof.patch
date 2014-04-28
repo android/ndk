@@ -1,0 +1,66 @@
+From 3754d92809b7067a98e38a19ea4e10b36ad52bc7 Mon Sep 17 00:00:00 2001
+From: Carl Norum <carl@norum.ca>
+Date: Sun, 27 Apr 2014 22:21:24 -0700
+Subject: [PATCH 07/12] Fix libc++ compiler error when calling std::feof()
+
+The following functions are "macro" in bionic's stdio.h and also
+defined in cstdio's std::  getchar, putchar, clearerr, feof, ferror
+
+Undef them and re-define as inlined functions otherwise use of
+std::feof, for example, break compilation.
+
+See b.android.com/66668 and b.android.com/36496
+---
+ include/cstdio | 30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
+
+diff --git a/include/cstdio b/include/cstdio
+index ce3af4d..7787fad 100644
+--- a/include/cstdio
++++ b/include/cstdio
+@@ -114,12 +114,42 @@ inline _LIBCPP_INLINE_VISIBILITY int __libcpp_getc(FILE* __stream) {return getc(
+ inline _LIBCPP_INLINE_VISIBILITY int getc(FILE* __stream) {return __libcpp_getc(__stream);}
+ #endif  // getc
+ 
++#ifdef getchar
++inline _LIBCPP_INLINE_VISIBILITY int __libcpp_getchar(void) {return getchar();}
++#undef getchar
++inline _LIBCPP_INLINE_VISIBILITY int getchar(void) {return __libcpp_getchar();}
++#endif  // getchar
++
+ #ifdef putc
+ inline _LIBCPP_INLINE_VISIBILITY int __libcpp_putc(int __c, FILE* __stream) {return putc(__c, __stream);}
+ #undef putc
+ inline _LIBCPP_INLINE_VISIBILITY int putc(int __c, FILE* __stream) {return __libcpp_putc(__c, __stream);}
+ #endif  // putc
+ 
++#ifdef putchar
++inline _LIBCPP_INLINE_VISIBILITY int __libcpp_putchar(int __c) {return putchar(__c);}
++#undef putchar
++inline _LIBCPP_INLINE_VISIBILITY int putchar(int __c) {return __libcpp_putchar(__c);}
++#endif  // putchar
++
++#ifdef clearerr
++inline _LIBCPP_INLINE_VISIBILITY void __libcpp_clearerr(FILE* __stream) {return clearerr(__stream);}
++#undef clearerr
++inline _LIBCPP_INLINE_VISIBILITY void clearerr(FILE* __stream) {return __libcpp_clearerr(__stream);}
++#endif  // clearerr
++
++#ifdef feof
++inline _LIBCPP_INLINE_VISIBILITY int __libcpp_feof(FILE* __stream) {return feof(__stream);}
++#undef feof
++inline _LIBCPP_INLINE_VISIBILITY int feof(FILE* __stream) {return __libcpp_feof(__stream);}
++#endif  // feof
++
++#ifdef ferror
++inline _LIBCPP_INLINE_VISIBILITY int __libcpp_ferror(FILE* __stream) {return ferror(__stream);}
++#undef ferror
++inline _LIBCPP_INLINE_VISIBILITY int ferror(FILE* __stream) {return __libcpp_ferror(__stream);}
++#endif  // ferror
++
+ _LIBCPP_BEGIN_NAMESPACE_STD
+ 
+ using ::FILE;
+-- 
+1.9.1.423.g4596e3a
+

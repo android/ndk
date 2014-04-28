@@ -34,6 +34,12 @@ int main()
         assert(t.translate_nocase('1') == '1');
         assert(t.translate_nocase('\xDA') == '\xDA');
         assert(t.translate_nocase('\xFA') == '\xFA');
+/* Disable locale specific tests on Android because Android's NDK does not
+ * support locales other than "C" and "POSIX".
+ *
+ * https://code.google.com/p/android/issues/detail?id=57313
+ */
+#if !defined(__ANDROID__)
         t.imbue(std::locale(LOCALE_en_US_UTF_8));
         assert(t.translate_nocase(' ') == ' ');
         assert(t.translate_nocase('A') == 'a');
@@ -43,6 +49,7 @@ int main()
         assert(t.translate_nocase('1') == '1');
         assert(t.translate_nocase('\xDA') == '\xFA');
         assert(t.translate_nocase('\xFA') == '\xFA');
+#endif
     }
     {
         std::regex_traits<wchar_t> t;
@@ -54,6 +61,12 @@ int main()
         assert(t.translate_nocase(L'1') == L'1');
         assert(t.translate_nocase(L'\xDA') == L'\xDA');
         assert(t.translate_nocase(L'\xFA') == L'\xFA');
+/* Disable locale specific tests on Android because Android's NDK does not
+ * support locales other than "C" and "POSIX".
+ *
+ * https://code.google.com/p/android/issues/detail?id=57313
+ */
+#if !defined(__ANDROID__)
         t.imbue(std::locale(LOCALE_en_US_UTF_8));
         assert(t.translate_nocase(L' ') == L' ');
         assert(t.translate_nocase(L'A') == L'a');
@@ -63,5 +76,6 @@ int main()
         assert(t.translate_nocase(L'1') == L'1');
         assert(t.translate_nocase(L'\xDA') == L'\xFA');
         assert(t.translate_nocase(L'\xFA') == L'\xFA');
+#endif
     }
 }

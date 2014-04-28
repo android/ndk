@@ -27,8 +27,15 @@ int main()
         const char B[] = "B";
         typedef forward_iterator<const char*> F;
         assert(t.transform(F(a), F(a+1)) > t.transform(F(B), F(B+1)));
+/* Disable locale specific tests on Android because Android's NDK does not
+ * support locales other than "C" and "POSIX".
+ *
+ * https://code.google.com/p/android/issues/detail?id=57313
+ */
+#if !defined(__ANDROID__)
         t.imbue(std::locale("cs_CZ.ISO8859-2"));
         assert(t.transform(F(a), F(a+1)) < t.transform(F(B), F(B+1)));
+#endif
     }
     {
         std::regex_traits<wchar_t> t;
@@ -36,7 +43,14 @@ int main()
         const wchar_t B[] = L"B";
         typedef forward_iterator<const wchar_t*> F;
         assert(t.transform(F(a), F(a+1)) > t.transform(F(B), F(B+1)));
+/* Disable locale specific tests on Android because Android's NDK does not
+ * support locales other than "C" and "POSIX".
+ *
+ * https://code.google.com/p/android/issues/detail?id=57313
+ */
+#if !defined(__ANDROID__)
         t.imbue(std::locale("cs_CZ.ISO8859-2"));
         assert(t.transform(F(a), F(a+1)) < t.transform(F(B), F(B+1)));
+#endif
     }
 }

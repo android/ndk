@@ -22,12 +22,15 @@
 
 _LIBCPP_BEGIN_NAMESPACE_STD
 
+#if !_LIBCPP_SINGLE_THREADED
+
 class _LIBCPP_TYPE_VIS mutex
 {
     pthread_mutex_t __m_;
 
 public:
     _LIBCPP_INLINE_VISIBILITY
+
 #ifndef _LIBCPP_HAS_NO_CONSTEXPR
      constexpr mutex() _NOEXCEPT : __m_(PTHREAD_MUTEX_INITIALIZER) {}
 #else
@@ -47,6 +50,7 @@ public:
     typedef pthread_mutex_t* native_handle_type;
     _LIBCPP_INLINE_VISIBILITY native_handle_type native_handle() {return &__m_;}
 };
+#endif // !_LIBCPP_SINGLE_THREADED
 
 struct _LIBCPP_TYPE_VIS defer_lock_t {};
 struct _LIBCPP_TYPE_VIS try_to_lock_t {};
@@ -262,6 +266,7 @@ _LIBCPP_DECLARE_STRONG_ENUM(cv_status)
 };
 _LIBCPP_DECLARE_STRONG_ENUM_EPILOG(cv_status)
 
+#if !_LIBCPP_SINGLE_THREADED
 class _LIBCPP_TYPE_VIS condition_variable
 {
     pthread_cond_t __cv_;
@@ -282,7 +287,7 @@ public:
     void notify_one() _NOEXCEPT;
     void notify_all() _NOEXCEPT;
 
-    void wait(unique_lock<mutex>& __lk);
+    void wait(unique_lock<mutex>& __lk) _NOEXCEPT;
     template <class _Predicate>
         void wait(unique_lock<mutex>& __lk, _Predicate __pred);
 
@@ -313,8 +318,9 @@ public:
 
 private:
     void __do_timed_wait(unique_lock<mutex>& __lk,
-                 chrono::time_point<chrono::system_clock, chrono::nanoseconds>);
+       chrono::time_point<chrono::system_clock, chrono::nanoseconds>) _NOEXCEPT;
 };
+#endif // !_LIBCPP_SINGLE_THREADED
 
 template <class _To, class _Rep, class _Period>
 inline _LIBCPP_INLINE_VISIBILITY
@@ -332,6 +338,7 @@ __ceil(chrono::duration<_Rep, _Period> __d)
     return __r;
 }
 
+#if !_LIBCPP_SINGLE_THREADED
 template <class _Predicate>
 void
 condition_variable::wait(unique_lock<mutex>& __lk, _Predicate __pred)
@@ -395,6 +402,8 @@ condition_variable::wait_for(unique_lock<mutex>& __lk,
     return wait_until(__lk, chrono::steady_clock::now() + __d,
                       _VSTD::move(__pred));
 }
+
+#endif // !_LIBCPP_SINGLE_THREADED
 
 _LIBCPP_END_NAMESPACE_STD
 

@@ -1,0 +1,1279 @@
+From de2427cee8c21f972a9b4df6a31a7933360b4d01 Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Tue, 3 Jun 2014 17:40:43 +0800
+Subject: [PATCH 13/13] [temp] collective ndk-hackathon fixes
+
+See https://github.com/awong-dev/ndk since 0a149253507bd702d042de32c2b6bb9aa58168a3
+for log.  Some are in the process of upstream
+
+---
+ include/__config                                   | 15 ++++++++
+ include/__mutex_base                               |  9 +++++
+ include/bitset                                     |  4 +--
+ include/condition_variable                         |  4 +++
+ include/future                                     |  4 +++
+ include/mutex                                      |  4 +++
+ include/regex                                      |  6 +++-
+ include/shared_mutex                               |  4 +++
+ include/thread                                     |  4 +++
+ src/algorithm.cpp                                  |  8 +++++
+ src/chrono.cpp                                     |  7 ++++
+ src/condition_variable.cpp                         |  5 +++
+ src/debug.cpp                                      | 40 +++++++++++++++++++++
+ src/future.cpp                                     |  6 ++++
+ src/memory.cpp                                     |  4 +--
+ src/mutex.cpp                                      | 19 ++++++++++
+ src/shared_mutex.cpp                               |  6 ++++
+ src/thread.cpp                                     |  9 +++++
+ test/re/re.alg/re.alg.match/basic.pass.cpp         | 14 ++++++++
+ test/re/re.alg/re.alg.match/ecma.pass.cpp          | 14 ++++++++
+ test/re/re.alg/re.alg.match/extended.pass.cpp      | 14 ++++++++
+ test/re/re.alg/re.alg.search/awk.pass.cpp          | 14 ++++++++
+ test/re/re.alg/re.alg.search/basic.pass.cpp        | 14 ++++++++
+ test/re/re.alg/re.alg.search/ecma.pass.cpp         | 14 ++++++++
+ test/re/re.alg/re.alg.search/extended.pass.cpp     | 14 ++++++++
+ test/re/re.traits/lookup_collatename.pass.cpp      |  6 ----
+ .../re.traits/lookup_collatename.xlocale.pass.cpp  | 41 ++++++++++++++++++++++
+ test/re/re.traits/transform.pass.cpp               | 14 ++++++++
+ test/re/re.traits/transform_primary.pass.cpp       | 14 ++++++++
+ test/re/re.traits/translate_nocase.pass.cpp        | 14 ++++++++
+ .../meta.trans.other/aligned_storage.pass.cpp      | 10 ++++--
+ 31 files changed, 341 insertions(+), 14 deletions(-)
+ create mode 100644 test/re/re.traits/lookup_collatename.xlocale.pass.cpp
+
+diff --git a/include/__config b/include/__config
+index 0f443a9..d2ab7ac 100644
+--- a/include/__config
++++ b/include/__config
+@@ -11,6 +11,8 @@
+ #ifndef _LIBCPP_CONFIG
+ #define _LIBCPP_CONFIG
+ 
++#include <unistd.h>
++
+ #if !defined(_MSC_VER) || defined(__clang__)
+ #pragma GCC system_header
+ #endif
+@@ -119,6 +121,12 @@
+ # endif
+ #endif  // !defined(_LIBCPP_LITTLE_ENDIAN) || !defined(_LIBCPP_BIG_ENDIAN)
+ 
++#if defined(_POSIX_THREADS) && _POSIX_THREADS > 0
++#  define _LIBCPP_SINGLE_THREADED 0
++#else
++#  define _LIBCPP_SINGLE_THREADED 1
++#endif
++
+ #ifdef _WIN32
+ 
+ // only really useful for a DLL
+@@ -378,7 +386,14 @@ namespace std {
+ #endif
+ 
+ #define _LIBCPP_HAS_NO_TEMPLATE_ALIASES
++
++// constexpr was added to GCC in 4.6
++#if _GNUC_VER < 406
+ #define _LIBCPP_HAS_NO_CONSTEXPR
++// Can only use constexpr in c++11 mode.
++#elif !defined(__GXX_EXPERIMENTAL_CXX0X__) && __cplusplus < 201103L
++#define _LIBCPP_HAS_NO_CONSTEXPR
++#endif
+ 
+ #define _NOEXCEPT throw()
+ #define _NOEXCEPT_(x)
+diff --git a/include/__mutex_base b/include/__mutex_base
+index 293fead..122b0b7 100644
+--- a/include/__mutex_base
++++ b/include/__mutex_base
+@@ -22,12 +22,15 @@
+ 
+ _LIBCPP_BEGIN_NAMESPACE_STD
+ 
++#if !_LIBCPP_SINGLE_THREADED
++
+ class _LIBCPP_TYPE_VIS mutex
+ {
+     pthread_mutex_t __m_;
+ 
+ public:
+     _LIBCPP_INLINE_VISIBILITY
++
+ #ifndef _LIBCPP_HAS_NO_CONSTEXPR
+      constexpr mutex() _NOEXCEPT : __m_(PTHREAD_MUTEX_INITIALIZER) {}
+ #else
+@@ -47,6 +50,7 @@ public:
+     typedef pthread_mutex_t* native_handle_type;
+     _LIBCPP_INLINE_VISIBILITY native_handle_type native_handle() {return &__m_;}
+ };
++#endif // !_LIBCPP_SINGLE_THREADED
+ 
+ struct _LIBCPP_TYPE_VIS defer_lock_t {};
+ struct _LIBCPP_TYPE_VIS try_to_lock_t {};
+@@ -262,6 +266,7 @@ _LIBCPP_DECLARE_STRONG_ENUM(cv_status)
+ };
+ _LIBCPP_DECLARE_STRONG_ENUM_EPILOG(cv_status)
+ 
++#if !_LIBCPP_SINGLE_THREADED
+ class _LIBCPP_TYPE_VIS condition_variable
+ {
+     pthread_cond_t __cv_;
+@@ -315,6 +320,7 @@ private:
+     void __do_timed_wait(unique_lock<mutex>& __lk,
+        chrono::time_point<chrono::system_clock, chrono::nanoseconds>) _NOEXCEPT;
+ };
++#endif // !_LIBCPP_SINGLE_THREADED
+ 
+ template <class _To, class _Rep, class _Period>
+ inline _LIBCPP_INLINE_VISIBILITY
+@@ -332,6 +338,7 @@ __ceil(chrono::duration<_Rep, _Period> __d)
+     return __r;
+ }
+ 
++#if !_LIBCPP_SINGLE_THREADED
+ template <class _Predicate>
+ void
+ condition_variable::wait(unique_lock<mutex>& __lk, _Predicate __pred)
+@@ -396,6 +403,8 @@ condition_variable::wait_for(unique_lock<mutex>& __lk,
+                       _VSTD::move(__pred));
+ }
+ 
++#endif // !_LIBCPP_SINGLE_THREADED
++
+ _LIBCPP_END_NAMESPACE_STD
+ 
+ #endif  // _LIBCPP___MUTEX_BASE
+diff --git a/include/bitset b/include/bitset
+index 4cc7dbd..8c278cc 100644
+--- a/include/bitset
++++ b/include/bitset
+@@ -249,9 +249,9 @@ inline _LIBCPP_INLINE_VISIBILITY
+ _LIBCPP_CONSTEXPR
+ __bitset<_N_words, _Size>::__bitset(unsigned long long __v) _NOEXCEPT
+ #ifndef _LIBCPP_HAS_NO_CONSTEXPR
+-#if __SIZE_WIDTH__ == 64
++#if __SIZEOF_SIZE_T__ == 8
+     : __first_{__v}
+-#elif __SIZE_WIDTH__ == 32
++#elif __SIZEOF_SIZE_T__ == 4
+     : __first_{__v, __v >> __bits_per_word}
+ #else
+ #error This constructor has not been ported to this platform
+diff --git a/include/condition_variable b/include/condition_variable
+index dc67266..603ee8f 100644
+--- a/include/condition_variable
++++ b/include/condition_variable
+@@ -115,6 +115,8 @@ public:
+ #pragma GCC system_header
+ #endif
+ 
++#if !_LIBCPP_SINGLE_THREADED
++
+ _LIBCPP_BEGIN_NAMESPACE_STD
+ 
+ class _LIBCPP_TYPE_VIS condition_variable_any
+@@ -253,4 +255,6 @@ void notify_all_at_thread_exit(condition_variable& cond, unique_lock<mutex> lk);
+ 
+ _LIBCPP_END_NAMESPACE_STD
+ 
++#endif // !_LIBCPP_SINGLE_THREADED
++
+ #endif  // _LIBCPP_CONDITION_VARIABLE
+diff --git a/include/future b/include/future
+index de00f25..c776c59 100644
+--- a/include/future
++++ b/include/future
+@@ -374,6 +374,8 @@ template <class R, class Alloc> struct uses_allocator<packaged_task<R>, Alloc>;
+ #pragma GCC system_header
+ #endif
+ 
++#if !_LIBCPP_SINGLE_THREADED
++
+ _LIBCPP_BEGIN_NAMESPACE_STD
+ 
+ //enum class future_errc
+@@ -2612,4 +2614,6 @@ future<void>::share()
+ 
+ _LIBCPP_END_NAMESPACE_STD
+ 
++#endif // !_LIBCPP_SINGLE_THREADED
++
+ #endif  // _LIBCPP_FUTURE
+diff --git a/include/mutex b/include/mutex
+index e0c02ad..b7a6709 100644
+--- a/include/mutex
++++ b/include/mutex
+@@ -187,6 +187,8 @@ template<class Callable, class ...Args>
+ 
+ _LIBCPP_BEGIN_NAMESPACE_STD
+ 
++#if !_LIBCPP_SINGLE_THREADED
++
+ class _LIBCPP_TYPE_VIS recursive_mutex
+ {
+     pthread_mutex_t __m_;
+@@ -425,6 +427,8 @@ lock(_L0& __l0, _L1& __l1, _L2& __l2, _L3& ...__l3)
+ 
+ #endif  // _LIBCPP_HAS_NO_VARIADICS
+ 
++#endif // !_LIBCPP_SINGLE_THREADED
++
+ struct _LIBCPP_TYPE_VIS once_flag;
+ 
+ #ifndef _LIBCPP_HAS_NO_VARIADICS
+diff --git a/include/regex b/include/regex
+index bebbaf0..7d922cb 100644
+--- a/include/regex
++++ b/include/regex
+@@ -964,7 +964,11 @@ public:
+     typedef locale                  locale_type;
+     typedef ctype_base::mask        char_class_type;
+ 
+-    static const char_class_type __regex_word = 0x80;
++    // Note that Android's whitespace bit, aka. _B (see locale_android.cpp for
++    // the details) was unfortunately defined as 0x80 which made the whitespace
++    // character be recognized as a word.
++    static const char_class_type __regex_word = 0x200;
++
+ private:
+     locale __loc_;
+     const ctype<char_type>* __ct_;
+diff --git a/include/shared_mutex b/include/shared_mutex
+index 7661054..fe16ee7 100644
+--- a/include/shared_mutex
++++ b/include/shared_mutex
+@@ -112,6 +112,8 @@ template <class Mutex>
+ #pragma GCC system_header
+ #endif
+ 
++#if !_LIBCPP_SINGLE_THREADED
++
+ _LIBCPP_BEGIN_NAMESPACE_STD
+ 
+ class _LIBCPP_TYPE_VIS shared_timed_mutex
+@@ -414,6 +416,8 @@ swap(shared_lock<_Mutex>& __x, shared_lock<_Mutex>& __y) noexcept
+ 
+ _LIBCPP_END_NAMESPACE_STD
+ 
++#endif  // _LIBC_HAS_PTHREADS
++
+ #endif  // _LIBCPP_STD_VER > 11
+ 
+ #endif  // _LIBCPP_SHARED_MUTEX
+diff --git a/include/thread b/include/thread
+index 1f1e4a2..0202440 100644
+--- a/include/thread
++++ b/include/thread
+@@ -106,6 +106,8 @@ void sleep_for(const chrono::duration<Rep, Period>& rel_time);
+ 
+ #define __STDCPP_THREADS__ __cplusplus
+ 
++#if !_LIBCPP_SINGLE_THREADED
++
+ _LIBCPP_BEGIN_NAMESPACE_STD
+ 
+ template <class _Tp>
+@@ -455,4 +457,6 @@ void yield() _NOEXCEPT {sched_yield();}
+ 
+ _LIBCPP_END_NAMESPACE_STD
+ 
++#endif // !_LIBCPP_SINGLE_THREADED
++
+ #endif  // _LIBCPP_THREAD
+diff --git a/src/algorithm.cpp b/src/algorithm.cpp
+index 10c4c33..2ee8b00 100644
+--- a/src/algorithm.cpp
++++ b/src/algorithm.cpp
+@@ -48,12 +48,16 @@ template bool __insertion_sort_incomplete<__less<long double>&, long double*>(lo
+ 
+ template unsigned __sort5<__less<long double>&, long double*>(long double*, long double*, long double*, long double*, long double*, __less<long double>&);
+ 
++#if !_LIBCPP_SINGLE_THREADED
+ static pthread_mutex_t __rs_mut = PTHREAD_MUTEX_INITIALIZER;
++#endif
+ unsigned __rs_default::__c_ = 0;
+ 
+ __rs_default::__rs_default()
+ {
++#if !_LIBCPP_SINGLE_THREADED
+     pthread_mutex_lock(&__rs_mut);
++#endif
+     __c_ = 1;
+ }
+ 
+@@ -64,8 +68,12 @@ __rs_default::__rs_default(const __rs_default&)
+ 
+ __rs_default::~__rs_default()
+ {
++#if !_LIBCPP_SINGLE_THREADED
+     if (--__c_ == 0)
+         pthread_mutex_unlock(&__rs_mut);
++#else
++    --__c_;
++#endif
+ }
+ 
+ __rs_default::result_type
+diff --git a/src/chrono.cpp b/src/chrono.cpp
+index 15a6f46..331de3d 100644
+--- a/src/chrono.cpp
++++ b/src/chrono.cpp
+@@ -120,10 +120,17 @@ steady_clock::now() _NOEXCEPT
+ steady_clock::time_point
+ steady_clock::now() _NOEXCEPT
+ {
++#if defined(_POSIX_MONOTONIC_CLOCK) && _POSIX_MONOTONIC_CLOCK > 0
+     struct timespec tp;
+     if (0 != clock_gettime(CLOCK_MONOTONIC, &tp))
+         __throw_system_error(errno, "clock_gettime(CLOCK_MONOTONIC) failed");
+     return time_point(seconds(tp.tv_sec) + nanoseconds(tp.tv_nsec));
++#else
++#warning posix doesn't have a monotonic clock on this system \
++         so we're falling back to std::steady_clock (which may \
++         not be monotonic, and therefore may not be conforming)
++    return time_point(system_clock::now().time_since_epoch());
++#endif
+ }
+ #endif  // __APPLE__
+ 
+diff --git a/src/condition_variable.cpp b/src/condition_variable.cpp
+index 061d138..f21142d 100644
+--- a/src/condition_variable.cpp
++++ b/src/condition_variable.cpp
+@@ -12,6 +12,8 @@
+ #include "system_error"
+ #include "cassert"
+ 
++#if !_LIBCPP_SINGLE_THREADED
++
+ _LIBCPP_BEGIN_NAMESPACE_STD
+ 
+ condition_variable::~condition_variable()
+@@ -79,3 +81,6 @@ notify_all_at_thread_exit(condition_variable& cond, unique_lock<mutex> lk)
+ }
+ 
+ _LIBCPP_END_NAMESPACE_STD
++
++#endif // !_LIBCPP_SINGLE_THREADED
++
+diff --git a/src/debug.cpp b/src/debug.cpp
+index d0e8679..05ec703 100644
+--- a/src/debug.cpp
++++ b/src/debug.cpp
+@@ -35,6 +35,7 @@ __get_const_db()
+ namespace
+ {
+ 
++#if !_LIBCPP_SINGLE_THREADED
+ typedef mutex mutex_type;
+ typedef lock_guard<mutex_type> WLock;
+ typedef lock_guard<mutex_type> RLock;
+@@ -45,6 +46,7 @@ mut()
+     static mutex_type m;
+     return m;
+ }
++#endif // !_LIBCPP_SINGLE_THREADED
+ 
+ }  // unnamed namespace
+ 
+@@ -108,7 +110,9 @@ __libcpp_db::~__libcpp_db()
+ void*
+ __libcpp_db::__find_c_from_i(void* __i) const
+ {
++#if !_LIBCPP_SINGLE_THREADED
+     RLock _(mut());
++#endif
+     __i_node* i = __find_iterator(__i);
+     _LIBCPP_ASSERT(i != nullptr, "iterator not found in debug database.");
+     return i->__c_ != nullptr ? i->__c_->__c_ : nullptr;
+@@ -117,7 +121,9 @@ __libcpp_db::__find_c_from_i(void* __i) const
+ void
+ __libcpp_db::__insert_ic(void* __i, const void* __c)
+ {
++#if !_LIBCPP_SINGLE_THREADED
+     WLock _(mut());
++#endif
+     if (__cbeg_ == __cend_)
+         return;
+     size_t hc = hash<const void*>()(__c) % static_cast<size_t>(__cend_ - __cbeg_);
+@@ -138,7 +144,9 @@ __libcpp_db::__insert_ic(void* __i, const void* __c)
+ __c_node*
+ __libcpp_db::__insert_c(void* __c)
+ {
++#if !_LIBCPP_SINGLE_THREADED
+     WLock _(mut());
++#endif
+     if (__csz_ + 1 > static_cast<size_t>(__cend_ - __cbeg_))
+     {
+         size_t nc = __next_prime(2*static_cast<size_t>(__cend_ - __cbeg_) + 1);
+@@ -184,7 +192,9 @@ __libcpp_db::__insert_c(void* __c)
+ void
+ __libcpp_db::__erase_i(void* __i)
+ {
++#if !_LIBCPP_SINGLE_THREADED
+     WLock _(mut());
++#endif
+     if (__ibeg_ != __iend_)
+     {
+         size_t hi = hash<void*>()(__i) % static_cast<size_t>(__iend_ - __ibeg_);
+@@ -215,7 +225,9 @@ __libcpp_db::__erase_i(void* __i)
+ void
+ __libcpp_db::__invalidate_all(void* __c)
+ {
++#if !_LIBCPP_SINGLE_THREADED
+     WLock _(mut());
++#endif
+     if (__cend_ != __cbeg_)
+     {
+         size_t hc = hash<void*>()(__c) % static_cast<size_t>(__cend_ - __cbeg_);
+@@ -239,17 +251,23 @@ __libcpp_db::__invalidate_all(void* __c)
+ __c_node*
+ __libcpp_db::__find_c_and_lock(void* __c) const
+ {
++#if !_LIBCPP_SINGLE_THREADED
+     mut().lock();
++#endif
+     if (__cend_ == __cbeg_)
+     {
++#if !_LIBCPP_SINGLE_THREADED
+         mut().unlock();
++#endif
+         return nullptr;
+     }
+     size_t hc = hash<void*>()(__c) % static_cast<size_t>(__cend_ - __cbeg_);
+     __c_node* p = __cbeg_[hc];
+     if (p == nullptr)
+     {
++#if !_LIBCPP_SINGLE_THREADED
+         mut().unlock();
++#endif
+         return nullptr;
+     }
+     while (p->__c_ != __c)
+@@ -257,7 +275,9 @@ __libcpp_db::__find_c_and_lock(void* __c) const
+         p = p->__next_;
+         if (p == nullptr)
+         {
++#if !_LIBCPP_SINGLE_THREADED
+             mut().unlock();
++#endif
+             return nullptr;
+         }
+     }
+@@ -281,13 +301,17 @@ __libcpp_db::__find_c(void* __c) const
+ void
+ __libcpp_db::unlock() const
+ {
++#if !_LIBCPP_SINGLE_THREADED
+     mut().unlock();
++#endif
+ }
+ 
+ void
+ __libcpp_db::__erase_c(void* __c)
+ {
++#if !_LIBCPP_SINGLE_THREADED
+     WLock _(mut());
++#endif
+     if (__cend_ != __cbeg_)
+     {
+         size_t hc = hash<void*>()(__c) % static_cast<size_t>(__cend_ - __cbeg_);
+@@ -322,7 +346,9 @@ __libcpp_db::__erase_c(void* __c)
+ void
+ __libcpp_db::__iterator_copy(void* __i, const void* __i0)
+ {
++#if !_LIBCPP_SINGLE_THREADED
+     WLock _(mut());
++#endif
+     __i_node* i = __find_iterator(__i);
+     __i_node* i0 = __find_iterator(__i0);
+     __c_node* c0 = i0 != nullptr ? i0->__c_ : nullptr;
+@@ -348,7 +374,9 @@ __libcpp_db::__iterator_copy(void* __i, const void* __i0)
+ bool
+ __libcpp_db::__dereferenceable(const void* __i) const
+ {
++#if !_LIBCPP_SINGLE_THREADED
+     RLock _(mut());
++#endif
+     __i_node* i = __find_iterator(__i);
+     return i != nullptr && i->__c_ != nullptr && i->__c_->__dereferenceable(__i);
+ }
+@@ -356,7 +384,9 @@ __libcpp_db::__dereferenceable(const void* __i) const
+ bool
+ __libcpp_db::__decrementable(const void* __i) const
+ {
++#if !_LIBCPP_SINGLE_THREADED
+     RLock _(mut());
++#endif
+     __i_node* i = __find_iterator(__i);
+     return i != nullptr && i->__c_ != nullptr && i->__c_->__decrementable(__i);
+ }
+@@ -364,7 +394,9 @@ __libcpp_db::__decrementable(const void* __i) const
+ bool
+ __libcpp_db::__addable(const void* __i, ptrdiff_t __n) const
+ {
++#if !_LIBCPP_SINGLE_THREADED
+     RLock _(mut());
++#endif
+     __i_node* i = __find_iterator(__i);
+     return i != nullptr && i->__c_ != nullptr && i->__c_->__addable(__i, __n);
+ }
+@@ -372,7 +404,9 @@ __libcpp_db::__addable(const void* __i, ptrdiff_t __n) const
+ bool
+ __libcpp_db::__subscriptable(const void* __i, ptrdiff_t __n) const
+ {
++#if !_LIBCPP_SINGLE_THREADED
+     RLock _(mut());
++#endif
+     __i_node* i = __find_iterator(__i);
+     return i != nullptr && i->__c_ != nullptr && i->__c_->__subscriptable(__i, __n);
+ }
+@@ -380,7 +414,9 @@ __libcpp_db::__subscriptable(const void* __i, ptrdiff_t __n) const
+ bool
+ __libcpp_db::__less_than_comparable(const void* __i, const void* __j) const
+ {
++#if !_LIBCPP_SINGLE_THREADED
+     RLock _(mut());
++#endif
+     __i_node* i = __find_iterator(__i);
+     __i_node* j = __find_iterator(__j);
+     __c_node* ci = i != nullptr ? i->__c_ : nullptr;
+@@ -391,7 +427,9 @@ __libcpp_db::__less_than_comparable(const void* __i, const void* __j) const
+ void
+ __libcpp_db::swap(void* c1, void* c2)
+ {
++#if !_LIBCPP_SINGLE_THREADED
+     WLock _(mut());
++#endif
+     size_t hc = hash<void*>()(c1) % static_cast<size_t>(__cend_ - __cbeg_);
+     __c_node* p1 = __cbeg_[hc];
+     _LIBCPP_ASSERT(p1 != nullptr, "debug mode internal logic error swap A");
+@@ -420,7 +458,9 @@ __libcpp_db::swap(void* c1, void* c2)
+ void
+ __libcpp_db::__insert_i(void* __i)
+ {
++#if !_LIBCPP_SINGLE_THREADED
+     WLock _(mut());
++#endif
+     __insert_iterator(__i);
+ }
+ 
+diff --git a/src/future.cpp b/src/future.cpp
+index c67dc58..91756e1 100644
+--- a/src/future.cpp
++++ b/src/future.cpp
+@@ -10,6 +10,8 @@
+ #include "future"
+ #include "string"
+ 
++#if !_LIBCPP_SINGLE_THREADED
++
+ _LIBCPP_BEGIN_NAMESPACE_STD
+ 
+ class _LIBCPP_HIDDEN __future_error_category
+@@ -298,3 +300,7 @@ shared_future<void>::operator=(const shared_future& __rhs)
+ }
+ 
+ _LIBCPP_END_NAMESPACE_STD
++
++#endif // !_LIBCPP_SINGLE_THREADED
++
++
+diff --git a/src/memory.cpp b/src/memory.cpp
+index 666673f..2938538 100644
+--- a/src/memory.cpp
++++ b/src/memory.cpp
+@@ -119,7 +119,7 @@ __shared_weak_count::__get_deleter(const type_info&) const _NOEXCEPT
+ 
+ #endif  // _LIBCPP_NO_RTTI
+ 
+-#if __has_feature(cxx_atomic)
++#if __has_feature(cxx_atomic) && !_LIBCPP_SINGLE_THREADED
+ 
+ static const std::size_t __sp_mut_count = 16;
+ static pthread_mutex_t mut_back_imp[__sp_mut_count] =
+@@ -172,7 +172,7 @@ __get_sp_mut(const void* p)
+     return muts[hash<const void*>()(p) & (__sp_mut_count-1)];
+ }
+ 
+-#endif // __has_feature(cxx_atomic)
++#endif // __has_feature(cxx_atomic) && LIBCPP_HAS_PTHREADS
+ 
+ void
+ declare_reachable(void*)
+diff --git a/src/mutex.cpp b/src/mutex.cpp
+index 0767897..18a68b1 100644
+--- a/src/mutex.cpp
++++ b/src/mutex.cpp
+@@ -14,6 +14,7 @@
+ #include "cassert"
+ 
+ _LIBCPP_BEGIN_NAMESPACE_STD
++#if !_LIBCPP_SINGLE_THREADED
+ 
+ const defer_lock_t  defer_lock = {};
+ const try_to_lock_t try_to_lock = {};
+@@ -206,21 +207,27 @@ recursive_timed_mutex::unlock() _NOEXCEPT
+     }
+ }
+ 
++#endif // !_LIBCPP_SINGLE_THREADED
++
+ // If dispatch_once_f ever handles C++ exceptions, and if one can get to it
+ // without illegal macros (unexpected macros not beginning with _UpperCase or
+ // __lowercase), and if it stops spinning waiting threads, then call_once should
+ // call into dispatch_once_f instead of here. Relevant radar this code needs to
+ // keep in sync with:  7741191.
+ 
++#if !_LIBCPP_SINGLE_THREADED
+ static pthread_mutex_t mut = PTHREAD_MUTEX_INITIALIZER;
+ static pthread_cond_t  cv  = PTHREAD_COND_INITIALIZER;
++#endif
+ 
+ void
+ __call_once(volatile unsigned long& flag, void* arg, void(*func)(void*))
+ {
++#if !_LIBCPP_SINGLE_THREADED
+     pthread_mutex_lock(&mut);
+     while (flag == 1)
+         pthread_cond_wait(&cv, &mut);
++#endif // !_LIBCPP_SINGLE_THREADED
+     if (flag == 0)
+     {
+ #ifndef _LIBCPP_NO_EXCEPTIONS
+@@ -228,26 +235,38 @@ __call_once(volatile unsigned long& flag, void* arg, void(*func)(void*))
+         {
+ #endif  // _LIBCPP_NO_EXCEPTIONS
+             flag = 1;
++#if !_LIBCPP_SINGLE_THREADED
+             pthread_mutex_unlock(&mut);
++#endif // !_LIBCPP_SINGLE_THREADED
+             func(arg);
++#if !_LIBCPP_SINGLE_THREADED
+             pthread_mutex_lock(&mut);
++#endif // !_LIBCPP_SINGLE_THREADED
+             flag = ~0ul;
++#if !_LIBCPP_SINGLE_THREADED
+             pthread_mutex_unlock(&mut);
+             pthread_cond_broadcast(&cv);
++#endif // !_LIBCPP_SINGLE_THREADED
+ #ifndef _LIBCPP_NO_EXCEPTIONS
+         }
+         catch (...)
+         {
++#if !_LIBCPP_SINGLE_THREADED
+             pthread_mutex_lock(&mut);
++#endif // !_LIBCPP_SINGLE_THREADED
+             flag = 0ul;
++#if !_LIBCPP_SINGLE_THREADED
+             pthread_mutex_unlock(&mut);
+             pthread_cond_broadcast(&cv);
++#endif // !_LIBCPP_SINGLE_THREADED
+             throw;
+         }
+ #endif  // _LIBCPP_NO_EXCEPTIONS
+     }
++#if !_LIBCPP_SINGLE_THREADED
+     else
+         pthread_mutex_unlock(&mut);
++#endif // !_LIBCPP_SINGLE_THREADED
+ }
+ 
+ _LIBCPP_END_NAMESPACE_STD
+diff --git a/src/shared_mutex.cpp b/src/shared_mutex.cpp
+index dd78a16..860e23a 100644
+--- a/src/shared_mutex.cpp
++++ b/src/shared_mutex.cpp
+@@ -10,6 +10,8 @@
+ #define _LIBCPP_BUILDING_SHARED_MUTEX
+ #include "shared_mutex"
+ 
++#if !_LIBCPP_SINGLE_THREADED
++
+ _LIBCPP_BEGIN_NAMESPACE_STD
+ 
+ shared_timed_mutex::shared_timed_mutex()
+@@ -99,3 +101,7 @@ shared_timed_mutex::unlock_shared()
+ 
+ 
+ _LIBCPP_END_NAMESPACE_STD
++
++#endif // !_LIBCPP_SINGLE_THREADED
++
++
+diff --git a/src/thread.cpp b/src/thread.cpp
+index bd2b7c3..1ffef7a 100644
+--- a/src/thread.cpp
++++ b/src/thread.cpp
+@@ -27,6 +27,8 @@
+ #include <windows.h>
+ #endif
+ 
++#if !_LIBCPP_SINGLE_THREADED
++
+ _LIBCPP_BEGIN_NAMESPACE_STD
+ 
+ thread::~thread()
+@@ -121,7 +123,11 @@ sleep_for(const chrono::nanoseconds& ns)
+             ts.tv_sec = ts_sec_max;
+             ts.tv_nsec = giga::num - 1;
+         }
++#if defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 199309L
+         nanosleep(&ts, 0);
++#else
++#warning sleep_for not yet implemented
++#endif
+     }
+ }
+ 
+@@ -223,3 +229,6 @@ __thread_struct::__make_ready_at_thread_exit(__assoc_sub_state* __s)
+ }
+ 
+ _LIBCPP_END_NAMESPACE_STD
++
++#endif // !_LIBCPP_SINGLE_THREADED
++
+diff --git a/test/re/re.alg/re.alg.match/basic.pass.cpp b/test/re/re.alg/re.alg.match/basic.pass.cpp
+index 55c7361..9d3f39d 100644
+--- a/test/re/re.alg/re.alg.match/basic.pass.cpp
++++ b/test/re/re.alg/re.alg.match/basic.pass.cpp
+@@ -614,6 +614,12 @@ int main()
+                                                  std::regex_constants::basic)));
+         assert(m.size() == 0);
+     }
++/* Disable locale specific tests on Android because Android's NDK does not
++ * support locales other than "C" and "POSIX".
++ *
++ * https://code.google.com/p/android/issues/detail?id=57313
++ */
++#if !defined(__ANDROID__)
+     std::locale::global(std::locale("cs_CZ.ISO8859-2"));
+     {
+         std::cmatch m;
+@@ -648,6 +654,7 @@ int main()
+         assert(m.str(0) == s);
+     }
+     std::locale::global(std::locale("C"));
++#endif
+     {
+         std::cmatch m;
+         const char s[] = "m";
+@@ -1282,6 +1289,12 @@ int main()
+                                                  std::regex_constants::basic)));
+         assert(m.size() == 0);
+     }
++/* Disable locale specific tests on Android because Android's NDK does not
++ * support locales other than "C" and "POSIX".
++ *
++ * https://code.google.com/p/android/issues/detail?id=57313
++ */
++#if !defined(__ANDROID__)
+     std::locale::global(std::locale("cs_CZ.ISO8859-2"));
+     {
+         std::wcmatch m;
+@@ -1316,6 +1329,7 @@ int main()
+         assert(m.str(0) == s);
+     }
+     std::locale::global(std::locale("C"));
++#endif
+     {
+         std::wcmatch m;
+         const wchar_t s[] = L"m";
+diff --git a/test/re/re.alg/re.alg.match/ecma.pass.cpp b/test/re/re.alg/re.alg.match/ecma.pass.cpp
+index 162a6a7..bb36831 100644
+--- a/test/re/re.alg/re.alg.match/ecma.pass.cpp
++++ b/test/re/re.alg/re.alg.match/ecma.pass.cpp
+@@ -576,6 +576,12 @@ int main()
+         assert(!std::regex_match(s, m, std::regex("[a[.hyphen.]z]")));
+         assert(m.size() == 0);
+     }
++/* Disable locale specific tests on Android because Android's NDK does not
++ * support locales other than "C" and "POSIX".
++ *
++ * https://code.google.com/p/android/issues/detail?id=57313
++ */
++#if !defined(__ANDROID__)
+     std::locale::global(std::locale("cs_CZ.ISO8859-2"));
+     {
+         std::cmatch m;
+@@ -621,6 +627,7 @@ int main()
+         assert(m.size() == 1);
+     }
+     std::locale::global(std::locale("C"));
++#endif
+     {
+         std::cmatch m;
+         const char s[] = "m";
+@@ -1241,6 +1248,12 @@ int main()
+         assert(!std::regex_match(s, m, std::wregex(L"[a[.hyphen.]z]")));
+         assert(m.size() == 0);
+     }
++/* Disable locale specific tests on Android because Android's NDK does not
++ * support locales other than "C" and "POSIX".
++ *
++ * https://code.google.com/p/android/issues/detail?id=57313
++ */
++#if !defined(__ANDROID__)
+     std::locale::global(std::locale("cs_CZ.ISO8859-2"));
+     {
+         std::wcmatch m;
+@@ -1274,6 +1287,7 @@ int main()
+         assert(m.str(0) == s);
+     }
+     std::locale::global(std::locale("C"));
++#endif
+     {
+         std::wcmatch m;
+         const wchar_t s[] = L"m";
+diff --git a/test/re/re.alg/re.alg.match/extended.pass.cpp b/test/re/re.alg/re.alg.match/extended.pass.cpp
+index 683f65b..5ef8695 100644
+--- a/test/re/re.alg/re.alg.match/extended.pass.cpp
++++ b/test/re/re.alg/re.alg.match/extended.pass.cpp
+@@ -612,6 +612,12 @@ int main()
+                                                  std::regex_constants::extended)));
+         assert(m.size() == 0);
+     }
++/* Disable locale specific tests on Android because Android's NDK does not
++ * support locales other than "C" and "POSIX".
++ *
++ * https://code.google.com/p/android/issues/detail?id=57313
++ */
++#if !defined(__ANDROID__)
+     std::locale::global(std::locale("cs_CZ.ISO8859-2"));
+     {
+         std::cmatch m;
+@@ -646,6 +652,7 @@ int main()
+         assert(m.str(0) == s);
+     }
+     std::locale::global(std::locale("C"));
++#endif
+     {
+         std::cmatch m;
+         const char s[] = "m";
+@@ -1278,6 +1285,12 @@ int main()
+                                                  std::regex_constants::extended)));
+         assert(m.size() == 0);
+     }
++/* Disable locale specific tests on Android because Android's NDK does not
++ * support locales other than "C" and "POSIX".
++ *
++ * https://code.google.com/p/android/issues/detail?id=57313
++ */
++#if !defined(__ANDROID__)
+     std::locale::global(std::locale("cs_CZ.ISO8859-2"));
+     {
+         std::wcmatch m;
+@@ -1312,6 +1325,7 @@ int main()
+         assert(m.str(0) == s);
+     }
+     std::locale::global(std::locale("C"));
++#endif
+     {
+         std::wcmatch m;
+         const wchar_t s[] = L"m";
+diff --git a/test/re/re.alg/re.alg.search/awk.pass.cpp b/test/re/re.alg/re.alg.search/awk.pass.cpp
+index 57606c1..b03dd7b 100644
+--- a/test/re/re.alg/re.alg.search/awk.pass.cpp
++++ b/test/re/re.alg/re.alg.search/awk.pass.cpp
+@@ -684,6 +684,12 @@ int main()
+                                                  std::regex_constants::awk)));
+         assert(m.size() == 0);
+     }
++/* Disable locale specific tests on Android because Android's NDK does not
++ * support locales other than "C" and "POSIX".
++ *
++ * https://code.google.com/p/android/issues/detail?id=57313
++ */
++#if !defined(__ANDROID__)
+     std::locale::global(std::locale("cs_CZ.ISO8859-2"));
+     {
+         std::cmatch m;
+@@ -718,6 +724,7 @@ int main()
+         assert(m.str(0) == s);
+     }
+     std::locale::global(std::locale("C"));
++#endif
+     {
+         std::cmatch m;
+         const char s[] = "m";
+@@ -1455,6 +1462,12 @@ int main()
+                                                  std::regex_constants::awk)));
+         assert(m.size() == 0);
+     }
++/* Disable locale specific tests on Android because Android's NDK does not
++ * support locales other than "C" and "POSIX".
++ *
++ * https://code.google.com/p/android/issues/detail?id=57313
++ */
++#if !defined(__ANDROID__)
+     std::locale::global(std::locale("cs_CZ.ISO8859-2"));
+     {
+         std::wcmatch m;
+@@ -1489,6 +1502,7 @@ int main()
+         assert(m.str(0) == s);
+     }
+     std::locale::global(std::locale("C"));
++#endif
+     {
+         std::wcmatch m;
+         const wchar_t s[] = L"m";
+diff --git a/test/re/re.alg/re.alg.search/basic.pass.cpp b/test/re/re.alg/re.alg.search/basic.pass.cpp
+index 56396f3..809f870 100644
+--- a/test/re/re.alg/re.alg.search/basic.pass.cpp
++++ b/test/re/re.alg/re.alg.search/basic.pass.cpp
+@@ -686,6 +686,12 @@ int main()
+                                                  std::regex_constants::basic)));
+         assert(m.size() == 0);
+     }
++/* Disable locale specific tests on Android because Android's NDK does not
++ * support locales other than "C" and "POSIX".
++ *
++ * https://code.google.com/p/android/issues/detail?id=57313
++ */
++#if !defined(__ANDROID__)
+     std::locale::global(std::locale("cs_CZ.ISO8859-2"));
+     {
+         std::cmatch m;
+@@ -720,6 +726,7 @@ int main()
+         assert(m.str(0) == s);
+     }
+     std::locale::global(std::locale("C"));
++#endif
+     {
+         std::cmatch m;
+         const char s[] = "m";
+@@ -1444,6 +1451,12 @@ int main()
+                                                  std::regex_constants::basic)));
+         assert(m.size() == 0);
+     }
++/* Disable locale specific tests on Android because Android's NDK does not
++ * support locales other than "C" and "POSIX".
++ *
++ * https://code.google.com/p/android/issues/detail?id=57313
++ */
++#if !defined(__ANDROID__)
+     std::locale::global(std::locale("cs_CZ.ISO8859-2"));
+     {
+         std::wcmatch m;
+@@ -1478,6 +1491,7 @@ int main()
+         assert(m.str(0) == s);
+     }
+     std::locale::global(std::locale("C"));
++#endif
+     {
+         std::wcmatch m;
+         const wchar_t s[] = L"m";
+diff --git a/test/re/re.alg/re.alg.search/ecma.pass.cpp b/test/re/re.alg/re.alg.search/ecma.pass.cpp
+index 8149157..21e3efe 100644
+--- a/test/re/re.alg/re.alg.search/ecma.pass.cpp
++++ b/test/re/re.alg/re.alg.search/ecma.pass.cpp
+@@ -666,6 +666,12 @@ int main()
+         assert(!std::regex_search(s, m, std::regex("[a[.hyphen.]z]")));
+         assert(m.size() == 0);
+     }
++/* Disable locale specific tests on Android because Android's NDK does not
++ * support locales other than "C" and "POSIX".
++ *
++ * https://code.google.com/p/android/issues/detail?id=57313
++ */
++#if !defined(__ANDROID__)
+     std::locale::global(std::locale("cs_CZ.ISO8859-2"));
+     {
+         std::cmatch m;
+@@ -699,6 +705,7 @@ int main()
+         assert(m.str(0) == s);
+     }
+     std::locale::global(std::locale("C"));
++#endif
+     {
+         std::cmatch m;
+         const char s[] = "m";
+@@ -1445,6 +1452,12 @@ int main()
+         assert(!std::regex_search(s, m, std::wregex(L"[a[.hyphen.]z]")));
+         assert(m.size() == 0);
+     }
++/* Disable locale specific tests on Android because Android's NDK does not
++ * support locales other than "C" and "POSIX".
++ *
++ * https://code.google.com/p/android/issues/detail?id=57313
++ */
++#if !defined(__ANDROID__)
+     std::locale::global(std::locale("cs_CZ.ISO8859-2"));
+     {
+         std::wcmatch m;
+@@ -1478,6 +1491,7 @@ int main()
+         assert(m.str(0) == s);
+     }
+     std::locale::global(std::locale("C"));
++#endif
+     {
+         std::wcmatch m;
+         const wchar_t s[] = L"m";
+diff --git a/test/re/re.alg/re.alg.search/extended.pass.cpp b/test/re/re.alg/re.alg.search/extended.pass.cpp
+index 8240872..9cac3b2 100644
+--- a/test/re/re.alg/re.alg.search/extended.pass.cpp
++++ b/test/re/re.alg/re.alg.search/extended.pass.cpp
+@@ -684,6 +684,12 @@ int main()
+                                                  std::regex_constants::extended)));
+         assert(m.size() == 0);
+     }
++/* Disable locale specific tests on Android because Android's NDK does not
++ * support locales other than "C" and "POSIX".
++ *
++ * https://code.google.com/p/android/issues/detail?id=57313
++ */
++#if !defined(__ANDROID__)
+     std::locale::global(std::locale("cs_CZ.ISO8859-2"));
+     {
+         std::cmatch m;
+@@ -718,6 +724,7 @@ int main()
+         assert(m.str(0) == s);
+     }
+     std::locale::global(std::locale("C"));
++#endif
+     {
+         std::cmatch m;
+         const char s[] = "m";
+@@ -1440,6 +1447,12 @@ int main()
+                                                  std::regex_constants::extended)));
+         assert(m.size() == 0);
+     }
++/* Disable locale specific tests on Android because Android's NDK does not
++ * support locales other than "C" and "POSIX".
++ *
++ * https://code.google.com/p/android/issues/detail?id=57313
++ */
++#if !defined(__ANDROID__)
+     std::locale::global(std::locale("cs_CZ.ISO8859-2"));
+     {
+         std::wcmatch m;
+@@ -1474,6 +1487,7 @@ int main()
+         assert(m.str(0) == s);
+     }
+     std::locale::global(std::locale("C"));
++#endif
+     {
+         std::wcmatch m;
+         const wchar_t s[] = L"m";
+diff --git a/test/re/re.traits/lookup_collatename.pass.cpp b/test/re/re.traits/lookup_collatename.pass.cpp
+index 055b554..9c6f108 100644
+--- a/test/re/re.traits/lookup_collatename.pass.cpp
++++ b/test/re/re.traits/lookup_collatename.pass.cpp
+@@ -103,9 +103,6 @@ int main()
+ 
+     test("tild", std::string(""));
+     test("ch", std::string(""));
+-    std::locale::global(std::locale("cs_CZ.ISO8859-2"));
+-    test("ch", std::string("ch"));
+-    std::locale::global(std::locale("C"));
+ 
+     test(L"NUL", std::wstring(L"\x00", 1));
+     test(L"alert", std::wstring(L"\x07"));
+@@ -179,7 +176,4 @@ int main()
+ 
+     test(L"tild", std::wstring(L""));
+     test(L"ch", std::wstring(L""));
+-    std::locale::global(std::locale("cs_CZ.ISO8859-2"));
+-    test(L"ch", std::wstring(L"ch"));
+-    std::locale::global(std::locale("C"));
+ }
+diff --git a/test/re/re.traits/lookup_collatename.xlocale.pass.cpp b/test/re/re.traits/lookup_collatename.xlocale.pass.cpp
+new file mode 100644
+index 0000000..b6e563c
+--- /dev/null
++++ b/test/re/re.traits/lookup_collatename.xlocale.pass.cpp
+@@ -0,0 +1,41 @@
++//===----------------------------------------------------------------------===//
++//
++//                     The LLVM Compiler Infrastructure
++//
++// This file is dual licensed under the MIT and the University of Illinois Open
++// Source Licenses. See LICENSE.TXT for details.
++//
++//===----------------------------------------------------------------------===//
++
++// <regex>
++
++// template <class charT> struct regex_traits;
++
++// template <class ForwardIterator>
++//   string_type
++//   lookup_collatename(ForwardIterator first, ForwardIterator last) const;
++
++#include <regex>
++#include <iterator>
++#include <cassert>
++#include "test_iterators.h"
++
++template <class char_type>
++void
++test(const char_type* A, const std::basic_string<char_type>& expected)
++{
++    std::regex_traits<char_type> t;
++    typedef forward_iterator<const char_type*> F;
++    assert(t.lookup_collatename(F(A), F(A + t.length(A))) == expected);
++}
++
++int main()
++{
++#if !defined(__ANDROID__)
++    std::locale::global(std::locale("cs_CZ.ISO8859-2"));
++    test("ch", std::string("ch"));
++
++    std::locale::global(std::locale("cs_CZ.ISO8859-2"));
++    test(L"ch", std::wstring(L"ch"));
++#endif
++}
+diff --git a/test/re/re.traits/transform.pass.cpp b/test/re/re.traits/transform.pass.cpp
+index 9b9feb1..73d6593 100644
+--- a/test/re/re.traits/transform.pass.cpp
++++ b/test/re/re.traits/transform.pass.cpp
+@@ -27,8 +27,15 @@ int main()
+         const char B[] = "B";
+         typedef forward_iterator<const char*> F;
+         assert(t.transform(F(a), F(a+1)) > t.transform(F(B), F(B+1)));
++/* Disable locale specific tests on Android because Android's NDK does not
++ * support locales other than "C" and "POSIX".
++ *
++ * https://code.google.com/p/android/issues/detail?id=57313
++ */
++#if !defined(__ANDROID__)
+         t.imbue(std::locale("cs_CZ.ISO8859-2"));
+         assert(t.transform(F(a), F(a+1)) < t.transform(F(B), F(B+1)));
++#endif
+     }
+     {
+         std::regex_traits<wchar_t> t;
+@@ -36,7 +43,14 @@ int main()
+         const wchar_t B[] = L"B";
+         typedef forward_iterator<const wchar_t*> F;
+         assert(t.transform(F(a), F(a+1)) > t.transform(F(B), F(B+1)));
++/* Disable locale specific tests on Android because Android's NDK does not
++ * support locales other than "C" and "POSIX".
++ *
++ * https://code.google.com/p/android/issues/detail?id=57313
++ */
++#if !defined(__ANDROID__)
+         t.imbue(std::locale("cs_CZ.ISO8859-2"));
+         assert(t.transform(F(a), F(a+1)) < t.transform(F(B), F(B+1)));
++#endif
+     }
+ }
+diff --git a/test/re/re.traits/transform_primary.pass.cpp b/test/re/re.traits/transform_primary.pass.cpp
+index 1e2aca6..a22d86d 100644
+--- a/test/re/re.traits/transform_primary.pass.cpp
++++ b/test/re/re.traits/transform_primary.pass.cpp
+@@ -29,9 +29,16 @@ int main()
+         typedef forward_iterator<const char*> F;
+         assert(t.transform_primary(F(A), F(A+1)) !=
+                t.transform_primary(F(Aacute), F(Aacute+1)));
++/* Disable locale specific tests on Android because Android's NDK does not
++ * support locales other than "C" and "POSIX".
++ *
++ * https://code.google.com/p/android/issues/detail?id=57313
++ */
++#if !defined(__ANDROID__)
+         t.imbue(std::locale("cs_CZ.ISO8859-2"));
+         assert(t.transform_primary(F(A), F(A+1)) ==
+                t.transform_primary(F(Aacute), F(Aacute+1)));
++#endif
+     }
+     {
+         std::regex_traits<wchar_t> t;
+@@ -40,8 +47,15 @@ int main()
+         typedef forward_iterator<const wchar_t*> F;
+         assert(t.transform_primary(F(A), F(A+1)) !=
+                t.transform_primary(F(Aacute), F(Aacute+1)));
++/* Disable locale specific tests on Android because Android's NDK does not
++ * support locales other than "C" and "POSIX".
++ *
++ * https://code.google.com/p/android/issues/detail?id=57313
++ */
++#if !defined(__ANDROID__)
+         t.imbue(std::locale("cs_CZ.ISO8859-2"));
+         assert(t.transform_primary(F(A), F(A+1)) ==
+                t.transform_primary(F(Aacute), F(Aacute+1)));
++#endif
+     }
+ }
+diff --git a/test/re/re.traits/translate_nocase.pass.cpp b/test/re/re.traits/translate_nocase.pass.cpp
+index 5e042ae..bd8a7f4 100644
+--- a/test/re/re.traits/translate_nocase.pass.cpp
++++ b/test/re/re.traits/translate_nocase.pass.cpp
+@@ -34,6 +34,12 @@ int main()
+         assert(t.translate_nocase('1') == '1');
+         assert(t.translate_nocase('\xDA') == '\xDA');
+         assert(t.translate_nocase('\xFA') == '\xFA');
++/* Disable locale specific tests on Android because Android's NDK does not
++ * support locales other than "C" and "POSIX".
++ *
++ * https://code.google.com/p/android/issues/detail?id=57313
++ */
++#if !defined(__ANDROID__)
+         t.imbue(std::locale(LOCALE_en_US_UTF_8));
+         assert(t.translate_nocase(' ') == ' ');
+         assert(t.translate_nocase('A') == 'a');
+@@ -43,6 +49,7 @@ int main()
+         assert(t.translate_nocase('1') == '1');
+         assert(t.translate_nocase('\xDA') == '\xFA');
+         assert(t.translate_nocase('\xFA') == '\xFA');
++#endif
+     }
+     {
+         std::regex_traits<wchar_t> t;
+@@ -54,6 +61,12 @@ int main()
+         assert(t.translate_nocase(L'1') == L'1');
+         assert(t.translate_nocase(L'\xDA') == L'\xDA');
+         assert(t.translate_nocase(L'\xFA') == L'\xFA');
++/* Disable locale specific tests on Android because Android's NDK does not
++ * support locales other than "C" and "POSIX".
++ *
++ * https://code.google.com/p/android/issues/detail?id=57313
++ */
++#if !defined(__ANDROID__)
+         t.imbue(std::locale(LOCALE_en_US_UTF_8));
+         assert(t.translate_nocase(L' ') == L' ');
+         assert(t.translate_nocase(L'A') == L'a');
+@@ -63,5 +76,6 @@ int main()
+         assert(t.translate_nocase(L'1') == L'1');
+         assert(t.translate_nocase(L'\xDA') == L'\xFA');
+         assert(t.translate_nocase(L'\xFA') == L'\xFA');
++#endif
+     }
+ }
+diff --git a/test/utilities/meta/meta.trans/meta.trans.other/aligned_storage.pass.cpp b/test/utilities/meta/meta.trans/meta.trans.other/aligned_storage.pass.cpp
+index d1b7700..67ee23d 100644
+--- a/test/utilities/meta/meta.trans/meta.trans.other/aligned_storage.pass.cpp
++++ b/test/utilities/meta/meta.trans/meta.trans.other/aligned_storage.pass.cpp
+@@ -159,12 +159,16 @@ int main()
+     static_assert(std::alignment_of<T1>::value == 8, "");
+     static_assert(sizeof(T1) == 16, "");
+     }
++    // The expected values for the tests below (modulo the last one) are
++    // platform-specific which alignof deals with. In particular, the maximum
++    // alignment value on ARM is 8 bytes as opposed to 16 bytes on some other
++    // architectures that support 128 bit memory accesses.
+     {
+     typedef std::aligned_storage<16>::type T1;
+ #if _LIBCPP_STD_VER > 11
+     static_assert(std::is_same<std::aligned_storage_t<16>, T1>::value, "" );
+ #endif
+-    static_assert(std::alignment_of<T1>::value == 16, "");
++    static_assert(std::alignment_of<T1>::value == alignof(T1), "");
+     static_assert(sizeof(T1) == 16, "");
+     }
+     {
+@@ -172,8 +176,8 @@ int main()
+ #if _LIBCPP_STD_VER > 11
+     static_assert(std::is_same<std::aligned_storage_t<17>, T1>::value, "" );
+ #endif
+-    static_assert(std::alignment_of<T1>::value == 16, "");
+-    static_assert(sizeof(T1) == 32, "");
++    static_assert(std::alignment_of<T1>::value == alignof(T1), "");
++    static_assert(sizeof(T1) == 16 + alignof(T1), "");
+     }
+     {
+     typedef std::aligned_storage<10>::type T1;
+-- 
+1.9.1.423.g4596e3a
+
