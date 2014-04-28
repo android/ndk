@@ -1,0 +1,9 @@
+Code-Review+1: Sam Hasinoff <hasinoff@google.com>
+Code-Review+2: Andrew Hsieh <andrewhsieh@google.com>
+Verified+1: Andrew Hsieh <andrewhsieh@google.com>
+Code-Review+1: Pavel Chupin <pavel.v.chupin@intel.com>
+Submitted-by: Andrew Hsieh <andrewhsieh@google.com>
+Submitted-at: Mon, 28 Apr 2014 17:03:54 +0000
+Reviewed-on: https://android-review.googlesource.com/92173
+Project: platform/ndk
+Branch: refs/heads/master
