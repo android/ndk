@@ -83,7 +83,7 @@ FAIL: language.support___support.exception___uncaught___uncaught_exception
     nalibcxxg++  uncaught_exception.pass.cpp -lc++_shared -latomic
       I/DEBUG   (   51): Abort message: 'uncaught_exception.pass.cpp:37: int main(): assertion "!std::uncaught_exception()" failed'
 
-FAIL: localization___locale.categories___category.collate___locale.collate.bynam___transform
+FAIL: localization___locale.categories___category.collate___locale.collate.byname___transform
   cd ~/libcxx-test/localization/locale.categories/category.collate/locale.collate.byname
     nalibcxxg++  transform.pass.cpp -lc++_shared -latomic
       F/libc    (23516): transform.pass.cpp:33: int main(): assertion "f.transform(x.data(), x.data() + x.size()) != x" failed

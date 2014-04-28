@@ -2799,7 +2799,7 @@ public:
     explicit moneypunct_byname(const char* __nm, size_t __refs = 0)
         : moneypunct<_CharT, _International>(__refs) {init(__nm);}
 
-    _LIBCPP_ALWAYS_INLINE
+    _LIBCPP_ALWAYS_INLINE_EXCEPT_GCC49
     explicit moneypunct_byname(const string& __nm, size_t __refs = 0)
         : moneypunct<_CharT, _International>(__refs) {init(__nm.c_str());}
 

@@ -1,8 +1,8 @@
-From 226c6c6d989445ddc55fa3bab50234f5f5b827e0 Mon Sep 17 00:00:00 2001
+From c50f7f9d8943a32c001d2339136fbadb1c12241e Mon Sep 17 00:00:00 2001
 From: Logan Chien <logan.chien@mediatek.com>
 Date: Wed, 12 Feb 2014 20:09:43 +0800
-Subject: [PATCH 4/6] [libc++] std::terminate() should not specify "throw ()"
- in C++ 98.
+Subject: [PATCH 04/11] std::terminate() should not specify "throw ()" in C++
+ 98.
 
 ---
  include/exception | 4 ++++
@@ -25,5 +25,5 @@ index cad802e..681a659 100644
  _LIBCPP_FUNC_VIS bool uncaught_exception() _NOEXCEPT;
  
 -- 
-1.9.0.rc1.175.g0b1dcb5
+1.9.1.423.g4596e3a
 
