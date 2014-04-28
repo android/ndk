@@ -77,6 +77,12 @@ $(call ndk_log,Using prebuilt STLport libraries)
 include $(CLEAR_VARS)
 LOCAL_MODULE := stlport_static
 LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE)$(TARGET_LIB_EXTENSION)
+# For armeabi*, choose thumb mode unless LOCAL_ARM_MODE := arm
+ifneq (,$(filter armeabi%,$(TARGET_ARCH_ABI)))
+ifneq (arm,$(LOCAL_ARM_MODE))
+LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/thumb/lib$(LOCAL_MODULE)$(TARGET_LIB_EXTENSION)
+endif
+endif
 LOCAL_EXPORT_C_INCLUDES := $(libstlport_c_includes)
 LOCAL_CPP_FEATURES := rtti
 include $(PREBUILT_STATIC_LIBRARY)
@@ -84,6 +90,14 @@ include $(PREBUILT_STATIC_LIBRARY)
 include $(CLEAR_VARS)
 LOCAL_MODULE := stlport_shared
 LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE)$(TARGET_SONAME_EXTENSION)
+# For armeabi*, choose thumb mode unless LOCAL_ARM_MODE := arm
+$(info TARGET_ARCH_ABI=$(TARGET_ARCH_ABI))
+$(info LOCAL_ARM_MODE=$(LOCAL_ARM_MODE))
+ifneq (,$(filter armeabi%,$(TARGET_ARCH_ABI)))
+ifneq (arm,$(LOCAL_ARM_MODE))
+LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/thumb/lib$(LOCAL_MODULE)$(TARGET_SONAME_EXTENSION)
+endif
+endif
 LOCAL_EXPORT_C_INCLUDES := $(libstlport_c_includes)
 LOCAL_CPP_FEATURES := rtti
 include $(PREBUILT_SHARED_LIBRARY)

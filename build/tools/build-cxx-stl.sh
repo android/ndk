@@ -434,22 +434,19 @@ SHARED_CXXFLAGS=
 # $1: ABI
 # $2: build directory
 # $3: build type: "static" or "shared"
-# $4: (optional) installation directory
+# $4: installation directory
+# $5: (optional) thumb
 build_stl_libs_for_abi ()
 {
     local ARCH BINPREFIX SYSROOT
     local ABI=$1
-    local BUILDDIR="$2"
+    local THUMB="$5"  
+    local BUILDDIR="$2"/$THUMB
     local TYPE="$3"
     local DSTDIR="$4"
     local FLOAT_ABI=""
     local DEFAULT_CFLAGS DEFAULT_CXXFLAGS
     local SRC OBJ OBJECTS EXTRA_CFLAGS EXTRA_CXXFLAGS EXTRA_LDFLAGS LIB_SUFFIX GCCVER
-
-    mkdir -p "$BUILDDIR"
-
-    DSTDIR=$DSTDIR/$CXX_STL_SUBDIR/libs/$ABI
-    LIB_SUFFIX="$(get_lib_suffix_for_abi $ABI)"
 
     EXTRA_CFLAGS=""
     EXTRA_LDFLAGS=""
@@ -459,12 +456,20 @@ build_stl_libs_for_abi ()
       FLOAT_ABI="hard"
     fi
 
+    if [ -n "$THUMB" ]; then
+      EXTRA_CFLAGS="$EXTRA_CFLAGS -mthumb"
+    fi
+
     if [ "$TYPE" = "static" -a -z "$VISIBLE_STATIC" ]; then
       EXTRA_CXXFLAGS="$STATIC_CXXFLAGS"
     else
       EXTRA_CXXFLAGS="$SHARED_CXXFLAGS"
     fi
 
+    DSTDIR=$DSTDIR/$CXX_STL_SUBDIR/libs/$ABI/$THUMB
+    LIB_SUFFIX="$(get_lib_suffix_for_abi $ABI)"
+
+    mkdir -p "$BUILDDIR"
     mkdir -p "$DSTDIR"
 
     if [ -n "$GCC_VERSION" ]; then
@@ -532,6 +537,11 @@ build_stl_libs_for_abi ()
 for ABI in $ABIS; do
     build_stl_libs_for_abi $ABI "$BUILD_DIR/$ABI/shared" "shared" "$OUT_DIR"
     build_stl_libs_for_abi $ABI "$BUILD_DIR/$ABI/static" "static" "$OUT_DIR"
+    # build thumb version of libraries for 32-bit arm
+    if [ "$ABI" != "${ABI%%arm*}" -a "$ABI" = "${ABI%%64*}" ] ; then
+        build_stl_libs_for_abi $ABI "$BUILD_DIR/$ABI/shared" "shared" "$OUT_DIR" thumb
+        build_stl_libs_for_abi $ABI "$BUILD_DIR/$ABI/static" "static" "$OUT_DIR" thumb
+    fi
 done
 
 # If needed, package files into tarballs
@@ -540,6 +550,9 @@ if [ -n "$PACKAGE_DIR" ] ; then
         FILES=""
         LIB_SUFFIX="$(get_lib_suffix_for_abi $ABI)"
         for LIB in ${CXX_STL_LIB}_static.a ${CXX_STL_LIB}_shared${LIB_SUFFIX}; do
+	    if [ -d "$CXX_STL_SUBDIR/libs/$ABI/thumb" ]; then
+                FILES="$FILES $CXX_STL_SUBDIR/libs/$ABI/thumb/$LIB"
+            fi
             FILES="$FILES $CXX_STL_SUBDIR/libs/$ABI/$LIB"
         done
         PACKAGE="$PACKAGE_DIR/${CXX_STL_PACKAGE}-libs-$ABI"

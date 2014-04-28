@@ -599,13 +599,13 @@ builder_begin_android ()
             if [ -z "$LLVM_VERSION" ]; then
                 # add -minline-thumb1-jumptable such that gabi++/stlport/libc++ can be linked
                 # with compiler-rt where helpers __gnu_thumb1_case_* (in libgcc.a) don't exist
-                builder_cflags "-mthumb -minline-thumb1-jumptable"
+                builder_cflags "-minline-thumb1-jumptable"
             else
-                builder_cflags "-mthumb"
+                builder_cflags ""
             fi
             ;;
         armeabi-v7a|armeabi-v7a-hard)
-            builder_cflags "-mthumb -march=armv7-a -mfpu=vfpv3-d16"
+            builder_cflags "-march=armv7-a -mfpu=vfpv3-d16"
             builder_ldflags "-march=armv7-a -Wl,--fix-cortex-a8"
             if [ "$ABI" != "armeabi-v7a-hard" ]; then
                 builder_cflags "-mfloat-abi=softfp"
