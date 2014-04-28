@@ -91,6 +91,7 @@ namespace std
     template <class T> struct is_empty;
     template <class T> struct is_polymorphic;
     template <class T> struct is_abstract;
+    template <class T> struct is_final; // C++14
 
     template <class T, class... Args> struct is_constructible;
     template <class T>                struct is_default_constructible;
@@ -236,10 +237,10 @@ struct _LIBCPP_TYPE_VIS_ONLY integral_constant
     typedef _Tp               value_type;
     typedef integral_constant type;
     _LIBCPP_INLINE_VISIBILITY
-        _LIBCPP_CONSTEXPR operator value_type() const {return value;}
+        _LIBCPP_CONSTEXPR operator value_type() const _NOEXCEPT {return value;}
 #if _LIBCPP_STD_VER > 11
     _LIBCPP_INLINE_VISIBILITY
-         constexpr value_type operator ()() const {return value;}
+         constexpr value_type operator ()() const _NOEXCEPT {return value;}
 #endif
 };
 
@@ -324,6 +325,10 @@ template <>          struct __libcpp_is_integral<long>               : public tr
 template <>          struct __libcpp_is_integral<unsigned long>      : public true_type {};
 template <>          struct __libcpp_is_integral<long long>          : public true_type {};
 template <>          struct __libcpp_is_integral<unsigned long long> : public true_type {};
+#ifndef _LIBCPP_HAS_NO_INT128
+template <>          struct __libcpp_is_integral<__int128_t>         : public true_type {};
+template <>          struct __libcpp_is_integral<__uint128_t>        : public true_type {};
+#endif
 
 template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY is_integral
     : public __libcpp_is_integral<typename remove_cv<_Tp>::type> {};
@@ -759,6 +764,13 @@ template <class _Tp> struct __libcpp_abstract<_Tp, false> : public false_type {}
 
 template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY is_abstract : public __libcpp_abstract<_Tp> {};
 
+// is_final
+
+#if _LIBCPP_STD_VER > 11 && __has_feature(is_final)
+template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY 
+is_final : public integral_constant<bool, __is_final(_Tp)> {};
+#endif
+
 // is_base_of
 
 #ifdef _LIBCPP_HAS_IS_BASE_OF
@@ -946,7 +958,7 @@ template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY is_empty : public __libcpp_emp
 
 // is_polymorphic
 
-#if __has_feature(is_polymorphic)
+#if __has_feature(is_polymorphic) || defined(_LIBCPP_MSVC)
 
 template <class _Tp>
 struct _LIBCPP_TYPE_VIS_ONLY is_polymorphic
@@ -1239,7 +1251,13 @@ typedef
     __type_list<signed int,
     __type_list<signed long,
     __type_list<signed long long,
+#ifndef _LIBCPP_HAS_NO_INT128
+    __type_list<__int128_t,
+#endif
     __nat
+#ifndef _LIBCPP_HAS_NO_INT128
+    >
+#endif
     > > > > > __signed_types;
 
 typedef
@@ -1248,7 +1266,13 @@ typedef
     __type_list<unsigned int,
     __type_list<unsigned long,
     __type_list<unsigned long long,
+#ifndef _LIBCPP_HAS_NO_INT128
+    __type_list<__uint128_t,
+#endif
     __nat
+#ifndef _LIBCPP_HAS_NO_INT128
+    >
+#endif
     > > > > > __unsigned_types;
 
 template <class _TypeList, size_t _Size, bool = _Size <= sizeof(typename _TypeList::_Head)> struct __find_first;
@@ -1332,6 +1356,10 @@ template <> struct __make_signed<  signed long,      true> {typedef long      ty
 template <> struct __make_signed<unsigned long,      true> {typedef long      type;};
 template <> struct __make_signed<  signed long long, true> {typedef long long type;};
 template <> struct __make_signed<unsigned long long, true> {typedef long long type;};
+#ifndef _LIBCPP_HAS_NO_INT128
+template <> struct __make_signed<__int128_t,         true> {typedef __int128_t type;};
+template <> struct __make_signed<__uint128_t,        true> {typedef __int128_t type;};
+#endif
 
 template <class _Tp>
 struct _LIBCPP_TYPE_VIS_ONLY make_signed
@@ -1361,6 +1389,10 @@ template <> struct __make_unsigned<  signed long,      true> {typedef unsigned l
 template <> struct __make_unsigned<unsigned long,      true> {typedef unsigned long      type;};
 template <> struct __make_unsigned<  signed long long, true> {typedef unsigned long long type;};
 template <> struct __make_unsigned<unsigned long long, true> {typedef unsigned long long type;};
+#ifndef _LIBCPP_HAS_NO_INT128
+template <> struct __make_unsigned<__int128_t,         true> {typedef __uint128_t        type;};
+template <> struct __make_unsigned<__uint128_t,        true> {typedef __uint128_t        type;};
+#endif
 
 template <class _Tp>
 struct _LIBCPP_TYPE_VIS_ONLY make_unsigned
@@ -2002,9 +2034,23 @@ class _LIBCPP_TYPE_VIS_ONLY result_of<_Fn(_A0, _A1, _A2)>
 
 #endif  // _LIBCPP_HAS_NO_VARIADICS
 
-#ifndef _LIBCPP_HAS_NO_VARIADICS
-
 // template <class T, class... Args> struct is_constructible;
+
+namespace __is_construct
+{
+struct __nat {};
+}
+
+#if __has_feature(is_constructible)
+
+template <class _Tp, class ..._Args>
+struct _LIBCPP_TYPE_VIS_ONLY is_constructible
+    : public integral_constant<bool, __is_constructible(_Tp, _Args...)>
+    {};
+
+#else
+
+#ifndef _LIBCPP_HAS_NO_VARIADICS
 
 //      main is_constructible test
 
@@ -2233,13 +2279,6 @@ struct __is_constructible2_void_check<true, _Tp, _A0, _A1>
 
 //      is_constructible entry point
 
-namespace __is_construct
-{
-
-struct __nat {};
-
-}
-
 template <class _Tp, class _A0 = __is_construct::__nat,
                      class _A1 = __is_construct::__nat>
 struct _LIBCPP_TYPE_VIS_ONLY is_constructible
@@ -2304,6 +2343,7 @@ struct __is_constructible2_imp<false, _Ap[], _A0, _A1>
     {};
 
 #endif  // _LIBCPP_HAS_NO_VARIADICS
+#endif  // __has_feature(is_constructible)
 
 // is_default_constructible
 

@@ -1,7 +1,7 @@
-From fbb68e1b52988199871392b4e16d611158a79995 Mon Sep 17 00:00:00 2001
+From 533844c5684a017db574b8acc174745803550a1c Mon Sep 17 00:00:00 2001
 From: David 'Digit' Turner <digit@google.com>
 Date: Wed, 12 Feb 2014 20:04:18 +0800
-Subject: [PATCH 1/6] android: Add locale support.
+Subject: [PATCH 01/11] android: Add locale support.
 
 This is based on the Bionic <ctype.h> declarations. Note that
 unfortunately, the _ctype_ table exposed by this header has a bug
@@ -16,7 +16,7 @@ See src/support/android/locale_android.cpp for details.
  create mode 100644 src/support/android/locale_android.cpp
 
 diff --git a/include/__locale b/include/__locale
-index 6d75162..d50fd31 100644
+index fb5b196..c793cfe 100644
 --- a/include/__locale
 +++ b/include/__locale
 @@ -375,7 +375,20 @@ public:
@@ -264,5 +264,5 @@ index 0000000..7193028
 +
 +const unsigned short* const _ctype_android = ctype_android_tab + 128;
 -- 
-1.9.0.rc1.175.g0b1dcb5
+1.9.1.423.g4596e3a
 
