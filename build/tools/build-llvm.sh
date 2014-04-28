@@ -406,12 +406,18 @@ find $TOOLCHAIN_BUILD_PREFIX/bin -maxdepth 1 -type f -exec $STRIP {} \;
 find $TOOLCHAIN_BUILD_PREFIX/lib -maxdepth 1 -type f \( -name "*.dll" -o -name "*.so" \) -exec $STRIP {} \;
 
 # For now, le64-tools is just like le32 ones
-run ln -s ndk-link $TOOLCHAIN_BUILD_PREFIX/bin/le32-none-ndk-link
-run ln -s ndk-link $TOOLCHAIN_BUILD_PREFIX/bin/le64-none-ndk-link
-run ln -s ndk-strip $TOOLCHAIN_BUILD_PREFIX/bin/le32-none-ndk-strip
-run ln -s ndk-strip $TOOLCHAIN_BUILD_PREFIX/bin/le64-none-ndk-strip
-run ln -s ndk-translate $TOOLCHAIN_BUILD_PREFIX/bin/le32-none-ndk-translate
-run ln -s ndk-translate $TOOLCHAIN_BUILD_PREFIX/bin/le64-none-ndk-translate
+if [ -f "$TOOLCHAIN_BUILD_PREFIX/bin/ndk-link${HOST_EXE}" ]; then
+    run ln -s ndk-link${HOST_EXE} $TOOLCHAIN_BUILD_PREFIX/bin/le32-none-ndk-link${HOST_EXE}
+    run ln -s ndk-link${HOST_EXE} $TOOLCHAIN_BUILD_PREFIX/bin/le64-none-ndk-link${HOST_EXE}
+fi
+if [ -f "$TOOLCHAIN_BUILD_PREFIX/bin/ndk-strip${HOST_EXE}" ]; then
+    run ln -s ndk-strip${HOST_EXE} $TOOLCHAIN_BUILD_PREFIX/bin/le32-none-ndk-strip${HOST_EXE}
+    run ln -s ndk-strip${HOST_EXE} $TOOLCHAIN_BUILD_PREFIX/bin/le64-none-ndk-strip${HOST_EXE}
+fi
+if [ -f "$TOOLCHAIN_BUILD_PREFIX/bin/ndk-translate${HOST_EXE}" ]; then
+    run ln -s ndk-translate${HOST_EXE} $TOOLCHAIN_BUILD_PREFIX/bin/le32-none-ndk-translate${HOST_EXE}
+    run ln -s ndk-translate${HOST_EXE} $TOOLCHAIN_BUILD_PREFIX/bin/le64-none-ndk-translate${HOST_EXE}
+fi
 
 # install script
 if [ "$USE_PYTHON" != "yes" ]; then
