@@ -1,7 +1,7 @@
-From 9f55486c7210bc98d0ca782e75ea9b037e2a2932 Mon Sep 17 00:00:00 2001
+From 204f9f8e5485f647f84d46bd609cd6fce950441c Mon Sep 17 00:00:00 2001
 From: Andrew Hsieh <andrewhsieh@google.com>
 Date: Wed, 12 Feb 2014 20:07:01 +0800
-Subject: [PATCH 3/6] Fallback to locale("C")
+Subject: [PATCH 03/11] Fallback to locale("C")
 
 Android's newlocale() return null for anything other than "", "C",
 and "POSIX", fallback to "C" to allow more tests to run and uncover
@@ -305,5 +305,5 @@ index 66aaca9..0fba54d 100644
      if (loc == nullptr)
          throw runtime_error("moneypunct_byname"
 -- 
-1.9.0.rc1.175.g0b1dcb5
+1.9.1.423.g4596e3a
 

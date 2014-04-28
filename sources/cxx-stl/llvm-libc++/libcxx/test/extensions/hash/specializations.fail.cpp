@@ -7,20 +7,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-// <shared_mutex>
-
-// class shared_mutex;
-
-// shared_mutex(const shared_mutex&) = delete;
-
-#include <shared_mutex>
+#include <assert.h>
+#include <ext/hash_map>
+#include <string>
 
 int main()
 {
-#if _LIBCPP_STD_VER > 11
-    std::shared_mutex m0;
-    std::shared_mutex m1(m0);
-#else
-#   error
-#endif
+    assert(__gnu_cxx::hash<std::string>()(std::string()) == 0);  // error
 }
