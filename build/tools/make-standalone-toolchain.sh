@@ -535,25 +535,26 @@ copy_stl_common_headers () {
 }
 
 # $1: Source ABI (e.g. 'armeabi')
-# $2: Optional destination directory, default to empty (e.g. "", "thumb", "armv7-a/thumb")
-# $3: Optional source directory, default to empty (e.g. "", "thumb", "armv7-a/thumb")
-# $4: Optional "yes" (default) or "no" about whether to copy additional header (eg. include/bits)
+# $2: Optional "yes" (default) or "no" about whether to copy additional header (eg. include/bits)
+# $3: Optional destination directory, default to empty (e.g. "", "thumb", "armv7-a/thumb")
+# $4: Optional source directory, default to empty (e.g. "", "thumb", "armv7-a/thumb")
 copy_stl_libs () {
     local ABI=$1
-    local DEST_DIR=$2
-    local SRC_DIR=$3
-    local COPY_ADDITIONAL_HEADER=yes
+    local COPY_ADDITIONAL_HEADER=$2
+    local DEST_DIR=$3
+    local SRC_DIR=$4
+    local ABI_SRC_DIR=$ABI
+
+    if [ -n "$SRC_DIR" ]; then
+        ABI_SRC_DIR=$ABI/$SRC_DIR
+    else
+        if [ "$DEST_DIR" != "${DEST_DIR%%/*}" ] ; then
+            ABI_SRC_DIR=$ABI/`basename $DEST_DIR`
+        fi
+    fi
+
     case $STL in
         gnustl)
-            # gnustl has thumb version of libraries.  Append ABI with basename($DEST_DIR) if $DEST_DIR contain '/'
-            ABI_SRC_DIR=$ABI
-            if [ -n "$SRC_DIR" ]; then
-                ABI_SRC_DIR=$ABI/$SRC_DIR
-            else
-                if [ "$DEST_DIR" != "${DEST_DIR%%/*}" ] ; then
-                    ABI_SRC_DIR=$ABI/`basename $DEST_DIR`
-                fi
-	    fi
             if [ "$COPY_ADDITIONAL_HEADER" != "no" ]; then
                 copy_directory "$GNUSTL_LIBS/$ABI/include/bits" "$ABI_STL_INCLUDE_TARGET/$DEST_DIR/bits"
             fi
@@ -565,8 +566,8 @@ copy_stl_libs () {
             if [ "$ARCH" = "${ARCH%%64*}" ]; then
                 copy_file_list "$COMPILER_RT_LIBS/$ABI" "$ABI_STL/lib/$DEST_DIR" "libcompiler_rt_shared.so" "libcompiler_rt_static.a"
             fi
-            copy_file_list "$LIBCXX_LIBS/$ABI" "$ABI_STL/lib/$DEST_DIR" "libc++_shared.so"
-            cp -p "$LIBCXX_LIBS/$ABI/libc++_static.a" "$ABI_STL/lib/$DEST_DIR/libstdc++.a"
+            copy_file_list "$LIBCXX_LIBS/$ABI_SRC_DIR" "$ABI_STL/lib/$DEST_DIR" "libc++_shared.so"
+            cp -p "$LIBCXX_LIBS/$ABI_SRC_DIR/libc++_static.a" "$ABI_STL/lib/$DEST_DIR/libstdc++.a"
             ;;
         stlport)
             if [ "$ARCH_STL" != "$ARCH" ]; then
@@ -576,8 +577,8 @@ copy_stl_libs () {
               cp -p "`ls $tmp_lib_dir/sources/cxx-stl/stlport/libs/*/libstlport_shared.bc`" "$ABI_STL/lib/$DEST_DIR/libstlport_shared.so"
               rm -rf $tmp_lib_dir
             else
-              copy_file_list "$STLPORT_LIBS/$ABI" "$ABI_STL/lib/$DEST_DIR" "libstlport_shared.so"
-              cp -p "$STLPORT_LIBS/$ABI/libstlport_static.a" "$ABI_STL/lib/$DEST_DIR/libstdc++.a"
+              copy_file_list "$STLPORT_LIBS/$ABI_SRC_DIR" "$ABI_STL/lib/$DEST_DIR" "libstlport_shared.so"
+              cp -p "$STLPORT_LIBS/$ABI_SRC_DIR/libstlport_static.a" "$ABI_STL/lib/$DEST_DIR/libstdc++.a"
             fi
             ;;
         *)
@@ -592,18 +593,18 @@ fail_panic "Can't create directory: $ABI_STL_INCLUDE_TARGET"
 copy_stl_common_headers
 case $ARCH in
     arm)
-        copy_stl_libs armeabi ""
-        copy_stl_libs armeabi "/thumb"
-        copy_stl_libs armeabi-v7a "armv7-a"
-        copy_stl_libs armeabi-v7a "armv7-a/thumb"
-        copy_stl_libs armeabi-v7a-hard "armv7-a/hard" "." "no"
-        copy_stl_libs armeabi-v7a-hard "armv7-a/thumb/hard" "thumb" "no"
+        copy_stl_libs armeabi
+        copy_stl_libs armeabi          "no"  "/thumb"
+        copy_stl_libs armeabi-v7a      "yes" "armv7-a"
+        copy_stl_libs armeabi-v7a      "no"  "armv7-a/thumb"
+        copy_stl_libs armeabi-v7a-hard "no"  "armv7-a/hard" "."
+        copy_stl_libs armeabi-v7a-hard "no"  "armv7-a/thumb/hard" "thumb"
         ;;
     arm64)
-        copy_stl_libs arm64-v8a ""
+        copy_stl_libs arm64-v8a
         ;;
     x86|mips|mips64|x86_64)
-        copy_stl_libs "$ARCH" ""
+        copy_stl_libs "$ARCH"
         ;;
     *)
         dump "ERROR: Unsupported NDK architecture: $ARCH"
