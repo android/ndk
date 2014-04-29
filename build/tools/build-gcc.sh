@@ -406,12 +406,16 @@ done
 
 ABI="$OLD_ABI"
 
-# install the toolchain to its final location
+# install the toolchain to its final location.
 dump "Install  : $TOOLCHAIN toolchain binaries."
 cd $BUILD_OUT && run make install
 if [ $? != 0 ] ; then
-    echo "Error while installing toolchain. See $TMPLOG"
-    exit 1
+    # try "-j1", eg.  for aarch64-linux-android-4.8 with libatomic may fail to install due to race condition (missing prefix/lib/../lib64/./libiberty.an)
+    run make install -j1
+    if [ $? != 0 ] ; then
+        echo "Error while installing toolchain. See $TMPLOG"
+        exit 1
+    fi
 fi
 
 unwind_library_for_abi ()
