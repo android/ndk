@@ -21,6 +21,7 @@
 //     loaded at the same address in two distinct processes.
 //
 #include <dlfcn.h>
+#include <stdbool.h>
 #include <stddef.h>
 
 #ifdef __cplusplus
@@ -131,6 +132,63 @@ void crazy_context_get_java_vm(crazy_context_t* context,
 
 // Destroy a given context object.
 void crazy_context_destroy(crazy_context_t* context) _CRAZY_PUBLIC;
+
+// Some operations performed by the crazy linker might conflict with the
+// system linker if they are used concurrently in different threads
+// (e.g. modifying the list of shared libraries seen by GDB). To work
+// around this, the crazy linker provides a way to delay these conflicting
+// operations for a later time.
+//
+// This works by wrapping each of these operations in a small data structure
+// (crazy_callback_t), which can later be passed to crazy_callback_run()
+// to execute it.
+//
+// The user must provide a function to record these callbacks during
+// library loading, by calling crazy_linker_set_callback_poster().
+//
+// Once all libraries are loaded, the callbacks can be later called either
+// in a different thread, or when it is safe to assume the system linker
+// cannot be running in parallel.
+
+// Callback handler.
+typedef void (*crazy_callback_handler_t)(void* opaque);
+
+// A small structure used to model a callback provided by the crazy linker.
+// Use crazy_callback_run() to run the callback.
+typedef struct {
+  crazy_callback_handler_t handler;
+  void* opaque;
+} crazy_callback_t;
+
+// Function to call to enable a callback into the crazy linker when delayed
+// operations are enabled (see crazy_context_set_callback_poster). A call
+// to crazy_callback_poster_t returns true if the callback was successfully
+// set up and will occur later, false if callback could not be set up (and
+// so will never occur).
+typedef bool (*crazy_callback_poster_t)(
+    crazy_callback_t* callback, void* poster_opaque);
+
+// Enable delayed operation, by passing the address of a
+// |crazy_callback_poster_t| function, that will be called during library
+// loading to let the user record callbacks for delayed operations.
+// Callers must copy the |crazy_callback_t| passed to |poster|.
+// |poster_opaque| is an opaque value for client code use, passed back
+// on each call to |poster|.
+// |poster| can be NULL to disable the feature.
+void crazy_context_set_callback_poster(crazy_context_t* context,
+                                       crazy_callback_poster_t poster,
+                                       void* poster_opaque);
+
+// Return the address of the function that the crazy linker can use to
+// request callbacks, and the |poster_opaque| passed back on each call
+// to |poster|. |poster| is NULL if the feature is disabled.
+void crazy_context_get_callback_poster(crazy_context_t* context,
+                                       crazy_callback_poster_t* poster,
+                                       void** poster_opaque);
+
+// Run a given |callback| in the current thread. Must only be called once
+// per callback.
+void crazy_callback_run(crazy_callback_t* callback);
 
 // Opaque handle to a library as seen/loaded by the crazy linker.
 typedef struct crazy_library_t crazy_library_t;
@@ -265,6 +323,10 @@ crazy_status_t crazy_library_find_from_address(
 // Close a library. This decrements its reference count. If it reaches
 // zero, the library be unloaded from the process.
 void crazy_library_close(crazy_library_t* library) _CRAZY_PUBLIC;
+
+// Close a library, with associated context to support delayed operations.
+void crazy_library_close_with_context(crazy_library_t* library,
+                                      crazy_context_t* context) _CRAZY_PUBLIC;
 
 #ifdef __cplusplus
 } /* extern "C" */
