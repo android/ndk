@@ -478,7 +478,7 @@ create_unwind_library ()
 {
     local ARCH="$1"
     local NDK_DIR="$2"
-    local ABIS=$(commas_to_spaces $(convert_archs_to_abis $ARCH))
+    local ABIS="$(commas_to_spaces $(convert_archs_to_abis $ARCH))"
     local ABI UNWIND_OBJS UNWIND_LIB
     for ABI in $ABIS; do
         UNWIND_OBJS=$(unwind_library_for_abi $ABI)

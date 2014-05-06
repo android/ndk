@@ -102,7 +102,7 @@ if [ "$WITH_LIBBFD" ]; then
     fi
     run mkdir -p $BINUTILS_BUILD_DIR
     run export CC CFLAGS LDFLAGS
-    run pushd $BINUTILS_BUILD_DIR && \
+    run cd $BINUTILS_BUILD_DIR && \
     run $BINUTILS_SRC_DIR/configure \
         --host=$ABI_CONFIGURE_HOST \
         --build=$ABI_CONFIGURE_BUILD \
@@ -113,7 +113,6 @@ if [ "$WITH_LIBBFD" ]; then
     run make -j$NUM_JOBS
     fail_panic "Can't build $BINUTILS_SRC_DIR"
 
-    popd > /dev/null
 fi
 
 OUT=$NDK_DIR/$(get_host_exec_name $PROGNAME)
