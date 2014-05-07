@@ -21,6 +21,9 @@ struct ELF {
   typedef Elf32_Sym Sym;
   typedef Elf32_Rel Rel;
   typedef Elf32_auxv_t auxv_t;
+
+  enum { kElfClass = ELFCLASS32 };
+  enum { kElfBits = 32 };
 };
 #elif __SIZEOF_POINTER__ == 8
 struct ELF {
@@ -32,6 +35,9 @@ struct ELF {
   typedef Elf64_Sym Sym;
   typedef Elf64_Rel Rel;
   typedef Elf64_auxv_t auxv_t;
+
+  enum { kElfClass = ELFCLASS64 };
+  enum { kElfBits = 64 };
 };
 #else
 #error "Unsupported target CPU bitness"

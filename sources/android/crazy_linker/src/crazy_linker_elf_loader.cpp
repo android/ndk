@@ -116,10 +116,13 @@ bool ElfLoader::ReadElfHeader(Error* error) {
     return false;
   }
 
-  if (header_.e_ident[EI_CLASS] != ELFCLASS32) {
-    error->Format("Not a 32-bit class: %d", header_.e_ident[EI_CLASS]);
+  if (header_.e_ident[EI_CLASS] != ELF::kElfClass) {
+    error->Format("Not a %d-bit class: %d",
+                  ELF::kElfBits,
+                  header_.e_ident[EI_CLASS]);
     return false;
   }
+
   if (header_.e_ident[EI_DATA] != ELFDATA2LSB) {
     error->Format("Not little-endian class: %d", header_.e_ident[EI_DATA]);
     return false;
