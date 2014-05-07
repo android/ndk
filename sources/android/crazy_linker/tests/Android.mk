@@ -67,6 +67,12 @@ LOCAL_STATIC_LIBRARIES := crazy_linker
 include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
+LOCAL_MODULE := test_load_library_callbacks
+LOCAL_SRC_FILES := test_load_library_callbacks.cpp
+LOCAL_STATIC_LIBRARIES := crazy_linker
+include $(BUILD_EXECUTABLE)
+
+include $(CLEAR_VARS)
 LOCAL_MODULE := test_dl_wrappers
 LOCAL_SRC_FILES := test_dl_wrappers.cpp
 LOCAL_STATIC_LIBRARIES := crazy_linker
