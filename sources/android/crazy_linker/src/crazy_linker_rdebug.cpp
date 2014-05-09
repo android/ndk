@@ -60,8 +60,11 @@ bool FindElfDynamicSection(const char* path,
   // Sanity check.
   if (header->e_ident[0] != 127 || header->e_ident[1] != 'E' ||
       header->e_ident[2] != 'L' || header->e_ident[3] != 'F' ||
-      header->e_ident[4] != 1) {
-    LOG("%s: Not a 32-bit ELF binary: %s\n", __FUNCTION__, path);
+      header->e_ident[4] != ELF::kElfClass) {
+    LOG("%s: Not a %d-bit ELF binary: %s\n",
+        __FUNCTION__,
+        ELF::kElfBits,
+        path);
     return false;
   }
 
