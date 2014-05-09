@@ -2012,7 +2012,7 @@ IMPORTANT CHANGES:
   Android devices.
 
   Note that by default, code is still generated for ARM-based devices.
-  You can however add 'x86' to your APP_PLATFORM definition in your
+  You can however add 'x86' to your APP_ABI definition in your
   Application.mk. For example, the following line instructs ndk-build
   to build your code for three distinct ABIs:
 
