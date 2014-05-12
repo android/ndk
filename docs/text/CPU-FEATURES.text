@@ -43,23 +43,14 @@ Two functions are provided for now:
 
         AndroidCpuFamily android_getCpuFamily();
 
-Returns a value matching the CPU family/architecture supported by the
-current process as an enum. Currently, the following families are defined:
+Returns the target device's CPU Family as an enum.
+Currently, the following families are defined:
 
   * `ANDROID_CPU_FAMILY_ARM`
 
   * `ANDROID_CPU_FAMILY_X86`
 
   * `ANDROID_CPU_FAMILY_MIPS`
-
-  * `ANDROID_CPU_FAMILY_ARM64`
-
-  * `ANDROID_CPU_FAMILY_X86_64`
-
-  * `ANDROID_CPU_FAMILY_MIPS64`
-
-Note that when running a 32-bit executable on a 64-bit system, this function
-will return the 32-bit family value only.
 
 Secondly:
 
@@ -69,8 +60,7 @@ Returns the set of optional features supported by the device's CPU.
 The result is a set of bit-flags, each corresponding to one CPU
 Family-specific optional feature.
 
-Currently, only the following flags are defined, for the 32-bit ARM CPU
-Family:
+Currently, only the following flags are defined, for the ARM CPU Family:
 
   * `ANDROID_CPU_ARM_FEATURE_VFPv2`
 >    Indicates that the device's CPU supports VFPv2 instruction set.
@@ -132,7 +122,7 @@ Family:
     available since ARMv6.  Together they provide atomic update on memory
     with the help of exclusive monitor.
 
-And the following flags for the 32-bit x86 CPU Family:
+And the following flags for the x86 CPU Family:
 
   * `ANDROID_CPU_X86_FEATURE_SSSE3`
 >   Indicates that the device's CPU supports the SSSE3 instruction
@@ -146,8 +136,6 @@ And the following flags for the 32-bit x86 CPU Family:
 >   Indicates that the device's CPU supports the MOVBE instruction.
     This one is specific to some Intel IA-32 CPUs, like the Atom.
 
-Other CPU families do not have extensions listed at the moment, which
-means that android_getCpuFeatures() will return 0 for them.
 
 The following function is also defined to return the max number of
 CPU cores on the target device:
