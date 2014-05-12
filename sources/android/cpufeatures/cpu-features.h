@@ -33,9 +33,6 @@
 
 __BEGIN_DECLS
 
-/* A list of valid values returned by android_getCpuFamily().
- * They describe the CPU Architecture of the current process.
- */
 typedef enum {
     ANDROID_CPU_FAMILY_UNKNOWN = 0,
     ANDROID_CPU_FAMILY_ARM,
@@ -49,32 +46,11 @@ typedef enum {
 
 } AndroidCpuFamily;
 
-/* Return the CPU family of the current process.
- *
- * Note that this matches the bitness of the current process. I.e. when
- * running a 32-bit binary on a 64-bit capable CPU, this will return the
- * 32-bit CPU family value.
- */
-extern AndroidCpuFamily android_getCpuFamily(void);
+/* Return family of the device's CPU */
+extern AndroidCpuFamily   android_getCpuFamily(void);
 
-/* Return a bitmap describing a set of optional CPU features that are
- * supported by the current device's CPU. The exact bit-flags returned
- * depend on the value returned by android_getCpuFamily(). See the
- * documentation for the ANDROID_CPU_*_FEATURE_* flags below for details.
- *
- * NOTE: This will return 0 for the following architectures that don't have
- *       optional features listed at the moment:
- *
- *   ANDROID_CPU_FAMILY_MIPS
- *   ANDROID_CPU_FAMILY_ARM64
- *   ANDROID_CPU_FAMILY_X86_64
- *   ANDROID_CPU_FAMILY_MIPS64
- */
-extern uint64_t android_getCpuFeatures(void);
-
-/* The list of feature flags for ANDROID_CPU_FAMILY_ARM that can be
- * recognized by the library (see note below for 64-bit ARM). Value details
- * are:
+/* The list of feature flags for ARM CPUs that can be recognized by the
+ * library. Value details are:
  *
  *   VFPv2:
  *     CPU supports the VFPv2 instruction set. Many, but not all, ARMv6 CPUs
@@ -177,14 +153,6 @@ extern uint64_t android_getCpuFeatures(void);
  *
  *   -mcpu=iwmmxt
  *     Allows the use of iWMMXt instrinsics with GCC.
- *
- * IMPORTANT NOTE: These flags should only be tested when
- * android_getCpuFamily() returns ANDROID_CPU_FAMILY_ARM, i.e. this is a
- * 32-bit process.
- *
- * When running a 64-bit ARM process on an ARMv8 CPU,
- * android_getCpuFeatures() will return a different set of bitflags
- * (currently always 0).
  */
 enum {
     ANDROID_CPU_ARM_FEATURE_ARMv7       = (1 << 0),
@@ -201,17 +169,16 @@ enum {
     ANDROID_CPU_ARM_FEATURE_iWMMXt      = (1 << 11),
 };
 
-/* The bit flags corresponding to the output of android_getCpuFeatures()
- * when android_getCpuFamily() returns ANDROID_CPU_FAMILY_X86.
- */
 enum {
     ANDROID_CPU_X86_FEATURE_SSSE3  = (1 << 0),
     ANDROID_CPU_X86_FEATURE_POPCNT = (1 << 1),
     ANDROID_CPU_X86_FEATURE_MOVBE  = (1 << 2),
 };
 
+extern uint64_t    android_getCpuFeatures(void);
+
 /* Return the number of CPU cores detected on this device. */
-extern int android_getCpuCount(void);
+extern int         android_getCpuCount(void);
 
 /* The following is used to force the CPU count and features
  * mask in sandboxed processes. Under 4.1 and higher, these processes

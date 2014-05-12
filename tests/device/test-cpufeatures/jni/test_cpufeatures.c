@@ -13,10 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define __STDC_FORMAT_MACROS 1
-
 #include <cpu-features.h>
-#include <inttypes.h>
 #include <stdio.h>
 
 int main(void)
@@ -90,21 +87,7 @@ int main(void)
 #undef CHECK
     }
 
-    int result = 0;
-
-    // Check that the CPU features mask is empty for anything that isn't
-    // 32-bit ARM or 32-bit x86.
-    if (family != ANDROID_CPU_FAMILY_ARM &&
-        family != ANDROID_CPU_FAMILY_X86) {
-        uint64_t features = android_getCpuFeatures();
-        if (features != 0) {
-            printf("ERROR: Unexpected CPU features mask: %016" PRIX64 "\n",
-                   features);
-            result = 1;
-        }
-    }
-
     int count = android_getCpuCount();
     printf( "Number of CPU cores: %d\n", count);
-    return result;
+    return 0;
 }
