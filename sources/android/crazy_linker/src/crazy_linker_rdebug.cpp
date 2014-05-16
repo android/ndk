@@ -101,11 +101,11 @@ bool FindElfDynamicSection(const char* path,
   }
 
   if (!found_load0) {
-    LOG("%s: Could not find loadable segment!?", __FUNCTION__);
+    LOG("%s: Could not find loadable segment!?\n", __FUNCTION__);
     return false;
   }
   if (!found_dyn) {
-    LOG("%s: Could not find dynamic segment!?", __FUNCTION__);
+    LOG("%s: Could not find dynamic segment!?\n", __FUNCTION__);
     return false;
   }
 

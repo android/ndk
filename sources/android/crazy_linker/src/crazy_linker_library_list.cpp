@@ -336,7 +336,7 @@ LibraryView* LibraryList::LoadLibrary(const char* lib_name,
   }
 
   // Relocate the library.
-  LOG("%s: Relocating %s", __FUNCTION__, base_name);
+  LOG("%s: Relocating %s\n", __FUNCTION__, base_name);
   if (!lib->Relocate(this, &dependencies, error))
     return NULL;
 

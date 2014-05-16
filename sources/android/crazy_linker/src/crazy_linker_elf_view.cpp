@@ -95,7 +95,7 @@ bool ElfView::InitUnmapped(size_t load_address,
   phdr_count_ = phdr_count;
 
   LOG("%s: New ELF view [load_address:%p, load_size:%p, load_bias:%p, phdr:%p, "
-      "phdr_count:%d, dynamic:%p, dynamic_count:%d, dynamic_flags:%d",
+      "phdr_count:%d, dynamic:%p, dynamic_count:%d, dynamic_flags:%d\n",
       __FUNCTION__,
       load_address_,
       load_size_,
