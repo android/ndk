@@ -124,7 +124,7 @@ bool ElfRelocations::Init(const ElfView* view, Error* error) {
       case DT_PLTREL:
         // NOTE: Yes, there is nothing to record here, the content of
         // plt_rel_ will come from DT_JMPREL instead.
-        RLOG("  DT_PLTREL");
+        RLOG("  DT_PLTREL\n");
         if (dyn_value != DT_REL) {
           *error = "Unsupported DT_RELA entry in dynamic section";
           return false;
