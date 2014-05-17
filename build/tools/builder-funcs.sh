@@ -110,10 +110,6 @@ builder_begin_module ()
     _BUILD_C_INCLUDES=
     _BUILD_CFLAGS=
     _BUILD_CXXFLAGS=
-    _BUILD_LDFLAGS_BEGIN_SO=
-    _BUILD_LDFLAGS_END_SO=
-    _BUILD_LDFLAGS_BEGIN_EXE=
-    _BUILD_LDFLAGS_END_EXE=
     _BUILD_LDFLAGS=
     _BUILD_BINPREFIX=
     _BUILD_DSTDIR=
@@ -372,20 +368,19 @@ builder_shared_library ()
     builder_command ${_BUILD_CXX} \
         -Wl,-soname,$(basename $lib) \
         -Wl,-shared \
-        $_BUILD_LDFLAGS_BEGIN_SO \
+        --sysroot=$SYSROOT \
         $_BUILD_OBJECTS \
         $_BUILD_STATIC_LIBRARIES \
         -lgcc \
         $_BUILD_SHARED_LIBRARIES \
         -lc $libm \
         $_BUILD_LDFLAGS \
-        $_BUILD_LDFLAGS_END_SO \
         -o $lib
     fail_panic "Could not create ${_BUILD_PREFIX}shared library $libname"
 }
 
 # Same as builder_shared_library, but do not link the default libs
-builder_nostdlib_shared_library ()
+builder_nodefaultlibs_shared_library ()
 {
     local lib libname suffix
     libname=$1
@@ -404,12 +399,11 @@ builder_nostdlib_shared_library ()
     builder_command ${_BUILD_CXX} \
         -Wl,-soname,$(basename $lib) \
         -Wl,-shared \
-        $_BUILD_LDFLAGS_BEGIN_SO \
+        --sysroot=$SYSROOT \
         $_BUILD_OBJECTS \
         $_BUILD_STATIC_LIBRARIES \
         $_BUILD_SHARED_LIBRARIES \
         $_BUILD_LDFLAGS \
-        $_BUILD_LDFLAGS_END_SO \
         -o $lib
     fail_panic "Could not create ${_BUILD_PREFIX}shared library $libname"
 }
@@ -497,7 +491,6 @@ builder_begin_android ()
 {
     local ABI BUILDDIR LLVM_VERSION MAKEFILE
     local ARCH SYSROOT FLAGS
-    local CRTBEGIN_SO_O CRTEND_SO_O CRTBEGIN_EXE_SO CRTEND_SO_O
     local BINPREFIX GCC_TOOLCHAIN LLVM_TRIPLE GCC_VERSION
     if [ -z "$NDK_DIR" ]; then
         panic "NDK_DIR is not defined!"
@@ -527,18 +520,6 @@ builder_begin_android ()
 
     SYSROOT=$NDK_DIR/$(get_default_platform_sysroot_for_arch $ARCH)
     LDIR=$SYSROOT"/usr/"$(get_default_libdir_for_arch $ARCH)
-
-    CRTBEGIN_EXE_O=$LDIR/crtbegin_dynamic.o
-    CRTEND_EXE_O=$LDIR/crtend_android.o
-
-    CRTBEGIN_SO_O=$LDIR/crtbegin_so.o
-    CRTEND_SO_O=$LDIR/crtend_so.o
-    if [ ! -f "$CRTBEGIN_SO_O" ]; then
-        CRTBEGIN_SO_O=$CRTBEGIN_EXE_O
-    fi
-    if [ ! -f "$CRTEND_SO_O" ]; then
-        CRTEND_SO_O=$CRTEND_EXE_O
-    fi
 
     builder_begin "$BUILDDIR" "$MAKEFILE"
     builder_set_prefix "$ABI "
@@ -571,10 +552,6 @@ builder_begin_android ()
             *)
                 LLVM_TRIPLE=le32-none-ndk
                 GCC_TOOLCHAIN=
-                CRTBEGIN_SO_O=
-                CRTEND_SO_O=
-                CRTBEGIN_EXE_O=
-                CRTEND_EXE_O=
                 FLAGS=-emit-llvm
                 ;;
         esac
@@ -588,11 +565,6 @@ builder_begin_android ()
 
     builder_cflags "--sysroot=$SYSROOT"
     builder_cxxflags "--sysroot=$SYSROOT"
-    _BUILD_LDFLAGS_BEGIN_SO="--sysroot=$SYSROOT -nostdlib $CRTBEGIN_SO_O"
-    _BUILD_LDFLAGS_BEGIN_EXE="--sysroot=$SYSROOT -nostdlib $CRTBEGIN_EXE_O"
-
-    _BUILD_LDFLAGS_END_SO="$CRTEND_SO_O"
-    _BUILD_LDFLAGS_END_EXE="$CRTEND_EXE_O"
 
     case $ABI in
         armeabi)
