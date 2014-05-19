@@ -142,7 +142,7 @@ size_t phdr_table_get_load_size(const ELF::Phdr* phdr_table,
                                 size_t phdr_count,
                                 ELF::Addr* out_min_vaddr,
                                 ELF::Addr* out_max_vaddr) {
-  ELF::Addr min_vaddr = 0xFFFFFFFFU;
+  ELF::Addr min_vaddr = ~static_cast<ELF::Addr>(0);
   ELF::Addr max_vaddr = 0x00000000U;
 
   bool found_pt_load = false;

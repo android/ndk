@@ -8,12 +8,12 @@
 
 namespace crazy {
 
-bool ElfView::InitUnmapped(size_t load_address,
+bool ElfView::InitUnmapped(ELF::Addr load_address,
                            const ELF::Phdr* phdr,
                            size_t phdr_count,
                            Error* error) {
   // Compute load size and bias.
-  size_t min_vaddr = 0;
+  ELF::Addr min_vaddr = 0;
   load_size_ = phdr_table_get_load_size(phdr, phdr_count, &min_vaddr, NULL);
   if (load_size_ == 0) {
     *error = "Invalid program header table";

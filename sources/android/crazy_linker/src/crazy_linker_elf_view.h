@@ -35,7 +35,7 @@ class ElfView {
   // appropriate values. Note that functions phdr() or dynamic() will always
   // return an address relative to |load_address|, even if the binary was
   // not loaded yet in the process.
-  bool InitUnmapped(size_t load_address,
+  bool InitUnmapped(ELF::Addr load_address,
                     const ELF::Phdr* phdr,
                     size_t phdr_count,
                     Error* error);
@@ -75,7 +75,7 @@ class ElfView {
     ELF::Addr GetValue() const { return dyn_->d_un.d_val; }
 
     ELF::Addr* GetValuePointer() const {
-      return const_cast<ELF::Addr*>(&dyn_->d_un.d_val);
+      return const_cast<ELF::Addr*>(&dyn_->d_un.d_ptr);
     }
 
     uintptr_t GetOffset() const { return dyn_->d_un.d_ptr; }
@@ -98,8 +98,8 @@ class ElfView {
   size_t phdr_count_;
   const ELF::Dyn* dynamic_;
   size_t dynamic_count_;
-  size_t dynamic_flags_;
-  size_t load_address_;
+  ELF::Word dynamic_flags_;
+  ELF::Addr load_address_;
   size_t load_size_;
   size_t load_bias_;
 };

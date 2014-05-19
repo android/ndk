@@ -170,8 +170,8 @@ class SharedLibrary {
   ElfView view_;
   ElfSymbols symbols_;
 
-  size_t relro_start_;
-  size_t relro_size_;
+  ELF::Addr relro_start_;
+  ELF::Addr relro_size_;
   bool relro_used_;
 
   SharedLibrary* list_next_;

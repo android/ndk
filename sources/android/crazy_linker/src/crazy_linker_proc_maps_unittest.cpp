@@ -4,6 +4,7 @@
 
 #include "crazy_linker_proc_maps.h"
 
+#include <limits.h>
 #include <minitest/minitest.h>
 #include "crazy_linker_system_mock.h"
 
