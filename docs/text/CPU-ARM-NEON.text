@@ -69,18 +69,19 @@ In other words, 'foo.c.arm.neon' works, but 'foo.c.neon.arm' does NOT.
 Build Requirements:
 ------------------
 
-Neon support only works when targeting the 'armeabi-v7a' ABI, otherwise the
-NDK build scripts will complain and abort. It is important to use checks like
-the following in your Android.mk:
+Neon support only works when targeting the 'armeabi-v7a' or 'x86' ABI, otherwise
+the NDK build scripts will complain and abort. Neon is partially supported on
+x86 via translation header (To learn more about it, see docs/CPU-X86.html).
+It is important to use checks like the following in your Android.mk:
 
         # define a static library containing our NEON code
-        ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
+        ifeq ($(TARGET_ARCH_ABI),$(filter $(TARGET_ARCH_ABI), armeabi-v7a x86))
             include $(CLEAR_VARS)
             LOCAL_MODULE    := mylib-neon
             LOCAL_SRC_FILES := mylib-neon.c
             LOCAL_ARM_NEON  := true
             include $(BUILD_STATIC_LIBRARY)
-        endif # TARGET_ARCH_ABI == armeabi-v7a
+        endif # TARGET_ARCH_ABI == armeabi-v7a || x86
 
 
 Runtime Detection:

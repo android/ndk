@@ -42,6 +42,78 @@ based on the native libraries they embed and your device's target CPU.
 
 Debugging with ndk-gdb should work exactly as described under docs/NDK-GDB.html.
 
+ARM NEON intrinsics support:
+----------------------------
+
+The solution is shaped as C/C++ language header with the same name as standard
+arm neon intrinsics header "arm_neon.h" which is also available in all NDK x86
+toolchains. It translates neon intrinsics to native x86 SSE ones.
+
+By default SSE up to SSE3 is used for porting ARM NEON to Intel SSE.
+
+By default solution covers ~83% NEON functions (1551 of total 1872).
+It is recommended to use the -mssse3 compiler flag to extend NEON functions
+covearge up to ~98% (only 45 of 1872 are not covered). The solution
+
+  - Redefines ARM NEON 64 and 128 bit vectors as the corresponding x86 SIMD data.
+
+  - Redefines some functions from ARM NEON to Intel SSE if 1:1 correspondence
+    exists (~50% of functions).
+
+  - Implements some ARM NEON functions using Intel SIMD if the performance
+    effective implementation is possible (~45% of functions).
+
+  - Implements the remaining NEON functions (for <5% of functions not widely used
+    in applications) using the serial solution and issuing the corresponding
+    "low performance" compiler warning.
+
+### Performance:
+
+For the major number of cases it is expected to obtain the similar to ARM NEON
+perfomance gain for vectorized vs. serial code.
+It was tested on several projects demonstrating very similar results.
+E.g. for "Hello NEON" Android NDK standard sample. It implements FIR filter
+along with the integrated performance benchmark for NEON vs serial execution
+performance comparison.
+
+The test was compiled as is for ARM (gcc 4.7) and using this solution for
+x86 (Intel compiler). Results of execution on the corresponding CPUs:
+
+> ARM Cortex A9 (Samsung Galaxy Note) - the 4.2 times speedup for NEON
+  version vs serial C version.
+
+> Intel Atom Z3770 (Intel development platforms) - the 4.0 times speedup
+  for NEON version vs serial C version if the SSE was used.
+
+### Porting considerations and best known methods are:
+
+  - Use 16-byte data alignment for faster load and store
+
+  - Avoid NEON functions working with constants. It produces performance
+    penalty for constants load\propagation.
+    If constants usage is necessary try to move constants initialization out of
+    hotspot loops and if applicable replace it with logical and compare
+    operations.
+
+  - Try to avoid functions marked as "serialy implemented" because they need to
+    store data from registers to memory, process them serialy and load them again.
+    Probably you could change the data type or algorithm used to make the whole
+    port vectorized not a serial one.
+
+To learn more about it, see
+
+> http://software.intel.com/en-us/blogs/2012/12/12/from-arm-neon-to-intel-mmxsse-automatic-porting-solution-tips-and-tricks
+
+### Sample code:
+
+In your project add 'x86' to APP_ABI definition and make sure "arm_neon.h"
+header is included.
+Your code will be ported to x86 without any other changes necessary.
+
+Look at the "hello-neon" sample in NDK for an example on how ARM NEON porting
+to X86 SSE works.
+
+
 Standalone-toolchain:
 ---------------------
 
