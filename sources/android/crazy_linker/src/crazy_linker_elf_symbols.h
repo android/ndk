@@ -66,9 +66,9 @@ class ElfSymbols {
  private:
   const ELF::Sym* symbol_table_;
   const char* string_table_;
-  ELF::Addr* hash_bucket_;
+  ELF::Word* hash_bucket_;
   size_t hash_bucket_size_;
-  ELF::Addr* hash_chain_;
+  ELF::Word* hash_chain_;
   size_t hash_chain_size_;
 };
 

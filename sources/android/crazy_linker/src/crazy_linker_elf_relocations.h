@@ -56,11 +56,43 @@ class ElfRelocations {
                        size_t size);
 
  private:
-  bool ApplyRelocs(const ELF::Rel* relocs,
-                   size_t relocs_count,
-                   const ElfSymbols* symbols,
-                   SymbolResolver* resolver,
-                   Error* error);
+  bool ResolveSymbol(unsigned rel_type,
+                     unsigned rel_symbol,
+                     const ElfSymbols* symbols,
+                     SymbolResolver* resolver,
+                     ELF::Addr reloc,
+                     ELF::Addr* sym_addr,
+                     Error* error);
+  bool ApplyRelaReloc(const ELF::Rela* rela,
+                      ELF::Addr sym_addr,
+                      bool resolved,
+                      Error* error);
+  bool ApplyRelReloc(const ELF::Rel* rel,
+                     ELF::Addr sym_addr,
+                     bool resolved,
+                     Error* error);
+  bool ApplyRelaRelocs(const ELF::Rela* relocs,
+                       size_t relocs_count,
+                       const ElfSymbols* symbols,
+                       SymbolResolver* resolver,
+                       Error* error);
+  bool ApplyRelRelocs(const ELF::Rel* relocs,
+                      size_t relocs_count,
+                      const ElfSymbols* symbols,
+                      SymbolResolver* resolver,
+                      Error* error);
+  void AdjustRelocation(ELF::Word rel_type,
+                        ELF::Addr src_reloc,
+                        size_t dst_delta,
+                        size_t map_delta);
+  void RelocateRela(size_t src_addr,
+                    size_t dst_addr,
+                    size_t map_addr,
+                    size_t size);
+  void RelocateRel(size_t src_addr,
+                   size_t dst_addr,
+                   size_t map_addr,
+                   size_t size);
 
 #if defined(__mips__)
   bool RelocateMipsGot(const ElfSymbols* symbols,
@@ -72,12 +104,13 @@ class ElfRelocations {
   size_t phdr_count_;
   size_t load_bias_;
 
-  const ELF::Rel* plt_relocations_;
-  size_t plt_relocations_count_;
+  ELF::Addr relocations_type_;
+  ELF::Addr plt_relocations_;
+  size_t plt_relocations_size_;
   ELF::Addr* plt_got_;
 
-  const ELF::Rel* relocations_;
-  size_t relocations_count_;
+  ELF::Addr relocations_;
+  size_t relocations_size_;
 
 #if defined(__mips__)
   // MIPS-specific relocation fields.
