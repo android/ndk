@@ -35,8 +35,11 @@ STL=gnustl
 register_var_option "--stl=<name>" STL "Specify C++ STL"
 
 ARCH=
-register_option "--arch=<name>" do_arch "Specify target architecture" "arm"
-do_arch () { ARCH=$1; }
+register_var_option "--arch=<name>" ARCH "Specify target architecture"
+
+# Grab the ABIs that match the architecture.
+ABIS=
+register_var_option "--abis=<list>" ABIS "Specify list of target ABIs."
 
 NDK_DIR=`dirname $0`
 NDK_DIR=`dirname $NDK_DIR`
@@ -122,6 +125,15 @@ else
             ;;
     esac
 
+fi
+
+if [ -z "$ABIS" ]; then
+    ABIS=$(convert_arch_to_abi $ARCH)
+fi
+
+if [ -z "$ABIS" ]; then
+    dump "ERROR: No ABIS. Possibly unsupported NDK architecture $ARCH?"
+    exit 1
 fi
 
 ARCH_LIB=$ARCH
@@ -588,29 +600,40 @@ copy_stl_libs () {
     esac
 }
 
+# $1: Source ABI (e.g. 'armeabi')
+copy_stl_libs_for_abi () {
+    local ABI=$1
+
+    if [ "$(convert_abi_to_arch "$ABI")" != "$ARCH" ]; then
+        dump "ERROR: ABI '$ABI' does not match ARCH '$ARCH'"
+        exit 1
+    fi
+
+    case $ABI in
+        armeabi)
+            copy_stl_libs armeabi
+            copy_stl_libs armeabi          "no"  "/thumb"
+            ;;
+        armeabi-v7a)
+            copy_stl_libs armeabi-v7a      "yes" "armv7-a"
+            copy_stl_libs armeabi-v7a      "no"  "armv7-a/thumb"
+            ;;
+        armeabi-v7a-hard)
+            copy_stl_libs armeabi-v7a-hard "no"  "armv7-a/hard" "."
+            copy_stl_libs armeabi-v7a-hard "no"  "armv7-a/thumb/hard" "thumb"
+            ;;
+        *)
+            copy_stl_libs "$ABI"
+            ;;
+    esac
+}
+
 mkdir -p "$ABI_STL_INCLUDE_TARGET"
 fail_panic "Can't create directory: $ABI_STL_INCLUDE_TARGET"
 copy_stl_common_headers
-case $ARCH in
-    arm)
-        copy_stl_libs armeabi
-        copy_stl_libs armeabi          "no"  "/thumb"
-        copy_stl_libs armeabi-v7a      "yes" "armv7-a"
-        copy_stl_libs armeabi-v7a      "no"  "armv7-a/thumb"
-        copy_stl_libs armeabi-v7a-hard "no"  "armv7-a/hard" "."
-        copy_stl_libs armeabi-v7a-hard "no"  "armv7-a/thumb/hard" "thumb"
-        ;;
-    arm64)
-        copy_stl_libs arm64-v8a
-        ;;
-    x86|mips|mips64|x86_64)
-        copy_stl_libs "$ARCH"
-        ;;
-    *)
-        dump "ERROR: Unsupported NDK architecture: $ARCH"
-        exit 1
-        ;;
-esac
+for ABI in $(tr ',' ' ' <<< $ABIS); do
+  copy_stl_libs_for_abi "$ABI"
+done
 
 # Install or Package
 if [ -n "$INSTALL_DIR" ] ; then
