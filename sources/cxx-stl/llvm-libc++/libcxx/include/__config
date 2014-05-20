@@ -191,6 +191,7 @@
 
 #ifndef _LIBCPP_INLINE_VISIBILITY
 #define _LIBCPP_INLINE_VISIBILITY __attribute__ ((__visibility__("hidden"), __always_inline__))
+#define _LIBCPP_INLINE_VISIBILITY_EXCEPT_GCC49 _LIBCPP_INLINE_VISIBILITY
 #endif
 
 #ifndef _LIBCPP_EXCEPTION_ABI
@@ -363,6 +364,8 @@ namespace std {
 # if (_GNUC_VER == 409)
 #undef _LIBCPP_ALWAYS_INLINE_EXCEPT_GCC49
 #define _LIBCPP_ALWAYS_INLINE_EXCEPT_GCC49 inline
+#undef _LIBCPP_INLINE_VISIBILITY_EXCEPT_GCC49
+#define _LIBCPP_INLINE_VISIBILITY_EXCEPT_GCC49
 #endif
 
 #define _ALIGNAS(x) __attribute__((__aligned__(x)))
