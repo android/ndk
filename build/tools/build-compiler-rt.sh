@@ -96,7 +96,7 @@ fi
 # Compiler flags we want to use
 COMPILER_RT_CFLAGS="-fPIC -O2 -DANDROID -D__ANDROID__ -ffunction-sections"
 COMPILER_RT_CFLAGS=$COMPILER_RT_CFLAGS" -I$SRC_DIR/include -I$SRC_DIR/lib"
-COMPILER_RT_LDFLAGS="-nostdlib -nodefaultlibs"
+COMPILER_RT_LDFLAGS="-nodefaultlibs"
 
 # List of sources to compile
 COMPILER_RT_GENERIC_SOURCES=$(cd $SRC_DIR && ls lib/*.c)
@@ -242,7 +242,7 @@ build_compiler_rt_libs_for_abi ()
         if [ $ABI != "armeabi-v7a-hard" ]; then
             builder_ldflags "-lm"
         fi
-        builder_nostdlib_shared_library libcompiler_rt_shared
+        builder_nodefaultlibs_shared_library libcompiler_rt_shared
     fi
     builder_end
 }
