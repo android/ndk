@@ -368,7 +368,6 @@ builder_shared_library ()
     builder_command ${_BUILD_CXX} \
         -Wl,-soname,$(basename $lib) \
         -Wl,-shared \
-        --sysroot=$SYSROOT \
         $_BUILD_OBJECTS \
         $_BUILD_STATIC_LIBRARIES \
         -lgcc \
@@ -399,7 +398,6 @@ builder_nodefaultlibs_shared_library ()
     builder_command ${_BUILD_CXX} \
         -Wl,-soname,$(basename $lib) \
         -Wl,-shared \
-        --sysroot=$SYSROOT \
         $_BUILD_OBJECTS \
         $_BUILD_STATIC_LIBRARIES \
         $_BUILD_SHARED_LIBRARIES \
@@ -565,6 +563,7 @@ builder_begin_android ()
 
     builder_cflags "--sysroot=$SYSROOT"
     builder_cxxflags "--sysroot=$SYSROOT"
+    builder_ldflags "--sysroot=$SYSROOT"
 
     case $ABI in
         armeabi)
