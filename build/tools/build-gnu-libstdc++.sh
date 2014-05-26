@@ -124,8 +124,12 @@ build_gnustl_for_abi ()
     mkdir -p $DSTDIR
 
     ARCH=$(convert_abi_to_arch $ABI)
-    BINPREFIX=$NDK_DIR/$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION)
-
+    for TAG in $HOST_TAG $HOST_TAG32; do
+        BINPREFIX=$NDK_DIR/$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION $TAG)
+        if [ -f ${BINPREFIX}-gcc ]; then
+            break;
+        fi
+    done
     GNUSTL_SRCDIR=$SRCDIR/gcc/gcc-$GCC_VERSION/libstdc++-v3
     # Sanity check
     if [ ! -d "$GNUSTL_SRCDIR" ]; then

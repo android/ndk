@@ -505,15 +505,20 @@ builder_begin_android ()
     if [ "$(arch_in_unknown_archs $ARCH)" = "yes" ]; then
         LLVM_VERSION=$DEFAULT_LLVM_VERSION
     fi
-
-    if [ -z "$LLVM_VERSION" ]; then
-        BINPREFIX=$NDK_DIR/$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION)
-    else
-        BINPREFIX=$NDK_DIR/$(get_llvm_toolchain_binprefix $LLVM_VERSION)
+    if [ -n "$LLVM_VERSION" ]; then
         # override GCC_VERSION to pick $DEFAULT_LLVM_GCC_VERSION instead
         GCC_VERSION=$DEFAULT_LLVM_GCC_VERSION
-        GCC_TOOLCHAIN=`dirname $NDK_DIR/$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION)`
+    fi
+    for TAG in $HOST_TAG $HOST_TAG32; do
+        BINPREFIX=$NDK_DIR/$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION $TAG)
+	if [ -f ${BINPREFIX}-gcc ]; then
+	    break;
+	fi
+    done
+    if [ -n "$LLVM_VERSION" ]; then
+        GCC_TOOLCHAIN=`dirname $BINPREFIX`
         GCC_TOOLCHAIN=`dirname $GCC_TOOLCHAIN`
+        BINPREFIX=$NDK_DIR/$(get_llvm_toolchain_binprefix $LLVM_VERSION $TAG)
     fi
 
     SYSROOT=$NDK_DIR/$(get_default_platform_sysroot_for_arch $ARCH)
