@@ -367,7 +367,7 @@ builder_shared_library ()
     #            for other platforms.
     builder_command ${_BUILD_CXX} \
         -Wl,-soname,$(basename $lib) \
-        -Wl,-shared \
+        -shared \
         $_BUILD_OBJECTS \
         $_BUILD_STATIC_LIBRARIES \
         -lgcc \
@@ -397,7 +397,7 @@ builder_nodefaultlibs_shared_library ()
 
     builder_command ${_BUILD_CXX} \
         -Wl,-soname,$(basename $lib) \
-        -Wl,-shared \
+        -shared \
         $_BUILD_OBJECTS \
         $_BUILD_STATIC_LIBRARIES \
         $_BUILD_SHARED_LIBRARIES \
