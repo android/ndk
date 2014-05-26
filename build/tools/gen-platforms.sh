@@ -711,7 +711,7 @@ for ARCH in $ARCHS; do
                gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $SYSROOT_DST/lib64 "-target le64-none-ndk"
             elif [ "$ARCH" = "x86_64" ]; then
                # We need full set for multilib compiler
-               gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $SYSROOT_DST/lib "-m32"
+               gen_shared_libraries $ARCH $PLATFORM_SRC/arch-x86/symbols $SYSROOT_DST/lib "-m32"
                gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $SYSROOT_DST/lib64 "-m64"
                gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $SYSROOT_DST/libx32 "-mx32"
             else
