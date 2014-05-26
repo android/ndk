@@ -367,8 +367,13 @@ get_default_compiler_for_arch()
     local TOOLCHAIN_PREFIX EXTRA_CFLAGS CC GCC_VERSION
 
     if [ "$ARCH" = "${ARCH%%64*}" -a "$(arch_in_unknown_archs $ARCH)" = "yes" ]; then
-        TOOLCHAIN_PREFIX="$NDK_DIR/$(get_llvm_toolchain_binprefix $OPTION_LLVM_VERSION)"
-        CC="$TOOLCHAIN_PREFIX/clang"
+        for TAG in $HOST_TAG $HOST_TAG32; do
+            TOOLCHAIN_PREFIX="$NDK_DIR/$(get_llvm_toolchain_binprefix $OPTION_LLVM_VERSION $TAG)"
+            CC="$TOOLCHAIN_PREFIX/clang"
+            if [ -f "$CC" ]; then
+                break;
+            fi
+        done
         EXTRA_CFLAGS="-emit-llvm"
     else
         if [ -n "$OPTION_GCC_VERSION" ]; then
@@ -376,10 +381,14 @@ get_default_compiler_for_arch()
         else
             GCC_VERSION=$(get_default_gcc_version_for_arch $ARCH)
         fi
-
-        TOOLCHAIN_PREFIX="$NDK_DIR/$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION)"
-        TOOLCHAIN_PREFIX=${TOOLCHAIN_PREFIX%-}
-        CC="$TOOLCHAIN_PREFIX-gcc"
+        for TAG in $HOST_TAG $HOST_TAG32; do
+            TOOLCHAIN_PREFIX="$NDK_DIR/$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION $TAG)"
+            TOOLCHAIN_PREFIX=${TOOLCHAIN_PREFIX%-}
+            CC="$TOOLCHAIN_PREFIX-gcc"
+            if [ -f "$CC" ]; then
+                break;
+            fi
+        done
         EXTRA_CFLAGS=
     fi
 
