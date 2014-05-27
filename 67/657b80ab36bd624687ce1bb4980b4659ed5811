@@ -1,0 +1,10 @@
+Code-Review+2: Andrew Hsieh <andrewhsieh@google.com>
+Code-Review+1: Pavel Chupin <pavel.v.chupin@intel.com>
+Code-Review+1: Antonov Arseniy <arseniy.antonov@intel.com>
+Code-Review+1: Alexey Volkov <alexey.v.volkov@intel.com>
+Verified+1: David Turner <digit@android.com>
+Submitted-by: David Turner <digit@android.com>
+Submitted-at: Tue, 27 May 2014 13:32:25 +0000
+Reviewed-on: https://android-review.googlesource.com/95772
+Project: platform/ndk
+Branch: refs/heads/master
