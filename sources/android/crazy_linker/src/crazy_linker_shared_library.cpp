@@ -112,6 +112,23 @@ class SharedLibraryResolver : public ElfRelocations::SymbolResolver {
       // wrap->GetName());
       if (wrap->IsSystem()) {
         address = ::dlsym(wrap->GetSystem(), symbol_name);
+#ifdef __arm__
+        // Android libm.so defines isnanf as weak. This means that its
+        // address cannot be found by dlsym(), which always returns NULL
+        // for weak symbols. However, libm.so contains the real isnanf
+        // as __isnanf. If we encounter isnanf and fail to resolve it in
+        // libm.so, retry with __isnanf.
+        //
+        // This occurs only in clang, which lacks __builtin_isnanf. The
+        // gcc compiler implements isnanf as a builtin, so the symbol
+        // isnanf never need be resolved in gcc builds.
+        //
+        // http://code.google.com/p/chromium/issues/detail?id=376828
+        if (!address &&
+            !strcmp(symbol_name, "isnanf") &&
+            !strcmp(wrap->GetName(), "libm.so"))
+          address = ::dlsym(wrap->GetSystem(), "__isnanf");
+#endif
         if (address)
           return address;
       }
