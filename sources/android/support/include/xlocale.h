@@ -28,6 +28,12 @@
 #ifndef NDK_ANDROID_SUPPORT_XLOCALE_H
 #define NDK_ANDROID_SUPPORT_XLOCALE_H
 
+#if defined(__LP64__)
+
+#include_next <xlocale.h>
+
+#else
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -41,5 +47,7 @@ struct locale_struct {
 #ifdef __cplusplus
 }  // extern "C"
 #endif
+
+#endif // !__LP64__
 
 #endif  // NDK_ANDROID_SUPPORT_XLOCAL_H

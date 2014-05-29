@@ -30,6 +30,8 @@
 
 #include_next <math.h>
 
+#if !defined(__LP64__)
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -91,5 +93,7 @@ double          log2(double);
 #ifdef __cplusplus
 }  // extern "C"
 #endif
+
+#endif // !__LP64__
 
 #endif  /* NDK_ANDROID_SUPPORT_MATH_H */

@@ -2,6 +2,38 @@ LOCAL_PATH := $(call my-dir)
 
 android_support_c_includes := $(LOCAL_PATH)/include
 
+ifneq ($(filter $(NDK_KNOWN_DEVICE_ABI64S),$(TARGET_ARCH_ABI)),)
+# 64-bit ABIs
+android_support_sources := \
+    src/locale_support.c \
+    src/musl-locale/catclose.c \
+    src/musl-locale/catgets.c \
+    src/musl-locale/catopen.c \
+    src/musl-locale/isdigit_l.c \
+    src/musl-locale/iswalpha_l.c \
+    src/musl-locale/iswblank_l.c \
+    src/musl-locale/iswcntrl_l.c \
+    src/musl-locale/iswdigit_l.c \
+    src/musl-locale/iswlower_l.c \
+    src/musl-locale/iswprint_l.c \
+    src/musl-locale/iswpunct_l.c \
+    src/musl-locale/iswspace_l.c \
+    src/musl-locale/iswupper_l.c \
+    src/musl-locale/iswxdigit_l.c \
+    src/musl-locale/isxdigit_l.c \
+    src/musl-locale/strcoll_l.c \
+    src/musl-locale/strftime_l.c \
+    src/musl-locale/strxfrm_l.c \
+    src/musl-locale/tolower_l.c \
+    src/musl-locale/toupper_l.c \
+    src/musl-locale/towlower_l.c \
+    src/musl-locale/towupper_l.c \
+    src/musl-locale/wcscoll_l.c \
+    src/musl-locale/wcsxfrm_l.c \
+
+else
+# 32-bit ABIs
+
 android_support_sources := \
     src/locale_support.c \
     src/math_support.c \
@@ -122,6 +154,8 @@ android_support_sources := \
     src/musl-stdio/swprintf.c \
     src/musl-stdio/vwprintf.c \
     src/musl-stdio/wprintf.c \
+
+endif # 64-/32-bit ABIs
 
 # This is only available as a static library for now.
 include $(CLEAR_VARS)

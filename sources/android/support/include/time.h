@@ -28,6 +28,8 @@
 #ifndef NDK_ANDROID_SUPPORT_TIME_H
 #define NDK_ANDROID_SUPPORT_TIME_H
 
+// __LP64__
+
 #include_next <time.h>
 #include <xlocale.h>
 

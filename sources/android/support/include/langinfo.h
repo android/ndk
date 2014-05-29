@@ -28,6 +28,8 @@
 #ifndef NDK_ANDROID_SUPPORT_LANGINFO_H
 #define NDK_ANDROID_SUPPORT_LANGINFO_H
 
+// __LP64__
+
 #include <nl_types.h>
 
 #define _NL_ITEM(category,index)  (((category) << 10) | (index))
@@ -109,8 +111,10 @@
 extern "C" {
 #endif
 
+#if !defined(__LP64__)
 char *nl_langinfo(nl_item);
 char *nl_langinfo_l(nl_item, locale_t);
+#endif // !__LP64__
 
 #ifdef __cplusplus
 }  // extern "C"

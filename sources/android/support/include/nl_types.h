@@ -28,6 +28,8 @@
 #ifndef NDK_ANDROID_SUPPORT_NL_TYPES_H
 #define NDK_ANDROID_SUPPORT_NL_TYPES_H
 
+// __LP64__
+
 #define NL_SETD 1
 #define NL_CAT_LOCALE 1
 
