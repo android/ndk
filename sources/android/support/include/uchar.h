@@ -28,6 +28,8 @@
 #ifndef NDK_ANDROID_SUPPORT_UCHAR_H
 #define NDK_ANDROID_SUPPORT_UCHAR_H
 
+// __LP64__
+
 #warning Not implemented
 
 #endif  // NDK_ANDROID_SUPPORT_UCHAR_H

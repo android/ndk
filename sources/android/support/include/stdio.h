@@ -28,6 +28,12 @@
 #ifndef NDK_ANDROID_SUPPORT_STDIO_H
 #define NDK_ANDROID_SUPPORT_STDIO_H
 
+#if defined(__LP64__)
+
+#include_next <stdio.h>
+
+#else
+
 // This is to avoid a compiler error when the putc() macro definition
 // in <stdio.h> follows a putc() function definition which is apparently
 // not compatible with it.
@@ -54,5 +60,7 @@ int vwscanf(const wchar_t *__restrict__, va_list);
 #ifdef __cplusplus
 }  // extern "C"
 #endif
+
+#endif // !__LP64__
 
 #endif  // NDK_ANDROID_SUPPORT_STDIO_H
