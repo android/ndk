@@ -28,9 +28,13 @@
 #ifndef NDK_ANDROID_SUPPORT_LOCALE_H
 #define NDK_ANDROID_SUPPORT_LOCALE_H
 
+#if defined(__LP64__)
+#include_next <locale.h>
+
+#else
+
 #define lconv  __libc_lconv
 #define localeconv  __libc_localeconv
-#include_next <locale.h>
 #undef lconv
 #undef localeconv
 #include <xlocale.h>
@@ -114,5 +118,7 @@ const int __ctype_c_mask_table_size = 256;
 #ifdef __cplusplus
 }  // extern "C"
 #endif
+
+#endif // !__LP64__
 
 #endif  // NDK_ANDROID_SUPPORT_LOCALE_H

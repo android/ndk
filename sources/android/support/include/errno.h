@@ -30,10 +30,13 @@
 
 #include_next <errno.h>
 
+#if !defined(__LP64__)
+
 #if !defined(ENOTRECOVERABLE)
 #error ENOTRECOVERABLE is not defined
 #endif
 
 #define ELAST ENOTRECOVERABLE
+#endif // !__LP64__
 
 #endif  /* NDK_ANDROID_SUPPORT_ERRNO_H */

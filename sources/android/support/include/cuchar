@@ -28,6 +28,8 @@
 #ifndef NDK_ANDROID_SUPPORT_CUCHAR
 #define NDK_ANDROID_SUPPORT_CUCHAR
 
+// __LP64__
+
 #include <__config>
 
 #warning Not implemented

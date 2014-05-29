@@ -29,6 +29,9 @@
 #define NDK_ANDROID_SUPPORT_INTTYPES_H
 
 #include_next <inttypes.h>
+
+#if !defined(__LP64__)
+
 #include <wchar.h>
 
 #ifdef __cplusplus
@@ -41,5 +44,7 @@ imaxdiv_t imaxdiv(intmax_t, intmax_t) __attribute__((__const__));
 #ifdef __cplusplus
 }  // extern "C"
 #endif
+
+#endif // !__LP64__
 
 #endif  // NDK_ANDROID_SUPPORT_INTTYPES_H

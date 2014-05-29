@@ -25,6 +25,8 @@
 #ifndef NDK_ANDROID_SUPPORT_WCHAR_H
 #define NDK_ANDROID_SUPPORT_WCHAR_H
 
+// __LP64__
+
 /* IMPORTANT NOTE: Unlike other headers in the support library, this
  * one doesn't try to include the Bionic header through #include_next.
  *
@@ -65,11 +67,14 @@
 extern "C" {
 #endif
 
+#include_next <wchar.h>
+#include <xlocale.h> // for locale_t
+
+#if !defined(__LP64__)
 #include <stdarg.h>  // for va_list
 #include <stdio.h>   // for FILE
 #include <stddef.h>  // for size_t
 #include <wctype.h>
-#include <xlocale.h> // for locale_t
 
 #define __need___wchar_t
 #include <stddef.h>
@@ -212,9 +217,6 @@ int wcscasecmp(const wchar_t *, const wchar_t *);
 int wcscasecmp_l(const wchar_t *, const wchar_t *, locale_t);
 int wcsncasecmp(const wchar_t *, const wchar_t *, size_t);
 int wcsncasecmp_l(const wchar_t *, const wchar_t *, size_t, locale_t);
-int wcscoll_l(const wchar_t *, const wchar_t *, locale_t);
-size_t wcsxfrm_l(wchar_t *__restrict__, const wchar_t *__restrict__, size_t n, locale_t);
-
 int wcwidth (wchar_t);
 int wcswidth (const wchar_t *, size_t);
 int       iswalnum(wint_t);
@@ -233,6 +235,11 @@ int       iswctype(wint_t, wctype_t);
 wint_t    towlower(wint_t);
 wint_t    towupper(wint_t);
 wctype_t  wctype(const char *);
+
+#endif // !__LP64__
+
+int wcscoll_l(const wchar_t *, const wchar_t *, locale_t);
+size_t wcsxfrm_l(wchar_t *__restrict__, const wchar_t *__restrict__, size_t n, locale_t);
 
 #ifdef __cplusplus
 }  // extern "C"
