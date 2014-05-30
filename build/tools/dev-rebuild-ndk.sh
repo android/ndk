@@ -40,9 +40,19 @@ register_var_option "--release=<rel_name>" OPTION_NDK_RELEASE "Version of releas
 OPTION_QUICK_BUILD="no"
 register_var_option "--quick" OPTION_QUICK_BUILD "Only build the Linux basics"
 
+ARCHS=$(find_ndk_unknown_archs)
+ARCHS="$DEFAULT_ARCHS $ARCHS"
+register_var_option "--arch=<arch>" ARCHS "Specify target architectures"
+
 # List of toolchains to package
-OPTION_TOOLCHAINS="$DEFAULT_ARCH_TOOLCHAIN_NAME_arm,$DEFAULT_ARCH_TOOLCHAIN_NAME_x86,$DEFAULT_ARCH_TOOLCHAIN_NAME_mips"
-register_var_option "--toolchains=<toolchain[,toolchain]>" OPTION_TOOLCHAINS "Toolchain(s) to package"
+GCC_VERSION_LIST="default" # it's arch defined by default so use default keyword
+register_var_option "--gcc-version-list=<vers>" GCC_VERSION_LIST "List of GCC release versions"
+
+LLVM_VERSION_LIST=$DEFAULT_LLVM_VERSION_LIST
+register_var_option "--llvm-version-list=<vers>" LLVM_VERSION_LIST "List of LLVM release versions"
+
+OPTION_SRC_DIR=
+register_var_option "--toolchain-src-dir=<path>" OPTION_SRC_DIR "Select toolchain source directory"
 
 OPTION_TRY_64=
 register_try64_option
@@ -135,23 +145,22 @@ fi
 
 echo
 echo "Checking for Toolchain sources"
-NDK_SRC_DIR=/tmp/ndk-$USER/src/android-ndk-src-${TOOLCHAIN_GIT_DATE}${PATCHES_SHA1}
-if [ ! -d $NDK_SRC_DIR ]
+if [ -z "$OPTION_SRC_DIR" ]
+then
+    OPTION_SRC_DIR=/tmp/ndk-$USER/src/android-ndk-src-${TOOLCHAIN_GIT_DATE}${PATCHES_SHA1}
+fi
+if [ ! -d $OPTION_SRC_DIR ]
 then
     echo "  Downloading Toolchain sources"
-    mkdir -p `dirname $NDK_SRC_DIR`
+    mkdir -p `dirname $OPTION_SRC_DIR`
     logfile="$TOP/download-toolchain-sources.log"
     rotate_log $logfile
-    $PROGDIR/download-toolchain-sources.sh $NDK_SRC_DIR \
+    $PROGDIR/download-toolchain-sources.sh $OPTION_SRC_DIR \
         > $logfile 2>&1
     fail_panic "Could not download toolchain sources!"
 else
-    echo "  Found existing $NDK_SRC_DIR"
+    echo "  Found existing $OPTION_SRC_DIR"
 fi
-
-
-ARCHS=$(find_ndk_unknown_archs)
-ARCHS="$DEFAULT_ARCHS $ARCHS"
 
 # Build the platform
 echo
@@ -199,12 +208,14 @@ do
     $PROGDIR/rebuild-all-prebuilt.sh \
         --arch=$(spaces_to_commas $ARCHS)  \
         --package-dir=$PACKAGE_DIR \
+        --gcc-version-list="$GCC_VERSION_LIST" \
+        --llvm-version-list="$LLVM_VERSION_LIST" \
         $MPFR_VERSION $GDB_VERSION $BINUTILS_VERSION \
         $TARGET_PLATFORM_FLAGS \
         $VERBOSE \
         $OPTION_TRY_64 \
         $OPTION_ALSO_64 \
-        $NDK_SRC_DIR >> $logfile 2>&1
+        $OPTION_SRC_DIR >> $logfile 2>&1
     fail_panic "rebuild-all-prebuilt.sh failed. Logfile in $logfile"
 done # with TARGET_PLATFORM
 
@@ -220,17 +231,18 @@ $PROGDIR/package-release.sh \
     --systems="$ALL_SYSTEMS" \
     --out-dir=$PACKAGE_DIR \
     --arch=$(spaces_to_commas $ARCHS)  \
+    --gcc-version-list="$GCC_VERSION_LIST" \
+    --llvm-version-list="$LLVM_VERSION_LIST" \
     --prefix=android-ndk-${OPTION_NDK_RELEASE} \
     $OPTION_TRY_64 \
     $OPTION_SEPARATE_64 \
-    --no-git \
     $VERBOSE > $logfile 2>&1
 fail_panic "package-release.sh failed. Logfile in $logfile"
 
 echo
 echo "Packaging the NDK Toolchain sources"
 NDK_TOOLCHAIN_PKG=${PACKAGE_DIR}/toolchain-src.tar.bz2
-(cd $NDK_SRC_DIR && tar cjf $NDK_TOOLCHAIN_PKG .)
+(cd $OPTION_SRC_DIR && tar cjf $NDK_TOOLCHAIN_PKG .)
 fail_panic "Could not package NDK Toolchain sources!"
 
 exit 0
