@@ -60,8 +60,7 @@ NO_GIT=no
 register_var_option "--no-git" NO_GIT "Don't use git to list input files, take all of them."
 
 # set of toolchain prebuilts we need to package
-TOOLCHAINS=$(get_toolchain_name_list_for_arch arm)
-OPTION_TOOLCHAINS=$TOOLCHAINS
+OPTION_TOOLCHAINS=
 register_var_option "--toolchains=<list>" OPTION_TOOLCHAINS "Specify list of toolchains."
 
 # set of platforms to package (all by default)
@@ -80,8 +79,11 @@ register_var_option "--out-dir=<path>" OPTION_OUT_DIR "Specify output package di
 DEVELOPMENT_ROOT=`dirname $ANDROID_NDK_ROOT`/development/ndk
 register_var_option "--development-root=<path>" DEVELOPMENT_ROOT "Specify platforms/samples directory"
 
+GCC_VERSION_LIST="default" # it's arch defined by default so use default keyword
+register_var_option "--gcc-version-list=<vers>" GCC_VERSION_LIST "List of GCC release versions"
+
 LLVM_VERSION_LIST=$DEFAULT_LLVM_VERSION_LIST
-register_var_option "--llvm=<versions>" LLVM_VERSION_LIST "List of LLVM release versions"
+register_var_option "--llvm-version-list=<versions>" LLVM_VERSION_LIST "List of LLVM release versions"
 
 register_try64_option
 
@@ -130,32 +132,6 @@ if [ ! -z "$UNKNOWN_ARCH" ]; then
     ARCHS=$(filter_out "$UNKNOWN_ARCH" "$ARCHS")
 fi
 
-TRY_x86=
-TRY_mips=
-TRY_arm64=
-TRY_x86_64=
-TRY_mips64=
-echo "$ARCHS" | tr ' ' '\n' | grep -q x86
-if [ $? = 0 ] ; then
-    TRY_x86=yes
-fi
-echo "$ARCHS" | tr ' ' '\n' | grep -q mips
-if [ $? = 0 ] ; then
-    TRY_mips=yes
-fi
-echo "$ARCHS" | tr ' ' '\n' | grep -q arm64
-if [ $? = 0 ] ; then
-    TRY_arm64=yes
-fi
-echo "$ARCHS" | tr ' ' '\n' | grep -q x86_64
-if [ $? = 0 ] ; then
-    TRY_x86_64=yes
-fi
-echo "$ARCHS" | tr ' ' '\n' | grep -q mips64
-if [ $? = 0 ] ; then
-    TRY_mips64=yes
-fi
-
 # Compute ABIS from ARCHS
 ABIS=
 for ARCH in $ARCHS; do
@@ -181,22 +157,25 @@ LLVM_VERSION_LIST=$(commas_to_spaces $LLVM_VERSION_LIST)
 if [ "$OPTION_TOOLCHAINS" != "$TOOLCHAINS" ]; then
     TOOLCHAINS=$(commas_to_spaces $OPTION_TOOLCHAINS)
 else
-    if [ "$TRY_x86" = "yes" ]; then
-        TOOLCHAINS=$TOOLCHAINS" "$(get_toolchain_name_list_for_arch x86)
-    fi
-    if [ "$TRY_mips" = "yes" ]; then
-        TOOLCHAINS=$TOOLCHAINS" "$(get_toolchain_name_list_for_arch mips)
-    fi
-    if [ "$TRY_arm64" = "yes" ]; then
-        TOOLCHAINS=$TOOLCHAINS" "$(get_toolchain_name_list_for_arch arm64)
-    fi
-    if [ "$TRY_x86_64" = "yes" ]; then
-        TOOLCHAINS=$TOOLCHAINS" "$(get_toolchain_name_list_for_arch x86_64)
-    fi
-    if [ "$TRY_mips64" = "yes" ]; then
-        TOOLCHAINS=$TOOLCHAINS" "$(get_toolchain_name_list_for_arch mips64)
-    fi
+    for ARCH in $ARCHS; do
+       case $ARCH in
+           arm|arm64|x86|x86_64|mips|mips64) TOOLCHAINS=$TOOLCHAINS" "$(get_toolchain_name_list_for_arch $ARCH) ;;
+           *) echo "ERROR: Unknown arch to package: $ARCH"; exit 1 ;;
+       esac
+    done
     TOOLCHAINS=$(commas_to_spaces $TOOLCHAINS)
+fi
+
+if [ "$GCC_VERSION_LIST" != "default" ]; then
+   TOOLCHAIN_NAMES=
+   for VERSION in $(commas_to_spaces $GCC_VERSION_LIST); do
+      for TOOLCHAIN in $TOOLCHAINS; do
+         if [ $TOOLCHAIN != ${TOOLCHAIN%%$VERSION} ]; then
+            TOOLCHAIN_NAMES="$TOOLCHAIN $TOOLCHAIN_NAMES"
+         fi
+      done
+   done
+   TOOLCHAINS=$TOOLCHAIN_NAMES
 fi
 
 # Check the prebuilt path
@@ -248,7 +227,8 @@ fi
 
 echo "Architectures: $ARCHS"
 echo "CPU ABIs: $ABIS"
-echo "Toolchains: $TOOLCHAINS"
+echo "GCC Toolchains: $TOOLCHAINS"
+echo "LLVM Toolchains: $LLVM_VERSION_LIST"
 echo "Host systems: $SYSTEMS"
 
 
@@ -545,7 +525,9 @@ for SYSTEM in $SYSTEMS; do
         done
 
         # Unpack mclinker
-        unpack_prebuilt ld.mcld-$SYSTEM "$DSTDIR" "$DSTDIR64"
+        if [ -n "$LLVM_VERSION_LIST" ]; then
+            unpack_prebuilt ld.mcld-$SYSTEM "$DSTDIR" "$DSTDIR64"
+        fi
         rm -rf $DSTDIR/toolchains/*l
         rm -rf $DSTDIR64/toolchains/*l
 
