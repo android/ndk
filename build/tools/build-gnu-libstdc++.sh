@@ -231,6 +231,12 @@ build_gnustl_for_abi ()
         #LDFLAGS=$LDFLAGS" -lsupc++"
     fi
 
+    if [ $ARCH == "x86_64" ]; then
+        MULTILIB_FLAGS=  #enable multilib is default. We need m32, m64, mx32.
+    else
+        MULTILIB_FLAGS=--disable-multilib
+    fi
+
     PROJECT="gnustl_$LIBTYPE gcc-$GCC_VERSION $ABI $THUMB"
     echo "$PROJECT: configuring"
     mkdir -p $BUILDDIR && rm -rf $BUILDDIR/* &&
@@ -241,7 +247,7 @@ build_gnustl_for_abi ()
         $LIBTYPE_FLAGS \
         --enable-libstdcxx-time \
         --disable-symvers \
-        --disable-multilib \
+        $MULTILIB_FLAGS \
         --disable-nls \
         --disable-sjlj-exceptions \
         --disable-tls \
@@ -290,6 +296,10 @@ copy_gnustl_libs ()
 
     # Copy the ABI-specific headers
     copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/bits" "$DDIR/libs/$ABI/include/bits"
+    if [ $ARCH = "x86_64" ]; then
+        copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/32/bits" "$DDIR/libs/$ABI/include/32/bits"
+        copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/x32/bits" "$DDIR/libs/$ABI/include/x32/bits"
+    fi
 
     LDIR=lib
     if [ "$ARCH" != "${ARCH%%64*}" ]; then
@@ -347,7 +357,12 @@ if [ -n "$PACKAGE_DIR" ] ; then
                 continue
             fi
             FILES=""
-            for LIB in include/bits libsupc++.a libgnustl_static.a libgnustl_shared.so; do
+            if [ $ABI = "x86_64" ]; then
+                MULTILIB="include/32/bits include/x32/bits"
+            else
+                MULTILIB=
+            fi
+            for LIB in include/bits $MULTILIB libsupc++.a libgnustl_static.a libgnustl_shared.so; do
                 FILES="$FILES $GNUSTL_SUBDIR/$VERSION/libs/$ABI/$LIB"
                 THUMB_FILE="$GNUSTL_SUBDIR/$VERSION/libs/$ABI/thumb/$LIB"
                 if [ -f "$NDK_DIR/$THUMB_FILE" ] ; then
