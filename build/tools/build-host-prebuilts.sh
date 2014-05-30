@@ -55,6 +55,9 @@ register_var_option "--darwin-ssh=<hostname>" DARWIN_SSH "Generate darwin packag
 NO_GEN_PLATFORMS=
 register_var_option "--no-gen-platforms" NO_GEN_PLATFORMS "Don't generate platforms/ directory, use existing one"
 
+GCC_VERSION_LIST=$DEFAULT_GCC_VERSION_LIST
+register_var_option "--gcc-version-list=<vers>" GCC_VERSION_LIST "List of GCC release versions"
+
 LLVM_VERSION_LIST=$DEFAULT_LLVM_VERSION_LIST
 register_var_option "--llvm-version-list=<vers>" LLVM_VERSION_LIST "List of LLVM release versions"
 
@@ -319,6 +322,17 @@ for SYSTEM in $SYSTEMS; do
     # Then the toolchains
     for ARCH in $ARCHS; do
         TOOLCHAIN_NAMES=$(get_toolchain_name_list_for_arch $ARCH)
+        if [ "$GCC_VERSION_LIST" != "$DEFAULT_GCC_VERSION_LIST" ]; then
+           TOOLCHAINS=
+           for VERSION in $GCC_VERSION_LIST; do
+              for TOOLCHAIN in $TOOLCHAIN_NAMES; do
+                 if [ $TOOLCHAIN != ${TOOLCHAIN%%$VERSION} ]; then
+                    TOOLCHAINS="$TOOLCHAIN $TOOLCHAINS"
+                 fi
+              done
+           done
+           TOOLCHAIN_NAMES=$TOOLCHAINS
+        fi
         if [ -z "$TOOLCHAIN_NAMES" ]; then
             echo "ERROR: Invalid architecture name: $ARCH"
             exit 1
