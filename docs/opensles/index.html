@@ -1037,6 +1037,25 @@ variance near zero, and for the handler to not block for unbounded times.
 <p>
 Lower latency audio is for these outputs only: on-device speaker, wired
 headphones, wired headset, and line out.
+<p>
+As of API level 20, lower latency audio input is supported on select
+devices. To take advantage of this feature, first confirm that lower
+latency output is available as described above. The capability for lower
+latency output is a prerequisite for the lower latency input feature.
+Then create an AudioRecorder with the same sample rate and buffer size
+as would be used for output.
+<p>
+For simultaneous input and output, separate buffer queue
+completion handlers are used for each side.  There is no guarantee of
+the relative order of these callbacks, or the synchronization of the
+audio clocks, even when both sides use the same sample rate.
+Your application should buffer the data with proper buffer synchronization.
+<p>
+One consequence of potentially independent audio clocks is the need
+for asynchronous sample rate conversion.  A simple (though not ideal
+for audio quality) technique for asynchronous sample rate conversion
+is to duplicate or drop samples as needed near a zero-crossing point.
+More sophisticated conversions are possible.
 
 <h3>Security and permissions</h3>
 
