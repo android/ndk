@@ -4,7 +4,7 @@
 #include <minitest/minitest.h>
 
 TEST(wchar, wchar_limits) {
-  ASSERT_EQ(4U, sizeof(wchar_t));
+  ASSERT_EQ(sizeof(__WCHAR_TYPE__), sizeof(wchar_t));
   ASSERT_EQ(sizeof(int), sizeof(wint_t));
 #ifdef __arm__
   ASSERT_GT(wchar_t(0), wchar_t(-1));
