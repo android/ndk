@@ -765,6 +765,30 @@ and are subject to change.  An application should not assume that indices
 are persistent across different execution runs, and should not assume that
 indices are shared for different object instances within the same run.
 
+<h3>Floating-point data</h3>
+
+As of API level 20 and above, data can be supplied to an AudioPlayer in
+single-precision floating-point format.
+<p>
+Example code fragment, to be used during the Engine::CreateAudioPlayer process:
+<pre>
+#include &lt;SLES/OpenSLES_Android.h&gt;
+...
+SLAndroidDataFormat_PCM_EX pcm;
+pcm.formatType = SL_ANDROID_DATAFORMAT_PCM_EX;
+pcm.numChannels = 2;
+pcm.sampleRate = SL_SAMPLINGRATE_44_1;
+pcm.bitsPerSample = 32;
+pcm.containerSize = 32;
+pcm.channelMask = SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT;
+pcm.endianness = SL_BYTEORDER_LITTLEENDIAN;
+pcm.representation = SL_ANDROID_PCM_REPRESENTATION_FLOAT;
+...
+SLDataSource audiosrc;
+audiosrc.pLocator = ...
+audiosrc.pFormat = &amp;pcm;
+</pre>
+
 <h2>Programming notes</h2>
 
 These notes supplement the OpenSL ES 1.0.1 specification,
