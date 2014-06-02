@@ -569,6 +569,10 @@ copy_stl_libs () {
         gnustl)
             if [ "$COPY_ADDITIONAL_HEADER" != "no" ]; then
                 copy_directory "$GNUSTL_LIBS/$ABI/include/bits" "$ABI_STL_INCLUDE_TARGET/$DEST_DIR/bits"
+                if [ $ABI = "x86_64" ]; then
+                    copy_directory "$GNUSTL_LIBS/$ABI/include/32/bits" "$ABI_STL_INCLUDE_TARGET/$DEST_DIR/32/bits"
+                    copy_directory "$GNUSTL_LIBS/$ABI/include/x32/bits" "$ABI_STL_INCLUDE_TARGET/$DEST_DIR/x32/bits"
+                fi
             fi
             copy_file_list "$GNUSTL_LIBS/$ABI_SRC_DIR" "$ABI_STL/lib/$DEST_DIR" "libgnustl_shared.so"
             copy_file_list "$GNUSTL_LIBS/$ABI_SRC_DIR" "$ABI_STL/lib/$DEST_DIR" "libsupc++.a"
