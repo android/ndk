@@ -74,32 +74,14 @@ extern "C" {
 #define __need___wchar_t
 #include <stddef.h>
 
-// See http://b.android.com/This is tricky: <stdio.h> indirectly includes <stdint.h>, which will
-// already have defined WCHAR_MIN / WCHAR_MAX in the following cases:
-// - When compiling C sources
-// - When compiling C++ sources AND having __STDC_LIMIT_MACROS defined.
-//
-// The conditional block below is only entered when compiling
-// C++ sources without __STDC_LIMIT_MACROS.
-//
-// The constants here ensure that they match the INT32_MIN / INT32_MAX
-// definitions.
 #ifndef WCHAR_MAX
-#  ifndef __WCHAR_MAX__
-#    error "__WCHAR_MAX__ undefined. Check your toolchain."
-#  endif
-// Clang doesn't define __WCHAR_MIN__, only __WCHAR_MAX__
-#  ifndef __WCHAR_MIN__
-#    if __WCHAR_MAX__ == 0xffffffff
-#      define __WCHAR_MIN__   0U
-#    elif __WCHAR_MAX__ == 0x7fffffff
-#      define __WCHAR_MIN__   0x80000000
-#    else
-#      error "Invalid __WCHAR_MAX__ value. Check your toolchain."
-#    endif
-#  endif  // !__WCHAR_MIN
 #define WCHAR_MAX __WCHAR_MAX__
-#define WCHAR_MIN __WCHAR_MIN__
+/* Clang does not define __WCHAR_MIN__ */
+#if defined(__WCHAR_UNSIGNED__)
+#define WCHAR_MIN L'\0'
+#else
+#define WCHAR_MIN (-(WCHAR_MAX) - 1)
+#endif
 #endif
 
 #define WEOF ((wint_t)(-1))
