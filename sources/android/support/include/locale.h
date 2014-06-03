@@ -28,6 +28,11 @@
 #ifndef NDK_ANDROID_SUPPORT_LOCALE_H
 #define NDK_ANDROID_SUPPORT_LOCALE_H
 
+#if defined(__LP64__)
+#include_next <locale.h>
+
+#else
+
 #define lconv  __libc_lconv
 #define localeconv  __libc_localeconv
 #include_next <locale.h>
@@ -35,11 +40,27 @@
 #undef localeconv
 #include <xlocale.h>
 
+#if !defined(LC_CTYPE)
+/* Define all LC_XXX to itself.  Sounds silly but libc++ expects it's defined, not in enum */
+#define LC_CTYPE           LC_CTYPE
+#define LC_NUMERIC         LC_NUMERIC
+#define LC_TIME            LC_TIME
+#define LC_COLLATE         LC_COLLATE
+#define LC_MONETARY        LC_MONETARY
+#define LC_MESSAGES        LC_MESSAGES
+#define LC_ALL             LC_ALL
+#define LC_PAPER           LC_PAPER
+#define LC_NAME            LC_NAME
+#define LC_ADDRESS         LC_ADDRESS
+#define LC_TELEPHONE       LC_TELEPHONE
+#define LC_MEASUREMENT     LC_MEASUREMENT
+#define LC_IDENTIFICATION  LC_IDENTIFICATION
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#ifndef LC_ALL_MASK
 #define LC_CTYPE_MASK  (1 << LC_CTYPE)
 #define LC_NUMERIC_MASK (1 << LC_NUMERIC)
 #define LC_TIME_MASK (1 << LC_TIME)
@@ -53,6 +74,7 @@ extern "C" {
 #define LC_MEASUREMENT_MASK (1 << LC_MEASUREMENT)
 #define LC_IDENTIFICATION_MASK (1 << LC_IDENTIFICATION)
 
+#undef LC_ALL_MASK
 #define LC_ALL_MASK (LC_CTYPE_MASK \
                      | LC_NUMERIC_MASK \
                      | LC_TIME_MASK \
@@ -66,7 +88,6 @@ extern "C" {
                      | LC_MEASUREMENT_MASK \
                      | LC_IDENTIFICATION_MASK \
                      )
-#endif
 
 extern locale_t newlocale(int, const char*, locale_t);
 extern locale_t uselocale(locale_t);
@@ -114,5 +135,7 @@ const int __ctype_c_mask_table_size = 256;
 #ifdef __cplusplus
 }  // extern "C"
 #endif
+
+#endif // !__LP64__
 
 #endif  // NDK_ANDROID_SUPPORT_LOCALE_H

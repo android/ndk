@@ -28,8 +28,10 @@
 #ifndef NDK_ANDROID_SUPPORT_STRING_H
 #define NDK_ANDROID_SUPPORT_STRING_H
 
+// __LP64__
+
 #include_next <string.h>
-#include <monetary.h>
+#include <xlocale.h>
 
 #ifdef __cplusplus
 extern "C" {
