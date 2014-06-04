@@ -312,6 +312,17 @@ copy_gnustl_libs ()
     copy_file_list "$SDIR/$LDIR" "$DDIR/libs/$ABI" libsupc++.a libgnustl_shared.so
     # Note: we need to rename libgnustl_shared.a to libgnustl_static.a
     cp "$SDIR/$LDIR/libgnustl_shared.a" "$DDIR/libs/$ABI/libgnustl_static.a"
+    if [ $ARCH = "x86_64" ]; then
+       # for multilib we copy full set. Keep native libs in $ABI dir for compatibility.
+       # TODO: remove it in $ABI top directory
+       copy_file_list "$SDIR/lib" "$DDIR/libs/$ABI/lib" libsupc++.a libgnustl_shared.so
+       copy_file_list "$SDIR/libx32" "$DDIR/libs/$ABI/libx32" libsupc++.a libgnustl_shared.so
+       copy_file_list "$SDIR/lib64" "$DDIR/libs/$ABI/lib64" libsupc++.a libgnustl_shared.so
+       # Note: we need to rename libgnustl_shared.a to libgnustl_static.a
+       cp "$SDIR/lib/libgnustl_shared.a" "$DDIR/libs/$ABI/lib/libgnustl_static.a"
+       cp "$SDIR/libx32/libgnustl_shared.a" "$DDIR/libs/$ABI/libx32/libgnustl_static.a"
+       cp "$SDIR/lib64/libgnustl_shared.a" "$DDIR/libs/$ABI/lib64/libgnustl_static.a"
+    fi
     if [ -d "$SDIR/thumb" ] ; then
         copy_file_list "$SDIR/thumb/$LDIR" "$DDIR/libs/$ABI/thumb" libsupc++.a libgnustl_shared.so
         cp "$SDIR/thumb/$LDIR/libgnustl_shared.a" "$DDIR/libs/$ABI/thumb/libgnustl_static.a"
@@ -358,7 +369,10 @@ if [ -n "$PACKAGE_DIR" ] ; then
             fi
             FILES=""
             if [ $ABI = "x86_64" ]; then
-                MULTILIB="include/32/bits include/x32/bits"
+                MULTILIB="include/32/bits include/x32/bits
+                 lib/libsupc++.a lib/libgnustl_static.a lib/libgnustl_shared.so
+                 libx32/libsupc++.a libx32/libgnustl_static.a libx32/libgnustl_shared.so
+                 lib64/libsupc++.a lib64/libgnustl_static.a lib64/libgnustl_shared.so"
             else
                 MULTILIB=
             fi

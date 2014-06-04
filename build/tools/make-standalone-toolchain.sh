@@ -547,14 +547,16 @@ copy_stl_common_headers () {
 }
 
 # $1: Source ABI (e.g. 'armeabi')
-# $2: Optional "yes" (default) or "no" about whether to copy additional header (eg. include/bits)
-# $3: Optional destination directory, default to empty (e.g. "", "thumb", "armv7-a/thumb")
-# $4: Optional source directory, default to empty (e.g. "", "thumb", "armv7-a/thumb")
+# #2  Optional destination path of additional header to copy (eg. include/bits), default to empty
+# $3: Optional source path of additional additional header to copy, default to empty
+# $4: Optional destination directory, default to empty (e.g. "", "thumb", "armv7-a/thumb")
+# $5: Optional source directory, default to empty (e.g. "", "thumb", "armv7-a/thumb")
 copy_stl_libs () {
     local ABI=$1
-    local COPY_ADDITIONAL_HEADER=$2
-    local DEST_DIR=$3
-    local SRC_DIR=$4
+    local HEADER_DST=$2
+    local HEADER_SRC=$3
+    local DEST_DIR=$4
+    local SRC_DIR=$5
     local ABI_SRC_DIR=$ABI
 
     if [ -n "$SRC_DIR" ]; then
@@ -567,12 +569,8 @@ copy_stl_libs () {
 
     case $STL in
         gnustl)
-            if [ "$COPY_ADDITIONAL_HEADER" != "no" ]; then
-                copy_directory "$GNUSTL_LIBS/$ABI/include/bits" "$ABI_STL_INCLUDE_TARGET/$DEST_DIR/bits"
-                if [ $ABI = "x86_64" ]; then
-                    copy_directory "$GNUSTL_LIBS/$ABI/include/32/bits" "$ABI_STL_INCLUDE_TARGET/$DEST_DIR/32/bits"
-                    copy_directory "$GNUSTL_LIBS/$ABI/include/x32/bits" "$ABI_STL_INCLUDE_TARGET/$DEST_DIR/x32/bits"
-                fi
+            if [ "$HEADER_SRC" != "" ]; then
+                copy_directory "$GNUSTL_LIBS/$ABI/include/$HEADER_SRC" "$ABI_STL_INCLUDE_TARGET/$HEADER_DST"
             fi
             copy_file_list "$GNUSTL_LIBS/$ABI_SRC_DIR" "$ABI_STL/lib/$DEST_DIR" "libgnustl_shared.so"
             copy_file_list "$GNUSTL_LIBS/$ABI_SRC_DIR" "$ABI_STL/lib/$DEST_DIR" "libsupc++.a"
@@ -615,19 +613,24 @@ copy_stl_libs_for_abi () {
 
     case $ABI in
         armeabi)
-            copy_stl_libs armeabi
-            copy_stl_libs armeabi          "no"  "/thumb"
+            copy_stl_libs armeabi          "bits"          "bits"
+            copy_stl_libs armeabi          ""              ""              "/thumb"
             ;;
         armeabi-v7a)
-            copy_stl_libs armeabi-v7a      "yes" "armv7-a"
-            copy_stl_libs armeabi-v7a      "no"  "armv7-a/thumb"
+            copy_stl_libs armeabi-v7a      "armv7-a/bits"  "bits"          "armv7-a"
+            copy_stl_libs armeabi-v7a      ""              ""              "armv7-a/thumb"
             ;;
         armeabi-v7a-hard)
-            copy_stl_libs armeabi-v7a-hard "no"  "armv7-a/hard" "."
-            copy_stl_libs armeabi-v7a-hard "no"  "armv7-a/thumb/hard" "thumb"
+            copy_stl_libs armeabi-v7a-hard ""              ""              "armv7-a/hard"       "."
+            copy_stl_libs armeabi-v7a-hard ""              ""              "armv7-a/thumb/hard" "thumb"
+            ;;
+        x86_64)
+            copy_stl_libs x86_64           "32/bits"       "32/bits"       ""                   "lib"
+            copy_stl_libs x86_64           "bits"          "bits"          "../lib64"           "lib64"
+            copy_stl_libs x86_64           "x32/bits"      "x32/bits"      "../libx32"          "libx32"
             ;;
         *)
-            copy_stl_libs "$ABI"
+            copy_stl_libs "$ABI"           "bits"          "bits"
             ;;
     esac
 }
