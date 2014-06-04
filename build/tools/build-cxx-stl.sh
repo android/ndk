@@ -253,7 +253,11 @@ libcxx/src/typeinfo.cpp \
 libcxx/src/utility.cpp \
 libcxx/src/valarray.cpp \
 libcxx/src/support/android/locale_android.cpp \
-../../android/support/src/locale_support.c \
+"
+
+# android/support files for libc++
+SUPPORT32_SOURCES=\
+"../../android/support/src/locale_support.c \
 ../../android/support/src/math_support.c \
 ../../android/support/src/stdlib_support.c \
 ../../android/support/src/wchar_support.c \
@@ -374,6 +378,36 @@ libcxx/src/support/android/locale_android.cpp \
 ../../android/support/src/musl-stdio/vprintf.c \
 ../../android/support/src/musl-stdio/vsprintf.c \
 "
+
+# android/support files for libc++
+SUPPORT64_SOURCES=\
+"../../android/support/src/locale_support.c \
+../../android/support/src/musl-locale/catclose.c \
+../../android/support/src/musl-locale/catgets.c \
+../../android/support/src/musl-locale/catopen.c \
+../../android/support/src/musl-locale/isdigit_l.c \
+../../android/support/src/musl-locale/iswalpha_l.c \
+../../android/support/src/musl-locale/iswblank_l.c \
+../../android/support/src/musl-locale/iswcntrl_l.c \
+../../android/support/src/musl-locale/iswdigit_l.c \
+../../android/support/src/musl-locale/iswlower_l.c \
+../../android/support/src/musl-locale/iswprint_l.c \
+../../android/support/src/musl-locale/iswpunct_l.c \
+../../android/support/src/musl-locale/iswspace_l.c \
+../../android/support/src/musl-locale/iswupper_l.c \
+../../android/support/src/musl-locale/iswxdigit_l.c \
+../../android/support/src/musl-locale/isxdigit_l.c \
+../../android/support/src/musl-locale/strcoll_l.c \
+../../android/support/src/musl-locale/strftime_l.c \
+../../android/support/src/musl-locale/strxfrm_l.c \
+../../android/support/src/musl-locale/tolower_l.c \
+../../android/support/src/musl-locale/toupper_l.c \
+../../android/support/src/musl-locale/towlower_l.c \
+../../android/support/src/musl-locale/towupper_l.c \
+../../android/support/src/musl-locale/wcscoll_l.c \
+../../android/support/src/musl-locale/wcsxfrm_l.c \
+"
+
 # If the --no-makefile flag is not used, we're going to put all build
 # commands in a temporary Makefile that we will be able to invoke with
 # -j$NUM_JOBS to build stuff in parallel.
@@ -516,6 +550,13 @@ build_stl_libs_for_abi ()
       builder_cxxflags "$DEFAULT_CXXFLAGS $CXX_STL_CXXFLAGS $EXTRA_CXXFLAGS"
       builder_ldflags "$CXX_STL_LDFLAGS $EXTRA_LDFLAGS"
       builder_sources $CXX_STL_SOURCES
+      if [ "$CXX_STL" = "libc++" ]; then
+        if [ "$ABI" = "${ABI%%64*}" ]; then
+          builder_sources $SUPPORT32_SOURCES
+        else
+          builder_sources $SUPPORT64_SOURCES
+        fi
+      fi
     fi
 
     if [ "$TYPE" = "static" ]; then
