@@ -481,10 +481,14 @@ dump "Copying sysroot headers and libraries..."
 # expect the sysroot files to be placed there!
 run copy_directory_nolinks "$SRC_SYSROOT_INC" "$TMPDIR/sysroot/usr/include"
 run copy_directory_nolinks "$SRC_SYSROOT_LIB" "$TMPDIR/sysroot/usr/lib"
-# x86_64 toolchain is built multilib.
-if [ "$ARCH" = "x86_64" ]; then
-run copy_directory_nolinks "$SRC_SYSROOT_LIB/../lib64" "$TMPDIR/sysroot/usr/lib64"
-run copy_directory_nolinks "$SRC_SYSROOT_LIB/../libx32" "$TMPDIR/sysroot/usr/libx32"
+# x86_64 and mips64el toolchain are built multilib.
+if [ "$ARCH" = "x86_64" -o "$ARCH" = "mips64" ]; then
+    run copy_directory_nolinks "$SRC_SYSROOT_LIB/../lib64" "$TMPDIR/sysroot/usr/lib64"
+    if [ "$ARCH" = "x86_64" ]; then
+        run copy_directory_nolinks "$SRC_SYSROOT_LIB/../libx32" "$TMPDIR/sysroot/usr/libx32"
+    else
+        run copy_directory_nolinks "$SRC_SYSROOT_LIB/../lib32" "$TMPDIR/sysroot/usr/lib32"
+    fi
 fi
 if [ "$ARCH_INC" != "$ARCH" ]; then
     cp -a $NDK_DIR/$GABIXX_SUBDIR/libs/$ABI/* $TMPDIR/sysroot/usr/lib
@@ -569,9 +573,13 @@ copy_stl_libs () {
         gnustl)
             if [ "$COPY_ADDITIONAL_HEADER" != "no" ]; then
                 copy_directory "$GNUSTL_LIBS/$ABI/include/bits" "$ABI_STL_INCLUDE_TARGET/$DEST_DIR/bits"
-                if [ $ABI = "x86_64" ]; then
+                if [ "$ABI" = "x86_64" -o "$ABI" = "mips64" ]; then
                     copy_directory "$GNUSTL_LIBS/$ABI/include/32/bits" "$ABI_STL_INCLUDE_TARGET/$DEST_DIR/32/bits"
-                    copy_directory "$GNUSTL_LIBS/$ABI/include/x32/bits" "$ABI_STL_INCLUDE_TARGET/$DEST_DIR/x32/bits"
+                    if [ "$ABI" = "x86_64" ]; then
+                        copy_directory "$GNUSTL_LIBS/$ABI/include/x32/bits" "$ABI_STL_INCLUDE_TARGET/$DEST_DIR/x32/bits"
+                    else
+                        copy_directory "$GNUSTL_LIBS/$ABI/include/n32/bits" "$ABI_STL_INCLUDE_TARGET/$DEST_DIR/n32/bits"
+                    fi
                 fi
             fi
             copy_file_list "$GNUSTL_LIBS/$ABI_SRC_DIR" "$ABI_STL/lib/$DEST_DIR" "libgnustl_shared.so"

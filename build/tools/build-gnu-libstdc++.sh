@@ -200,7 +200,7 @@ build_gnustl_for_abi ()
 
     setup_ccache
 
-    export LDFLAGS="-L$LDIR -lc $EXTRA_FLAGS"
+    export LDFLAGS="-lc $EXTRA_FLAGS"
 
     if [ "$ABI" = "armeabi-v7a" -o "$ABI" = "armeabi-v7a-hard" ]; then
         CXXFLAGS=$CXXFLAGS" -march=armv7-a -mfpu=vfpv3-d16"
@@ -231,8 +231,8 @@ build_gnustl_for_abi ()
         #LDFLAGS=$LDFLAGS" -lsupc++"
     fi
 
-    if [ $ARCH == "x86_64" ]; then
-        MULTILIB_FLAGS=  #enable multilib is default. We need m32, m64, mx32.
+    if [ "$ARCH" == "x86_64" -o "$ARCH" == "mips64" ]; then
+        MULTILIB_FLAGS=  # Both x86_64 and mips64el toolchains are built with multilib options
     else
         MULTILIB_FLAGS=--disable-multilib
     fi
@@ -296,9 +296,13 @@ copy_gnustl_libs ()
 
     # Copy the ABI-specific headers
     copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/bits" "$DDIR/libs/$ABI/include/bits"
-    if [ $ARCH = "x86_64" ]; then
+    if [ "$ARCH" = "x86_64" -o "$ARCH" = "mips64" ]; then
         copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/32/bits" "$DDIR/libs/$ABI/include/32/bits"
-        copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/x32/bits" "$DDIR/libs/$ABI/include/x32/bits"
+        if [ "$ARCH" = "x86_64" ]; then
+            copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/x32/bits" "$DDIR/libs/$ABI/include/x32/bits"
+        else
+            copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/n32/bits" "$DDIR/libs/$ABI/include/n32/bits"
+        fi
     fi
 
     LDIR=lib
@@ -357,11 +361,17 @@ if [ -n "$PACKAGE_DIR" ] ; then
                 continue
             fi
             FILES=""
-            if [ $ABI = "x86_64" ]; then
-                MULTILIB="include/32/bits include/x32/bits"
-            else
-                MULTILIB=
-            fi
+            case "$ABI" in
+                x86_64)
+                    MULTILIB="include/32/bits include/x32/bits"
+                    ;;
+                mips64)
+                    MULTILIB="include/32/bits include/n32/bits"
+                    ;;
+                *)
+                    MULTILIB=
+                    ;;
+            esac
             for LIB in include/bits $MULTILIB libsupc++.a libgnustl_static.a libgnustl_shared.so; do
                 FILES="$FILES $GNUSTL_SUBDIR/$VERSION/libs/$ABI/$LIB"
                 THUMB_FILE="$GNUSTL_SUBDIR/$VERSION/libs/$ABI/thumb/$LIB"
