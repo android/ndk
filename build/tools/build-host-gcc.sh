@@ -1576,6 +1576,9 @@ install_gcc ()
     if [ -d "$TARGET_LIBS_DIR/$TARGET/libx32" ]; then
        run2 copy_directory "$TARGET_LIBS_DIR/$TARGET/libx32" "$INSTALL_DIR/$TARGET/libx32"
     fi
+    if [ -d "$TARGET_LIBS_DIR/$TARGET/lib32" ]; then
+       run2 copy_directory "$TARGET_LIBS_DIR/$TARGET/libx32" "$INSTALL_DIR/$TARGET/lib32"
+    fi
     if [ -d "$TARGET_LIBS_DIR/$TARGET/lib64" ]; then
        run2 copy_directory "$TARGET_LIBS_DIR/$TARGET/lib64" "$INSTALL_DIR/$TARGET/lib64"
     fi
