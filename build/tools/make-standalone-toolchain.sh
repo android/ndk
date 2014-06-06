@@ -186,7 +186,7 @@ if [ -z "$PLATFORM" -a "$ARCH_INC" = "$ARCH" ] ; then
             PLATFORM=android-9
             ;;
         arm64|x86_64|mips64)
-            PLATFORM=android-20
+            PLATFORM=android-$MIN_API64_LEVEL
             ;;
         *)
             dump "ERROR: Unsupported NDK architecture $ARCH!"

@@ -1391,9 +1391,9 @@ get_default_toolchain_binprefix_for_arch ()
 get_default_api_level_for_arch ()
 {
     # For now, always build the toolchain against API level 9 for 32-bit arch
-    # and API level 20 for 64-bit arch
+    # and API level $MIN_API64_LEVEL for 64-bit arch
     case $1 in
-       *64) echo 20 ;;
+       *64) echo $MIN_API64_LEVEL ;;
        *) echo 9 ;;
     esac
 }
@@ -1408,8 +1408,7 @@ get_default_platform_sysroot_for_arch ()
     local LEVEL=$(get_default_api_level_for_arch $ARCH)
 
     if [ "$ARCH" != "${ARCH%%64*}" ] ; then
-        # Hack to use new 64-bit headers only available at, say LEVEL 20
-        LEVEL=20
+        LEVEL=$MIN_API64_LEVEL
     fi
     echo "platforms/android-$LEVEL/arch-$ARCH"
 }
