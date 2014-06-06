@@ -409,6 +409,9 @@ install_host_python ()
         run copy_directory "$SRCDIR/include" "$DSTDIR/include"
         # remove unneeded files
         run rm -rf "$DSTDIR/share/man"
+        run rm -rf "$DSTDIR/share/pretty-printers/libstdcxx/gcc-4.9.*"
+        run rm -rf "$DSTDIR/share/pretty-printers/libstdcxx/gcc-4.9-*"
+        run rm -rf "$DSTDIR/share/pretty-printers/libstdcxx/gcc-[lm]*"
     fi
 }
 

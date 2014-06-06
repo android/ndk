@@ -546,6 +546,8 @@ for SYSTEM in $SYSTEMS; do
 
         # Unpack mclinker
         unpack_prebuilt ld.mcld-$SYSTEM "$DSTDIR" "$DSTDIR64"
+        rm -rf $DSTDIR/toolchains/*l
+        rm -rf $DSTDIR64/toolchains/*l
 
         # Unpack renderscript tools
         unpack_prebuilt renderscript-$SYSTEM "$DSTDIR" "$DSTDIR64"
