@@ -349,6 +349,11 @@ esac
 # Enable linker option -eh-frame-hdr also for static executable
 EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-eh-frame-hdr-for-static"
 
+MAY_FAIL_DUE_TO_RACE_CONDITION=
+if [ "$MINGW" = "yes" -o "$DARWIN" = "yes" ]; then
+   MAY_FAIL_DUE_TO_RACE_CONDITION=yes
+fi
+
 cd $BUILD_OUT && run \
 $BUILD_SRCDIR/configure --target=$ABI_CONFIGURE_TARGET \
                         --enable-initfini-array \
@@ -386,12 +391,13 @@ while [ -n "1" ]; do
     if [ $? = 0 ] ; then
         break
     else
-        if [ "$MINGW" = "yes" -o "$DARWIN" = "yes" ] ; then
+        if [ "$MAY_FAIL_DUE_TO_RACE_CONDITION" = "yes" ] ; then
             # Unfortunately, there is a bug in the GCC build scripts that prevent
             # parallel mingw/darwin canadian cross builds to work properly on some
             # multi-core machines (but not all, sounds like a race condition). Detect
             # this and restart in less parallelism, until -j1 also fail
             NUM_JOBS=$((NUM_JOBS/2))
+            export NUM_JOBS
             if [ $NUM_JOBS -lt 1 ] ; then
                 echo "Error while building mingw/darwin toolchain. See $TMPLOG"
                 exit 1
@@ -411,7 +417,9 @@ dump "Install  : $TOOLCHAIN toolchain binaries."
 cd $BUILD_OUT && run make install
 if [ $? != 0 ] ; then
     # try "-j1", eg.  for aarch64-linux-android-4.8 with libatomic may fail to install due to race condition (missing prefix/lib/../lib64/./libiberty.an)
-    run make install -j1
+    NUM_JOBS=1
+    export NUM_JOBS
+    run make install -j$NUM_JOBS
     if [ $? != 0 ] ; then
         echo "Error while installing toolchain. See $TMPLOG"
         exit 1

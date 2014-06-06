@@ -145,6 +145,7 @@ if [ -z "$OPTION_BUILD_DIR" ]; then
 else
     BUILD_DIR=$OPTION_BUILD_DIR
 fi
+rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 fail_panic "Could not create build directory: $BUILD_DIR"
 
