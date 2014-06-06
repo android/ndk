@@ -676,6 +676,23 @@ for ARCH in $ARCHS; do
             done
         fi
 
+        # There are two set of bionic headers: the original ones haven't been updated since
+        # gingerbread except for bug fixing, and the new ones in android-$MIN_API64_LEVEL
+        # with 64-bit support.  Before the old bionic headers are deprecated/removed, we need
+        # to remove stale old headers when createing platform >= $MIN_API64_LEVEL
+        if [ "$PLATFORM" -eq "$MIN_API64_LEVEL" ]; then
+            log "Removing stale bionic headers in \$DST/$SYSROOT_DST/include"
+            nonbonic_files="android EGL GLES GLES2 GLES3 KHR media OMXAL SLES jni.h thread_db.h zconf.h zlib.h"
+            if [ -d "$DSTDIR/$SYSROOT_DST/include/" ]; then
+                files=$(cd "$DSTDIR/$SYSROOT_DST/include/" && ls)
+                for file in $files; do
+	            if [ "$nonbonic_files" = "${nonbonic_files%%${file}*}" ]; then
+                        rm -rf "$DSTDIR/$SYSROOT_DST/include/$file"
+                    fi
+                done
+            fi
+        fi
+
         # Now copy over all non-arch specific include files
         copy_src_directory $PLATFORM_SRC/include $SYSROOT_DST/include "common system headers"
         copy_src_directory $PLATFORM_SRC/arch-$ARCH/include $SYSROOT_DST/include "$ARCH system headers"
