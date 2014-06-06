@@ -511,7 +511,7 @@ builder_begin_android ()
     fi
     for TAG in $HOST_TAG $HOST_TAG32; do
         BINPREFIX=$NDK_DIR/$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION $TAG)
-        if [ -f ${BINPREFIX}-gcc ]; then
+        if [ -f ${BINPREFIX}gcc ]; then
             break;
         fi
     done
@@ -522,7 +522,6 @@ builder_begin_android ()
     fi
 
     SYSROOT=$NDK_DIR/$(get_default_platform_sysroot_for_arch $ARCH)
-    LDIR=$SYSROOT"/usr/"$(get_default_libdir_for_arch $ARCH)
 
     builder_begin "$BUILDDIR" "$MAKEFILE"
     builder_set_prefix "$ABI "
