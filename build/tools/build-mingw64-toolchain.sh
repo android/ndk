@@ -590,11 +590,11 @@ build_mingw_headers ()
             run make
             log "$PKGNAME: Installing" &&
             run make install -j$JOBS &&
-            run cd $INSTALL_DIR && 
+            run cd $INSTALL_DIR &&
             run ln -s $TARGET_TAG mingw &&
-            run cd $INSTALL_DIR/mingw && 
+            run cd $INSTALL_DIR/mingw &&
             run ln -s lib lib$TARGET_BITS
-            fail_panic "Can't configure mingw-64-headers"
+            fail_panic "Can't install mingw-64-headers"
         ) || exit 1
         touch $STAMP_DIR/$PKGNAME
     fi
