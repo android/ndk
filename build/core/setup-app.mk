@@ -66,7 +66,7 @@ else
         ifeq (1,$(words $(filter-out $(NDK_KNOWN_ARCHS),$(NDK_FOUND_ARCHS))))
             ifneq ($(filter %bcall,$(_unknown_abis)),)
                  _unknown_abis_prefix := $(_unknown_abis:%bcall=%)
-                 NDK_APP_ABI := $(NDK_KNOWN_ABIS:%=$(_unknown_abis_prefix)bc%)
+                 NDK_APP_ABI := $(NDK_KNOWN_ABI32S:%=$(_unknown_abis_prefix)bc%)
             else
                 ifneq ($(filter %all,$(_unknown_abis)),)
                     _unknown_abis_prefix := $(_unknown_abis:%all=%)
