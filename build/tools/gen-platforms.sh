@@ -438,7 +438,7 @@ gen_shared_lib ()
 
     # Copy to our destination now
     local libdir=$(dirname "$DSTFILE")
-    mkdir -p "$libdir" && cp -f $TMPO "$DSTFILE"
+    mkdir -p "$libdir" && rm -f "$DSTFILE" && cp -f $TMPO "$DSTFILE"
     if [ $? != 0 ] ; then
         dump "ERROR: Can't copy shared library for: $LIBNAME"
         dump "target location is: $DSTFILE"
