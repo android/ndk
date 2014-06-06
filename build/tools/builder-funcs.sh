@@ -506,12 +506,16 @@ builder_begin_android ()
         LLVM_VERSION=$DEFAULT_LLVM_VERSION
     fi
     if [ -n "$LLVM_VERSION" ]; then
-        # override GCC_VERSION to pick $DEFAULT_LLVM_GCC_VERSION instead
-        GCC_VERSION=$DEFAULT_LLVM_GCC_VERSION
+        # override GCC_VERSION to pick $DEFAULT_LLVM_GCC??_VERSION instead
+        if [ "$ABI" != "${ABI%%64*}" ]; then
+            GCC_VERSION=$DEFAULT_LLVM_GCC64_VERSION
+        else
+            GCC_VERSION=$DEFAULT_LLVM_GCC32_VERSION
+        fi
     fi
     for TAG in $HOST_TAG $HOST_TAG32; do
         BINPREFIX=$NDK_DIR/$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION $TAG)
-        if [ -f ${BINPREFIX}-gcc ]; then
+        if [ -f ${BINPREFIX}gcc ]; then
             break;
         fi
     done

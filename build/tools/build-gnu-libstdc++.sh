@@ -95,6 +95,9 @@ if [ -z "$OPTION_BUILD_DIR" ]; then
 else
     BUILD_DIR=$OPTION_BUILD_DIR
 fi
+
+HOST_TAG_LIST="$HOST_TAG $HOST_TAG32"
+
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 fail_panic "Could not create build directory: $BUILD_DIR"
@@ -124,9 +127,9 @@ build_gnustl_for_abi ()
     mkdir -p $DSTDIR
 
     ARCH=$(convert_abi_to_arch $ABI)
-    for TAG in $HOST_TAG $HOST_TAG32; do
+    for TAG in $HOST_TAG_LIST; do
         BINPREFIX=$NDK_DIR/$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION $TAG)
-        if [ -f ${BINPREFIX}-gcc ]; then
+        if [ -f ${BINPREFIX}gcc ]; then
             break;
         fi
     done
@@ -316,16 +319,20 @@ copy_gnustl_libs ()
     copy_file_list "$SDIR/$LDIR" "$DDIR/libs/$ABI" libsupc++.a libgnustl_shared.so
     # Note: we need to rename libgnustl_shared.a to libgnustl_static.a
     cp "$SDIR/$LDIR/libgnustl_shared.a" "$DDIR/libs/$ABI/libgnustl_static.a"
-    if [ $ARCH = "x86_64" ]; then
+    if [ "$ARCH" = "x86_64" -o "$ARCH" = "mips64" ]; then
        # for multilib we copy full set. Keep native libs in $ABI dir for compatibility.
        # TODO: remove it in $ABI top directory
        copy_file_list "$SDIR/lib" "$DDIR/libs/$ABI/lib" libsupc++.a libgnustl_shared.so
-       copy_file_list "$SDIR/libx32" "$DDIR/libs/$ABI/libx32" libsupc++.a libgnustl_shared.so
        copy_file_list "$SDIR/lib64" "$DDIR/libs/$ABI/lib64" libsupc++.a libgnustl_shared.so
-       # Note: we need to rename libgnustl_shared.a to libgnustl_static.a
        cp "$SDIR/lib/libgnustl_shared.a" "$DDIR/libs/$ABI/lib/libgnustl_static.a"
-       cp "$SDIR/libx32/libgnustl_shared.a" "$DDIR/libs/$ABI/libx32/libgnustl_static.a"
        cp "$SDIR/lib64/libgnustl_shared.a" "$DDIR/libs/$ABI/lib64/libgnustl_static.a"
+       if [ "$ARCH" = "x86_64" ]; then
+         copy_file_list "$SDIR/libx32" "$DDIR/libs/$ABI/libx32" libsupc++.a libgnustl_shared.so
+         cp "$SDIR/libx32/libgnustl_shared.a" "$DDIR/libs/$ABI/libx32/libgnustl_static.a"
+       else
+         copy_file_list "$SDIR/lib32" "$DDIR/libs/$ABI/lib32" libsupc++.a libgnustl_shared.so
+         cp "$SDIR/lib32/libgnustl_shared.a" "$DDIR/libs/$ABI/lib32/libgnustl_static.a"
+       fi
     fi
     if [ -d "$SDIR/thumb" ] ; then
         copy_file_list "$SDIR/thumb/$LDIR" "$DDIR/libs/$ABI/thumb" libsupc++.a libgnustl_shared.so
@@ -337,15 +344,11 @@ GCC_VERSION_LIST=$(commas_to_spaces $GCC_VERSION_LIST)
 for ABI in $ABIS; do
     ARCH=$(convert_abi_to_arch $ABI)
     DEFAULT_GCC_VERSION=$(get_default_gcc_version_for_arch $ARCH)
-    BUILD_IT=
     for VERSION in $GCC_VERSION_LIST; do
         # Only build for this GCC version if it on or after DEFAULT_GCC_VERSION
-        if [ -z "$BUILD_IT" -a "$VERSION" = "$DEFAULT_GCC_VERSION" ]; then
-	    BUILD_IT=yes
-	fi
-	if [ -z "$BUILD_IT" ]; then
+        if [ "${VERSION%%l}" \< "$DEFAULT_GCC_VERSION" ]; then
             continue
-	fi
+        fi
 
         build_gnustl_for_abi $ABI "$BUILD_DIR" static $VERSION
         build_gnustl_for_abi $ABI "$BUILD_DIR" shared $VERSION
@@ -403,7 +406,7 @@ if [ -n "$PACKAGE_DIR" ] ; then
             PACKAGE="${PACKAGE}.tar.bz2"
             dump "Packaging: $PACKAGE"
             pack_archive "$PACKAGE" "$NDK_DIR" "$FILES"
-            fail_panic "Could not package $ABI STLport binaries!"
+            fail_panic "Could not package $ABI GNU libstdc++ binaries!"
         done
     done
 fi
