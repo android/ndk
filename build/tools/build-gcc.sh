@@ -349,6 +349,15 @@ esac
 # Enable linker option -eh-frame-hdr also for static executable
 EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-eh-frame-hdr-for-static"
 
+CONFIGURE_GCC_VERSION=$GCC_VERSION
+case "$TOOLCHAIN" in
+  *4.9l)
+    CONFIGURE_GCC_VERSION=4.9l
+    ;;
+  *4.8l)
+    CONFIGURE_GCC_VERSION=4.8l
+    ;;
+esac
 cd $BUILD_OUT && run \
 $BUILD_SRCDIR/configure --target=$ABI_CONFIGURE_TARGET \
                         --enable-initfini-array \
@@ -361,7 +370,7 @@ $BUILD_SRCDIR/configure --target=$ABI_CONFIGURE_TARGET \
                         --with-mpfr-version=$MPFR_VERSION \
                         --with-mpc-version=$MPC_VERSION \
                         --with-gmp-version=$GMP_VERSION \
-                        --with-gcc-version=$GCC_VERSION \
+                        --with-gcc-version=$CONFIGURE_GCC_VERSION \
                         --with-gdb-version=$GDB_VERSION \
                         $WITH_PYTHON \
                         --with-gxx-include-dir=$TOOLCHAIN_BUILD_PREFIX/include/c++/$GCC_VERSION \
