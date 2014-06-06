@@ -242,7 +242,7 @@ if [ ! -d "$SRC_SYSROOT_INC" -o ! -d "$SRC_SYSROOT_LIB" ] ; then
 fi
 
 # Check that we have any prebuilts GCC toolchain here
-if [ ! -d "$TOOLCHAIN_PATH/prebuilt" ] ; then
+if [ ! -d "$TOOLCHAIN_PATH/prebuilt" ]; then
     echo "Toolchain is missing prebuilt files: $TOOLCHAIN_NAME"
     echo "You must point to a valid NDK release package!"
     exit 1
@@ -633,11 +633,11 @@ copy_stl_libs_for_abi () {
     case $ABI in
         armeabi)
             copy_stl_libs armeabi
-            copy_stl_libs armeabi          "no"  "/thumb"
+            copy_stl_libs armeabi          "yes"  "/thumb"
             ;;
         armeabi-v7a)
             copy_stl_libs armeabi-v7a      "yes" "armv7-a"
-            copy_stl_libs armeabi-v7a      "no"  "armv7-a/thumb"
+            copy_stl_libs armeabi-v7a      "yes"  "armv7-a/thumb"
             ;;
         armeabi-v7a-hard)
             copy_stl_libs armeabi-v7a-hard "no"  "armv7-a/hard" "."
