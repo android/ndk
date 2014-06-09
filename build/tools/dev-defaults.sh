@@ -47,10 +47,10 @@ DEFAULT_GCC_VERSION_LIST="4.6 4.8 4.9"
 # The default GCC version for 32-bit NDK is the first item in $DEFAULT_GCC_VERSION_LIST
 DEFAULT_GCC32_VERSION=$(echo "$DEFAULT_GCC_VERSION_LIST" | tr ' ' '\n' | head -n 1)
 
-# The default GCC version for 64-bit is the second item in $DEFAULT_GCC_VERSION_LIST
-DEFAULT_GCC64_VERSION=$(echo "$DEFAULT_GCC_VERSION_LIST" | tr ' ' '\n' | head -n 2 | tail -n 1)
+# The default GCC version for 64-bit is the last item in $DEFAULT_GCC_VERSION_LIST
+DEFAULT_GCC64_VERSION=$(echo "$DEFAULT_GCC_VERSION_LIST" | tr ' ' '\n' | tail -n 1)
 
-# The default GCC version for "clang -gcc-toolchain", is also the second item in $DEFAULT_GCC_VERSION_LIST
+# The default GCC version for "clang -gcc-toolchain", is the second item in $DEFAULT_GCC_VERSION_LIST
 DEFAULT_LLVM_GCC_VERSION=$(echo "$DEFAULT_GCC_VERSION_LIST" | tr ' ' '\n' | head -n 2 | tail -n 1)
 
 DEFAULT_BINUTILS_VERSION=2.21
