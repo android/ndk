@@ -80,7 +80,7 @@ set_parameters ()
     if [ -n "$GDB_VERSION" ]; then
         GDBVER=$GDB_VERSION
     else
-        GDBVER=$(get_default_gdb_version_for_gcc $TOOLCHAIN)
+        GDBVER=$(get_default_gdbserver_version_for_gcc $TOOLCHAIN)
     fi
 
     SRC_DIR2="$SRC_DIR/gdb/gdb-$GDBVER/gdb/gdbserver"

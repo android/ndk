@@ -277,7 +277,17 @@ get_default_binutils_version_for_llvm ()
 get_default_gdb_version_for_gcc ()
 {
     case $1 in
-        x86*|aarch64-*|mips64el-*|*-4.9) echo "7.6";;
+        x86*|aarch64-*|mips64el-*|*-4.8|*-4.8l|*-4.9|*-4.9l) echo "7.6";;
         *) echo "$DEFAULT_GDB_VERSION";;
     esac
+}
+
+# Return the gdbserver version to be used by default when building a given
+# version of GCC.
+#
+# $1: toolchain with version numer (e.g. 'arm-linux-androideabi-4.6')
+#
+get_default_gdbserver_version_for_gcc ()
+{
+    echo "7.6"
 }
