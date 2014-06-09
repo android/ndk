@@ -164,9 +164,11 @@ filter_library_symbols ()
                 '^_resolv_cache' '^_dns_getht' '^_thread_atexit' \
                 '^free_malloc_leak_info' 'fake_gmtime_r' 'fake_localtime_r' \
                 '^gAllocationsMutex' '^gHashTable' '^gMallocLeakZygoteChild'
+            # libc.so now absort libstdc++ use to have, thus contains C++ symbols from now on
+            set_symbol_includes '^_Z.*'
             ;;
         libstdc++.so)
-            # This is the only library that is allowed to export C++ symbols for now.
+            # This used to be the only library that is allowed to export C++ symbols for now.
             set_symbol_includes '^_Z.*'
             ;;
         liblog.so)
