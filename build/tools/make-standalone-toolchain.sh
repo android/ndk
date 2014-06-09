@@ -215,6 +215,15 @@ fi
 # Extract architecture from platform name
 parse_toolchain_name $TOOLCHAIN_NAME
 
+case "$TOOLCHAIN_NAME" in
+  *4.9l)
+    GCC_VERSION=4.9l
+    ;;
+  *4.8l)
+    GCC_VERSION=4.8l
+    ;;
+esac
+
 # Check that there are any platform files for it!
 (cd $NDK_DIR/platforms && ls -d */arch-$ARCH_INC >/dev/null 2>&1 )
 if [ $? != 0 ] ; then
