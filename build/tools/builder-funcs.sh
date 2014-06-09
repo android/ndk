@@ -522,7 +522,6 @@ builder_begin_android ()
     fi
 
     SYSROOT=$NDK_DIR/$(get_default_platform_sysroot_for_arch $ARCH)
-    LDIR=$SYSROOT"/usr/"$(get_default_libdir_for_arch $ARCH)
 
     builder_begin "$BUILDDIR" "$MAKEFILE"
     builder_set_prefix "$ABI "

@@ -1093,7 +1093,7 @@ parse_toolchain_name ()
         ABI_CFLAGS_FOR_TARGET="-fexceptions -fpic"
         ABI_CXXFLAGS_FOR_TARGET="-frtti -fpic"
         # Add --disable-fixed-point to disable fixed-point support
-        ABI_CONFIGURE_EXTRA_FLAGS="$ABI_CONFIGURE_EXTRA_FLAGS --disable-fixed-point --disable-libgomp --disable-libatomic"
+        ABI_CONFIGURE_EXTRA_FLAGS="$ABI_CONFIGURE_EXTRA_FLAGS --disable-fixed-point"
         ;;
     * )
         echo "Invalid toolchain specified. Expected (arm-linux-androideabi-*|arm-eabi-*|x86-*|mipsel*|mips64el*)"
@@ -1419,8 +1419,8 @@ get_default_platform_sysroot_for_arch ()
 get_default_libdir_for_arch ()
 {
     case $1 in
-      x86_64) echo "lib64" ;;
-      arm64|mips64) echo "lib" ;; # return "lib" until aarch64 and mips64 compilers are built to look for sysroot/usr/lib64
+      x86_64|mips64) echo "lib64" ;;
+      arm64) echo "lib" ;; # return "lib" until aarch64 is built to look for sysroot/usr/lib64
       *) echo "lib" ;;
     esac
 }
