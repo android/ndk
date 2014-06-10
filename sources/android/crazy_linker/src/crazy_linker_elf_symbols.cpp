@@ -35,7 +35,7 @@ bool ElfSymbols::Init(const ElfView* view) {
       case DT_HASH:
         LOG("  DT_HASH addr=%p\n", dyn_addr);
         {
-          ELF::Addr* data = reinterpret_cast<uintptr_t*>(dyn_addr);
+          ELF::Word* data = reinterpret_cast<ELF::Word*>(dyn_addr);
           hash_bucket_size_ = data[0];
           hash_chain_size_ = data[1];
           hash_bucket_ = data + 2;

@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <elf.h>
-#include <sys/exec_elf.h>
 
 #include "crazy_linker_ashmem.h"
 #include "crazy_linker_debug.h"
