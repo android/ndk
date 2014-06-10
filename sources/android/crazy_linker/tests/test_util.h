@@ -23,6 +23,10 @@
 #include <sys/stat.h>
 #include <sys/uio.h>
 #include <unistd.h>
+#ifndef __STDC_FORMAT_MACROS
+#define __STDC_FORMAT_MACROS // to get PRI and SCN in 32-bit inttypes.h
+#endif
+#include <inttypes.h>
 
 namespace {
 
@@ -341,8 +345,8 @@ inline void CheckRelroMaps(int expected_count) {
         if (!strstr(line, " r--"))
           Panic("Shared RELRO mapping is not readonly!\n");
         // Check that they can't be remapped read-write.
-        unsigned vma_start, vma_end;
-        if (sscanf(line, "%x-%x", &vma_start, &vma_end) != 2)
+        uint64_t vma_start, vma_end;
+        if (sscanf(line, "%" SCNx64 "-%" SCNx64, &vma_start, &vma_end) != 2)
           Panic("Could not parse VM address range!\n");
         int ret = ::mprotect(
             (void*)vma_start, vma_end - vma_start, PROT_READ | PROT_WRITE);

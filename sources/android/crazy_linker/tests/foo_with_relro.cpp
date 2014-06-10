@@ -21,7 +21,7 @@ extern "C" void Foo() {
   for (size_t n = 0; n < sizeof(kStrings) / sizeof(kStrings[0]); ++n) {
     const char* ptr = kStrings[n];
     if (strcmp(ptr, "some example string")) {
-      printf("%s: Bad string at offset=%d\n", __FUNCTION__, n);
+      printf("%s: Bad string at offset=%zu\n", __FUNCTION__, n);
       exit(1);
     }
   }
