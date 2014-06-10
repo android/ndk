@@ -248,6 +248,7 @@ get_default_binutils_version_for_gcc ()
 {
     case $1 in
         mipsel-*-4.4.3|*-4.6) echo "$DEFAULT_BINUTILS_VERSION";;
+        mipsel-*-4.8|mipsel-*-4.9) echo "2.25";;
         *-4.4.3) echo "2.19";;
         x86*-4.7) echo "2.23";;  # Use 2.23 to get x32 support in ld.gold
         *-4.7) echo "2.22";;
