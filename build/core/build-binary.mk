@@ -270,8 +270,8 @@ endif
 
 neon_sources := $(strip $(neon_sources))
 ifdef neon_sources
-  ifeq ($(filter $(TARGET_ARCH_ABI), armeabi-v7a armeabi-v7a-hard),)
-    $(call __ndk_info,NEON support is only possible for armeabi-v7a ABI and its variant armeabi-v7a-hard)
+  ifeq ($(filter $(TARGET_ARCH_ABI), armeabi-v7a armeabi-v7a-hard x86),)
+    $(call __ndk_info,NEON support is only possible for armeabi-v7a ABI, its variant armeabi-v7a-hard and x86 ABI)
     $(call __ndk_info,Please add checks against TARGET_ARCH_ABI in $(LOCAL_MAKEFILE))
     $(call __ndk_error,Aborting)
   endif
