@@ -87,6 +87,11 @@ if [ -z "$ARCH" ]; then
         aarch64-*)
             ARCH=arm64
             ;;
+        x86_64-linux-android-*)
+            ARCH=x86_64
+            TOOLCHAIN_NAME=$(echo "$TOOLCHAIN_NAME" | sed -e 's/-linux-android//')
+            echo "Auto-truncate: --toolchain=$TOOLCHAIN_NAME"
+            ;;
         x86_64-*)
             ARCH=x86_64
             ;;
@@ -167,14 +172,20 @@ if [ "$ARCH_INC" != "$ARCH" ]; then
     fi
 fi
 
-# Detect LLVM version from toolchain name
-if [ -z "$LLVM_VERSION" ]; then
-    LLVM_VERSION_EXTRACT=$(echo "$TOOLCHAIN_NAME" | grep 'clang[0-9]\.[0-9]$' | sed -e 's/.*-clang//')
-    if [ -n "$LLVM_VERSION_EXTRACT" ]; then
-        TOOLCHAIN_NAME=$(get_default_toolchain_name_for_arch $ARCH)
+# Detect LLVM version from toolchain name with *clang*
+LLVM_VERSION_EXTRACT=$(echo "$TOOLCHAIN_NAME" | grep 'clang[0-9]\.[0-9]$' | sed -e 's/.*-clang//')
+if [ -n "$LLVM_VERSION_EXTRACT" ]; then
+    NEW_TOOLCHAIN_NAME=$(get_default_toolchain_name_for_arch $ARCH)
+    if [ -z "$LLVM_VERSION" ]; then
         LLVM_VERSION=$LLVM_VERSION_EXTRACT
-        echo "Auto-config: --toolchain=$TOOLCHAIN_NAME, --llvm-version=$LLVM_VERSION"
+        echo "Auto-config: --toolchain=$NEW_TOOLCHAIN_NAME, --llvm-version=$LLVM_VERSION"
+    else
+        if [ "$LLVM_VERSION" != "$LLVM_VERSION_EXTRACT" ]; then
+            echo "Conflict llvm-version: --llvm-version=$LLVM_VERSION and as implied by --toolchain=$TOOLCHAIN_NAME"
+            exit 1
+	fi
     fi
+    TOOLCHAIN_NAME=$NEW_TOOLCHAIN_NAME
 fi
 
 # Check PLATFORM
