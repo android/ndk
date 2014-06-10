@@ -120,10 +120,17 @@ steady_clock::now() _NOEXCEPT
 steady_clock::time_point
 steady_clock::now() _NOEXCEPT
 {
+#if defined(_POSIX_MONOTONIC_CLOCK) && _POSIX_MONOTONIC_CLOCK > 0
     struct timespec tp;
     if (0 != clock_gettime(CLOCK_MONOTONIC, &tp))
         __throw_system_error(errno, "clock_gettime(CLOCK_MONOTONIC) failed");
     return time_point(seconds(tp.tv_sec) + nanoseconds(tp.tv_nsec));
+#else
+#warning posix doesn't have a monotonic clock on this system \
+         so we're falling back to std::steady_clock (which may \
+         not be monotonic, and therefore may not be conforming)
+    return time_point(system_clock::now().time_since_epoch());
+#endif
 }
 #endif  // __APPLE__
 

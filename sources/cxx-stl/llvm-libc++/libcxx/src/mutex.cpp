@@ -14,6 +14,7 @@
 #include "cassert"
 
 _LIBCPP_BEGIN_NAMESPACE_STD
+#if !_LIBCPP_SINGLE_THREADED
 
 const defer_lock_t  defer_lock = {};
 const try_to_lock_t try_to_lock = {};
@@ -206,21 +207,27 @@ recursive_timed_mutex::unlock() _NOEXCEPT
     }
 }
 
+#endif // !_LIBCPP_SINGLE_THREADED
+
 // If dispatch_once_f ever handles C++ exceptions, and if one can get to it
 // without illegal macros (unexpected macros not beginning with _UpperCase or
 // __lowercase), and if it stops spinning waiting threads, then call_once should
 // call into dispatch_once_f instead of here. Relevant radar this code needs to
 // keep in sync with:  7741191.
 
+#if !_LIBCPP_SINGLE_THREADED
 static pthread_mutex_t mut = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t  cv  = PTHREAD_COND_INITIALIZER;
+#endif
 
 void
 __call_once(volatile unsigned long& flag, void* arg, void(*func)(void*))
 {
+#if !_LIBCPP_SINGLE_THREADED
     pthread_mutex_lock(&mut);
     while (flag == 1)
         pthread_cond_wait(&cv, &mut);
+#endif // !_LIBCPP_SINGLE_THREADED
     if (flag == 0)
     {
 #ifndef _LIBCPP_NO_EXCEPTIONS
@@ -228,26 +235,38 @@ __call_once(volatile unsigned long& flag, void* arg, void(*func)(void*))
         {
 #endif  // _LIBCPP_NO_EXCEPTIONS
             flag = 1;
+#if !_LIBCPP_SINGLE_THREADED
             pthread_mutex_unlock(&mut);
+#endif // !_LIBCPP_SINGLE_THREADED
             func(arg);
+#if !_LIBCPP_SINGLE_THREADED
             pthread_mutex_lock(&mut);
+#endif // !_LIBCPP_SINGLE_THREADED
             flag = ~0ul;
+#if !_LIBCPP_SINGLE_THREADED
             pthread_mutex_unlock(&mut);
             pthread_cond_broadcast(&cv);
+#endif // !_LIBCPP_SINGLE_THREADED
 #ifndef _LIBCPP_NO_EXCEPTIONS
         }
         catch (...)
         {
+#if !_LIBCPP_SINGLE_THREADED
             pthread_mutex_lock(&mut);
+#endif // !_LIBCPP_SINGLE_THREADED
             flag = 0ul;
+#if !_LIBCPP_SINGLE_THREADED
             pthread_mutex_unlock(&mut);
             pthread_cond_broadcast(&cv);
+#endif // !_LIBCPP_SINGLE_THREADED
             throw;
         }
 #endif  // _LIBCPP_NO_EXCEPTIONS
     }
+#if !_LIBCPP_SINGLE_THREADED
     else
         pthread_mutex_unlock(&mut);
+#endif // !_LIBCPP_SINGLE_THREADED
 }
 
 _LIBCPP_END_NAMESPACE_STD

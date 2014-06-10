@@ -27,6 +27,8 @@
 #include <windows.h>
 #endif
 
+#if !_LIBCPP_SINGLE_THREADED
+
 _LIBCPP_BEGIN_NAMESPACE_STD
 
 thread::~thread()
@@ -121,7 +123,11 @@ sleep_for(const chrono::nanoseconds& ns)
             ts.tv_sec = ts_sec_max;
             ts.tv_nsec = giga::num - 1;
         }
+#if defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 199309L
         nanosleep(&ts, 0);
+#else
+#warning sleep_for not yet implemented
+#endif
     }
 }
 
@@ -223,3 +229,6 @@ __thread_struct::__make_ready_at_thread_exit(__assoc_sub_state* __s)
 }
 
 _LIBCPP_END_NAMESPACE_STD
+
+#endif // !_LIBCPP_SINGLE_THREADED
+

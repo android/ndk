@@ -417,7 +417,7 @@ int __sscanf_l(const char *__s, locale_t __l, const char *__format, ...) {
 //  and failbit is set in __err.
 //  Else an iterator pointing to the matching keyword is found.  If more than
 //  one keyword matches, an iterator to the first matching keyword is returned.
-//  If on exit __b == __e, eofbit is set in __err.  If __case_senstive is false,
+//  If on exit __b == __e, eofbit is set in __err.  If __case_sensitive is false,
 //  __ct is used to force to lower case before comparing characters.
 //  Examples:
 //  Keywords:  "a", "abb"
@@ -1180,11 +1180,11 @@ num_get<_CharT, _InputIterator>::do_get(iter_type __b, iter_type __e,
             break;
     }
     // Stage 3
-    __a[sizeof(__a)-1] = 0;
+    __buf.resize(__a_end - __a);
 #ifdef _LIBCPP_LOCALE__L_EXTENSIONS
-    if (sscanf_l(__a, _LIBCPP_GET_C_LOCALE, "%p", &__v) != 1)
+    if (sscanf_l(__buf.c_str(), _LIBCPP_GET_C_LOCALE, "%p", &__v) != 1)
 #else
-    if (__sscanf_l(__a, __cloc(), "%p", &__v) != 1)
+    if (__sscanf_l(__buf.c_str(), __cloc(), "%p", &__v) != 1)
 #endif
         __err = ios_base::failbit;
     // EOF checked
@@ -2038,7 +2038,7 @@ template <class _CharT, class _InputIterator>
 locale::id
 time_get<_CharT, _InputIterator>::id;
 
-// time_get primatives
+// time_get primitives
 
 template <class _CharT, class _InputIterator>
 void
@@ -2259,7 +2259,7 @@ time_get<_CharT, _InputIterator>::__get_percent(iter_type& __b, iter_type __e,
         __err |= ios_base::eofbit;
 }
 
-// time_get end primatives
+// time_get end primitives
 
 template <class _CharT, class _InputIterator>
 _InputIterator
@@ -2799,7 +2799,7 @@ public:
     explicit moneypunct_byname(const char* __nm, size_t __refs = 0)
         : moneypunct<_CharT, _International>(__refs) {init(__nm);}
 
-    _LIBCPP_ALWAYS_INLINE
+    _LIBCPP_ALWAYS_INLINE_EXCEPT_GCC49
     explicit moneypunct_byname(const string& __nm, size_t __refs = 0)
         : moneypunct<_CharT, _International>(__refs) {init(__nm.c_str());}
 

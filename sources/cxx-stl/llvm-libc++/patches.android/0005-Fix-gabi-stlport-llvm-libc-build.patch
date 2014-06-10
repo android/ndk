@@ -1,7 +1,7 @@
-From 7fc79b53cba838b604f45bef6a4471915bef26e7 Mon Sep 17 00:00:00 2001
+From 939e32d87dff0fd949e54599d376bfae8381001a Mon Sep 17 00:00:00 2001
 From: Andrew Hsieh <andrewhsieh@google.com>
 Date: Wed, 12 Feb 2014 20:11:53 +0800
-Subject: [PATCH 5/6] Fix gabi++/stlport/llvm-libc++ build
+Subject: [PATCH 05/12] Fix gabi++/stlport/llvm-libc++ build
 
 ---
  src/exception.cpp | 2 +-
@@ -37,15 +37,15 @@ index 3b7c341..9130ab3 100644
      #endif  // __has_include(<cxxabi.h>)
      #if !defined(_LIBCPPABI_VERSION) && !defined(__GLIBCXX__)
 diff --git a/src/stdexcept.cpp b/src/stdexcept.cpp
-index ec7f666..6a46f34 100644
+index aff4b18..26de25f 100644
 --- a/src/stdexcept.cpp
 +++ b/src/stdexcept.cpp
-@@ -22,7 +22,7 @@
+@@ -18,7 +18,7 @@
+ #endif
  
- #ifdef __APPLE__
- #include <cxxabi.h>
--#elif defined(LIBCXXRT) || __has_include(<cxxabi.h>)
-+#elif defined(LIBCXXRT) || __has_include(<cxxabi.h>) || defined(__ANDROID__)
+ /* For _LIBCPPABI_VERSION */
+-#if __has_include(<cxxabi.h>) || defined(__APPLE_) || defined(LIBCXXRT)
++#if __has_include(<cxxabi.h>) || defined(__APPLE_) || defined(LIBCXXRT) || defined(__ANDROID__)
  #include <cxxabi.h>
  #endif
  
@@ -63,5 +63,5 @@ index b428120..b1bceb5 100644
  #endif
  
 -- 
-1.9.0.rc1.175.g0b1dcb5
+1.9.1.423.g4596e3a
 

@@ -7,17 +7,17 @@
 //
 //===----------------------------------------------------------------------===//
 
-// <shared_mutex>
+// <vector>
+// class vector
+// vector();
 
-// class shared_mutex;
+#include <vector>
 
-// shared_mutex();
-
-#include <shared_mutex>
+struct X
+{
+    std::vector<X> q;
+};
 
 int main()
 {
-#if _LIBCPP_STD_VER > 11
-    std::shared_mutex m;
-#endif
 }

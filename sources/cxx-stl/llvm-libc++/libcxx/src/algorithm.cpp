@@ -48,12 +48,16 @@ template bool __insertion_sort_incomplete<__less<long double>&, long double*>(lo
 
 template unsigned __sort5<__less<long double>&, long double*>(long double*, long double*, long double*, long double*, long double*, __less<long double>&);
 
+#if !_LIBCPP_SINGLE_THREADED
 static pthread_mutex_t __rs_mut = PTHREAD_MUTEX_INITIALIZER;
+#endif
 unsigned __rs_default::__c_ = 0;
 
 __rs_default::__rs_default()
 {
+#if !_LIBCPP_SINGLE_THREADED
     pthread_mutex_lock(&__rs_mut);
+#endif
     __c_ = 1;
 }
 
@@ -64,8 +68,12 @@ __rs_default::__rs_default(const __rs_default&)
 
 __rs_default::~__rs_default()
 {
+#if !_LIBCPP_SINGLE_THREADED
     if (--__c_ == 0)
         pthread_mutex_unlock(&__rs_mut);
+#else
+    --__c_;
+#endif
 }
 
 __rs_default::result_type
