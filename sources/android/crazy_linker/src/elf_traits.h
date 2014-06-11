@@ -67,7 +67,7 @@ struct ELF {
 #define ELF_MACHINE EM_ARM
 #elif defined(__i386__)
 #define ELF_MACHINE EM_386
-#elif defined(__mips__)
+#elif defined(__mips__) && !defined(__LP64__)  // mips64el defines __mips__ too
 #define ELF_MACHINE EM_MIPS
 #elif defined(__aarch64__)
 #define ELF_MACHINE EM_AARCH64
