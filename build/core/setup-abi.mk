@@ -43,6 +43,13 @@ $(foreach _plat,3 4 5 8 9 10 11 12 13 14 15 16 17 18 19,\
 )
 endif
 
+# Warn about potential emulator issues on x86 target and old hosts without ssse3
+ifneq ($(filter %x86,$(TARGET_ARCH_ABI)),)
+ifeq ($(shell cat /proc/cpuinfo | grep ssse3),)
+    $(call __ndk_info,WARNING: There can be x86 target emulation performance issues on old hosts without ssse3 support)
+endif
+endif
+
 # Separate the debug and release objects. This prevents rebuilding
 # everything when you switch between these two modes. For projects
 # with lots of C++ sources, this can be a considerable time saver.
