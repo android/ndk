@@ -349,7 +349,11 @@ typedef __char32_t char32_t;
 #endif
 
 #if __has_feature(underlying_type)
-#  define _LIBCXX_UNDERLYING_TYPE(T) __underlying_type(T)
+#  define _LIBCPP_UNDERLYING_TYPE(T) __underlying_type(T)
+#endif
+
+#if __has_feature(is_literal)
+#  define _LIBCPP_IS_LITERAL(T) __is_literal(T)
 #endif
 
 // Inline namespaces are available in Clang regardless of C++ dialect.
@@ -380,6 +384,11 @@ namespace std {
 #define _ALIGNAS_TYPE(x) __attribute__((__aligned__(__alignof(x))))
 
 #define _LIBCPP_NORETURN __attribute__((noreturn))
+
+#if _GNUC_VER >= 407
+#define _LIBCPP_UNDERLYING_TYPE(T) __underlying_type(T)
+#define _LIBCPP_IS_LITERAL(T) __is_literal_type(T)
+#endif
 
 #if !__EXCEPTIONS
 #define _LIBCPP_NO_EXCEPTIONS
@@ -460,13 +469,14 @@ using namespace _LIBCPP_NAMESPACE __attribute__((__strong__));
 #endif
 
 // Emulation of clang's __has_feature() for GCC on known cases
-#ifndef __has_feature
+#undef __has_feature
+#define __has_feature(__x) __gxx__ ## __x
 
 #define __gxx__cxx_access_control_sfinae          !defined(_LIBCPP_HAS_NO_TRAILING_RETURN) || !defined(_LIBCPP_HAS_NO_ADVANCED_SFINAE) // Also see usage in 7 tests
 #define __gxx__cxx_alias_templates                !defined(_LIBCPP_HAS_NO_TEMPLATE_ALIASES)
 #define __gxx__cxx_address_sanitizer              !defined(_LIBCPP_HAS_NO_ASAN)
 #define __gxx__cxx_alignas                        0  // Not sure, doesn't matter.
-#define __gxx__cxx_atomic                         0  // (_GNUC_VER >= 409) seems to support _Atomic in -std=c11 not -std=c++11 !
+#define __gxx__cxx_atomic                         (_GNUC_VER >= 407)
 #define __gxx__cxx_attributes                     0  // Not sure. Also see usage in libcxx/test/utilities/meta/meta.unary/meta.unary.prop/is_polymorphic.pass.cpp
 #define __gxx__cxx_auto_type                      !defined(_LIBCPP_HAS_NO_AUTO_TYPE)
 #define __gxx__cxx_constexpr                      !defined(_LIBCPP_HAS_NO_CONSTEXPR)
@@ -503,7 +513,7 @@ using namespace _LIBCPP_NAMESPACE __attribute__((__strong__));
 #define __gxx__is_empty                           1  // Not sure.  Also see usage in libcxx/include/type_traits
 #define __gxx__is_enum                            (_GNUC_VER >= 403)  // See usage in libcxx/include/type_traits
 #define __gxx__is_final                           (_GNUC_VER >= 408)  // Not if 4.7 work. 4.6 certainly not.  Also see usage in libcxx/include/unordered_map,tuple,ext/hash_map,map,memory
-#define __gxx__is_literal                         0  // Not supported in GCC 4.8.  Also see usage in libcxx/include/type_traits
+#define __gxx__is_literal                         defined(_LIBCPP_IS_LITERAL)
 #define __gxx__is_pod                             (_GNUC_VER >= 403)  // See usage in libcxx/include/type_traits
 #define __gxx__is_polymorphic                     1  // Not sure.  Also see usage in libcxx/include/type_traits
 #define __gxx__is_standard_layout                 1  // Not sure.  Also see usage in libcxx/include/type_traits
@@ -513,11 +523,8 @@ using namespace _LIBCPP_NAMESPACE __attribute__((__strong__));
 #define __gxx__is_union                           (_GNUC_VER >= 403)  // See usage in libcxx/include/type_traits
 #define __gxx__objc_arc                           defined(_LIBCPP_HAS_OBJC_ARC)
 #define __gxx__objc_arc_weak                      defined(_LIBCPP_HAS_OBJC_ARC_WEAK)
-#define __gxx__underlying_type                    1  // Not sure.  Also see usage in libcxx/include/type_traits
+#define __gxx__underlying_type                    defined(_LIBCPP_UNDERLYING_TYPE)
 
-#define __has_feature(__x) __gxx__ ## __x
-
-#endif // __has_feature
 
 #elif defined(_LIBCPP_MSVC)
 

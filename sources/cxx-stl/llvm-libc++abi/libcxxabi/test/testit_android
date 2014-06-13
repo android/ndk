@@ -1,0 +1,520 @@
+#!/bin/bash
+# //===--------------------------- testit ---------------------------------===//
+# //
+# //                     The LLVM Compiler Infrastructure
+# //
+# // This file is distributed under the University of Illinois Open Source
+# // License. See LICENSE.TXT for details.
+# //
+# //===--------------------------------------------------------------------===//
+
+currentpath=`pwd`
+origpath=$currentpath
+currentdir=`basename $currentpath`
+while [ $currentdir != "test" ]; do
+	if [ $currentdir = "/" ]
+	then
+		echo "current directory must be in or under \"test\"."
+		exit 1
+	fi
+	cd ..
+	currentpath=`pwd`
+	currentdir=`basename $currentpath`
+done
+
+cd ..
+LIBCXX_ROOT=`pwd`/../../llvm-libc++/libcxx
+cd $origpath
+
+VERBOSE=1
+
+run () {
+  if [ "$VERBOSE" -gt 1 ]; then
+    echo "COMMAND: $@"
+  fi
+  case $VERBOSE in
+    0|1)
+      # Hide command output and errors.
+      "$@" >/dev/null 2>&1
+      ;;
+    2)
+      # Only hide command output
+      "$@" >/dev/null
+      ;;
+    *)
+      # Show command output and errors.
+      "$@"
+      ;;
+  esac
+}
+
+run2 () {
+  if [ "$VERBOSE" -gt 2 ]; then
+    echo "COMMAND: $@"
+  fi
+  case $VERBOSE in
+    0|1)
+      # Hide command output and errors.
+      "$@" >/dev/null 2>&1
+      ;;
+    2)
+      # Only hide command output
+      "$@" >/dev/null
+      ;;
+    *)
+      # Show command output and errors.
+      "$@"
+      ;;
+  esac
+}
+
+# The list of valid target abis supported by this script.
+VALID_ABIS="armeabi armeabi-v7a armeabi-v7a-hard x86 mips"
+
+DO_HELP=
+DO_STATIC=
+TARGET_ABI=
+TARGET_ARCH=
+if [ -n "$SHARD_TEST_TOOLCHAIN" ]; then
+  TARGET_PATH=/data/local/tmp/libcxx-${SHARD_TEST_TOOLCHAIN}-$(dirname $PWD | sum | cut -d' ' -f1)-$(basename $PWD)
+else
+  TARGET_PATH=/data/local/tmp/libcxx
+fi
+CXX=
+WITH_COMPILER_RT=
+OPTIMIZE=
+for OPT; do
+  case $OPT in
+    --help|-?)
+      DO_HELP=true
+      ;;
+    --abi=*)
+      TARGET_ABI=${OPT##--abi=}
+      ;;
+    --static)
+      DO_STATIC=true
+      ;;
+    --shared)
+      DO_STATIC=
+      ;;
+    --cxx=*)
+      CXX=${OPT##--cxx=}
+      ;;
+    --verbose)
+      VERBOSE=$(( $VERBOSE + 1 ))
+      ;;
+    --with-compiler-rt)
+      WITH_COMPILER_RT=yes
+      ;;
+    -O*)
+      OPTIMIZE=$OPT
+      ;;
+    -*)
+      echo "Unknown option: $OPT. See --help."
+      exit 1
+      ;;
+    *)
+      echo "This script doesn't take parameters. See --help."
+      exit 1
+      ;;
+  esac
+done
+
+if [ "$DO_HELP" ]; then
+  echo \
+"Usage: $(basename $0) [options]
+
+This script is used to run the libc++ test suite for Android.
+You will need the following things:
+
+  - The prebuild libc++ libraries in your NDK install.
+  - A prebuilt Android toolchain in your path.
+  - The 'adb' tool in your path.
+  - An Android device connected to ADB.
+
+The toolchain and device must match your target ABI. For example, if
+you use --abi=armeabi-v7a, your device must run ARMv7-A Android binaries,
+and arm-linux-androideabi-g++ will be used to compile all tests, unless
+you use --cxx=<command> to override it.
+
+Valid options:
+  --help|-?        Display this message.
+  --abi=<name>     Specify target ABI. Use --abi=list for list.
+  --static         Link against static libc++ library.
+  --cxx=<program>  Override C++ compiler/linker.
+  --verbose        Increase verbosity.
+"
+  exit 0
+fi
+
+# Check target ABI.
+if [ "$TARGET_ABI" = "list" ]; then
+  echo "List of valid target ABIs:"
+  for ABI in $VALID_ABIS; do
+    printf " %s" $ABI
+  done
+  printf "\n"
+  exit 0
+fi
+
+if [ -z "$TARGET_ABI" ]; then
+  echo "ERROR: Please specify a target ABI (--abi=<name>)."
+  exit 1
+fi
+
+FOUND_ABI=
+for ABI in $VALID_ABIS; do
+  if [ "$ABI" = "$TARGET_ABI" ]; then
+    FOUND_ABI=true
+    break
+  fi
+done
+
+if [ -z "$FOUND_ABI" ]; then
+  echo "ERROR: Invalid abi '$TARGET_ABI'. Must be one of: $VALID_ABIS"
+  exit 1
+fi
+
+LIBCXX_LIBS=$(cd $LIBCXX_ROOT/.. && pwd)/libs/$TARGET_ABI
+for LIB in libc++_static.a libc++_shared.so; do
+  if [ ! -f "$LIBCXX_LIBS/$LIB" ]; then
+    echo "ERROR: Missing prebuilt library: $LIBCXX_LIBS/$LIB"
+    echo "Please run: build/tools/build-cxx-stl.sh --stl=libc++"
+    exit 1
+  fi
+done
+
+LIBCOMPILER_RT_LIBS=$(cd "$LIBCXX_ROOT"/../../../android/compiler-rt && pwd)/libs/$TARGET_ABI
+if [ "$WITH_COMPILER_RT" = "yes" ]; then
+  for LIB in libcompiler_rt_static.a libcompiler_rt_shared.so; do
+    if [ ! -f "$LIBCOMPILER_RT_LIBS/$LIB" ]; then
+      echo "ERROR: Missing prebuilt library: $LIBCOMPILER_RT_LIBS/$LIB"
+      echo "Please run: build/tools/build-compiler-rt.sh --ndk-dir=$NDK \
+--src-dir=/tmp/ndk-$USER/src/llvm-3.4/compiler-rt --llvm-version=3.4"
+      exit 1
+    fi
+  done
+fi
+
+# Check or detect C++ toolchain.
+TOOLCHAIN_CFLAGS=
+TOOLCHAIN_LDFLAGS=
+THUMB_MODE="-mthumb"
+LIBM="-lm"
+if [ -z "$TOOLCHAIN_PREFIX" ]; then
+  # Compute
+  case $TARGET_ABI in
+    armeabi)
+      TOOLCHAIN_PREFIX=arm-linux-androideabi
+      TOOLCHAIN_CFLAGS="$THUMB_MODE"
+      TOOLCHAIN_LDFLAGS="$THUMB_MODE"
+      ;;
+    armeabi-v7a)
+      TOOLCHAIN_PREFIX=arm-linux-androideabi
+      TOOLCHAIN_CFLAGS="-march=armv7-a $THUMB_MODE -mfpu=vfpv3-d16"
+      TOOLCHAIN_LDFLAGS="-march=armv7-a $THUMB_MODE -Wl,--fix-cortex-a8"
+      ;;
+    armeabi-v7a-hard)
+      TOOLCHAIN_PREFIX=arm-linux-androideabi
+      TOOLCHAIN_CFLAGS="-march=armv7-a $THUMB_MODE -mfpu=vfpv3-d16 -mhard-float -D_NDK_MATH_NO_SOFTFP=1"
+      TOOLCHAIN_LDFLAGS="-march=armv7-a $THUMB_MODE -Wl,--fix-cortex-a8 -Wl,--no-warn-mismatch"
+      LIBM="-lm_hard"
+      ;;
+    x86)
+      TOOLCHAIN_PREFIX=i686-linux-android
+      ;;
+    mips)
+      TOOLCHAIN_PREFIX=mipsel-linux-android
+      ;;
+    *)
+      echo "ERROR: Unknown ABI '$ABI'"
+      exit 1
+      ;;
+  esac
+  if [ -z "$CXX" ]; then
+      CXX=$TOOLCHAIN_PREFIX-g++
+  fi
+fi
+
+REAL_CXX=$(which "$CXX" 2>/dev/null)
+if [ -z "$REAL_CXX" ]; then
+  echo "ERROR: Missing C++ compiler: $CXX"
+  exit 1
+fi
+CC=$CXX
+
+function version_ge {
+    input_string=$1
+    compare_string=$2
+    input_major=$(echo $input_string | cut -d\. -f 1)
+    input_minor=$(echo $input_string | cut -d\. -f 2)
+    compare_major=$(echo $compare_string | cut -d\. -f 1)
+    compare_minor=$(echo $compare_string | cut -d\. -f 2)
+    true=0
+    false=1
+    if [ "$input_major" -gt "$compare_major" ]; then return $true; fi
+    if [ "$input_major" -lt "$compare_major" ]; then return $false; fi
+    if [ "$input_minor" -ge "$compare_minor" ]; then return $true; fi
+    return $false
+}
+
+if [ -z "$OPTIONS" ]
+then
+  OPTIONS="-std=c++11 -g -funwind-tables $OPTIMIZE"
+  # Note that some tests use assert() to check condition but -O2 defines assert() to nothing,
+  # unless we specify -UNDEBUG to bring assert() back.
+  # But currently adding -UNDEBUG crashes both clang3.4 and clang3.3 for test
+  # like libcxx/test/atomics/atomics.types.generic/address.pass.cpp.  Define -UNDEBUG
+  # only when we are not using clang.  ToDo
+  if [ "$CXX" = "${CXX%%*clang++*}" ] ; then
+    OPTIONS="$OPTIONS -UNDEBUG"
+  fi
+  if [ -n "$LLVM_VERSION" ]; then
+    if version_ge "$LLVM_VERSION" "3.4"; then
+      OPTIONS="${OPTIONS} -mllvm -arm-enable-ehabi-descriptors -mllvm -arm-enable-ehabi"
+    fi
+  fi
+fi
+OPTIONS="$OPTIONS $TOOLCHAIN_CFLAGS $TOOLCHAIN_LDFLAGS"
+OPTIONS="$OPTIONS -I$LIBCXX_ROOT/test/support"
+# llvm-libc++/libcxx/test/lit.cfg line #278 defineds the following for testing only on Linux
+OPTIONS="$OPTIONS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS"
+
+if [ -z "$ADB" ]
+then
+  ADB=adb
+fi
+
+# Run a shell command through ADB, return its status.
+# Variable ERR contains output if $RET is non-zero
+adb_shell () {
+  # We need a temporary file to store the output of our command
+  local CMD_OUT RET
+  ERR=
+  CMD_OUT=$(mktemp /tmp/testit_android-cmdout-XXXXXX)
+  # Run the command, while storing the standard output to CMD_OUT
+  # and appending the exit code as the last line.
+  if [ "$VERBOSE" -gt 2 ]; then
+    echo "COMMAND: $ADB shell $@"
+  fi
+  $ADB shell "$@ ; echo \$?" | sed -e 's![[:cntrl:]]!!g' > $CMD_OUT 2>&1
+  # Get last line in log, which contains the exit code from the command
+  RET=$(sed -e '$!d' $CMD_OUT)
+  # Get output, which corresponds to everything except the last line
+  OUT=$(sed -e '$d' $CMD_OUT)
+  if [ "$RET" != "0" ]; then
+    ERR=$OUT
+  fi
+  if [ "$VERBOSE" -gt 2 ]; then
+    printf "%s" "$OUT"
+  fi
+  rm -f $CMD_OUT
+  return $RET
+}
+
+# Push a given file through ADB.
+# $1: File path
+adb_push () {
+  local FILE=$1
+  local FILE_BASENAME=$(basename "$FILE")
+  run2 $ADB push $FILE $TARGET_PATH/$FILE_BASENAME 2>/dev/null
+}
+
+# Run a given executable through ADB.
+# $1: Executable path
+adb_run () {
+  local EXECUTABLE=$1
+  local EXECUTABLE_BASENAME=$(basename "$EXECUTABLE")
+  run2 $ADB push $EXECUTABLE $TARGET_PATH/$EXECUTABLE_BASENAME 2>/dev/null
+  if [ "$?" != 0 ]; then
+    return 1;
+  fi
+  # Retry up to 10 times if fail is due to "Text file busy"
+  for i in 1 2 3 4 5 6 7 8 9 10; do
+    adb_shell "cd $TARGET_PATH; LD_LIBRARY_PATH=$TARGET_PATH LIBUNWIND_PRINT_UNWINDING=1 ./$EXECUTABLE_BASENAME"
+    if [ "$?" = "0" ]; then
+      return 0
+    fi
+    if ! $(echo $ERR | grep -iq "Text file busy"); then
+      if [ "$i" != "1" ]; then
+        # Dump error message to help diagnostics
+        echo "ERR=$ERR"
+      fi
+      break;
+    fi
+    echo "Text file busy.  Re-try $i"
+    sleep 1
+    run2 $ADB push $EXECUTABLE $TARGET_PATH/$EXECUTABLE_BASENAME 2>/dev/null
+    sleep 2  # try again
+  done
+  return 1
+}
+
+adb_shell "rm -rf $TARGET_PATH"
+adb_shell "mkdir -p $TARGET_PATH"
+
+if [ "$DO_STATIC" ]; then
+  # Statically link to ensure the executable can be run easily through ADB
+  if [ "$WITH_COMPILER_RT" = "yes" ]; then
+    LIBS="-nodefaultlibs -lc++_static -latomic -ldl $LIBM -lc -lcompiler_rt_static"
+  else
+    LIBS="-nodefaultlibs -latomic -ldl $LIBM -lc"
+  fi
+else
+  run2 $ADB push $LIBCXX_LIBS/libc++_shared.so $TARGET_PATH 2>/dev/null
+  if [ $? != 0 ]; then
+    echo "ERROR: Can't push shared libc++ to target device!"
+    exit 1
+  fi
+  if [ "$WITH_COMPILER_RT" = "yes" ]; then
+    run2 $ADB push $LIBCOMPILER_RT_LIBS/libcompiler_rt_shared.so $TARGET_PATH 2>/dev/null
+    if [ $? != 0 ]; then
+      echo "ERROR: Can't push shared libcompiler_rt to target device!"
+      exit 1
+    fi
+    LIBS="-nodefaultlibs -lc++_shared -latomic -ldl $LIBM -lc -lcompiler_rt_shared"
+  else
+    LIBS="-nodefaultlibs -lc++_shared -latomic -ldl $LIBM -lc"
+  fi
+fi
+
+case $TRIPLE in
+  *-*-mingw* | *-*-cygwin* | *-*-win*)
+    TEST_EXE=test.exe
+    ;;
+  *)
+    TEST_EXE=a.out
+    ;;
+esac
+
+TEST_EXE=/tmp/testit_android-$USER-$$-$TEST_EXE
+
+FAIL=0
+PASS=0
+UNIMPLEMENTED=0
+IMPLEMENTED_FAIL=0
+IMPLEMENTED_PASS=0
+
+# Run tests in current directory, recursively
+#
+# Note that file path containing EQ are symlink to the existing tests whose path contain '=',
+# to workaround an issue in ndk-build which doesn't handle LOCAL_SRC_FILES with '='.
+# See tests/device/test-libc++-static-full/jni/Android.mk  We need to filter out path containing
+# EQ such that we don't run same tests twice
+#
+# An alternative is to do "find . -type f", but this doesn't work in NDK windows package
+# where zip turns symlink into physical file it points to.
+#
+# We also sort the test to make the test report comparable to previous test
+#
+
+afunc() {
+	fail=0
+	pass=0
+	if (ls ${TEST_PREFIX}*fail.cpp > /dev/null 2>&1)
+	then
+		for FILE in $(ls ${TEST_PREFIX}*fail.cpp | tr ' ' '\n' | grep -v EQ | sort); do
+			if run $CC $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS -o $TEST_EXE > /dev/null 2>&1
+			then
+				rm $TEST_EXE
+				echo "$FILE should not compile"
+				fail=$(($fail+1))
+			else
+				pass=$(($pass+1))
+			fi
+		done
+	fi
+
+	if (ls ${TEST_PREFIX}*.cpp > /dev/null 2>&1)
+	then
+		if (ls *.dat > /dev/null 2>&1)
+		then
+			adb_shell "rm -f $TARGET_PATH/*.dat"
+			for FILE in $(ls *.dat | tr ' ' '\n' | grep -v EQ | sort); do
+	                      if [ "$VERBOSE" -gt 1 ]; then
+	                          echo "Pushing data: " $FILE
+			      fi
+			      adb_push $FILE
+			      if [ $? != 0 ]; then
+				  echo "Failed to push file $FILE"
+	                      fi
+			done
+		fi
+		for FILE in $(ls ${TEST_PREFIX}*.cpp | tr ' ' '\n' | grep -v EQ | sort); do
+                      if [ "$VERBOSE" -gt 1 ]; then
+                          echo "Running test: " $FILE
+                      fi
+                        COMMAND="( cd $(pwd) && $CC $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS )"
+			if run $CC $OPTIONS $HEADER_INCLUDE $SOURCE_LIB $FILE $LIBS -o $TEST_EXE
+			then
+				if adb_run $TEST_EXE
+				then
+					rm $TEST_EXE
+					pass=$(($pass+1))
+				else
+					echo "`pwd`/$FILE failed at run time"
+					echo "Compile line was: $COMMAND # run-time"
+					fail=$(($fail+1))
+					rm $TEST_EXE
+				fi
+			else
+				echo "`pwd`/$FILE failed to compile"
+				echo "Compile line was: $COMMAND # compile-time"
+				fail=$(($fail+1))
+			fi
+		done
+	fi
+
+	if [ $fail -gt 0 ]
+	then
+		echo "failed $fail tests in `pwd`"
+		IMPLEMENTED_FAIL=$(($IMPLEMENTED_FAIL+1))
+	fi
+	if [ $pass -gt 0 ]
+	then
+		echo "passed $pass tests in `pwd`"
+		if [ $fail -eq 0 ]
+		then
+			IMPLEMENTED_PASS=$((IMPLEMENTED_PASS+1))
+		fi
+	fi
+	if [ $fail -eq 0 -a $pass -eq 0 ]
+	then
+		echo "not implemented:  `pwd`"
+		UNIMPLEMENTED=$(($UNIMPLEMENTED+1))
+	fi
+
+	FAIL=$(($FAIL+$fail))
+	PASS=$(($PASS+$pass))
+
+	for FILE in $(ls | tr ' ' '\n' | grep -v EQ | sort)
+	do
+		if [ -d "$FILE" ];
+		then
+			cd $FILE
+			afunc
+			cd ..
+		fi
+	done
+}
+
+afunc
+
+echo "****************************************************"
+echo "Results for `pwd`:"
+echo "using `$CC --version`"
+echo "with $OPTIONS $HEADER_INCLUDE $SOURCE_LIB"
+echo "----------------------------------------------------"
+echo "sections without tests   : $UNIMPLEMENTED"
+echo "sections with failures   : $IMPLEMENTED_FAIL"
+echo "sections without failures: $IMPLEMENTED_PASS"
+echo "                       +   ----"
+echo "total number of sections : $(($UNIMPLEMENTED+$IMPLEMENTED_FAIL+$IMPLEMENTED_PASS))"
+echo "----------------------------------------------------"
+echo "number of tests failed   : $FAIL"
+echo "number of tests passed   : $PASS"
+echo "                       +   ----"
+echo "total number of tests    : $(($FAIL+$PASS))"
+echo "****************************************************"
+
+exit $FAIL

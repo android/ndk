@@ -27,6 +27,9 @@ GNUSTL_SUBDIR=sources/cxx-stl/gnu-libstdc++
 # root directory.
 LIBCXX_SUBDIR=sources/cxx-stl/llvm-libc++
 
+# Location of the LLVM libc++abi headers, relative to the NDK # root directory.
+LIBCXXABI_SUBDIR=sources/cxx-stl/llvm-libc++abi/libcxxabi
+
 # Location of the libportable sources, relative to the NDK root directory
 LIBPORTABLE_SUBDIR=sources/android/libportable
 
