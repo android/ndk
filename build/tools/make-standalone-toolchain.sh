@@ -242,7 +242,7 @@ if [ ! -d "$SRC_SYSROOT_INC" -o ! -d "$SRC_SYSROOT_LIB" ] ; then
 fi
 
 # Check that we have any prebuilts GCC toolchain here
-if [ ! -d "$TOOLCHAIN_PATH/prebuilt" ] ; then
+if [ ! -d "$TOOLCHAIN_PATH/prebuilt" ]; then
     echo "Toolchain is missing prebuilt files: $TOOLCHAIN_NAME"
     echo "You must point to a valid NDK release package!"
     exit 1
@@ -626,29 +626,37 @@ copy_stl_libs_for_abi () {
 
     case $ABI in
         armeabi)
-            copy_stl_libs armeabi          "bits"          "bits"
-            copy_stl_libs armeabi          ""              ""              "/thumb"
+            copy_stl_libs armeabi          "bits"                "bits"
+            copy_stl_libs armeabi          "thumb/bits"          "bits"       "/thumb"
             ;;
         armeabi-v7a)
-            copy_stl_libs armeabi-v7a      "armv7-a/bits"  "bits"          "armv7-a"
-            copy_stl_libs armeabi-v7a      ""              ""              "armv7-a/thumb"
+            copy_stl_libs armeabi-v7a      "armv7-a/bits"        "bits"       "armv7-a"
+            copy_stl_libs armeabi-v7a      "armv7-a/thumb/bits"  "bits"       "armv7-a/thumb"
             ;;
         armeabi-v7a-hard)
-            copy_stl_libs armeabi-v7a-hard ""              ""              "armv7-a/hard"       "."
-            copy_stl_libs armeabi-v7a-hard ""              ""              "armv7-a/thumb/hard" "thumb"
+            copy_stl_libs armeabi-v7a-hard ""                    ""           "armv7-a/hard"       "."
+            copy_stl_libs armeabi-v7a-hard ""                    ""           "armv7-a/thumb/hard" "thumb"
             ;;
         x86_64)
-            copy_stl_libs x86_64           "32/bits"       "32/bits"       ""                   "lib"
-            copy_stl_libs x86_64           "bits"          "bits"          "../lib64"           "lib64"
-            copy_stl_libs x86_64           "x32/bits"      "x32/bits"      "../libx32"          "libx32"
+            if [ "$STL" = "gnustl" ]; then
+                copy_stl_libs x86_64       "32/bits"             "32/bits"    ""                   "lib"
+                copy_stl_libs x86_64       "bits"                "bits"       "../lib64"           "lib64"
+                copy_stl_libs x86_64       "x32/bits"            "x32/bits"   "../libx32"          "libx32"
+            else
+                copy_stl_libs "$ABI"
+            fi
             ;;
         mips64)
-            copy_stl_libs x86_64           "32/bits"       "32/bits"       ""                   "lib"
-            copy_stl_libs x86_64           "bits"          "bits"          "../lib64"           "lib64"
-            copy_stl_libs x86_64           "n32/bits"      "n32/bits"      "../lib32"           "lib32"
+            if [ "$STL" = "gnustl" ]; then
+                copy_stl_libs mips64       "32/bits"             "32/bits"    ""                   "lib"
+                copy_stl_libs mips64       "bits"                "bits"       "../lib64"           "lib64"
+                copy_stl_libs mips64       "n32/bits"            "n32/bits"   "../lib32"           "lib32"
+            else
+                copy_stl_libs "$ABI"
+            fi
             ;;
         *)
-            copy_stl_libs "$ABI"           "bits"          "bits"
+            copy_stl_libs "$ABI"           "bits"                "bits"
             ;;
     esac
 }

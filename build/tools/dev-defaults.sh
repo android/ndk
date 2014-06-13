@@ -46,14 +46,10 @@ TOOLCHAIN_GIT_DATE=now
 # The space-separated list of all GCC versions we support in this NDK
 DEFAULT_GCC_VERSION_LIST="4.6 4.8 4.9"
 
-# The default GCC version for 32-bit NDK is the first item in $DEFAULT_GCC_VERSION_LIST
-DEFAULT_GCC32_VERSION=$(echo "$DEFAULT_GCC_VERSION_LIST" | tr ' ' '\n' | head -n 1)
-
-# The default GCC version for 64-bit is the last item in $DEFAULT_GCC_VERSION_LIST
-DEFAULT_GCC64_VERSION=$(echo "$DEFAULT_GCC_VERSION_LIST" | tr ' ' '\n' | tail -n 1)
-
-# The default GCC version for "clang -gcc-toolchain", is the second item in $DEFAULT_GCC_VERSION_LIST
-DEFAULT_LLVM_GCC_VERSION=$(echo "$DEFAULT_GCC_VERSION_LIST" | tr ' ' '\n' | head -n 2 | tail -n 1)
+DEFAULT_GCC32_VERSION=4.6
+DEFAULT_GCC64_VERSION=4.9
+DEFAULT_LLVM_GCC32_VERSION=4.8
+DEFAULT_LLVM_GCC64_VERSION=4.9
 
 DEFAULT_BINUTILS_VERSION=2.21
 DEFAULT_GDB_VERSION=7.3.x
@@ -66,7 +62,7 @@ DEFAULT_PPL_VERSION=1.0
 DEFAULT_PYTHON_VERSION=2.7.5
 DEFAULT_PERL_VERSION=5.16.2
 
-RECENT_BINUTILS_VERSION=2.23
+RECENT_BINUTILS_VERSION=2.24
 
 # Default platform to build target binaries against.
 DEFAULT_PLATFORM=android-9
