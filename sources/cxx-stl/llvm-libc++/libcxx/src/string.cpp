@@ -186,7 +186,7 @@ as_float_helper(const string& func, const S& str, size_t* idx, F f )
     const typename S::value_type* const p = str.c_str();
     typename remove_reference<decltype(errno)>::type errno_save = errno;
     errno = 0;
-    V r = f(p, &ptr);
+    V r = static_cast<V>(f(p, &ptr));
     swap(errno, errno_save);
     if (errno_save == ERANGE)
         throw_from_string_out_of_range(func);
@@ -206,7 +206,7 @@ inline
 float
 as_float( const string& func, const string& s, size_t* idx )
 {
-    return as_float_helper<float>( func, s, idx, strtof );
+    return as_float_helper<float>( func, s, idx, strtod );
 }
 
 template<>
@@ -230,7 +230,7 @@ inline
 float
 as_float( const string& func, const wstring& s, size_t* idx )
 {
-    return as_float_helper<float>( func, s, idx, wcstof );
+    return as_float_helper<float>( func, s, idx, wcstod );
 }
 
 template<>

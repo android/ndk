@@ -27,7 +27,6 @@
 //
 // delete.cc: delete operator
 
-#if !defined(LIBCXXABI)
 #include <gabixx_config.h>
 #include <stdlib.h>
 #include <new>
@@ -57,4 +56,3 @@ void operator delete[](void* ptr, const std::nothrow_t &nt) _GABIXX_NOEXCEPT
 {
     ::operator delete(ptr, nt);
 }
-#endif  // !defined(LIBCXXABI)

@@ -7,13 +7,25 @@
 //
 //  
 //  This file implements the storage for the "Caught Exception Stack"
-//  http://www.codesourcery.com/public/cxx-abi/abi-eh.html (section 2.2.2)
+//  http://mentorembedded.github.io/cxx-abi/abi-eh.html (section 2.2.2)
 //  
 //===----------------------------------------------------------------------===//
 
 #include "cxa_exception.hpp"
 
-#ifdef HAS_THREAD_LOCAL
+#include "config.h"
+
+#if LIBCXXABI_SINGLE_THREADED
+
+namespace __cxxabiv1 {
+extern "C" {
+    static __cxa_eh_globals eh_globals;
+    __cxa_eh_globals *__cxa_get_globals() { return &eh_globals; }
+    __cxa_eh_globals *__cxa_get_globals_fast() { return &eh_globals; }
+    }
+}
+
+#elif defined(HAS_THREAD_LOCAL)
 
 namespace __cxxabiv1 {
 

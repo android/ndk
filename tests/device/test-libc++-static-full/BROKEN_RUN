@@ -20,16 +20,6 @@ FAIL: containers___sequences___vector___vector.capacity___shrink_to_fit
       I/DEBUG   (   51):     #00  pc 00035e66  /data/local/tmp/libc++_shared.so (__gabixx::__default_terminate()+13)
       I/DEBUG   (   51):     #01  pc 00035e7d  /data/local/tmp/libc++_shared.so (__gabixx::__terminate(void (*)())+16)
 
-FAIL: input.output___file.streams___fstreams___filebuf.virtuals___seekoff
-  cd ~/libcxx-test/input.output/file.streams/fstreams/filebuf.virtuals
-    nalibcxxg++  seekoff.pass.cpp -lc++_shared -latomic
-      I/DEBUG   (   51):     #00  pc 000645ac  /data/local/tmp/libc++_shared.so (std::__1::codecvt<wchar_t, char, mbstate_t>::do_out(mbstate_t&, wchar_t const*, wchar_t const*, wchar_t const*&, char*, char*, char*&) const+39)
-      $NDK/sources/cxx-stl/llvm-libc++/libcxx/src/locale.cpp:1535
-         codecvt<wchar_t, char, mbstate_t>::do_out(state_type& st,
-             const intern_type* frm, const intern_type* frm_end, const intern_type*& frm_nxt,
-             extern_type* to, extern_type* to_end, extern_type*& to_nxt) const
-         frm = NULL
-
 FAIL: input.output___iostream.format___output.streams___ostream_sentry___destruct
   cd ~/libcxx-test/input.output/iostream.format/output.streams/ostream_sentry
     nalibcxxg++  destruct.pass.cpp -lc++_shared -latomic
@@ -87,11 +77,6 @@ FAIL: localization___locale.categories___category.collate___locale.collate.bynam
   cd ~/libcxx-test/localization/locale.categories/category.collate/locale.collate.byname
     nalibcxxg++  transform.pass.cpp -lc++_shared -latomic
       F/libc    (23516): transform.pass.cpp:33: int main(): assertion "f.transform(x.data(), x.data() + x.size()) != x" failed
-
-FAIL: localization___locale.categories___category.ctype___locale.codecvt___locale.codecvt.members___wchar_t_out
-  cd ~/libcxx-test/localization/locale.categories/category.ctype/locale.codecvt/locale.codecvt.members
-    nalibcxxg++  wchar_t_out.pass.cpp -lc++_shared -latomic
-      I/DEBUG   (   51): Abort message: 'wchar_t_out.pass.cpp:65: int main(): assertion "from_next - from.data() == to.size()-1" failed'
 
 FAIL: localization___locale.categories___category.ctype___locale.ctype.byname___is_1
   cd ~/libcxx-test/localization/locale.categories/category.ctype/locale.ctype.byname
@@ -258,11 +243,6 @@ FAIL: localization___locale.categories___category.numeric___locale.nm.put___face
     nalibcxxg++  put_pointer.pass.cpp -lc++_shared -latomic
       I/DEBUG   (   51): Abort message: 'put_pointer.pass.cpp:41: int main(): assertion "ex == "0x0" || ex == "(nil)"" failed'
 
-FAIL: localization___locale.categories___category.numeric___locale.num.get___facet.num.get.members___get_pointer
-  cd ~/libcxx-test/localization/locale.categories/category.numeric/locale.num.get/facet.num.get.members
-    nalibcxxg++  get_pointer.pass.cpp -lc++_shared -latomic
-      I/DEBUG   (   51): Abort message: 'get_pointer.pass.cpp:59: int main(): assertion "p == (void*)0x73" failed'
-
 FAIL: localization___locale.categories___category.time___locale.time.get.byname___date_order
   cd ~/libcxx-test/localization/locale.categories/category.time/locale.time.get.byname
     nalibcxxg++  date_order.pass.cpp -lc++_shared -latomic
@@ -333,71 +313,6 @@ FAIL: localization___locales___locale___locale.cons___char_pointer
     nalibcxxg++  char_pointer.pass.cpp -lc++_shared -latomic
       I/DEBUG   (   51): Abort message: 'char_pointer.pass.cpp:92: int main(): assertion "false" failed'
 
-FAIL: localization___locales___locale.convenience___conversions___conversions.buffer___seekoff
-  cd ~/libcxx-test/localization/locales/locale.convenience/conversions/conversions.buffer
-    nalibcxxg++  seekoff.pass.cpp -lc++_shared -latomic
-      I/DEBUG   (   51):     #00  pc 00064598  /data/local/tmp/libc++_shared.so (std::__1::codecvt<wchar_t, char, mbstate_t>::do_out(mbstate_t&, wchar_t const*, wchar_t const*, wchar_t const*&, char*, char*, char*&) const+39)
-
-FAIL: re___re.alg___re.alg.match___basic
-  cd ~/libcxx-test/re/re.alg/re.alg.match
-    nalibcxxg++  basic.pass.cpp -lc++_shared -latomic
-      I/DEBUG   (   51): Abort message: 'basic.pass.cpp:622: int main(): assertion "std::regex_match(s, m, std::regex("[a[=M=]z]", std::regex_constants::basic))" failed'
-
-FAIL: re___re.alg___re.alg.match___ecma
-  cd ~/libcxx-test/re/re.alg/re.alg.match
-    nalibcxxg++  ecma.pass.cpp -lc++_shared -latomic
-      I/DEBUG   (   51): Abort message: 'ecma.pass.cpp:583: int main(): assertion "std::regex_match(s, m, std::regex("[a[=M=]z]"))" failed'
-
-FAIL: re___re.alg___re.alg.match___extended
-  cd ~/libcxx-test/re/re.alg/re.alg.match
-    nalibcxxg++  extended.pass.cpp -lc++_shared -latomic
-      I/DEBUG   (   51): Abort message: 'ecma.pass.cpp:583: int main(): assertion "std::regex_match(s, m, std::regex("[a[=M=]z]"))" failed'
-
-FAIL: re___re.alg___re.alg.search___awk -lcompiler_rt_static -latomic
-  cd ~/libcxx-test/re/re.alg/re.alg.search
-    nalibcxxg++  awk.pass.cpp -lcompiler_rt_static -latomic
-      I/DEBUG   (   51): Abort message: 'awk.pass.cpp:692: int main(): assertion "std::regex_search(s, m, std::regex("[a[=M=]z]", std::regex_constants::awk))" failed'
-
-FAIL: re___re.alg___re.alg.search___basic
-  cd ~/libcxx-test/re/re.alg/re.alg.search
-    nalibcxxg++  basic.pass.cpp -lc++_shared -latomic
-      /libc    (16185): basic.pass.cpp:694: int main(): assertion "std::regex_search(s, m, std::regex("[a[=M=]z]", std::regex_
-
-FAIL: re___re.alg___re.alg.search___ecma
-  cd ~/libcxx-test/re/re.alg/re.alg.search
-    nalibcxxg++  ecma.pass.cpp -lc++_shared -latomic
-      I/DEBUG   (   51): Abort message: 'ecma.pass.cpp:673: int main(): assertion "std::regex_search(s, m, std::regex("[a[=M=]z]"))" failed'
-
-FAIL: re___re.alg___re.alg.search___extended
-  cd ~/libcxx-test/re/re.alg/re.alg.search
-    nalibcxxg++  extended.pass.cpp -lc++_shared -latomic
-      I/DEBUG   (   51): Abort message: 'extended.pass.cpp:692: int main(): assertion "std::regex_search(s, m, std::regex("[a[=M=]z]", std::regex_constants::extended))" failed'
-
-FAIL: re___re.traits___isctype
-  cd ~/libcxx-test/re/re.traits
-    nalibcxxg++  isctype.pass.cpp -lc++_shared -latomic
-      I/DEBUG   (   51): Abort message: 'isctype.pass.cpp:29: int main(): assertion "!t.isctype(' ', t.lookup_classname(s.begin(), s.end()))" failed'
-
-FAIL: re___re.traits___lookup_collatename
-  cd ~/libcxx-test/re/re.traits
-    nalibcxxg++  lookup_collatename.pass.cpp -lc++_shared -latomic
-      I/DEBUG   (   51): Abort message: 'lookup_collatename.pass.cpp:29: void test(const char_type *, const std::basic_string<char_type> &) [char_type = char]: assertion "t.lookup_collatename(F(A), F(A + t.length(A))) == expected" failed'
-
-FAIL: re___re.traits___transform
-  cd ~/libcxx-test/re/re.traits
-    nalibcxxg++  transform.pass.cpp -lc++_shared -latomic
-      I/DEBUG   (   51): Abort message: 'transform.pass.cpp:31: int main(): assertion "t.transform(F(a), F(a+1)) < t.transform(F(B), F(B+1))" failed'
-
-FAIL: re___re.traits___transform_primary
-  cd ~/libcxx-test/re/re.traits
-    nalibcxxg++  transform_primary.pass.cpp -lc++_shared -latomic
-      I/DEBUG   (   51): Abort message: 'transform_primary.pass.cpp:34: int main(): assertion "t.transform_primary(F(A), F(A+1)) == t.transform_primary(F(Aacute), F(Aacute+1))" failed'
-
-FAIL: re___re.traits___translate_nocase
-  cd ~/libcxx-test/re/re.traits
-    nalibcxxg++  translate_nocase.pass.cpp -lc++_shared -latomic
-      I/DEBUG   (   51): Abort message: 'translate_nocase.pass.cpp:44: int main(): assertion "t.translate_nocase('\xDA') == '\xFA'" failed'
-
 FAIL: strings___string.conversions___stod
   cd ~/libcxx-test/strings/string.conversions
     nalibcxxg++  stod.pass.cpp -lc++_shared -latomic
@@ -438,6 +353,11 @@ FAIL: strings___string.conversions___stoul
   cd ~/libcxx-test/strings/string.conversions
     nalibcxxg++  stoul.pass.cpp -lc++_shared -latomic
       I/DEBUG   (   51): Abort message: '/tmp/ndk-andrewhsieh/tmp/build-10543/build-libc++/ndk/sources/cxx-stl/llvm-libc++/../../android/support/src/wchar_support.c:379: wcstoull: assertion "0" failed'
+
+FAIL: thread___futures___futures.async___async
+  cd ~/libcxx-test/thread/futures/futures.async
+    nalibcxxclang++  async.pass.cpp -lc++_shared -latomic
+      async.pass.cpp:187: int main(): assertion "false" failed
 
 FAIL: thread___futures___futures.promise___dtor
   cd ~/libcxx-test/thread/futures/futures.promise

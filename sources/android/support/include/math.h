@@ -41,7 +41,7 @@ typedef double      double_t;
 typedef float       float_t;
 
 // Missing long double functions. Note that 'long double' is the same
-// than 'double' on Android, so this will define stubs.
+// as 'double' on 32-bit Android, so this will define stubs.
 #define LLVM_LIBCXX_LONG_DOUBLE_FUNCTIONS
 
 long double     acosl(long double);

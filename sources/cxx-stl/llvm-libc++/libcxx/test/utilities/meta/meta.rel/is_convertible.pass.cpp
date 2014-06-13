@@ -38,6 +38,13 @@ class NonCopyable {
   NonCopyable(NonCopyable&);
 };
 
+class MoveOnly {
+  MoveOnly(const MoveOnly &);
+  MoveOnly& operator =(const MoveOnly&);
+public:
+    MoveOnly(MoveOnly&& x);
+};
+
 int main()
 {
     // void
@@ -177,13 +184,17 @@ int main()
     static_assert(( std::is_convertible<const char*, const char*>::value), "");
 
     // NonCopyable
-    static_assert((std::is_convertible<NonCopyable&, NonCopyable&>::value), "");
-    static_assert((std::is_convertible<NonCopyable&, const NonCopyable&>::value), "");
-    static_assert((std::is_convertible<NonCopyable&, const volatile NonCopyable&>::value), "");
-    static_assert((std::is_convertible<NonCopyable&, volatile NonCopyable&>::value), "");
-    static_assert((std::is_convertible<const NonCopyable&, const NonCopyable&>::value), "");
-    static_assert((std::is_convertible<const NonCopyable&, const volatile NonCopyable&>::value), "");
-    static_assert((std::is_convertible<volatile NonCopyable&, const volatile NonCopyable&>::value), "");
-    static_assert((std::is_convertible<const volatile NonCopyable&, const volatile NonCopyable&>::value), "");
+    static_assert(( std::is_convertible<NonCopyable&, NonCopyable&>::value), "");
+    static_assert(( std::is_convertible<NonCopyable&, const NonCopyable&>::value), "");
+    static_assert(( std::is_convertible<NonCopyable&, const volatile NonCopyable&>::value), "");
+    static_assert(( std::is_convertible<NonCopyable&, volatile NonCopyable&>::value), "");
+    static_assert(( std::is_convertible<const NonCopyable&, const NonCopyable&>::value), "");
+    static_assert(( std::is_convertible<const NonCopyable&, const volatile NonCopyable&>::value), "");
+    static_assert(( std::is_convertible<volatile NonCopyable&, const volatile NonCopyable&>::value), "");
+    static_assert(( std::is_convertible<const volatile NonCopyable&, const volatile NonCopyable&>::value), "");
     static_assert((!std::is_convertible<const NonCopyable&, NonCopyable&>::value), "");
+
+    // MoveOnly
+    static_assert(( std::is_convertible<MoveOnly, MoveOnly>::value), "");
+    static_assert((!std::is_convertible<const MoveOnly, MoveOnly>::value), "");
 }

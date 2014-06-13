@@ -1,4 +1,4 @@
-//===--------------------- catch_const_pointer_nullptr.cpp ----------------------===//
+//===--------------------- catch_const_pointer_nullptr.cpp ----------------===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -53,7 +53,7 @@ void test3()
         throw nullptr;
         assert(false);
     }
-    catch (const A const*)
+    catch (const A* const)
     {
     }
     catch (A*)
@@ -72,7 +72,7 @@ void test4()
     catch (A*)
     {
     }
-    catch (const A const*)
+    catch (const A* const)
     {
         assert(false);
     }

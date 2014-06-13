@@ -38,21 +38,27 @@ int main()
     idx = 0;
     try
     {
+        // 21.5p4 and p6: "call strtod [...] Throws out_of_range if strtod
+        // [...] sets errno to ERANGE".  1.e60 fits in a double, so while this
+        // does return INFINITY it shouldn't throw according to the standard.
         assert(std::stof("1.e60", &idx) == INFINITY);
-        assert(false);
+        assert(idx == 5);
     }
     catch (const std::out_of_range&)
     {
-        assert(idx == 0);
+        assert(false);
     }
     try
     {
+        // 21.5p11 and p13: "call wcstod [...] Throws out_of_range if wcstod
+        // [...] sets errno to ERANGE".  1.e60 fits in a double, so while this
+        // does return INFINITY it shouldn't throw according to the standard.
         assert(std::stof(L"1.e60", &idx) == INFINITY);
-        assert(false);
+        assert(idx == 5);
     }
     catch (const std::out_of_range&)
     {
-        assert(idx == 0);
+        assert(false);
     }
     idx = 0;
     try

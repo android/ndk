@@ -57,22 +57,6 @@ android_support_sources := \
     src/msun/e_log2.c \
     src/msun/e_log2f.c \
     src/msun/s_nan.c \
-    src/musl-multibyte/btowc.c \
-    src/musl-multibyte/internal.c \
-    src/musl-multibyte/mblen.c \
-    src/musl-multibyte/mbrlen.c \
-    src/musl-multibyte/mbrtowc.c \
-    src/musl-multibyte/mbsinit.c \
-    src/musl-multibyte/mbsnrtowcs.c \
-    src/musl-multibyte/mbsrtowcs.c \
-    src/musl-multibyte/mbstowcs.c \
-    src/musl-multibyte/mbtowc.c \
-    src/musl-multibyte/wcrtomb.c \
-    src/musl-multibyte/wcsnrtombs.c \
-    src/musl-multibyte/wcsrtombs.c \
-    src/musl-multibyte/wcstombs.c \
-    src/musl-multibyte/wctob.c \
-    src/musl-multibyte/wctomb.c \
     src/musl-ctype/iswalnum.c \
     src/musl-ctype/iswalpha.c \
     src/musl-ctype/iswblank.c \
@@ -121,31 +105,41 @@ android_support_sources := \
     src/musl-locale/iswxdigit_l.c \
     src/musl-locale/isxdigit_l.c \
     src/musl-locale/langinfo.c \
-    src/musl-locale/nl_langinfo_l.c \
     src/musl-locale/strcasecmp_l.c \
     src/musl-locale/strcoll.c \
-    src/musl-locale/strcoll_l.c \
     src/musl-locale/strerror_l.c \
     src/musl-locale/strfmon.c \
     src/musl-locale/strftime_l.c \
     src/musl-locale/strncasecmp_l.c \
     src/musl-locale/strxfrm.c \
-    src/musl-locale/strxfrm_l.c \
     src/musl-locale/tolower_l.c \
     src/musl-locale/toupper_l.c \
     src/musl-locale/towctrans_l.c \
     src/musl-locale/towlower_l.c \
     src/musl-locale/towupper_l.c \
     src/musl-locale/wcscoll.c \
-    src/musl-locale/wcscoll_l.c \
     src/musl-locale/wcsxfrm.c \
-    src/musl-locale/wcsxfrm_l.c \
     src/musl-locale/wctrans_l.c \
     src/musl-locale/wctype_l.c \
     src/musl-math/frexp.c \
     src/musl-math/frexpf.c \
     src/musl-math/frexpl.c \
-    src/musl-math/s_scalbln.c \
+    src/musl-multibyte/btowc.c \
+    src/musl-multibyte/internal.c \
+    src/musl-multibyte/mblen.c \
+    src/musl-multibyte/mbrlen.c \
+    src/musl-multibyte/mbrtowc.c \
+    src/musl-multibyte/mbsinit.c \
+    src/musl-multibyte/mbsnrtowcs.c \
+    src/musl-multibyte/mbsrtowcs.c \
+    src/musl-multibyte/mbstowcs.c \
+    src/musl-multibyte/mbtowc.c \
+    src/musl-multibyte/wcrtomb.c \
+    src/musl-multibyte/wcsnrtombs.c \
+    src/musl-multibyte/wcsrtombs.c \
+    src/musl-multibyte/wcstombs.c \
+    src/musl-multibyte/wctob.c \
+    src/musl-multibyte/wctomb.c \
     src/musl-stdio/printf.c \
     src/musl-stdio/snprintf.c \
     src/musl-stdio/sprintf.c \
@@ -154,8 +148,23 @@ android_support_sources := \
     src/musl-stdio/swprintf.c \
     src/musl-stdio/vwprintf.c \
     src/musl-stdio/wprintf.c \
+    src/wcstox/floatscan.c \
+    src/wcstox/intscan.c \
+    src/wcstox/shgetc.c \
+    src/wcstox/wcstol.c \
+    src/wcstox/wcstod.c \
 
-endif # 64-/32-bit ABIs
+# Replaces broken implementations in x86 libm.so
+ifeq (x86,$(TARGET_ARCH_ABI))
+android_support_sources += \
+    src/musl-math/scalbln.c \
+    src/musl-math/scalblnf.c \
+    src/musl-math/scalblnl.c \
+    src/musl-math/scalbnl.c \
+
+endif
+
+endif  # 64-/32-bit ABIs
 
 # This is only available as a static library for now.
 include $(CLEAR_VARS)

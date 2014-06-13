@@ -92,7 +92,6 @@ namespace std {
 
 } // namespace std
 
-#if !defined(LIBCXXABI)
 _GABIXX_WEAK
 void* operator new(std::size_t size) throw(std::bad_alloc) {
   void* space;
@@ -131,4 +130,3 @@ void* operator new[](std::size_t size, const std::nothrow_t& no)
   return ::operator new(size, no);
 }
 
-#endif  // !defined(LIBCXXABI)

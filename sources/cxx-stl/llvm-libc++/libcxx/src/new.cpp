@@ -35,7 +35,8 @@
     #endif  // _LIBCPPABI_VERSION
 #endif
 
-#ifndef __GLIBCXX__
+// libc++abi provides operator new and delete as part of the abi layer.
+#if !defined(__GLIBCXX__) && !defined(_LIBCPPABI_VERSION)
 
 // Implement all new and delete operators as weak definitions
 // in this shared library, so that they can be overriden by programs
@@ -145,7 +146,7 @@ operator delete[] (void* ptr, const std::nothrow_t&) _NOEXCEPT
     ::operator delete[](ptr);
 }
 
-#endif // !__GLIBCXX__
+#endif // !defined(__GLIBCXX__) && !defined(_LIBCPPABI_VERSION)
 
 namespace std
 {
