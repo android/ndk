@@ -7,9 +7,11 @@
 //
 //  
 //  This file implements the "Exception Handling APIs"
-//  http://www.codesourcery.com/public/cxx-abi/abi-eh.html
+//  http://mentorembedded.github.io/cxx-abi/abi-eh.html
 //  
 //===----------------------------------------------------------------------===//
+
+#include "config.h"
 
 //  A small, simple heap manager based (loosely) on 
 //  the startup heap manager from FreeBSD, optimized for space.
@@ -23,16 +25,28 @@
 
 namespace {
 
+// When POSIX threads are not available, make the mutex operations a nop
+#if LIBCXXABI_SINGLE_THREADED
+static void * heap_mutex = 0;
+#else
 static pthread_mutex_t heap_mutex = PTHREAD_MUTEX_INITIALIZER;
+#endif
 
 class mutexor {
 public:
+#if LIBCXXABI_SINGLE_THREADED
+    mutexor ( void * ) {}
+    ~mutexor () {}
+#else
     mutexor ( pthread_mutex_t *m ) : mtx_(m) { pthread_mutex_lock ( mtx_ ); }
     ~mutexor () { pthread_mutex_unlock ( mtx_ ); }
+#endif
 private:
     mutexor ( const mutexor &rhs );
     mutexor & operator = ( const mutexor &rhs );
+#if !LIBCXXABI_SINGLE_THREADED
     pthread_mutex_t *mtx_;
+#endif
     };
 
         

@@ -7,17 +7,19 @@
 //
 //  
 //  This file implements the "Exception Handling APIs"
-//  http://www.codesourcery.com/public/cxx-abi/abi-eh.html
+//  http://mentorembedded.github.io/cxx-abi/abi-eh.html
 //  
 //===----------------------------------------------------------------------===//
 
+#include "config.h"
 #include "cxxabi.h"
 
 #include <exception>        // for std::terminate
 #include <cstdlib>          // for malloc, free
 #include <cstring>          // for memset
-#include <pthread.h>
-
+#if !LIBCXXABI_SINGLE_THREADED
+#  include <pthread.h>      // for fallback_malloc.ipp's mutexes
+#endif
 #include "cxa_exception.hpp"
 #include "cxa_handlers.hpp"
 
@@ -232,7 +234,7 @@ __cxa_throw(void* thrown_object, std::type_info* tinfo, void (*dest)(void*))
     globals->uncaughtExceptions += 1;   // Not atomically, since globals are thread-local
 
     exception_header->unwindHeader.exception_cleanup = exception_cleanup_func;
-#if __arm__
+#if __USING_SJLJ_EXCEPTIONS__
     _Unwind_SjLj_RaiseException(&exception_header->unwindHeader);
 #else
     _Unwind_RaiseException(&exception_header->unwindHeader);
@@ -254,11 +256,102 @@ The adjusted pointer is computed by the personality routine during phase 1
 void*
 __cxa_get_exception_ptr(void* unwind_exception) throw()
 {
+#if LIBCXXABI_ARM_EHABI
+    return reinterpret_cast<void*>(
+           static_cast<_Unwind_Control_Block*>(unwind_exception)->barrier_cache.bitpattern[0]);
+#else
     return cxa_exception_from_exception_unwind_exception
            (
                static_cast<_Unwind_Exception*>(unwind_exception)
            )->adjustedPtr;
+#endif
 }
+
+#if LIBCXXABI_ARM_EHABI
+/*
+The routine to be called before the cleanup.  This will save __cxa_exception in
+__cxa_eh_globals, so that __cxa_end_cleanup() can recover later.
+*/
+bool
+__cxa_begin_cleanup(void* unwind_arg) throw ()
+{
+    _Unwind_Exception* unwind_exception = static_cast<_Unwind_Exception*>(unwind_arg);
+    __cxa_eh_globals* globals = __cxa_get_globals();
+    __cxa_exception* exception_header =
+        cxa_exception_from_exception_unwind_exception(unwind_exception);
+
+    if (isOurExceptionClass(unwind_exception))
+    {
+        if (0 == exception_header->propagationCount)
+        {
+            exception_header->nextPropagatingException = globals->propagatingExceptions;
+            globals->propagatingExceptions = exception_header;
+        }
+        ++exception_header->propagationCount;
+    }
+    else
+    {
+        // If the propagatingExceptions stack is not empty, since we can't
+        // chain the foreign exception, terminate it.
+        if (NULL != globals->propagatingExceptions)
+            std::terminate();
+        globals->propagatingExceptions = exception_header;
+    }
+    return true;
+}
+
+/*
+The routine to be called after the cleanup has been performed.  It will get the
+propagating __cxa_exception from __cxa_eh_globals, and continue the stack
+unwinding with _Unwind_Resume.
+
+According to ARM EHABI 8.4.1, __cxa_end_cleanup() should not clobber any
+register, thus we have to write this function in assembly so that we can save
+{r1, r2, r3}.  We don't have to save r0 because it is the return value and the
+first argument to _Unwind_Resume().  In addition, we are saving r4 in order to
+align the stack to 16 bytes, even though it is a callee-save register.
+*/
+__attribute__((used)) static _Unwind_Exception *
+__cxa_end_cleanup_impl()
+{
+    __cxa_eh_globals* globals = __cxa_get_globals();
+    __cxa_exception* exception_header = globals->propagatingExceptions;
+    if (NULL == exception_header)
+    {
+        // It seems that __cxa_begin_cleanup() is not called properly.
+        // We have no choice but terminate the program now.
+        std::terminate();
+    }
+
+    if (isOurExceptionClass(&exception_header->unwindHeader))
+    {
+        --exception_header->propagationCount;
+        if (0 == exception_header->propagationCount)
+        {
+            globals->propagatingExceptions = exception_header->nextPropagatingException;
+            exception_header->nextPropagatingException = NULL;
+        }
+    }
+    else
+    {
+        globals->propagatingExceptions = NULL;
+    }
+    return &exception_header->unwindHeader;
+}
+
+asm (
+    "	.pushsection	.text.__cxa_end_cleanup\n"
+    "	.globl	__cxa_end_cleanup\n"
+    "	.type	__cxa_end_cleanup,%function\n"
+    "__cxa_end_cleanup:\n"
+    "	push	{r1, r2, r3, r4}\n"
+    "	bl	__cxa_end_cleanup_impl\n"
+    "	pop	{r1, r2, r3, r4}\n"
+    "	bl	_Unwind_Resume\n"
+    "	bl	abort\n"
+    "	.popsection"
+);
+#endif  // LIBCXXABI_ARM_EHABI
     
 /*
 This routine can catch foreign or native exceptions.  If native, the exception
@@ -318,7 +411,11 @@ __cxa_begin_catch(void* unwind_arg) throw()
             globals->caughtExceptions = exception_header;
         }
         globals->uncaughtExceptions -= 1;   // Not atomically, since globals are thread-local
+#if LIBCXXABI_ARM_EHABI
+        return reinterpret_cast<void*>(exception_header->unwindHeader.barrier_cache.bitpattern[0]);
+#else
         return exception_header->adjustedPtr;
+#endif
     }
     // Else this is a foreign exception
     // If the caughtExceptions stack is not empty, terminate
@@ -352,6 +449,10 @@ void __cxa_end_catch()
 {
     static_assert(sizeof(__cxa_exception) == sizeof(__cxa_dependent_exception),
                   "sizeof(__cxa_exception) must be equal to sizeof(__cxa_dependent_exception)");
+    static_assert(offsetof(__cxa_exception, referenceCount) == offsetof(__cxa_dependent_exception, primaryException),
+                  "the layout of __cxa_exception must match the layout of __cxa_dependent_exception");
+    static_assert(offsetof(__cxa_exception, handlerCount) == offsetof(__cxa_dependent_exception, handlerCount),
+                  "the layout of __cxa_exception must match the layout of __cxa_dependent_exception");
     __cxa_eh_globals* globals = __cxa_get_globals_fast(); // __cxa_get_globals called in __cxa_begin_catch
     __cxa_exception* exception_header = globals->caughtExceptions;
     // If we've rethrown a foreign exception, then globals->caughtExceptions
@@ -465,7 +566,7 @@ __cxa_rethrow()
         //   nothing
         globals->caughtExceptions = 0;
     }
-#if __arm__
+#if __USING_SJLJ_EXCEPTIONS__
     _Unwind_SjLj_RaiseException(&exception_header->unwindHeader);
 #else
     _Unwind_RaiseException(&exception_header->unwindHeader);
@@ -594,7 +695,7 @@ __cxa_rethrow_primary_exception(void* thrown_object)
         setDependentExceptionClass(&dep_exception_header->unwindHeader);
         __cxa_get_globals()->uncaughtExceptions += 1;
         dep_exception_header->unwindHeader.exception_cleanup = dependent_exception_cleanup;
-#if __arm__
+#if __USING_SJLJ_EXCEPTIONS__
         _Unwind_SjLj_RaiseException(&dep_exception_header->unwindHeader);
 #else
         _Unwind_RaiseException(&dep_exception_header->unwindHeader);

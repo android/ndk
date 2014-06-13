@@ -481,7 +481,7 @@ void test_isinf()
 #error isinf defined
 #endif
     static_assert((std::is_same<decltype(std::isinf((float)0)), bool>::value), "");
-#if !(defined(__ANDROID__) && (__LP64__ || __ANDROID_API__ >= 20))
+#if !(defined(__ANDROID__) && (__LP64__ || __ANDROID_API__ >= 21))
  // bionic isnan(double) returns int.
     static_assert((std::is_same<decltype(std::isinf((double)0)), bool>::value), "");
 #endif

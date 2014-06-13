@@ -175,6 +175,7 @@ class String {
   MINITEST_OPERATOR_LL_(unsigned long long);
   MINITEST_OPERATOR_LL_(float);
   MINITEST_OPERATOR_LL_(double);
+  MINITEST_OPERATOR_LL_(long double);
   MINITEST_OPERATOR_LL_(const void*);
 
 #undef MINITEST_OPERATOR_LL_
@@ -399,10 +400,10 @@ void RegisterTest(const char* test_name,
              __FILE__,                                                         \
              __LINE__,                                                         \
              #expression);                                                     \
-      printf("actual size   : %d (0x%x)\n",                                    \
+      printf("actual size   : %zu (0x%zx)\n",                                  \
              minitest_actual_len,                                              \
              minitest_actual_len);                                             \
-      printf("expected size : %d (0x%x)\n",                                    \
+      printf("expected size : %zu (0x%zx)\n",                                  \
              minitest_expected_len,                                            \
              minitest_expected_len);                                           \
       minitest_testcase->Failure();                                            \
@@ -410,16 +411,18 @@ void RegisterTest(const char* test_name,
       bool minitest_eq =                                                       \
           !memcmp(minitest_expected, minitest_actual, minitest_expected_len);  \
       if (minitest_eq != is_eq) {                                              \
-        printf("%s%s:%s:%d: with expression '%s' of %d bytes\n",               \
+        printf("%s%s:%s:%d: with expression '%s' of %zu bytes\n",              \
                minitest_prefix,                                                \
                minitest_suffix,                                                \
                __FILE__,                                                       \
                __LINE__,                                                       \
                #expression,                                                    \
                minitest_expected_len);                                         \
-        printf("actual   : '%.*s'\n", minitest_expected_len, minitest_actual); \
+        printf("actual   : '%.*s'\n", (int)minitest_expected_len,              \
+                                      minitest_actual);                        \
         printf(                                                                \
-            "expected : '%.*s'\n", minitest_expected_len, minitest_expected);  \
+            "expected : '%.*s'\n", (int)minitest_expected_len,                 \
+                                   minitest_expected);                         \
         minitest_testcase->Failure();                                          \
       }                                                                        \
     }                                                                          \

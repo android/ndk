@@ -27,7 +27,7 @@
 // The current implementation of _LIBCXX_DYNAMIC_FALLBACK requires a
 // printf-like function called syslog:
 // 
-//     void syslog(const char* format, ...);
+//     void syslog(int facility_priority, const char* format, ...);
 // 
 // If you want this functionality but your platform doesn't have syslog,
 // just implement it in terms of fprintf(stderr, ...).
@@ -38,6 +38,18 @@
 #include "abort_message.h"
 #include <string.h>
 #include <sys/syslog.h>
+#endif
+
+// On Windows, typeids are different between DLLs and EXEs, so comparing
+// type_info* will work for typeids from the same compiled file but fail
+// for typeids from a DLL and an executable. Among other things, exceptions
+// are not caught by handlers since can_catch() returns false.
+//
+// Defining _LIBCXX_DYNAMIC_FALLBACK does not help since can_catch() calls 
+// is_equal() with use_strcmp=false so the string names are not compared.
+
+#ifdef _WIN32
+#include <string.h>
 #endif
 
 namespace __cxxabiv1
@@ -62,7 +74,11 @@ inline
 bool
 is_equal(const std::type_info* x, const std::type_info* y, bool)
 {
+#ifndef _WIN32
     return x == y;
+#else
+    return (x == y) || (strcmp(x->name(), y->name()) == 0);
+#endif    
 }
 
 #endif  // _LIBCXX_DYNAMIC_FALLBACK
@@ -285,17 +301,20 @@ __base_class_type_info::has_unambiguous_public_base(__dynamic_cast_info* info,
                                                     void* adjustedPtr,
                                                     int path_below) const
 {
-    ptrdiff_t offset_to_base = __offset_flags >> __offset_shift;
-    if (__offset_flags & __virtual_mask)
+    ptrdiff_t offset_to_base = 0;
+    if (adjustedPtr != nullptr)
     {
-        const char* vtable = *static_cast<const char*const*>(adjustedPtr);
-        offset_to_base = *reinterpret_cast<const ptrdiff_t*>(vtable + offset_to_base);
+        offset_to_base = __offset_flags >> __offset_shift;
+        if (__offset_flags & __virtual_mask)
+        {
+            const char* vtable = *static_cast<const char*const*>(adjustedPtr);
+            offset_to_base = *reinterpret_cast<const ptrdiff_t*>(vtable + offset_to_base);
+        }
     }
-    __base_type->has_unambiguous_public_base(info,
-                                             static_cast<char*>(adjustedPtr) + offset_to_base,
-                                             (__offset_flags & __public_mask) ?
-                                                 path_below :
-                                                 not_public_path);
+    __base_type->has_unambiguous_public_base(
+            info,
+            static_cast<char*>(adjustedPtr) + offset_to_base,
+            (__offset_flags & __public_mask) ? path_below : not_public_path);
 }
 
 void
@@ -342,7 +361,8 @@ __pointer_type_info::can_catch(const __shim_type_info* thrown_type,
                                void*& adjustedPtr) const
 {
     // Do the dereference adjustment
-    adjustedPtr = *static_cast<void**>(adjustedPtr);
+    if (adjustedPtr != NULL)
+        adjustedPtr = *static_cast<void**>(adjustedPtr);
     // bullets 1 and 4
     if (__pbase_type_info::can_catch(thrown_type, adjustedPtr))
         return true;
@@ -372,7 +392,8 @@ __pointer_type_info::can_catch(const __shim_type_info* thrown_type,
     thrown_class_type->has_unambiguous_public_base(&info, adjustedPtr, public_path);
     if (info.path_dst_ptr_to_static_ptr == public_path)
     {
-        adjustedPtr = const_cast<void*>(info.dst_ptr_leading_to_static_ptr);
+        if (adjustedPtr != NULL)
+            adjustedPtr = const_cast<void*>(info.dst_ptr_leading_to_static_ptr);
         return true;
     }
     return false;

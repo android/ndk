@@ -13,6 +13,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := android_support_unittests
 LOCAL_SRC_FILES := \
   ctype_unittest.cc \
+  math_unittest.cc \
   stdio_unittest.cc \
   wchar_unittest.cc \
 

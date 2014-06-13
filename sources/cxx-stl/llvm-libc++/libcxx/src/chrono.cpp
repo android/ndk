@@ -108,11 +108,6 @@ steady_clock::now() _NOEXCEPT
 }
 
 #else  // __APPLE__
-// FIXME: We assume that clock_gettime(CLOCK_MONOTONIC) works on
-// non-apple systems.  Instead, we should check _POSIX_TIMERS and
-// _POSIX_MONOTONIC_CLOCK and fall back to something else if those
-// don't exist.
-
 // Warning:  If this is not truly steady, then it is non-conforming.  It is
 //  better for it to not exist and have the rest of libc++ use system_clock
 //  instead.
@@ -120,15 +115,16 @@ steady_clock::now() _NOEXCEPT
 steady_clock::time_point
 steady_clock::now() _NOEXCEPT
 {
-#if defined(_POSIX_MONOTONIC_CLOCK) && _POSIX_MONOTONIC_CLOCK > 0
+#if (defined(_POSIX_TIMERS) && _POSIX_TIMERS > 0) && \
+    (defined(_POSIX_MONOTONIC_CLOCK) && _POSIX_MONOTONIC_CLOCK > 0)
     struct timespec tp;
     if (0 != clock_gettime(CLOCK_MONOTONIC, &tp))
         __throw_system_error(errno, "clock_gettime(CLOCK_MONOTONIC) failed");
     return time_point(seconds(tp.tv_sec) + nanoseconds(tp.tv_nsec));
 #else
-#warning posix doesn't have a monotonic clock on this system \
-         so we're falling back to std::steady_clock (which may \
-         not be monotonic, and therefore may not be conforming)
+#warning According to unistd.h, there is no monotonic clock on this system so \
+         we are falling back to std::system_clock (which may not be \
+         monotonic, and therefore may not be conforming).
     return time_point(system_clock::now().time_since_epoch());
 #endif
 }
