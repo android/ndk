@@ -20,6 +20,8 @@
 #define GB18030     0330
 #define GBK         0331
 #define GB2312      0332
+#define BIG5        0340
+#define EUC_KR      0350
 
 /* FIXME: these are not implemented yet
  * EUC:   A1-FE A1-FE
@@ -47,6 +49,8 @@ static const unsigned char charmaps[] =
 "gb18030\0\0\330"
 "gbk\0\0\331"
 "gb2312\0\0\332"
+"big5\0bigfive\0cp950\0big5hkscs\0\0\340"
+"euckr\0ksc5601\0ksx1001\0cp949\0\0\350"
 #include "codepages.h"
 ;
 
@@ -60,6 +64,18 @@ static const unsigned short jis0208[84][94] = {
 
 static const unsigned short gb18030[126][190] = {
 #include "gb18030.h"
+};
+
+static const unsigned short big5[89][157] = {
+#include "big5.h"
+};
+
+static const unsigned short hkscs[] = {
+#include "hkscs.h"
+};
+
+static const unsigned short ksc[93][94] = {
+#include "ksc.h"
 };
 
 static int fuzzycmp(const unsigned char *a, const unsigned char *b)
@@ -265,7 +281,7 @@ size_t iconv(iconv_t cd0, char **restrict in, size_t *restrict inb, char **restr
 				c += 128;
 				for (d=0; d<=c; ) {
 					k = 0;
-                                      int i, j;
+                                       int i, j;
 					for (i=0; i<126; i++)
 						for (j=0; j<190; j++)
 							if (gb18030[i][j]-d <= c-d)
@@ -278,6 +294,76 @@ size_t iconv(iconv_t cd0, char **restrict in, size_t *restrict inb, char **restr
 			d -= 0x40;
 			if (d>63) d--;
 			c = gb18030[c][d];
+			break;
+		case BIG5:
+			l = 2;
+			if (*inb < 2) goto starved;
+			d = *((unsigned char *)*in + 1);
+			if (d-0x40>=0xff-0x40 || d-0x7f<0xa1-0x7f) goto ilseq;
+			d -= 0x40;
+			if (d > 0x3e) d -= 0x22;
+			if (c-0xa1>=0xfa-0xa1) {
+				if (c-0x87>=0xff-0x87) goto ilseq;
+				if (c < 0xa1) c -= 0x87;
+				else c -= 0x87 + (0xfa-0xa1);
+				c = (hkscs[4867+(c*157+d)/16]>>(c*157+d)%16)%2<<17
+					| hkscs[c*157+d];
+				/* A few HKSCS characters map to pairs of UCS
+				 * characters. These are mapped to surrogate
+				 * range in the hkscs table then hard-coded
+				 * here. Ugly, yes. */
+				if (c/256 == 0xdc) {
+					if (totype-0300U > 8) k = 2;
+					else k = "\10\4\4\10\4\4\10\2\4"[totype-0300];
+					if (k > *outb) goto toobig;
+					x += iconv((iconv_t)(uintptr_t)to,
+						&(char *){"\303\212\314\204"
+						"\303\212\314\214"
+						"\303\252\314\204"
+						"\303\252\314\214"
+						+c%256}, &(size_t){4},
+						out, outb);
+					continue;
+				}
+				if (!c) goto ilseq;
+				break;
+			}
+			c -= 0xa1;
+			c = big5[c][d]|(c==0x27&&(d==0x3a||d==0x3c||d==0x42))<<17;
+			if (!c) goto ilseq;
+			break;
+		case EUC_KR:
+			l = 2;
+			if (*inb < 2) goto starved;
+			d = *((unsigned char *)*in + 1);
+			c -= 0xa1;
+			d -= 0xa1;
+			if (c >= 93 || d >= 94) {
+				c += (0xa1-0x81);
+				d += 0xa1;
+				if (c >= 93 || c>=0xc6-0x81 && d>0x52)
+					goto ilseq;
+				if (d-'A'<26) d = d-'A';
+				else if (d-'a'<26) d = d-'a'+26;
+				else if (d-0x81<0xff-0x81) d = d-0x81+52;
+				else goto ilseq;
+				if (c < 0x20) c = 178*c + d;
+				else c = 178*0x20 + 84*(c-0x20) + d;
+				c += 0xac00;
+				for (d=0xac00; d<=c; ) {
+					k = 0;
+                                       int i, j;
+					for (i=0; i<93; i++)
+						for (j=0; j<94; j++)
+							if (ksc[i][j]-d <= c-d)
+								k++;
+					d = c+1;
+					c += k;
+				}
+				break;
+			}
+			c = ksc[c][d];
+			if (!c) goto ilseq;
 			break;
 		default:
 			if (c < 128+type) break;
@@ -317,8 +403,8 @@ size_t iconv(iconv_t cd0, char **restrict in, size_t *restrict inb, char **restr
 			}
 			d = c;
 			for (c=0; c<128-totype; c++) {
-				if (d == legacy_chars[ map[c*5/4]>>2*c%8 |
-					map[c*5/4+1]<<8-2*c%8 & 1023 ]) {
+				if (d == legacy_chars[ tomap[c*5/4]>>2*c%8 |
+					tomap[c*5/4+1]<<8-2*c%8 & 1023 ]) {
 					c += 128;
 					goto revout;
 				}
