@@ -83,7 +83,11 @@ register_var_option "--with-debug-info" WITH_DEBUG_INFO "Build with -g.  STL is 
 EXPLICIT_COMPILER_VERSION=
 
 GCC_VERSION=
-register_var_option "--gcc-version=<ver>" GCC_VERSION "Specify GCC version" "$GCC_VERSION"
+register_option "--gcc-version=<ver>" do_gcc_version "Specify GCC version"
+do_gcc_version() {
+    GCC_VERSION=$1
+    EXPLICIT_COMPILER_VERSION=true
+}
 
 LLVM_VERSION=
 register_option "--llvm-version=<ver>" do_llvm_version "Specify LLVM version"
@@ -95,6 +99,10 @@ do_llvm_version() {
 register_jobs_option
 
 extract_parameters "$@"
+
+if [ -n "${LLVM_VERSION}" -a -n "${GCC_VERSION}" ]; then
+    panic "Cannot set both LLVM_VERSION and GCC_VERSION. Make up your mind!"
+fi
 
 ABIS=$(commas_to_spaces $ABIS)
 UNKNOWN_ABIS=
@@ -638,7 +646,7 @@ build_stl_libs_for_abi ()
     if [ "$TYPE" = "static" ]; then
         log "Building $DSTDIR/${CXX_STL_LIB}_static.a"
         builder_static_library ${CXX_STL_LIB}_static
-        if [ "$CXX_STL" == "libc++" ]; then
+        if [ "$CXX_SUPPORT_LIB" == "libc++abi" ]; then
             builder_compiler_runtime_ldflags "\
                 -L$NDK_DIR/$COMPILER_RT_SUBDIR/libs/$ABI \
                 -lcompiler_rt_static \
@@ -646,7 +654,7 @@ build_stl_libs_for_abi ()
         fi
     else
         log "Building $DSTDIR/${CXX_STL_LIB}_shared${LIB_SUFFIX}"
-        if [ "$CXX_STL" == "libc++" ]; then
+        if [ "$CXX_SUPPORT_LIB" == "libc++abi" ]; then
             builder_compiler_runtime_ldflags "\
                 -L$NDK_DIR/$COMPILER_RT_SUBDIR/libs/$ABI \
                 -lcompiler_rt_shared \
