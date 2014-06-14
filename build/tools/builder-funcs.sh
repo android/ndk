@@ -117,6 +117,7 @@ builder_begin_module ()
     _BUILD_OBJECTS=
     _BUILD_STATIC_LIBRARIES=
     _BUILD_SHARED_LIBRARIES=
+    _BUILD_COMPILER_RUNTIME_LDFLAGS=-lgcc
 }
 
 builder_set_binprefix ()
@@ -132,6 +133,7 @@ builder_set_binprefix_llvm ()
     _BUILD_BINPREFIX=$1
     _BUILD_CC=${1}clang
     _BUILD_CXX=${1}clang++
+    _BUILD_AR=${2}ar
 }
 
 builder_set_builddir ()
@@ -202,6 +204,11 @@ builder_reset_c_includes ()
         eval $_varname=\"$_BUILD_C_INCLUDES\"
     fi
     _BUILD_C_INCLUDES=
+}
+
+builder_compiler_runtime_ldflags ()
+{
+    _BUILD_COMPILER_RUNTIME_LDFLAGS=$1
 }
 
 builder_link_with ()
@@ -365,14 +372,17 @@ builder_shared_library ()
     # Important: -lgcc must appear after objects and static libraries,
     #            but before shared libraries for Android. It doesn't hurt
     #            for other platforms.
+    #            Also $libm must come before -lc because bionic libc
+    #            accidentally exports a soft-float version of ldexp.
     builder_command ${_BUILD_CXX} \
         -Wl,-soname,$(basename $lib) \
         -shared \
         $_BUILD_OBJECTS \
         $_BUILD_STATIC_LIBRARIES \
-        -lgcc \
+        -nodefaultlibs \
+        $_BUILD_COMPILER_RUNTIME_LDFLAGS \
         $_BUILD_SHARED_LIBRARIES \
-        -lc $libm \
+        $libm -lc \
         $_BUILD_LDFLAGS \
         -o $lib
     fail_panic "Could not create ${_BUILD_PREFIX}shared library $libname"
