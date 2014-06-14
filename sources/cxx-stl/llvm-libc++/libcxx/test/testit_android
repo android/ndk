@@ -234,7 +234,7 @@ CC=$CXX
 
 if [ -z "$OPTIONS" ]
 then
-  OPTIONS="-std=c++11 -O2 -g"
+  OPTIONS="--std=c++11 -O2 -g"
   # Note that some tests use assert() to check condition but -O2 defines assert() to nothing,
   # unless we specify -UNDEBUG to bring assert() back.
   # But currently adding -UNDEBUG crashes both clang3.4 and clang3.3 for test
@@ -327,7 +327,7 @@ if [ "$DO_STATIC" ]; then
   # Note that in standalone toolchain libc++_static is renamed to libstdc++, and
   # compiler adds -lstdc++ implicitly
   if [ "$WITH_COMPILER_RT" = "yes" ]; then
-    LIBS="-lcompiler_rt_static -latomic"
+    LIBS="-nodefaultlibs -lcompiler_rt_static -latomic"
   else
     LIBS="-latomic"
   fi
@@ -343,8 +343,7 @@ else
       echo "ERROR: Can't push shared libcompiler_rt to target device!"
       exit 1
     fi
-    LIBS="-lc++_shared -lcompiler_rt_shared -latomic"
-    #LIBS="-nodefaultlibs -lc++_shared -lcompiler_rt_shared -latomic -ldl -lc -lm"
+    LIBS="-nodefaultlibs -lc++_shared -lcompiler_rt_shared -latomic -ldl -lm -lc"
   else
     LIBS="-lc++_shared -latomic"
   fi
