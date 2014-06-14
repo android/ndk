@@ -656,7 +656,7 @@ build_stl_libs_for_abi ()
             builder_shared_library ${CXX_STL_LIB}_shared $LIB_SUFFIX "$FLOAT_ABI"
         else
             builder_ldflags "-lm -lc"
-            builder_nodefaultlibs_shared_library ${CXX_STL_LIB}_shared $LIB_SUFFIX # Don't use libgcc
+            builder_nostdlib_shared_library ${CXX_STL_LIB}_shared $LIB_SUFFIX # Don't use libgcc
         fi
     fi
 
