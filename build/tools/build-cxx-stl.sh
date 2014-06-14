@@ -188,11 +188,11 @@ else
     panic "Unknown CXX_SUPPORT_LIB: $CXX_SUPPORT_LIB"
 fi
 
-COMMON_CFLAGS="-fPIC -O2 -ffunction-sections -fdata-sections"
+COMMON_C_CXX_FLAGS="-fPIC -O2 -ffunction-sections -fdata-sections"
 COMMON_CXXFLAGS="-fexceptions -frtti -fuse-cxa-atexit"
 
 if [ "$WITH_DEBUG_INFO" ]; then
-    COMMON_CFLAGS="$COMMON_CFLAGS -g"
+    COMMON_C_CXX_FLAGS="$COMMON_C_CXX_FLAGS -g"
 fi
 
 if [ "$CXX_STL" = "libc++" ]; then
@@ -205,21 +205,21 @@ fi
 # Determine GAbi++ build parameters. Note that GAbi++ is also built as part
 # of STLport and Libc++, in slightly different ways.
 if [ "$CXX_SUPPORT_LIB" = "gabi++" ]; then
-    GABIXX_CXXFLAGS="$COMMON_CXXFLAGS"
     if [ "$CXX_STL" = "libc++" ]; then
-        GABIXX_INCLUDES=$LIBCXX_INCLUDES
+        GABIXX_INCLUDES="$LIBCXX_INCLUDES"
         GABIXX_CXXFLAGS="$GABIXX_CXXFLAGS -DLIBCXXABI=1"
     else
         GABIXX_INCLUDES="-I$GABIXX_SRCDIR/include"
     fi
-    GABIXX_CFLAGS="$COMMON_CFLAGS $GABIXX_INCLUDES"
+    GABIXX_CFLAGS="$COMMON_C_CXX_FLAGS $GABIXX_INCLUDES"
+    GABIXX_CXXFLAGS="$GABIXX_CXXFLAGS $GABIXX_CFLAGS $COMMON_CXXFLAGS"
     GABIXX_SOURCES=$(cd $ANDROID_NDK_ROOT/$GABIXX_SUBDIR && ls src/*.cc)
     GABIXX_LDFLAGS="-ldl"
 fi
 
 # Determine STLport build parameters
-STLPORT_CFLAGS="$COMMON_CFLAGS -DGNU_SOURCE -I$STLPORT_SRCDIR/stlport $GABIXX_INCLUDES"
-STLPORT_CXXFLAGS="$COMMON_CXXFLAGS"
+STLPORT_CFLAGS="$COMMON_C_CXX_FLAGS -DGNU_SOURCE -I$STLPORT_SRCDIR/stlport $GABIXX_INCLUDES"
+STLPORT_CXXFLAGS="$STLPORT_CFLAGS $COMMON_CXXFLAGS"
 STLPORT_SOURCES=\
 "src/dll_main.cpp \
 src/fstream.cpp \
@@ -256,8 +256,8 @@ src/cxa.c"
 
 # Determine Libc++ build parameters
 LIBCXX_LINKER_SCRIPT=export_symbols.txt
-LIBCXX_CFLAGS="$COMMON_CFLAGS $LIBCXX_INCLUDES -Drestrict=__restrict__"
-LIBCXX_CXXFLAGS="$COMMON_CXXFLAGS -DLIBCXXABI=1 -std=c++11"
+LIBCXX_CFLAGS="$COMMON_C_CXX_FLAGS $LIBCXX_INCLUDES -Drestrict=__restrict__"
+LIBCXX_CXXFLAGS="$LIBCXX_CFLAGS -DLIBCXXABI=1 -std=c++11"
 LIBCXX_LDFLAGS="-Wl,--version-script,\$_BUILD_SRCDIR/$LIBCXX_LINKER_SCRIPT"
 LIBCXX_SOURCES=\
 "libcxx/src/algorithm.cpp \
@@ -620,9 +620,9 @@ build_stl_libs_for_abi ()
     # Build the runtime sources, except if we're only building GAbi++
     if [ "$CXX_STL" != "gabi++" ]; then
       builder_set_srcdir "$CXX_STL_SRCDIR"
-      builder_reset_cflags DEFAULT_CFLAGS
+      builder_reset_cflags
       builder_cflags "$DEFAULT_CFLAGS $CXX_STL_CFLAGS $EXTRA_CFLAGS"
-      builder_reset_cxxflags DEFAULT_CXXFLAGS
+      builder_reset_cxxflags
       builder_cxxflags "$DEFAULT_CXXFLAGS $CXX_STL_CXXFLAGS $EXTRA_CXXFLAGS"
       builder_ldflags "$CXX_STL_LDFLAGS $EXTRA_LDFLAGS"
       builder_sources $CXX_STL_SOURCES
