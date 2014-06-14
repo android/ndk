@@ -252,7 +252,7 @@ builder_sources ()
             exit 1
         fi
         obj=$src
-        cflags="$_BUILD_CFLAGS"
+        cflags=""
         for inc in $_BUILD_C_INCLUDES; do
             cflags=$cflags" -I$inc"
         done
@@ -262,6 +262,7 @@ builder_sources ()
                 obj=${obj%%.c}
                 text="C"
                 cc=$_BUILD_CC
+                cflags="$cflags $_BUILD_CFLAGS"
                 ;;
             *.cpp)
                 obj=${obj%%.cpp}
@@ -597,9 +598,11 @@ builder_begin_android ()
                 ;;
         esac
         builder_cflags "-target $LLVM_TRIPLE $FLAGS"
+        builder_cxxflags "-target $LLVM_TRIPLE $FLAGS"
         builder_ldflags "-target $LLVM_TRIPLE $FLAGS"
         if [ ! -z $GCC_TOOLCHAIN ]; then
             builder_cflags "-gcc-toolchain $GCC_TOOLCHAIN"
+            builder_cxxflags "-gcc-toolchain $GCC_TOOLCHAIN"
             builder_ldflags "-gcc-toolchain $GCC_TOOLCHAIN"
         fi
     fi
@@ -619,17 +622,22 @@ builder_begin_android ()
                 # add -minline-thumb1-jumptable such that gabi++/stlport/libc++ can be linked
                 # with compiler-rt where helpers __gnu_thumb1_case_* (in libgcc.a) don't exist
                 builder_cflags "-minline-thumb1-jumptable"
+                builder_cxxflags "-minline-thumb1-jumptable"
             else
                 builder_cflags ""
+                builder_cxxflags ""
             fi
             ;;
         armeabi-v7a|armeabi-v7a-hard)
             builder_cflags "-march=armv7-a -mfpu=vfpv3-d16"
+            builder_cxxflags "-march=armv7-a -mfpu=vfpv3-d16"
             builder_ldflags "-march=armv7-a -Wl,--fix-cortex-a8"
             if [ "$ABI" != "armeabi-v7a-hard" ]; then
                 builder_cflags "-mfloat-abi=softfp"
+                builder_cxxflags "-mfloat-abi=softfp"
             else
                 builder_cflags "-mhard-float -D_NDK_MATH_NO_SOFTFP=1"
+                builder_cxxflags "-mhard-float -D_NDK_MATH_NO_SOFTFP=1"
                 builder_ldflags "-Wl,--no-warn-mismatch -lm_hard"
             fi
             ;;
