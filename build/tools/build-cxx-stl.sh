@@ -131,21 +131,21 @@ if [ -z "$CXX_STL" ]; then
 fi
 
 # Derive runtime, and normalize CXX_STL
-CXX_STL_RUNTIME=gabi++
+CXX_SUPPORT_LIB=gabi++
 case $CXX_STL in
   gabi++)
     ;;
   stlport)
     ;;
   libc++)
-    CXX_STL_RUNTIME=gabi++  # libc++abi
+    CXX_SUPPORT_LIB=gabi++  # libc++abi
     ;;
   libc++-libc++abi)
-    CXX_STL_RUNTIME=libc++abi
+    CXX_SUPPORT_LIB=libc++abi
     CXX_STL=libc++
     ;;
   libc++-gabi++)
-    CXX_STL_RUNTIME=gabi++
+    CXX_SUPPORT_LIB=gabi++
     CXX_STL=libc++
     ;;
   *)
@@ -172,10 +172,12 @@ STLPORT_SRCDIR=$BUILD_DIR/ndk/$STLPORT_SUBDIR
 LIBCXX_SRCDIR=$BUILD_DIR/ndk/$LIBCXX_SUBDIR
 LIBCXXABI_SRCDIR=$BUILD_DIR/ndk/$LIBCXXABI_SUBDIR
 
-if [ "$CXX_STL_RUNTIME" = "gabi++" ]; then
+if [ "$CXX_SUPPORT_LIB" = "gabi++" ]; then
     LIBCXX_INCLUDES="-I$LIBCXX_SRCDIR/libcxx/include -I$ANDROID_NDK_ROOT/sources/android/support/include -I$GABIXX_SRCDIR/include"
-else
+elif [ "$CXX_SUPPORT_LIB" = "libc++abi" ]; then
     LIBCXX_INCLUDES="-I$LIBCXX_SRCDIR/libcxx/include -I$ANDROID_NDK_ROOT/sources/android/support/include -I$LIBCXXABI_SRCDIR/include"
+else
+    panic "Unknown CXX_SUPPORT_LIB: $CXX_SUPPORT_LIB"
 fi
 
 COMMON_CFLAGS="-fPIC -O2 -ffunction-sections -fdata-sections"
@@ -185,25 +187,26 @@ if [ "$WITH_DEBUG_INFO" ]; then
     COMMON_CFLAGS="$COMMON_CFLAGS -g"
 fi
 
-# Determine GAbi++ build parameters. Note that GAbi++ is also built as part
-# of STLport and Libc++, in slightly different ways.
 if [ "$CXX_STL" = "libc++" ]; then
-    if [ "$CXX_STL_RUNTIME" = "gabi++" ]; then
-        GABIXX_INCLUDES=$LIBCXX_INCLUDES
-    fi
-    # Use clang to build libc++ by default
+    # Use clang to build libc++ by default.
     if [ "$EXPLICIT_COMPILER_VERSION" != "true" ]; then
         LLVM_VERSION=$DEFAULT_LLVM_VERSION
-     fi
-else
-  GABIXX_INCLUDES="-I$GABIXX_SRCDIR/include"
+    fi
 fi
-GABIXX_CFLAGS="$COMMON_CFLAGS $GABIXX_INCLUDES"
-GABIXX_CXXFLAGS="$COMMON_CXXFLAGS"
-GABIXX_SOURCES=$(cd $ANDROID_NDK_ROOT/$GABIXX_SUBDIR && ls src/*.cc)
-GABIXX_LDFLAGS="-ldl"
-if [ "$CXX_STL" = "libc++" ]; then
-  GABIXX_CXXFLAGS="$GABIXX_CXXFLAGS -DLIBCXXABI=1"
+
+# Determine GAbi++ build parameters. Note that GAbi++ is also built as part
+# of STLport and Libc++, in slightly different ways.
+if [ "$CXX_SUPPORT_LIB" = "gabi++" ]; then
+    GABIXX_CXXFLAGS="$COMMON_CXXFLAGS"
+    if [ "$CXX_STL" = "libc++" ]; then
+        GABIXX_INCLUDES=$LIBCXX_INCLUDES
+        GABIXX_CXXFLAGS="$GABIXX_CXXFLAGS -DLIBCXXABI=1"
+    else
+        GABIXX_INCLUDES="-I$GABIXX_SRCDIR/include"
+    fi
+    GABIXX_CFLAGS="$COMMON_CFLAGS $GABIXX_INCLUDES"
+    GABIXX_SOURCES=$(cd $ANDROID_NDK_ROOT/$GABIXX_SUBDIR && ls src/*.cc)
+    GABIXX_LDFLAGS="-ldl"
 fi
 
 # Determine STLport build parameters
@@ -244,10 +247,10 @@ src/c_locale.c \
 src/cxa.c"
 
 # Determine Libc++ build parameters
-LINKER_SCRIPT=export_symbols.txt
+LIBCXX_LINKER_SCRIPT=export_symbols.txt
 LIBCXX_CFLAGS="$COMMON_CFLAGS $LIBCXX_INCLUDES -Drestrict=__restrict__"
 LIBCXX_CXXFLAGS="$COMMON_CXXFLAGS -DLIBCXXABI=1 -std=c++11"
-LIBCXX_LDFLAGS=-Wl,--version-script,\$_BUILD_SRCDIR/$LINKER_SCRIPT
+LIBCXX_LDFLAGS="-Wl,--version-script,\$_BUILD_SRCDIR/$LIBCXX_LINKER_SCRIPT"
 LIBCXX_SOURCES=\
 "libcxx/src/algorithm.cpp \
 libcxx/src/bind.cpp \
@@ -278,10 +281,8 @@ libcxx/src/valarray.cpp \
 libcxx/src/support/android/locale_android.cpp \
 "
 
-if [ "$CXX_STL_RUNTIME" = "libc++abi" ]; then
-    LIBCXX_SOURCES=\
-"$LIBCXX_SOURCES \
-../llvm-libc++abi/libcxxabi/src/abort_message.cpp \
+LIBCXXABI_SOURCES=\
+"../llvm-libc++abi/libcxxabi/src/abort_message.cpp \
 ../llvm-libc++abi/libcxxabi/src/cxa_aux_runtime.cpp \
 ../llvm-libc++abi/libcxxabi/src/cxa_default_handlers.cpp \
 ../llvm-libc++abi/libcxxabi/src/cxa_demangle.cpp \
@@ -304,9 +305,7 @@ if [ "$CXX_STL_RUNTIME" = "libc++abi" ]; then
 ../llvm-libc++abi/libcxxabi/src/Unwind/UnwindLevel1-gcc-ext.c \
 ../llvm-libc++abi/libcxxabi/src/Unwind/UnwindRegistersRestore.S \
 ../llvm-libc++abi/libcxxabi/src/Unwind/UnwindRegistersSave.S \
-../llvm-libc++abi/libcxxabi/src/Unwind/Unwind-sjlj.c \
 "
-fi
 
 # android/support files for libc++
 SUPPORT32_SOURCES=\
@@ -567,6 +566,7 @@ build_stl_libs_for_abi ()
 
     if [ -n "$GCC_VERSION" ]; then
         GCCVER=$GCC_VERSION
+        EXTRA_CFLAGS="$EXTRA_CFLAGS -std=c99"
     else
         ARCH=$(convert_abi_to_arch $ABI)
         GCCVER=$(get_default_gcc_version_for_arch $ARCH)
@@ -574,8 +574,17 @@ build_stl_libs_for_abi ()
 
     # libc++ built with clang (for ABI armeabi-only) produces
     # libc++_shared.so and libc++_static.a with undefined __atomic_fetch_add_4
-    # Add -latomic
+    # Add -latomic.
     if [ -n "$LLVM_VERSION" -a "$CXX_STL_LIB" = "libc++" -a "$ABI" = "armeabi" ]; then
+        # EHABI tables were added as experimental flags in llvm 3.4. In 3.5, these
+        # are now the defaults and the flags have been removed. Add these flags
+        # explicitly only for llvm 3.4.
+        if [ "$LLVM_VERSION" = "3.4" ]; then
+            EXTRA_CFLAGS="${EXTRA_CFLAGS} -mllvm -arm-enable-ehabi-descriptors \
+                          -mllvm -arm-enable-ehabi"
+            EXTRA_CXXFLAGS="${EXTRA_CXXFLAGS} -mllvm -arm-enable-ehabi-descriptors \
+                            -mllvm -arm-enable-ehabi"
+        fi
         EXTRA_LDFLAGS="$EXTRA_LDFLAGS -latomic"
     fi
 
@@ -585,7 +594,7 @@ build_stl_libs_for_abi ()
     builder_reset_cflags DEFAULT_CFLAGS
     builder_reset_cxxflags DEFAULT_CXXFLAGS
 
-    if [ "$CXX_STL_RUNTIME" = "gabi++" ]; then
+    if [ "$CXX_SUPPORT_LIB" = "gabi++" ]; then
         builder_set_srcdir "$GABIXX_SRCDIR"
         builder_cflags "$DEFAULT_CFLAGS $GABIXX_CFLAGS $EXTRA_CFLAGS"
         builder_cxxflags "$DEFAULT_CXXFLAGS $GABIXX_CXXFLAGS $EXTRA_CXXFLAGS"
@@ -603,12 +612,16 @@ build_stl_libs_for_abi ()
     # Build the runtime sources, except if we're only building GAbi++
     if [ "$CXX_STL" != "gabi++" ]; then
       builder_set_srcdir "$CXX_STL_SRCDIR"
-      builder_reset_cflags
+      builder_reset_cflags DEFAULT_CFLAGS
       builder_cflags "$DEFAULT_CFLAGS $CXX_STL_CFLAGS $EXTRA_CFLAGS"
       builder_reset_cxxflags DEFAULT_CXXFLAGS
       builder_cxxflags "$DEFAULT_CXXFLAGS $CXX_STL_CXXFLAGS $EXTRA_CXXFLAGS"
       builder_ldflags "$CXX_STL_LDFLAGS $EXTRA_LDFLAGS"
       builder_sources $CXX_STL_SOURCES
+      if [ "$CXX_SUPPORT_LIB" == "libc++abi" ]; then
+          builder_sources $LIBCXXABI_SOURCES
+          builder_ldflags "-ldl"
+      fi
       if [ "$CXX_STL" = "libc++" ]; then
         if [ "$ABI" = "${ABI%%64*}" ]; then
           if [ "$ABI" = "x86" ]; then
@@ -625,12 +638,24 @@ build_stl_libs_for_abi ()
     if [ "$TYPE" = "static" ]; then
         log "Building $DSTDIR/${CXX_STL_LIB}_static.a"
         builder_static_library ${CXX_STL_LIB}_static
+        if [ "$CXX_STL" == "libc++" ]; then
+            builder_compiler_runtime_ldflags "\
+                -L$NDK_DIR/$COMPILER_RT_SUBDIR/libs/$ABI \
+                -lcompiler_rt_static \
+                "
+        fi
     else
         log "Building $DSTDIR/${CXX_STL_LIB}_shared${LIB_SUFFIX}"
+        if [ "$CXX_STL" == "libc++" ]; then
+            builder_compiler_runtime_ldflags "\
+                -L$NDK_DIR/$COMPILER_RT_SUBDIR/libs/$ABI \
+                -lcompiler_rt_shared \
+                "
+        fi
         if [ "$(find_ndk_unknown_archs)" != "$ABI" ]; then
             builder_shared_library ${CXX_STL_LIB}_shared $LIB_SUFFIX "$FLOAT_ABI"
         else
-            builder_ldflags "-lc -lm"
+            builder_ldflags "-lm -lc"
             builder_nodefaultlibs_shared_library ${CXX_STL_LIB}_shared $LIB_SUFFIX # Don't use libgcc
         fi
     fi
