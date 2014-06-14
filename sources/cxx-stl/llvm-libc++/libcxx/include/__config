@@ -11,8 +11,6 @@
 #ifndef _LIBCPP_CONFIG
 #define _LIBCPP_CONFIG
 
-#include <unistd.h>
-
 #if !defined(_MSC_VER) || defined(__clang__)
 #pragma GCC system_header
 #endif
@@ -120,12 +118,6 @@
 #  error unable to determine endian
 # endif
 #endif  // !defined(_LIBCPP_LITTLE_ENDIAN) || !defined(_LIBCPP_BIG_ENDIAN)
-
-#if defined(_POSIX_THREADS) && _POSIX_THREADS > 0
-#  define _LIBCPP_SINGLE_THREADED 0
-#else
-#  define _LIBCPP_SINGLE_THREADED 1
-#endif
 
 #ifdef _WIN32
 
