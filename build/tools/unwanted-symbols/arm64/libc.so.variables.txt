@@ -1,0 +1,9 @@
+__atexit
+__atexit_invalid
+_C_ctype_
+_C_tolower_
+_C_toupper_
+__isthreaded
+__system_property_area__
+_tolower_tab_
+_toupper_tab_
