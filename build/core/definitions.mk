@@ -640,6 +640,16 @@ module-is-shared-library = $(strip \
     $(call module-get-class,$1)))
 
 # -----------------------------------------------------------------------------
+# Returns non-empty if a module is a prebuilt static library
+# Arguments: 1: module name
+# Returns     : non-empty iff the module is a prebuilt static library.
+# Usage       : $(if $(call module-is-prebuilt-static-library,<name>),...)
+# -----------------------------------------------------------------------------
+module-is-prebuilt-static-library = $(strip \
+  $(filter PREBUILT_STATIC_LIBRARY,\
+    $(call module-get-class,$1)))
+
+# -----------------------------------------------------------------------------
 # Filter a list of module names to retain only the static libraries.
 # Arguments: 1: module name list
 # Returns     : input list modules which are static libraries.
@@ -807,13 +817,17 @@ module-get-c++-sources = \
 module-has-c++-sources = $(strip $(call module-get-c++-sources,$1))
 
 
-# Add C++ dependencies to any module that has C++ sources.
+# Add C++ dependencies to any module that has C++ sources or is a prebuilt static library.
 # $1: list of C++ runtime static libraries (if any)
 # $2: list of C++ runtime shared libraries (if any)
 #
 modules-add-c++-dependencies = \
     $(foreach __module,$(__ndk_modules),\
-        $(if $(call module-has-c++-sources,$(__module)),\
+        $(if \
+            $(strip \
+                $(call module-has-c++-sources,$(__module)) \
+                $(call module-is-prebuilt-static-library,$(__module)) \
+            ), \
             $(call ndk_log,Module '$(__module)' has C++ sources)\
             $(call module-add-c++-deps,$(__module),$1,$2),\
         )\
