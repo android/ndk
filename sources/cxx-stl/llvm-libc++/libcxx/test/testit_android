@@ -240,11 +240,11 @@ then
   # But currently adding -UNDEBUG crashes both clang3.4 and clang3.3 for test
   # like libcxx/test/atomics/atomics.types.generic/address.pass.cpp.  Define -UNDEBUG
   # only when we are not using clang.  ToDo
-  if [ "$CXX" = "${CXX%%*clang++*}" ] ; then
+  if [ "$CXX" != "${CXX%clang++*}" ] ; then
     OPTIONS="$OPTIONS -UNDEBUG -mllvm -arm-enable-ehabi-descriptors -mllvm -arm-enable-ehabi"
-    OPTIONS="$OPTIONS -UNDEBUG"
   fi
 fi
+
 OPTIONS="$OPTIONS $TOOLCHAIN_CFLAGS $TOOLCHAIN_LDFLAGS"
 OPTIONS="$OPTIONS -I$LIBCXX_ROOT/test/support"
 # llvm-libc++/libcxx/test/lit.cfg line #278 defineds the following for testing only on Linux

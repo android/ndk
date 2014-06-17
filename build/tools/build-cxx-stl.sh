@@ -540,7 +540,7 @@ build_stl_libs_for_abi ()
 {
     local ARCH BINPREFIX SYSROOT
     local ABI=$1
-    local THUMB="$5"  
+    local THUMB="$5"
     local BUILDDIR="$2"/$THUMB
     local TYPE="$3"
     local DSTDIR="$4"
@@ -549,21 +549,24 @@ build_stl_libs_for_abi ()
     local SRC OBJ OBJECTS EXTRA_CFLAGS EXTRA_CXXFLAGS EXTRA_LDFLAGS LIB_SUFFIX GCCVER
 
     EXTRA_CFLAGS=""
+    EXTRA_CXXFLAGS=""
     EXTRA_LDFLAGS=""
     if [ "$ABI" = "armeabi-v7a-hard" ]; then
         EXTRA_CFLAGS="-mhard-float -D_NDK_MATH_NO_SOFTFP=1"
+        EXTRA_CXXFLAGS="-mhard-float -D_NDK_MATH_NO_SOFTFP=1"
         EXTRA_LDFLAGS="-Wl,--no-warn-mismatch -lm_hard"
         FLOAT_ABI="hard"
     fi
 
     if [ -n "$THUMB" ]; then
         EXTRA_CFLAGS="$EXTRA_CFLAGS -mthumb"
+        EXTRA_CXXFLAGS="$EXTRA_CXXFLAGS -mthumb"
     fi
 
     if [ "$TYPE" = "static" -a -z "$VISIBLE_STATIC" ]; then
-        EXTRA_CXXFLAGS="$STATIC_CXXFLAGS"
+        EXTRA_CXXFLAGS="$EXTRA_CXXFLAGS $STATIC_CXXFLAGS"
     else
-        EXTRA_CXXFLAGS="$SHARED_CXXFLAGS"
+        EXTRA_CXXFLAGS="$EXTRA_CXXFLAGS $SHARED_CXXFLAGS"
     fi
 
     DSTDIR=$DSTDIR/$CXX_STL_SUBDIR/libs/$ABI/$THUMB
