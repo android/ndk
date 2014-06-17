@@ -252,7 +252,7 @@ builder_sources ()
             exit 1
         fi
         obj=$src
-        cflags="$_BUILD_CFLAGS"
+        cflags=""
         for inc in $_BUILD_C_INCLUDES; do
             cflags=$cflags" -I$inc"
         done
@@ -262,6 +262,7 @@ builder_sources ()
                 obj=${obj%%.c}
                 text="C"
                 cc=$_BUILD_CC
+                cflags="$cflags $_BUILD_CFLAGS"
                 ;;
             *.cpp)
                 obj=${obj%%.cpp}
@@ -279,6 +280,7 @@ builder_sources ()
                 obj=${obj%%.$obj}
                 text="ASM"
                 cc=$_BUILD_CC
+                cflags="$cflags $_BUILD_CFLAGS"
                 ;;
             *)
                 echo "Unknown source file extension: $obj"
@@ -508,6 +510,7 @@ builder_begin_android ()
     local ARCH SYSROOT LDIR FLAGS
     local CRTBEGIN_SO_O CRTEND_SO_O CRTBEGIN_EXE_SO CRTEND_SO_O
     local BINPREFIX GCC_TOOLCHAIN LLVM_TRIPLE GCC_VERSION
+    local SCRATCH_FLAGS
     if [ -z "$NDK_DIR" ]; then
         panic "NDK_DIR is not defined!"
     elif [ ! -d "$NDK_DIR/platforms" ]; then
@@ -596,19 +599,25 @@ builder_begin_android ()
                 FLAGS=-emit-llvm
                 ;;
         esac
-        builder_cflags "-target $LLVM_TRIPLE $FLAGS"
-        builder_ldflags "-target $LLVM_TRIPLE $FLAGS"
+        SCRATCH_FLAGS="-target $LLVM_TRIPLE $FLAGS"
+        builder_cflags  "$SCRATCH_FLAGS"
+        builder_cxxflags "$SCRATCH_FLAGS"
+        builder_ldflags "$SCRATCH_FLAGS"
         if [ ! -z $GCC_TOOLCHAIN ]; then
-            builder_cflags "-gcc-toolchain $GCC_TOOLCHAIN"
-            builder_ldflags "-gcc-toolchain $GCC_TOOLCHAIN"
+            SCRATCH_FLAGS="-gcc-toolchain $GCC_TOOLCHAIN"
+            builder_cflags "$SCRATCH_FLAGS"
+            builder_cxxflags "$SCRATCH_FLAGS"
+            builder_ldflags "$SCRATCH_FLAGS"
         fi
     fi
 
-    builder_cflags "--sysroot=$SYSROOT"
-    builder_cxxflags "--sysroot=$SYSROOT"
+    SCRATCH_FLAGS="--sysroot=$SYSROOT"
+    builder_cflags "$SCRATCH_FLAGS"
+    builder_cxxflags "$SCRATCH_FLAGS"
 
-    _BUILD_LDFLAGS_BEGIN_SO="--sysroot=$SYSROOT -nostdlib $CRTBEGIN_SO_O"
-    _BUILD_LDFLAGS_BEGIN_EXE="--sysroot=$SYSROOT -nostdlib $CRTBEGIN_EXE_O"
+    SCRATCH_FLAGS="--sysroot=$SYSROOT -nostdlib"
+    _BUILD_LDFLAGS_BEGIN_SO="$SCRATCH_FLAGS $CRTBEGIN_SO_O"
+    _BUILD_LDFLAGS_BEGIN_EXE="$SCRATCH_FLAGS $CRTBEGIN_EXE_O"
 
     _BUILD_LDFLAGS_END_SO="$CRTEND_SO_O"
     _BUILD_LDFLAGS_END_EXE="$CRTEND_EXE_O"
@@ -618,18 +627,27 @@ builder_begin_android ()
             if [ -z "$LLVM_VERSION" ]; then
                 # add -minline-thumb1-jumptable such that gabi++/stlport/libc++ can be linked
                 # with compiler-rt where helpers __gnu_thumb1_case_* (in libgcc.a) don't exist
-                builder_cflags "-minline-thumb1-jumptable"
+                SCRATCH_FLAGS="-minline-thumb1-jumptable"
+                builder_cflags "$SCRATCH_FLAGS"
+                builder_cxxflags "$SCRATCH_FLAGS"
             else
                 builder_cflags ""
+                builder_cxxflags ""
             fi
             ;;
         armeabi-v7a|armeabi-v7a-hard)
-            builder_cflags "-march=armv7-a -mfpu=vfpv3-d16"
+            SCRATCH_FLAGS="-march=armv7-a -mfpu=vfpv3-d16"
+            builder_cflags "$SCRATCH_FLAGS"
+            builder_cxxflags "$SCRATCH_FLAGS"
             builder_ldflags "-march=armv7-a -Wl,--fix-cortex-a8"
             if [ "$ABI" != "armeabi-v7a-hard" ]; then
-                builder_cflags "-mfloat-abi=softfp"
+                SCRATCH_FLAGS="-mfloat-abi=softfp"
+                builder_cflags "$SCRATCH_FLAGS"
+                builder_cxxflags "$SCRATCH_FLAGS"
             else
-                builder_cflags "-mhard-float -D_NDK_MATH_NO_SOFTFP=1"
+                SCRATCH_FLAGS="-mhard-float -D_NDK_MATH_NO_SOFTFP=1"
+                builder_cflags "$SCRATCH_FLAGS"
+                builder_cxxflags "$SCRATCH_FLAGS"
                 builder_ldflags "-Wl,--no-warn-mismatch -lm_hard"
             fi
             ;;
