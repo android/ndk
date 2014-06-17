@@ -43,11 +43,6 @@ black_list_clang3_3 := \
 black_list_gcc4_8 := \
     atomics/atomics.flag/atomic_flag_test_and_set_explicit \
     atomics/atomics.flag/test_and_set \
-    utilities/meta/meta.unary/meta.unary.prop/is_literal_type \
-    utilities/meta/meta.unary/meta.unary.prop/is_nothrow_assignable \
-    utilities/meta/meta.unary/meta.unary.prop/is_nothrow_copy_constructible \
-    utilities/meta/meta.unary/meta.unary.prop/is_nothrow_destructible \
-    utilities/meta/meta.unary/meta.unary.prop/is_trivial \
     utilities/meta/meta.unary/meta.unary.prop/is_trivialially_copyable \
     utilities/meta/meta.unary/meta.unary.prop/is_trivially_assignable \
     utilities/meta/meta.unary/meta.unary.prop/is_trivially_copy_assignable \
@@ -58,6 +53,7 @@ black_list_gcc4_8 := \
 
 black_list_gcc4_9 := \
     $(black_list_gcc4_8) \
+    strings/basic.string/string.modifiers/string_replace/size_size_string_size_size \
     utilities/tuple/tuple.tuple/TupleFunction
 
 # Compute the back_list in this particular configuration: "all | compiler | arch"
