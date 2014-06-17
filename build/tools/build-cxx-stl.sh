@@ -452,6 +452,8 @@ SUPPORT64_SOURCES=\
 ../../android/support/src/musl-locale/catgets.c \
 ../../android/support/src/musl-locale/catopen.c \
 ../../android/support/src/musl-locale/isdigit_l.c \
+../../android/support/src/musl-locale/islower_l.c \
+../../android/support/src/musl-locale/isupper_l.c \
 ../../android/support/src/musl-locale/iswalpha_l.c \
 ../../android/support/src/musl-locale/iswblank_l.c \
 ../../android/support/src/musl-locale/iswcntrl_l.c \
