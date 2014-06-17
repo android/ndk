@@ -28,6 +28,9 @@ make scripts."
 TOOLCHAIN_NAME=
 register_var_option "--toolchain=<name>" TOOLCHAIN_NAME "Specify toolchain name"
 
+GCC_VERSION=
+register_var_option "--gcc-version=<ver>" GCC_VERSION "Specify LLVM version"
+
 LLVM_VERSION=
 register_var_option "--llvm-version=<ver>" LLVM_VERSION "Specify LLVM version"
 
