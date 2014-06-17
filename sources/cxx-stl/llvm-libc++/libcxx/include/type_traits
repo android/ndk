@@ -843,9 +843,11 @@ template <class _Tp> typename add_rvalue_reference<_Tp>::type __create();
 template <class _Tp> typename remove_reference<_Tp>::type& __create();
 #endif
 
-template <class _Tp> void helper(_Tp);
+template <class _Tp> char helper(_Tp);
 
-template <class _Tp, class _Tf, class = decltype(helper<_Tp>(__create<_Tf>()))> char  __test(int);
+template <class _Tp, class _Tf>
+typename enable_if<sizeof(helper<_Tp>(__create<_Tf>())) == 1, char>::type
+    __test(int);
 template <class _Tp, class _Tf> __two __test(...);
 
 template <class _Tp, bool _IsArray =    is_array<_Tp>::value,
@@ -2656,7 +2658,7 @@ struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_constructible
 
 #ifndef _LIBCPP_HAS_NO_VARIADICS
 
-#if __has_feature(cxx_noexcept) || (_GNUC_VER >= 407)
+#if __has_feature(cxx_noexcept) || (_GNUC_VER >= 407 && __cplusplus >= 201103L)
 
 template <bool, class _Tp, class... _Args> struct __libcpp_is_nothrow_constructible;
 
@@ -2818,7 +2820,7 @@ template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_move_constructible
 
 // is_nothrow_assignable
 
-#if __has_feature(cxx_noexcept) || (_GNUC_VER >= 407)
+#if __has_feature(cxx_noexcept) || (_GNUC_VER >= 407 && __cplusplus >= 201103L)
 
 template <bool, class _Tp, class _Arg> struct __libcpp_is_nothrow_assignable;
 
@@ -2904,7 +2906,7 @@ template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY is_nothrow_move_assignable
 
 // is_nothrow_destructible
 
-#if __has_feature(cxx_noexcept) || (_GNUC_VER >= 407)
+#if __has_feature(cxx_noexcept) || (_GNUC_VER >= 407 && __cplusplus >= 201103L)
 
 template <bool, class _Tp> struct __libcpp_is_nothrow_destructible;
 
@@ -3340,7 +3342,7 @@ struct __is_swappable
 {
 };
 
-#if __has_feature(cxx_noexcept) || (_GNUC_VER >= 407)
+#if __has_feature(cxx_noexcept) || (_GNUC_VER >= 407 && __cplusplus >= 201103L)
 
 template <bool, class _Tp>
 struct __is_nothrow_swappable_imp
