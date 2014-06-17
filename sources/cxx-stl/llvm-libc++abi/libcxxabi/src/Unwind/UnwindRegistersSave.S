@@ -1,4 +1,4 @@
-//===-------------------- UnwindRegistersRestore.s ------------------------===//
+//===------------------------ UnwindRegistersSave.S -----------------------===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -7,6 +7,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "assembly.h"
 
     .text
 
@@ -24,8 +25,7 @@
 #   +-----------------------+   <-- SP
 #   +                       +
 #
-  .globl _unw_getcontext
-_unw_getcontext:
+DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
   push  %eax
   movl  8(%esp), %eax
   movl  %ebx,  4(%eax)
@@ -60,8 +60,7 @@ _unw_getcontext:
 # On entry:
 #  thread_state pointer is in rdi
 #
-  .globl _unw_getcontext
-_unw_getcontext:
+DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
   movq  %rax,   (%rdi)
   movq  %rbx,  8(%rdi)
   movq  %rcx, 16(%rdi)
@@ -96,8 +95,7 @@ _unw_getcontext:
 ; On entry:
 ;  thread_state pointer is in r3
 ;
-  .globl _unw_getcontext
-_unw_getcontext:
+DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
   stw    r0,  8(r3)
   mflr  r0
   stw    r0,  0(r3)  ; store lr as ssr0
@@ -240,47 +238,155 @@ _unw_getcontext:
 ; On entry:
 ;  thread_state pointer is in x0
 ;
-  .globl _unw_getcontext
-_unw_getcontext:
-  stp    x0, x1,  [x0, #0x000]
-  stp    x2, x3,  [x0, #0x010]
-  stp    x4, x5,  [x0, #0x020]
-  stp    x6, x7,  [x0, #0x030]
-  stp    x8, x9,  [x0, #0x040]
-  stp    x10,x11, [x0, #0x050]
-  stp    x12,x13, [x0, #0x060]
-  stp    x14,x15, [x0, #0x070]
-  stp    x16,x17, [x0, #0x080]
-  stp    x18,x19, [x0, #0x090]
-  stp    x20,x21, [x0, #0x0A0]
-  stp    x22,x23, [x0, #0x0B0]
-  stp    x24,x25, [x0, #0x0C0]
-  stp    x26,x27, [x0, #0x0D0]
-  stp    x28,fp,  [x0, #0x0E0]
-  str    lr,      [x0, #0x0F0]
-  mov    x1,sp
-  str    x1,      [x0, #0x0F8]
-  str    lr,      [x0, #0x100]    ; store return address as pc
-  ; skip cpsr
-  stp    d0, d1,  [x0, #0x110]
-  stp    d2, d3,  [x0, #0x120]
-  stp    d4, d5,  [x0, #0x130]
-  stp    d6, d7,  [x0, #0x140]
-  stp    d8, d9,  [x0, #0x150]
-  stp    d10,d11, [x0, #0x160]
-  stp    d12,d13, [x0, #0x170]
-  stp    d14,d15, [x0, #0x180]
-  stp    d16,d17, [x0, #0x190]
-  stp    d18,d19, [x0, #0x1A0]
-  stp    d20,d21, [x0, #0x1B0]
-  stp    d22,d23, [x0, #0x1C0]
-  stp    d24,d25, [x0, #0x1D0]
-  stp    d26,d27, [x0, #0x1E0]
-  stp    d28,d29, [x0, #0x1F0]
-  str    d30,     [x0, #0x200]
-  str    d31,     [x0, #0x208]
-  ldr    x0, #0      ; return UNW_ESUCCESS
-  ret
+  ; skip restore of x0,x1 for now
+  ldp    x2, x3,  [x0, #0x010]
+  ldp    x4, x5,  [x0, #0x020]
+  ldp    x6, x7,  [x0, #0x030]
+  ldp    x8, x9,  [x0, #0x040]
+  ldp    x10,x11, [x0, #0x050]
+  ldp    x12,x13, [x0, #0x060]
+  ldp    x14,x15, [x0, #0x070]
+  ldp    x16,x17, [x0, #0x080]
+  ldp    x18,x19, [x0, #0x090]
+  ldp    x20,x21, [x0, #0x0A0]
+  ldp    x22,x23, [x0, #0x0B0]
+  ldp    x24,x25, [x0, #0x0C0]
+  ldp    x26,x27, [x0, #0x0D0]
+  ldp    x28,fp,  [x0, #0x0E0]
+  ldr    lr,      [x0, #0x100]  ; restore pc into lr
+  ldr    x1,      [x0, #0x0F8]
+  mov    sp,x1          ; restore sp
 
+  ldp    d0, d1,  [x0, #0x110]
+  ldp    d2, d3,  [x0, #0x120]
+  ldp    d4, d5,  [x0, #0x130]
+  ldp    d6, d7,  [x0, #0x140]
+  ldp    d8, d9,  [x0, #0x150]
+  ldp    d10,d11, [x0, #0x160]
+  ldp    d12,d13, [x0, #0x170]
+  ldp    d14,d15, [x0, #0x180]
+  ldp    d16,d17, [x0, #0x190]
+  ldp    d18,d19, [x0, #0x1A0]
+  ldp    d20,d21, [x0, #0x1B0]
+  ldp    d22,d23, [x0, #0x1C0]
+  ldp    d24,d25, [x0, #0x1D0]
+  ldp    d26,d27, [x0, #0x1E0]
+  ldp    d28,d29, [x0, #0x1F0]
+  ldr    d30,     [x0, #0x200]
+  ldr    d31,     [x0, #0x208]
+
+  ldp    x0, x1,  [x0, #0x000]  ; restore x0,x1
+  ret    lr            ; jump to pc
+
+
+
+#elif __arm__ && !__APPLE__
+
+@
+@ extern int unw_getcontext(unw_context_t* thread_state)
+@
+@ On entry:
+@  thread_state pointer is in r0
+@ 
+@ Per EHABI #4.7 this only saves the core integer registers.
+@ EHABI #7.4.5 notes that in general all VRS registers should be restored
+@ however this is very hard to do for VFP registers because it is unknown
+@ to the lbirary how many registers are implemented by the architecture.
+@ Instead, VFP registers are demand saved by logic external to unw_getcontext.
+@
+  .p2align 2
+DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
+  @ 32bit thumb-2 restrictions for stm:
+  @ . the sp (r13) cannot be in the list
+  @ . the pc (r15) cannot be in the list in an STM instruction
+  stm r0, {r0-r12}
+  str sp, [r0, #52]
+  str lr, [r0, #56]
+  str lr, [r0, #60]  @ store return address as pc
+  mov r0, #0         @ return UNW_ESUCCESS
+#if _ARM_ARCH > 4
+  bx lr
+#else
+  mov pc, lr
 #endif
 
+@
+@ static void libunwind::Registers_arm::saveVFPWithFSTMD(unw_fpreg_t* values)
+@
+@ On entry:
+@  values pointer is in r0
+@
+  .p2align 2
+DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm16saveVFPWithFSTMDEPy)
+  fstmiad r0, {d0-d15}
+  mov pc, lr
+
+@
+@ static void libunwind::Registers_arm::saveVFPWithFSTMX(unw_fpreg_t* values)
+@
+@ On entry:
+@  values pointer is in r0
+@
+  .p2align 2
+DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm16saveVFPWithFSTMXEPy)
+  fstmiax r0, {d0-d15}
+  mov pc, lr
+
+@
+@ static void libunwind::Registers_arm::saveVFPv3(unw_fpreg_t* values)
+@
+@ On entry:
+@  values pointer is in r0
+@
+  .p2align 2
+DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm9saveVFPv3EPy)
+  @ d16-d31 are only available when compiling with -mfpu=vfpv3. We don't want to
+  @ do that in the library (because we don't want the compiler to generate
+  @ instructions that access those), but this is only accessed if the
+  @ personality routine needs these registers, which implies they are actually,
+  @ available on the target, so it's ok to execute.
+  @ So, generate the instruction using the corresponding coprocessor mnemonic.
+  stcl p11, cr0, [r0], {#0x20}  @ vldm r0, {d16-d31}
+  mov pc, lr
+
+@
+@ static void libunwind::Registers_arm::saveiWMMX(unw_fpreg_t* values)
+@
+@ On entry:
+@  values pointer is in r0
+@
+  .p2align 2
+DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm9saveiWMMXEPy)
+  stcl p1, cr0, [r0], #8  @ wstrd wR0, [r0], #8
+  stcl p1, cr1, [r0], #8  @ wstrd wR1, [r0], #8
+  stcl p1, cr2, [r0], #8  @ wstrd wR2, [r0], #8
+  stcl p1, cr3, [r0], #8  @ wstrd wR3, [r0], #8
+  stcl p1, cr4, [r0], #8  @ wstrd wR4, [r0], #8
+  stcl p1, cr5, [r0], #8  @ wstrd wR5, [r0], #8
+  stcl p1, cr6, [r0], #8  @ wstrd wR6, [r0], #8
+  stcl p1, cr7, [r0], #8  @ wstrd wR7, [r0], #8
+  stcl p1, cr8, [r0], #8  @ wstrd wR8, [r0], #8
+  stcl p1, cr9, [r0], #8  @ wstrd wR9, [r0], #8
+  stcl p1, cr10, [r0], #8  @ wstrd wR10, [r0], #8
+  stcl p1, cr11, [r0], #8  @ wstrd wR11, [r0], #8
+  stcl p1, cr12, [r0], #8  @ wstrd wR12, [r0], #8
+  stcl p1, cr13, [r0], #8  @ wstrd wR13, [r0], #8
+  stcl p1, cr14, [r0], #8  @ wstrd wR14, [r0], #8
+  stcl p1, cr15, [r0], #8  @ wstrd wR15, [r0], #8
+  mov pc, lr
+
+@
+@ static void libunwind::Registers_arm::saveiWMMXControl(unw_uint32_t* values)
+@
+@ On entry:
+@  values pointer is in r0
+@
+  .p2align 2
+DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm16saveiWMMXControlEPj)
+  stc2 p1, cr8, [r0], #4  @ wstrw wCGR0, [r0], #4
+  stc2 p1, cr9, [r0], #4  @ wstrw wCGR1, [r0], #4
+  stc2 p1, cr10, [r0], #4  @ wstrw wCGR2, [r0], #4
+  stc2 p1, cr11, [r0], #4  @ wstrw wCGR3, [r0], #4
+  mov pc, lr
+
+#endif

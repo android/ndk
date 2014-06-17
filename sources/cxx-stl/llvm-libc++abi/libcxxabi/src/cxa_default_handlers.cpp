@@ -13,6 +13,7 @@
 #include <new>
 #include <exception>
 #include "abort_message.h"
+#include "config.h" // For __sync_swap
 #include "cxxabi.h"
 #include "cxa_handlers.hpp"
 #include "cxa_exception.hpp"
@@ -91,6 +92,9 @@ std::terminate_handler  __cxa_terminate_handler = default_terminate_handler;
 std::unexpected_handler __cxa_unexpected_handler = default_unexpected_handler;
 
 // In the future these will become:
+// TODO(ajwong): Can this actually be true? Is std::atomic part of libc++? If so, do we have a
+// layering violation?
+//
 // std::atomic<std::terminate_handler>  __cxa_terminate_handler(default_terminate_handler);
 // std::atomic<std::unexpected_handler> __cxa_unexpected_handler(default_unexpected_handler);
 

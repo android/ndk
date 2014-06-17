@@ -8,6 +8,7 @@ LOCAL_PATH := $(call my-dir)
 #
 
 LIBCXX_FORCE_REBUILD := $(strip $(LIBCXX_FORCE_REBUILD))
+LIBCXX_USE_LIBCXXABI := $(strip $(LIBCXX_USE_LIBCXXABI))
 ifndef LIBCXX_FORCE_REBUILD
   ifeq (,$(strip $(wildcard $(LOCAL_PATH)/libs/$(TARGET_ARCH_ABI)/libc++_static$(TARGET_LIB_EXTENSION))))
     $(call __ndk_info,WARNING: Rebuilding libc++ libraries from sources!)
@@ -55,8 +56,10 @@ llvm_libc++_export_cxxflags := -std=c++11
 
 llvm_libc++_cxxflags := $(llvm_libc++_export_cxxflags)
 
+
+ifneq ($(LIBCXX_USE_LIBCXXABI),true)
+
 # Gabi++ emulates libcxxabi when building libcxx.
-#
 llvm_libc++_cxxflags += -DLIBCXXABI=1
 
 # Find the GAbi++ sources to include them here.
@@ -78,6 +81,27 @@ include $(libgabi++_sources_dir)/sources.mk
 llvm_libc++_sources += $(addprefix $(libgabi++_sources_prefix:%/=%)/,$(libgabi++_src_files))
 llvm_libc++_includes += $(libgabi++_c_includes)
 llvm_libc++_export_includes += $(libgabi++_c_includes)
+
+else
+# LIBCXX_USE_LIBCXXABI : true
+
+libcxxabi_sources_dir := $(strip $(wildcard $(LOCAL_PATH)/../llvm-libc++abi))
+ifdef libcxxabi_sources_dir
+  libcxxabi_sources_prefix := ../llvm-libc++abi
+else
+  libcxxabi_sources_dir := $(strip $(wildcard $(NDK_ROOT)/sources/cxx-stl/llvm-libc++abi))
+  ifndef libcxxabi_sources_dir
+    $(error Can't find libcxxabi sources directory!!)
+  endif
+  libcxxabi_sources_prefix := $(libcxxabi_sources_dir)
+endif
+
+include $(libcxxabi_sources_dir)/sources.mk
+llvm_libc++_sources += $(addprefix $(libcxxabi_sources_prefix:%/=%)/,$(libcxxabi_src_files))
+llvm_libc++_includes += $(libcxxabi_c_includes)
+llvm_libc++_export_includes += $(libcxxabi_c_includes)
+
+endif
 
 ifneq ($(LIBCXX_FORCE_REBUILD),true)
 

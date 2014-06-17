@@ -123,8 +123,9 @@ sleep_for(const chrono::nanoseconds& ns)
             ts.tv_sec = ts_sec_max;
             ts.tv_nsec = giga::num - 1;
         }
-#if defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 199309L
-        nanosleep(&ts, 0);
+#if (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 199309L) || defined(__ANDROID__)
+        while (nanosleep(&ts, &ts) == -1 && errno == EINTR)
+            ;
 #else
 #warning sleep_for not yet implemented
 #endif

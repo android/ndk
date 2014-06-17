@@ -9,7 +9,9 @@ LOCAL_SRC_FILES := $(libcxx-test-path)/$$(__test).pass.cpp
 LOCAL_MODULE := $$(subst /,___,$$(__test))
 
 # armeabi and mips needs libatomic to provide "__atomic_is_lock_free"
+ifneq (,$(filter armeabi mips,$(TARGET_ARCH_ABI)))
 LOCAL_LDLIBS += -latomic
+endif
 
 # Enable RTTI and exception handling for some tests
 LOCAL_CPP_FEATURES := rtti exceptions
@@ -29,8 +31,7 @@ endef
 # The following black list contain test can't be compiled under various
 # configuration
 
-black_list_all := \
-    utilities/meta/meta.trans/meta.trans.other/aligned_storage
+black_list_all :=
 
 black_list_clang3_4 := \
     utilities/tuple/tuple.tuple/TupleFunction
@@ -40,68 +41,12 @@ black_list_clang3_3 := \
     utilities/meta/meta.unary/meta.unary.prop/is_trivialially_copyable
 
 black_list_gcc4_8 := \
-    atomics/atomics.fences/atomic_signal_fence \
-    atomics/atomics.fences/atomic_thread_fence \
-    atomics/atomics.flag/atomic_flag_clear \
-    atomics/atomics.flag/atomic_flag_clear_explicit \
-    atomics/atomics.flag/atomic_flag_test_and_set \
     atomics/atomics.flag/atomic_flag_test_and_set_explicit \
-    atomics/atomics.flag/clear \
-    atomics/atomics.flag/default \
-    atomics/atomics.flag/init \
     atomics/atomics.flag/test_and_set \
-    atomics/atomics.general/nothing_to_do \
-    atomics/atomics.lockfree/lockfree \
-    atomics/atomics.order/kill_dependency \
-    atomics/atomics.order/memory_order \
-    atomics/atomics.syn/nothing_to_do \
-    atomics/atomics.types.generic/address \
-    atomics/atomics.types.generic/bool \
-    atomics/atomics.types.generic/cstdint_typedefs \
-    atomics/atomics.types.generic/integral \
-    atomics/atomics.types.generic/integral_typedefs \
-    atomics/atomics.types.operations/atomics.types.operations.arith/nothing_to_do \
-    atomics/atomics.types.operations/atomics.types.operations.general/nothing_to_do \
-    atomics/atomics.types.operations/atomics.types.operations.pointer/nothing_to_do \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_compare_exchange_strong \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_compare_exchange_strong_explicit \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_compare_exchange_weak \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_compare_exchange_weak_explicit \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_exchange \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_exchange_explicit \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_add \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_add_explicit \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_and \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_and_explicit \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_or \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_or_explicit \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_sub \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_sub_explicit \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_xor \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_xor_explicit \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_init \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_is_lock_free \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_load \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_load_explicit \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_store \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_store_explicit \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_var_init \
-    atomics/atomics.types.operations/atomics.types.operations.templ/nothing_to_do \
-    atomics/atomics.types.operations/nothing_to_do \
-    atomics/version \
-    thread/futures/futures.async/async \
-    thread/futures/futures.overview/launch \
-    utilities/memory/unique.ptr/unique.ptr.runtime/unique.ptr.runtime.ctor/default02 \
-    utilities/memory/unique.ptr/unique.ptr.runtime/unique.ptr.runtime.ctor/pointer02 \
-    utilities/memory/unique.ptr/unique.ptr.single/unique.ptr.single.ctor/default02 \
-    utilities/memory/unique.ptr/unique.ptr.single/unique.ptr.single.ctor/pointer02 \
-    utilities/meta/meta.rel/is_convertible \
-    utilities/meta/meta.trans/meta.trans.other/underlying_type \
     utilities/meta/meta.unary/meta.unary.prop/is_literal_type \
     utilities/meta/meta.unary/meta.unary.prop/is_nothrow_assignable \
     utilities/meta/meta.unary/meta.unary.prop/is_nothrow_copy_constructible \
     utilities/meta/meta.unary/meta.unary.prop/is_nothrow_destructible \
-    utilities/meta/meta.unary/meta.unary.prop/is_nothrow_move_constructible \
     utilities/meta/meta.unary/meta.unary.prop/is_trivial \
     utilities/meta/meta.unary/meta.unary.prop/is_trivialially_copyable \
     utilities/meta/meta.unary/meta.unary.prop/is_trivially_assignable \
@@ -109,103 +54,11 @@ black_list_gcc4_8 := \
     utilities/meta/meta.unary/meta.unary.prop/is_trivially_copy_constructible \
     utilities/meta/meta.unary/meta.unary.prop/is_trivially_move_assignable \
     utilities/meta/meta.unary/meta.unary.prop/is_trivially_move_constructible \
-    utilities/utility/pairs/pairs.pair/copy_ctor \
-    utilities/utility/pairs/pairs.pair/rv_pair_U_V \
-    utilities/utility/pairs/pairs.spec/make_pair
+    utilities/utility/pairs/pairs.pair/copy_ctor
 
 black_list_gcc4_9 := \
-    atomics/atomics.fences/atomic_signal_fence \
-    atomics/atomics.fences/atomic_thread_fence \
-    atomics/atomics.flag/atomic_flag_clear \
-    atomics/atomics.flag/atomic_flag_clear_explicit \
-    atomics/atomics.flag/atomic_flag_test_and_set \
-    atomics/atomics.flag/atomic_flag_test_and_set_explicit \
-    atomics/atomics.flag/clear \
-    atomics/atomics.flag/default \
-    atomics/atomics.flag/init \
-    atomics/atomics.flag/test_and_set \
-    atomics/atomics.general/nothing_to_do \
-    atomics/atomics.lockfree/lockfree \
-    atomics/atomics.order/kill_dependency \
-    atomics/atomics.order/memory_order \
-    atomics/atomics.syn/nothing_to_do \
-    atomics/atomics.types.generic/address \
-    atomics/atomics.types.generic/bool \
-    atomics/atomics.types.generic/cstdint_typedefs \
-    atomics/atomics.types.generic/integral \
-    atomics/atomics.types.generic/integral_typedefs \
-    atomics/atomics.types.operations/atomics.types.operations.arith/nothing_to_do \
-    atomics/atomics.types.operations/atomics.types.operations.general/nothing_to_do \
-    atomics/atomics.types.operations/atomics.types.operations.pointer/nothing_to_do \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_compare_exchange_strong \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_compare_exchange_strong_explicit \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_compare_exchange_weak \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_compare_exchange_weak_explicit \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_exchange \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_exchange_explicit \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_add \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_add_explicit \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_and \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_and_explicit \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_or \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_or_explicit \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_sub \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_sub_explicit \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_xor \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_xor_explicit \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_init \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_is_lock_free \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_load \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_load_explicit \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_store \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_store_explicit \
-    atomics/atomics.types.operations/atomics.types.operations.req/atomic_var_init \
-    atomics/atomics.types.operations/atomics.types.operations.templ/nothing_to_do \
-    atomics/atomics.types.operations/nothing_to_do \
-    atomics/version \
-    thread/futures/futures.async/async \
-    thread/futures/futures.overview/launch \
-    utilities/function.objects/bind/func.bind/func.bind.bind/invoke_lvalue \
-    utilities/function.objects/bind/func.bind/func.bind.bind/invoke_rvalue \
-    utilities/function.objects/func.memfn/member_function_const \
-    utilities/function.objects/func.memfn/member_function_const_volatile \
-    utilities/function.objects/func.memfn/member_function_volatile \
-    utilities/function.objects/func.require/invoke \
-    utilities/function.objects/func.wrap/func.wrap.func/func.wrap.func.con/alloc_F \
-    utilities/function.objects/func.wrap/func.wrap.func/func.wrap.func.con/F \
-    utilities/function.objects/func.wrap/func.wrap.func/func.wrap.func.con/F_assign \
-    utilities/function.objects/func.wrap/func.wrap.func/func.wrap.func.inv/invoke \
-    utilities/function.objects/refwrap/refwrap.invoke/invoke \
-    utilities/memory/unique.ptr/unique.ptr.runtime/unique.ptr.runtime.ctor/default02 \
-    utilities/memory/unique.ptr/unique.ptr.runtime/unique.ptr.runtime.ctor/pointer02 \
-    utilities/memory/unique.ptr/unique.ptr.single/unique.ptr.single.ctor/default02 \
-    utilities/memory/unique.ptr/unique.ptr.single/unique.ptr.single.ctor/pointer02 \
-    utilities/meta/meta.rel/is_convertible \
-    utilities/meta/meta.trans/meta.trans.other/result_of \
-    utilities/meta/meta.trans/meta.trans.other/underlying_type \
-    utilities/meta/meta.unary/meta.unary.prop/is_literal_type \
-    utilities/meta/meta.unary/meta.unary.prop/is_nothrow_assignable \
-    utilities/meta/meta.unary/meta.unary.prop/is_nothrow_copy_constructible \
-    utilities/meta/meta.unary/meta.unary.prop/is_nothrow_destructible \
-    utilities/meta/meta.unary/meta.unary.prop/is_nothrow_move_constructible \
-    utilities/meta/meta.unary/meta.unary.prop/is_trivial \
-    utilities/meta/meta.unary/meta.unary.prop/is_trivialially_copyable \
-    utilities/meta/meta.unary/meta.unary.prop/is_trivially_assignable \
-    utilities/meta/meta.unary/meta.unary.prop/is_trivially_copy_assignable \
-    utilities/meta/meta.unary/meta.unary.prop/is_trivially_copy_constructible \
-    utilities/meta/meta.unary/meta.unary.prop/is_trivially_move_assignable \
-    utilities/meta/meta.unary/meta.unary.prop/is_trivially_move_constructible \
-    utilities/tuple/tuple.tuple/TupleFunction \
-    utilities/utility/pairs/pairs.pair/copy_ctor \
-    utilities/utility/pairs/pairs.pair/rv_pair_U_V \
-    utilities/utility/pairs/pairs.spec/make_pair
-
-black_list_x86 := \
-    language.support/support.types/max_align_t
-
-black_list_gcc4_9_armeabi := \
-    strings/basic.string/string.modifiers/string_replace/size_size_string_size_size \
-    strings/basic.string/string.ops/string_compare/size_size_string_size_size   # sometime
+    $(black_list_gcc4_8) \
+    utilities/tuple/tuple.tuple/TupleFunction
 
 # Compute the back_list in this particular configuration: "all | compiler | arch"
 
@@ -222,16 +75,9 @@ black_list += $(black_list_gcc4_8)
 else
 ifeq (4.9,$(NDK_TOOLCHAIN_VERSION))
 black_list += $(black_list_gcc4_9)
-ifeq ($(TARGET_ARCH_ABI),armeabi)
-black_list += $(black_list_gcc4_9_armeabi)
 endif
 endif
 endif
-endif
-endif
-
-ifeq ($(TARGET_ARCH_ABI),x86)
-black_list += $(black_list_x86)
 endif
 
 # Function  gen-test
