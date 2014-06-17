@@ -333,7 +333,7 @@ generate_shell_library ()
 
     # Build it with our cross-compiler. It will complain about conflicting
     # types for built-in functions, so just shut it up.
-    $TOOLCHAIN_PREFIX-gcc -shared -Wl,-Bsymbolic -nostdlib -o $TMPO $TMPC 1>/dev/null 2>&1
+    $TOOLCHAIN_PREFIX-gcc -Wl,-shared,-Bsymbolic -nostdlib -o $TMPO $TMPC 1>/dev/null 2>&1
     if [ $? != 0 ] ; then
         dump "ERROR: Can't generate shell library for: $1"
         dump "See the content of $TMPC for details."
