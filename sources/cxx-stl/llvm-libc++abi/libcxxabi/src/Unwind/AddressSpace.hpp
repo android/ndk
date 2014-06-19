@@ -20,6 +20,11 @@
 
 #if !_LIBUNWIND_IS_BAREMETAL
 #include <dlfcn.h>
+#if defined(__ANDROID__) && !__LP64__
+// dladdr only exits in API >= 8. Call to our my_dladdr in android/support for dynamic lookup
+extern "C" int my_dladdr(const void* addr, Dl_info *info);
+#define dladdr  my_dladdr
+#endif
 #endif
 
 #if __APPLE__
