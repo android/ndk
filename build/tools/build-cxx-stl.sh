@@ -317,7 +317,8 @@ LIBCXXABI_SOURCES=\
 
 # android/support files for libc++
 SUPPORT32_SOURCES=\
-"../../android/support/src/locale_support.c \
+"../../android/support/src/libdl_support.c \
+../../android/support/src/locale_support.c \
 ../../android/support/src/math_support.c \
 ../../android/support/src/stdlib_support.c \
 ../../android/support/src/wchar_support.c \

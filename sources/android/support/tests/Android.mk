@@ -15,7 +15,12 @@ LOCAL_SRC_FILES := \
   ctype_unittest.cc \
   math_unittest.cc \
   stdio_unittest.cc \
-  wchar_unittest.cc \
+  wchar_unittest.cc
+
+ifeq ($(filter $(NDK_KNOWN_DEVICE_ABI64S),$(TARGET_ARCH_ABI)),)
+LOCAL_SRC_FILES += \
+  libdl_unittest.cc
+endif
 
 LOCAL_STATIC_LIBRARIES := android_support minitest
 include $(BUILD_EXECUTABLE)
