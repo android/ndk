@@ -340,7 +340,9 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm20restoreCoreAndJu
 @
   .p2align 2
 DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm19restoreVFPWithFLDMDEPy)
+#if _ARM_ARCH >= 7
   fldmiad r0, {d0-d15}
+#endif
   mov pc, lr
 
 @
@@ -351,7 +353,9 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm19restoreVFPWithFL
 @
   .p2align 2
 DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm19restoreVFPWithFLDMXEPy)
+#if _ARM_ARCH >= 7
   fldmiax r0, {d0-d15}
+#endif
   mov pc, lr
 
 @

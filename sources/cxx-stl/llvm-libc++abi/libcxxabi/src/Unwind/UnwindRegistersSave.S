@@ -318,7 +318,9 @@ DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
 @
   .p2align 2
 DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm16saveVFPWithFSTMDEPy)
+#if _ARM_ARCH >= 7
   fstmiad r0, {d0-d15}
+#endif
   mov pc, lr
 
 @
@@ -329,7 +331,9 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm16saveVFPWithFSTMD
 @
   .p2align 2
 DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm16saveVFPWithFSTMXEPy)
+#if _ARM_ARCH >= 7
   fstmiax r0, {d0-d15}
+#endif
   mov pc, lr
 
 @
