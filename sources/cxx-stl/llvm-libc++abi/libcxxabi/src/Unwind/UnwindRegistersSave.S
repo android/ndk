@@ -318,7 +318,7 @@ DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
 @
   .p2align 2
 DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm16saveVFPWithFSTMDEPy)
-  fstmiad r0, {d0-d15}
+  stc p11, cr0, [r0], {#0x20}  @ fstmiad r0, {d0-d15}
   mov pc, lr
 
 @
@@ -329,7 +329,7 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm16saveVFPWithFSTMD
 @
   .p2align 2
 DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm16saveVFPWithFSTMXEPy)
-  fstmiax r0, {d0-d15}
+  stc p11, cr0, [r0], {#0x21}  @ fstmiax r0, {d0-d15}
   mov pc, lr
 
 @
@@ -340,12 +340,13 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm16saveVFPWithFSTMX
 @
   .p2align 2
 DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm9saveVFPv3EPy)
-  @ d16-d31 are only available when compiling with -mfpu=vfpv3. We don't want to
-  @ do that in the library (because we don't want the compiler to generate
-  @ instructions that access those), but this is only accessed if the
-  @ personality routine needs these registers, which implies they are actually,
-  @ available on the target, so it's ok to execute.
-  @ So, generate the instruction using the corresponding coprocessor mnemonic.
+  @ VFP and iwMMX instructions are only available when compiling with the flags
+  @ that enable them. We don't want to do that in the library (because we don't
+  @ want the compiler to generate instructions that access those) but this is
+  @ only accessed if the personality routine needs these registers. Use of
+  @ these registers implies they are, actually, available on the target, so
+  @ it's ok to execute.
+  @ So, generate the instructions using the corresponding coprocessor mnemonic.
   stcl p11, cr0, [r0], {#0x20}  @ vldm r0, {d16-d31}
   mov pc, lr
 
