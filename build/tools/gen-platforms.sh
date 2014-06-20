@@ -184,6 +184,11 @@ if [ -n "$OPTION_PLATFORM" ] ; then
 else
     # Build the list from the content of SRCDIR
     PLATFORMS=`extract_platforms_from "$SRCDIR"`
+    # hack to place non-numeric level 'L' (lmp-preview) at the very end
+    if [ "$PLATFORMS" != "${PLATFORMS%%L*}" ] ; then
+        PLATFORMS=`echo $PLATFORMS | tr -d 'L'`
+        PLATFORMS="$PLATFORMS L"
+    fi
     log "Using platforms: $PLATFORMS"
 fi
 
@@ -580,6 +585,12 @@ generate_api_level ()
     local HEADER="platforms/android-$API/arch-$ARCH/usr/include/android/api-level.h"
     log "Generating: $HEADER"
     rm -f "$3/$HEADER"  # Remove symlink if any.
+
+    # hack to replace 'L' with large number
+    if [ "$API" = "L" ]; then
+        API="9999 /*'L'*/"
+    fi
+
     cat > "$3/$HEADER" <<EOF
 /*
  * Copyright (C) 2008 The Android Open Source Project
@@ -667,7 +678,7 @@ for ARCH in $ARCHS; do
         # into the x86 and mips android-9 directories.
         if [ -z "$PREV_SYSROOT_DST" ]; then
             for OLD_PLATFORM in $PLATFORMS; do
-                if [ "$OLD_PLATFORM" -eq "$PLATFORM" ]; then
+                if [ "$OLD_PLATFORM" = "$PLATFORM" ]; then
                     break
                 fi
                 copy_src_directory platforms/android-$OLD_PLATFORM/include \
@@ -677,10 +688,10 @@ for ARCH in $ARCHS; do
         fi
 
         # There are two set of bionic headers: the original ones haven't been updated since
-        # gingerbread except for bug fixing, and the new ones in android-$MIN_API64_LEVEL
+        # gingerbread except for bug fixing, and the new ones in android-$FIRST_API64_LEVEL
         # with 64-bit support.  Before the old bionic headers are deprecated/removed, we need
-        # to remove stale old headers when createing platform >= $MIN_API64_LEVEL
-        if [ "$PLATFORM" -eq "$MIN_API64_LEVEL" ]; then
+        # to remove stale old headers when createing platform = $FIRST_API64_LEVEL
+        if [ "$PLATFORM" = "$FIRST_API64_LEVEL" ]; then
             log "Removing stale bionic headers in \$DST/$SYSROOT_DST/include"
             nonbionic_files="android EGL GLES GLES2 GLES3 KHR media OMXAL SLES jni.h thread_db.h zconf.h zlib.h"
             if [ -d "$DSTDIR/$SYSROOT_DST/include/" ]; then
