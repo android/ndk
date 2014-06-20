@@ -1,0 +1,10 @@
+Code-Review+1: H.J. Lu <hjl.tools@gmail.com>
+Code-Review+1: Bruce J Beare <bruce.j.beare@intel.com>
+Code-Review+1: Elliott Hughes <enh@google.com>
+Code-Review+2: Andrew Hsieh <andrewhsieh@google.com>
+Verified+1: Andrew Hsieh <andrewhsieh@google.com>
+Submitted-by: Andrew Hsieh <andrewhsieh@google.com>
+Submitted-at: Fri, 20 Jun 2014 13:47:35 +0000
+Reviewed-on: https://android-review.googlesource.com/72235
+Project: platform/ndk
+Branch: refs/heads/master
