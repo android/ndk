@@ -1,0 +1,66 @@
+Android NDK x86-64 instruction set support
+===
+
+Introduction:
+-------------
+
+Android NDK r[TBD] added support for the '`x86-64`' ABI, that allows native code to
+run on Android-based devices running on CPUs supporting the x86-64 instruction
+set.
+
+The Android x86-64 ABI itself is fully specified in docs/CPU-ARCH-ABIS.html.
+
+Overview:
+---------
+
+Generating machine code is simple: just add 'x86-64' to your APP_ABI
+definition in your Application.mk file, for example:
+
+        APP_ABI := armeabi armeabi-v7a x86 x86-64
+
+Alternatively, you can use:
+
+        APP_ABI := all
+
+will generate machine code for all supported ABIs with this NDK. Doing so
+will ensure that your application package contains libraries for all target
+ABIs. Note that this has an impact on package size, since each ABI will
+correspond to its own set of native libraries built from the same sources.
+
+The default ABI is still '`armeabi`', if unspecified in your project.
+
+As you would expect, generated libraries will go into `$PROJECT/libs/x86-64/`,
+and will be embedded into your .apk under `/lib/x86-64/`.
+
+And just like other ABIs, the Android package manager will extract these
+libraries on a *compatible* x86-64 based device automatically at install
+time, to put them under <dataPath>/lib, where <dataPath> is the
+application's private data directory.
+
+Similarly, the Google Play server is capable of filtering applications
+based on the native libraries they embed and your device's target CPU.
+
+Debugging with ndk-gdb should work exactly as described under docs/NDK-GDB.html.
+
+Standalone-toolchain:
+---------------------
+
+It is possible to use the x86-64 toolchain with NDK in stand-alone mode.
+See docs/STANDALONE-TOOLCHAIN.html for more details. Briefly speaking,
+it is now possible to run:
+
+      $NDK/build/tools/make-standalone-toolchain.sh --arch=x86_64 --install-dir=<path>
+
+The toolchain binaries have the `x86_64-linux-android- prefix`.
+
+
+Compatibility:
+--------------
+
+The minimal native API level provided by official Android x86-64 platform
+builds is [TBD], which corresponds to all the native APIs provided by
+Android [TBD], i.e. [TBD]-desert.
+
+You won't have to change anything to your project files if you target an older
+API level: the NDK build script will automatically select the right set of
+native platform headers/libraries for you.
