@@ -539,6 +539,8 @@ NDK_APP_ABI_ALL_EXPANDED := $(NDK_KNOWN_ABIS)
 else
 NDK_APP_ABI_ALL_EXPANDED := $(NDK_KNOWN_DEVICE_ABIS)
 endif
+# The first API level ndk-build enforces -fPIE for executable
+NDK_PIE_PLATFORM_LEVEL := 16
 
 # the list of all toolchains in this NDK
 NDK_ALL_TOOLCHAINS :=

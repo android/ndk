@@ -145,14 +145,6 @@ LOCAL_RS_OBJECTS :=
 #
 LOCAL_CFLAGS := -DANDROID $(LOCAL_CFLAGS)
 
-# enable PIE for executable beyond certain API level
-ifeq ($(NDK_APP_PIE),true)
-  ifeq ($(call module-get-class,$(LOCAL_MODULE)),EXECUTABLE)
-    LOCAL_CFLAGS += -fPIE
-    LOCAL_LDFLAGS += -fPIE -pie
-  endif
-endif
-
 #
 # Add the default system shared libraries to the build
 #
@@ -211,6 +203,16 @@ ifeq ($(LOCAL_DISABLE_FORMAT_STRING_CHECKS),true)
   LOCAL_CFLAGS += $($(my)DISABLE_FORMAT_STRING_CFLAGS)
 else
   LOCAL_CFLAGS += $($(my)FORMAT_STRING_CFLAGS)
+endif
+
+# enable PIE for executable beyond certain API level, unless "-static"
+ifneq (,$(filter true,$(NDK_APP_PIE) $(TARGET_PIE)))
+  ifeq ($(call module-get-class,$(LOCAL_MODULE)),EXECUTABLE)
+    ifeq (,$(filter -static,$(TARGET_LDFLAGS) $(LOCAL_LDFLAGS) $(NDK_APP_LDFLAGS)))
+      LOCAL_CFLAGS += -fPIE
+      LOCAL_LDFLAGS += -fPIE -pie
+    endif
+  endif
 endif
 
 #
