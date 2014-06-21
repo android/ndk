@@ -488,14 +488,20 @@ $(foreach _platform,$(NDK_ALL_PLATFORMS),\
 
 # we're going to find the maximum platform number of the form android-<number>
 # ignore others, which could correspond to special and experimental cases
+NDK_PREVIEW_LEVEL := L
 NDK_ALL_PLATFORM_LEVELS := $(filter android-%,$(NDK_ALL_PLATFORMS))
 NDK_ALL_PLATFORM_LEVELS := $(patsubst android-%,%,$(NDK_ALL_PLATFORM_LEVELS))
 $(call ndk_log,Found stable platform levels: $(NDK_ALL_PLATFORM_LEVELS))
 
+# Hack to pull $(NDK_PREVIEW_LEVEL) ahead of all (numeric) level
 NDK_MAX_PLATFORM_LEVEL := 3
 $(foreach level,$(NDK_ALL_PLATFORM_LEVELS),\
-  $(eval NDK_MAX_PLATFORM_LEVEL := $$(call max,$$(NDK_MAX_PLATFORM_LEVEL),$$(level)))\
+  $(eval NDK_MAX_PLATFORM_LEVEL := $$(if $$(subst $$(NDK_PREVIEW_LEVEL),,$$(level)),$$(call max,$$(NDK_MAX_PLATFORM_LEVEL),$$(level)),9999))\
 )
+ifeq ($(NDK_MAX_PLATFORM_LEVEL),9999)
+NDK_MAX_PLATFORM_LEVEL := $(NDK_PREVIEW_LEVEL)
+endif
+
 $(call ndk_log,Found max platform level: $(NDK_MAX_PLATFORM_LEVEL))
 
 # ====================================================================

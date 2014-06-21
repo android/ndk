@@ -36,10 +36,10 @@ $(foreach _plat,3 4 5 8,\
 )
 endif
 
-# The minimal platform for 64-bit ABIs is android-20
-ifneq ($(filter %arm64-v8a %x86_64 %mips64,$(TARGET_ARCH_ABI)),)
-$(foreach _plat,3 4 5 8 9 10 11 12 13 14 15 16 17 18 19,\
-    $(eval TARGET_PLATFORM := $$(subst android-$(_plat),android-20,$$(TARGET_PLATFORM)))\
+# The first platform for 64-bit ABIs is android-$(NDK_PREVIEW_LEVEL)
+ifneq ($(filter $(NDK_KNOWN_DEVICE_ABI64S),$(TARGET_ARCH_ABI)),)
+$(foreach _plat,3 4 5 8 9 10 11 12 13 14 15 16 17 18 19 20 21,\
+    $(eval TARGET_PLATFORM := $$(subst android-$(_plat),android-$(NDK_PREVIEW_LEVEL),$$(TARGET_PLATFORM)))\
 )
 endif
 
