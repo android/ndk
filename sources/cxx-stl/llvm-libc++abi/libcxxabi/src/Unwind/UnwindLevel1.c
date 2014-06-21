@@ -34,9 +34,10 @@ unwind_phase1(unw_context_t *uc, _Unwind_Exception *exception_object) {
   // from scratch thus achieving the same effect.
   unw_cursor_t cursor1;
   unw_init_local(&cursor1, uc);
+  bool handlerNotFound;
 
   // Walk each frame looking for a place to stop.
-  for (bool handlerNotFound = true; handlerNotFound;) {
+  for (handlerNotFound = true; handlerNotFound;) {
 
     // Ask libuwind to get next frame (skip over first which is
     // _Unwind_RaiseException).
@@ -661,7 +662,8 @@ _Unwind_VRS_Result _Unwind_VRS_Pop(
                           _UVRSD_UINT32, &sp) != _UVRSR_OK) {
         return _UVRSR_FAILED;
       }
-      for (int i = 0; i < 16; ++i) {
+      int i;
+      for (i = 0; i < 16; ++i) {
         if (!(discriminator & (1<<i)))
           continue;
         uint32_t value = *sp++;
@@ -692,7 +694,8 @@ _Unwind_VRS_Result _Unwind_VRS_Pop(
       }
       // For _UVRSD_VFPX, we're assuming the data is stored in FSTMX "standard
       // format 1", which is equivalent to FSTMD + a padding word.
-      for (uint32_t i = first; i < end; ++i) {
+      uint32_t i;
+      for (i = first; i < end; ++i) {
         // SP is only 32-bit aligned so don't copy 64-bit at a time.
         uint64_t value = *sp++;
         value |= ((uint64_t)(*sp++)) << 32;

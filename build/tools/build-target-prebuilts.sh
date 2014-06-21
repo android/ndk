@@ -126,7 +126,7 @@ run $BUILDTOOLS/build-cxx-stl.sh --stl=stlport --abis="$ABIS,$UNKNOWN_ABIS" $FLA
 fail_panic "Could not build stlport with debug info!"
 
 dump "Building $ABIS $UNKNOWN_ABIS libc++ binaries..."
-run $BUILDTOOLS/build-cxx-stl.sh --stl=libc++ --abis="$ABIS,$UNKNOWN_ABIS" $FLAGS --llvm-version=$DEFAULT_LLVM_VERSION
+run $BUILDTOOLS/build-cxx-stl.sh --stl=libc++-libc++abi --abis="$ABIS,$UNKNOWN_ABIS" $FLAGS --llvm-version=$DEFAULT_LLVM_VERSION
 fail_panic "Could not build libc++!"
 run $BUILDTOOLS/build-cxx-stl.sh --stl=libc++ --abis="$ABIS,$UNKNOWN_ABIS" $FLAGS --with-debug-info --llvm-version=$DEFAULT_LLVM_VERSION
 fail_panic "Could not build libc++ with debug info!"

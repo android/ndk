@@ -75,9 +75,13 @@ DO_HELP=
 DO_STATIC=
 TARGET_ABI=
 TARGET_ARCH=
-TARGET_PATH=/data/local/tmp/libcxx
+if [ -z "$TARGET_TEST_SUBDIR" ]; then
+    TARGET_TEST_SUBDIR="libcxx"
+fi
+TARGET_PATH=/data/local/tmp/$TARGET_TEST_SUBDIR
 CXX=
 WITH_COMPILER_RT=
+LIBCXX_NEEDS_COMPILER_RT=
 for OPT; do
   case $OPT in
     --help|-?)
@@ -177,7 +181,12 @@ for LIB in libc++_static.a libc++_shared.so; do
 done
 
 LIBCOMPILER_RT_LIBS=$(cd "$LIBCXX_ROOT"/../../../android/compiler-rt && pwd)/libs/$TARGET_ABI
-if [ "$WITH_COMPILER_RT" = "yes" ]; then
+readelf -d "$LIBCXX_LIBS/libc++_shared.so" | grep NEEDED | grep -q compiler_rt
+if [ $? = 0 ]; then
+  LIBCXX_NEEDS_COMPILER_RT=yes
+fi
+
+if [ "$WITH_COMPILER_RT" = "yes" -o "$LIBCXX_NEEDS_COMPILER_RT" = "yes" ]; then
   for LIB in libcompiler_rt_static.a libcompiler_rt_shared.so; do
     if [ ! -f "$LIBCOMPILER_RT_LIBS/$LIB" ]; then
       echo "ERROR: Missing prebuilt library: $LIBCOMPILER_RT_LIBS/$LIB"
@@ -328,7 +337,7 @@ if [ "$DO_STATIC" ]; then
   # Note that in standalone toolchain libc++_static is renamed to libstdc++, and
   # compiler adds -lstdc++ implicitly
   if [ "$WITH_COMPILER_RT" = "yes" ]; then
-    LIBS="-nodefaultlibs -latomic -ldl -lm -lc -lcompiler_rt_static"
+    LIBS="-nodefaultlibs -lstdc++ -latomic -ldl -lm -lc -lcompiler_rt_static"
   else
     LIBS="-latomic"
   fi
@@ -338,12 +347,16 @@ else
     echo "ERROR: Can't push shared libc++ to target device!"
     exit 1
   fi
-  if [ "$WITH_COMPILER_RT" = "yes" ]; then
+
+  if [ "$WITH_COMPILER_RT" = "yes" -o "$LIBCXX_NEEDS_COMPILER_RT" = "yes" ]; then
     run2 $ADB push $LIBCOMPILER_RT_LIBS/libcompiler_rt_shared.so $TARGET_PATH 2>/dev/null
     if [ $? != 0 ]; then
       echo "ERROR: Can't push shared libcompiler_rt to target device!"
       exit 1
     fi
+  fi
+
+  if [ "$WITH_COMPILER_RT" = "yes" ]; then
     LIBS="-nodefaultlibs -lc++_shared -latomic -ldl -lm -lc -lcompiler_rt_shared"
   else
     LIBS="-lc++_shared -latomic"
