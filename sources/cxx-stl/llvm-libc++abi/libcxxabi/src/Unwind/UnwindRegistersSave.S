@@ -390,4 +390,20 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm16saveiWMMXControl
   stc2 p1, cr11, [r0], #4  @ wstrw wCGR3, [r0], #4
   mov pc, lr
 
+#elif __mips64
+#
+# extern int unw_getcontext(unw_context_t* thread_state)
+# ToDo:
+#
+DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
+  j $31
+
+#elif __mips__
+#
+# extern int unw_getcontext(unw_context_t* thread_state)
+# ToDo:
+#
+DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
+  j $31
+
 #endif

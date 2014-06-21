@@ -1272,6 +1272,9 @@ int UnwindCursor<A, R>::step() {
   result = this->stepWithDwarfFDE();
 #elif LIBCXXABI_ARM_EHABI
   result = UNW_STEP_SUCCESS;
+#elif defined(__i386__) || defined(__x86_64__) || defined(__mips__) || defined(__mips64)
+  // ToDo: really?
+  result = UNW_STEP_SUCCESS;
 #else
   #error Need _LIBUNWIND_SUPPORT_COMPACT_UNWIND or \
               _LIBUNWIND_SUPPORT_DWARF_UNWIND or \

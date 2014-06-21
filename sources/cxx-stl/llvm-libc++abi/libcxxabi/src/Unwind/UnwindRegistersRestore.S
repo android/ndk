@@ -412,4 +412,5 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm19restoreiWMMXCont
   ldc2 p1, cr11, [r0], #4  @ wldrw wCGR3, [r0], #4
   mov pc, lr
 
+#elif __mips64
 #endif
