@@ -651,20 +651,8 @@ build_stl_libs_for_abi ()
     if [ "$TYPE" = "static" ]; then
         log "Building $DSTDIR/${CXX_STL_LIB}_static.a"
         builder_static_library ${CXX_STL_LIB}_static
-        if [ "$CXX_SUPPORT_LIB" == "libc++abi" ]; then
-            builder_compiler_runtime_ldflags "\
-                -L$NDK_DIR/$COMPILER_RT_SUBDIR/libs/$ABI \
-                -lcompiler_rt_static \
-                "
-        fi
     else
         log "Building $DSTDIR/${CXX_STL_LIB}_shared${LIB_SUFFIX}"
-        if [ "$CXX_SUPPORT_LIB" == "libc++abi" ]; then
-            builder_compiler_runtime_ldflags "\
-                -L$NDK_DIR/$COMPILER_RT_SUBDIR/libs/$ABI \
-                -lcompiler_rt_shared \
-                "
-        fi
         if [ "$(find_ndk_unknown_archs)" != "$ABI" ]; then
             builder_shared_library ${CXX_STL_LIB}_shared $LIB_SUFFIX "$FLOAT_ABI"
         else
