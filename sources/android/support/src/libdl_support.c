@@ -34,7 +34,7 @@
 #include <android/api-level.h>
 
 #if __ANDROID_API__ < 8
-typedef void Dl_info;
+typedef int Dl_info;
 #endif // __ANDROID_API__ >= 8
 
 typedef int (*dladdr_func_t)(const void *addr, Dl_info *info);

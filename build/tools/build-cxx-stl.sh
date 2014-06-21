@@ -173,6 +173,7 @@ fail_panic "Could not create build directory: $BUILD_DIR"
 # Location of the various C++ runtime source trees.  Use symlink from
 # $BUILD_DIR instead of $NDK which may contain full path of builder's working dir
 
+rm -f $BUILD_DIR/ndk
 ln -sf $ANDROID_NDK_ROOT $BUILD_DIR/ndk
 
 GABIXX_SRCDIR=$BUILD_DIR/ndk/$GABIXX_SUBDIR

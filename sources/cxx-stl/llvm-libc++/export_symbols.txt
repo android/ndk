@@ -859,6 +859,7 @@
     _ZNSt3__110to_wstringEd;
     _ZNSt3__110to_wstringEe;
     _ZNSt3__110to_wstringEf;
+    _ZNSt3__110to_wstringEg;
     _ZNSt3__110to_wstringEi;
     _ZNSt3__110to_wstringEj;
     _ZNSt3__110to_wstringEl;
@@ -1878,6 +1879,7 @@
     _ZNSt3__19to_stringEd;
     _ZNSt3__19to_stringEe;
     _ZNSt3__19to_stringEf;
+    _ZNSt3__19to_stringEg;
     _ZNSt3__19to_stringEi;
     _ZNSt3__19to_stringEj;
     _ZNSt3__19to_stringEl;

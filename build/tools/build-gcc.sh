@@ -532,7 +532,7 @@ fi
 
 # build the gdb stub and replace gdb with it. This is done post-install
 # so files are in the correct place when determining the relative path.
-if [ "$MINGW" = "yes" ] ; then
+if [ -n "$WITH_PYTHON" -a "$MINGW" = "yes" ] ; then
     WITH_PYTHON_PREFIX=$(dirname $(dirname "$WITH_PYTHON_SCRIPT"))
     dump "Building : $TOOLCHAIN GDB stub. "$TOOLCHAIN_PATH/bin/${ABI_CONFIGURE_TARGET}-gdb.exe", "$WITH_PYTHON_PREFIX", $ABI_CONFIGURE_HOST-gcc"
     GCC_FOR_STUB=$ABI_CONFIGURE_HOST-gcc

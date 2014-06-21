@@ -71,6 +71,14 @@ run2 () {
 # The list of valid target abis supported by this script.
 VALID_ABIS="armeabi armeabi-v7a x86 mips"
 
+HOST_OS=`uname -s`
+if [ "$HOST_OS" = "Darwin" ]; then
+    # darwin doesn't have readelf.  hard-code a known one
+    READELF=../../../../../toolchains/arm-linux-androideabi-4.6/prebuilt/darwin-x86/bin/arm-linux-androideabi-readelf
+else
+    READELF=readelf
+fi
+
 DO_HELP=
 DO_STATIC=
 TARGET_ABI=
@@ -181,7 +189,7 @@ for LIB in libc++_static.a libc++_shared.so; do
 done
 
 LIBCOMPILER_RT_LIBS=$(cd "$LIBCXX_ROOT"/../../../android/compiler-rt && pwd)/libs/$TARGET_ABI
-readelf -d "$LIBCXX_LIBS/libc++_shared.so" | grep NEEDED | grep -q compiler_rt
+$READELF -d "$LIBCXX_LIBS/libc++_shared.so" | grep NEEDED | grep -q compiler_rt
 if [ $? = 0 ]; then
   LIBCXX_NEEDS_COMPILER_RT=yes
 fi

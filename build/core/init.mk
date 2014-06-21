@@ -495,10 +495,11 @@ $(call ndk_log,Found stable platform levels: $(NDK_ALL_PLATFORM_LEVELS))
 
 # Hack to pull $(NDK_PREVIEW_LEVEL) ahead of all (numeric) level
 NDK_MAX_PLATFORM_LEVEL := 3
+_max_theoretical_api_level := 99
 $(foreach level,$(NDK_ALL_PLATFORM_LEVELS),\
-  $(eval NDK_MAX_PLATFORM_LEVEL := $$(if $$(subst $$(NDK_PREVIEW_LEVEL),,$$(level)),$$(call max,$$(NDK_MAX_PLATFORM_LEVEL),$$(level)),9999))\
+  $(eval NDK_MAX_PLATFORM_LEVEL := $$(if $$(subst $$(NDK_PREVIEW_LEVEL),,$$(level)),$$(call max,$$(NDK_MAX_PLATFORM_LEVEL),$$(level)),$(_max_theoretical_api_level)))\
 )
-ifeq ($(NDK_MAX_PLATFORM_LEVEL),9999)
+ifeq ($(NDK_MAX_PLATFORM_LEVEL),$(_max_theoretical_api_level))
 NDK_MAX_PLATFORM_LEVEL := $(NDK_PREVIEW_LEVEL)
 endif
 
