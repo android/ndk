@@ -36,7 +36,10 @@ NDK_BUILDTOOLS_PATH=$ROOTDIR/build/tools
 # directoy and tested separately from armeabi-v7a.  Some tests are now compiled with both
 # APP_ABI=armeabi-v7a and APP_ABI=armeabi-v7a-hard. Without _NDK_TESTING_ALL_=yes, tests
 # may fail to install due to race condition on the same libs/armeabi-v7a
-export _NDK_TESTING_ALL_=yes
+if [ -z "$_NDK_TESTING_ALL_" ]; then
+   _NDK_TESTING_ALL_=all
+fi
+export _NDK_TESTING_ALL_
 
 # The list of tests that are too long to be part of a normal run of
 # run-tests.sh. Most of these do not run properly at the moment.
