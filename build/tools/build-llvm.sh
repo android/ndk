@@ -305,6 +305,10 @@ dump "Install  : llvm toolchain binaries"
 cd $LLVM_BUILD_OUT && run make install $MAKE_FLAGS
 fail_panic "Couldn't install llvm toolchain to $TOOLCHAIN_BUILD_PREFIX"
 
+# copy arm_neon_x86.h from GCC
+GCC_SRC_DIR=$SRC_DIR/gcc/gcc-$DEFAULT_GCC32_VERSION
+cp -a $GCC_SRC_DIR/gcc/config/i386/arm_neon.h $TOOLCHAIN_BUILD_PREFIX/lib/clang/$LLVM_VERSION/include/arm_neon_x86.h
+
 # Since r156448, llvm installs a separate llvm-config-host when cross-compiling. Use llvm-config-host if this
 # exists otherwise llvm-config.
 # Note, llvm-config-host should've really been called llvm-config-build and the following changes fix this by
