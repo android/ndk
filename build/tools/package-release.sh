@@ -573,6 +573,11 @@ for SYSTEM in $SYSTEMS; do
     # Unpack renderscript headers/libs
     unpack_prebuilt renderscript "$DSTDIR" "$DSTDIR64"
 
+    # Unpack misc stuff
+    if [ -f "$PREBUILT_DIR/misc.tar.bz2" ]; then
+        unpack_prebuilt misc "$DSTDIR" "$DSTDIR64"
+    fi
+
     # Create an archive for the final package. Extension depends on the
     # host system.
     ARCHIVE=$BIN_RELEASE
