@@ -133,8 +133,8 @@ GMP_URL=http://ftp.gnu.org/gnu/gmp/
 
 MPFR_VERSION=3.1.1
 MPC_VERSION=1.0.1
-BINUTILS_VERSION=2.22
-GCC_VERSION=4.8.1
+BINUTILS_VERSION=2.24
+GCC_VERSION=4.8.3
 
 # Need at least revision 5166
 # For reference, I've built a working NDK with 5445
