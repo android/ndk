@@ -8,12 +8,21 @@ LOCAL_PATH := $(call my-dir)
 #
 
 LIBCXX_FORCE_REBUILD := $(strip $(LIBCXX_FORCE_REBUILD))
-LIBCXX_USE_LIBCXXABI := $(strip $(LIBCXX_USE_LIBCXXABI))
+
 ifndef LIBCXX_FORCE_REBUILD
   ifeq (,$(strip $(wildcard $(LOCAL_PATH)/libs/$(TARGET_ARCH_ABI)/libc++_static$(TARGET_LIB_EXTENSION))))
     $(call __ndk_info,WARNING: Rebuilding libc++ libraries from sources!)
     $(call __ndk_info,You might want to use $$NDK/build/tools/build-cxx-stl.sh --stl=libc++)
     $(call __ndk_info,in order to build prebuilt versions to speed up your builds!)
+    LIBCXX_FORCE_REBUILD := true
+  endif
+endif
+
+LIBCXX_USE_GABIXX := $(strip $(LIBCXX_USE_GABIXX))
+ifeq ($(LIBCXX_USE_GABIXX),true)
+  ifneq ($(LIBCXX_FORCE_REBUILD),true)
+    $(call __ndk_info,WARNING: Rebuilding libc++ libraries from sources using gabi++ as requested!)
+    $(call __ndk_info,Since libc++ libraries are now prebuilt with libc++abi)
     LIBCXX_FORCE_REBUILD := true
   endif
 endif
@@ -57,7 +66,7 @@ llvm_libc++_export_cxxflags := -std=c++11
 llvm_libc++_cxxflags := $(llvm_libc++_export_cxxflags)
 
 
-ifneq ($(LIBCXX_USE_LIBCXXABI),true)
+ifeq ($(LIBCXX_USE_GABIXX),true)
 
 # Gabi++ emulates libcxxabi when building libcxx.
 llvm_libc++_cxxflags += -DLIBCXXABI=1
@@ -83,7 +92,7 @@ llvm_libc++_includes += $(libgabi++_c_includes)
 llvm_libc++_export_includes += $(libgabi++_c_includes)
 
 else
-# LIBCXX_USE_LIBCXXABI : true
+# libc++abi
 
 libcxxabi_sources_dir := $(strip $(wildcard $(LOCAL_PATH)/../llvm-libc++abi))
 ifdef libcxxabi_sources_dir
