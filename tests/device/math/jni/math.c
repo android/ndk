@@ -35,6 +35,7 @@ void TEST_EQ(long double a, long double b)
 int main()
 {
 #if __ANDROID_API__ >= 9
+#if  __ANDROID_API__ < 20
     sincosl(0.73, &ld, &ld1);
     sincos(0.72, &d, &d1);
     sincosf(0.71f, &f, &f1);
@@ -44,6 +45,7 @@ int main()
     TEST_EQ(d1, 0.7518057);
     TEST_EQ(f, 0.6518338f);
     TEST_EQ(f1, 0.7583619f);
+#endif
 #if __ANDROID_API__ >= 13
     ldn = nanl("");
     dn = nan("");
