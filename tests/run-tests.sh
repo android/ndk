@@ -64,6 +64,12 @@ RUN_TESTS_FILTERED=
 NDK_PACKAGE=
 WINE=
 CONTINUE_ON_BUILD_FAIL=
+if [ -z "$TEST_DIR" ]; then
+    TEST_DIR="/tmp/ndk-$USER/tests"
+fi
+if [ -z "$TARGET_TEST_SUBDIR" ]; then
+    TARGET_TEST_SUBDIR="ndk-tests"
+fi
 
 while [ -n "$1" ]; do
     opt="$1"
@@ -84,6 +90,9 @@ while [ -n "$1" ]; do
             ;;
         --platform=*)
             PLATFORM="$optarg"
+	    ;;
+        --test-dir=*)
+            TEST_DIR="$optarg"
             ;;
         --ndk=*)
             NDK_ROOT="$optarg"
@@ -274,7 +283,6 @@ else # !FULL_TESTS
 fi # !FULL_TESTS
 
 
-TEST_DIR="/tmp/ndk-$USER/tests"
 mkdir -p $TEST_DIR
 setup_default_log_file "$TEST_DIR/build-tests.log"
 
@@ -777,7 +785,7 @@ if is_testable device; then
         local TEST=$3
         local TEST_NAME="$(basename $TEST)"
         local SRCDIR
-        local DSTDIR="$4/ndk-tests"
+        local DSTDIR="$4/$TARGET_TEST_SUBDIR"
         local SRCFILE
         local DSTFILE
         local PROGRAM

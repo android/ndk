@@ -1,6 +1,8 @@
 /* AUTO-GENERATED FILE - DO NOT MODIFY! */
 #define __STDC_CONSTANT_MACROS 1
+#include <android/api-level.h>
 #include <stdint.h>
+#if __ANDROID_API__ < 20
 #ifdef INT8_MIN
 #error INT8_MIN is defined!
 #endif
@@ -132,6 +134,7 @@
 #endif
 #ifdef UINTPTR_MAX
 #error UINTPTR_MAX is defined!
+#endif
 #endif
 #ifndef INT8_C
 #error INT8_C is not defined!

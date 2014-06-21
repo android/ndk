@@ -1,3 +1,7 @@
+#include <android/api-level.h>
+
+#if !__LP64__ && !defined(__arm__) || __ANDROID_API__ < 9
+
 // This checks that, by default, wchar_t is 32-bit and
 // WCHAR_MIN/WCHAR_MAX are 32-bit signed on all platforms when
 // _WCHAR_IS_ALWAYS_SIGNED is defined.
@@ -14,3 +18,5 @@ STATIC_ASSERT(sizeof(wchar_t) == 4);
 
 STATIC_ASSERT(WCHAR_MIN == -1-2147483647);
 STATIC_ASSERT(WCHAR_MAX == 2147483647);
+
+#endif
