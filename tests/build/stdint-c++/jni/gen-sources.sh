@@ -31,41 +31,50 @@ SRC=test_cpp_no_macros.cpp
 gen_cpp_no_macros ()
 {
     echo "/* AUTO-GENERATED FILE - DO NOT MODIFY! */"
+    echo "#include <android/api-level.h>"
+    echo "#if __ANDROID_API__ < 20"
     echo "#include <stdint.h>"
     for MACRO in $LIMITS $CONSTANTS; do
         echo "#ifdef $MACRO"
         echo "#error $MACRO defined!"
         echo "#endif"
     done
+    echo "#endif"
 }
 
 gen_cpp_limit_macros ()
 {
     echo "/* AUTO-GENERATED FILE - DO NOT MODIFY! */"
     echo "#define __STDC_LIMIT_MACROS 1"
+    echo "#include <android/api-level.h>"
     echo "#include <stdint.h>"
     for MACRO in $LIMITS; do
         echo "#ifndef $MACRO"
         echo "#error $MACRO is not defined!"
         echo "#endif"
     done
+    echo "#if __ANDROID_API__ < 20"
     for MACRO in $CONSTANTS; do
         echo "#ifdef $MACRO"
         echo "#error $MACRO is defined!"
         echo "#endif"
     done
+    echo "#endif"
 }
 
 gen_cpp_constant_macros ()
 {
     echo "/* AUTO-GENERATED FILE - DO NOT MODIFY! */"
     echo "#define __STDC_CONSTANT_MACROS 1"
+    echo "#include <android/api-level.h>"
     echo "#include <stdint.h>"
+    echo "#if __ANDROID_API__ < 20"
     for MACRO in $LIMITS; do
         echo "#ifdef $MACRO"
         echo "#error $MACRO is defined!"
         echo "#endif"
     done
+    echo "#endif"
     for MACRO in $CONSTANTS; do
         echo "#ifndef $MACRO"
         echo "#error $MACRO is not defined!"

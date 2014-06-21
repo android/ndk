@@ -1,4 +1,6 @@
 /* AUTO-GENERATED FILE - DO NOT MODIFY! */
+#include <android/api-level.h>
+#if __ANDROID_API__ < 20
 #include <stdint.h>
 #ifdef INT8_MIN
 #error INT8_MIN defined!
@@ -218,4 +220,5 @@
 #endif
 #ifdef UINTPTR_C
 #error UINTPTR_C defined!
+#endif
 #endif
