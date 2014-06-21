@@ -10,6 +10,8 @@ android_support_sources := \
     src/musl-locale/catgets.c \
     src/musl-locale/catopen.c \
     src/musl-locale/isdigit_l.c \
+    src/musl-locale/islower_l.c \
+    src/musl-locale/isupper_l.c \
     src/musl-locale/iswalpha_l.c \
     src/musl-locale/iswblank_l.c \
     src/musl-locale/iswcntrl_l.c \
