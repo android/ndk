@@ -4,13 +4,15 @@
  * image.
  */
 #include <stdio.h>
+#include <unistd.h>
 #include <dlfcn.h>
 
-int main(void)
+int main(int argc, char *argv[])
 {
     void*  lib;
-
-    lib = dlopen("/data/local/tmp/ndk-tests/libbar.so", RTLD_NOW);
+    char buf[PATH_MAX];
+    sprintf(buf, "%s/libbar.so", getcwd(NULL, 0));
+    lib = dlopen(buf, RTLD_NOW);
     if (lib == NULL) {
         fprintf(stderr, "Could not dlopen(\"libbar.so\"): %s\n", dlerror());
         return 1;
