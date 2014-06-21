@@ -136,8 +136,9 @@ TARGET_GDBSERVER := $(NDK_ROOT)/prebuilt/android-$(TARGET_ARCH)/gdbserver/gdbser
 
 # compute NDK_APP_DST_DIR as the destination directory for the generated files
 NDK_APP_DST_DIR := $(NDK_APP_LIBS_OUT)/$(TARGET_ARCH_ABI)
-# install armeabi-v7a-hard to lib/armeabi-v7a, unless under testing where env. var. _NDK_TESTING_ALL_=yes
-ifneq ($(_NDK_TESTING_ALL_),yes)
+# install armeabi-v7a-hard to lib/armeabi-v7a, unless under testing where env. var. _NDK_TESTING_ALL_
+# is set to one of yes, all, all32, or all64
+ifeq (,$(filter yes all all32 all64,$(_NDK_TESTING_ALL_)))
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a-hard)
 NDK_APP_DST_DIR := $(NDK_APP_LIBS_OUT)/armeabi-v7a
 endif
