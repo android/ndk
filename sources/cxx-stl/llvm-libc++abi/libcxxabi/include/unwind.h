@@ -111,6 +111,7 @@ typedef _Unwind_Reason_Code (*__personality_routine)
        _Unwind_Exception* exceptionObject,
        struct _Unwind_Context* context);
 #else
+typedef uint32_t _Unwind_State;
 struct _Unwind_Context;   // opaque
 struct _Unwind_Exception; // forward declaration
 typedef struct _Unwind_Exception _Unwind_Exception;
@@ -129,6 +130,14 @@ struct _Unwind_Exception {
   uint32_t reserved[3];
 #endif
 };
+
+typedef _Unwind_Reason_Code (*_Unwind_Stop_Fn)
+      (int version,
+       _Unwind_Action actions,
+       uint64_t exceptionClass,
+       struct _Unwind_Exception*,
+       struct _Unwind_Context*,
+       void* stop_parameter);
 
 typedef _Unwind_Reason_Code (*__personality_routine)
       (int version,

@@ -72,7 +72,7 @@
     assert(false);
     abort();
   }
-  #define _LIBUNWIND_BUILD_ZERO_COST_APIS (__i386__ || __x86_64__ || __arm64__ || __arm__)
+  #define _LIBUNWIND_BUILD_ZERO_COST_APIS (__i386__ || __x86_64__ || __arm64__ || __arm__ || __mips__)
   #define _LIBUNWIND_BUILD_SJLJ_APIS      0
   #define _LIBUNWIND_SUPPORT_FRAME_APIS   (__i386__ || __x86_64__)
   #define _LIBUNWIND_EXPORT               __attribute__((visibility("default")))
