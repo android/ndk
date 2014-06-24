@@ -523,8 +523,6 @@ if [ "$ARCH_LIB" != "$ARCH" ]; then
     cp -a $NDK_DIR/platforms/$PLATFORM/arch-$ARCH/usr/lib/crt* $TMPDIR/sysroot/usr/lib
 fi
 
-dump "Copying c++ runtime headers and libraries..."
-
 GNUSTL_DIR=$NDK_DIR/$GNUSTL_SUBDIR/$GCC_VERSION
 GNUSTL_LIBS=$GNUSTL_DIR/libs
 
@@ -533,11 +531,25 @@ STLPORT_LIBS=$STLPORT_DIR/libs
 
 LIBCXX_DIR=$NDK_DIR/$LIBCXX_SUBDIR
 LIBCXX_LIBS=$LIBCXX_DIR/libs
+case $ARCH in
+    x86|x86_64|mips|mips64)
+        LIBCXX_SUPPORT_LIB=gabi++
+	;;
+    *)
+        LIBCXX_SUPPORT_LIB=libc++abi
+	;;
+esac
 
 SUPPORT_DIR=$NDK_DIR/$SUPPORT_SUBDIR
 
 COMPILER_RT_DIR=$NDK_DIR/$COMPILER_RT_SUBDIR
 COMPILER_RT_LIBS=$COMPILER_RT_DIR/libs
+
+if [ "$STL" = "libcxx" -o "$STL" = "libc++" ]; then
+    dump "Copying c++ runtime headers and libraries (with $LIBCXX_SUPPORT_LIB)..."
+else
+    dump "Copying c++ runtime headers and libraries..."
+fi
 
 ABI_STL="$TMPDIR/$ABI_CONFIGURE_TARGET"
 ABI_STL_INCLUDE="$TMPDIR/include/c++/$GCC_BASE_VERSION"
@@ -562,8 +574,16 @@ copy_stl_common_headers () {
         libcxx|libc++)
             copy_directory "$LIBCXX_DIR/libcxx/include" "$ABI_STL_INCLUDE"
             copy_directory "$SUPPORT_DIR/include" "$ABI_STL_INCLUDE"
-            copy_directory "$LIBCXX_DIR/../llvm-libc++abi/libcxxabi/include" "$ABI_STL_INCLUDE/../../llvm-libc++abi/include"
-            copy_abi_headers llvm-libc++abi cxxabi.h libunwind.h unwind.h
+            if [ "$LIBCXX_SUPPORT_LIB" = "gabi++" ]; then
+                copy_directory "$STLPORT_DIR/../gabi++/include" "$ABI_STL_INCLUDE/../../gabi++/include"
+                copy_abi_headers gabi++ cxxabi.h unwind.h unwind-arm.h unwind-itanium.h gabixx_config.h
+            elif [ "$LIBCXX_SUPPORT_LIB" = "libc++abi" ]; then
+                copy_directory "$LIBCXX_DIR/../llvm-libc++abi/libcxxabi/include" "$ABI_STL_INCLUDE/../../llvm-libc++abi/include"
+                copy_abi_headers llvm-libc++abi cxxabi.h libunwind.h unwind.h
+            else
+                dump "ERROR: Unknown libc++ support lib: $LIBCXX_SUPPORT_LIB"
+                exit 1
+            fi
             ;;
         stlport)
             copy_directory "$STLPORT_DIR/stlport" "$ABI_STL_INCLUDE"
