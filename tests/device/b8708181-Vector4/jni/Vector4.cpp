@@ -1,13 +1,13 @@
 #include <stdio.h>
 
-#if defined(__arm__)
+#if defined(__arm__) || defined(__aarch64__)
 #include <arm_neon.h>
 #define SP  "sp"
-#elif defined(__i386__)
+#elif defined(__i386__) || defined(__x86_64__)
 #include <xmmintrin.h>
 #define SP  "esp"
 typedef __m128 float32x4_t;
-#elif defined(__mips__)
+#elif defined(__mips__)  // mipsel64- defines __mips__ too
 #define SP  "sp"
 typedef float float32x4_t __attribute__ ((__vector_size__ (16)));
 #elif !defined(__le32__)
@@ -53,8 +53,8 @@ Vector4 v;
 
 int main()
 {
-    register int sp __asm(SP);
-    printf("sp = %x\n", sp);
+    register void *sp __asm(SP);
+    printf("sp = %p\n", sp);
 #if 1
     v = initVector4(f, f, f, f);
 #else

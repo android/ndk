@@ -175,7 +175,7 @@ fi
 # Detect LLVM version from toolchain name with *clang*
 LLVM_VERSION_EXTRACT=$(echo "$TOOLCHAIN_NAME" | grep 'clang[0-9]\.[0-9]$' | sed -e 's/.*-clang//')
 if [ -n "$LLVM_VERSION_EXTRACT" ]; then
-    NEW_TOOLCHAIN_NAME=$(get_default_toolchain_name_for_arch $ARCH)
+    NEW_TOOLCHAIN_NAME=${TOOLCHAIN_NAME%-clang${LLVM_VERSION_EXTRACT}}
     if [ -z "$LLVM_VERSION" ]; then
         LLVM_VERSION=$LLVM_VERSION_EXTRACT
         echo "Auto-config: --toolchain=$NEW_TOOLCHAIN_NAME, --llvm-version=$LLVM_VERSION"
