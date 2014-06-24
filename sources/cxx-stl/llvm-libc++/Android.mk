@@ -9,21 +9,41 @@ LOCAL_PATH := $(call my-dir)
 
 LIBCXX_FORCE_REBUILD := $(strip $(LIBCXX_FORCE_REBUILD))
 
+__libcxx_force_rebuild := $(LIBCXX_FORCE_REBUILD)
+
 ifndef LIBCXX_FORCE_REBUILD
   ifeq (,$(strip $(wildcard $(LOCAL_PATH)/libs/$(TARGET_ARCH_ABI)/libc++_static$(TARGET_LIB_EXTENSION))))
     $(call __ndk_info,WARNING: Rebuilding libc++ libraries from sources!)
     $(call __ndk_info,You might want to use $$NDK/build/tools/build-cxx-stl.sh --stl=libc++)
     $(call __ndk_info,in order to build prebuilt versions to speed up your builds!)
-    LIBCXX_FORCE_REBUILD := true
+    __libcxx_force_rebuild := true
   endif
 endif
 
+# Use gabi++ for x86* and mips* until libc++/libc++abi is ready for them
+ifneq (,$(filter x86% mips%,$(TARGET_ARCH_ABI)))
+  __prebuilt_libcxx_compiled_with_gabixx := true
+else
+  __prebuilt_libcxx_compiled_with_gabixx := false
+endif
+
+__libcxx_use_gabixx := $(__prebuilt_libcxx_compiled_with_gabixx)
+
 LIBCXX_USE_GABIXX := $(strip $(LIBCXX_USE_GABIXX))
 ifeq ($(LIBCXX_USE_GABIXX),true)
-  ifneq ($(LIBCXX_FORCE_REBUILD),true)
-    $(call __ndk_info,WARNING: Rebuilding libc++ libraries from sources using gabi++ as requested!)
-    $(call __ndk_info,Since libc++ libraries are now prebuilt with libc++abi)
-    LIBCXX_FORCE_REBUILD := true
+  __libcxx_use_gabixx := true
+endif
+
+ifneq ($(__libcxx_use_gabixx),$(__prebuilt_libcxx_compiled_with_gabixx))
+  ifneq ($(__libcxx_force_rebuild),true)
+    ifeq ($(__prebuilt_libcxx_compiled_with_gabixx),true)
+      $(call __ndk_info,WARNING: Rebuilding libc++ libraries from sources since libc++ prebuilt libraries for $(TARGET_ARCH_ABI))
+      $(call __ndk_info,are compiled with gabi++ but LIBCXX_USE_GABIXX is not set to true)
+    else
+      $(call __ndk_info,WARNING: Rebuilding libc++ libraries from sources since libc++ prebuilt libraries for $(TARGET_ARCH_ABI))
+      $(call __ndk_info,are not compiled with gabi++ and LIBCXX_USE_GABIXX is set to true)
+    endif
+    __libcxx_force_rebuild := true
   endif
 endif
 
@@ -65,8 +85,7 @@ llvm_libc++_export_cxxflags := -std=c++11
 
 llvm_libc++_cxxflags := $(llvm_libc++_export_cxxflags)
 
-
-ifeq ($(LIBCXX_USE_GABIXX),true)
+ifeq ($(__libcxx_use_gabixx),true)
 
 # Gabi++ emulates libcxxabi when building libcxx.
 llvm_libc++_cxxflags += -DLIBCXXABI=1
@@ -148,7 +167,8 @@ LOCAL_EXPORT_C_INCLUDES := $(llvm_libc++_export_includes) $(android_support_c_in
 LOCAL_EXPORT_CPPFLAGS := $(llvm_libc++_export_cxxflags)
 include $(PREBUILT_SHARED_LIBRARY)
 
-else # LIBCXX_FORCE_REBUILD == true
+else
+# __libcxx_force_rebuild == true
 
 $(call ndk_log,Rebuilding libc++ libraries from sources)
 
@@ -189,7 +209,7 @@ endif
 
 include $(BUILD_SHARED_LIBRARY)
 
-endif # LIBCXX_FORCE_REBUILD == true
+endif # __libcxx_force_rebuild == true
 
 $(call import-module, android/support)
 $(call import-module, android/compiler-rt)
