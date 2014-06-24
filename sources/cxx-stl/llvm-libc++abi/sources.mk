@@ -19,7 +19,7 @@ libcxxabi_src_files := \
         libcxxabi/src/stdexcept.cpp \
         libcxxabi/src/typeinfo.cpp \
         libcxxabi/src/Unwind/libunwind.cpp \
-        libcxxabi/src/Unwind/Unwind-arm.cpp \
+        libcxxabi/src/Unwind/Unwind-EHABI.cpp \
         libcxxabi/src/Unwind/UnwindLevel1.c \
         libcxxabi/src/Unwind/UnwindLevel1-gcc-ext.c \
         libcxxabi/src/Unwind/UnwindRegistersRestore.S \

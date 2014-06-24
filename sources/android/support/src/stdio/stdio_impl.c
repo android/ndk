@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <wchar.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define _STDIO_IMPL_NO_REDIRECT_MACROS
@@ -12,7 +13,7 @@ void fake_file_init_file(FakeFILE* file, FILE* f) {
 
 void fake_file_init_buffer(FakeFILE* file, char* buffer, size_t buffer_size) {
   memset(file, 0, sizeof(*file));
-  file->buffer = buffer;
+  file->buffer = (void*)buffer;
   file->buffer_pos = 0;
   file->buffer_size = buffer_size;
 }

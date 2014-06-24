@@ -308,7 +308,7 @@ LIBCXXABI_SOURCES=\
 ../llvm-libc++abi/libcxxabi/src/stdexcept.cpp \
 ../llvm-libc++abi/libcxxabi/src/typeinfo.cpp \
 ../llvm-libc++abi/libcxxabi/src/Unwind/libunwind.cpp \
-../llvm-libc++abi/libcxxabi/src/Unwind/Unwind-arm.cpp \
+../llvm-libc++abi/libcxxabi/src/Unwind/Unwind-EHABI.cpp \
 ../llvm-libc++abi/libcxxabi/src/Unwind/UnwindLevel1.c \
 ../llvm-libc++abi/libcxxabi/src/Unwind/UnwindLevel1-gcc-ext.c \
 ../llvm-libc++abi/libcxxabi/src/Unwind/UnwindRegistersRestore.S \
