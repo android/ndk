@@ -356,7 +356,16 @@ fi
 
 # hack to use different set of sources
 CONFIGURE_GCC_VERSION=$GCC_VERSION
+CONFIGURE_GDB_VERSION=$GDB_VERSION
+CONFIGURE_BINUTILS_VERSION=$BINUTILS_VERSION
 case "$TOOLCHAIN" in
+  mips64el-linux-android-4.9)
+    CONFIGURE_GCC_VERSION=4.9-mipsr6
+    CONFIGURE_GDB_VERSION=7.6-mipsr6
+    CONFIGURE_BINUTILS_VERSION=2.24-mipsr6
+    # The new source in "alpha" may fail highly parallel build due to race condition
+    MAY_FAIL_DUE_TO_RACE_CONDITION=yes
+    ;;
   *4.9l)
     CONFIGURE_GCC_VERSION=4.9l
     ;;
@@ -364,10 +373,6 @@ case "$TOOLCHAIN" in
     CONFIGURE_GCC_VERSION=4.8l
     ;;
 esac
-MAY_FAIL_DUE_TO_RACE_CONDITION=
-if [ "$MINGW" = "yes" -o "$DARWIN" = "yes" ]; then
-   MAY_FAIL_DUE_TO_RACE_CONDITION=yes
-fi
 
 cd $BUILD_OUT && run \
 $BUILD_SRCDIR/configure --target=$ABI_CONFIGURE_TARGET \
@@ -377,12 +382,12 @@ $BUILD_SRCDIR/configure --target=$ABI_CONFIGURE_TARGET \
                         --disable-nls \
                         --prefix=$TOOLCHAIN_BUILD_PREFIX \
                         --with-sysroot=$TOOLCHAIN_BUILD_SYSROOT \
-                        --with-binutils-version=$BINUTILS_VERSION \
+                        --with-binutils-version=$CONFIGURE_BINUTILS_VERSION \
                         --with-mpfr-version=$MPFR_VERSION \
                         --with-mpc-version=$MPC_VERSION \
                         --with-gmp-version=$GMP_VERSION \
                         --with-gcc-version=$CONFIGURE_GCC_VERSION \
-                        --with-gdb-version=$GDB_VERSION \
+                        --with-gdb-version=$CONFIGURE_GDB_VERSION \
                         $WITH_PYTHON \
                         --with-gxx-include-dir=$TOOLCHAIN_BUILD_PREFIX/include/c++/$GCC_VERSION \
                         --with-bugurl=$DEFAULT_ISSUE_TRACKER_URL \
