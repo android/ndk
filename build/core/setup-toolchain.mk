@@ -21,6 +21,7 @@ $(call assert-defined,TARGET_PLATFORM TARGET_ARCH TARGET_ARCH_ABI)
 $(call assert-defined,NDK_APPS NDK_APP_STL)
 
 LLVM_VERSION_LIST := 2.6 2.7 2.8 2.9 3.0 3.1 3.2 3.3 3.4
+NDK_64BIT_TOOLCHAIN_LIST := clang3.4 4.9
 
 # Check that we have a toolchain that supports the current ABI.
 # NOTE: If NDK_TOOLCHAIN is defined, we're going to use it.
@@ -56,7 +57,6 @@ ifndef NDK_TOOLCHAIN
     else
         TARGET_TOOLCHAIN := $(lastword $(TARGET_TOOLCHAIN_LIST))
     endif
-
     # If NDK_TOOLCHAIN_VERSION is defined, we replace the toolchain version
     # suffix with it.
     #
@@ -65,25 +65,36 @@ ifndef NDK_TOOLCHAIN
         ifeq ($(NDK_TOOLCHAIN_VERSION),clang)
             override NDK_TOOLCHAIN_VERSION := clang$(lastword $(LLVM_VERSION_LIST))
         endif
-        # We assume the toolchain name uses dashes (-) as separators and doesn't
-        # contain any space. The following is a bit subtle, but essentially
-        # does the following:
-        #
-        #   1/ Use 'subst' to convert dashes into spaces, this generates a list
-        #   2/ Use 'chop' to remove the last element of the list
-        #   3/ Use 'subst' again to convert the spaces back into dashes
-        #
-        # So it TARGET_TOOLCHAIN is 'foo-bar-zoo-xxx', then
-        # TARGET_TOOLCHAIN_BASE will be 'foo-bar-zoo'
-        #
-        TARGET_TOOLCHAIN_BASE := $(subst $(space),-,$(call chop,$(subst -,$(space),$(TARGET_TOOLCHAIN))))
-        # if TARGET_TOOLCHAIN_BASE is llvm, remove clang from NDK_TOOLCHAIN_VERSION
-        VERSION := $(NDK_TOOLCHAIN_VERSION)
-        ifeq ($(TARGET_TOOLCHAIN_BASE),llvm)
-            VERSION := $(subst clang,,$(NDK_TOOLCHAIN_VERSION))
+        __use_ndk_toolchain_version := true
+        ifneq (,$(findstring 64,$(TARGET_ARCH_ABI)))
+            # don't allow NDK_TOOLCHAIN_VERSION to change if it doesn't support 64-bit
+            ifeq (,$(filter $(NDK_64BIT_TOOLCHAIN_LIST),$(NDK_TOOLCHAIN_VERSION)))
+                $(call ndk_log,Specified NDK_TOOLCHAIN_VERSION $(NDK_TOOLCHAIN_VERSION) does not support 64-bit)
+                $(call ndk_log,Using default target toolchain '$(TARGET_TOOLCHAIN)' for '$(TARGET_ARCH_ABI)' ABI)
+                __use_ndk_toolchain_version := false;
+            endif
         endif
-        TARGET_TOOLCHAIN := $(TARGET_TOOLCHAIN_BASE)-$(VERSION)
-        $(call ndk_log,Using target toolchain '$(TARGET_TOOLCHAIN)' for '$(TARGET_ARCH_ABI)' ABI (through NDK_TOOLCHAIN_VERSION))
+        ifeq ($(__use_ndk_toolchain_version),true)
+            # We assume the toolchain name uses dashes (-) as separators and doesn't
+            # contain any space. The following is a bit subtle, but essentially
+            # does the following:
+            #
+            #   1/ Use 'subst' to convert dashes into spaces, this generates a list
+            #   2/ Use 'chop' to remove the last element of the list
+            #   3/ Use 'subst' again to convert the spaces back into dashes
+            #
+            # So it TARGET_TOOLCHAIN is 'foo-bar-zoo-xxx', then
+            # TARGET_TOOLCHAIN_BASE will be 'foo-bar-zoo'
+            #
+            TARGET_TOOLCHAIN_BASE := $(subst $(space),-,$(call chop,$(subst -,$(space),$(TARGET_TOOLCHAIN))))
+            # if TARGET_TOOLCHAIN_BASE is llvm, remove clang from NDK_TOOLCHAIN_VERSION
+            VERSION := $(NDK_TOOLCHAIN_VERSION)
+            ifeq ($(TARGET_TOOLCHAIN_BASE),llvm)
+                VERSION := $(subst clang,,$(NDK_TOOLCHAIN_VERSION))
+            endif
+            TARGET_TOOLCHAIN := $(TARGET_TOOLCHAIN_BASE)-$(VERSION)
+            $(call ndk_log,Using target toolchain '$(TARGET_TOOLCHAIN)' for '$(TARGET_ARCH_ABI)' ABI (through NDK_TOOLCHAIN_VERSION))
+        endif
     else
         $(call ndk_log,Using target toolchain '$(TARGET_TOOLCHAIN)' for '$(TARGET_ARCH_ABI)' ABI)
     endif
