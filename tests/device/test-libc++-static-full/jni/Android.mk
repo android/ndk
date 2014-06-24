@@ -36,10 +36,7 @@ black_list_all :=
 black_list_clang3_4 := \
     utilities/tuple/tuple.tuple/TupleFunction
 
-black_list_clang3_3 := \
-    utilities/tuple/tuple.tuple/TupleFunction \
-    utilities/meta/meta.unary/meta.unary.prop/is_trivialially_copyable
-
+# gcc4.8 fails atomic_flag_test_and_set_explicit and test_and_set for x86, x86_64, mips, mips64
 black_list_gcc4_8 := \
     atomics/atomics.flag/atomic_flag_test_and_set_explicit \
     atomics/atomics.flag/test_and_set \
@@ -51,10 +48,65 @@ black_list_gcc4_8 := \
     utilities/meta/meta.unary/meta.unary.prop/is_trivially_move_constructible \
     utilities/utility/pairs/pairs.pair/copy_ctor
 
+# gcc4.9 segfault on size_size_string_size_size for armeabi
 black_list_gcc4_9 := \
     $(black_list_gcc4_8) \
-    strings/basic.string/string.modifiers/string_replace/size_size_string_size_size \
+    strings/basic.string/string.ops/string_compare/size_size_string_size_size \
     utilities/tuple/tuple.tuple/TupleFunction
+
+# gcc4.6 fails all atomics
+black_list_gcc4_6 := \
+    $(black_list_gcc4_8) \
+    atomics/atomics.fences/atomic_signal_fence \
+    atomics/atomics.fences/atomic_thread_fence \
+    atomics/atomics.flag/atomic_flag_clear_explicit \
+    atomics/atomics.flag/atomic_flag_clear \
+    atomics/atomics.flag/atomic_flag_test_and_set_explicit \
+    atomics/atomics.flag/atomic_flag_test_and_set \
+    atomics/atomics.flag/clear \
+    atomics/atomics.flag/default \
+    atomics/atomics.flag/init \
+    atomics/atomics.flag/test_and_set \
+    atomics/atomics.general/nothing_to_do \
+    atomics/atomics.lockfree/lockfree \
+    atomics/atomics.order/kill_dependency \
+    atomics/atomics.order/memory_order \
+    atomics/atomics.syn/nothing_to_do \
+    atomics/atomics.types.generic/address \
+    atomics/atomics.types.generic/bool \
+    atomics/atomics.types.generic/cstdint_typedefs \
+    atomics/atomics.types.generic/integral \
+    atomics/atomics.types.generic/integral_typedefs \
+    atomics/atomics.types.operations/atomics.types.operations.arith/nothing_to_do \
+    atomics/atomics.types.operations/atomics.types.operations.general/nothing_to_do \
+    atomics/atomics.types.operations/atomics.types.operations.pointer/nothing_to_do \
+    atomics/atomics.types.operations/atomics.types.operations.req/atomic_compare_exchange_strong_explicit \
+    atomics/atomics.types.operations/atomics.types.operations.req/atomic_compare_exchange_strong \
+    atomics/atomics.types.operations/atomics.types.operations.req/atomic_compare_exchange_weak_explicit \
+    atomics/atomics.types.operations/atomics.types.operations.req/atomic_compare_exchange_weak \
+    atomics/atomics.types.operations/atomics.types.operations.req/atomic_exchange_explicit \
+    atomics/atomics.types.operations/atomics.types.operations.req/atomic_exchange \
+    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_add_explicit \
+    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_add \
+    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_and_explicit \
+    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_and \
+    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_or_explicit \
+    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_or \
+    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_sub_explicit \
+    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_sub \
+    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_xor_explicit \
+    atomics/atomics.types.operations/atomics.types.operations.req/atomic_fetch_xor \
+    atomics/atomics.types.operations/atomics.types.operations.req/atomic_init \
+    atomics/atomics.types.operations/atomics.types.operations.req/atomic_is_lock_free \
+    atomics/atomics.types.operations/atomics.types.operations.req/atomic_load_explicit \
+    atomics/atomics.types.operations/atomics.types.operations.req/atomic_load \
+    atomics/atomics.types.operations/atomics.types.operations.req/atomic_store_explicit \
+    atomics/atomics.types.operations/atomics.types.operations.req/atomic_store \
+    atomics/atomics.types.operations/atomics.types.operations.req/atomic_var_init \
+    atomics/atomics.types.operations/atomics.types.operations.templ/nothing_to_do \
+    atomics/atomics.types.operations/nothing_to_do \
+    atomics/version \
+
 
 # Compute the back_list in this particular configuration: "all | compiler | arch"
 
@@ -64,13 +116,17 @@ ifeq (clang3.4,$(NDK_TOOLCHAIN_VERSION))
 black_list += $(black_list_clang3_4)
 else
 ifeq (clang3.3,$(NDK_TOOLCHAIN_VERSION))
-black_list += $(black_list_clang3_3)
+$(error clang3.3 is not tested against libc++.  Please upgrade to clang3.4 or after, or use gcc4.8)
 else
 ifeq (4.8,$(NDK_TOOLCHAIN_VERSION))
 black_list += $(black_list_gcc4_8)
 else
 ifeq (4.9,$(NDK_TOOLCHAIN_VERSION))
 black_list += $(black_list_gcc4_9)
+else
+ifeq (4.6,$(NDK_TOOLCHAIN_VERSION))
+black_list += $(black_list_gcc4_6)
+endif
 endif
 endif
 endif
@@ -3724,16 +3780,16 @@ $(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.mutex.requ
 $(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.mutex.requirements.mutex/thread.mutex.recursive/lock)
 $(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.mutex.requirements.mutex/thread.mutex.recursive/native_handle)
 $(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.mutex.requirements.mutex/thread.mutex.recursive/try_lock)
-$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/nothing_to_do) # path-change
-$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/thread.sharedmutex.class/default) # path-change
-$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/thread.sharedmutex.class/lock) # path-change
-$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/thread.sharedmutex.class/lock_shared) # path-change
-$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/thread.sharedmutex.class/try_lock_for) # path-change
-$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/thread.sharedmutex.class/try_lock) # path-change
-$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/thread.sharedmutex.class/try_lock_shared_for) # path-change
-$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/thread.sharedmutex.class/try_lock_shared) # path-change
-$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/thread.sharedmutex.class/try_lock_shared_until) # path-change
-$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedmutex.requirements/thread.sharedmutex.class/try_lock_until) # path-change
+$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedtimedmutex.requirements/nothing_to_do) # path-change
+$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedtimedmutex.requirements/thread.sharedtimedmutex.class/default) # path-change
+$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedtimedmutex.requirements/thread.sharedtimedmutex.class/lock) # path-change
+$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedtimedmutex.requirements/thread.sharedtimedmutex.class/lock_shared) # path-change
+$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedtimedmutex.requirements/thread.sharedtimedmutex.class/try_lock_for) # path-change
+$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedtimedmutex.requirements/thread.sharedtimedmutex.class/try_lock) # path-change
+$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedtimedmutex.requirements/thread.sharedtimedmutex.class/try_lock_shared_for) # path-change
+$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedtimedmutex.requirements/thread.sharedtimedmutex.class/try_lock_shared) # path-change
+$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedtimedmutex.requirements/thread.sharedtimedmutex.class/try_lock_shared_until) # path-change
+$(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.sharedtimedmutex.requirements/thread.sharedtimedmutex.class/try_lock_until) # path-change
 $(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.timedmutex.requirements/nothing_to_do)
 $(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.timedmutex.requirements/thread.timedmutex.class/default)
 $(call gen-test, thread/thread.mutex/thread.mutex.requirements/thread.timedmutex.requirements/thread.timedmutex.class/lock)
