@@ -94,6 +94,9 @@
 #define ANDROID_CHANGES
 
 #ifdef ANDROID_CHANGES
+/* Needs to be above math.h include below */
+#include "fpmath.h"
+
 #include <pthread.h>
 #define mutex_lock(x) pthread_mutex_lock(x)
 #define mutex_unlock(x) pthread_mutex_unlock(x)
@@ -2987,7 +2990,6 @@ __dtoa
 }
 
 #include <limits.h>
-#include "fpmath.h"
 
  char *
 rv_alloc(int i)

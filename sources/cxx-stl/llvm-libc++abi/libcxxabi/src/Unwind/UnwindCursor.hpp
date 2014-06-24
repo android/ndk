@@ -498,7 +498,9 @@ private:
     }
     return false;
   }
+#endif // _LIBUNWIND_SUPPORT_COMPACT_UNWIND
 
+#if _LIBUNWIND_SUPPORT_DWARF_UNWIND
   compact_unwind_encoding_t dwarfEncoding() const {
     R dummy;
     return dwarfEncoding(dummy);
@@ -519,7 +521,7 @@ private:
   compact_unwind_encoding_t dwarfEncoding(Registers_arm64 &) const {
     return UNWIND_ARM64_MODE_DWARF;
   }
-#endif // _LIBUNWIND_SUPPORT_COMPACT_UNWIND
+#endif // _LIBUNWIND_SUPPORT_DWARF_UNWIND
 
 
   A               &_addressSpace;
@@ -1271,6 +1273,9 @@ int UnwindCursor<A, R>::step() {
 #elif _LIBUNWIND_SUPPORT_DWARF_UNWIND
   result = this->stepWithDwarfFDE();
 #elif LIBCXXABI_ARM_EHABI
+  result = UNW_STEP_SUCCESS;
+#elif defined(__i386__) || defined(__x86_64__) || defined(__mips__) || defined(__mips64)
+  // ToDo: really?
   result = UNW_STEP_SUCCESS;
 #else
   #error Need _LIBUNWIND_SUPPORT_COMPACT_UNWIND or \

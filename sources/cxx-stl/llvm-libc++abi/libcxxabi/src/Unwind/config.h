@@ -72,7 +72,7 @@
     assert(false);
     abort();
   }
-  #define _LIBUNWIND_BUILD_ZERO_COST_APIS (__i386__ || __x86_64__ || __arm64__ || __arm__)
+  #define _LIBUNWIND_BUILD_ZERO_COST_APIS (__i386__ || __x86_64__ || __arm64__ || __arm__ || __mips__)
   #define _LIBUNWIND_BUILD_SJLJ_APIS      0
   #define _LIBUNWIND_SUPPORT_FRAME_APIS   (__i386__ || __x86_64__)
   #define _LIBUNWIND_EXPORT               __attribute__((visibility("default")))
@@ -81,7 +81,7 @@
   #define _LIBUNWIND_ABORT(msg) assert_rtn(__func__, __FILE__, __LINE__, msg)
 
   #define _LIBUNWIND_SUPPORT_COMPACT_UNWIND   0
-  #define _LIBUNWIND_SUPPORT_DWARF_UNWIND     0
+  #define _LIBUNWIND_SUPPORT_DWARF_UNWIND     defined(__mips__)
   #define _LIBUNWIND_SUPPORT_DWARF_INDEX      0
   #define _LIBUNWIND_IS_BAREMETAL             0
 #endif

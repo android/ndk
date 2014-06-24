@@ -27,7 +27,7 @@ void shinit_wcstring(struct fake_file_t *, const wchar_t *wcs);
 int shgetc(struct fake_file_t *);
 
 // Back-track one character, must not be called more times than shgetc()
-void shungetc(struct fake_file_t *);
+void shunget(struct fake_file_t *);
 
 // This will be called with a value of 0 for |lim| to force rewinding
 // to the start of the string. In Musl, this is also used in different

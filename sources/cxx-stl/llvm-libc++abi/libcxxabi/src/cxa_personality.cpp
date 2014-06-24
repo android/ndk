@@ -977,7 +977,7 @@ __gxx_personality_v0
             {
                 // No, do the scan again to reload the results.
                 scan_eh_tab(results, actions, native_exception, unwind_exception, context,
-                    (const uint8_t*)_Unwind_GetLanguageSpecificData(context));
+                            (const uint8_t*)_Unwind_GetLanguageSpecificData(context));
                 // Phase 1 told us we would find a handler.  Now in Phase 2 we
                 //   didn't find a handler.  The eh table should not be changing!
                 if (results.reason != _URC_HANDLER_FOUND)
