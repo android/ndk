@@ -83,6 +83,13 @@ llvm_libc++_sources := $(llvm_libc++_sources:%=libcxx/src/%)
 # For now, this library can only be used to build C++11 binaries.
 llvm_libc++_export_cxxflags := -std=c++11
 
+ifeq (,$(filter clang%,$(NDK_TOOLCHAIN_VERSION)))
+# Add -fno-strict-aliasing because __list_imp::_end_ breaks TBAA rules by declaring
+# simply as __list_node_base then casted to __list_node derived from that.  See
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=61571 for details
+llvm_libc++_export_cxxflags += -fno-strict-aliasing
+endif
+
 llvm_libc++_cxxflags := $(llvm_libc++_export_cxxflags)
 
 ifeq ($(__libcxx_use_gabixx),true)
@@ -131,7 +138,7 @@ llvm_libc++_export_includes += $(libcxxabi_c_includes)
 
 endif
 
-ifneq ($(LIBCXX_FORCE_REBUILD),true)
+ifneq ($(__libcxx_force_rebuild),true)
 
 $(call ndk_log,Using prebuilt libc++ libraries)
 
