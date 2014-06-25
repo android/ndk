@@ -268,6 +268,10 @@ ifdef LOCAL_ARM_NEON
 endif
 ifeq ($(LOCAL_ARM_NEON),true)
   neon_sources += $(LOCAL_SRC_FILES:%.neon=%)
+  # tag the precompiled header with 'neon' tag if it exists
+  ifneq (,$(LOCAL_PCH))
+    $(call tag-src-files,$(LOCAL_PCH),neon)
+  endif
 endif
 
 neon_sources := $(strip $(neon_sources))
@@ -292,6 +296,10 @@ LOCAL_SRC_FILES := $(LOCAL_SRC_FILES:%.arm=%)
 
 ifeq ($(LOCAL_ARM_MODE),arm)
     arm_sources := $(LOCAL_SRC_FILES)
+    # tag the precompiled header with 'arm' tag if it exists
+    ifneq (,$(LOCAL_PCH))
+        $(call tag-src-files,$(LOCAL_PCH),arm)
+    endif
 endif
 ifeq ($(LOCAL_ARM_MODE),thumb)
     arm_sources := $(empty)
@@ -302,12 +310,26 @@ $(call tag-src-files,$(arm_sources),arm)
 #
 ifeq ($(APP_OPTIM),debug)
     $(call tag-src-files,$(LOCAL_SRC_FILES),debug)
+    ifneq (,$(LOCAL_PCH))
+        $(call tag-src-files,$(LOCAL_PCH),debug)
+    endif
+endif
+
+# add PCH to LOCAL_SRC_FILES so that TARGET-process-src-files-tags could process it
+ifneq (,$(LOCAL_PCH))
+    LOCAL_SRC_FILES += $(LOCAL_PCH)
 endif
 
 # Process all source file tags to determine toolchain-specific
 # target compiler flags, and text.
 #
 $(call TARGET-process-src-files-tags)
+
+# now remove PCH from LOCAL_SRC_FILES to prevent getting NDK warning about
+# unsupported source file extensions
+ifneq (,$(LOCAL_PCH))
+    LOCAL_SRC_FILES := $(filter-out $(LOCAL_PCH),$(LOCAL_SRC_FILES))
+endif
 
 # only call dump-src-file-tags during debugging
 #$(dump-src-file-tags)
@@ -385,6 +407,37 @@ endif
 RS_COMPAT :=
 ifneq ($(call module-is-shared-library,$(LOCAL_MODULE)),)
     RS_COMPAT := true
+endif
+
+
+# Build PCH
+
+get-pch-name = $(strip \
+    $(subst ../,__/,\
+        $(eval __pch := $1)\
+        $(eval __pch := $(__pch:%.h=%.precompiled.h))\
+        $(__pch)\
+    ))
+
+ifneq (,$(LOCAL_PCH))
+    # Build PCH into obj directory
+    LOCAL_BUILT_PCH := $(call get-pch-name,$(LOCAL_PCH))
+
+    # Build PCH
+    $(call compile-cpp-source,$(LOCAL_PCH),$(LOCAL_BUILT_PCH).gch)
+
+    # All obj files are dependent on the PCH
+    $(foreach src,$(filter $(all_cpp_patterns),$(LOCAL_SRC_FILES)),\
+        $(eval $(LOCAL_OBJS_DIR)/$(call get-object-name,$(src)) : $(LOCAL_OBJS_DIR)/$(LOCAL_BUILT_PCH).gch)\
+    )
+
+    # Files from now on build with PCH
+    LOCAL_CPPFLAGS += -Winvalid-pch -include $(LOCAL_BUILT_PCH)
+
+    # Insert PCH dir at beginning of include search path
+    LOCAL_C_INCLUDES := \
+        $(LOCAL_OBJS_DIR) \
+        $(LOCAL_C_INCLUDES)
 endif
 
 # Build the sources to object files
