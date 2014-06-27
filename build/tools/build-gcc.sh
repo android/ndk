@@ -585,7 +585,15 @@ run rm -rf $TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/include/c++
 
 # strip binaries to reduce final package size
 test -z "$STRIP" && STRIP=strip
-run $STRIP $TOOLCHAIN_PATH/bin/*
+# because libpython is statically linked to GDB, it introduces symbols
+# that are only used by Python modules that must not be stripped. This
+# is not true of Windows which dynamically links to Python.
+if [ "$MINGW" = "yes" ] ; then
+    run $STRIP $TOOLCHAIN_PATH/bin/*
+else
+    find $TOOLCHAIN_PATH/bin -type f -not -name "*gdb" \
+        | while read EXECUTABLE; do run $STRIP "$EXECUTABLE"; done
+fi
 run $STRIP $TOOLCHAIN_PATH/$ABI_CONFIGURE_TARGET/bin/*
 run $STRIP $TOOLCHAIN_PATH/libexec/gcc/*/*/cc1$HOST_EXE
 run $STRIP $TOOLCHAIN_PATH/libexec/gcc/*/*/cc1plus$HOST_EXE
