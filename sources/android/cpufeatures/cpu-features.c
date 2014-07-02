@@ -74,6 +74,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #include <sys/system_properties.h>
 
 static  pthread_once_t     g_once;
@@ -428,6 +429,46 @@ cpulist_read_from(CpuList* list, const char* filename)
 
     cpulist_parse(list, file, filelen);
 }
+#if defined(__aarch64__)
+// see <uapi/asm/hwcap.h> kernel header
+#define HWCAP_FP                (1 << 0)
+#define HWCAP_ASIMD             (1 << 1)
+#define HWCAP_AES               (1 << 3)
+#define HWCAP_PMULL             (1 << 4)
+#define HWCAP_SHA1              (1 << 5)
+#define HWCAP_SHA2              (1 << 6)
+#define HWCAP_CRC32             (1 << 7)
+
+#define AT_HWCAP 16
+
+// Probe the system's C library for a 'getauxval' function and call it if
+// it exits, or return 0 for failure. This function is available since API
+// level 20.
+//
+static uint32_t
+get_elf_hwcap_from_getauxval(void) {
+    typedef unsigned long getauxval_func_t(unsigned long);
+
+    dlerror();
+    void* libc_handle = dlopen("libc.so", RTLD_NOW);
+    if (!libc_handle) {
+        D("Could not dlopen() C library: %s\n", dlerror());
+        return 0;
+    }
+
+    uint32_t ret = 0;
+    getauxval_func_t* func = (getauxval_func_t*)
+            dlsym(libc_handle, "getauxval");
+    if (!func) {
+        D("Could not find getauxval() in C library\n");
+    } else {
+        // Note: getauxval() returns 0 on failure. Doesn't touch errno.
+        ret = (uint32_t)(*func)(AT_HWCAP);
+    }
+    dlclose(libc_handle);
+    return ret;
+}
+#endif
 
 #if defined(__arm__)
 
@@ -883,6 +924,40 @@ android_cpuInit(void)
         }
     }
 #endif /* __arm__ */
+#ifdef __aarch64__
+    {
+        /* Extract the list of CPU features from ELF hwcaps */
+        uint32_t hwcaps = 0;
+        hwcaps = get_elf_hwcap_from_getauxval();
+        if (hwcaps != 0) {
+            int has_fp      = (hwcaps & HWCAP_FP);
+            int has_asimd   = (hwcaps & HWCAP_ASIMD);
+            int has_aes     = (hwcaps & HWCAP_AES);
+            int has_pmull   = (hwcaps & HWCAP_PMULL);
+            int has_sha1    = (hwcaps & HWCAP_SHA1);
+            int has_sha2    = (hwcaps & HWCAP_SHA2);
+            int has_crc32   = (hwcaps & HWCAP_CRC32);
+
+            /* AArch64 processors running Android will have FP and ASIMD */
+            assert(has_fp == 1 && has_asimd == 1);
+
+            if (has_fp)
+                g_cpuFeatures |= ANDROID_CPU_ARM64_FEATURE_FP;
+            if (has_asimd)
+                g_cpuFeatures |= ANDROID_CPU_ARM64_FEATURE_ASIMD;
+            if (has_aes)
+                g_cpuFeatures |= ANDROID_CPU_ARM64_FEATURE_AES;
+            if (has_pmull)
+                g_cpuFeatures |= ANDROID_CPU_ARM64_FEATURE_PMULL;
+            if (has_sha1)
+                g_cpuFeatures |= ANDROID_CPU_ARM64_FEATURE_SHA1;
+            if (has_sha2)
+                g_cpuFeatures |= ANDROID_CPU_ARM64_FEATURE_SHA2;
+            if (has_crc32)
+                g_cpuFeatures |= ANDROID_CPU_ARM64_FEATURE_CRC32;
+        }
+    }
+#endif /* __aarch64__ */
 
 #ifdef __i386__
     int regs[4];
