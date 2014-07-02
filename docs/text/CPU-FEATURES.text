@@ -146,6 +146,32 @@ And the following flags for the 32-bit x86 CPU Family:
 >   Indicates that the device's CPU supports the MOVBE instruction.
     This one is specific to some Intel IA-32 CPUs, like the Atom.
 
+And the following flags for the 64-bit ARM CPU Family:
+
+  * `ANDROID_CPU_ARM64_FEATURE_FP`
+>   Indicates that the device's CPU has Floating Point (FP) unit.
+    All ARM64 devices running Android are expected to have this.
+
+  * `ANDROID_CPU_ARM64_FEATURE_ASIMD`
+>   Indicates that the device's CPU has Advanced SIMD (ASIMD) unit.
+    All ARM64 devices running Android are expected to have this.
+
+  * `ANDROID_CPU_ARM64_FEATURE_AES`
+>   Indicates that the device's CPU supports AES instructions.
+
+  * `ANDROID_CPU_ARM64_FEATURE_CRC32`
+>   Indicates that the device's CPU supports CRC32 instructions.
+
+  * `ANDROID_CPU_ARM64_FEATURE_SHA1`
+>   Indicates that the device's CPU supports SHA1 instructions.
+
+  * `ANDROID_CPU_ARM64_FEATURE_SHA2`
+>   Indicates that the device's CPU supports SHA2 instructions.
+
+  * `ANDROID_CPU_ARM64_FEATURE_PMULL`
+>   Indicates that the device's CPU supports 64-bit PMULL and PMULL2
+    instructions.
+
 Other CPU families do not have extensions listed at the moment, which
 means that android_getCpuFeatures() will return 0 for them.
 
