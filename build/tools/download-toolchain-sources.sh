@@ -113,7 +113,7 @@ LLVM_VERSION_LIST=$(commas_to_spaces $LLVM_VERSION_LIST)
 # Create temp directory where everything will be copied first
 #
 PKGNAME=android-ndk-toolchain-$RELEASE
-TMPDIR=/tmp/ndk-$USER/$PKGNAME
+TMPDIR=$NDK_TMPDIR/$PKGNAME
 log "Creating temporary directory $TMPDIR"
 rm -rf $TMPDIR && mkdir $TMPDIR
 fail_panic "Could not create temporary directory: $TMPDIR"
