@@ -144,6 +144,13 @@ TARGET_LD       = $(TOOLCHAIN_PREFIX)ld
 TARGET_LDFLAGS :=
 
 TARGET_AR       = $(TOOLCHAIN_PREFIX)ar
+# Use *-gcc-ar instead of *-ar for better LTO support
+ifneq (,$(NDK_TOOLCHAIN_VERSION))
+ifneq (4.6,$(NDK_TOOLCHAIN_VERSION))
+TARGET_AR       = $(TOOLCHAIN_PREFIX)gcc-ar
+endif
+endif
+
 TARGET_ARFLAGS := crsD
 
 TARGET_STRIP    = $(TOOLCHAIN_PREFIX)strip
