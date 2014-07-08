@@ -461,6 +461,7 @@ for SYSTEM in $SYSTEMS; do
     # Remove tests containing duplicated files in case-insensitive file system
     if [ "$SYSTEM" = "windows" -o "$SYSTEM" = "darwin-x86" ]; then
         rm -rf $DSTDIR/tests/build/c++-stl-source-extensions
+        find $DSTDIR/platforms | sort  | uniq -di | xargs rm
     fi
 
     if [ "$PREBUILT_NDK" ]; then
