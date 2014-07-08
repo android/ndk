@@ -364,10 +364,6 @@ case "$TOOLCHAIN" in
     CONFIGURE_GCC_VERSION=4.8l
     ;;
 esac
-MAY_FAIL_DUE_TO_RACE_CONDITION=
-if [ "$MINGW" = "yes" -o "$DARWIN" = "yes" ]; then
-   MAY_FAIL_DUE_TO_RACE_CONDITION=yes
-fi
 
 cd $BUILD_OUT && run \
 $BUILD_SRCDIR/configure --target=$ABI_CONFIGURE_TARGET \
