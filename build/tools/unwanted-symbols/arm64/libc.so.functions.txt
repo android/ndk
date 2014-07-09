@@ -16,8 +16,6 @@ get_malloc_leak_info
 localtime_tz
 mktime_tz
 posix2time
-__pthread_cleanup_pop
-__pthread_cleanup_push
 __pthread_gettid
 SHA1Final
 SHA1Init
