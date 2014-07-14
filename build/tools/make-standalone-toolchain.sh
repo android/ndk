@@ -501,15 +501,26 @@ dump "Copying sysroot headers and libraries..."
 # expect the sysroot files to be placed there!
 run copy_directory_nolinks "$SRC_SYSROOT_INC" "$TMPDIR/sysroot/usr/include"
 run copy_directory_nolinks "$SRC_SYSROOT_LIB" "$TMPDIR/sysroot/usr/lib"
-# x86_64 and mips64el toolchain are built multilib.
-if [ "$ARCH" = "x86_64" -o "$ARCH" = "mips64" ]; then
-    run copy_directory_nolinks "$SRC_SYSROOT_LIB/../lib64" "$TMPDIR/sysroot/usr/lib64"
-    if [ "$ARCH" = "x86_64" ]; then
+case "$ARCH" in
+# x86_64 and mips* toolchain are built multilib.
+    x86_64)
+        run copy_directory_nolinks "$SRC_SYSROOT_LIB/../lib64" "$TMPDIR/sysroot/usr/lib64"
         run copy_directory_nolinks "$SRC_SYSROOT_LIB/../libx32" "$TMPDIR/sysroot/usr/libx32"
-    else
-        run copy_directory_nolinks "$SRC_SYSROOT_LIB/../lib32" "$TMPDIR/sysroot/usr/lib32"
-    fi
-fi
+        ;;
+    mips64)
+        run copy_directory_nolinks "$SRC_SYSROOT_LIB/../libr2" "$TMPDIR/sysroot/usr/libr2"
+        run copy_directory_nolinks "$SRC_SYSROOT_LIB/../libr6" "$TMPDIR/sysroot/usr/libr6"
+        run copy_directory_nolinks "$SRC_SYSROOT_LIB/../lib64" "$TMPDIR/sysroot/usr/lib64"
+        run copy_directory_nolinks "$SRC_SYSROOT_LIB/../lib64r2" "$TMPDIR/sysroot/usr/lib64r2"
+        ;;
+    mips)
+        if [ "$GCC_VERSION" == "4.9" ]; then
+            run copy_directory_nolinks "$SRC_SYSROOT_LIB/../libr2" "$TMPDIR/sysroot/usr/libr2"
+            run copy_directory_nolinks "$SRC_SYSROOT_LIB/../libr6" "$TMPDIR/sysroot/usr/libr6"
+	fi
+        ;;
+esac
+
 if [ "$ARCH_INC" != "$ARCH" ]; then
     cp -a $NDK_DIR/$GABIXX_SUBDIR/libs/$ABI/* $TMPDIR/sysroot/usr/lib
     cp -a $NDK_DIR/$LIBPORTABLE_SUBDIR/libs/$ABI/* $TMPDIR/sysroot/usr/lib
@@ -682,11 +693,22 @@ copy_stl_libs_for_abi () {
             ;;
         mips64)
             if [ "$STL" = "gnustl" ]; then
-                copy_stl_libs mips64       "32/bits"             "32/bits"    ""                   "lib"
-                copy_stl_libs mips64       "bits"                "bits"       "../lib64"           "lib64"
-                copy_stl_libs mips64       "n32/bits"            "n32/bits"   "../lib32"           "lib32"
+                copy_stl_libs mips64       "32/mips-r1/bits"     "32/mips-r1/bits"  ""             "lib"
+                copy_stl_libs mips64       "32/mips-r2/bits"     "32/mips-r2/bits"  "../libr2"     "libr2"
+                copy_stl_libs mips64       "32/mips-r6/bits"     "32/mips-r6/bits"  "../libr6"     "libr6"
+                copy_stl_libs mips64       "bits"                "bits"             "../lib64"     "lib64"
+                copy_stl_libs mips64       "mips64-r2/bits"      "mips64-r2/bits"   "../lib64r2"   "lib64r2"
             else
                 copy_stl_libs "$ABI"
+            fi
+            ;;
+        mips)
+            if [ "$STL" = "gnustl" -a "$GCC_VERSION" == "4.9" ]; then
+                copy_stl_libs mips         "bits"                "bits"             "../lib"       "lib"
+                copy_stl_libs mips         "mips-r2/bits"        "mips-r2/bits"     "../libr2"     "libr2"
+                copy_stl_libs mips         "mips-r6/bits"        "mips-r6/bits"     "../libr6"     "libr6"
+            else
+                copy_stl_libs mips         "bits"                "bits"
             fi
             ;;
         *)
