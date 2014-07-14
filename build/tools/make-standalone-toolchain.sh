@@ -507,7 +507,8 @@ if [ "$ARCH" = "x86_64" -o "$ARCH" = "mips64" ]; then
     if [ "$ARCH" = "x86_64" ]; then
         run copy_directory_nolinks "$SRC_SYSROOT_LIB/../libx32" "$TMPDIR/sysroot/usr/libx32"
     else
-        run copy_directory_nolinks "$SRC_SYSROOT_LIB/../lib32" "$TMPDIR/sysroot/usr/lib32"
+        run copy_directory_nolinks "$SRC_SYSROOT_LIB/../libr6" "$TMPDIR/sysroot/usr/libr6"
+        run copy_directory_nolinks "$SRC_SYSROOT_LIB/../lib64r2" "$TMPDIR/sysroot/usr/lib64r2"
     fi
 fi
 if [ "$ARCH_INC" != "$ARCH" ]; then
@@ -682,9 +683,11 @@ copy_stl_libs_for_abi () {
             ;;
         mips64)
             if [ "$STL" = "gnustl" ]; then
-                copy_stl_libs mips64       "32/bits"             "32/bits"    ""                   "lib"
-                copy_stl_libs mips64       "bits"                "bits"       "../lib64"           "lib64"
-                copy_stl_libs mips64       "n32/bits"            "n32/bits"   "../lib32"           "lib32"
+                copy_stl_libs mips64       "32/mips-r1/bits"     "32/mips-r1/bits"  ""             "lib"
+                copy_stl_libs mips64       "32/mips-r2/bits"     "32/mips-r2/bits"  ""             "lib"
+                copy_stl_libs mips64       "32/mips-r6/bits"     "32/mips-r6/bits"  "../libr6"     "libr6"
+                copy_stl_libs mips64       "bits"                "bits"             "../lib64"     "lib64"
+                copy_stl_libs mips64       "mips64-r2/bits"      "mips64-r2/bits"   "../lib64r2"   "lib64r2"
             else
                 copy_stl_libs "$ABI"
             fi

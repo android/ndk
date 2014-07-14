@@ -300,11 +300,14 @@ copy_gnustl_libs ()
     # Copy the ABI-specific headers
     copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/bits" "$DDIR/libs/$ABI/include/bits"
     if [ "$ARCH" = "x86_64" -o "$ARCH" = "mips64" ]; then
-        copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/32/bits" "$DDIR/libs/$ABI/include/32/bits"
         if [ "$ARCH" = "x86_64" ]; then
+            copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/32/bits" "$DDIR/libs/$ABI/include/32/bits"
             copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/x32/bits" "$DDIR/libs/$ABI/include/x32/bits"
         else
-            copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/n32/bits" "$DDIR/libs/$ABI/include/n32/bits"
+            copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/32/mips-r1/bits" "$DDIR/libs/$ABI/include/32/mips-r1/bits"
+            copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/32/mips-r2/bits" "$DDIR/libs/$ABI/include/32/mips-r2/bits"
+            copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/32/mips-r6/bits" "$DDIR/libs/$ABI/include/32/mips-r6/bits"
+            copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/mips64-r2/bits" "$DDIR/libs/$ABI/include/mips64-r2/bits"
         fi
     fi
 
@@ -330,8 +333,10 @@ copy_gnustl_libs ()
          copy_file_list "$SDIR/libx32" "$DDIR/libs/$ABI/libx32" libsupc++.a libgnustl_shared.so
          cp "$SDIR/libx32/libgnustl_shared.a" "$DDIR/libs/$ABI/libx32/libgnustl_static.a"
        else
-         copy_file_list "$SDIR/lib32" "$DDIR/libs/$ABI/lib32" libsupc++.a libgnustl_shared.so
-         cp "$SDIR/lib32/libgnustl_shared.a" "$DDIR/libs/$ABI/lib32/libgnustl_static.a"
+         copy_file_list "$SDIR/lib64r2" "$DDIR/libs/$ABI/lib64r2" libsupc++.a libgnustl_shared.so
+         copy_file_list "$SDIR/libr6" "$DDIR/libs/$ABI/libr6" libsupc++.a libgnustl_shared.so
+         cp "$SDIR/lib64r2/libgnustl_shared.a" "$DDIR/libs/$ABI/lib64r2/libgnustl_static.a"
+         cp "$SDIR/libr6/libgnustl_shared.a" "$DDIR/libs/$ABI/libr6/libgnustl_static.a"
        fi
     fi
     if [ -d "$SDIR/thumb" ] ; then
@@ -383,10 +388,11 @@ if [ -n "$PACKAGE_DIR" ] ; then
                               lib64/libsupc++.a lib64/libgnustl_static.a lib64/libgnustl_shared.so"
                     ;;
                 mips64)
-                    MULTILIB="include/32/bits include/n32/bits
+                    MULTILIB="include/32/mips-r1/bits include/32/mips-r2/bits include/32/mips-r6/bits include/bits include/mips64-r2/bits
                               lib/libsupc++.a lib/libgnustl_static.a lib/libgnustl_shared.so
-                              lib32/libsupc++.a lib32/libgnustl_static.a lib32/libgnustl_shared.so
-                              lib64/libsupc++.a lib64/libgnustl_static.a lib64/libgnustl_shared.so"
+                              libr6/libsupc++.a libr6/libgnustl_static.a libr6/libgnustl_shared.so
+                              lib64/libsupc++.a lib64/libgnustl_static.a lib64/libgnustl_shared.so
+                              lib64r2/libsupc++.a lib64r2/libgnustl_static.a lib64r2/libgnustl_shared.so"
                     ;;
                 *)
                     MULTILIB=
