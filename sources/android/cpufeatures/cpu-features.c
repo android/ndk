@@ -428,6 +428,16 @@ cpulist_read_from(CpuList* list, const char* filename)
 
     cpulist_parse(list, file, filelen);
 }
+#if defined(__aarch64__)
+// see <uapi/asm/hwcap.h> kernel header
+#define HWCAP_FP                (1 << 0)
+#define HWCAP_ASIMD             (1 << 1)
+#define HWCAP_AES               (1 << 3)
+#define HWCAP_PMULL             (1 << 4)
+#define HWCAP_SHA1              (1 << 5)
+#define HWCAP_SHA2              (1 << 6)
+#define HWCAP_CRC32             (1 << 7)
+#endif
 
 #if defined(__arm__)
 
@@ -451,6 +461,9 @@ cpulist_read_from(CpuList* list, const char* filename)
     HWCAP_VFPv4 | \
     HWCAP_IDIVA | \
     HWCAP_IDIVT )
+#endif
+
+#if defined(__arm__) || defined(__aarch64__)
 
 #define AT_HWCAP 16
 
@@ -491,7 +504,9 @@ get_elf_hwcap_from_getauxval(void) {
     dlclose(libc_handle);
     return ret;
 }
+#endif
 
+#if defined(__arm__)
 // Parse /proc/self/auxv to extract the ELF HW capabilities bitmap for the
 // current CPU. Note that this file is not accessible from regular
 // application processes on some Android platform releases.
@@ -883,6 +898,44 @@ android_cpuInit(void)
         }
     }
 #endif /* __arm__ */
+#ifdef __aarch64__
+    {
+        /* Extract the list of CPU features from ELF hwcaps */
+        uint32_t hwcaps = 0;
+        hwcaps = get_elf_hwcap_from_getauxval();
+        if (hwcaps != 0) {
+            int has_fp      = (hwcaps & HWCAP_FP);
+            int has_asimd   = (hwcaps & HWCAP_ASIMD);
+            int has_aes     = (hwcaps & HWCAP_AES);
+            int has_pmull   = (hwcaps & HWCAP_PMULL);
+            int has_sha1    = (hwcaps & HWCAP_SHA1);
+            int has_sha2    = (hwcaps & HWCAP_SHA2);
+            int has_crc32   = (hwcaps & HWCAP_CRC32);
+
+            if(has_fp == 0) {
+                D("ERROR: Floating-point unit missing, but is required by Android on AArch64 CPUs\n");
+            }
+            if(has_asimd == 0) {
+                D("ERROR: ASIMD unit missing, but is required by Android on AArch64 CPUs\n");
+            }
+
+            if (has_fp)
+                g_cpuFeatures |= ANDROID_CPU_ARM64_FEATURE_FP;
+            if (has_asimd)
+                g_cpuFeatures |= ANDROID_CPU_ARM64_FEATURE_ASIMD;
+            if (has_aes)
+                g_cpuFeatures |= ANDROID_CPU_ARM64_FEATURE_AES;
+            if (has_pmull)
+                g_cpuFeatures |= ANDROID_CPU_ARM64_FEATURE_PMULL;
+            if (has_sha1)
+                g_cpuFeatures |= ANDROID_CPU_ARM64_FEATURE_SHA1;
+            if (has_sha2)
+                g_cpuFeatures |= ANDROID_CPU_ARM64_FEATURE_SHA2;
+            if (has_crc32)
+                g_cpuFeatures |= ANDROID_CPU_ARM64_FEATURE_CRC32;
+        }
+    }
+#endif /* __aarch64__ */
 
 #ifdef __i386__
     int regs[4];
