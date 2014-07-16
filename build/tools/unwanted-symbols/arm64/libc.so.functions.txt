@@ -10,7 +10,6 @@ arc4random_uniform
 __bionic_name_mem
 dlmalloc_inspect_all
 dlmalloc_trim
-dn_expand
 __findenv
 get_malloc_leak_info
 localtime_tz
