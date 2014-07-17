@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+ <h2>Change List</h2>
+ <h3>Android NDK, Revision 10</a> <em>(July 2014)</em></h3>
+ </p>
+ <div class="toggle-content-toggleme">
+    <dl>
+      <dt>Important changes:</dt>
+      <dd>
+      <ul>
+        <li>Added 3 new ABIs, all 64-bit: arm64-v8a, x86_64, mips64.</li> Note that:
+        <ul>
+           <li>GCC 4.9 is the default compiler for 64-bit ABIs. Clang is currently version 3.4.
+<code>NDK_TOOLCHAIN_VERSION=clang</code>
+      may not work for arm64-v8a and mips64.</li>
+           <li>Android API level L is the first level with 64-bit support.  Note that this API
+level is a temporary one, and only for L-preview. An actual API level number will replace it at
+L-release.</li>
+           <li>This release includes now includes <code>all32</code> and <code>all64</code>
+settings for <code>APP_ABI</code>.
+              <ul>
+              <li><code>APP_ABI=all32</code> is equivalent to
+<code>APP_ABI=armeabi,armeabi-v7a,x86,mips</code>.</li>
+              <li><code>APP_ABI=all64</code> is equivalent to
+<code>APP_ABI=arm64-v8a,x86_64,mips64</code>.</li>
+              <li><code>APP_ABI=all</code> selects all ABIs.</li>
+              </ul>
+           <li>The new GNU libstdc++ in Android-L contains all <code>&lt;tr1/cmath&gt;</code>
+Before defining your own math function, check <code>_GLIBCXX_USE_C99_MATH_TR1</code> to see a
+function with that name already exists, in order to avoid "multiple definition" errors from the
+linker.</li>
+           <li>The cpu-features library has been updated for the ARMv8 kernel.  The existing
+cpu-features library may fail to detect the presence of NEON on the ARMv8 platform. Recompile your
+code with the new version.</li>
+        </ul>
+        <li>Added a new <code>platforms/android-L/</code> API directory. It includes:</li>
+        <ul>
+           <li>Updated Bionic headers, which had not changed from Android API levels 3
+(Cupcake) to 19 (KitKat). This new version, for level L, is to be synchronized with AOSP.</li>
+           <li>New media APIs and a native-codec sample.</li>
+           <li>An updated <code>Android.h</code> header for SLES/OpenSLES, enabling support for
+single-precision, floating-point audio format in AudioPlayer.</li>
+           <li>GLES 3.1 and AEP extensions to <code>libGLESv3.so.</code></li>
+           <li>GLES2 and GLES3 headers updated to the latest official Khronos versions.</li>
+        </ul>
+        <li>Added GCC 4.9 compilers to the 32-/64-bit ABIs.  GCC 4.9 is the default (only) compiler
+for 64-bit ABIs, as previously mentioned.  For 32-bit ABIs, you must explcitly enable GCC 4.9, as
+GCC 4.6 is still the default.</li>
+        <ul>
+           <li>For ndk-build, enable 32-bit, GCC 4.9 building either by adding
+<code>NDK_TOOLCHAIN_VERSION=4.9</code> to <code>Application.mk</code>, or exporting it as an
+environment variable from the command line.</li>
+           <li>For a standalone toolchain, use the <code> --toolchain=</code> option in the
+<code>make-standalone-toolchain.sh</code> script. For example: <code>--toolchain=arm-linux-androideabi-4.9.</code></li>
+        </ul>
+        <li>Upgraded GDB to version 7.6 in GCC 4.8/4.9 and x86*. Since GDB is still at version GDB-7.3.x in
+GCC 4.6 (the default for ARM and MIPS), you must set
+<code>NDK_TOOLCHAIN_VERSION=4.8</code> or <code>4.9</code> to enable ndk-gdb to select GDB 7.6.</li>
+        <li>Added the <code>-mssse3</code> build option to provide SSSE3 support, and made it the default for ABI x86
+(upgrading from SSE3). The image released by Google does not contain SSSE3 instructions.</li>
+        <li>Updated GCC 4.8 to 4.8.3.</li>
+        <li>Improved ARM libc++ EH support by switching from gabi++ to libc++abi. For details, see the "C++ Support" section of the documentation.
+  Note that:</li>
+        <ul>
+           <li>All tests except for locale now pass for Clang 3.4 and GCC 4.8. For more
+information, see the "C++ Support" section of the documentation.</li>
+           <li>The libc++ libraries for X86 and MIPS libc++ still use gabi++.</li>
+           <li>GCC 4.7 and later can now use &lt;atomic&gt;.</li>
+           <li>You must add <code>-fno-strict-aliasing</code> if you use <code> &lt;list&gt;</code>, because <code>__list_imp::_end</code>_ breaks
+      TBAA rules.  (Issue <a href="https://gcc.gnu.org/bugzilla/show_bug.cgi?id=61571">61571</a>.)</li>
+           <li>As of GCC 4.6, LIBCXX_FORCE_REBUILD:=true no longer rebuilds libc++. Rebuilding it
+requires the use of a different compiler. Note that Clang 3.3 is untested.</li>
+        </ul>
+        <li>mclinker is now version 2.7, and has aarch64 Linux support.</li>
+        <li>Added precompiled header support for headers specified by <code>LOCAL_PCH</code>.  (Issue <a href="http://b.android.com/25412">25412</a>).</li>
+      </dd>
+   <dl>
+
+
+     <dt>Important bug fixes:</dt>
+     <dd>
+     <ul>
+       <li>Fixed libc++ so that it now compiles <code>std::feof</code>, etc. (Issue <a
+href="http://b.android.com/66668">66668</a>).</li>
+       <li>Fixed a Clang 3.3/3.4 atomic library call that caused crashes in some of the libc++
+tests for ABI armeabi.</li>
+       <li>Fixed Clang 3.4 crashes that were occurring on reading precompiled headers. (Issue <a
+href="http://b.android.com/66657">66657</a>).</li>
+       <li>Fixed the Clang 3.3/3.4 <code>-O3</code> assert on:</li>
+       <code>llvm-3.2/llvm/include/llvm/MDBuilder.h:64: llvm::MDNode*
+llvm::MDBuilder::createBranchWeights(llvm::ArrayRef<unsigned int>): Assertion Weights.size() >= 2
+&& "Need at least two branch weights!"</code> (Issue <a href="http://b.android.com/57381">57381</a>).
+       <li>Fixed the following Clang 3.3/3.4 crash:</li>
+       <code>Assertion failed: (!Fn && "cast failed but able to resolve overload expression!!"), function CheckCXXCStyleCast, file
+Volumes/data/ndk-toolchain/src/llvm-3.3/llvm/tools/clang/lib/Sema/SemaCast.cpp, line 2018</code>.
+(Issue <a href="http://b.android.com/66950">66950</a>).
+     </ul>
+     </dd>
+
+     <dt>Other bug fixes:</dt>
+     <dd>
+     <ul>
+       <li>Fixed headers:</li>
+       <ul>
+          <li>Fixed 32-bit <code>ssize_t</code> to be <code>int</code> instead of <code>long
+int</code>.</li>
+          <li>Fixed <code>WCHAR_MIN</code> and <code>WCHAR_MAX</code> so that they they take
+appropriate signs according to the architecture they're running on:</li>
+          <ul>
+             <li>X86/MIPS: signed.
+             <li>ARM: unsigned.
+             <li>To force X86/MIPS to default to unsigned, use
+<code>-D__WCHAR_UNSIGNED__</code>.</li>
+             <li>To force <code>wchar_t</code> to be 16 bits, use <code>-fshort-wchar</code>.</li>
+          </ul>
+          <li>Removed non-existent symbols from 32-bit <code>libc.so</code>, and added <code>pread64</code>,
+<code>pwrite64</code>, <code>ftruncate64</code> for
+Android API level 12 and higher. (Issue <a href="http://b.android.com/69319">69319</a>). For more
+information, see the commit message accompanying AOSP change list
+     <a href="https://android-review.googlesource.com/#/c/94137">94137</a>.</li>
+       </ul>
+       <li>Fixed GCC warning about redefinition of <code>putchar</code>. Warning message reads:</li>
+       <code>include/stdio.h:236:5: warning: conflicts with previous declaration here
+[-Wattributes] int  putchar(int);</code> (Change list <a
+href="https://android-review.googlesource.com/#/c/91185">91185</a>).
+       <li>Fixed <code>make-standalone-toolchain.sh --stl=libc++</code> so that it:</li>
+       <ul>
+          <li>Copies <code>cxxabi.h</code>. (Issue <a
+href="http://b.android.com/68001">68001</a>).</li>
+          <li>Runs in directories other than the NDK install directory. (Issues <a
+href="http://b.android.com/67690">67690</a> and <a href="http://b.android.com/68647">68647</a>).</li>
+       </ul>
+       <li>Fixed GCC/Windows to quote arguments only when necessary for spawning processes in
+external programs. This change decreases the likelihood of exceeding the 32K length limit.</li>
+       <li>Fixed an issue that made it impossible to adjust the <code>APP_PLATFORM</code>
+environment variable.</li>
+       <li>Fixed the implementation of <code>IsSystemLibrary()</code> in crazy_linker so that it
+uses <code>strrchr()</code>
+  instead of <code>strchr()</code> to find the library path's true basename.</li>
+       <li>Fixed native-audio's inability to build in debug mode.</li>
+       <li>Fixed gdb's inability to print extreme floating-point numbers. (Issue <a
+href="http://b.android.com/69203">69203</a>).</li>
+       <li>Fixed Clang 3.4 inability to compile with <code>-Wl,-shared</code> (as opposed to
+<code>-shared</code>, which
+  had no compilation issues).  The problem was that Clang added <code>-pie</code> for Android
+targets if neither <code>-shared</code> nor <code>-static</code> existed. This behavior, which was
+incorrect, caused the linker to complain that <code>-shared</code> and <code>-pie</code> could not
+co-exist.</li>
+
+     </ul>
+     </dd>
+     <dt>Other changes:</dt>
+     <dd>
+     <ul>
+        <li>Added <code>arm_neon.h</code> to the x86 toolchain so that it now emulates ~47% of
+Neon. There is currently no support for 64-bit types. For more information, see the section on ARM
+Neon intrinsics support in the x86 documentation.</li>
+        <li>Ported ARM/GOT_PREL optimization (present in GCC 4.6 built from the GCC google branch) to
+ARM GCC 4.8/4.9.  This optimization sometimes reduces instruction count when accessing global
+variables.  As an example, see the build.sh script in
+<code>$NDK/tests/build/b14811006-GOT_PREL-optimization/</code>.</li>
+        <li>Added ARM version for STL gabi++, stlport, and libc++. They now have both it and Thumb
+mode.</li>
+        <li>It is now possible to call the make-standalone-toolchain.sh script with
+<code>--toolchain=x86_64-linux-android-4.9</code>, which is equivalent to
+<code>--toolchain=x86_64-4.9</code>.</li>
+     </dd>
+     </ul>
+   </dl>
+ </div>
+</div>
+
+A comprehensive change list, going through all previous releases of the NDK, can be found at the <a href="http://developer.android.com/tools/sdk/ndk/index.html">Android developer website.</a><br>
+        <br>
+
+  <div id="copyright">
+
+  Except as noted, this content is
+  licensed under <a href="http://creativecommons.org/licenses/by/2.5/">
+  Creative Commons Attribution 2.5</a>. For details and
+  restrictions, see the <a href="http://developer.android.com/license.html">Content
+  License</a>.
+  <div id="footerlinks">
+
+  <p>
+    <a href="http://developer.android.com/about/index.html">About Android</a>&nbsp;&nbsp;|&nbsp;
+    <a href="http://developer.android.com/legal.html">Legal</a>&nbsp;&nbsp;|&nbsp;
+    <a href="http://developer.android.com/support.html">Support</a>
+  </p>
+  </div>
+  </div>
+</body>
+</html>
