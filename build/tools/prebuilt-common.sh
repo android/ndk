@@ -30,7 +30,7 @@ NDK_BUILDTOOLS_ABSPATH=$(cd $NDK_BUILDTOOLS_PATH && pwd)
 # Binaries built by new linux host toolchain "prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.11-4.6"
 # may contain functions missing from server runs very old libc.so.  Define __USE_OLD_LINUX_HOST_GCC=yes
 # to use the original "prebuilts/tools/gcc-sdk" with glibc2.7 sysroot
-__USE_OLD_LINUX_HOST_GCC=yes
+__USE_OLD_LINUX_HOST_GCC=no
 
 #====================================================
 #
