@@ -59,12 +59,27 @@ endif
 #
 ifeq ($(NDK_APP_ABI),all)
     NDK_APP_ABI := $(NDK_APP_ABI_ALL_EXPANDED)
+    _abis_without_toolchain := $(filter-out $(NDK_ALL_ABIS),$(NDK_APP_ABI))
+    ifneq (,$(_abis_without_toolchain))
+        $(call ndk_log,Remove the following abis expanded from 'all' due to no toolchain: $(_abis_without_toolchain))
+        NDK_APP_ABI := $(filter-out $(_abis_without_toolchain),$(NDK_APP_ABI))
+    endif
 else
 ifeq ($(NDK_APP_ABI),all32)
     NDK_APP_ABI := $(NDK_APP_ABI_ALL32_EXPANDED)
+    _abis_without_toolchain := $(filter-out $(NDK_ALL_ABIS),$(NDK_APP_ABI))
+    ifneq (,$(_abis_without_toolchain))
+        $(call ndk_log,Remove the following abis expanded from 'all32' due to no toolchain: $(_abis_without_toolchain))
+        NDK_APP_ABI := $(filter-out $(_abis_without_toolchain),$(NDK_APP_ABI))
+    endif
 else
 ifeq ($(NDK_APP_ABI),all64)
     NDK_APP_ABI := $(NDK_APP_ABI_ALL64_EXPANDED)
+    _abis_without_toolchain := $(filter-out $(NDK_ALL_ABIS),$(NDK_APP_ABI))
+    ifneq (,$(_abis_without_toolchain))
+        $(call ndk_log,Remove the following abis expanded from 'all64' due to no toolchain: $(_abis_without_toolchain))
+        NDK_APP_ABI := $(filter-out $(_abis_without_toolchain),$(NDK_APP_ABI))
+    endif
 else
     # Plug in the unknown
     _unknown_abis := $(strip $(filter-out $(NDK_ALL_ABIS),$(NDK_APP_ABI)))

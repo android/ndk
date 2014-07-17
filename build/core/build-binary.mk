@@ -78,6 +78,7 @@ system_libs := \
     RS \
     ui \
     utils \
+    mediandk \
     atomic
 
 libs_in_ldflags := $(filter-out $(addprefix -l,$(system_libs)), $(libs_in_ldflags))
