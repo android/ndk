@@ -37,7 +37,10 @@ ifndef NDK_TOOLCHAIN
 
     ifeq (,$(findstring 64,$(TARGET_ARCH_ABI)))
       # Filter out 4.7, 4.8 and 4.9 which are newer than the defaultat this moment
-      TARGET_TOOLCHAIN_LIST := $(filter-out %4.7 %4.8 %4.8l %4.9 %4.9l,$(TARGET_TOOLCHAIN_LIST))
+      __filtered_toolchain_list := $(filter-out %4.7 %4.8 %4.8l %4.9 %4.9l,$(TARGET_TOOLCHAIN_LIST))
+      ifdef __filtered_toolchain_list
+          TARGET_TOOLCHAIN_LIST := $(__filtered_toolchain_list)
+      endif
     else
       # Filter out 4.6, 4.7 and 4.8 which don't have good 64-bit support in all supported arch
       TARGET_TOOLCHAIN_LIST := $(filter-out %4.6 %4.7 %4.8 %4.8l,$(TARGET_TOOLCHAIN_LIST))
