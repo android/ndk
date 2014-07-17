@@ -128,6 +128,23 @@ $(document).ready(function(){initNavTree('md_3__key__topics__c_p_u__support__c_p
 <li><code>ANDROID_CPU_X86_FEATURE_MOVBE</code><br/>
  Indicates that the device's CPU supports the MOVBE instruction. This one is specific to some Intel IA-32 CPUs, like the Atom.</li>
 </ul>
+<p>And the following flags for the 64-bit ARM CPU Family:</p>
+<ul>
+<li><code>ANDROID_CPU_ARM64_FEATURE_FP</code><br/>
+ Indicates that the device's CPU has Floating Point (FP) unit. All Android ARM64 devices are required to support this feature.</li>
+<li><code>ANDROID_CPU_ARM64_FEATURE_ASIMD</code><br/>
+ Indicates that the device's CPU has Advanced SIMD (ASIMD) unit. All Android ARM64 devices are required to support this feature.</li>
+<li><code>ANDROID_CPU_ARM64_FEATURE_AES</code><br/>
+ Indicates that the device's CPU supports AES instructions.</li>
+<li><code>ANDROID_CPU_ARM64_FEATURE_CRC32</code><br/>
+ Indicates that the device's CPU supports CRC32 instructions.</li>
+<li><code>ANDROID_CPU_ARM64_FEATURE_SHA1</code><br/>
+ Indicates that the device's CPU supports SHA1 instructions.</li>
+<li><code>ANDROID_CPU_ARM64_FEATURE_SHA2</code><br/>
+ Indicates that the device's CPU supports SHA2 instructions.</li>
+<li><code>ANDROID_CPU_ARM64_FEATURE_PMULL</code><br/>
+ Indicates that the device's CPU supports 64-bit PMULL and PMULL2 instructions.</li>
+</ul>
 <p>Other CPU families do not have extensions listed at the moment, which means that android_getCpuFeatures() will return 0 for them.</p>
 <p>The following function is also defined to return the max number of CPU cores on the target device: </p>
 <pre class="fragment">    int  android_getCpuCount(void);
