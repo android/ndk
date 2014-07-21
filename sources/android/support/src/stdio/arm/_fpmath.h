@@ -26,11 +26,7 @@
  * $FreeBSD$
  */
 
-#if defined(__VFP_FP__)
 #define	_IEEE_WORD_ORDER	_BYTE_ORDER
-#else
-#define	_IEEE_WORD_ORDER	_BIG_ENDIAN
-#endif
 
 union IEEEl2bits {
 	long double	e;
