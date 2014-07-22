@@ -24,6 +24,9 @@ is_file_type_thin_archive () {
     *"ar archive"*)
       return 1
       ;;
+    *"thin archive"*)
+      return 0
+      ;;
     "data")
       return 0
       ;;
