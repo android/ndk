@@ -4,7 +4,7 @@ var NAVTREE =
     [ "Concepts", "md_1__concepts__concepts.html", null ],
     [ "- Before Beginning", "md_1__concepts__concepts.html#bb", null ],
     [ "- Introduction", "md_1__concepts__concepts.html#intro", null ],
-    [ "- How it Works", "md_1__concepts__concepts.html#hiw", null ],
+    [ "- Process", "md_1__concepts__concepts.html#hiw", null ],
     [ "- Native Activities and Applications", "md_1__concepts__concepts.html#naa", null ],
     [ "Samples", "md_2__samples__samples.html", null ],
     [ "- hello-jni", "md_2__samples_sample--hellojni.html", null ],

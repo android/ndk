@@ -60,7 +60,7 @@ $(document).ready(function(){initNavTree('md_1__concepts__concepts.html','');});
 <li>
 <a href="#intro">Introduction</a> </li>
 <li>
-<a href="#hiw">How It Works</a> <ul style="list-style:none;">
+<a href="#hiw">Process</a> <ul style="list-style:none;">
 <li>
 <a href="#mc">Main Components</a> </li>
 <ul>
@@ -127,9 +127,8 @@ between platform releases. If the NDK headers do not explicitly support an
 Android system library, then apps should not depend on its being
 available; otherwise, the next over-the-air (“OTA”) system update may
 break them.
-<p><br/>
-</p>
-<p><a class="anchor" id="hiw">Main Components and Flow</a> </p>
+
+<p><a class="anchor" id="hiw"></a> </p>
 <h2>Process</h2>
 <p>This section introduces the main components used in building a native
 application for Android, and goes on to describe the flow of building and
@@ -151,8 +150,7 @@ determine what to build.</li>
 </li>
 </ul>
 <p>For more information, see the <a
-href="./md_3__key__topics__building__chapter_1-section_8_ndk-build.html">ndk-bui
-ld</a> section of this guide.</p>
+href="./md_3__key__topics__building__chapter_1-section_8_ndk-build.html">ndk-build</a> section of this guide.</p>
 <p><a class="anchor" id="jav"></a></p>
 <ul>
 <li>Java: From your Java source, the Android build process generates
@@ -195,15 +193,13 @@ app's machine code is expected to interact with the system at runtime. The NDK
 builds <code>.so</code> files against these definitions. Different ABIs
 correspond to different architectures: The NDK includes ABI support for ARMEABI
 (default), MIPS, and x86. For more information, see <a
-href="./md_3__key__topics__c_p_u__support__chapter_1-section_8__a_b_is.html">Sup
-ported ABIs</a>.</li>
+href="./md_3__key__topics__c_p_u__support__chapter_1-section_8__a_b_is.html">Supported ABIs</a>.</li>
 </ul>
 <p><a class="anchor" id="man"></a></p>
 <ul>
 <li>Manifest: If you are writing an app with no Java component to it, you must
 declare the NativeActivity class in the <a
-href="http://developer.android.com/guide/topics/manifest/manifest-intro.html">ma
-nifest</a>. The <a href=#naa>Native Activity</a> section provides more detail
+href="http://developer.android.com/guide/topics/manifest/manifest-intro.html">manifest</a>. The <a href=#naa>Native Activity</a> section provides more detail
 on how to do this, under “Using the native-activity.h interface.”</li>
 </ul>
 <br>
@@ -217,8 +213,7 @@ configuration file inside your <code>jni</code> folder. The ndk-build script
 looks at this file, which defines the module and its name, the source files to
 be compiled, build flags and libraries to link. For more information, see the
 <a
-href="./md_3__key__topics__building__chapter_1-section_8__android_8mk.html">Andr
-oid.mk</a> section of this document.</li>
+href="./md_3__key__topics__building__chapter_1-section_8__android_8mk.html">Android.mk</a> section of this document.</li>
 </ul>
 <p><a class="anchor" id="app"></a></p>
 <ul>
@@ -386,8 +381,7 @@ href="http://developer.android.com/training/basics/activity-lifecycle/index.html
 <li>Create an <code>Android.mk file</code> in the <code>jni/</code> directory
 of your project to describe your native module to the build system. For more
 information, see the <a
-href="./md_3__key__topics__building__chapter_1-section_8__android_8mk.html">Andr
-oid.mk section.</a>.</li>
+href="./md_3__key__topics__building__chapter_1-section_8__android_8mk.html">Android.mk section.</a></li>
 <li>Once you have an <code>Android.mk</code> file, compile your native code
 using the <code>ndk-build</code> command.</li>
 
