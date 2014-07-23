@@ -30,8 +30,9 @@ fi
 MYNDKDIR=`dirname $0`
 
 # create a temporary skeleton project so that we can leverage build-local.mk
-mkdir -p /tmp/ndk-which/jni
-cat >/tmp/ndk-which/jni/Android.mk << "END_OF_FILE"
+TMPDIR=/tmp/ndk-which-$$
+mkdir -p $TMPDIR/jni
+cat >$TMPDIR/jni/Android.mk << "END_OF_FILE"
 include $(CLEAR_VARS)
 END_OF_FILE
 
@@ -41,11 +42,11 @@ get_build_var_for_abi ()
     if [ -z "$GNUMAKE" ] ; then
         GNUMAKE=make
     fi
-    NDK_PROJECT_PATH=/tmp/ndk-which $GNUMAKE --no-print-dir -f $MYNDKDIR/build/core/build-local.mk DUMP_$1 APP_ABI=$2
+    NDK_PROJECT_PATH=$TMPDIR $GNUMAKE --no-print-dir -f $MYNDKDIR/build/core/build-local.mk DUMP_$1 APP_ABI=$2
 }
 
 TOOLCHAIN_PREFIX=`get_build_var_for_abi TOOLCHAIN_PREFIX armeabi`
-rm -Rf /tmp/ndk-which
+rm -Rf $TMPDIR
 
 # fully qualified file name
 FQFN=${TOOLCHAIN_PREFIX}$WHICH
