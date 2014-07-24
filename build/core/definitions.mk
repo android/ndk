@@ -1490,7 +1490,7 @@ $$(_OBJ): $$(_RS_SRC) $$(LOCAL_MAKEFILE) $$(NDK_APP_APPLICATION_MK) $$(NDK_DEPEN
 	cd $$(call host-path,$$(dir $$(PRIVATE_RS_SRC))) && $$(PRIVATE_RS_CC) -o $$(call host-path,$$(abspath $$(dir $$(PRIVATE_OBJ))))/ -d $$(abspath $$(call host-path,$$(dir $$(PRIVATE_OBJ)))) -MD -reflect-c++ $$(PRIVATE_RS_FLAGS) $$(notdir $$(PRIVATE_RS_SRC))
 	$$(hide) \
 	$$(PRIVATE_RS_BCC) -O3 -o $$(call host-path,$$(PRIVATE_BC_OBJ)) -fPIC -shared -rt-path $$(call host-path,$(SYSROOT_LINK)/usr/lib/rs/libclcore.bc) -mtriple $$(PRIVATE_RS_TRIPLE) $$(call host-path,$$(PRIVATE_BC_SRC)) && \
-	$$(PRIVATE_CXX) -shared -Wl,-soname,librs.$$(PRIVATE_BC_SO) -nostdlib $$(call host-path,$$(PRIVATE_BC_OBJ)) $$(call host-path,$(SYSROOT_LINK)/usr/lib/rs/libcompiler_rt.a) -o $$(call host-path,$$(PRIVATE_OUT)/librs.$$(PRIVATE_BC_SO)) -L $$(call host-path,$(SYSROOT_LINK)/usr/lib) -L $$(call host-path,$(SYSROOT_LINK)/usr/lib/rs) -lRSSupport -lm -lc && \
+	$$(PRIVATE_CXX) -shared -Wl,-soname,librs.$$(PRIVATE_BC_SO) -nostdlib $$(call host-path,$$(PRIVATE_BC_OBJ)) $$(call host-path,$(SYSROOT_LINK)/usr/lib/rs/libcompiler_rt.a) -o $$(call host-path,$$(PRIVATE_OUT)/librs.$$(PRIVATE_BC_SO)) -L $$(call host-path,$(SYSROOT_LINK)/usr/lib) -L $$(call host-path,$(SYSROOT_LINK)/usr/lib/rs) $$(TARGET_LDFLAGS) -lRSSupport -lm -lc && \
 	$$(PRIVATE_CXX) -MMD -MP -MF $$(call convert-deps,$$(PRIVATE_DEPS)) $$(PRIVATE_CPPFLAGS) $$(call host-path,$$(PRIVATE_CPP_SRC)) -o $$(call host-path,$$(PRIVATE_OBJ)) \
 	$$(call cmd-convert-deps,$$(PRIVATE_DEPS))
 else
