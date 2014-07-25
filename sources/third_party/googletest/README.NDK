@@ -49,9 +49,14 @@ jni/Android.mk:
   include $(CLEAR_VARS)
   LOCAL_MODULE := foo_unittest
   LOCAL_SRC_FILES := foo_unittest.cpp
+  LOCAL_SHARED_LIBRARIES := foo
   LOCAL_STATIC_LIBRARIES := googletest_main
   include $(BUILD_EXECUTABLE)
 
+  $(call import-module,third_party/googletest)
+
+jni/Application.mk:
+  APP_STL := gnustl_shared
 
 jni/foo.cpp:
   int foo(int x, int y) {
@@ -79,6 +84,8 @@ $PROJECT/libs/$ABI/. After this, to run the unit test program push it to
 the device and execute it with ADB, e.g.:
 
   adb push libs/armeabi/libfoo.so /data/local/tmp/
+  adb push libs/armeabi/libgnustl_shared.so /data/local/tmp/
   adb push libs/armeabi/foo_unittest /data/local/tmp/
+  adb shell chmod 775 /data/local/tmp/foo_unittest
   adb shell "LD_LIBRARY_PATH=/data/local/tmp /data/local/tmp/foo_unittest"
 
