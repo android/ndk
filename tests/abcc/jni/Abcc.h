@@ -21,6 +21,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "llvm_version.h"
 
 namespace abcc {
 
@@ -91,13 +92,13 @@ struct TargetAttributes {
 };
 
 const TargetAttributes kGlobalTargetAttrs[] = {
-  {"arm", "armv5te-linux-androideabi", "armelf_linux_eabi", "-arm-enable-ehabi -arm-enable-ehabi-descriptors -float-abi=soft", "-dynamic-linker /system/bin/linker"},
+  {"arm", "armv5te-linux-androideabi", "armelf_linux_eabi", ARM_BASE_CFLAGS, "-dynamic-linker /system/bin/linker"},
 #ifdef FORCE_ARM
-  {"arm", "armv7-linux-androideabi", "armelf_linux_eabi", "-arm-enable-ehabi -arm-enable-ehabi-descriptors -float-abi=soft", "-dynamic-linker /system/bin/linker"},
+  {"arm", "armv7-linux-androideabi", "armelf_linux_eabi", ARM_BASE_CFLAGS, "-dynamic-linker /system/bin/linker"},
 #else
-  {"arm", "thumbv7-linux-androideabi", "armelf_linux_eabi", "-arm-enable-ehabi -arm-enable-ehabi-descriptors -float-abi=soft", "-dynamic-linker /system/bin/linker"},
+  {"arm", "thumbv7-linux-androideabi", "armelf_linux_eabi", ARM_BASE_CFLAGS, "-dynamic-linker /system/bin/linker"},
 #endif
-  {"x86", "i686-linux-android", "elf_i386", "-disable-fp-elim -force-align-stack -mattr=-ssse3,-sse41,-sse42,-sse4a,-popcnt -x86-force-gv-stack-cookie", "-dynamic-linker /system/bin/linker"},
+  {"x86", "i686-linux-android", "elf_i386", X86_BASE_CFLAGS, "-dynamic-linker /system/bin/linker"},
   {"mips", "mipsel-linux-android", "elf32ltsmip", "-float-abi=hard", "-dynamic-linker /system/bin/linker"},
   {"arm64", "aarch64-linux-android", "aarch64linux", "", "-dynamic-linker /system/bin/linker64"},
   {"x86_64", "x86_64-linux-android", "elf_x86_64", "-disable-fp-elim -force-align-stack -mattr=+sse3 -x86-force-gv-stack-cookie", "-dynamic-linker /system/bin/linker64"},
@@ -153,7 +154,7 @@ protected:
 public:
   BitcodeCompiler(const std::string &abi, const std::string &sysroot, const std::string &working_dir, const bool savetemps);
   virtual ~BitcodeCompiler();
-  const ReturnCode returnCode() const { return mRet; }
+  ReturnCode returnCode() const { return mRet; }
   virtual void cleanupPre() {}
   virtual void cleanupPost() {}
   void prepare() {

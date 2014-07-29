@@ -151,7 +151,7 @@ BitcodeCompiler::BitcodeCompiler(const std::string &abi, const std::string &sysr
   mGlobalCFlags += std::string(" -mtriple=") + kGlobalTargetAttrs[mAbi].mTriple;
   mGlobalCFlags += " -filetype=obj -mc-relax-all";
   mGlobalCFlags += " -relocation-model=pic -code-model=small -use-init-array";
-  mGlobalCFlags += " -ffunction-sections";
+  mGlobalCFlags += " " OPTION_FUNCTION_SECTION;
 
   // LDFlags
   mGlobalLDFlags = kGlobalTargetAttrs[mAbi].mBaseLDFlags;
