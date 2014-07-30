@@ -1,0 +1,2 @@
+__clz_tab
+__popcount_tab
