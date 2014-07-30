@@ -25,21 +25,21 @@
 #ifndef NDK_ANDROID_SUPPORT_WCTYPE_H
 #define NDK_ANDROID_SUPPORT_WCTYPE_H
 
-// __LP64__
-
 /* Please read note in wchar.h to see why the C library version of this
  * file is not included through #include_next here.
  */
 #if defined(__LP64__)
-#include_next <wctype.h>
-#endif
-#include <xlocale.h>
+
+# include_next <wctype.h>
+
+#else
+
+# include <xlocale.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#if !defined(__LP64__)
 typedef int wint_t;
 typedef int wctrans_t;
 typedef int wctype_t;
@@ -73,8 +73,6 @@ wint_t towctrans_l(wint_t, wctrans_t, locale_t);
 wctrans_t wctrans_l(const char *, locale_t);
 wctype_t  wctype_l(const char *, locale_t);
 
-#endif // !__LP64__
-
 int iswalpha_l(wint_t, locale_t);
 int iswblank_l(wint_t, locale_t);
 int iswcntrl_l(wint_t, locale_t);
@@ -86,11 +84,13 @@ int iswspace_l(wint_t, locale_t);
 int iswupper_l(wint_t, locale_t);
 int iswxdigit_l(wint_t, locale_t);
 
-wint_t towlower_l(wint_t, locale_t);
-wint_t towupper_l(wint_t, locale_t);
+int towlower_l(int, locale_t);
+int towupper_l(int, locale_t);
 
 #ifdef __cplusplus
 }  // extern "C"
 #endif
+
+#endif // !__LP64__
 
 #endif  // NDK_ANDROID_SUPPORT_WCTYPE_H
