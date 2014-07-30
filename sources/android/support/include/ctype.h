@@ -28,17 +28,17 @@
 #ifndef NDK_ANDROID_SUPPORT_CTYPE_H
 #define NDK_ANDROID_SUPPORT_CTYPE_H
 
-// __LP64__
-
 // Get the system header first.
 #include_next <ctype.h>
+
+#if !defined(__LP64__)
+
 #include <xlocale.h>  // for locale_t
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#if !defined(__LP64__)
 int isalnum_l(int, locale_t);
 int isalpha_l(int, locale_t);
 int isblank_l(int, locale_t);
@@ -47,7 +47,6 @@ int isgraph_l(int, locale_t);
 int isprint_l(int, locale_t);
 int ispunct_l(int, locale_t);
 int isspace_l(int, locale_t);
-#endif // !__LP64__
 
 int islower_l(int, locale_t);
 int isupper_l(int, locale_t);
@@ -59,5 +58,7 @@ int toupper_l(int, locale_t);
 #ifdef __cplusplus
 }  // extern "C"
 #endif
+
+#endif // !__LP64__
 
 #endif  // NDK_ANDROID_SUPPORT_CTYPE_H

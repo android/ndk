@@ -29,6 +29,7 @@
 #define NDK_ANDROID_SUPPORT_LOCALE_H
 
 #if defined(__LP64__)
+
 #include_next <locale.h>
 
 #else

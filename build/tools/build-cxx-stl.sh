@@ -449,33 +449,9 @@ SUPPORT32_SOURCES_x86=\
 
 # android/support files for libc++
 SUPPORT64_SOURCES=\
-"../../android/support/src/locale_support.c \
-../../android/support/src/musl-locale/catclose.c \
+"../../android/support/src/musl-locale/catclose.c \
 ../../android/support/src/musl-locale/catgets.c \
 ../../android/support/src/musl-locale/catopen.c \
-../../android/support/src/musl-locale/isdigit_l.c \
-../../android/support/src/musl-locale/islower_l.c \
-../../android/support/src/musl-locale/isupper_l.c \
-../../android/support/src/musl-locale/iswalpha_l.c \
-../../android/support/src/musl-locale/iswblank_l.c \
-../../android/support/src/musl-locale/iswcntrl_l.c \
-../../android/support/src/musl-locale/iswdigit_l.c \
-../../android/support/src/musl-locale/iswlower_l.c \
-../../android/support/src/musl-locale/iswprint_l.c \
-../../android/support/src/musl-locale/iswpunct_l.c \
-../../android/support/src/musl-locale/iswspace_l.c \
-../../android/support/src/musl-locale/iswupper_l.c \
-../../android/support/src/musl-locale/iswxdigit_l.c \
-../../android/support/src/musl-locale/isxdigit_l.c \
-../../android/support/src/musl-locale/strcoll_l.c \
-../../android/support/src/musl-locale/strftime_l.c \
-../../android/support/src/musl-locale/strxfrm_l.c \
-../../android/support/src/musl-locale/tolower_l.c \
-../../android/support/src/musl-locale/toupper_l.c \
-../../android/support/src/musl-locale/towlower_l.c \
-../../android/support/src/musl-locale/towupper_l.c \
-../../android/support/src/musl-locale/wcscoll_l.c \
-../../android/support/src/musl-locale/wcsxfrm_l.c \
 "
 
 # If the --no-makefile flag is not used, we're going to put all build

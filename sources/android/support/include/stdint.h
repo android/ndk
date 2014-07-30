@@ -31,7 +31,9 @@
 #include_next <stdint.h>
 
 #if !defined(__LP64__)
+
 #include <limits.h> // For SIZE_MAX
+
 #endif // !__LP64__
 
 #endif  // NDK_ANDROID_SUPPORT_STDINT_H
