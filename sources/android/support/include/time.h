@@ -31,6 +31,9 @@
 // __LP64__
 
 #include_next <time.h>
+
+#if !defined(__LP64__)
+
 #include <xlocale.h>
 
 #ifdef __cplusplus
@@ -43,5 +46,7 @@ size_t strftime_l(char *s, size_t maxsize, const char *format,
 #ifdef __cplusplus
 }  // extern "C"
 #endif
+
+#endif // !__LP64__
 
 #endif  // NDK_ANDROID_SUPPORT_TIME_H
