@@ -1,0 +1,4 @@
+__clz_tab
+__CTOR_LIST__
+__DTOR_LIST__
+__popcount_tab
