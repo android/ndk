@@ -232,6 +232,11 @@ build_gnustl_for_abi ()
             ;;
     esac
 
+    if [ "$ABI" = "armeabi" -o "$ABI" = "armeabi-v7a" -o "$ABI" = "armeabi-v7a-hard" ]; then
+        CFLAGS=$CFLAGS" -minline-thumb1-jumptable"
+        CXXFLAGS=$CXXFLAGS" -minline-thumb1-jumptable"
+    fi
+
     LIBTYPE_FLAGS=
     if [ $LIBTYPE = "static" ]; then
         # Ensure we disable visibility for the static library to reduce the
