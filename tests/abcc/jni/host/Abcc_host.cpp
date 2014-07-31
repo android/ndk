@@ -79,6 +79,10 @@ int HostBitcodeCompiler::parseLDFlags(BitcodeInfo &info, const std::string &orig
       continue;
     }
 
+    if (str == "-static") {
+      info.mStatic = true;
+    }
+
     if (str.size() > 2 &&
         str.substr(str.size() - 2) == ".a") {
       if (str.size() > 6 &&
@@ -176,7 +180,6 @@ void HostBitcodeCompiler::prepareToolchain() {
   cmd = " @" + getRuntimePath("portable.wrap") + " " + getRuntimePath("portable");
   cmd += " " + getRuntimePath("compiler_rt_static");
   cmd += " " + getRuntimePath("gccunwind");
-  cmd += " -ldl";
   mExecutableToolsPath[(unsigned)CMD_LINK_RUNTIME] = cmd;
 }
 

@@ -117,6 +117,7 @@ public:
   static void dropExternalLDLibs(SONameMap &map);
 
   bool mShared;
+  bool mStatic;
   int mOptimizationLevel;
   std::string mBCPath;
   std::string mTargetBCPath;
