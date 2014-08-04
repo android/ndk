@@ -386,7 +386,7 @@ get_default_compiler_for_arch()
         elif [ "$ARCH" = "mips" ]; then
             # Support for mips32r6 in the new multilib mipsel-* toolchain is only available from 4.9
             GCC_VERSION=4.9
-	else
+        else
             GCC_VERSION=$(get_default_gcc_version_for_arch $ARCH)
         fi
         for TAG in $HOST_TAG $HOST_TAG32; do
@@ -489,6 +489,7 @@ gen_shared_libraries ()
         vars=$(cat "$SYMDIR/$LIB.variables.txt" 2>/dev/null)
         funcs=$(remove_unwanted_function_symbols $ARCH libgcc.a $funcs)
         funcs=$(remove_unwanted_function_symbols $ARCH $LIB $funcs)
+        vars=$(remove_unwanted_variable_symbols $ARCH libgcc.a $vars)
         vars=$(remove_unwanted_variable_symbols $ARCH $LIB $vars)
         numfuncs=$(echo $funcs | wc -w)
         numvars=$(echo $vars | wc -w)
