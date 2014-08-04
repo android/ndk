@@ -501,14 +501,20 @@ case $CXX_STL in
     ;;
 esac
 
+HIDDEN_VISIBILITY_FLAGS="-fvisibility=hidden -fvisibility-inlines-hidden"
+
 # By default, all static libraries include hidden ELF symbols, except
 # if one uses the --visible-static option.
 if [ -z "$VISIBLE_STATIC" ]; then
-    STATIC_CXXFLAGS="-fvisibility=hidden -fvisibility-inlines-hidden"
+    STATIC_CXXFLAGS="$HIDDEN_VISIBILITY_FLAGS"
 else
     STATIC_CXXFLAGS=
 fi
 SHARED_CXXFLAGS=
+# Mainlly deal with android_support.a
+STATIC_CONLYFLAGS="$HIDDEN_VISIBILITY_FLAGS"
+SHARED_CONLYFLAGS="$HIDDEN_VISIBILITY_FLAGS"
+
 
 # build_stl_libs_for_abi
 # $1: ABI
@@ -543,9 +549,11 @@ build_stl_libs_for_abi ()
         EXTRA_CXXFLAGS="$EXTRA_CXXFLAGS -mthumb"
     fi
 
-    if [ "$TYPE" = "static" -a -z "$VISIBLE_STATIC" ]; then
+    if [ "$TYPE" = "static" ]; then
+        EXTRA_CFLAGS="$EXTRA_CFLAGS $STATIC_CONLYFLAGS"
         EXTRA_CXXFLAGS="$EXTRA_CXXFLAGS $STATIC_CXXFLAGS"
     else
+        EXTRA_CFLAGS="$EXTRA_CFLAGS $SHARED_CONLYFLAGS"
         EXTRA_CXXFLAGS="$EXTRA_CXXFLAGS $SHARED_CXXFLAGS"
     fi
 

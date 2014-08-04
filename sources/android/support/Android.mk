@@ -150,7 +150,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := android_support
 LOCAL_SRC_FILES := $(android_support_sources)
 LOCAL_C_INCLUDES := $(android_support_c_includes)
-LOCAL_CFLAGS += -Drestrict=__restrict__ -ffunction-sections -fdata-sections
+LOCAL_CFLAGS += -Drestrict=__restrict__ -ffunction-sections -fdata-sections -fvisibility=hidden -fvisibility-inlines-hidden
 
 # These Clang warnings are triggered by the Musl sources. The code is fine,
 # but we don't want to modify it. TODO(digit): This is potentially dangerous,
