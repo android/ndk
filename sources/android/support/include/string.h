@@ -28,9 +28,10 @@
 #ifndef NDK_ANDROID_SUPPORT_STRING_H
 #define NDK_ANDROID_SUPPORT_STRING_H
 
-// __LP64__
-
 #include_next <string.h>
+
+#if !defined(__LP64__)
+
 #include <xlocale.h>
 
 #ifdef __cplusplus
@@ -43,5 +44,7 @@ size_t strxfrm_l(char *, const char *, size_t, locale_t);
 #ifdef __cplusplus
 }  // extern "C"
 #endif
+
+#endif // !__LP64__
 
 #endif  // NDK_ANDROID_SUPPORT_STRING_H
