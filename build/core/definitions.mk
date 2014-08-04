@@ -1449,6 +1449,7 @@ endef
 # _CXX: 'compiler' command for _CPP_SRC
 # _RS_FLAGS: 'compiler' flags for _RS_SRC
 # _CPP_FLAGS: 'compiler' flags for _CPP_SRC
+# _LD_FLAGS: 'compiler' flags for linking
 # _TEXT: Display text (e.g. "Compile RS")
 # _OUT: output dir
 # _COMPAT: 'true' if bcc_compat is required
@@ -1469,6 +1470,7 @@ $$(_OBJ): PRIVATE_RS_BCC    := $$(_RS_BCC)
 $$(_OBJ): PRIVATE_CXX       := $$(_CXX)
 $$(_OBJ): PRIVATE_RS_FLAGS  := $$(_RS_FLAGS)
 $$(_OBJ): PRIVATE_CPPFLAGS  := $$(_CPP_FLAGS)
+$$(_OBJ): PRIVATE_LDFLAGS   := $$(_LD_FLAGS)
 $$(_OBJ): PRIVATE_OUT       := $$(NDK_APP_DST_DIR)
 $$(_OBJ): PRIVATE_RS_TRIPLE := $$(RS_TRIPLE)
 $$(_OBJ): PRIVATE_COMPAT    := $$(_COMPAT)
@@ -1490,7 +1492,7 @@ $$(_OBJ): $$(_RS_SRC) $$(LOCAL_MAKEFILE) $$(NDK_APP_APPLICATION_MK) $$(NDK_DEPEN
 	cd $$(call host-path,$$(dir $$(PRIVATE_RS_SRC))) && $$(PRIVATE_RS_CC) -o $$(call host-path,$$(abspath $$(dir $$(PRIVATE_OBJ))))/ -d $$(abspath $$(call host-path,$$(dir $$(PRIVATE_OBJ)))) -MD -reflect-c++ $$(PRIVATE_RS_FLAGS) $$(notdir $$(PRIVATE_RS_SRC))
 	$$(hide) \
 	$$(PRIVATE_RS_BCC) -O3 -o $$(call host-path,$$(PRIVATE_BC_OBJ)) -fPIC -shared -rt-path $$(call host-path,$(SYSROOT_LINK)/usr/lib/rs/libclcore.bc) -mtriple $$(PRIVATE_RS_TRIPLE) $$(call host-path,$$(PRIVATE_BC_SRC)) && \
-	$$(PRIVATE_CXX) -shared -Wl,-soname,librs.$$(PRIVATE_BC_SO) -nostdlib $$(call host-path,$$(PRIVATE_BC_OBJ)) $$(call host-path,$(SYSROOT_LINK)/usr/lib/rs/libcompiler_rt.a) -o $$(call host-path,$$(PRIVATE_OUT)/librs.$$(PRIVATE_BC_SO)) -L $$(call host-path,$(SYSROOT_LINK)/usr/lib) -L $$(call host-path,$(SYSROOT_LINK)/usr/lib/rs) -lRSSupport -lm -lc && \
+	$$(PRIVATE_CXX) -shared -Wl,-soname,librs.$$(PRIVATE_BC_SO) -nostdlib $$(call host-path,$$(PRIVATE_BC_OBJ)) $$(call host-path,$(SYSROOT_LINK)/usr/lib/rs/libcompiler_rt.a) -o $$(call host-path,$$(PRIVATE_OUT)/librs.$$(PRIVATE_BC_SO)) -L $$(call host-path,$(SYSROOT_LINK)/usr/lib) -L $$(call host-path,$(SYSROOT_LINK)/usr/lib/rs) $$(PRIVATE_LDFLAGS) -lRSSupport -lm -lc && \
 	$$(PRIVATE_CXX) -MMD -MP -MF $$(call convert-deps,$$(PRIVATE_DEPS)) $$(PRIVATE_CPPFLAGS) $$(call host-path,$$(PRIVATE_CPP_SRC)) -o $$(call host-path,$$(PRIVATE_OBJ)) \
 	$$(call cmd-convert-deps,$$(PRIVATE_DEPS))
 else
@@ -1751,6 +1753,8 @@ _CPP_FLAGS := $$($$(my)CXXFLAGS) \
           $$(call host-c-includes,$$($(my)C_INCLUDES)) \
           -fno-rtti \
           -c \
+
+_LD_FLAGS := $$(TARGET_LDFLAGS)
 
 _RS_FLAGS := $$(call host-c-includes, $$(LOCAL_RENDERSCRIPT_INCLUDES) $$(LOCAL_PATH)) \
           $$($$(my)RS_FLAGS) \
