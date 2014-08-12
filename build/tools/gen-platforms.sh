@@ -474,6 +474,10 @@ gen_shared_libraries ()
 
     # Let's locate the toolchain we're going to use
     CC=$(get_default_compiler_for_arch $ARCH)" $FLAGS"
+    if [ $? != 0 ]; then
+        echo $CC
+        exit 1
+    fi
 
     # In certain cases, the symbols directory doesn't exist,
     # e.g. on x86 for PLATFORM < 9
@@ -522,6 +526,10 @@ gen_crt_objects ()
 
     # Let's locate the toolchain we're going to use
     CC=$(get_default_compiler_for_arch $ARCH)" $FLAGS"
+    if [ $? != 0 ]; then
+        echo $CC
+        exit 1
+    fi
 
     CRTBRAND_S=$DST_DIR/crtbrand.s
     log "Generating platform $API crtbrand assembly code: $CRTBRAND_S"
