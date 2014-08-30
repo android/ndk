@@ -86,8 +86,7 @@ extension. This value must be the same as the one you described for
 each preceded by the <code>-l</code> (link-against) option.</p>
 <ul>
 <li>log is a logging library.</li>
-<li>android encompasses the standard Android support APIs for NDK. The
-[“Stable APIs”])(./md_3__key__topics__libraries__s_t_a_b_l_e-_a_p_i_s.html)
+<li>android encompasses the standard Android support APIs for NDK. The <a href="./md_3__key__topics__libraries__s_t_a_b_l_e-_a_p_i_s.html">Stable APIs</a>
 section discusses these in more detail.</li>
 <li>EGL, standardized by Khronos, corresponds to the platform-specific portion
 of the graphics API.</li>
@@ -99,8 +98,7 @@ of the graphics API.</li>
 <code>.so</code> extension. For example, the actual file name for the
 <code>log</code> library is <code>liblog.so</code>.</li>
 <li>The library lives in the following directory, relative to the NDK root:
-<code>&lt;ndk&gt;/platforms/android-&lt;sdk_version&gt;/arch-&lt;abi&gt;/usr/lib
-/</code>.</li>
+<code>&lt;ndk&gt;/platforms/android-&lt;sdk_version&gt;/arch-&lt;abi&gt;/usr/lib/</code>.</li>
 </ul>
 <pre class="fragment">LOCAL_LDLIBS    := -llog -landroid -lEGL -lGLESv1_CM
 </pre><p>A static library, <code>android_native_app_glue</code>, that the
@@ -114,8 +112,7 @@ generated during the build process. The next sample discusses the
 android_native_app_glue in more detail.</p>
 <pre class="fragment">$(call import-module,android/native_app_glue)
 </pre><p>For more information about the Application.mk file, consult the <a
-href="./md_3__key__topics__building__a_p_p_l_i_c_a_t_i_o_n-_m_k.html">Applicatio
-n.mk section</a> of this guide.</p>
+href="./md_3__key__topics__building__a_p_p_l_i_c_a_t_i_o_n-_m_k.html">Application.mk section</a> of this guide.</p>
 <h3><code>Application.mk</code></h3>
 <p>This line defines the minimum level of Android API Level support.</p>
 <pre class="fragment">APP_PLATFORM := android-10
