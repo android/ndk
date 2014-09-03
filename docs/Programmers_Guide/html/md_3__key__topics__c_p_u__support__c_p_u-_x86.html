@@ -68,10 +68,9 @@ $(document).ready(function(){initNavTree('md_3__key__topics__c_p_u__support__c_p
 <p>Similarly, the Google Play server is capable of filtering applications based on the native libraries they embed and your device's target CPU.</p>
 <p>Debugging with ndk-gdb should work exactly as described under docs/NDK-GDB.html.</p>
 <h2>ARM NEON intrinsics support</h2>
-<p>The solution is shaped as C/C++ language header with the same name as standard arm neon intrinsics header "arm_neon.h" which is also available in all NDK x86 toolchains. It translates neon intrinsics to native x86 SSE ones.</p>
-<p>By default SSE up to SSE3 is used for porting ARM NEON to Intel SSE.</p>
-<p>Current solution covers by default ~41% NEON functions (889 of total 1884) and 47% when -mssse3 is enabled. It is highly recommended to use the -mssse3 compiler flag for more coverage and performance.</p>
-<p>If currently provided coverage is not enough to port application please look into next version preview (up to 98% NEON instrinsics covered) <a href="http://software.intel.com/en-us/blogs/2012/12/12/from-arm-neon-to-intel-mmxsse-automatic-porting-solution-tips-and-tricks">here</a></p>
+<p>The solution is shaped as C/C++ language header with the same name as standard ARM NEON intrinsics header "arm_neon.h" and is available in all NDK x86 toolchains. It translates NEON intrinsics to native x86 SSE ones.</p>
+<p>By default SSE up to SSSE3 is used for porting ARM NEON to Intel SSE.</p>
+<p>Current solution covers by default ~93% NEON functions (1869 of total 2009).</p>
 <p>The solution</p>
 <ul>
 <li>Redefines ARM NEON 128 bit vectors as the corresponding x86 SIMD data.</li>
@@ -79,17 +78,89 @@ $(document).ready(function(){initNavTree('md_3__key__topics__c_p_u__support__c_p
 <li>Implements some ARM NEON functions using Intel SIMD if the performance effective implementation is possible.</li>
 <li>Implements some of the remaining NEON functions using the serial solution and issuing the corresponding "low performance" compiler warning.</li>
 </ul>
+<h3>Known differences with ARM version:</h3>
+<p>There are few corner cases where x86 implementation produces different results comparing to native execution on ARM. It's been found on <a href="https://gitorious.org/arm-neon-tests/arm-neon-tests">NEON tests</a> with total passrate close to 100%. Though these cases are expected to be rare please see below for a complete list of such incompatibilities:</p>
+<ul>
+<li><code>VRECPS/VRECPSQ</code><br/>
+  If one of the operands is +/- infinity and the second is +/- 0.0 then
+  <ul>
+    <li>On ARM CPUs result element equal to 2.0 will be returned. To learn more about it, see <a href="http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0489h/CIHDIACI.html">here</a>.</li>
+    <li>On x86 CPUs QNaN Indefinite will be returned. To learn more about it, see Volume 1 Appendix E chapter E.4.2.2 <a href="http://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-manual-325462.pdf">here</a>.</li>
+  </ul>
+</li>
+<li><code>VRSQRTS/VRSQRTSQ</code><br/>
+  If one of the operands is +/- infinity and the second is +/- 0.0 then
+  <ul>
+    <li>On ARM CPUs result element equal to 1.5 will be returned. To learn more about it, see <a href="http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0489h/CIHDIACI.html">here</a>.</li>
+    <li>On x86 CPUs QNaN Indefinite will be returned. To learn more about it, see Volume 1 Appendix E chapter E.4.2.2 <a href="http://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-manual-325462.pdf">here</a>.</li>
+  </ul>
+</li>
+<li><code>VMAX/VMAXQ</code><br/>
+  If one of the operands is NaN or both are +/- 0.0 then
+  <ul>
+    <li>On ARM CPUs floating-point maximum works as follows:
+      <ul>
+        <li>max(+0.0, -0.0) = +0.0.</li>
+        <li>If any input is a NaN, the corresponding result element is the default NaN.</li>
+      </ul>
+      To learn more about it, see <a href="http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0489h/CIHDEEBE.html">here</a>.
+    </li>
+    <li>On x86 CPUs floating-point maximum works as follows:
+      <ul>
+        <li>If one of the source operands is NaN, than return the second source operand.</li>
+        <li>If both source operands are equal to 0, than return the second source operand.</li>
+      </ul>
+      To learn more about it, see Volume 1 Appendix E chapter E.4.2.3 and Volume 2 at page 3-488 <a href="http://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-manual-325462.pdf">here</a>.
+    </li>
+  </ul>
+</li>
+<li><code>VMIN/VMINQ</code><br/>
+  If one of the operands is NaN or both are +/- 0.0 then
+  <ul>
+    <li>On ARM CPUs floating-point minimum works as follows:
+      <ul>
+        <li>min(+0.0, -0.0) = -0.0.</li>
+        <li>If any input is a NaN, the corresponding result element is the default NaN.</li>
+      </ul>
+     To learn more about it, see <a href="http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0489h/CIHDEEBE.html">here</a>.
+    </li>
+    <li>On x86 CPUs floating-point minimum works as follows:
+      <ul>
+        <li>If one of the source operands is NaN, than return the second source operand.</li>
+        <li>If both source operands are equal to 0, than return the second source operand.</li>
+      </ul>
+      To learn more about it, see Volume 1 Appendix E chapter E.4.2.3 and Volume 2 at page 3-497 <a href="http://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-manual-325462.pdf">here</a>.
+    </li>
+  </ul>
+</li>
+<li><code>VRECPE/VRECPEQ</code><br/>
+  Different accuracy on ARM and x86 CPUs. To learn more about it, see ARM article "How do I use VRECPE/VRECPEQ for reciprocal estimate?" <a href="http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.faqs/ka14282.html">here</a>
+  and Volume 2 at page 4-281 <a href="http://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-manual-325462.pdf">here</a>.
+</li>
+<li><code>VRSQRTE/VRSQRTEQ</code><br/>
+  <ul>
+    <li>Different accuracy on ARM and x86 CPUs. To learn more about it, see <a href="http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0204h/CIHCHECJ.html">here</a> and Volume 2 at page 4-325 <a href="http://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-manual-325462.pdf">here</a>.</li>
+    <li>If one of the operands is negative or -infinity then
+      <ul>
+        <li>On ARM CPUs function will return default NaN (sign is set to positive). To learn more about it, see <a href="http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0489i/CIHIICBB.html">here</a>.</li>
+        <li>On x86 CPUs function will return the QNaN floating-point Indefinite (sign is set to negative). To learn more about it, see Volume 1 Appendix E chapter E.4.2.3 <a href="http://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-manual-325462.pdf">here</a>.</li>
+      </ul>
+    </li>
+  </ul>
+</li>
+</ul>
 <h3>Performance:</h3>
 <p>For the major number of cases it is expected to obtain the similar to ARM NEON native perfomance gain for vectorized vs. serial code.</p>
 <h3>Porting considerations and best known methods are:</h3>
 <ul>
 <li>Use 16-byte data alignment for faster load and store</li>
 <li>Avoid NEON functions working with constants. It produces performance penalty for constants load. If constants usage is necessary try to move constants initialization out of hotspot loops and if applicable replace it with logical and compare operations.</li>
-<li>Try to avoid functions marked as "serialy implemented" because they need to store data from registers to memory, process them serialy and load them again. Probably you could change the data type or algorithm used to make the whole port vectorized not a serial one.</li>
+<li>Try to avoid functions marked as "serially implemented" because they need to store data from registers to memory, process them serialy and load them again. Probably you could change the data type or algorithm used to make the whole port vectorized not a serial one.</li>
 </ul>
 <p>To learn more about it, see <a href="http://software.intel.com/en-us/blogs/2012/12/12/from-arm-neon-to-intel-mmxsse-automatic-porting-solution-tips-and-tricks">here</a>.</p>
 <h3>Sample code:</h3>
 <p>In your project add 'x86' to APP_ABI definition and make sure "arm_neon.h" header is included. Your code will be ported to x86 without any other changes necessary.</p>
+<p>Look at the "hello-neon" sample in NDK for an example on how ARM NEON porting to x86 SSE works.</p>
 <h2>Standalone-toolchain</h2>
 <p>It is possible to use the x86 toolchain with NDK r6 in stand-alone mode. See docs/STANDALONE-TOOLCHAIN.html for more details. Briefly speaking, it is now possible to run: </p>
 <pre class="fragment">  $NDK/build/tools/make-standalone-toolchain.sh --arch=x86 --install-dir=&lt;path&gt;
