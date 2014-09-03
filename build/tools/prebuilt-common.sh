@@ -1390,12 +1390,17 @@ get_default_toolchain_binprefix_for_arch ()
 # $1: Architecture name
 get_default_api_level_for_arch ()
 {
-    # For now, always build the toolchain against API level 9 for 32-bit arch
-    # and API level $FIRST_API64_LEVEL for 64-bit arch
-    case $1 in
-       *64) echo $FIRST_API64_LEVEL ;;
-       *) echo 9 ;;
-    esac
+    # For unknown arch, use API level $FIRST_API64_LEVEL
+    if [ $(arch_in_unknown_archs $1) = "yes" ]; then
+        echo $FIRST_API64_LEVEL
+    else
+        # For now, always build the toolchain against API level 9 for 32-bit arch
+        # and API level $FIRST_API64_LEVEL for 64-bit arch
+        case $1 in
+            *64) echo $FIRST_API64_LEVEL ;;
+            *) echo 9 ;;
+        esac
+    fi
 }
 
 # Return the default platform sysroot corresponding to a given architecture
