@@ -1,1 +1,3 @@
+get_malloc_leak_info
+free_malloc_leak_info
 atexit
