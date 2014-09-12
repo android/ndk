@@ -842,7 +842,7 @@ ctype<wchar_t>::do_toupper(char_type c) const
     return isascii(c) ? _DefaultRuneLocale.__mapupper[c] : c;
 #elif defined(__GLIBC__) || defined(__EMSCRIPTEN__) || defined(__NetBSD__)
     return isascii(c) ? ctype<char>::__classic_upper_table()[c] : c;
-#elif defined(__ANDROID__) && !__LP64__
+#elif defined(__ANDROID__) && (__ANDROID_API__ < 20)
     return isascii(c) ? _toupper_tab_[c + 1] : c;
 #else
     return (isascii(c) && iswlower_l(c, __cloc())) ? c-L'a'+L'A' : c;
@@ -858,7 +858,7 @@ ctype<wchar_t>::do_toupper(char_type* low, const char_type* high) const
 #elif defined(__GLIBC__) || defined(__EMSCRIPTEN__) || defined(__NetBSD__)
         *low = isascii(*low) ? ctype<char>::__classic_upper_table()[*low]
                              : *low;
-#elif defined(__ANDROID__) && !__LP64__
+#elif defined(__ANDROID__) && (__ANDROID_API__ < 20)
         *low = isascii(*low) ? _toupper_tab_[*low + 1] : *low;
 #else
         *low = (isascii(*low) && islower_l(*low, __cloc())) ? (*low-L'a'+L'A') : *low;
@@ -873,7 +873,7 @@ ctype<wchar_t>::do_tolower(char_type c) const
     return isascii(c) ? _DefaultRuneLocale.__maplower[c] : c;
 #elif defined(__GLIBC__) || defined(__EMSCRIPTEN__) || defined(__NetBSD__)
     return isascii(c) ? ctype<char>::__classic_lower_table()[c] : c;
-#elif defined(__ANDROID__) && !__LP64__
+#elif defined(__ANDROID__) &&  (__ANDROID_API__ < 20)
     return isascii(c) ? _tolower_tab_[c + 1] : c;
 #else
     return (isascii(c) && isupper_l(c, __cloc())) ? c-L'A'+'a' : c;
@@ -889,7 +889,7 @@ ctype<wchar_t>::do_tolower(char_type* low, const char_type* high) const
 #elif defined(__GLIBC__) || defined(__EMSCRIPTEN__) || defined(__NetBSD__)
         *low = isascii(*low) ? ctype<char>::__classic_lower_table()[*low]
                              : *low;
-#elif defined(__ANDROID__) && !__LP64__
+#elif defined(__ANDROID__) &&  (__ANDROID_API__ < 20)
         *low = isascii(*low) ? _tolower_tab_[*low + 1] : *low;
 #else
         *low = (isascii(*low) && isupper_l(*low, __cloc())) ? *low-L'A'+L'a' : *low;
@@ -960,7 +960,7 @@ ctype<char>::do_toupper(char_type c) const
 #elif defined(__GLIBC__) || defined(__EMSCRIPTEN__)
     return isascii(c) ?
       static_cast<char>(__classic_upper_table()[static_cast<unsigned char>(c)]) : c;
-#elif defined(__ANDROID__) && !__LP64__
+#elif defined(__ANDROID__) && (__ANDROID_API__ < 20)
     return isascii(c) ? _toupper_tab_[c + 1] : c;
 #else
     return (isascii(c) && islower_l(c, __cloc())) ? c-'a'+'A' : c;
@@ -979,7 +979,7 @@ ctype<char>::do_toupper(char_type* low, const char_type* high) const
 #elif defined(__GLIBC__) || defined(__EMSCRIPTEN__)
         *low = isascii(*low) ?
           static_cast<char>(__classic_upper_table()[static_cast<size_t>(*low)]) : *low;
-#elif defined(__ANDROID__) && !__LP64__
+#elif defined(__ANDROID__) && (__ANDROID_API__ < 20)
         *low = isascii(*low) ? _toupper_tab_[*low + 1] : *low;
 #else
         *low = (isascii(*low) && islower_l(*low, __cloc())) ? *low-'a'+'A' : *low;
@@ -998,7 +998,7 @@ ctype<char>::do_tolower(char_type c) const
 #elif defined(__GLIBC__) || defined(__EMSCRIPTEN__) || defined(__NetBSD__)
     return isascii(c) ?
       static_cast<char>(__classic_lower_table()[static_cast<size_t>(c)]) : c;
-#elif defined(__ANDROID__) && !__LP64__
+#elif defined(__ANDROID__) && (__ANDROID_API__ < 20)
     return isascii(c) ? _tolower_tab_[c + 1] : c;
 #else
     return (isascii(c) && isupper_l(c, __cloc())) ? c-'A'+'a' : c;
@@ -1015,7 +1015,7 @@ ctype<char>::do_tolower(char_type* low, const char_type* high) const
         *low = static_cast<char>(__classic_lower_table()[static_cast<unsigned char>(*low)]);
 #elif defined(__GLIBC__) || defined(__EMSCRIPTEN__)
         *low = isascii(*low) ? static_cast<char>(__classic_lower_table()[static_cast<size_t>(*low)]) : *low;
-#elif defined(__ANDROID__) && !__LP64__
+#elif defined(__ANDROID__) && (__ANDROID_API__ < 20)
         *low = isascii(*low) ? _tolower_tab_[*low + 1] : *low;
 #else
         *low = (isascii(*low) && isupper_l(*low, __cloc())) ? *low-'A'+'a' : *low;
