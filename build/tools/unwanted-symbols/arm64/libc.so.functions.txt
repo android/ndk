@@ -7,10 +7,13 @@ arc4random_addrandom
 arc4random_buf
 arc4random_stir
 arc4random_uniform
+basename_r
 __bionic_name_mem
 dlmalloc_inspect_all
 dlmalloc_trim
+dirname_r
 __findenv
+free_malloc_leak_info
 get_malloc_leak_info
 localtime_tz
 mktime_tz
