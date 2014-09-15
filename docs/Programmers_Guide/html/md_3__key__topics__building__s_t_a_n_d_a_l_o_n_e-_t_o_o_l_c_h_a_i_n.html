@@ -149,10 +149,9 @@ $(document).ready(function(){initNavTree('md_3__key__topics__building__s_t_a_n_d
 <pre class="fragment">    LDFLAGS='-march=armv7-a -Wl,--fix-cortex-a8'
 </pre><p>Note: The first flag instructs linker to pick libgcc.a, libgcov.a and crt*.o tailored for armv7-a. The 2nd flag is <em>required</em> to route around a CPU bug in some Cortex-A8 implementations:</p>
 <p>Since NDK r9b, all Android native APIs taking or returning double/float has <b>attribute</b>((pcs("aapcs"))) for ARM. It's possible to compile user code in -mhard-float (which implies -mfloat-abi=hard) and still link with Android native APIs which follow softfp ABI. Please see tests/device/hard-float/jni/Android.mk for details.</p>
-<p>If you want to use Neon intrinsics on x86 they can be translated to the native x86 SSE ones using special C/C++ language header with the same name as standard arm neon intrinsics header "arm_neon.h".</p>
-<p>By default x86 ABI supports SIMD up to SSE3 and the header covers ~83% NEON functions (1551 of total 1872). It is recommended to use the -mssse3 compiler flag which extends SIMD up to SSSE3 and in this case the header will cover ~98% NEON functions (1827 of total 1872): </p>
-<pre class="fragment">    CFLAGS='-mssse3'
-</pre><p>To learn more about it, see docs/CPU-X86.html</p>
+<p>If you want to use NEON intrinsics on x86 they can be translated to the native x86 SSE ones using special C/C++ language header with the same name as standard arm neon intrinsics header "arm_neon.h".</p>
+<p>By default x86 ABI supports SIMD up to SSSE3 and the header covers ~93% NEON functions (1869 of total 2009).</p>
+<p>To learn more about it, see <a href="./md_3__key__topics__c_p_u__support__c_p_u-_x86.html">x86</a>.</p>
 <p>If none of the above makes sense to you, it's probably better not to use the standalone toolchain, and stick to the NDK build system instead, which will handle all the details for you.</p>
 <p>You don't have to use any specific compiler flag when targeting the MIPS ABI.</p>
 <h2>Warnings and Limitations</h2>
