@@ -504,13 +504,14 @@ builder_end ()
 # $3: Gcc version
 # $4: Optional llvm version
 # $5: Optional Makefile name
+# $6: Platform (android-X)
 builder_begin_android ()
 {
     local ABI BUILDDIR LLVM_VERSION MAKEFILE
     local ARCH SYSROOT LDIR FLAGS
     local CRTBEGIN_SO_O CRTEND_SO_O CRTBEGIN_EXE_SO CRTEND_SO_O
     local BINPREFIX GCC_TOOLCHAIN LLVM_TRIPLE GCC_VERSION
-    local SCRATCH_FLAGS
+    local SCRATCH_FLAGS PLATFORM
     if [ -z "$NDK_DIR" ]; then
         panic "NDK_DIR is not defined!"
     elif [ ! -d "$NDK_DIR/platforms" ]; then
@@ -522,6 +523,7 @@ builder_begin_android ()
     LLVM_VERSION=$4
     MAKEFILE=$5
     ARCH=$(convert_abi_to_arch $ABI)
+    PLATFORM=$6
 
     if [ "$(arch_in_unknown_archs $ARCH)" = "yes" ]; then
         LLVM_VERSION=$DEFAULT_LLVM_VERSION
@@ -546,7 +548,11 @@ builder_begin_android ()
         BINPREFIX=$NDK_DIR/$(get_llvm_toolchain_binprefix $LLVM_VERSION $TAG)
     fi
 
-    SYSROOT=$NDK_DIR/$(get_default_platform_sysroot_for_arch $ARCH)
+    if [ -z "$PLATFORM" ]; then
+      SYSROOT=$NDK_DIR/$(get_default_platform_sysroot_for_arch $ARCH)
+    else
+      SYSROOT=$NDK_DIR/platforms/$PLATFORM/arch-$ARCH
+    fi
     LDIR=$SYSROOT"/usr/"$(get_default_libdir_for_arch $ARCH)
 
     CRTBEGIN_EXE_O=$LDIR/crtbegin_dynamic.o
