@@ -644,12 +644,14 @@ if [ -z "$OPTION_OVERLAY" ]; then
     rm -rf $DSTDIR/platforms && mkdir -p $DSTDIR/platforms
 fi
 for ARCH in $ARCHS; do
+    echo "## Generating arch: $ARCH"
     # Find first platform for this arch
     PREV_SYSROOT_DST=
     PREV_PLATFORM_SRC_ARCH=
     LIBDIR=$(get_default_libdir_for_arch $ARCH)
 
     for PLATFORM in $PLATFORMS; do
+        echo "## Generating platform: $PLATFORM"
         PLATFORM_DST=platforms/android-$PLATFORM   # Relative to $DSTDIR
         PLATFORM_SRC=$PLATFORM_DST                 # Relative to $SRCDIR
         SYSROOT_DST=$PLATFORM_DST/arch-$ARCH/usr

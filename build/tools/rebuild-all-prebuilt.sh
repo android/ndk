@@ -94,6 +94,9 @@ if [ "$DARWIN_SSH" -a -z "$CUSTOM_SYSTEMS" ]; then
 fi
 
 FLAGS=
+if [ "$DRYRUN" = "yes" ]; then
+    FLAGS=$FLAGS" --dryrun"
+fi
 if [ "$VERBOSE" = "yes" ]; then
     FLAGS=$FLAGS" --verbose"
 fi
@@ -122,14 +125,17 @@ if [ "$DARWIN_SSH" ]; then
 fi
 
 if [ "$ALSO_64" = "yes" -a "$TRY64" != "yes" ] ; then
+    echo "COMMAND: $PROGDIR/build-host-prebuilts.sh $HOST_FLAGS $SRC_DIR --try-64"
     $PROGDIR/build-host-prebuilts.sh $HOST_FLAGS "$SRC_DIR" --try-64
     fail_panic "Could not build host prebuilts in 64-bit!"
 fi
+echo "COMMAND: $PROGDIR/build-host-prebuilts.sh $HOST_FLAGS $SRC_DIR"
 $PROGDIR/build-host-prebuilts.sh $HOST_FLAGS "$SRC_DIR"
 fail_panic "Could not build host prebuilts!"
 
 TARGET_FLAGS=$FLAGS
 
+echo "COMMAND: $PROGDIR/build-target-prebuilts.sh $TARGET_FLAGS $SRC_DIR"
 $PROGDIR/build-target-prebuilts.sh $TARGET_FLAGS "$SRC_DIR"
 fail_panic "Could not build target prebuilts!"
 

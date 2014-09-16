@@ -80,6 +80,9 @@ if [ ! -z "$UNKNOWN_ARCH" ]; then
 fi
 
 FLAGS=
+if [ "$DRYRUN" = "yes" ]; then
+    FLAGS=$FLAGS" --dryrun"
+fi
 if [ "$VERBOSE" = "yes" ]; then
     FLAGS=$FLAGS" --verbose"
 fi
