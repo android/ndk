@@ -71,6 +71,9 @@ if [ ! -f $ANDROID_NDK_ROOT/build/tools/ndk-common.sh ] ; then
     exit 1
 fi
 
+## Use DRYRUN to find out top-level commands.
+DRYRUN=${DRYRUN-no}
+
 ## Logging support
 ##
 VERBOSE=${VERBOSE-yes}
@@ -155,7 +158,9 @@ log2 ()
 
 run ()
 {
-    if [ "$VERBOSE" = "yes" ] ; then
+    if [ "$DRYRUN" = "yes" ] ; then
+        echo "## SKIP COMMAND: $@"
+    elif [ "$VERBOSE" = "yes" ] ; then
         echo "## COMMAND: $@"
         "$@" 2>&1
     else
@@ -170,7 +175,9 @@ run ()
 
 run2 ()
 {
-    if [ "$VERBOSE2" = "yes" ] ; then
+    if [ "$DRYRUN" = "yes" ] ; then
+        echo "## SKIP COMMAND: $@"
+    elif [ "$VERBOSE2" = "yes" ] ; then
         echo "## COMMAND: $@"
         "$@" 2>&1
     elif [ "$VERBOSE" = "yes" ]; then

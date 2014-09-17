@@ -504,8 +504,15 @@ do_option_verbose ()
     fi
 }
 
+DRYRUN=no
+do_option_dryrun ()
+{
+    DRYRUN=yes
+}
+
 register_option "--help"          do_option_help     "Print this help."
 register_option "--verbose"       do_option_verbose  "Enable verbose mode."
+register_option "--dryrun"        do_option_dryrun   "Set to dryrun mode."
 
 #====================================================
 #

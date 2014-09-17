@@ -127,6 +127,9 @@ if [ "$DARWIN_SSH" -a -z "$CUSTOM_SYSTEMS" ]; then
 fi
 
 FLAGS=
+if [ "$DRYRUN" = "yes" ]; then
+    FLAGS=$FLAGS" --dryrun"
+fi
 if [ "$VERBOSE" = "yes" ]; then
     FLAGS=$FLAGS" --verbose"
 fi
@@ -357,7 +360,7 @@ for SYSTEM in $SYSTEMS; do
     done
 
     # Deploy ld.mcld
-    $PROGDIR/deploy-host-mcld.sh --package-dir=$PACKAGE_DIR --systems=$SYSNAME
+    run $PROGDIR/deploy-host-mcld.sh --package-dir=$PACKAGE_DIR --systems=$SYSNAME
     fail_panic "Could not deploy ld.mcld for $SYSNAME"
 
     # We're done for this system
