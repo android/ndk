@@ -346,6 +346,7 @@ void FstreamTest::tellp()
     long expected_pos = 9;
     #endif
     FILE* f = fopen( "test_file.txt", "a" );
+    CPPUNIT_ASSERT( f != NULL );
     CPPUNIT_CHECK( ftell( f ) == expected_pos );
     fclose( f );
   }

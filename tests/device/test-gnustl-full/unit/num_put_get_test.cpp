@@ -242,14 +242,6 @@ private:
     {
       stringstream str;
 
-      str << -limits::quiet_NaN();
-
-      CPPUNIT_ASSERT( !str.fail() );
-      CPPUNIT_ASSERT( !limits::has_quiet_NaN || str.str() == "-nan" );
-    }
-    {
-      stringstream str;
-
       str << "0." << string(limits::max_exponent10, '0') << "1e" << (limits::max_exponent10 + 1);
       CPPUNIT_ASSERT( !str.fail() );
 
