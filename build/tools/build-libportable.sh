@@ -73,6 +73,8 @@ register_var_option "--platform=<name>"  PLATFORM "Specify platform name"
 
 register_jobs_option
 
+register_try64_option
+
 extract_parameters "$@"
 
 ABIS=$(commas_to_spaces $ABIS)

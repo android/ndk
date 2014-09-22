@@ -59,6 +59,8 @@ register_var_option "--package-dir=<path>" PACKAGE_DIR "Archive binary into spec
 
 register_jobs_option
 
+register_try64_option
+
 extract_parameters "$@"
 
 setup_default_log_file

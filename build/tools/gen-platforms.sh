@@ -76,7 +76,7 @@ OPTION_ARCH=
 OPTION_ABI=
 OPTION_DEBUG_LIBS=
 OPTION_OVERLAY=
-OPTION_GCC_VERSION=
+OPTION_GCC_VERSION="default"
 OPTION_LLVM_VERSION=$DEFAULT_LLVM_VERSION
 PACKAGE_DIR=
 
@@ -380,13 +380,13 @@ get_default_compiler_for_arch()
                 break;
             fi
         done
-        EXTRA_CFLAGS="-emit-llvm"
+        EXTRA_CFLAGS=
     else
-        if [ -n "$OPTION_GCC_VERSION" ]; then
-            GCC_VERSION=$OPTION_GCC_VERSION
-        elif [ "$ARCH" = "mips" ]; then
+        if [ "$ARCH" = "mips" ]; then
             # Support for mips32r6 in the new multilib mipsel-* toolchain is only available from 4.9
             GCC_VERSION=4.9
+        elif [ -n "$OPTION_GCC_VERSION" -a "$OPTION_GCC_VERSION" != "default" ]; then
+            GCC_VERSION=$OPTION_GCC_VERSION
         else
             GCC_VERSION=$(get_default_gcc_version_for_arch $ARCH)
         fi

@@ -324,17 +324,11 @@ for SYSTEM in $SYSTEMS; do
 
     # Then the toolchains
     for ARCH in $ARCHS; do
-        TOOLCHAIN_NAMES=$(get_toolchain_name_list_for_arch $ARCH)
         if [ "$GCC_VERSION_LIST" != "default" ]; then
-           TOOLCHAINS=
-           for VERSION in $(commas_to_spaces $GCC_VERSION_LIST); do
-              for TOOLCHAIN in $TOOLCHAIN_NAMES; do
-                 if [ $TOOLCHAIN != ${TOOLCHAIN%%$VERSION} ]; then
-                    TOOLCHAINS="$TOOLCHAIN $TOOLCHAINS"
-                 fi
-              done
-           done
-           TOOLCHAIN_NAMES=$TOOLCHAINS
+            VERSIONS=$(spaces_to_commas $GCC_VERSION_LIST)
+            TOOLCHAIN_NAMES=$(get_toolchain_name_list_for_arch $ARCH $VERSIONS)
+        else
+            TOOLCHAIN_NAMES=$(get_toolchain_name_list_for_arch $ARCH)
         fi
         if [ -z "$TOOLCHAIN_NAMES" ]; then
             echo "ERROR: Toolchains: "$(spaces_to_commas $GCC_VERSION_LIST)" are not available for arch: $ARCH"
@@ -359,9 +353,11 @@ for SYSTEM in $SYSTEMS; do
         fail_panic "Could not build llvm for $SYSNAME"
     done
 
-    # Deploy ld.mcld
-    run $PROGDIR/deploy-host-mcld.sh --package-dir=$PACKAGE_DIR --systems=$SYSNAME
-    fail_panic "Could not deploy ld.mcld for $SYSNAME"
+    if [ ! -z "$LLVM_VERSION_LIST" ]; then
+        # Deploy ld.mcld
+        run $PROGDIR/deploy-host-mcld.sh --package-dir=$PACKAGE_DIR --systems=$SYSNAME
+        fail_panic "Could not deploy ld.mcld for $SYSNAME"
+    fi
 
     # We're done for this system
 done

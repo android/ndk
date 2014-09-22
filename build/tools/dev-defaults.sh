@@ -205,11 +205,12 @@ get_default_toolchain_prefix_for_arch ()
 
 # Get the list of all toolchain names for a given architecture
 # $1: architecture (e.g. 'arm')
+# $2: comma separated versions (optional)
 # Out: list of toolchain names for this arch (e.g. arm-linux-androideabi-4.6 arm-linux-androideabi-4.8)
 # Return empty for unknown arch
 get_toolchain_name_list_for_arch ()
 {
-    local PREFIX VERSION RET ADD DEFAULT_GCC_VERSION
+    local PREFIX VERSION RET ADD DEFAULT_GCC_VERSION VERSIONS
     PREFIX=$(eval echo \"\$DEFAULT_ARCH_TOOLCHAIN_NAME_$1\")
     if [ -z "$PREFIX" ]; then
         return 0
@@ -217,7 +218,13 @@ get_toolchain_name_list_for_arch ()
     RET=""
     DEFAULT_GCC_VERSION=$(get_default_gcc_version_for_arch $1)
     ADD=""
-    for VERSION in $DEFAULT_GCC_VERSION_LIST; do
+    VERSIONS=$(commas_to_spaces $2)
+    if [ -z "$VERSIONS" ]; then
+        VERSIONS=$DEFAULT_GCC_VERSION_LIST
+    else
+        ADD="yes" # include everything we passed explicitly
+    fi
+    for VERSION in $VERSIONS; do
         if [ -z "$ADD" -a "$VERSION" = "$DEFAULT_GCC_VERSION" ]; then
             ADD="yes"
         fi

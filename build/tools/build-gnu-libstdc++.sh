@@ -72,6 +72,7 @@ WITH_DEBUG_INFO=
 register_var_option "--with-debug-info" WITH_DEBUG_INFO "Build with -g.  STL is still built with optimization but with debug info"
 
 register_jobs_option
+register_try64_option
 
 extract_parameters "$@"
 

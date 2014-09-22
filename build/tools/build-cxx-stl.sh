@@ -80,23 +80,15 @@ register_var_option "--visible-static" VISIBLE_STATIC "Do not use hidden visibil
 WITH_DEBUG_INFO=
 register_var_option "--with-debug-info" WITH_DEBUG_INFO "Build with -g.  STL is still built with optimization but with debug info"
 
-EXPLICIT_COMPILER_VERSION=
-
 GCC_VERSION=
-register_option "--gcc-version=<ver>" do_gcc_version "Specify GCC version"
-do_gcc_version() {
-    GCC_VERSION=$1
-    EXPLICIT_COMPILER_VERSION=true
-}
+register_var_option "--gcc-version=<ver>" GCC_VERSION "Specify GCC version"
 
 LLVM_VERSION=
-register_option "--llvm-version=<ver>" do_llvm_version "Specify LLVM version"
-do_llvm_version() {
-    LLVM_VERSION=$1
-    EXPLICIT_COMPILER_VERSION=true
-}
+register_var_option "--llvm-version=<ver>" LLVM_VERSION "Specify LLVM version"
 
 register_jobs_option
+
+register_try64_option
 
 extract_parameters "$@"
 
@@ -198,7 +190,7 @@ fi
 
 if [ "$CXX_STL" = "libc++" ]; then
     # Use clang to build libc++ by default.
-    if [ "$EXPLICIT_COMPILER_VERSION" != "true" ]; then
+    if [ -z "$LLVM_VERSION" -a -z "$GCC_VERSION" ]; then
         LLVM_VERSION=$DEFAULT_LLVM_VERSION
     fi
 fi
