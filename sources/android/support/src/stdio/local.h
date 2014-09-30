@@ -91,7 +91,7 @@ extern int __sdidinit;
 	(fp)->_lb._base = NULL; \
 }
 
-#define FLOCKFILE(fp)   do { if (__isthreaded) flockfile(fp); } while (0)
-#define FUNLOCKFILE(fp) do { if (__isthreaded) funlockfile(fp); } while (0)
+#define FLOCKFILE(fp)   flockfile(fp);
+#define FUNLOCKFILE(fp) funlockfile(fp);
 
 #define FLOATING_POINT

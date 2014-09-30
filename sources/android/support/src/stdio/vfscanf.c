@@ -38,8 +38,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-extern int __isthreaded;
-
 #include "local.h"
 
 #ifdef FLOATING_POINT
