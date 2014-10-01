@@ -314,7 +314,7 @@ done
 # Copy python-related to for gdb.exe
 PYTHON=python
 PYTHON_x=python$(echo "$DEFAULT_PYTHON_VERSION" | cut -d . -f 1)
-PYTHON_xdotx=python$(echo "$DEFAULT_PYTHON_VERSION" | cut -d . -f 1).$(echo "$DEFAULT_PYTHON_VERSION" | cut -d . -f 2)
+PYTHON_xdotx=python$(echo "$DEFAULT_PYTHON_VERSION" | cut -d . -f 1-2)
 copy_directory "$NDK_DIR/prebuilt/$SYSTEM/include/$PYTHON_xdotx" "$TMPDIR/include/$PYTHON_xdotx"
 copy_directory "$NDK_DIR/prebuilt/$SYSTEM/lib/$PYTHON_xdotx" "$TMPDIR/lib/$PYTHON_xdotx"
 copy_file_list "$NDK_DIR/prebuilt/$SYSTEM/bin" "$TMPDIR/bin" "$PYTHON$HOST_EXE" "$PYTHON_x$HOST_EXE" "$PYTHON_xdotx$HOST_EXE"
