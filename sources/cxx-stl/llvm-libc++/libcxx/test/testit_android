@@ -251,14 +251,14 @@ CC=$CXX
 
 if [ -z "$OPTIONS" ]
 then
-  OPTIONS="--std=c++11 -O2 -g -funwind-tables"
   # Note that some tests use assert() to check condition but -O2 defines assert() to nothing,
   # unless we specify -UNDEBUG to bring assert() back.
-  # But currently adding -UNDEBUG crashes both clang3.4 and clang3.3 for test
-  # like libcxx/test/atomics/atomics.types.generic/address.pass.cpp.  Define -UNDEBUG
-  # only when we are not using clang.  ToDo
+  OPTIONS="--std=c++11 -O2 -g -funwind-tables -UNDEBUG"
   if [ "$CXX" != "${CXX%clang++*}" ] ; then
-    OPTIONS="$OPTIONS -UNDEBUG -mllvm -arm-enable-ehabi-descriptors -mllvm -arm-enable-ehabi"
+    OPTIONS="$OPTIONS -mllvm -arm-enable-ehabi-descriptors -mllvm -arm-enable-ehabi"
+  else
+    # Some libc++ implementation (eg. list) break TBAA!
+    OPTIONS="$OPTIONS -fno-strict-aliasing"
   fi
 fi
 
