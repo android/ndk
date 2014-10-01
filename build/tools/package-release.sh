@@ -373,11 +373,6 @@ rm -rf $REFERENCE/samples/*/{obj,libs,build.xml,local.properties,Android.mk} &&
 rm -rf $REFERENCE/tests/build/*/{obj,libs} &&
 rm -rf $REFERENCE/tests/device/*/{obj,libs}
 
-# Regenerate HTML documentation, place the files under .../docs/
-$NDK_ROOT_DIR/build/tools/build-docs.sh \
-    --in-dir=$NDK_ROOT_DIR/docs/text \
-    --out-dir=$REFERENCE/docs
-
 # copy sources files
 if [ -d $DEVELOPMENT_ROOT/sources ] ; then
     echo "Copying NDK sources files"
@@ -437,12 +432,6 @@ for SYSTEM in $SYSTEMS; do
     mkdir -p "$DSTDIR" "$DSTDIR64" &&
     copy_directory "$REFERENCE" "$DSTDIR"
     fail_panic "Could not copy reference. Aborting."
-
-    # Remove tests containing duplicated files in case-insensitive file system
-    if [ "$SYSTEM" = "windows" -o "$SYSTEM" = "darwin-x86" ]; then
-        rm -rf $DSTDIR/tests/build/c++-stl-source-extensions
-        find $DSTDIR/platforms | sort  | uniq -di | xargs rm
-    fi
 
     if [ "$PREBUILT_NDK" ]; then
         cd $UNZIP_DIR/android-ndk-* && cp -rP toolchains/* $DSTDIR/toolchains/
@@ -560,6 +549,15 @@ for SYSTEM in $SYSTEMS; do
     if [ -f "$PREBUILT_DIR/misc.tar.bz2" ]; then
         unpack_prebuilt misc "$DSTDIR" "$DSTDIR64"
     fi
+
+    # Remove duplicated files in case-insensitive file system
+    if [ "$SYSTEM" = "windows" -o "$SYSTEM" = "darwin-x86" ]; then
+        rm -rf $DSTDIR/tests/build/c++-stl-source-extensions
+        find "$DSTDIR/platforms" "$DSTDIR64/platforms" | sort -f | uniq -di | xargs rm
+    fi
+
+    # Remove include-fixed/linux/a.out.h.   See b.android.com/73728
+    find "$DSTDIR/toolchains" "$DSTDIR64/toolchains" -name a.out.h | grep include-fixed/ | xargs rm
 
     # Create an archive for the final package. Extension depends on the
     # host system.
