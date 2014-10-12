@@ -600,6 +600,21 @@ get_elf_hwcap_from_proc_cpuinfo(const char* cpuinfo, int cpuinfo_len) {
     }
     return hwcaps;
 }
+
+/* Check Houdini Binary Translator is installed on the system.
+ *
+ * If this function returns 1, get_elf_hwcap_from_getauxval() function
+ * will causes SIGSEGV while calling getauxval() function.
+ */
+static int
+has_houdini_binary_translator(void) {
+    int found = 0;
+    if (access("/system/lib/libhoudini.so", F_OK) != -1) {
+        D("Found Houdini binary translator\n");
+        found = 1;
+    }
+    return found;
+}
 #endif  /* __arm__ */
 
 /* Return the number of cpus present on a given device.
@@ -747,9 +762,14 @@ android_cpuInit(void)
             free(cpuArch);
         }
 
+        /* Check Houdini binary translator is installed */
+        int has_houdini = has_houdini_binary_translator();
+
         /* Extract the list of CPU features from ELF hwcaps */
         uint32_t hwcaps = 0;
-        hwcaps = get_elf_hwcap_from_getauxval(AT_HWCAP);
+        if (!has_houdini) {
+            hwcaps = get_elf_hwcap_from_getauxval(AT_HWCAP);
+        }
         if (!hwcaps) {
             D("Parsing /proc/self/auxv to extract ELF hwcaps!\n");
             hwcaps = get_elf_hwcap_from_proc_self_auxv();
@@ -823,7 +843,9 @@ android_cpuInit(void)
 
         /* Extract the list of CPU features from ELF hwcaps2 */
         uint32_t hwcaps2 = 0;
-        hwcaps2 = get_elf_hwcap_from_getauxval(AT_HWCAP2);
+        if (!has_houdini) {
+            hwcaps2 = get_elf_hwcap_from_getauxval(AT_HWCAP2);
+        }
         if (hwcaps2 != 0) {
             int has_aes     = (hwcaps2 & HWCAP2_AES);
             int has_pmull   = (hwcaps2 & HWCAP2_PMULL);
