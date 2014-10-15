@@ -255,7 +255,7 @@ then
   # unless we specify -UNDEBUG to bring assert() back.
   OPTIONS="--std=c++11 -O2 -g -funwind-tables -UNDEBUG"
   if [ "$CXX" != "${CXX%clang++*}" ] ; then
-    OPTIONS="$OPTIONS -mllvm -arm-enable-ehabi-descriptors -mllvm -arm-enable-ehabi"
+    OPTIONS="$OPTIONS" # clang3.5 doesn't accept the following: -mllvm -arm-enable-ehabi-descriptors -mllvm -arm-enable-ehabi"
   else
     # Some libc++ implementation (eg. list) break TBAA!
     OPTIONS="$OPTIONS -fno-strict-aliasing"
