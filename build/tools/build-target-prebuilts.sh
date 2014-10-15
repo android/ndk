@@ -117,20 +117,14 @@ run $BUILDTOOLS/build-compiler-rt.sh --abis="$ABIS" $FLAGS --src-dir="$SRC_DIR/l
 fail_panic "Could not build compiler-rt!"
 
 dump "Building $ABIS gabi++ binaries..."
-run $BUILDTOOLS/build-cxx-stl.sh --stl=gabi++ --abis="$ABIS" $FLAGS
-fail_panic "Could not build gabi++!"
 run $BUILDTOOLS/build-cxx-stl.sh --stl=gabi++ --abis="$ABIS" $FLAGS --with-debug-info
 fail_panic "Could not build gabi++ with debug info!"
 
 dump "Building $ABIS $UNKNOWN_ABIS stlport binaries..."
-run $BUILDTOOLS/build-cxx-stl.sh --stl=stlport --abis="$ABIS,$UNKNOWN_ABIS" $FLAGS
-fail_panic "Could not build stlport!"
 run $BUILDTOOLS/build-cxx-stl.sh --stl=stlport --abis="$ABIS,$UNKNOWN_ABIS" $FLAGS --with-debug-info
 fail_panic "Could not build stlport with debug info!"
 
 dump "Building $ABIS $UNKNOWN_ABIS libc++ binaries... with libc++abi"
-run $BUILDTOOLS/build-cxx-stl.sh --stl=libc++-libc++abi --abis="$ABIS,$UNKNOWN_ABIS" $FLAGS --llvm-version=$DEFAULT_LLVM_VERSION
-fail_panic "Could not build libc++ with libc++abi!"
 run $BUILDTOOLS/build-cxx-stl.sh --stl=libc++-libc++abi --abis="$ABIS,$UNKNOWN_ABIS" $FLAGS --with-debug-info --llvm-version=$DEFAULT_LLVM_VERSION
 fail_panic "Could not build libc++ with libc++abi and debug info!"
 
@@ -139,8 +133,6 @@ for abi in $ABIS; do
   case $abi in
      x86|x86_64|mips|mips64)
   dump "Rebuilding $abi libc++ binaries... with gabi++"
-  run $BUILDTOOLS/build-cxx-stl.sh --stl=libc++-gabi++ --abis=$abi $FLAGS --llvm-version=$DEFAULT_LLVM_VERSION
-  fail_panic "Could not build libc++ with gabi++!"
   run $BUILDTOOLS/build-cxx-stl.sh --stl=libc++-gabi++ --abis=$abi $FLAGS --with-debug-info --llvm-version=$DEFAULT_LLVM_VERSION
   fail_panic "Could not build libc++ with gabi++ and debug info!"
      ;;
