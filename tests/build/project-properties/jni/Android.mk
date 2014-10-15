@@ -1,5 +1,5 @@
 WANTED_PLATFORM_32 := android-9
-WANTED_PLATFORM_64 := android-L
+WANTED_PLATFORM_64 := android-21
 
 ifeq (,$(filter %64, $(TARGET_ARCH)))
   ifneq ($(TARGET_PLATFORM),$(WANTED_PLATFORM_32))

@@ -179,7 +179,7 @@ make_standalone ()
 }
 
 API32=14
-API64=L
+API64=21
 for ARCH in $(commas_to_spaces $DEFAULT_ARCHS); do
     if [ "$ARCH" = "${ARCH%%64*}" ]; then
         API=$API32
