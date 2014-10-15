@@ -61,7 +61,13 @@ register_var_option "--install-dir=<path>" INSTALL_DIR "Don't create package, in
 
 PLATFORM=
 register_option "--platform=<name>" do_platform "Specify target Android platform/API level." "android-3"
-do_platform () { PLATFORM=$1; }
+do_platform () {
+    PLATFORM=$1;
+    if [ "$PLATFORM" = "android-L" ]; then
+        echo "WARNING: android-L is renamed as android-21"
+        PLATFORM=android-21
+    fi
+}
 
 extract_parameters "$@"
 
