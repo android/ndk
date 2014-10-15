@@ -575,17 +575,25 @@ build_stl_libs_for_abi ()
     # libc++ built with clang (for ABI armeabi-only) produces
     # libc++_shared.so and libc++_static.a with undefined __atomic_fetch_add_4
     # Add -latomic.
-    if [ -n "$LLVM_VERSION" -a "$CXX_STL_LIB" = "libc++" -a "$ABI" = "armeabi" ]; then
-        # EHABI tables were added as experimental flags in llvm 3.4. In 3.5, these
-        # are now the defaults and the flags have been removed. Add these flags
-        # explicitly only for llvm 3.4.
-        if [ "$LLVM_VERSION" = "3.4" ]; then
-            EXTRA_CFLAGS="${EXTRA_CFLAGS} -mllvm -arm-enable-ehabi-descriptors \
-                          -mllvm -arm-enable-ehabi"
-            EXTRA_CXXFLAGS="${EXTRA_CXXFLAGS} -mllvm -arm-enable-ehabi-descriptors \
-                            -mllvm -arm-enable-ehabi"
+    if [ -n "$LLVM_VERSION" -a "$CXX_STL_LIB" = "libc++" ]; then
+        # clang3.5 use integrated-as as default, which has trouble compiling
+        # llvm-libc++abi/libcxxabi/src/Unwind/UnwindRegistersRestore.S
+        if [ "$LLVM_VERSION" = "3.5" ]; then
+            EXTRA_CFLAGS="${EXTRA_CFLAGS} -no-integrated-as"
+            EXTRA_CXXFLAGS="${EXTRA_CXXFLAGS} -no-integrated-as"
         fi
-        EXTRA_LDFLAGS="$EXTRA_LDFLAGS -latomic"
+        if [ "$ABI" = "armeabi" ]; then
+            # EHABI tables were added as experimental flags in llvm 3.4. In 3.5, these
+            # are now the defaults and the flags have been removed. Add these flags
+            # explicitly only for llvm 3.4.
+            if [ "$LLVM_VERSION" = "3.4" ]; then
+                EXTRA_CFLAGS="${EXTRA_CFLAGS} -mllvm -arm-enable-ehabi-descriptors \
+                              -mllvm -arm-enable-ehabi"
+                EXTRA_CXXFLAGS="${EXTRA_CXXFLAGS} -mllvm -arm-enable-ehabi-descriptors \
+                                -mllvm -arm-enable-ehabi"
+	    fi
+            EXTRA_LDFLAGS="$EXTRA_LDFLAGS -latomic"
+        fi
     fi
 
     builder_begin_android $ABI "$BUILDDIR" "$GCCVER" "$LLVM_VERSION" "$MAKEFILE"

@@ -38,7 +38,7 @@ If --systems isn't specified, this script discovers all ld.mcld[.exe] in
 toolchains/llvm-$DEFAULT_LLVM_VERSION
 
 Note that one copy of ld.mcld serves all GCC {4.9, 4.8, 4.7, 4.6, 4.4.3} x {arm, x86, mips} and
-LLVM {3.3, 3.4}.
+LLVM {3.4, 3.5}.
 
 GCC passes -m flag for ld.mcld to figure out the right target.
 "
