@@ -553,7 +553,8 @@ for SYSTEM in $SYSTEMS; do
     # Remove duplicated files in case-insensitive file system
     if [ "$SYSTEM" = "windows" -o "$SYSTEM" = "darwin-x86" ]; then
         rm -rf $DSTDIR/tests/build/c++-stl-source-extensions
-        find "$DSTDIR/platforms" "$DSTDIR64/platforms" | sort -f | uniq -di | xargs rm
+        find "$DSTDIR/platforms" | sort -f | uniq -di | xargs rm
+        find "$DSTDIR64/platforms" | sort -f | uniq -di | xargs rm
     fi
 
     # Remove include-fixed/linux/a.out.h.   See b.android.com/73728
