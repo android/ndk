@@ -21,7 +21,11 @@ LLVM_TRIPLE := le32-none-ndk
 endif
 
 # For sources/cxx-stl/gnu-libstdc++/$(TOOLCHAIN_VERSION)/libs/*/libsupc++.a
+ifneq ($(UNKNOWN_ABI_64),)
+TOOLCHAIN_VERSION := 4.9
+else
 TOOLCHAIN_VERSION := 4.8
+endif
 
 TARGET_CC := $(TOOLCHAIN_PREFIX)clang$(HOST_EXEEXT)
 TARGET_CXX := $(TOOLCHAIN_PREFIX)clang++$(HOST_EXEEXT)

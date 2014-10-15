@@ -435,7 +435,7 @@ gen_shared_lib ()
 
     # Build it with our cross-compiler. It will complain about conflicting
     # types for built-in functions, so just shut it up.
-    COMMAND="$CC -Wl,-shared,-Bsymbolic -Wl,-soname,$LIBRARY -nostdlib -o $TMPO $TMPC"
+    COMMAND="$CC -Wl,-shared,-Bsymbolic -Wl,-soname,$LIBRARY -nostdlib -o $TMPO $TMPC -Wl,--exclude-libs,libgcc.a"
     echo "## COMMAND: $COMMAND" > $TMPL
     $COMMAND 1>>$TMPL 2>&1
     if [ $? != 0 ] ; then
@@ -456,8 +456,8 @@ gen_shared_lib ()
 
     if [ "$OPTION_DEBUG_LIBS" ]; then
       cp $TMPC $DSTFILE.c
-      echo "$FUNCS" > $DSTFILE.functions.txt
-      echo "$VARS" > $DSTFILE.variables.txt
+      echo "$FUNCS" | tr ' ' '\n' > $DSTFILE.functions.txt
+      echo "$VARS" | tr ' ' '\n' > $DSTFILE.variables.txt
     fi
 }
 
