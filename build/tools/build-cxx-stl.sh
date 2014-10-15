@@ -328,16 +328,10 @@ SUPPORT32_SOURCES=\
 ../../android/support/src/locale/localeconv.c \
 ../../android/support/src/locale/newlocale.c \
 ../../android/support/src/locale/uselocale.c \
-../../android/support/src/stdio/fscanf.c \
-../../android/support/src/stdio/scanf.c \
-../../android/support/src/stdio/sscanf.c \
 ../../android/support/src/stdio/stdio_impl.c \
 ../../android/support/src/stdio/strtod.c \
 ../../android/support/src/stdio/vfprintf.c \
-../../android/support/src/stdio/vfscanf.c \
 ../../android/support/src/stdio/vfwprintf.c \
-../../android/support/src/stdio/vscanf.c \
-../../android/support/src/stdio/vsscanf.c \
 ../../android/support/src/msun/e_log2.c \
 ../../android/support/src/msun/e_log2f.c \
 ../../android/support/src/msun/s_nan.c \
