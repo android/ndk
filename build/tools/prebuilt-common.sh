@@ -730,6 +730,9 @@ handle_canadian_build ()
 #
 find_mingw_toolchain ()
 {
+    if [ "$DEBIAN_NAME" -a "$BINPREFIX" -a "$MINGW_GCC" ]; then
+        return
+    fi
     # IMPORTANT NOTE: binutils 2.21 requires a cross toolchain named
     # i585-pc-mingw32msvc-gcc, or it will fail its configure step late
     # in the toolchain build. Note that binutils 2.19 can build properly

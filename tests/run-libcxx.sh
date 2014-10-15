@@ -4,7 +4,7 @@ DEVICE_arm="$1"
 DEVICE_x86="$2"
 DEVICE_mips="$3"
 
-LLVM_VERSION=3.4
+LLVM_VERSION=3.5 # 3.4
 
 MODES="--static --shared"
 
@@ -36,74 +36,75 @@ echo ================  llvm-libc++
 
   for MODE in $MODES; do
     if [ -z "$DEVICE_arm" ]; then
-      echo "### clang${LLVM_VERSION} armeabi-v7a: no device"
+      echo "### clang${LLVM_VERSION} $MODE armeabi-v7a: no device"
     else
-      echo "### clang${LLVM_VERSION} armeabi-v7a"
+      echo "### clang${LLVM_VERSION} $MODE armeabi-v7a"
       ADB="adb -s $DEVICE_arm" PATH=$TOOLCHAIN_DIR_ARM/bin:$PATH \
         ./testit_android --abi=armeabi-v7a --cxx=arm-linux-androideabi-clang++ $MODE
     fi
 
     if [ -z "$DEVICE_x86" ]; then
-      echo "### clang${LLVM_VERSION} x86: no device"
+      echo "### clang${LLVM_VERSION} $MODE x86: no device"
     else
-      echo "### clang${LLVM_VERSION} x86"
+      echo "### clang${LLVM_VERSION} $MODE x86"
       ADB="adb -s $DEVICE_x86" PATH=$TOOLCHAIN_DIR_X86/bin:$PATH \
         ./testit_android --abi=x86 --cxx=i686-linux-android-clang++ $MODE
     fi
 
     if [ -z "$DEVICE_mips" ]; then
-      echo "### clang${LLVM_VERSION} mips: no device"
+      echo "### clang${LLVM_VERSION} $MODE mips: no device"
     else
-      echo "### clang${LLVM_VERSION} mips"
+      echo "### clang${LLVM_VERSION} $MODE mips"
       ADB="adb -s $DEVICE_mips" PATH=$TOOLCHAIN_DIR_MIPS/bin:$PATH \
         ./testit_android --abi=mips --cxx=mipsel-linux-android-clang++ $MODE
     fi
 
     if [ -z "$DEVICE_arm" ]; then
-      echo "### gcc4.9 armeabi-v7a: no device"
+      echo "### gcc4.8 $MODE armeabi-v7a: no device"
     else
-      echo "### gcc4.9 armeabi-v7a"
-      ADB="adb -s $DEVICE_arm" PATH=$TOOLCHAIN49_DIR_ARM/bin:$PATH \
-        ./testit_android --abi=armeabi-v7a $MODE
-    fi
-
-    if [ -z "$DEVICE_x86" ]; then
-      echo "### gcc4.9 x86: no device"
-    else
-      echo "### gcc4.9 x86"
-      ADB="adb -s $DEVICE_x86" PATH=$TOOLCHAIN49_DIR_X86/bin:$PATH \
-        ./testit_android --abi=x86 $MODE
-    fi
-
-    if [ -z "$DEVICE_mips" ]; then
-      echo "### gcc4.9 mips: no device"
-    else
-      echo "### gcc4.9 mips"
-      ADB="adb -s $DEVICE_mips" PATH=$TOOLCHAIN49_DIR_MIPS/bin:$PATH \
-        ./testit_android --abi=mips $MODE
-    fi
-
-    if [ -z "$DEVICE_arm" ]; then
-      echo "### gcc4.8 armeabi-v7a: no device"
-    else
-      echo "### gcc4.8 armeabi-v7a"
+      echo "### gcc4.8 $MODE armeabi-v7a"
       ADB="adb -s $DEVICE_arm" PATH=$TOOLCHAIN_DIR_ARM/bin:$PATH \
         ./testit_android --abi=armeabi-v7a $MODE
     fi
 
     if [ -z "$DEVICE_x86" ]; then
-      echo "### gcc4.8 x86: no device"
+      echo "### gcc4.8 $MODE x86: no device"
     else
-      echo "### gcc4.8 x86"
+      echo "### gcc4.8 $MODE x86"
       ADB="adb -s $DEVICE_x86" PATH=$TOOLCHAIN_DIR_X86/bin:$PATH \
         ./testit_android --abi=x86 $MODE
     fi
 
     if [ -z "$DEVICE_mips" ]; then
-      echo "### gcc4.8 mips: no device"
+      echo "### gcc4.8 $MODE mips: no device"
     else
-      echo "### gcc4.8 mips"
+      echo "### gcc4.8 $MODE mips"
       ADB="adb -s $DEVICE_mips" PATH=$TOOLCHAIN_DIR_MIPS/bin:$PATH \
         ./testit_android --abi=mips $MODE
     fi
+
+    if [ -z "$DEVICE_arm" ]; then
+      echo "### gcc4.9 $MODE armeabi-v7a: no device"
+    else
+      echo "### gcc4.9 $MODE armeabi-v7a"
+      ADB="adb -s $DEVICE_arm" PATH=$TOOLCHAIN49_DIR_ARM/bin:$PATH \
+        ./testit_android --abi=armeabi-v7a $MODE
+    fi
+
+    if [ -z "$DEVICE_x86" ]; then
+      echo "### gcc4.9 $MODE x86: no device"
+    else
+      echo "### gcc4.9 $MODE x86"
+      ADB="adb -s $DEVICE_x86" PATH=$TOOLCHAIN49_DIR_X86/bin:$PATH \
+        ./testit_android --abi=x86 $MODE
+    fi
+
+    if [ -z "$DEVICE_mips" ]; then
+      echo "### gcc4.9 $MODE mips: no device"
+    else
+      echo "### gcc4.9 $MODE mips"
+      ADB="adb -s $DEVICE_mips" PATH=$TOOLCHAIN49_DIR_MIPS/bin:$PATH \
+        ./testit_android --abi=mips $MODE
+    fi
+
   done
