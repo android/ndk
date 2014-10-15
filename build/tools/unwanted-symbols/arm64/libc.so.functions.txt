@@ -2,11 +2,8 @@ android_getaddrinfofornet
 android_gethostbyaddrfornet
 android_gethostbynamefornet
 __android_set_abort_message
-arc4random
 arc4random_addrandom
-arc4random_buf
 arc4random_stir
-arc4random_uniform
 basename_r
 __bionic_name_mem
 dlmalloc_inspect_all
