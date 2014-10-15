@@ -26,9 +26,7 @@ endif
 
 TARGET_OUT := $(NDK_APP_OUT)/$(_app)/$(TARGET_ARCH_ABI)
 
-# Special handling for x86 and mips: The minimal platform is android-9 here
-# For now, handle this with a simple substitution. We may want to implement
-# more general filtering in the future when introducing other ABIs.
+# For x86 and mips: the minimal platform level is android-9
 TARGET_PLATFORM_SAVED := $(TARGET_PLATFORM)
 ifneq ($(filter %x86 %mips,$(TARGET_ARCH_ABI)),)
 $(foreach _plat,3 4 5 8,\
@@ -36,23 +34,19 @@ $(foreach _plat,3 4 5 8,\
 )
 endif
 
-# The first platform for 64-bit ABIs is android-$(NDK_PREVIEW_LEVEL)
+# For 64-bit ABIs: the minimal platform level is android-21
 ifneq ($(filter $(NDK_KNOWN_DEVICE_ABI64S),$(TARGET_ARCH_ABI)),)
-$(foreach _plat,3 4 5 8 9 10 11 12 13 14 15 16 17 18 19 20 21,\
-    $(eval TARGET_PLATFORM := $$(subst android-$(_plat),android-$(NDK_PREVIEW_LEVEL),$$(TARGET_PLATFORM)))\
+$(foreach _plat,3 4 5 8 9 10 11 12 13 14 15 16 17 18 19 20,\
+    $(eval TARGET_PLATFORM := $$(subst android-$(_plat),android-21,$$(TARGET_PLATFORM)))\
 )
 endif
 
 TARGET_PLATFORM_LEVEL := $(strip $(subst android-,,$(TARGET_PLATFORM)))
-ifneq ($(TARGET_PLATFORM_LEVEL),$(NDK_PREVIEW_LEVEL))
-    ifneq (,$(call gte,$(TARGET_PLATFORM_LEVEL),$(NDK_PIE_PLATFORM_LEVEL)))
-        TARGET_PIE := true
-        $(call ndk_log,  Enabling -fPIE for TARGET_PLATFORM $(TARGET_PLATFORM))
-    else
-        TARGET_PIE := false
-    endif
-else
+ifneq (,$(call gte,$(TARGET_PLATFORM_LEVEL),$(NDK_FIRST_PIE_PLATFORM_LEVEL)))
     TARGET_PIE := true
+    $(call ndk_log,  Enabling -fPIE for TARGET_PLATFORM $(TARGET_PLATFORM))
+else
+    TARGET_PIE := false
 endif
 
 # Separate the debug and release objects. This prevents rebuilding
