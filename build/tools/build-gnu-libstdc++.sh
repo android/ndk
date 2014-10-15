@@ -213,16 +213,22 @@ build_gnustl_for_abi ()
 
     export LDFLAGS="-lc $EXTRA_FLAGS"
 
-    if [ "$ABI" = "armeabi-v7a" -o "$ABI" = "armeabi-v7a-hard" ]; then
-        CXXFLAGS=$CXXFLAGS" -march=armv7-a -mfpu=vfpv3-d16"
-        LDFLAGS=$LDFLAGS" -Wl,--fix-cortex-a8"
-        if [ "$ABI" != "armeabi-v7a-hard" ]; then
-            CXXFLAGS=$CXXFLAGS" -mfloat-abi=softfp"
-        else
-            CXXFLAGS=$CXXFLAGS" -mhard-float -D_NDK_MATH_NO_SOFTFP=1"
-            LDFLAGS=$LDFLAGS" -Wl,--no-warn-mismatch -lm_hard"
-        fi
-    fi
+    case $ABI in
+        armeabi-v7a|armeabi-v7a-hard)
+            CXXFLAGS=$CXXFLAGS" -march=armv7-a -mfpu=vfpv3-d16"
+            LDFLAGS=$LDFLAGS" -Wl,--fix-cortex-a8"
+            if [ "$ABI" != "armeabi-v7a-hard" ]; then
+                CXXFLAGS=$CXXFLAGS" -mfloat-abi=softfp"
+            else
+                CXXFLAGS=$CXXFLAGS" -mhard-float -D_NDK_MATH_NO_SOFTFP=1"
+                LDFLAGS=$LDFLAGS" -Wl,--no-warn-mismatch -lm_hard"
+            fi
+            ;;
+        arm64-v8a)
+            CFLAGS="$CFLAGS -mfix-cortex-a53-835769"
+            CXXFLAGS=$CXXFLAGS" -mfix-cortex-a53-835769"
+            ;;
+    esac
 
     LIBTYPE_FLAGS=
     if [ $LIBTYPE = "static" ]; then
