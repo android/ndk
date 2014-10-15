@@ -531,12 +531,19 @@ build_stl_libs_for_abi ()
     EXTRA_CFLAGS=""
     EXTRA_CXXFLAGS=""
     EXTRA_LDFLAGS=""
-    if [ "$ABI" = "armeabi-v7a-hard" ]; then
-        EXTRA_CFLAGS="-mhard-float -D_NDK_MATH_NO_SOFTFP=1"
-        EXTRA_CXXFLAGS="-mhard-float -D_NDK_MATH_NO_SOFTFP=1"
-        EXTRA_LDFLAGS="-Wl,--no-warn-mismatch -lm_hard"
-        FLOAT_ABI="hard"
-    fi
+
+    case $ABI in
+        armeabi-v7a-hard)
+            EXTRA_CFLAGS="-mhard-float -D_NDK_MATH_NO_SOFTFP=1"
+            EXTRA_CXXFLAGS="-mhard-float -D_NDK_MATH_NO_SOFTFP=1"
+            EXTRA_LDFLAGS="-Wl,--no-warn-mismatch -lm_hard"
+            FLOAT_ABI="hard"
+            ;;
+        arm64-v8a)
+            EXTRA_CFLAGS="-mfix-cortex-a53-835769"
+            EXTRA_CXXFLAGS="-mfix-cortex-a53-835769"
+            ;;
+    esac
 
     if [ -n "$THUMB" ]; then
         EXTRA_CFLAGS="$EXTRA_CFLAGS -mthumb"
