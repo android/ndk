@@ -1,0 +1,20 @@
+From fbb61793b1ea06b4061f1e45007b96a0e1c2717c Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Tue, 22 Jul 2014 15:24:53 +0800
+Subject: [PATCH] Simplify gcc BASE-VER to make clang easier to find ld/as/libs
+
+Change-Id: Iebb74b6cd2b276bd9865ac980bf8cdcdecdb88ea
+---
+ gcc-4.9/gcc/BASE-VER | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/gcc-4.9/gcc/BASE-VER b/gcc-4.9/gcc/BASE-VER
+index d81d21c..86a9588 100644
+--- a/gcc-4.9/gcc/BASE-VER
++++ b/gcc-4.9/gcc/BASE-VER
+@@ -1 +1 @@
+-4.9.x-google
++4.9
+-- 
+2.0.0.526.g5318336
+

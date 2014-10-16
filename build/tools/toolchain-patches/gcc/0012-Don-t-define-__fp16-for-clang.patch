@@ -1,0 +1,57 @@
+From c0ab21746a436d57b0d8a819319e2b4785b08d74 Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Tue, 22 Jul 2014 12:20:01 +0800
+Subject: [PATCH 2/2] Don't define __fp16 for clang
+
+Change-Id: Ie0131eb5d2158d678d82aaf3e46f78bf8fdd1c7a
+---
+ gcc-4.6/gcc/config/i386/arm_neon.h | 2 ++
+ gcc-4.8/gcc/config/i386/arm_neon.h | 2 ++
+ gcc-4.9/gcc/config/i386/arm_neon.h | 2 ++
+ 3 files changed, 6 insertions(+)
+
+diff --git a/gcc-4.6/gcc/config/i386/arm_neon.h b/gcc-4.6/gcc/config/i386/arm_neon.h
+index 5f56cbd..873b7d6 100644
+--- a/gcc-4.6/gcc/config/i386/arm_neon.h
++++ b/gcc-4.6/gcc/config/i386/arm_neon.h
+@@ -159,7 +159,9 @@ typedef unsigned long long uint64_t;
+ #endif
+ 
+ typedef   float float32_t;
++#if !defined(__clang__)
+ typedef   float __fp16;
++#endif
+ 
+ typedef  uint8_t poly8_t;
+ typedef  uint16_t poly16_t;
+diff --git a/gcc-4.8/gcc/config/i386/arm_neon.h b/gcc-4.8/gcc/config/i386/arm_neon.h
+index 5f56cbd..873b7d6 100644
+--- a/gcc-4.8/gcc/config/i386/arm_neon.h
++++ b/gcc-4.8/gcc/config/i386/arm_neon.h
+@@ -159,7 +159,9 @@ typedef unsigned long long uint64_t;
+ #endif
+ 
+ typedef   float float32_t;
++#if !defined(__clang__)
+ typedef   float __fp16;
++#endif
+ 
+ typedef  uint8_t poly8_t;
+ typedef  uint16_t poly16_t;
+diff --git a/gcc-4.9/gcc/config/i386/arm_neon.h b/gcc-4.9/gcc/config/i386/arm_neon.h
+index 5f56cbd..873b7d6 100644
+--- a/gcc-4.9/gcc/config/i386/arm_neon.h
++++ b/gcc-4.9/gcc/config/i386/arm_neon.h
+@@ -159,7 +159,9 @@ typedef unsigned long long uint64_t;
+ #endif
+ 
+ typedef   float float32_t;
++#if !defined(__clang__)
+ typedef   float __fp16;
++#endif
+ 
+ typedef  uint8_t poly8_t;
+ typedef  uint16_t poly16_t;
+-- 
+2.0.0.526.g5318336
+
