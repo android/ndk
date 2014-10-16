@@ -349,6 +349,11 @@ esac
 # Enable linker option -eh-frame-hdr also for static executable
 EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-eh-frame-hdr-for-static"
 
+# Enable aarch64 workaround for Cortex-A53 Erratum number 835769
+case "$TOOLCHAIN" in
+    aarch64*-4.9) EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-fix-cortex-a53-835769"
+esac
+
 MAY_FAIL_DUE_TO_RACE_CONDITION=
 if [ "$MINGW" = "yes" -o "$DARWIN" = "yes" ]; then
    MAY_FAIL_DUE_TO_RACE_CONDITION=yes
