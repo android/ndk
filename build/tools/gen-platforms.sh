@@ -184,11 +184,6 @@ if [ -n "$OPTION_PLATFORM" ] ; then
 else
     # Build the list from the content of SRCDIR
     PLATFORMS=`extract_platforms_from "$SRCDIR"`
-    # hack to place non-numeric level 'L' (lmp-preview) at the very end
-    if [ "$PLATFORMS" != "${PLATFORMS%%L*}" ] ; then
-        PLATFORMS=`echo $PLATFORMS | tr -d 'L'`
-        PLATFORMS="$PLATFORMS L"
-    fi
     log "Using platforms: $PLATFORMS"
 fi
 
@@ -597,12 +592,6 @@ generate_api_level ()
     local HEADER="platforms/android-$API/arch-$ARCH/usr/include/android/api-level.h"
     log "Generating: $HEADER"
     rm -f "$3/$HEADER"  # Remove symlink if any.
-
-    # hack to replace 'L' with large number
-    if [ "$API" = "L" ]; then
-        API="9999 /*'L'*/"
-    fi
-
     cat > "$3/$HEADER" <<EOF
 /*
  * Copyright (C) 2008 The Android Open Source Project

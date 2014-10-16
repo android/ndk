@@ -41,6 +41,11 @@ all: ndk-app-$(_app)
 
 # which platform/abi/toolchain are we going to use?
 TARGET_PLATFORM := $(call get,$(_map),APP_PLATFORM)
+ifeq ($(TARGET_PLATFORM),android-L)
+$(call __ndk_warning,WARNING: android-L is renamed as android-21)
+TARGET_PLATFORM := android-21
+endif
+
 
 # The ABI(s) to use
 NDK_APP_ABI := $(subst $(comma),$(space),$(strip $(NDK_APP_ABI)))
