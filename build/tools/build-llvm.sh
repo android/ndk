@@ -48,6 +48,10 @@ POLLY=no
 do_polly_option () { POLLY=yes; }
 register_option "--with-polly" do_polly_option "Enable Polyhedral optimizations for LLVM"
 
+MCLINKER=no
+do_mclinker_option () { MCLINKER=yes; }
+register_option "--mclinker" do_mclinker_option "Build mclinker as well"
+
 CHECK=no
 do_check_option () { CHECK=yes; }
 register_option "--check" do_check_option "Check LLVM"
@@ -323,7 +327,7 @@ if [ -f $TOOLCHAIN_BUILD_PREFIX/bin/llvm-config-host ] ; then
 fi
 
 # build mclinker only against default the LLVM version, once
-if [ "$TOOLCHAIN" = "llvm-$DEFAULT_LLVM_VERSION" ] ; then
+if [ "$MCLINKER" = "yes" -o "$TOOLCHAIN" = "llvm-$DEFAULT_LLVM_VERSION" ] ; then
     dump "Copy     : mclinker source"
     MCLINKER_SRC_DIR=$BUILD_OUT/mclinker
     mkdir -p $MCLINKER_SRC_DIR
