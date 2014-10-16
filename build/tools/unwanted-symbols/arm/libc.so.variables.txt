@@ -1,1 +1,3 @@
 __dso_handle
+__sdidinit
+__sglue

@@ -5,6 +5,8 @@ _C_tolower_
 _C_toupper_
 gMallocLeakZygoteChild
 __isthreaded
+__sdidinit
+__sglue
 __system_property_area__
 _tolower_tab_
 _toupper_tab_
