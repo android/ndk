@@ -133,12 +133,12 @@ ifneq ($(strip $(subst android-,,$(APP_PLATFORM))),$(APP_PLATFORM_LEVEL))
     $(call ndk_log,  Adjusting APP_PLATFORM android-$(APP_PLATFORM_LEVEL) to $(APP_PLATFORM))
 endif
 
-# If APP_PIE isn't defined, set it to true for android-$(NDK_PIE_PLATFORM_LEVEL) and above
+# If APP_PIE isn't defined, set it to true for android-$(NDK_FIRST_PIE_PLATFORM_LEVEL) and above
 #
 APP_PIE := $(strip $(APP_PIE))
 $(call ndk_log,  APP_PIE is $(APP_PIE))
 ifndef APP_PIE
-    ifneq (,$(call gte,$(APP_PLATFORM_LEVEL),$(NDK_PIE_PLATFORM_LEVEL)))
+    ifneq (,$(call gte,$(APP_PLATFORM_LEVEL),$(NDK_FIRST_PIE_PLATFORM_LEVEL)))
         APP_PIE := true
         $(call ndk_log,  Enabling -fPIE)
     else

@@ -554,7 +554,7 @@ endif
 endif
 
 # The first API level ndk-build enforces -fPIE for executable
-NDK_PIE_PLATFORM_LEVEL := 16
+NDK_FIRST_PIE_PLATFORM_LEVEL := 16
 
 # the list of all toolchains in this NDK
 NDK_ALL_TOOLCHAINS :=
