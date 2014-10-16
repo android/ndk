@@ -22,17 +22,6 @@ TEST(stdio,snprintf) {
   EXPECT_STREQ("0x1.921fb54411744p+1", char_buff);
 }
 
-TEST(stdio,sscanf) {
-  double d;
-  float f;
-
-  EXPECT_EQ(1, sscanf("0x1p-2", "%a", &f));
-  EXPECT_EQ(0.25f, f);
-
-  EXPECT_EQ(1, sscanf("0x1p-2", "%la", &d));
-  EXPECT_EQ(0.25, f);
-}
-
 TEST(stdio,swprintf) {
   wchar_t wide_buff[32];
   size_t wide_buff_len = sizeof(wide_buff) / sizeof(wchar_t);

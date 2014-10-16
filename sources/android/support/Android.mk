@@ -23,16 +23,10 @@ android_support_sources := \
     src/locale/localeconv.c \
     src/locale/newlocale.c \
     src/locale/uselocale.c \
-    src/stdio/fscanf.c \
-    src/stdio/scanf.c \
-    src/stdio/sscanf.c \
     src/stdio/stdio_impl.c \
     src/stdio/strtod.c \
     src/stdio/vfprintf.c \
-    src/stdio/vfscanf.c \
     src/stdio/vfwprintf.c \
-    src/stdio/vscanf.c \
-    src/stdio/vsscanf.c \
     src/msun/e_log2.c \
     src/msun/e_log2f.c \
     src/msun/s_nan.c \
