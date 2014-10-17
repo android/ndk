@@ -1,0 +1,80 @@
+From 170a5342a6a8d799d8b0167295e12597a26a61a7 Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Thu, 16 Oct 2014 18:02:07 +0800
+Subject: [PATCH 1/6] Revert "Fix build with llvm trunk." to build with llvm
+ 3.5
+
+Also check llvm version 3.5
+
+Change-Id: I677258fba797ffbfc08b2ba2426661bb196d38d9
+---
+ configure.ac                       | 2 +-
+ include/mcld/Support/raw_ostream.h | 2 +-
+ lib/Support/MemoryArea.cpp         | 7 ++++---
+ lib/Support/raw_ostream.cpp        | 4 ++--
+ 4 files changed, 8 insertions(+), 7 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index a85d304..601c67d 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -138,7 +138,7 @@ AC_CHECK_HEADERS([zlib.h])
+ 
+ ####################
+ # Configure LLVM
+-CHECK_LLVM([3.6])
++CHECK_LLVM([3.5])
+ ENUM_MCLD_TARGETS
+ CHECK_ALONE_TARGET
+ 
+diff --git a/include/mcld/Support/raw_ostream.h b/include/mcld/Support/raw_ostream.h
+index b3a9f83..b30ceee 100644
+--- a/include/mcld/Support/raw_ostream.h
++++ b/include/mcld/Support/raw_ostream.h
+@@ -28,7 +28,7 @@ class raw_fd_ostream : public llvm::raw_fd_ostream {
+   /// file descriptor when it is done (this is necessary to detect
+   /// output errors).
+   raw_fd_ostream(const char* pFilename,
+-                 std::error_code& pErrorCode,
++                 std::string &pErrorInfo,
+                  llvm::sys::fs::OpenFlags pFlags = llvm::sys::fs::F_None);
+ 
+   /// raw_fd_ostream ctor - FD is the file descriptor that this writes to.  If
+diff --git a/lib/Support/MemoryArea.cpp b/lib/Support/MemoryArea.cpp
+index 77a617d..dd5b63f 100644
+--- a/lib/Support/MemoryArea.cpp
++++ b/lib/Support/MemoryArea.cpp
+@@ -32,10 +32,11 @@ MemoryArea::MemoryArea(llvm::StringRef pFilename) {
+ 
+ MemoryArea::MemoryArea(const char* pMemBuffer, size_t pSize) {
+   llvm::StringRef mem(pMemBuffer, pSize);
+-  m_pMemoryBuffer =
+-      llvm::MemoryBuffer::getMemBuffer(mem,
+-                                       /*BufferName*/ "NaN",
++  llvm::MemoryBuffer* buffer =
++      llvm::MemoryBuffer::getMemBuffer(mem, /*BufferName*/ "NaN",
+                                        /*RequiresNullTerminator*/ false);
++  assert(buffer != NULL);
++  m_pMemoryBuffer.reset(buffer);
+ }
+ 
+ llvm::StringRef MemoryArea::request(size_t pOffset, size_t pLength) {
+diff --git a/lib/Support/raw_ostream.cpp b/lib/Support/raw_ostream.cpp
+index 3347ca2..e1a96bc 100644
+--- a/lib/Support/raw_ostream.cpp
++++ b/lib/Support/raw_ostream.cpp
+@@ -35,9 +35,9 @@ namespace mcld {
+ // raw_ostream
+ //===----------------------------------------------------------------------===//
+ raw_fd_ostream::raw_fd_ostream(const char* pFilename,
+-                               std::error_code& pErrorCode,
++                                     std::string &pErrorInfo,
+                                llvm::sys::fs::OpenFlags pFlags)
+-    : llvm::raw_fd_ostream(pFilename, pErrorCode, pFlags),
++    : llvm::raw_fd_ostream(pFilename, pErrorInfo, pFlags),
+       m_bConfigColor(false),
+       m_bSetColor(false) {
+ }
+-- 
+2.1.0.rc2.206.gedb03e5
+
