@@ -1,0 +1,43 @@
+From 6eb7414701d509174dd5e1b6966277463a820534 Mon Sep 17 00:00:00 2001
+From: Dehao Chen <dehao@google.com>
+Date: Thu, 16 Oct 2014 16:23:00 +0800
+Subject: [PATCH] Fix GCC4.9 segfaults with -fauto-profile and -Os
+
+BUG=17997360
+
+Change-Id: I0ccae39cb1399e6f058d524141ede990d2645927
+---
+ gcc-4.9/gcc/auto-profile.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/gcc-4.9/gcc/auto-profile.c b/gcc-4.9/gcc/auto-profile.c
+index 11c2016..c69c1e6 100644
+--- a/gcc-4.9/gcc/auto-profile.c
++++ b/gcc-4.9/gcc/auto-profile.c
+@@ -1674,7 +1674,14 @@ afdo_annotate_cfg (const stmt_set &promoted_stmts)
+       counts_to_freqs ();
+     }
+   if (flag_value_profile_transformations)
+-    gimple_value_profile_transformations ();
++    {
++      gimple_value_profile_transformations ();
++      free_dominance_info (CDI_DOMINATORS);
++      free_dominance_info (CDI_POST_DOMINATORS);
++      calculate_dominance_info (CDI_POST_DOMINATORS);
++      calculate_dominance_info (CDI_DOMINATORS);
++      update_ssa (TODO_update_ssa);
++    }
+ }
+ 
+ /* Wrapper function to invoke early inliner.  */
+@@ -1756,7 +1763,6 @@ auto_profile (void)
+       early_inline ();
+       autofdo::afdo_annotate_cfg (promoted_stmts);
+       compute_function_frequency ();
+-      update_ssa (TODO_update_ssa);
+ 
+       /* Local pure-const may imply need to fixup the cfg.  */
+       if (execute_fixup_cfg () & TODO_cleanup_cfg)
+-- 
+2.1.0.rc2.206.gedb03e5
+
