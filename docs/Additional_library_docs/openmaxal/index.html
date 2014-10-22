@@ -8,6 +8,12 @@
 
 <body>
 
+<b>Note:</b>
+<a href="http://developer.android.com/reference/android/media/MediaCodec.html">android.media.MediaCodec</a>
+is recommended for new applications at API level 16 and above.  The NDK
+equivalent (in &lt;media/NdkMedia*.h&gt;) is recommended for new native
+applications at API level 21 and above.
+
 <h1>OpenMAX AL for Android</h1>
 
 This article describes the Android native multimedia APIs based on the
@@ -17,12 +23,12 @@ platform version 4.0) and higher.
 OpenMAX AL is a companion API to OpenSL ES, but for multimedia (video
 and audio) rather than audio only.
 <p>
-Android 4.0 provides a direct, efficient path for low-level streaming multimedia. The new path is
+Android 4.0 provides a direct, efficient path for low-level streaming multimedia. The path is
 ideal for applications that need to maintain complete control over media data before passing it to
-the platform for presentation. For example, media applications can now retrieve data from any
+the platform for presentation. For example, media applications can retrieve data from any
 source, apply proprietary encryption/decryption, and then send the data to the platform for display.
 <p>
-Applications can now send processed data to the platform as a multiplexed stream of audio/video
+Applications can send processed data to the platform as a multiplexed stream of audio/video
 content in MPEG-2 transport stream format. The platform de-muxes, decodes, and renders the content.
 The audio track is rendered to the active audio device, while the video track is rendered to either
 a Surface or a SurfaceTexture. When rendering to a SurfaceTexture, the application can apply
@@ -340,7 +346,7 @@ at the second destroy.
 
 The Android native multimedia APIs at level 14 are based on Khronos
 Group OpenMAX AL 1.0.1 (see section "References" below).
-As of the time of this writing, Khronos has recently released
+Khronos has released
 a revised version 1.1 of the standard. The revised version
 includes new features, clarifications, correction of
 typographical errors, and some incompatibilities. Most of the
@@ -678,6 +684,8 @@ entered JNI is allowed to directly call OpenMAX AL APIs, including
 those which block. However, blocking calls are not recommended from
 the main thread, as they may result in the dreaded "Application Not
 Responding" (ANR).
+<p>
+(Throughout this document, "Dalvik" can be considered to also refer to "ART").
 
 <h3>Performance</h3>
 
