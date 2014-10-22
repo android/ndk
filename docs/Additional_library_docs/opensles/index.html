@@ -36,6 +36,8 @@ Interface (JNI).  NDK is not intended for writing pure C/C++
 applications.  That said, OpenSL ES is a full-featured API, and we
 expect that you should be able to accomplish most of your audio
 needs using only this API, without up-calls to code running in the Dalvik VM.
+<p>
+(Throughout this document, "Dalvik" can be considered to also refer to "ART").
 
 <p>
 Note: though based on OpenSL ES, the Android native audio API
@@ -309,6 +311,8 @@ units of milliHz, despite the misleading name. To avoid accidentally
 using the wrong value, you should initialize this field using one
 of the symbolic constants defined for this purpose (such as
 <code>SL_SAMPLINGRATE_44_1</code> etc.)
+<p>
+For API level 21 and above, see section "Floating-point data" below.
 
 <h4>Playback rate</h4>
 
@@ -389,7 +393,7 @@ at the second destroy.
 
 The Android native audio APIs are based on Khronos
 Group OpenSL ES 1.0.1 (see section "References" below).
-As of the time of this writing, Khronos has recently released
+Khronos has released
 a revised version 1.1 of the standard. The revised version
 includes new features, clarifications, correction of
 typographical errors, and some incompatibilities. Most of the expected
@@ -633,6 +637,15 @@ where # is the platform API level, 9 or higher
 
 <h3>Decode audio to PCM</h3>
 
+<b>Note:</b>
+For decoding an encoded stream to PCM without immediate playback,
+<a
+href="http://developer.android.com/reference/android/media/MediaCodec.html">android.media.MediaCodec</a>
+is recommended for new applications at API level 16 and above.  The NDK
+equivalent (in &lt;media/NdkMedia*.h&gt;) is recommended for new native
+applications at API level 21 and above.
+<p>
+
 Note: this feature is available at API level 14 and higher.
 <p>
 A standard audio player plays back to an audio device, and the data sink
@@ -767,7 +780,7 @@ indices are shared for different object instances within the same run.
 
 <h3>Floating-point data</h3>
 
-As of API level L and above, data can be supplied to an AudioPlayer in
+As of API level 21 and above, data can be supplied to an AudioPlayer in
 single-precision floating-point format.
 <p>
 Example code fragment, to be used during the Engine::CreateAudioPlayer process:
@@ -1062,7 +1075,7 @@ variance near zero, and for the handler to not block for unbounded times.
 Lower latency audio is for these outputs only: on-device speaker, wired
 headphones, wired headset, and line out.
 <p>
-As of API level L, lower latency audio input is supported on select
+As of API level 21, lower latency audio input is supported on select
 devices. To take advantage of this feature, first confirm that lower
 latency output is available as described above. The capability for lower
 latency output is a prerequisite for the lower latency input feature.
