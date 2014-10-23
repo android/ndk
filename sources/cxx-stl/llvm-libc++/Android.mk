@@ -91,6 +91,7 @@ llvm_libc++_export_cxxflags += -fno-strict-aliasing
 endif
 
 llvm_libc++_cxxflags := $(llvm_libc++_export_cxxflags)
+llvm_libc++_cflags :=
 
 ifeq ($(__libcxx_use_gabixx),true)
 
@@ -135,6 +136,12 @@ include $(libcxxabi_sources_dir)/sources.mk
 llvm_libc++_sources += $(addprefix $(libcxxabi_sources_prefix:%/=%)/,$(libcxxabi_src_files))
 llvm_libc++_includes += $(libcxxabi_c_includes)
 llvm_libc++_export_includes += $(libcxxabi_c_includes)
+
+ifeq (clang3.5,$(NDK_TOOLCHAIN_VERSION))
+# Workaround an issue of integrated-as (default in clang3.5) where it fails to compile
+# llvm-libc++abi/libcxxabi/src/Unwind/UnwindRegistersRestore.S
+llvm_libc++_cflags += -no-integrated-as
+endif
 
 endif
 
@@ -183,6 +190,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := c++_static
 LOCAL_SRC_FILES := $(llvm_libc++_sources)
 LOCAL_C_INCLUDES := $(android_support_c_includes) $(llvm_libc++_includes)
+LOCAL_CFLAGS := $(llvm_libc++_cflags)
 LOCAL_CPPFLAGS := $(llvm_libc++_cxxflags)
 LOCAL_CPP_FEATURES := rtti exceptions
 LOCAL_EXPORT_C_INCLUDES := $(llvm_libc++_export_includes)
@@ -194,6 +202,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := c++_shared
 LOCAL_SRC_FILES := $(llvm_libc++_sources)
 LOCAL_C_INCLUDES := $(android_support_c_includes) $(llvm_libc++_includes)
+LOCAL_CFLAGS := $(llvm_libc++_cflags)
 LOCAL_CPPFLAGS := $(llvm_libc++_cxxflags)
 LOCAL_CPP_FEATURES := rtti exceptions
 LOCAL_EXPORT_C_INCLUDES := $(llvm_libc++_export_includes)
