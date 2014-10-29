@@ -105,7 +105,9 @@ if [ -z "$ARCH" ]; then
             ARCH=mips64
             ;;
         *)
-            ARCH=arm
+            ARCH=null
+            echo "Unable to auto-config arch from toolchain $TOOLCHAIN_NAME"
+            exit 1
             ;;
     esac
     ARCH_INC=$ARCH
@@ -132,7 +134,10 @@ else
             ARCH=mips64
             ;;
         *)
-            ARCH=arm
+            echo "Invalid --arch $ARCH"
+            echo "Please use one of arm, x86, mips, arm64, x86_64 or mips64"
+            ARCH=null
+            exit 1
             ;;
     esac
 
