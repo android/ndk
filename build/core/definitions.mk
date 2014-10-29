@@ -1140,6 +1140,13 @@ all-subdir-makefiles = $(call all-makefiles-under,$(call my-dir))
 # =============================================================================
 
 # -----------------------------------------------------------------------------
+# Macro    : escape-colon-in-path
+# Returns  : replace colon in $1 with $(colon)
+# Usage    : $(escape-colon-in-path,<file>)
+# -----------------------------------------------------------------------------
+escape-colon-in-path = $(subst $(colon),$$(colon),$1)
+
+# -----------------------------------------------------------------------------
 # Macro    : clear-all-src-tags
 # Returns  : remove all source file tags and associated data.
 # Usage    : $(clear-all-src-tags)
@@ -1149,9 +1156,9 @@ $(foreach __tag,$(LOCAL_SRC_TAGS), \
     $(eval LOCAL_SRC_TAG.$(__tag) := $(empty)) \
 ) \
 $(foreach __src,$(LOCAL_SRC_FILES), \
-    $(eval LOCAL_SRC_FILES_TAGS.$(__src) := $(empty)) \
-    $(eval LOCAL_SRC_FILES_TARGET_CFLAGS.$(__src) := $(empty)) \
-    $(eval LOCAL_SRC_FILES_TEXT.$(__src) := $(empty)) \
+    $(eval LOCAL_SRC_FILES_TAGS.$(call escape-colon-in-path,$(__src)) := $(empty)) \
+    $(eval LOCAL_SRC_FILES_TARGET_CFLAGS.$(call escape-colon-in-path,$(__src)) := $(empty)) \
+    $(eval LOCAL_SRC_FILES_TEXT.$(call escape-colon-in-path,$(__src)) := $(empty)) \
 ) \
 $(eval LOCAL_SRC_TAGS := $(empty_set))
 
@@ -1166,7 +1173,7 @@ tag-src-files = \
 $(eval LOCAL_SRC_TAGS := $(call set_insert,$2,$(LOCAL_SRC_TAGS))) \
 $(eval LOCAL_SRC_TAG.$2 := $(call set_union,$1,$(LOCAL_SRC_TAG.$2))) \
 $(foreach __src,$1, \
-    $(eval LOCAL_SRC_FILES_TAGS.$(__src) += $2) \
+    $(eval LOCAL_SRC_FILES_TAGS.$(call escape-colon-in-path,$(__src)) += $2) \
 )
 
 # -----------------------------------------------------------------------------
@@ -1195,7 +1202,8 @@ get-src-files-without-tag = $(filter-out $(LOCAL_SRC_TAG.$1),$(LOCAL_SRC_FILES))
 #            normally be called from the toolchain-specific function that
 #            computes all compiler flags for all source files.
 # -----------------------------------------------------------------------------
-set-src-files-target-cflags = $(foreach __src,$1,$(eval LOCAL_SRC_FILES_TARGET_CFLAGS.$(__src) := $2))
+set-src-files-target-cflags = \
+    $(foreach __src,$1,$(eval LOCAL_SRC_FILES_TARGET_CFLAGS.$(call escape-colon-in-path,$(__src)) := $2))
 
 # -----------------------------------------------------------------------------
 # Macro    : add-src-files-target-cflags
@@ -1206,7 +1214,8 @@ set-src-files-target-cflags = $(foreach __src,$1,$(eval LOCAL_SRC_FILES_TARGET_C
 #            to append, instead of replace, compiler flags for specific
 #            source files.
 # -----------------------------------------------------------------------------
-add-src-files-target-cflags = $(foreach __src,$1,$(eval LOCAL_SRC_FILES_TARGET_CFLAGS.$(__src) += $2))
+add-src-files-target-cflags = \
+    $(foreach __src,$1,$(eval LOCAL_SRC_FILES_TARGET_CFLAGS.$(call escape-colon-in-path,$(__src)) += $2))
 
 # -----------------------------------------------------------------------------
 # Macro    : get-src-file-target-cflags
@@ -1229,7 +1238,8 @@ get-src-file-target-cflags = $(LOCAL_SRC_FILES_TARGET_CFLAGS.$1)
 #            ARM-based toolchains. This function must be called by the
 #            toolchain-specific functions that processes all source files.
 # -----------------------------------------------------------------------------
-set-src-files-text = $(foreach __src,$1,$(eval LOCAL_SRC_FILES_TEXT.$(__src) := $2))
+set-src-files-text = \
+    $(foreach __src,$1,$(eval LOCAL_SRC_FILES_TEXT.$(call escape-colon-in-path,$(__src)) := $2))
 
 # -----------------------------------------------------------------------------
 # Macro    : get-src-file-text
