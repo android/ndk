@@ -24,9 +24,9 @@ index 473fceb..1d9248b 100644
 +	* config/arm/arm.md (movcond_addsi): Handle case where source
 +	and target operands are the same.
 +
- 2014-08-27  Guozhi Wei  <carrot@google.com>
+ 2014-10-29  Kyrylo Tkachov  <kyrylo.tkachov@arm.com>
  
- 	PR target/62262
+ 	PR tree-optimization/63530
 diff --git a/gcc-4.9/gcc/config/arm/arm.md b/gcc-4.9/gcc/config/arm/arm.md
 index 467f9ce..13c9b37 100644
 --- a/gcc-4.9/gcc/config/arm/arm.md
@@ -55,15 +55,15 @@ index 51626c3..1a04681 100644
 --- a/gcc-4.9/gcc/testsuite/ChangeLog
 +++ b/gcc-4.9/gcc/testsuite/ChangeLog
 @@ -1,3 +1,9 @@
-++2014-09-10  Xinliang David Li  <davidxl@google.com>
++2014-09-10  Xinliang David Li  <davidxl@google.com>
 +
 +	Backport from mainline
 +	PR target/63209
 +	* gcc.c-torture/execute/pr63209.c: New test.
 +
- 2014-09-04  Guozhi Wei  <carrot@google.com>
+ 2014-10-29  Kyrylo Tkachov  <kyrylo.tkachov@arm.com>
  
- 	PR target/62040
+ 	PR tree-optimization/63530
 diff --git a/gcc-4.9/gcc/testsuite/gcc.c-torture/execute/pr63209.c b/gcc-4.9/gcc/testsuite/gcc.c-torture/execute/pr63209.c
 new file mode 100644
 index 0000000..9bcb587
