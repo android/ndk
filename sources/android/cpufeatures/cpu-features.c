@@ -900,6 +900,8 @@ android_cpuInit(void)
              * forgets to report IDIV support. */
             { 0x510006f2, ANDROID_CPU_ARM_FEATURE_IDIV_ARM |
                           ANDROID_CPU_ARM_FEATURE_IDIV_THUMB2 },
+            { 0x510006f3, ANDROID_CPU_ARM_FEATURE_IDIV_ARM |
+                          ANDROID_CPU_ARM_FEATURE_IDIV_THUMB2 },
             };
         size_t n;
         for (n = 0; n < sizeof(cpu_fixes)/sizeof(cpu_fixes[0]); ++n) {
