@@ -117,8 +117,12 @@ if [ "$GCC_VERSION_LIST" != "default" ]; then
 fi
 HOST_FLAGS=$HOST_FLAGS" --llvm-version-list=$(spaces_to_commas $LLVM_VERSION_LIST)"
 
+TARGET_FLAGS=$FLAGS
+
 if [ "$TRY64" = "yes" ]; then
     HOST_FLAGS=$HOST_FLAGS" --try-64"
+    # If we build only 64-bit host we need to use this flag as well so that correct toolchain is found on target tools build
+    TARGET_FLAGS=$TARGET_FLAGS" --try-64"
 fi
 if [ "$DARWIN_SSH" ]; then
     HOST_FLAGS=$HOST_FLAGS" --darwin-ssh=$DARWIN_SSH"
@@ -133,7 +137,29 @@ echo "COMMAND: $PROGDIR/build-host-prebuilts.sh $HOST_FLAGS $SRC_DIR"
 $PROGDIR/build-host-prebuilts.sh $HOST_FLAGS "$SRC_DIR"
 fail_panic "Could not build host prebuilts!"
 
-TARGET_FLAGS=$FLAGS
+if [ ! -z "$LLVM_VERSION_LIST" ]; then
+    LLVM_VERSIONS=$(commas_to_spaces $LLVM_VERSION_LIST)
+    LLVM_VERSION=${LLVM_VERSIONS%% *}
+    TARGET_FLAGS=$TARGET_FLAGS" --llvm-version=$LLVM_VERSION"
+    if [ "$GCC_VERSION_LIST" != "default" ]; then
+       for ARCH in $(commas_to_spaces $ARCHS); do
+         if [ "$ARCH" != "${ARCH%%64*}" ] ; then
+           if [ "${GCC_VERSION_LIST%%$DEFAULT_LLVM_GCC64_VERSION*}" = "$GCC_VERSION_LIST" ]; then
+              echo "ERROR: LLVM $LLVM_VERSION require GCC $DEFAULT_LLVM_GCC64_VERSION for $ARCH to be available. Try to include it in build list."
+              exit 1
+           fi
+         else
+           if [ "${GCC_VERSION_LIST%%$DEFAULT_LLVM_GCC32_VERSION*}" = "$GCC_VERSION_LIST" ]; then
+              echo "ERROR: LLVM $LLVM_VERSION require GCC $DEFAULT_LLVM_GCC32_VERSION for $ARCH to be available. Try to include it in build list."
+              exit 1
+           fi
+         fi
+       done
+    fi
+fi
+if [ "$GCC_VERSION_LIST" != "default" ]; then
+   TARGET_FLAGS=$TARGET_FLAGS" --gcc-version-list=$(spaces_to_commas $GCC_VERSION_LIST)"
+fi
 
 echo "COMMAND: $PROGDIR/build-target-prebuilts.sh $TARGET_FLAGS $SRC_DIR"
 $PROGDIR/build-target-prebuilts.sh $TARGET_FLAGS "$SRC_DIR"
