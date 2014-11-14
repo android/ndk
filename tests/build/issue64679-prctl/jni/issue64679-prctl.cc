@@ -17,7 +17,7 @@
 #undef linux
 #define linux linux
 
-#include HEADER
+#include HEADER_UNDER_TESTING
 
 int main()
 {

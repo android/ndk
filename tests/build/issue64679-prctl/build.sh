@@ -8,6 +8,7 @@ NDK_BUILDTOOLS_PATH=$NDK/build/tools
 . $NDK/build/tools/prebuilt-common.sh
 
 INTERNAL_HEADERS="sys/_errdefs.h sys/_sigdefs.h sys/_system_properties.h"
+INVALID_HEADERS_FOR_64BIT="time64.h sys/user.h"  # ToDo: remove sys/user.h later once __u64 and __u32 are defined for x86_64
 
 for API_LEVEL in $API_LEVELS; do
     for ARCH in $DEFAULT_ARCHS; do
@@ -17,12 +18,18 @@ for API_LEVEL in $API_LEVELS; do
             ABIS=$(commas_to_spaces $(convert_arch_to_abi $ARCH))
             for ABI in $ABIS; do
                 for HEADER in $HEADERS; do
-                    if [ "$INTERNAL_HEADERS" = "${INTERNAL_HEADERS%%$HEADER*}" ] ; then
-                        #echo Compiling with $HEADER
-                        $ANDROID_NDK_ROOT/ndk-build -B APP_CFLAGS=-DHEADER=\"\<$HEADER\>\" APP_PLATFORM=android-$API_LEVEL APP_ABI=$ABI 1>/dev/null 2>&1
-                        fail_panic "Can't compile header $ANDROID_NDK_ROOT/platforms/android-$API_LEVEL/arch-$ARCH/usr/include/$HEADER alone.
-To reproduce: $ANDROID_NDK_ROOT/ndk-build -B APP_CFLAGS=-DHEADER=\"\<$HEADER\>\" APP_PLATFORM=android-$API_LEVEL APP_ABI=$ABI"
+                    if [ "$INTERNAL_HEADERS" != "${INTERNAL_HEADERS%%$HEADER*}" ] ; then
+                        continue;
                     fi
+                    if [ "$ABI" != "${ABI%%64*}" ] ; then
+                        if [ "$INVALID_HEADERS_FOR_64BIT" != "${INVALID_HEADERS_FOR_64BIT%%$HEADER*}" ] ; then
+                            continue;
+                        fi
+                    fi
+                    #echo Compiling with $HEADER
+                    $ANDROID_NDK_ROOT/ndk-build -B APP_CFLAGS=-DHEADER_UNDER_TESTING=\"\<$HEADER\>\" APP_PLATFORM=android-$API_LEVEL APP_ABI=$ABI 1>/dev/null 2>&1
+                    fail_panic "Can't compile header $ANDROID_NDK_ROOT/platforms/android-$API_LEVEL/arch-$ARCH/usr/include/$HEADER alone.
+To reproduce: $ANDROID_NDK_ROOT/ndk-build -B APP_CFLAGS=-DHEADER_UNDER_TESTING=\"\<$HEADER\>\" APP_PLATFORM=android-$API_LEVEL APP_ABI=$ABI"
                 done
             done
         fi
