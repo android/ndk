@@ -441,7 +441,7 @@ ifneq (,$(LOCAL_PCH))
     )
 
     # Files from now on build with PCH
-    LOCAL_CPPFLAGS += -Winvalid-pch -include $(LOCAL_BUILT_PCH)
+    LOCAL_CPPFLAGS += -Winvalid-pch -include $(LOCAL_OBJS_DIR)/$(LOCAL_BUILT_PCH)
 
     # Insert PCH dir at beginning of include search path
     LOCAL_C_INCLUDES := \
