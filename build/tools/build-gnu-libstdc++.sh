@@ -390,10 +390,10 @@ copy_gnustl_libs ()
 GCC_VERSION_LIST=$(commas_to_spaces $GCC_VERSION_LIST)
 for ABI in $ABIS; do
     ARCH=$(convert_abi_to_arch $ABI)
-    DEFAULT_GCC_VERSION=$(get_default_gcc_version_for_arch $ARCH)
+    FIRST_GCC_VERSION=$(get_first_gcc_version_for_arch $ARCH)
     for VERSION in $GCC_VERSION_LIST; do
-        # Only build for this GCC version if it on or after DEFAULT_GCC_VERSION
-        if [ -z "$EXPLICIT_COMPILER_VERSION" ] && version_is_greater_than "$DEFAULT_GCC_VERSION" "${VERSION%%l}"; then
+        # Only build for this GCC version if it on or after FIRST_GCC_VERSION
+        if [ -z "$EXPLICIT_COMPILER_VERSION" ] && version_is_greater_than "$FIRST_GCC_VERSION" "${VERSION%%l}"; then
             continue
         fi
 
