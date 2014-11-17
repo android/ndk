@@ -727,7 +727,7 @@ copy_stl_libs_for_abi () {
 mkdir -p "$ABI_STL_INCLUDE_TARGET"
 fail_panic "Can't create directory: $ABI_STL_INCLUDE_TARGET"
 copy_stl_common_headers
-for ABI in $(tr ',' ' ' <<< $ABIS); do
+for ABI in $(echo "$ABIS" | tr ',' ' '); do
   copy_stl_libs_for_abi "$ABI"
 done
 
