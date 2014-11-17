@@ -552,7 +552,7 @@ log "Device CPU ABIs: $CPU_ABIS"
 APP_ABIS=$APP_ABIS" "
 
 adb_var_shell BCFILES run-as $PACKAGE_NAME /system/bin/sh -c "ls lib/*.bc"
-if [ $? == 0 ]; then
+if [ $? = 0 ]; then
     COMPAT_ABI="$UNKNOWN_ABI"
 else
     for CPU_ABI in $CPU_ABIS; do
@@ -768,7 +768,7 @@ fi
 
 # If we are debugging UNKNOWN_ABI, download compiled *.so from device.
 #
-if [ "$COMPAT_ABI" == "$UNKNOWN_ABI" ]; then
+if [ "$COMPAT_ABI" = "$UNKNOWN_ABI" ]; then
     for bc in $BCFILES; do
         log "Pulled $(basename $bc .bc).so from device/emulator."
         adb pull $DATA_DIR/lib/$(basename $bc .bc).so $PROJECT/obj/local/$UNKNOWN_ABI/
