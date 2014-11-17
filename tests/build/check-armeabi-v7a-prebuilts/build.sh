@@ -13,7 +13,7 @@
 #
 extract_arch_tag ()
 {
-    echo $(readelf -A "$1" | awk '$1 == "'$2':" { print $2; }' | sort -u | tr '\n' ' ')
+    echo $($ARM_READELF -A "$1" | awk '$1 == "'$2':" { print $2; }' | sort -u | tr '\n' ' ')
 }
 
 # Returns success only if a file is a static object or library.
@@ -217,6 +217,28 @@ check_armv7_elf_binary ()
 }
 
 . $NDK/build/tools/dev-defaults.sh
+
+ARM_TOOLCHAIN_NAME=$(get_default_toolchain_name_for_arch arm)
+ARM_TOOLCHAIN_PREFIX=$(get_default_toolchain_prefix_for_arch arm)
+
+case $(uname -s) in
+    Darwin)
+      HOST_TAG=darwin-$(uname -m)
+      ;;
+    Linux)
+      HOST_TAG=linux-$(uname -p)
+      ;;
+    *)
+      echo "WARNING: This test cannot run on this machine!" >&2
+      exit 0
+      ;;
+esac
+
+ARM_READELF=$NDK/toolchains/$ARM_TOOLCHAIN_NAME/prebuilt/$HOST_TAG/bin/${ARM_TOOLCHAIN_PREFIX}-readelf
+if [ ! -f "$ARM_READELF" ]; then
+    echo "ERROR: Missing binary: $ARM_READELF" >&2
+    exit 1
+fi
 
 ARMv7_ABIS="armeabi-v7a armeabi-v7a-hard"
 for ABI in $ARMv7_ABIS; do
