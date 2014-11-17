@@ -945,3 +945,37 @@ rotate_log ()
         ver=$prev
     done
 }
+
+# Dereference symlink
+# $1+: directories
+dereference_symlink ()
+{
+    local DIRECTORY SYMLINKS DIR FILE LINK
+    for DIRECTORY in $@; do
+        if [ -d "$DIRECTORY" ]; then
+            while [ 1 ]
+            do
+                # Find all symlinks in this directory.
+                SYMLINKS=`find $DIRECTORY -type l`
+                if [ -z "$SYMLINKS" ]; then
+                    break;
+                fi
+                # Iterate symlinks
+                for SYMLINK in $SYMLINKS; do
+                    if [ -L "$SYMLINK" ]; then
+                        DIR=`dirname "$SYMLINK"`
+                        FILE=`basename "$SYMLINK"`
+                        # Note that if `readlink $FILE` is also a link, we want to deal
+                        # with it in the next iteration.  There is potential infinite-loop
+                        # situation for cicular link doesn't exist in our case, though.
+                        (cd "$DIR" && \
+                         LINK=`readlink "$FILE"` && \
+                         test ! -L "$LINK" && \
+                         rm -f "$FILE" && \
+                         cp -a "$LINK" "$FILE")
+                    fi
+                done
+        done
+        fi
+    done
+}
