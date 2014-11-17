@@ -430,7 +430,7 @@ get-pch-name = $(strip \
 
 ifneq (,$(LOCAL_PCH))
     # Build PCH into obj directory
-    LOCAL_BUILT_PCH := $(call get-pch-name,$(LOCAL_PCH))
+    LOCAL_BUILT_PCH := $(call get-pch-name,$(LOCAL_OBJS_DIR)/$(LOCAL_PCH))
 
     # Build PCH
     $(call compile-cpp-source,$(LOCAL_PCH),$(LOCAL_BUILT_PCH).gch)
