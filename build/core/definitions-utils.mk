@@ -43,6 +43,13 @@ space4 := $(space)$(space)$(space)$(space)
 comma := ,
 
 # -----------------------------------------------------------------------------
+# Macro    : colon
+# Returns  : a single colon
+# Usage    : $(colon)
+# -----------------------------------------------------------------------------
+colon := :
+
+# -----------------------------------------------------------------------------
 # Function : remove-duplicates
 # Arguments: a list
 # Returns  : the list with duplicate items removed, order is preserved.
