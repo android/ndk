@@ -36,8 +36,8 @@ ifndef NDK_TOOLCHAIN
             $(filter-out %-clang$(_ver),$(TARGET_TOOLCHAIN_LIST))))
 
     ifeq (,$(findstring 64,$(TARGET_ARCH_ABI)))
-      # Filter out 4.7, 4.8 and 4.9 which are newer than the defaultat this moment
-      __filtered_toolchain_list := $(filter-out %4.7 %4.8 %4.8l %4.9 %4.9l,$(TARGET_TOOLCHAIN_LIST))
+      # Filter out 4.6 and 4.7 which are deprecated
+      __filtered_toolchain_list := $(filter-out %4.6 %4.7,$(TARGET_TOOLCHAIN_LIST))
       ifdef __filtered_toolchain_list
           TARGET_TOOLCHAIN_LIST := $(__filtered_toolchain_list)
       endif
