@@ -142,7 +142,9 @@ $(document).ready(function(){initNavTree('md_3__key__topics__libraries__c_p_l_u_
 <p>This problem also happens if you want to link an executable and a shared library to the same static library.</p>
 <p>In other words, if your project requires several shared library modules, then use the shared library variant of your C++ runtime.</p>
 <h3>Shared runtimes</h3>
-<p>If you use the shared library variant of a given C++ runtime, keep in mind that you must load it before any library that depends on it when your application starts.</p>
+<p>Due to an issue which is fixed in JB-MR2 API level 18 (issue
+<a href="https://code.google.com/p/android/issues/detail?id=41790">41790</a> and <a href="https://code.google.com/p/android/issues/detail?id=34416">34416</a>
+), if you use the shared library variant of a given C++ runtime, keep in mind that you must load it before any library that depends on it when your application starts.</p>
 <p>As an example, let's consider the case where we have the following modules</p>
 <ul>
 <li>libfoo.so</li>
