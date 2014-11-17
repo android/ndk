@@ -49,8 +49,10 @@ TOOLCHAIN_GIT_DATE=now
 # The space-separated list of all GCC versions we support in this NDK
 DEFAULT_GCC_VERSION_LIST="4.6 4.8 4.9"
 
-DEFAULT_GCC32_VERSION=4.6
+DEFAULT_GCC32_VERSION=4.8
 DEFAULT_GCC64_VERSION=4.9
+FIRST_GCC32_VERSION=4.6
+FIRST_GCC64_VERSION=4.9
 DEFAULT_LLVM_GCC32_VERSION=4.8
 DEFAULT_LLVM_GCC64_VERSION=4.9
 
@@ -118,6 +120,17 @@ get_default_gcc_version_for_arch ()
     case $1 in
        *64) echo $DEFAULT_GCC64_VERSION ;;
        *) echo $DEFAULT_GCC32_VERSION ;;
+    esac
+}
+
+# Return the first gcc version for a given architecture
+# $1: Architecture name (e.g. 'arm')
+# Out: default arch-specific gcc version
+get_first_gcc_version_for_arch ()
+{
+    case $1 in
+       *64) echo $FIRST_GCC64_VERSION ;;
+       *) echo $FIRST_GCC32_VERSION ;;
     esac
 }
 
@@ -210,13 +223,13 @@ get_default_toolchain_prefix_for_arch ()
 # Return empty for unknown arch
 get_toolchain_name_list_for_arch ()
 {
-    local PREFIX VERSION RET ADD DEFAULT_GCC_VERSION VERSIONS
+    local PREFIX VERSION RET ADD FIRST_GCC_VERSION VERSIONS
     PREFIX=$(eval echo \"\$DEFAULT_ARCH_TOOLCHAIN_NAME_$1\")
     if [ -z "$PREFIX" ]; then
         return 0
     fi
     RET=""
-    DEFAULT_GCC_VERSION=$(get_default_gcc_version_for_arch $1)
+    FIRST_GCC_VERSION=$(get_first_gcc_version_for_arch $1)
     ADD=""
     VERSIONS=$(commas_to_spaces $2)
     if [ -z "$VERSIONS" ]; then
@@ -225,7 +238,7 @@ get_toolchain_name_list_for_arch ()
         ADD="yes" # include everything we passed explicitly
     fi
     for VERSION in $VERSIONS; do
-        if [ -z "$ADD" -a "$VERSION" = "$DEFAULT_GCC_VERSION" ]; then
+        if [ -z "$ADD" -a "$VERSION" = "$FIRST_GCC_VERSION" ]; then
             ADD="yes"
         fi
         if [ -z "$ADD" ]; then

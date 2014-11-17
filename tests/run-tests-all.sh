@@ -186,11 +186,11 @@ for ARCH in $(commas_to_spaces $DEFAULT_ARCHS); do
     else
         API=$API64
     fi
-    DEFAULT_GCC_VERSION=$(get_default_gcc_version_for_arch $ARCH)
+    FIRST_GCC_VERSION=$(get_first_gcc_version_for_arch $ARCH)
     MAKE_IT=
     for GCC_VERSION in $(commas_to_spaces $DEFAULT_GCC_VERSION_LIST); do
-        # Only process GCC_VERSION from DEFAULT_GCC_VERSION
-        if [ -z "$MAKE_IT" -a "$GCC_VERSION" = "$DEFAULT_GCC_VERSION" ]; then
+        # Only process GCC_VERSION from FIRST_GCC_VERSION
+        if [ -z "$MAKE_IT" -a "$GCC_VERSION" = "$FIRST_GCC_VERSION" ]; then
 	    MAKE_IT=yes
         fi
         if [ -z "$MAKE_IT" ]; then
