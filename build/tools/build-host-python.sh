@@ -309,7 +309,7 @@ build_host_python ()
             QEMU_HOST_ARCH=$(arch_to_qemu_arch $BH_HOST_ARCH)
             if [ ! -z "$(which qemu-$QEMU_HOST_ARCH 2>/dev/null)" -o \
                  ! -z "$(which qemu-$QEMU_HOST_ARCH-static 2>/dev/null)" ] ; then
-               panic "Installed qemu(s) ($(which qemu-$QEMU_HOST_ARCH 2>/dev/null) $(which qemu-$QEMU_HOST_ARCH-static 2>/dev/null))" \
+               dump "Installed qemu(s) ($(which qemu-$QEMU_HOST_ARCH 2>/dev/null) $(which qemu-$QEMU_HOST_ARCH-static 2>/dev/null))" \
                       "will prevent this build from working."
             fi
         fi
