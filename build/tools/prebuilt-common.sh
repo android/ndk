@@ -65,9 +65,9 @@ extract_minor_version ()
 # $1: first version (e.g. 4.4.3)
 # $2: second version (e.g. 4.6)
 #
-# Example: version_is_greater_than 4.6 4.4.3 --> success
+# Example: version_is_at_least 4.6 4.4.3 --> success
 #
-version_is_greater_than ()
+version_is_at_least ()
 {
     local A_MAJOR A_MINOR B_MAJOR B_MINOR
     A_MAJOR=$(extract_major_version $1)
