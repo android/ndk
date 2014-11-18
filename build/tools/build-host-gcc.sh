@@ -714,7 +714,7 @@ select_toolchain_for_host ()
             # Sanity check for GMP which doesn't build with x86_64-w64-mingw32-gcc
             # before 5.0. We already have 5.0.5 in AOSP toolchain source tree, so
             # suggest it here.
-            if ! version_is_greater_than $GMP_VERSION 5.0; then
+            if ! version_is_at_least $GMP_VERSION 5.0; then
                 dump "You cannot build a 64-bit Windows toolchain with this version of libgmp."
                 dump "Please use --gmp-version=5.0.5 to fix this."
                 exit 1
@@ -916,7 +916,7 @@ setup_build_for_toolchain ()
 
     # MPC is only needed starting with GCC 4.5
     HOST_NEED_MPC=
-    if version_is_greater_than $GCC_VERSION 4.5; then
+    if version_is_at_least $GCC_VERSION 4.5; then
         HOST_NEED_MPC=true
     fi
 
@@ -1180,7 +1180,7 @@ build_host_binutils ()
     # Another special case, for arch-x86_64 gold supports x32 starting from 2.23
     #
     if [ "$TARGET" = "x86_64-linux-android" ]; then
-       if ! version_is_greater_than $BINUTILS_VERSION 2.23; then
+       if ! version_is_at_least $BINUTILS_VERSION 2.23; then
         USE_LD_DEFAULT=true
         BUILD_GOLD=
        fi
@@ -1211,7 +1211,7 @@ build_host_binutils ()
     export host_configargs=
     if [ "$BUILD_GOLD" ]; then
         # The syntax of the --enable-gold option has changed.
-        if version_is_greater_than $BINUTILS_VERSION 2.20; then
+        if version_is_at_least $BINUTILS_VERSION 2.20; then
             if [ "$DEFAULT_LD" = "bfd" ]; then
                 ARGS=$ARGS" --enable-gold --enable-ld=default"
             else
@@ -1230,9 +1230,9 @@ build_host_binutils ()
             # gold may have runtime dependency on libgcc_sjlj_1.dll and
             # libstdc++-6.dll when built by newer versions of mingw.
             # Link them statically to avoid that.
-            if version_is_greater_than $BINUTILS_VERSION 2.22; then
+            if version_is_at_least $BINUTILS_VERSION 2.22; then
                 export host_configargs="--with-gold-ldflags='-static-libgcc -static-libstdc++'"
-            elif version_is_greater_than $BINUTILS_VERSION 2.21; then
+            elif version_is_at_least $BINUTILS_VERSION 2.21; then
                 GOLD_LDFLAGS_ARG="--with-gold-ldflags=-static-libgcc -static-libstdc++"
             else
                 export LDFLAGS=$LDFLAGS" -static-libgcc -static-libstdc++"
