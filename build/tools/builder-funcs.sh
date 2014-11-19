@@ -311,7 +311,7 @@ builder_sources ()
 
 builder_static_library ()
 {
-    local lib libname
+    local lib libname arflags
     libname=$1
     if [ -z "$_BUILD_DSTDIR" ]; then
         panic "Destination directory not set"
@@ -327,7 +327,16 @@ builder_static_library ()
     fi
     builder_log "${_BUILD_PREFIX}Archive: $libname"
     rm -f "$lib"
-    builder_command ${_BUILD_AR} crsD "$lib" "$_BUILD_OBJECTS"
+    arflags="crs"
+    case $HOST_TAG in
+        darwin*)
+            # XCode 'ar' doesn't support D flag
+            ;;
+        *)
+            arflags="${arflags}D"
+            ;;
+    esac
+    builder_command ${_BUILD_AR} $arflags "$lib" "$_BUILD_OBJECTS"
     fail_panic "Could not archive ${_BUILD_PREFIX}$libname objects!"
 }
 
