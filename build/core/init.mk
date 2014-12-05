@@ -513,7 +513,7 @@ $(call ndk_log,Found max platform level: $(NDK_MAX_PLATFORM_LEVEL))
 # in build/toolchains/<name>/ that will be included here.
 #
 # Each one of these files should define the following variables:
-#   TOOLCHAIN_NAME   toolchain name (e.g. arm-linux-androideabi-4.6)
+#   TOOLCHAIN_NAME   toolchain name (e.g. arm-linux-androideabi-4.9)
 #   TOOLCHAIN_ABIS   list of target ABIs supported by the toolchain.
 #
 # Then, it should include $(ADD_TOOLCHAIN) which will perform
@@ -597,13 +597,13 @@ endif
 # version number. Unlike NDK_TOOLCHAIN, this only changes the suffix of
 # the toolchain path we're using.
 #
-# For example, if GCC 4.6 is the default, defining NDK_TOOLCHAIN_VERSION=4.8
+# For example, if GCC 4.8 is the default, defining NDK_TOOLCHAIN_VERSION=4.9
 # will ensure that ndk-build uses the following toolchains, depending on
 # the target architecture:
 #
-#    arm -> arm-linux-androideabi-4.8
-#    x86 -> x86-android-linux-4.8
-#    mips -> mipsel-linux-android-4.8
+#    arm -> arm-linux-androideabi-4.9
+#    x86 -> x86-android-linux-4.9
+#    mips -> mipsel-linux-android-4.9
 #
 # This is used in setup-toolchain.mk
 #

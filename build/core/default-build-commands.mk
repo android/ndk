@@ -148,12 +148,12 @@ TARGET_ASMFLAGS =
 TARGET_LD       = $(TOOLCHAIN_PREFIX)ld
 TARGET_LDFLAGS :=
 
-TARGET_AR       = $(TOOLCHAIN_PREFIX)ar
-# Use *-gcc-ar instead of *-ar for better LTO support
-ifneq (,$(NDK_TOOLCHAIN_VERSION))
+# Use *-gcc-ar instead of *-ar for better LTO support, except for
+# gcc4.6 which doesn't have gcc-ar
 ifneq (4.6,$(NDK_TOOLCHAIN_VERSION))
 TARGET_AR       = $(TOOLCHAIN_PREFIX)gcc-ar
-endif
+else
+TARGET_AR       = $(TOOLCHAIN_PREFIX)ar
 endif
 
 TARGET_ARFLAGS := crsD
