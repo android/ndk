@@ -26,7 +26,7 @@ index 473fceb..1d9248b 100644
 +
  2014-10-29  Kyrylo Tkachov  <kyrylo.tkachov@arm.com>
  
- 	PR tree-optimization/63530
+ 	* config/aarch64/aarch64.c (aarch64_madd_needs_nop): Restore
 diff --git a/gcc-4.9/gcc/config/arm/arm.md b/gcc-4.9/gcc/config/arm/arm.md
 index 467f9ce..13c9b37 100644
 --- a/gcc-4.9/gcc/config/arm/arm.md

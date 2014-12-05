@@ -123,7 +123,8 @@ static __inline__ void x86_cpuid(int func, int values[4])
 static int
 get_file_size(const char* pathname)
 {
-    int fd, ret, result = 0;
+
+   int fd, result = 0;
     char buffer[256];
 
     fd = open(pathname, O_RDONLY);
@@ -195,7 +196,7 @@ extract_cpuinfo_field(const char* buffer, int buflen, const char* field)
     int  fieldlen = strlen(field);
     const char* bufend = buffer + buflen;
     char* result = NULL;
-    int len, ignore;
+    int len;
     const char *p, *q;
 
     /* Look for first field occurence, and ensures it starts the line. */
@@ -902,7 +903,7 @@ android_cpuInit(void)
                           ANDROID_CPU_ARM_FEATURE_IDIV_THUMB2 },
             { 0x510006f3, ANDROID_CPU_ARM_FEATURE_IDIV_ARM |
                           ANDROID_CPU_ARM_FEATURE_IDIV_THUMB2 },
-            };
+        };
         size_t n;
         for (n = 0; n < sizeof(cpu_fixes)/sizeof(cpu_fixes[0]); ++n) {
             const struct CpuFix* entry = &cpu_fixes[n];
