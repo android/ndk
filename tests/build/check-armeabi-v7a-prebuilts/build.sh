@@ -223,7 +223,15 @@ ARM_TOOLCHAIN_PREFIX=$(get_default_toolchain_prefix_for_arch arm)
 
 case $(uname -s) in
     Darwin)
-      HOST_TAG=darwin-$(uname -m)
+      HOST_ARCH=`uname -m`
+      case "$HOST_ARCH" in
+          i?86) HOST_ARCH=x86
+              if ! echo __LP64__ | (CCOPTS= gcc -E - 2>/dev/null) | grep -q __LP64__ ; then
+                  HOST_ARCH=x86_64
+              fi
+              ;;
+      esac
+      HOST_TAG=darwin-$HOST_ARCH
       ;;
     Linux)
       HOST_TAG=linux-$(uname -p)

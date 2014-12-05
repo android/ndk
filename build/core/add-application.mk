@@ -119,16 +119,6 @@ ifneq (,$(call gt,$(APP_PLATFORM_LEVEL),21))
     override APP_PLATFORM := android-21
 endif
 
-#ifneq (,$(filter 13,$(APP_PLATFORM_LEVEL)))
-#    override APP_PLATFORM := android-12
-#endif
-#ifneq (,$(filter 15,$(APP_PLATFORM_LEVEL)))
-#    override APP_PLATFORM := android-14
-#endif
-#ifneq (,$(filter 17,$(APP_PLATFORM_LEVEL)))
-#    override APP_PLATFORM := android-16
-#endif
-
 ifneq ($(strip $(subst android-,,$(APP_PLATFORM))),$(APP_PLATFORM_LEVEL))
     $(call ndk_log,  Adjusting APP_PLATFORM android-$(APP_PLATFORM_LEVEL) to $(APP_PLATFORM))
 endif
