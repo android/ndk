@@ -26,9 +26,6 @@ INVALID_HEADERS_FOR_64BIT="time64.h sys/user.h"  # ToDo: remove sys/user.h later
 # --std=c++-0x or higher, so skip it here.
 INTERNAL_HEADERS="$INTERNAL_HEADERS uchar.h"
 
-# The following Khronos headers cannot be compiled standalone. Meh!
-INTERNAL_HEADERS="$INTERNAL_HEADERS GLES2/gl2ext.h"
-
 for API_LEVEL in $API_LEVELS; do
     for ARCH in $DEFAULT_ARCHS; do
         if [ ! -d $ANDROID_NDK_ROOT/platforms/android-$API_LEVEL/arch-$ARCH ]; then

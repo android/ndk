@@ -168,6 +168,11 @@ build_gnustl_for_abi ()
         exit 1
     fi
 
+    EXTRA_FLAGS="-ffunction-sections -fdata-sections"
+    if [ -n "$THUMB" ] ; then
+        EXTRA_FLAGS="$EXTRA_FLAGS -mthumb"
+    fi
+
     case $ARCH in
         arm)
             BUILD_HOST=arm-linux-androideabi
@@ -189,10 +194,6 @@ build_gnustl_for_abi ()
             ;;
     esac
 
-    EXTRA_FLAGS="-ffunction-sections -fdata-sections"
-    if [ -n "$THUMB" ] ; then
-        EXTRA_FLAGS="-mthumb"
-    fi
     CFLAGS="-fPIC $CFLAGS --sysroot=$SYSROOT -fexceptions -funwind-tables -D__BIONIC__ -O2 $EXTRA_FLAGS"
     CXXFLAGS="-fPIC $CXXFLAGS --sysroot=$SYSROOT -fexceptions -frtti -funwind-tables -D__BIONIC__ -O2 $EXTRA_FLAGS"
     CPPFLAGS="$CPPFLAGS --sysroot=$SYSROOT"

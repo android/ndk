@@ -287,9 +287,6 @@ export CFLAGS LDFLAGS CFLAGS_FOR_BUILD LDFLAGS_FOR_BUILD
 # This extra flag is used to slightly speed up the build
 EXTRA_CONFIG_FLAGS="--disable-bootstrap"
 
-# This is to disable GCC 4.6 specific features that don't compile well
-# the flags are ignored for older GCC versions.
-EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --disable-libquadmath"
 if [ "$DARWIN" = "yes" ]; then
     # Disable plugin because in canadian cross build, plugin gengtype
     # will be incorrectly linked with build's library and fails.
