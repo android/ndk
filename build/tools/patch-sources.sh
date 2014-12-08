@@ -75,9 +75,13 @@ PATCHES=`echo $PATCHES | sed -e s%^\./%%g`
 for PATCH in $PATCHES; do
     PATCHDIR=`dirname $PATCH`
     PATCHNAME=`basename $PATCH`
-    log "Applying $PATCHNAME into $SRC_DIR/$PATCHDIR"
-    cd $SRC_DIR/$PATCHDIR && patch $REVERSE -p1 < $PATCHES_DIR/$PATCH
-    fail_panic "Patch failure with $PATCHES_DIR/$PATCH!! !! Please check your patches directory!"
+    if [ -d $SRC_DIR/$PATCHDIR ]; then
+        log "Applying $PATCHNAME into $SRC_DIR/$PATCHDIR"
+        cd $SRC_DIR/$PATCHDIR && patch $REVERSE -p1 < $PATCHES_DIR/$PATCH
+        fail_panic "Patch failure with $PATCHES_DIR/$PATCH!! !! Please check your patches directory!"
+    else
+        echo "Ignore non-existance $SRC_DIR/$PATCHDIR"
+    fi
 done
 
 dump "Done!"

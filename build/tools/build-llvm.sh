@@ -356,6 +356,15 @@ if [ "$MCLINKER" = "yes" -o "$TOOLCHAIN" = "llvm-$DEFAULT_LLVM_VERSION" ] ; then
     fail_panic "Couldn't copy mclinker source: $MCLINKER_SRC_DIR"
 
     CXXFLAGS="$CXXFLAGS -fexceptions"  # optimized/ScriptParser.cc needs it
+    if [ "$MINGW" = "yes" ] ; then
+      # Windows dll targets is already build with position independent code, so adding
+      # -fPIC is considered insult to mingw-64 compilers which complains and dies
+      # if -Werror is also on
+      #
+      #  addng .../mclinker/lib/ADT/StringEntry.cpp:1:0: error: -fPIC ignored for target (all code is position independent) [-Werror]
+      #
+        CXXFLAGS="$CXXFLAGS -Wno-error"
+    fi
     export CXXFLAGS
 
     cd $MCLINKER_SRC_DIR && run ./autogen.sh

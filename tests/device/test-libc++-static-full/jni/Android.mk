@@ -901,7 +901,7 @@ $(call gen-test, containers/sequences/vector.bool/swap_noexcept)
 $(call gen-test, containers/sequences/vector.bool/swap)
 $(call gen-test, containers/sequences/vector.bool/types)
 $(call gen-test, containers/sequences/vector.bool/vector_bool)
-$(call gen-test, containers/sequences/vector/asan) # newnew
+$(call gen-test, containers/sequences/vector/asan)
 $(call gen-test, containers/sequences/vector/const_value_type)
 $(call gen-test, containers/sequences/vector/db_back)
 $(call gen-test, containers/sequences/vector/db_cback)
@@ -936,7 +936,7 @@ $(call gen-test, containers/sequences/vector/vector.cons/construct_size_value)
 $(call gen-test, containers/sequences/vector/vector.cons/copy_alloc)
 $(call gen-test, containers/sequences/vector/vector.cons/copy)
 $(call gen-test, containers/sequences/vector/vector.cons/default_noexcept)
-$(call gen-test, containers/sequences/vector/vector.cons/default.recursive) # new
+$(call gen-test, containers/sequences/vector/vector.cons/default.recursive)
 $(call gen-test, containers/sequences/vector/vector.cons/dtor_noexcept)
 $(call gen-test, containers/sequences/vector/vector.cons/initializer_list_alloc)
 $(call gen-test, containers/sequences/vector/vector.cons/initializer_list)
@@ -1453,8 +1453,8 @@ $(call gen-test, diagnostics/syserr/syserr.syserr/syserr.syserr.members/ctor_int
 $(call gen-test, diagnostics/syserr/syserr.syserr/syserr.syserr.members/ctor_int_error_category_string)
 $(call gen-test, diagnostics/syserr/syserr.syserr/syserr.syserr.overview/nothing_to_do)
 $(call gen-test, diagnostics/syserr/version)
-$(call gen-test, extensions/hash/specializations) # new
-$(call gen-test, extensions/nothing_to_do) # new
+$(call gen-test, extensions/hash/specializations)
+$(call gen-test, extensions/nothing_to_do)
 $(call gen-test, input.output/file.streams/c.files/cinttypes)
 $(call gen-test, input.output/file.streams/c.files/cstdio)
 $(call gen-test, input.output/file.streams/c.files/version_ccstdio)
@@ -1904,7 +1904,7 @@ $(call gen-test, iterators/predef.iterators/reverse.iterators/reverse.iter.ops/r
 $(call gen-test, iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.cons/iter)
 $(call gen-test, iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.cons/reverse_iterator)
 $(call gen-test, iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.conv/tested_elsewhere)
-$(call gen-test, iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.make/make_reverse_iterator) # new
+$(call gen-test, iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.make/make_reverse_iterator)
 $(call gen-test, iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.op-/difference_type)
 $(call gen-test, iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.op+/difference_type)
 $(call gen-test, iterators/predef.iterators/reverse.iterators/reverse.iter.ops/reverse.iter.opdiff/test)
@@ -3700,8 +3700,8 @@ $(call gen-test, thread/thread.condition/thread.condition.condvarany/default)
 $(call gen-test, thread/thread.condition/thread.condition.condvarany/destructor)
 $(call gen-test, thread/thread.condition/thread.condition.condvarany/notify_all)
 $(call gen-test, thread/thread.condition/thread.condition.condvarany/notify_one)
-$(call gen-test, thread/thread.condition/thread.condition.condvarany/wait.exception) # new
-$(call gen-test, thread/thread.condition/thread.condition.condvarany/wait_for.exception) # new
+$(call gen-test, thread/thread.condition/thread.condition.condvarany/wait.exception)
+$(call gen-test, thread/thread.condition/thread.condition.condvarany/wait_for.exception)
 $(call gen-test, thread/thread.condition/thread.condition.condvarany/wait_for)
 $(call gen-test, thread/thread.condition/thread.condition.condvarany/wait_for_pred)
 $(call gen-test, thread/thread.condition/thread.condition.condvarany/wait)
@@ -3855,7 +3855,7 @@ $(call gen-test, utilities/allocator.adaptor/allocator.adaptor.members/inner_all
 $(call gen-test, utilities/allocator.adaptor/allocator.adaptor.members/max_size)
 $(call gen-test, utilities/allocator.adaptor/allocator.adaptor.members/outer_allocator)
 $(call gen-test, utilities/allocator.adaptor/allocator.adaptor.members/select_on_container_copy_construction)
-$(call gen-test, utilities/allocator.adaptor/allocator.adaptor.types/allocator_pointers) # new
+$(call gen-test, utilities/allocator.adaptor/allocator.adaptor.types/allocator_pointers)
 $(call gen-test, utilities/allocator.adaptor/allocator.adaptor.types/inner_allocator_type)
 $(call gen-test, utilities/allocator.adaptor/allocator.adaptor.types/propagate_on_container_copy_assignment)
 $(call gen-test, utilities/allocator.adaptor/allocator.adaptor.types/propagate_on_container_move_assignment)
@@ -3991,7 +3991,7 @@ $(call gen-test, utilities/memory/default.allocator/allocator.members/address)
 $(call gen-test, utilities/memory/default.allocator/allocator.members/allocate)
 $(call gen-test, utilities/memory/default.allocator/allocator.members/construct)
 $(call gen-test, utilities/memory/default.allocator/allocator.members/max_size)
-$(call gen-test, utilities/memory/default.allocator/allocator_pointers) # new
+$(call gen-test, utilities/memory/default.allocator/allocator_pointers)
 $(call gen-test, utilities/memory/default.allocator/allocator_types)
 $(call gen-test, utilities/memory/default.allocator/allocator_void)
 $(call gen-test, utilities/memory/pointer.traits/difference_type)
@@ -4242,7 +4242,7 @@ $(call gen-test, utilities/meta/meta.unary/meta.unary.prop/is_copy_constructible
 $(call gen-test, utilities/meta/meta.unary/meta.unary.prop/is_default_constructible)
 $(call gen-test, utilities/meta/meta.unary/meta.unary.prop/is_destructible)
 $(call gen-test, utilities/meta/meta.unary/meta.unary.prop/is_empty)
-$(call gen-test, utilities/meta/meta.unary/meta.unary.prop/is_final) # new
+$(call gen-test, utilities/meta/meta.unary/meta.unary.prop/is_final)
 $(call gen-test, utilities/meta/meta.unary/meta.unary.prop/is_literal_type)
 $(call gen-test, utilities/meta/meta.unary/meta.unary.prop/is_move_assignable)
 $(call gen-test, utilities/meta/meta.unary/meta.unary.prop/is_move_constructible)
@@ -4454,9 +4454,9 @@ $(call gen-test, utilities/time/time.traits/time.traits.specializations/duration
 $(call gen-test, utilities/time/time.traits/time.traits.specializations/time_point)
 $(call gen-test, utilities/time/version)
 $(call gen-test, utilities/tuple/tuple.general/nothing_to_do)
-$(call gen-test, utilities/tuple/tuple.general/tuple.smartptr) # new
+$(call gen-test, utilities/tuple/tuple.general/tuple.smartptr)
 $(call gen-test, utilities/tuple/tuple.tuple/empty_member)
-$(call gen-test, utilities/tuple/tuple.tuple/TupleFunction) # new
+$(call gen-test, utilities/tuple/tuple.tuple/TupleFunction)
 $(call gen-test, utilities/tuple/tuple.tuple/tuple.assign/const_pair)
 $(call gen-test, utilities/tuple/tuple.tuple/tuple.assign/convert_copy)
 $(call gen-test, utilities/tuple/tuple.tuple/tuple.assign/convert_move)
