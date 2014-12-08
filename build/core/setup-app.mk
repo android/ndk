@@ -108,6 +108,7 @@ else
                 NDK_APP_ABI := $(subst $(_unknown_abis_prefix),$(filter-out $(NDK_KNOWN_ARCHS),$(NDK_FOUND_ARCHS)),$(NDK_APP_ABI))
             endif
         endif
+	TARGET_PLATFORM := android-21
     endif
     # check the target ABIs for this application
     _bad_abis = $(strip $(filter-out $(NDK_ALL_ABIS),$(NDK_APP_ABI)))
