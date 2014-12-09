@@ -283,9 +283,10 @@ if [ "$USE_PYTHON" != "yes" ]; then
     rm -f $SRC_DIR/$TOOLCHAIN/llvm/tools/ndk-bc2native/*.c
     rm -f $SRC_DIR/$TOOLCHAIN/llvm/tools/ndk-bc2native/*.h
     run cp -a $NDK_DIR/tests/abcc/jni/*.cpp $SRC_DIR/$TOOLCHAIN/llvm/tools/ndk-bc2native
-    run cp -a $NDK_DIR/tests/abcc/jni/*.h $SRC_DIR/$TOOLCHAIN/llvm/tools/ndk-bc2native
+    run cp -a $NDK_DIR/tests/abcc/jni/Abcc.h $SRC_DIR/$TOOLCHAIN/llvm/tools/ndk-bc2native
     run cp -a $NDK_DIR/tests/abcc/jni/host/*.cpp $SRC_DIR/$TOOLCHAIN/llvm/tools/ndk-bc2native
     run cp -a $NDK_DIR/tests/abcc/jni/host/*.h $SRC_DIR/$TOOLCHAIN/llvm/tools/ndk-bc2native
+    run cp -a $NDK_DIR/tests/abcc/jni/llvm_${LLVM_VERSION_MAJOR}${LLVM_VERSION_MINOR}.h $SRC_DIR/$TOOLCHAIN/llvm/tools/ndk-bc2native/llvm_version.h
     run cp -a $NDK_DIR/tests/abcc/jni/mman-win32/mman.[ch] $SRC_DIR/$TOOLCHAIN/llvm/tools/ndk-bc2native
     export LLVM_TOOLS_FILTER="PARALLEL_DIRS:=\$\$(PARALLEL_DIRS:%=% ndk-bc2native)"
 fi
