@@ -81,6 +81,9 @@ int DeviceBitcodeCompiler::parseLDFlags(BitcodeInfo &info, const std::string &or
       info.mOutPath += ".so";
       continue;
     }
+    if (str == "-static") {
+      info.mStatic = true;
+    }
 
     // Parse -lxxx
     if (str.size() > 2 &&
@@ -196,7 +199,6 @@ void DeviceBitcodeCompiler::prepareToolchain() {
   cmd = " @" + mSysroot + "/usr/lib/libportable.wrap " + mSysroot + "/usr/lib/libportable.a";
   cmd += " " + mSysroot + "/usr/lib/libcompiler_rt_static.a";
   cmd += " " + mSysroot + "/usr/lib/libgccunwind.a";
-  cmd += " -ldl";
   mExecutableToolsPath[(unsigned)CMD_LINK_RUNTIME] = cmd;
 }
 
