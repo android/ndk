@@ -562,7 +562,7 @@ builder_begin_android ()
     else
       SYSROOT=$NDK_DIR/platforms/$PLATFORM/arch-$ARCH
     fi
-    LDIR=$SYSROOT"/usr/"$(get_default_libdir_for_arch $ARCH)
+    LDIR=$SYSROOT"/usr/"$(get_default_libdir_for_abi $ABI)
 
     CRTBEGIN_EXE_O=$LDIR/crtbegin_dynamic.o
     CRTEND_EXE_O=$LDIR/crtend_android.o
@@ -598,7 +598,7 @@ builder_begin_android ()
             x86_64)
                 LLVM_TRIPLE=x86_64-none-linux-android
                 ;;
-            mips)
+            mips|mipsr6)
                 LLVM_TRIPLE=mipsel-none-linux-android
                 ;;
             mips64)

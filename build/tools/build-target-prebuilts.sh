@@ -169,7 +169,7 @@ fail_panic "Could not build libc++ with libc++abi and debug info!"
 # workaround issues in libc++/libc++abi for x86 and mips
 for abi in $ABIS; do
   case $abi in
-     x86|x86_64|mips|mips64)
+     x86|x86_64|mips|mipsr6|mips64)
   dump "Rebuilding $abi libc++ binaries... with gabi++"
   run $BUILDTOOLS/build-cxx-stl.sh --stl=libc++-gabi++ --abis=$abi $FLAGS --with-debug-info $BUILD_TOOLCHAIN
   esac
