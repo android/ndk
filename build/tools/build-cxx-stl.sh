@@ -99,7 +99,7 @@ fi
 ABIS=$(commas_to_spaces $ABIS)
 UNKNOWN_ABIS=
 if [ "$ABIS" = "${ABIS%%64*}" ]; then
-    UNKNOWN_ABIS="$(filter_out "$PREBUILT_ABIS" "$ABIS" )"
+    UNKNOWN_ABIS="$(filter_out "$PREBUILT_ABIS mipsr6" "$ABIS" )"
     if [ -n "$UNKNOWN_ABIS" ] && [ -n "$(find_ndk_unknown_archs)" ]; then
         ABIS="$(filter_out "$UNKNOWN_ABIS" "$ABIS")"
         ABIS="$ABIS $(find_ndk_unknown_archs)"
@@ -537,6 +537,11 @@ build_stl_libs_for_abi ()
             EXTRA_CFLAGS="-mfix-cortex-a53-835769"
             EXTRA_CXXFLAGS="-mfix-cortex-a53-835769"
             ;;
+        mipsr6)
+            EXTRA_CFLAGS="-mips32r6"
+            EXTRA_CXXFLAGS="-mips32r6"
+            EXTRA_LDFLAGS="-mips32r6"
+            ;;
     esac
 
     if [ -n "$THUMB" ]; then
@@ -654,12 +659,12 @@ build_stl_libs_for_abi ()
 }
 
 for ABI in $ABIS; do
-    build_stl_libs_for_abi $ABI "$BUILD_DIR/$ABI/shared" "shared" "$OUT_DIR"
     build_stl_libs_for_abi $ABI "$BUILD_DIR/$ABI/static" "static" "$OUT_DIR"
+    build_stl_libs_for_abi $ABI "$BUILD_DIR/$ABI/shared" "shared" "$OUT_DIR"
     # build thumb version of libraries for 32-bit arm
     if [ "$ABI" != "${ABI%%arm*}" -a "$ABI" = "${ABI%%64*}" ] ; then
-        build_stl_libs_for_abi $ABI "$BUILD_DIR/$ABI/shared" "shared" "$OUT_DIR" thumb
         build_stl_libs_for_abi $ABI "$BUILD_DIR/$ABI/static" "static" "$OUT_DIR" thumb
+        build_stl_libs_for_abi $ABI "$BUILD_DIR/$ABI/shared" "shared" "$OUT_DIR" thumb
     fi
 done
 

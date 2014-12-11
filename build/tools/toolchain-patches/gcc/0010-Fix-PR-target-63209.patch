@@ -63,7 +63,7 @@ index 51626c3..1a04681 100644
 +
  2014-10-29  Kyrylo Tkachov  <kyrylo.tkachov@arm.com>
  
- 	PR tree-optimization/63530
+ 	* gcc.target/aarch64/madd_after_asm_1.c: New test.
 diff --git a/gcc-4.9/gcc/testsuite/gcc.c-torture/execute/pr63209.c b/gcc-4.9/gcc/testsuite/gcc.c-torture/execute/pr63209.c
 new file mode 100644
 index 0000000..9bcb587

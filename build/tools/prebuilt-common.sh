@@ -1327,6 +1327,9 @@ convert_abi_to_arch ()
         x86|mips|x86_64|mips64)
             RET=$ABI
             ;;
+        mipsr6)
+            RET=mips
+            ;;
         arm64-v8a)
             RET=arm64
             ;;
@@ -1466,6 +1469,14 @@ get_default_platform_sysroot_for_arch ()
     echo "platforms/android-$LEVEL/arch-$ARCH"
 }
 
+# Return the default platform sysroot corresponding to a given abi
+# $1: ABI
+get_default_platform_sysroot_for_abi ()
+{
+    local ARCH=$(convert_abi_to_arch $1)
+    $(get_default_platform_sysroot_for_arch $ARCH)
+}
+
 # Return the default libs dir corresponding to a given architecture
 # $1: Architecture name
 get_default_libdir_for_arch ()
@@ -1477,14 +1488,20 @@ get_default_libdir_for_arch ()
     esac
 }
 
-# Guess what?
-get_default_platform_sysroot_for_abi ()
+# Return the default libs dir corresponding to a given abi
+# $1: ABI
+get_default_libdir_for_abi ()
 {
-    local ARCH=$(convert_abi_to_arch $1)
-    $(get_default_platform_sysroot_for_arch $ARCH)
+    local ARCH
+
+    case $1 in
+      mipsr6) echo "libr6" ;;
+      *)
+        local ARCH=$(convert_abi_to_arch $1)
+        $(get_default_libdir_for_arch $ARCH)
+        ;;
+    esac
 }
-
-
 
 # Return the host/build specific path for prebuilt toolchain binaries
 # relative to $1.

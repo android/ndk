@@ -714,7 +714,7 @@ copy_stl_libs_for_abi () {
                 copy_stl_libs "$ABI"
             fi
             ;;
-        mips)
+        mips|mipsr6)
             if [ "$STL" = "gnustl" -a "$GCC_VERSION" = "4.9" ]; then
                 copy_stl_libs mips         "bits"                "bits"             "../lib"       "lib"
                 copy_stl_libs mips         "mips-r2/bits"        "mips-r2/bits"     "../libr2"     "libr2"

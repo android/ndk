@@ -150,6 +150,9 @@ get_default_abi_for_arch ()
         x86|x86_64|mips|mips64)
             RET="$1"
             ;;
+        mipsr6)
+            RET="mips"
+            ;;
         *)
             2> echo "ERROR: Unsupported architecture name: $1, use one of: arm arm64 x86 x86_64 mips mips64"
             exit 1
@@ -172,7 +175,7 @@ get_default_abis_for_arch ()
         arm64)
             RET="arm64-v8a"
             ;;
-        x86|x86_64|mips|mips64)
+        x86|x86_64|mips|mipsr6|mips64)
             RET="$1"
             ;;
         *)
