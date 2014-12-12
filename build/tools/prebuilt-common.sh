@@ -204,7 +204,7 @@ filter_out ()
     local PATTERN="$1"
     local TEXT="$2"
     for pat in $PATTERN; do
-        pat=$"${pat/\//\\/}"
+        pat=$"${pat//\//\\/}"
         TEXT=$(echo $TEXT | sed -e 's/'$pat' //g' -e 's/'$pat'$//g')
     done
     echo $TEXT
