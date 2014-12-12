@@ -390,7 +390,7 @@ get_default_compiler_for_arch()
         else
             # By default we want to use the first gcc (currently 4.6) instead of the default (gcc4.8)
             # for best compatibility, at least before gcc4.6 (now deprecated) is removed from NDK package
-            GCC_VERSION=$(get_first_gcc_version_for_arch $ARCH) # $(get_default_gcc_version_for_arch $ARCH)
+            GCC_VERSION=$(get_default_gcc_version_for_arch $ARCH) # $(get_first_gcc_version_for_arch $ARCH)
         fi
         for TAG in $HOST_TAG $HOST_TAG32; do
             TOOLCHAIN_PREFIX="$NDK_DIR/$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION $TAG)"
