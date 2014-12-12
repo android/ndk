@@ -133,7 +133,7 @@ fi
 
 # First, gdbserver
 for ARCH in $ARCHS; do
-    if [ "$GCC_VERSION" == "default" ]; then
+    if [ "$GCC_VERSION" = "default" ]; then
        GDB_TOOLCHAIN=$(get_default_toolchain_name_for_arch $ARCH)
     elif [ ! -z "$GCC_VERSION" ]; then
        GDB_TOOLCHAIN=$(get_toolchain_name_for_arch $ARCH $GCC_VERSION)

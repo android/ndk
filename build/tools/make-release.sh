@@ -62,7 +62,7 @@ HOST_SYSTEMS="$HOST_TAG32"
 
 MINGW_GCC=
 CANADIAN_DARWIN_BUILD=no
-if [ "$HOST_TAG" == "linux-x86" ] ; then
+if [ "$HOST_TAG" = "linux-x86" ] ; then
     find_mingw_toolchain
     if [ -n "$MINGW_GCC" ] ; then
         HOST_SYSTEMS="$HOST_SYSTEMS,windows"
