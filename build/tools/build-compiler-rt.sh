@@ -225,6 +225,11 @@ build_compiler_rt_libs_for_abi ()
     else
         ARCH=$(convert_abi_to_arch $ABI)
         GCCVER=$(get_default_gcc_version_for_arch $ARCH)
+        if [ "$LLVM_VERSION" \> "3.4" ]; then
+            # Turn on integrated-as for clang >= 3.5 otherwise file like
+            # can't be compiled
+            COMPILER_RT_CFLAGS="$COMPILER_RT_CFLAGS -fintegrated-as"
+        fi
     fi
 
     builder_begin_android $ABI "$BUILDDIR" "$GCCVER" "$LLVM_VERSION" "$MAKEFILE" "android-$FIRST_API64_LEVEL"
