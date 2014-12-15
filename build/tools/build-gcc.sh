@@ -312,6 +312,12 @@ case "$TOOLCHAIN" in
     *) EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-libgomp" ;;
 esac
 
+# Enable indirect functions
+case "$TOOLCHAIN" in
+    *-4.4.3|*-4.6|*-4.7) ;;
+    *) EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-gnu-indirect-function" ;;
+esac
+
 # Disable libcilkrts which needs C++ for now, because libstdlibc++ in NDK is built separately...
 case "$TOOLCHAIN" in
     x86*-4.9) EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --disable-libcilkrts"
