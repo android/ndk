@@ -625,7 +625,7 @@ build_stl_libs_for_abi ()
       builder_cxxflags "$DEFAULT_CXXFLAGS $CXX_STL_CXXFLAGS $EXTRA_CXXFLAGS"
       builder_ldflags "$CXX_STL_LDFLAGS $EXTRA_LDFLAGS"
       builder_sources $CXX_STL_SOURCES
-      if [ "$CXX_SUPPORT_LIB" == "libc++abi" ]; then
+      if [ "$CXX_SUPPORT_LIB" = "libc++abi" ]; then
           builder_sources $LIBCXXABI_SOURCES
           builder_ldflags "-ldl"
       fi
