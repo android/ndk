@@ -155,7 +155,7 @@ $(document).ready(function(){initNavTree('md_3__key__topics__building__a_p_p_l_i
 <h3><code>APP_SHORT_COMMANDS</code></h3>
 <p>The equivalent of LOCAL_SHORT_COMMANDS for your whole project. See the documentation for this variable in the <a href="./md_3__key__topics__building__chapter_1-section_8__android_8mk.html">Android.mk</a> section.</p>
 <h3><code>NDK_TOOLCHAIN_VERSION</code></h3>
-<p>Define this variable to either 4.6, 4.7 or 4.8 to select version of the GCC compiler. 4.6 is the default</p>
+<p>Define this variable to either 4.8 or 4.9 to select version of the GCC compiler. 4.8 is the default for 32-bit ABIs, and 4.9 is the default for 64-bit ABIs.  To select version of Clang, define this variable to clang3.4, clang3.5 or clang (which chooses the most recent version of clang).</p>
 <h3><code>APP_PIE</code></h3>
 <p>Starting from Jelly Bean (4.1), Android's dynamic linker supports position-independent executables (PIE), which are built with <code>-fPIE</code>. This flag makes it harder to exploit memory corruption bugs by randomization the location of the code. By default, <code>ndk-build</code> will automatically set this value to '<code>true</code>' if your project targets <code>android-16</code> or higher. You may set it manually to either '<code>true</code>' or '<code>false</code>'.</p>
 <p>IMPORTANT: PIE executables <em>cannot</em> run on Android releases prior to 4.1.</p>

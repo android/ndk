@@ -59,9 +59,9 @@ $(document).ready(function(){initNavTree('md_3__key__topics__building__s_t_a_n_d
 <h2>Selecting your toolchain</h2>
 <p>Before anything else, you need to decide whether your standalone toolchain is going to target ARM-based devices, x86-based, or MIPS-based one. Each architecture corresponds to a different toolchain name. For example:</p>
 <ul>
-<li>arm-linux-androideabi-4.6 =&gt; targeting ARM-based Android devices</li>
-<li>x86-4.6 =&gt; targeting x86-based Android devices</li>
-<li>mipsel-linux-android-4.6 =&gt; targeting MIPS-based Android devices</li>
+<li>arm-linux-androideabi-4.8 =&gt; targeting ARM-based Android devices</li>
+<li>x86-4.8 =&gt; targeting x86-based Android devices</li>
+<li>mipsel-linux-android-4.8 =&gt; targeting MIPS-based Android devices</li>
 </ul>
 <h2>Selecting your sysroot</h2>
 <p>The second thing you need to know is which Android native API level you want to target. Each one of them provides a different various APIs, which are documented under doc/STABLE-APIS.html, and correspond to the sub-directories of $NDK/platforms.</p>
@@ -75,7 +75,7 @@ $(document).ready(function(){initNavTree('md_3__key__topics__building__s_t_a_n_d
 <pre class="fragment">    export CC="$NDK/toolchains/&lt;name&gt;/prebuilt/&lt;system&gt;/bin/&lt;prefix&gt;gcc --sysroot=$SYSROOT"
     $CC -o foo.o -c foo.c
 </pre><p>Where &lt;name&gt; is the toolchain's name, &lt;system&gt; is the host tag for your system, and &lt;prefix&gt; is a toolchain-specific prefix. For example, if you are on Linux using the NDK r5 toolchain, you would use: </p>
-<pre class="fragment">    export CC="$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc --sysroot=$SYSROOT"
+<pre class="fragment">    export CC="$NDK/toolchains/arm-linux-androideabi-4.8/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc --sysroot=$SYSROOT"
 </pre><p>As you can see, this is rather verbose, but it works!</p>
 <p>IMPORTANT NOTE:</p>
 <p>Using the NDK toolchain directly has a serious limitation: You won't be able to use any C++ STL (STLport, libc++, or the GNU libstdc++) with it. Also no exceptions and no RTTI.</p>
@@ -88,10 +88,10 @@ $(document).ready(function(){initNavTree('md_3__key__topics__building__s_t_a_n_d
 <p>The NDK allows you to create a "customized" toolchain installation to make life easier. For example, consider the following command: </p>
 <pre class="fragment">    $NDK/build/tools/make-standalone-toolchain.sh --platform=android-5 --install-dir=/tmp/my-android-toolchain
 </pre><p>This will create a directory named /tmp/my-android-toolchain containing a copy of the android-5/arch-arm sysroot, and of the toolchain binaries.</p>
-<p>Note that by default, the 32-bit ARM-based GCC 4.6 toolchain will be selected by the script. Use the '&ndash;arch=x86' option to specify the x86 GCC 4.6, or add '&ndash;arch=mips' option to specify the MIPS GCC 4.6, or alternatively '&ndash;toolchain=&lt;name&gt;'. For example: </p>
+<p>Note that by default, the 32-bit ARM-based GCC 4.8 toolchain will be selected by the script. Use the '&ndash;arch=x86' option to specify the x86 GCC 4.8, or add '&ndash;arch=mips' option to specify the MIPS GCC 4.8, or alternatively '&ndash;toolchain=&lt;name&gt;'. For example: </p>
 <pre class="fragment">    --toolchain=x86-4.8                    # select x86 GCC 4.8 compiler
-    --toolchain=arm-linux-androideabi-4.7  # select ARM GCC 4.7 compiler
-    --toolchain=mipsel-linux-android-4.6   # select MIPS GCC 4.6 compiler, same as --arch=mips
+    --toolchain=arm-linux-androideabi-4.9  # select ARM GCC 4.9 compiler
+    --toolchain=mipsel-linux-android-4.8   # select MIPS GCC 4.8 compiler, same as --arch=mips
 </pre><p>If you wish, add '&ndash;llvm-version=3.3' to also copy clang/llvm 3.3, or use &ndash;toolchain with '-clang3.3' suffix. For example: </p>
 <pre class="fragment">    --toolchain=arm-linux-androideabi-clang3.3  # same as --arch=arm --llvm-version=3.3
 </pre><p>You may specify &ndash;system=linux-x86_64 on 64-bit Linux or &ndash;system=darwin-x86_64 on 64-bit MacOSX to make 64-bit host toolchain instead of the 32-bit one (default). See IV of NDK-BUILD.html</p>

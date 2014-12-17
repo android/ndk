@@ -282,7 +282,7 @@ to verify that the patches apply cleanly.
 
 The toolchains binaries are typically placed under the directory
 $NDK/toolchains/$NAME/prebuilt/$SYSTEM, where $NAME is the toolchain name's
-full name (e.g. arm-linux-androideabi-4.6), and $SYSTEM is the name of the
+full name (e.g. arm-linux-androideabi-4.8), and $SYSTEM is the name of the
 host system it is meant to run on (e.g. 'linux-x86', 'windows' or 'darwin-x86')
 
 
@@ -311,8 +311,8 @@ For example, to rebuild the arm and x86 prebuilt toolchain binaries in the
 current NDK directory (which can be handy if you want to later use them to
 rebuild other target prebuilts or run tests), do:
 
-   $NDK/build/tools/build-gcc.sh /tmp/ndk-$USER/src $NDK arm-linux-androideabi-4.6
-   $NDK/build/tools/build-gcc.sh /tmp/ndk-$USER/src $NDK x86-4.6
+   $NDK/build/tools/build-gcc.sh /tmp/ndk-$USER/src $NDK arm-linux-androideabi-4.8
+   $NDK/build/tools/build-gcc.sh /tmp/ndk-$USER/src $NDK x86-4.8
 
 Here, we assume you downloaded the toolchain sources in /tmp/ndk-$USER/src
 as described in the previous section.
@@ -330,10 +330,10 @@ cross-toolchain (install it with "apt-get install mingw32" on Ubuntu). To do so
 use the "--mingw" option, as in:
 
     $NDK/build/tools/build-gcc.sh --mingw \
-        /tmp/ndk-$USER/src $NDK arm-linux-androideabi-4.6
+        /tmp/ndk-$USER/src $NDK arm-linux-androideabi-4.8
 
     $NDK/build/tools/build-gcc.sh --mingw \
-        /tmp/ndk-$USER/src $NDK x86-4.6
+        /tmp/ndk-$USER/src $NDK x86-4.8
 
 The corresponding binaries are installed under $NDK/toolchains/$NAME/prebuilt/windows
 Note that these are native Windows programs, not Cygwin ones.
@@ -383,8 +383,8 @@ The prebuilt binary is placed under $NDK/toolchains/$NAME/prebuilt/gdbserver
 in the final NDK installation. You can generate with 'build-gdbserver.sh' and
 takes the same parameters than 'build-gcc.sh'. So one can do:
 
-  $NDK/build/tools/build-gcc.sh  /tmp/ndk-$USER/src $NDK arm-linux-androideabi-4.6
-  $NDK/build/tools/build-gcc.sh  /tmp/ndk-$USER/src $NDK x86-4.6
+  $NDK/build/tools/build-gcc.sh  /tmp/ndk-$USER/src $NDK arm-linux-androideabi-4.8
+  $NDK/build/tools/build-gcc.sh  /tmp/ndk-$USER/src $NDK x86-4.8
 
 
 III.3. Generating C++ runtime prebuilt binaries:

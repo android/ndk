@@ -33,12 +33,15 @@ If you don't pass any parameter, the script will rebuild all NDK toolchains
 for the current host system [$HOST_TAG]. You can otherwise give a list of
 toolchains among the following names:
 
-  arm-linux-androideabi-4.4.3
-  arm-linux-androideabi-4.6
-  x64-4.4.3
-  x86-4.6
-  mipsel-linux-android-4.4.3
-  mipsel-linux-android-4.6
+  arm-linux-androideabi-4.8
+  arm-linux-androideabi-4.9
+  x64-4.8
+  x86-4.9
+  mipsel-linux-android-4.8
+  mipsel-linux-android-4.9
+  aarch64-linux-android-4.9
+  mips64el-linux-android-4.9
+  x86_64-4.9
 
 By default, the script rebuilds the toolchain(s) for you host system [$HOST_TAG],
 but you can use --systems=<tag1>,<tag2>,.. to ask binaries that can run on
@@ -58,8 +61,8 @@ for four different systems:
 
   $PROGNAME --toolchain-src-dir=/path/to/toolchain/src \
     --systems=linux-x86,linux-x86_64,windows,windows-x86_64 \
-    arm-linux-androideabi-4.4.3 \
-    arm-linux-androideabi-4.6
+    arm-linux-androideabi-4.8 \
+    arm-linux-androideabi-4.9
 
 You can build Windows binaries on Linux if you have a Windows-targetting
 cross-toolchain installed and in your path. Note that the script named
@@ -169,7 +172,7 @@ extract_parameters "$@"
 
 TOOLCHAINS=$PARAMETERS
 if [ -z "$TOOLCHAINS" ]; then
-    TOOLCHAINS="arm-linux-androideabi-4.6,x86-4.6,mipsel-linux-android-4.6"
+    TOOLCHAINS="arm-linux-androideabi-4.8,x86-4.8,mipsel-linux-android-4.8"
     dump "Auto-config: $TOOLCHAINS"
 fi
 

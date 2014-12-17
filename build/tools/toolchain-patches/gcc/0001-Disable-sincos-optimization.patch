@@ -1,7 +1,7 @@
 From 504ba0176a97c9b849fd18c4591a2cfc8d5eb130 Mon Sep 17 00:00:00 2001
 From: David 'Digit' Turner <digit@google.com>
 Date: Wed, 9 May 2012 17:53:13 +0200
-Subject: gcc-4.6: Disable sincos optimization
+Subject: gcc-4.8: Disable sincos optimization
 
 Ensure that sincos optimization is disabled for NDK toolchain
 builds. This ensures that NDK-generated code will always link
@@ -21,23 +21,9 @@ Into machine code that does:
 
 Change-Id: I332bf5788267dd56e93b8cdb0cefa04b970eca88
 ---
- gcc-4.6/gcc/config/linux.h | 2 +-
  gcc-4.8/gcc/config/linux.h | 2 +-
  2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/gcc-4.6/gcc/config/linux.h b/gcc-4.6/gcc/config/linux.h
-index 4e21112..025157f 100644
---- a/gcc-4.6/gcc/config/linux.h
-+++ b/gcc-4.6/gcc/config/linux.h
-@@ -99,7 +99,7 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
- #define TARGET_C99_FUNCTIONS (OPTION_GLIBC)
- 
- /* Whether we have sincos that follows the GNU extension.  */
--#define TARGET_HAS_SINCOS (OPTION_GLIBC || OPTION_BIONIC)
-+#define TARGET_HAS_SINCOS (OPTION_GLIBC)
- 
- /* Whether we have Bionic libc runtime */
- #undef TARGET_HAS_BIONIC
 diff --git a/gcc-4.8/gcc/config/linux.h b/gcc-4.8/gcc/config/linux.h
 index 2be1079..b83dc08 100644
 --- a/gcc-4.8/gcc/config/linux.h
