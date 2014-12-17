@@ -23,7 +23,7 @@ var NAVTREE =
     [ "- Neon", "md_3__key__topics__c_p_u__support__c_p_u-_a_r_m-_n_e_o_n.html", null ],
     [ "- Mips", "md_3__key__topics__c_p_u__support__c_p_u-_m_i_p_s.html", null ],
     [ "- x86", "md_3__key__topics__c_p_u__support__c_p_u-_x86.html", null ],
-    [ "- x86-64", "md_3__key__topics__c_p_u__support__c_p_u-_x86-64.html", null ],
+    [ "- x86_64", "md_3__key__topics__c_p_u__support__c_p_u-_x86-64.html", null ],
     [ "- CPU Features", "md_3__key__topics__c_p_u__support__c_p_u-_f_e_a_t_u_r_e_s.html", null ],
     [ "Libraries", "md_3__key__topics__libraries_libraries.html", null ],
     [ "- Stable APIs", "md_3__key__topics__libraries__s_t_a_b_l_e-_a_p_i_s.html", null ],

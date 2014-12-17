@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.5"/>
-<title>NDK Programmer&#39;s Guide: x86-64</title>
+<title>NDK Programmer&#39;s Guide: x86_64</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -50,20 +50,20 @@ $(document).ready(function(){initNavTree('md_3__key__topics__c_p_u__support__c_p
 <div id="doc-content">
 <div class="header">
   <div class="headertitle">
-<div class="title">x86-64 </div>  </div>
+<div class="title">x86_64 </div>  </div>
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><h2>Introduction</h2>
-<p>Android NDK r10 added support for the '<code>x86-64</code>' ABI, that allows native code to run on Android-based devices running on CPUs supporting the x86-64 instruction set.</p>
-<p>The Android x86-64 ABI itself is fully specified in docs/CPU-ARCH-ABIS.html.</p>
+<p>Android NDK r10 added support for the '<code>x86_64</code>' ABI, that allows native code to run on Android-based devices running on CPUs supporting the x86-64 instruction set.</p>
+<p>The Android x86_64 ABI itself is fully specified in docs/CPU-ARCH-ABIS.html.</p>
 <h2>Overview</h2>
-<p>Generating machine code is simple: just add 'x86-64' to your APP_ABI definition in your Application.mk file, for example: </p>
-<pre class="fragment">    APP_ABI := armeabi armeabi-v7a x86 x86-64
+<p>Generating machine code is simple: just add 'x86_64' to your APP_ABI definition in your Application.mk file, for example: </p>
+<pre class="fragment">    APP_ABI := armeabi armeabi-v7a x86 x86_64
 </pre><p>Alternatively, you can use: </p>
 <pre class="fragment">    APP_ABI := all
 </pre><p>will generate machine code for all supported ABIs with this NDK. Doing so will ensure that your application package contains libraries for all target ABIs. Note that this has an impact on package size, since each ABI will correspond to its own set of native libraries built from the same sources.</p>
 <p>The default ABI is still '<code>armeabi</code>', if unspecified in your project.</p>
-<p>As you would expect, generated libraries will go into <code>$PROJECT/libs/x86-64/</code>, and will be embedded into your .apk under <code>/lib/x86-64/</code>.</p>
+<p>As you would expect, generated libraries will go into <code>$PROJECT/libs/x86_64/</code>, and will be embedded into your .apk under <code>/lib/x86_64/</code>.</p>
 <p>And just like other ABIs, the Android package manager will extract these libraries on a <em>compatible</em> x86-64 based device automatically at install time, to put them under &lt;dataPath&gt;/lib, where &lt;dataPath&gt; is the application's private data directory.</p>
 <p>Similarly, the Google Play server is capable of filtering applications based on the native libraries they embed and your device's target CPU.</p>
 <p>Debugging with ndk-gdb should work exactly as described under docs/NDK-GDB.html.</p>
