@@ -313,7 +313,7 @@ TMPDIR=$NDK_TMPDIR/standalone/$TOOLCHAIN_NAME
 
 dump "Copying prebuilt binaries..."
 # Now copy the GCC toolchain prebuilt binaries
-run copy_directory "$TOOLCHAIN_PATH" "$TMPDIR"
+copy_directory "$TOOLCHAIN_PATH" "$TMPDIR"
 
 # Replace soft-link mcld by real file
 ALL_LDS=`find $TMPDIR -name "*mcld"`
@@ -395,7 +395,7 @@ dump_extra_compile_commands () {
 
 if [ -n "$LLVM_VERSION" ]; then
   # Copy the clang/llvm toolchain prebuilt binaries
-  run copy_directory "$LLVM_TOOLCHAIN_PATH" "$TMPDIR"
+  copy_directory "$LLVM_TOOLCHAIN_PATH" "$TMPDIR"
 
   # Move clang and clang++ to clang${LLVM_VERSION} and clang${LLVM_VERSION}++,
   # then create scripts linking them with predefined -target flag.  This is to
@@ -511,24 +511,24 @@ fi
 dump "Copying sysroot headers and libraries..."
 # Copy the sysroot under $TMPDIR/sysroot. The toolchain was built to
 # expect the sysroot files to be placed there!
-run copy_directory_nolinks "$SRC_SYSROOT_INC" "$TMPDIR/sysroot/usr/include"
-run copy_directory_nolinks "$SRC_SYSROOT_LIB" "$TMPDIR/sysroot/usr/lib"
+copy_directory_nolinks "$SRC_SYSROOT_INC" "$TMPDIR/sysroot/usr/include"
+copy_directory_nolinks "$SRC_SYSROOT_LIB" "$TMPDIR/sysroot/usr/lib"
 case "$ARCH" in
 # x86_64 and mips* toolchain are built multilib.
     x86_64)
-        run copy_directory_nolinks "$SRC_SYSROOT_LIB/../lib64" "$TMPDIR/sysroot/usr/lib64"
-        run copy_directory_nolinks "$SRC_SYSROOT_LIB/../libx32" "$TMPDIR/sysroot/usr/libx32"
+        copy_directory_nolinks "$SRC_SYSROOT_LIB/../lib64" "$TMPDIR/sysroot/usr/lib64"
+        copy_directory_nolinks "$SRC_SYSROOT_LIB/../libx32" "$TMPDIR/sysroot/usr/libx32"
         ;;
     mips64)
-        run copy_directory_nolinks "$SRC_SYSROOT_LIB/../libr2" "$TMPDIR/sysroot/usr/libr2"
-        run copy_directory_nolinks "$SRC_SYSROOT_LIB/../libr6" "$TMPDIR/sysroot/usr/libr6"
-        run copy_directory_nolinks "$SRC_SYSROOT_LIB/../lib64" "$TMPDIR/sysroot/usr/lib64"
-        run copy_directory_nolinks "$SRC_SYSROOT_LIB/../lib64r2" "$TMPDIR/sysroot/usr/lib64r2"
+        copy_directory_nolinks "$SRC_SYSROOT_LIB/../libr2" "$TMPDIR/sysroot/usr/libr2"
+        copy_directory_nolinks "$SRC_SYSROOT_LIB/../libr6" "$TMPDIR/sysroot/usr/libr6"
+        copy_directory_nolinks "$SRC_SYSROOT_LIB/../lib64" "$TMPDIR/sysroot/usr/lib64"
+        copy_directory_nolinks "$SRC_SYSROOT_LIB/../lib64r2" "$TMPDIR/sysroot/usr/lib64r2"
         ;;
     mips)
         if [ "$GCC_VERSION" = "4.9" ]; then
-            run copy_directory_nolinks "$SRC_SYSROOT_LIB/../libr2" "$TMPDIR/sysroot/usr/libr2"
-            run copy_directory_nolinks "$SRC_SYSROOT_LIB/../libr6" "$TMPDIR/sysroot/usr/libr6"
+            copy_directory_nolinks "$SRC_SYSROOT_LIB/../libr2" "$TMPDIR/sysroot/usr/libr2"
+            copy_directory_nolinks "$SRC_SYSROOT_LIB/../libr6" "$TMPDIR/sysroot/usr/libr6"
 	fi
         ;;
 esac
@@ -740,9 +740,9 @@ done
 if [ -n "$INSTALL_DIR" ] ; then
     dump "Copying files to: $INSTALL_DIR"
     if [ ! -d "$INSTALL_DIR" ]; then
-        run move_directory "$TMPDIR" "$INSTALL_DIR"
+        move_directory "$TMPDIR" "$INSTALL_DIR"
     else
-        run copy_directory "$TMPDIR" "$INSTALL_DIR"
+        copy_directory "$TMPDIR" "$INSTALL_DIR"
     fi
 else
     PACKAGE_FILE="$PACKAGE_DIR/$TOOLCHAIN_NAME.tar.bz2"
@@ -751,6 +751,6 @@ else
     fail_panic "Could not create tarball from $TMPDIR"
 fi
 dump "Cleaning up..."
-run rm -rf $TMPDIR
+rm -rf $TMPDIR
 
 dump "Done."
