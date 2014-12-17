@@ -156,7 +156,7 @@ toolchain_clone ()
 # $1: sub-directory
 # $2: branch (e.g. 'master')
 # $3: repository/clone name (e.g. 'gcc')
-# $4+: sub-path to extract, relative to clone top-level (e.g. 'gcc-4.6')
+# $4+: sub-path to extract, relative to clone top-level (e.g. 'gcc-4.8')
 #
 toolchain_checkout ()
 {
@@ -215,8 +215,8 @@ toolchain_checkout "" $BRANCH cloog .
 toolchain_checkout "" $BRANCH isl .
 toolchain_checkout "" $BRANCH ppl .
 toolchain_checkout "" $BRANCH expat .
-toolchain_checkout "" $BRANCH binutils binutils-2.21 binutils-2.24
-toolchain_checkout "" $BRANCH gcc gcc-4.6 gcc-4.8 gcc-4.9
+toolchain_checkout "" $BRANCH binutils binutils-2.24
+toolchain_checkout "" $BRANCH gcc gcc-4.8 gcc-4.9
 toolchain_checkout "" $BRANCH gdb gdb-7.3.x gdb-7.6 gdb-7.7
 toolchain_checkout "" $BRANCH python Python-2.7.5
 toolchain_checkout "" $BRANCH perl perl-5.16.2

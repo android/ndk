@@ -148,7 +148,7 @@ UNKNOWN_ABIS=$(convert_archs_to_abis $UNKNOWN_ARCH)
 # Convert comma-separated list to space-separated list
 LLVM_VERSION_LIST=$(commas_to_spaces $LLVM_VERSION_LIST)
 
-# If --arch is used to list x86 as a target architecture, Add x86-4.6 to
+# If --arch is used to list x86 as a target architecture, Add x86-4.8 to
 # the list of default toolchains to package. That is, unless you also
 # explicitely use --toolchains=<list>
 #

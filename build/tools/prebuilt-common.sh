@@ -35,7 +35,7 @@ extract_version ()
     echo $1 | tr '-' '\n' | tail -1
 }
 
-# $1: versioned name (e.g. arm-linux-androideabi-4.6)
+# $1: versioned name (e.g. arm-linux-androideabi-4.8)
 # Out: major version (e.g. 4)
 #
 # Examples:  arm-linux-androideabi-4.4.3 -> 4
@@ -62,10 +62,10 @@ extract_minor_version ()
 # Compare two version numbers and only succeeds if the first one is
 # greather or equal than the second one.
 #
-# $1: first version (e.g. 4.4.3)
-# $2: second version (e.g. 4.6)
+# $1: first version (e.g. 4.9)
+# $2: second version (e.g. 4.8)
 #
-# Example: version_is_at_least 4.6 4.4.3 --> success
+# Example: version_is_at_least 4.9 4.8 --> success
 #
 version_is_at_least ()
 {
@@ -1397,7 +1397,7 @@ convert_archs_to_abis ()
 }
 
 # Return the default toolchain binary path prefix for given architecture and gcc version
-# For example: arm 4.6 -> toolchains/arm-linux-androideabi-4.6/prebuilt/<system>/bin/arm-linux-androideabi-
+# For example: arm 4.8 -> toolchains/arm-linux-androideabi-4.8/prebuilt/<system>/bin/arm-linux-androideabi-
 # $1: Architecture name
 # $2: GCC version
 # $3: optional, system name, defaults to $HOST_TAG
@@ -1426,7 +1426,7 @@ get_llvm_toolchain_binprefix ()
 }
 
 # Return the default toochain binary path prefix for a given architecture
-# For example: arm -> toolchains/arm-linux-androideabi-4.6/prebuilt/<system>/bin/arm-linux-androideabi-
+# For example: arm -> toolchains/arm-linux-androideabi-4.8/prebuilt/<system>/bin/arm-linux-androideabi-
 # $1: Architecture name
 # $2: optional, system name, defaults to $HOST_TAG
 get_default_toolchain_binprefix_for_arch ()

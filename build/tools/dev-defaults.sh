@@ -47,16 +47,16 @@ SUPPORT_SUBDIR=sources/android/support
 TOOLCHAIN_GIT_DATE=now
 
 # The space-separated list of all GCC versions we support in this NDK
-DEFAULT_GCC_VERSION_LIST="4.6 4.8 4.9"
+DEFAULT_GCC_VERSION_LIST="4.8 4.9"
 
 DEFAULT_GCC32_VERSION=4.8
 DEFAULT_GCC64_VERSION=4.9
-FIRST_GCC32_VERSION=4.6
+FIRST_GCC32_VERSION=4.8
 FIRST_GCC64_VERSION=4.9
 DEFAULT_LLVM_GCC32_VERSION=4.8
 DEFAULT_LLVM_GCC64_VERSION=4.9
 
-DEFAULT_BINUTILS_VERSION=2.21
+DEFAULT_BINUTILS_VERSION=2.24
 DEFAULT_GDB_VERSION=7.3.x
 DEFAULT_MPFR_VERSION=3.1.1
 DEFAULT_GMP_VERSION=5.0.5
@@ -188,7 +188,7 @@ get_default_abis_for_arch ()
 
 # Return toolchain name for given architecture and GCC version
 # $1: Architecture name (e.g. 'arm')
-# $2: optional, GCC version (e.g. '4.6')
+# $2: optional, GCC version (e.g. '4.8')
 # Out: default arch-specific toolchain name (e.g. 'arm-linux-androideabi-$GCC_VERSION')
 # Return empty for unknown arch
 get_toolchain_name_for_arch ()
@@ -222,7 +222,7 @@ get_default_toolchain_prefix_for_arch ()
 # Get the list of all toolchain names for a given architecture
 # $1: architecture (e.g. 'arm')
 # $2: comma separated versions (optional)
-# Out: list of toolchain names for this arch (e.g. arm-linux-androideabi-4.6 arm-linux-androideabi-4.8)
+# Out: list of toolchain names for this arch (e.g. arm-linux-androideabi-4.8 arm-linux-androideabi-4.9)
 # Return empty for unknown arch
 get_toolchain_name_list_for_arch ()
 {
@@ -264,17 +264,17 @@ get_toolchain_name_list_for_arch ()
 # binutils was reverted to 2.19, to ensure at least
 # feature/bug compatibility.
 #
-# $1: toolchain with version numer (e.g. 'arm-linux-androideabi-4.6')
+# $1: toolchain with version numer (e.g. 'arm-linux-androideabi-4.8')
 #
 get_default_binutils_version_for_gcc ()
 {
     case $1 in
         mips*) echo "2.24";;
-        *-4.6) echo "$DEFAULT_BINUTILS_VERSION";;
+        *-4.6) echo "2.21";;
         *-4.4.3) echo "2.19";;
         x86*-4.7) echo "2.23";;  # Use 2.23 to get x32 support in ld.gold
         *-4.7) echo "2.22";;
-        *) echo "2.24";;
+        *) echo "$DEFAULT_BINUTILS_VERSION";;
     esac
 }
 
@@ -296,7 +296,7 @@ get_default_binutils_version_for_llvm ()
 # Return the gdb version to be used by default when building a given
 # version of GCC.
 #
-# $1: toolchain with version numer (e.g. 'arm-linux-androideabi-4.6')
+# $1: toolchain with version numer (e.g. 'arm-linux-androideabi-4.8')
 #
 get_default_gdb_version_for_gcc ()
 {
@@ -310,7 +310,7 @@ get_default_gdb_version_for_gcc ()
 # Return the gdbserver version to be used by default when building a given
 # version of GCC.
 #
-# $1: toolchain with version numer (e.g. 'arm-linux-androideabi-4.6')
+# $1: toolchain with version numer (e.g. 'arm-linux-androideabi-4.8')
 #
 get_default_gdbserver_version_for_gcc ()
 {
