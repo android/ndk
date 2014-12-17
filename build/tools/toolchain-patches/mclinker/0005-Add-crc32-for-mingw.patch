@@ -1,7 +1,7 @@
 From a14939c891eb9c92d2a3c970806b3817ec5def49 Mon Sep 17 00:00:00 2001
 From: Andrew Hsieh <andrewhsieh@google.com>
 Date: Thu, 16 Oct 2014 18:04:41 +0800
-Subject: [PATCH 5/6] Add crc32 for mingw
+Subject: [PATCH 5/7] Add crc32 for mingw
 
 Change-Id: Iba3ef73f472b430dfca3b54390a9ffc36593c24e
 ---
@@ -89,5 +89,5 @@ index 6d75d55..b7311b8 100644
 -}  // namespace mcld
 +} // namespace mcld
 -- 
-2.1.0.rc2.206.gedb03e5
+2.2.0.rc0.207.ga3a616c
 

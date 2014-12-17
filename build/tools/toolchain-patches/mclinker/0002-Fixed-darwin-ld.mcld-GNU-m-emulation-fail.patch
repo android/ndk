@@ -1,7 +1,7 @@
 From 7b2bc50282c75c028b674a55c12318d229e7c731 Mon Sep 17 00:00:00 2001
 From: Andrew Hsieh <andrewhsieh@google.com>
 Date: Thu, 16 Oct 2014 18:02:42 +0800
-Subject: [PATCH 2/6] Fixed darwin ld.mcld GNU -m emulation fail
+Subject: [PATCH 2/7] Fixed darwin ld.mcld GNU -m emulation fail
 
 Change-Id: I4190a509767f4c124b2b95d1ac9061aac06039ef
 ---
@@ -31,5 +31,5 @@ index c64e2bb..27a828d 100644
  
    if (triple.getArch() == llvm::Triple::UnknownArch &&
 -- 
-2.1.0.rc2.206.gedb03e5
+2.2.0.rc0.207.ga3a616c
 
