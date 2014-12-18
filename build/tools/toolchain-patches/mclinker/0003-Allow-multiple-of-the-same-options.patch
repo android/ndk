@@ -1,7 +1,7 @@
 From 077432301ff38f492d311683581badabc7f17889 Mon Sep 17 00:00:00 2001
 From: Andrew Hsieh <andrewhsieh@google.com>
 Date: Thu, 16 Oct 2014 18:03:20 +0800
-Subject: [PATCH 3/6] Allow multiple of the same options
+Subject: [PATCH 3/7] Allow multiple of the same options
 
 Change-Id: I8fa12e2401b0b828546a07ebe36a1acaf1f54caf
 ---
@@ -34,5 +34,5 @@ index 58ef3a0..88ad045 100644
  
  llvm::cl::opt<bool> ArgSVR4Compatibility(
 -- 
-2.1.0.rc2.206.gedb03e5
+2.2.0.rc0.207.ga3a616c
 
