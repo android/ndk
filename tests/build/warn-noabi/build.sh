@@ -7,7 +7,7 @@ export ANDROID_NDK_ROOT=$NDK
 NDK_BUILDTOOLS_PATH=$NDK/build/tools
 . $NDK/build/tools/prebuilt-common.sh
 
-VERSION=4.6
+VERSION=4.8
 
 if [ -n "$NDK_TOOLCHAIN_VERSION" ];  then
     case "$NDK_TOOLCHAIN_VERSION" in

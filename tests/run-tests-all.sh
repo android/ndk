@@ -58,8 +58,8 @@ TEST_HOST_32BIT=no
 TAGS=$HOST_TAG
 case "$HOST_TAG" in
     linux-x86_64|darwin-x86_64)
-        if [ -d "$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/$HOST_TAG" ] ; then
-            if [ -d "$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/$HOST_TAG32" ] ; then
+        if [ -d "$NDK/toolchains/arm-linux-androideabi-4.8/prebuilt/$HOST_TAG" ] ; then
+            if [ -d "$NDK/toolchains/arm-linux-androideabi-4.8/prebuilt/$HOST_TAG32" ] ; then
                 # ideally we should check each individual compiler the presence of 64-bit
                 # but for test script this is fine
                 TEST_HOST_32BIT=yes
@@ -71,8 +71,8 @@ case "$HOST_TAG" in
     ;;
     windows*)
         if [ "$ProgramW6432" != "" ] ; then
-            if [ -d "$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/windows-x86_64" ] ; then
-                if [ -d "$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/windows" ] ; then
+            if [ -d "$NDK/toolchains/arm-linux-androideabi-4.8/prebuilt/windows-x86_64" ] ; then
+                if [ -d "$NDK/toolchains/arm-linux-androideabi-4.8/prebuilt/windows" ] ; then
                     TEST_HOST_32BIT=yes
                     TAGS=$TAGS" windows-x86_64"
                 fi
@@ -114,7 +114,7 @@ if [ "$TEST_HOST_32BIT" = "yes" ] ; then
     done
 fi
 
-if [ "$SYSTEM" = "linux-x86" -a -d "$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/windows-x86_64" ] ; then
+if [ "$SYSTEM" = "linux-x86" -a -d "$NDK/toolchains/arm-linux-androideabi-4.8/prebuilt/windows-x86_64" ] ; then
     # using 64-bit windows toolchain
     for V in $NDK_TOOLCHAIN_VERSIONS; do
         dump "### Running windows-x86_64 $V tests"
@@ -122,7 +122,7 @@ if [ "$SYSTEM" = "linux-x86" -a -d "$NDK/toolchains/arm-linux-androideabi-4.6/pr
     done
 fi
 
-if [ "$SYSTEM" = "linux-x86" -a -d "$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/windows" ] ; then
+if [ "$SYSTEM" = "linux-x86" -a -d "$NDK/toolchains/arm-linux-androideabi-4.8/prebuilt/windows" ] ; then
     # using 32-bit windows toolchain
     for V in $NDK_TOOLCHAIN_VERSIONS; do
         dump "### Running windows $V tests"
