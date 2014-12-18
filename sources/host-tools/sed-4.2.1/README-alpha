@@ -1,8 +1,0 @@
-This is an alpha version of GNU sed.  Please try it on a wide
-range of scripts (especially configure scripts) and submit
-bug reports to bonzini@gnu.org.
-
-Thanks,
-
-Paolo Bonzini
-GNU sed maintainer

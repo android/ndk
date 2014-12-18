@@ -282,10 +282,6 @@ for SYSTEM in $SYSTEMS; do
     run $BUILDTOOLS/build-host-awk.sh $TOOLCHAIN_FLAGS
     fail_panic "awk build failure!"
 
-    echo "Building $SYSNAME ndk-sed"
-    run $BUILDTOOLS/build-host-sed.sh $TOOLCHAIN_FLAGS
-    fail_panic "sed build failure!"
-
     # ToDo: perl in windows/darwin cross.
     MAKE_PERL=no
     case $SYSTEM in
