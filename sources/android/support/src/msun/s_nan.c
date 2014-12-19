@@ -121,7 +121,7 @@ nanf(const char *s)
 	return (u.f);
 }
 
-#if (LDBL_MANT_DIG == 53)
+#if (LDBL_MANT_DIG == 53) && !defined(__le32__) && !defined(__le64__)
 #define __weak_reference(sym,alias) \
     __asm__(".weak " #alias); \
     __asm__(".equ "  #alias ", " #sym)
