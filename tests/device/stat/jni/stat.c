@@ -32,7 +32,11 @@ int main()
             printf("Can't stat path %s\n", paths[i]);
         else
         {
+#if defined(__le32__) || defined(__le64__)
+            printf("%14s %6ld: %s%s%s %s %s %s %s\n", paths[i], sb.st_size,
+#else
             printf("%14s %6lld: %s%s%s %s %s %s %s\n", paths[i], sb.st_size,
+#endif
                    ((sb.st_mode & S_IRUSR)? "r" : " "),
                    ((sb.st_mode & S_IWUSR)? "w" : " "),
                    ((sb.st_mode & S_IXUSR)? "x" : " "),
