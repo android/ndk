@@ -18,7 +18,6 @@
 #define ABCC_LLVM_35_H
 
 #define ARM_BASE_CFLAGS         "-float-abi=soft"
-#define X86_BASE_CFLAGS         "-disable-fp-elim -force-align-stack -mattr=-ssse3,-sse4.1,-sse4.2,-sse4a,-popcnt -x86-force-gv-stack-cookie"
 
 #define OPTION_FUNCTION_SECTION "-function-sections"
 

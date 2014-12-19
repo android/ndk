@@ -98,10 +98,10 @@ const TargetAttributes kGlobalTargetAttrs[] = {
 #else
   {"arm", "thumbv7-linux-androideabi", "armelf_linux_eabi", ARM_BASE_CFLAGS, "-dynamic-linker /system/bin/linker"},
 #endif
-  {"x86", "i686-linux-android", "elf_i386", X86_BASE_CFLAGS, "-dynamic-linker /system/bin/linker"},
+  {"x86", "i686-linux-android", "elf_i386", "-disable-fp-elim -force-align-stack -mattr=+ssse3 -x86-force-gv-stack-cookie", "-dynamic-linker /system/bin/linker"},
   {"mips", "mipsel-linux-android", "elf32ltsmip", "-float-abi=hard", "-dynamic-linker /system/bin/linker"},
   {"arm64", "aarch64-linux-android", "aarch64linux", "", "-dynamic-linker /system/bin/linker64"},
-  {"x86_64", "x86_64-linux-android", "elf_x86_64", "-disable-fp-elim -force-align-stack -mattr=+sse3 -x86-force-gv-stack-cookie", "-dynamic-linker /system/bin/linker64"},
+  {"x86_64", "x86_64-linux-android", "elf_x86_64", "-disable-fp-elim -force-align-stack -mattr=+sse4.2,+popcnt -x86-force-gv-stack-cookie", "-dynamic-linker /system/bin/linker64"},
   {"mips64", "mips64el-linux-android", "elf64ltsmip", "", "-dynamic-linker /system/bin/linker64"},
 };
 
