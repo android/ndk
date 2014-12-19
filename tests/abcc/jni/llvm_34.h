@@ -18,7 +18,6 @@
 #define ABCC_LLVM_34_H
 
 #define ARM_BASE_CFLAGS         "-arm-enable-ehabi -arm-enable-ehabi-descriptors -float-abi=soft"
-#define X86_BASE_CFLAGS         "-disable-fp-elim -force-align-stack -mattr=-ssse3,-sse41,-sse42,-sse4a,-popcnt -x86-force-gv-stack-cookie"
 
 #define OPTION_FUNCTION_SECTION "-ffunction-sections"
 
