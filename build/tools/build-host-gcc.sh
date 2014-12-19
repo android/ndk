@@ -1328,7 +1328,7 @@ build_host_gcc_core ()
     esac
 
     ARGS=$ARGS" --with-gnu-as --with-gnu-ld"
-    ARGS=$ARGS" --enable-threads --disable-libssp --disable-libmudflap"
+    ARGS=$ARGS" --enable-threads --disable-libssp --disable-libmudflap --disable-libcilkrts --enable-gnu-indirect-function"
     ARGS=$ARGS" --disable-libstdc__-v3 --disable-sjlj-exceptions"
     ARGS=$ARGS" --disable-tls"
     ARGS=$ARGS" --disable-libquadmath --disable-libitm --disable-bootstrap"
