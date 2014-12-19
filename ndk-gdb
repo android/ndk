@@ -99,6 +99,7 @@ OPTION_LAUNCH=
 OPTION_LAUNCH_LIST=no
 OPTION_DELAY=
 OPTION_WAIT="-D"
+OPTION_PACKAGE_NAME=
 
 check_parameter ()
 {
@@ -262,6 +263,9 @@ while [ -n "$1" ]; do
             JDB_PORT=
             OPTION_WAIT=
             ;;
+        --package=*)
+            OPTION_PACKAGE_NAME="$optarg"
+            ;;
         -*) # unknown options
             echo "ERROR: Unknown option '$opt', use --help for list of valid ones."
             exit 1
@@ -305,6 +309,7 @@ if [ "$OPTION_HELP" = "yes" ] ; then
     echo "    --delay=<secs>    Delay in seconds between activity start and gdbserver attach."
     echo "    --project=<path>  Specify application project path"
     echo "    -p <path>         Same as --project=<path>"
+    echo "    --package=<name>  Specify package name"
     echo "    --port=<port>     Use tcp:localhost:<port> to communicate with gdbserver [$DEBUG_PORT]"
     echo "    --exec=<file>     Execute gdb initialization commands in <file> after connection"
     echo "    -x <file>         Same as --exec=<file>"
@@ -482,13 +487,18 @@ else
     log "Using auto-detected project path: $PROJECT"
 fi
 
-# Extract the package name from the manifest
-PACKAGE_NAME=`run_awk_manifest_script extract-package-name.awk`
-log "Found package name: $PACKAGE_NAME"
-if [ $? != 0 -o "$PACKAGE_NAME" = "<none>" ] ; then
-    echo "ERROR: Could not extract package name from $PROJECT/$MANIFEST."
-    echo "       Please check that the file is well-formed!"
-    exit 1
+if [ ! -z "$OPTION_PACKAGE_NAME" ]; then
+    PACKAGE_NAME="$OPTION_PACKAGE_NAME"
+    log "Using package name: $PACKAGE_NAME"
+else
+    # Extract the package name from the manifest
+    PACKAGE_NAME=`run_awk_manifest_script extract-package-name.awk`
+    log "Found package name: $PACKAGE_NAME"
+    if [ $? != 0 -o "$PACKAGE_NAME" = "<none>" ] ; then
+        echo "ERROR: Could not extract package name from $PROJECT/$MANIFEST."
+        echo "       Please check that the file is well-formed!"
+        exit 1
+    fi
 fi
 
 # If --launch-list is used, list all launchable activities, and be done with it
