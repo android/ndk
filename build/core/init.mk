@@ -296,7 +296,6 @@ $(call ndk_log,HOST_TAG set to $(HOST_TAG))
 HOST_PREBUILT_ROOT := $(call host-prebuilt-tag, $(NDK_ROOT))
 HOST_PREBUILT := $(strip $(wildcard $(HOST_PREBUILT_ROOT)/bin))
 HOST_AWK := $(strip $(NDK_HOST_AWK))
-HOST_SED  := $(strip $(NDK_HOST_SED))
 HOST_MAKE := $(strip $(NDK_HOST_MAKE))
 HOST_PYTHON := $(strip $(NDK_HOST_PYTHON))
 ifdef HOST_PREBUILT
@@ -306,9 +305,6 @@ ifdef HOST_PREBUILT
     ifneq ($(HOST_OS),cygwin)
         ifndef HOST_AWK
             HOST_AWK := $(wildcard $(HOST_PREBUILT)/awk$(HOST_EXEEXT))
-        endif
-        ifndef HOST_SED
-            HOST_SED  := $(wildcard $(HOST_PREBUILT)/sed$(HOST_EXEEXT))
         endif
         ifndef HOST_MAKE
             HOST_MAKE := $(wildcard $(HOST_PREBUILT)/make$(HOST_EXEEXT))
