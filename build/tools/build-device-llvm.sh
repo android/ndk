@@ -185,7 +185,7 @@ for abi in $ABIS; do
     --stl=$STL \
     --arch=$arch \
     --system=$HOST_TAG \
-    --platform=android-19 \
+    --platform=android-21 \
     --install-dir=$BUILD_OUT/ndk-standalone-$arch
   fail_panic "Couldn't make standalone for $arch"
 
@@ -266,11 +266,7 @@ for abi in $ABIS; do
   fail_panic "Couldn't compile mclinker"
 
   run mkdir -p $TOOLCHAIN_BUILD_PREFIX/$abi
-  if [ -f $MCLINKER_BUILD_OUT/tools/lite/ld.lite ]; then
-    run cp -f $MCLINKER_BUILD_OUT/tools/lite/ld.lite $TOOLCHAIN_BUILD_PREFIX/$abi/ld.mcld
-  else
-    run cp -f $MCLINKER_BUILD_OUT/optimized/ld.mcld $TOOLCHAIN_BUILD_PREFIX/$abi
-  fi
+  run cp -f $MCLINKER_BUILD_OUT/tools/mcld/ld.mcld $TOOLCHAIN_BUILD_PREFIX/$abi
   fail_panic "Couldn't copy mclinker"
 
   # Strip

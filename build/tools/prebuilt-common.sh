@@ -1498,7 +1498,7 @@ get_default_libdir_for_abi ()
       mipsr6) echo "libr6" ;;
       *)
         local ARCH=$(convert_abi_to_arch $1)
-        $(get_default_libdir_for_arch $ARCH)
+        echo "$(get_default_libdir_for_arch $ARCH)"
         ;;
     esac
 }
