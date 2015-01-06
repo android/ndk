@@ -21,7 +21,13 @@
 #include <map>
 #include <string>
 #include <vector>
+
+// Always use latest llvm for on-device abcc
+#if ON_DEVICE
+#include "llvm_35.h"
+#else
 #include "llvm_version.h"
+#endif
 
 namespace abcc {
 

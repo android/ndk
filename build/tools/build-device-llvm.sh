@@ -162,7 +162,7 @@ for abi in $ABIS; do
   fi
   toolchain_prefix=`get_default_toolchain_prefix_for_arch $arch`
   toolchain_name=`get_toolchain_name_for_arch $arch $GCCVER`
-  CFLAGS="-fomit-frame-pointer -fstrict-aliasing -ffunction-sections -fdata-sections"
+  CFLAGS="-fomit-frame-pointer -fstrict-aliasing -ffunction-sections -fdata-sections -fPIE"
   case $abi in
     armeabi)
       # No -mthumb, because ./llvm/lib/Target/ARM/ARMJITInfo.cpp now contain inline assembly
@@ -171,7 +171,7 @@ for abi in $ABIS; do
       ;;
     armeabi-v7a|armeabi-v7a-hard)
       CFLAGS=$CFLAGS" -mthumb -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16"
-      if [ "$arbi" = "armeabi-v7a-hard" ]; then
+      if [ "$abi" = "armeabi-v7a-hard" ]; then
         CFLAGS=$CFLAGS" -mhard-float -D_NDK_MATH_NO_SOFTFP=1 -Wl,--no-warn-mismatch -lm_hard"
       fi
       ;;
@@ -194,14 +194,15 @@ for abi in $ABIS; do
     run cp -f $BUILD_OUT/ndk-standalone-$arch/$toolchain_prefix/lib/lib${STL}_shared.so $TOOLCHAIN_BUILD_PREFIX/$abi
   fi
 
-  CC=$BUILD_OUT/ndk-standalone-$arch/bin/$toolchain_prefix-gcc
-  CXX=$BUILD_OUT/ndk-standalone-$arch/bin/$toolchain_prefix-g++
-  export CC CXX
+  CC="$BUILD_OUT/ndk-standalone-$arch/bin/$toolchain_prefix-gcc $CFLAGS"
+  CXX="$BUILD_OUT/ndk-standalone-$arch/bin/$toolchain_prefix-g++ $CFLAGS"
+  LDFLAGS="-fPIE -pie"
+  export CC CXX LDFLAGS
 
   EXTRA_LLVM_CONFIG=""
   EXTRA_MCLINKER_CONFIG=""
   if [ "$SHARED" = "yes" ]; then
-    EXTRA_LLVM_CONFIG="--enable-shared --with-extra-ld-options=-l${STL}_shared"
+    EXTRA_LLVM_CONFIG="--enable-shared --with-extra-ld-options=\"-l${STL}_shared\""
     EXTRA_MCLINKER_CONFIG="--with-llvm-shared-lib=$LLVM_BUILD_OUT/Release/lib/libLLVM-${DEFAULT_LLVM_VERSION}.so"
   fi
 
@@ -216,7 +217,6 @@ for abi in $ABIS; do
     --with-clang-srcdir=/dev/null \
     --disable-assertions \
     --disable-terminfo \
-    --with-extra-options="$CFLAGS" \
     $EXTRA_LLVM_CONFIG
   fail_panic "Couldn't configure llvm toolchain for ABI $abi"
 

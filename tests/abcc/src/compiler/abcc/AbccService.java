@@ -264,12 +264,6 @@ public class AbccService extends IntentService {
   private native int genLibs(String working_dir, String sysroot);
 
   static {
-    // Distinguish whether this is a system prebuilt apk or an updated apk
-    // ApplicationInfo info = getApplicationInfo();
-    // FIXME: We cannot access ApplicationInfo in static context, how to prevent magic path?
-    if (new File("/data/data/compiler.abcc/lib/libjni_abcc.so").exists())
       System.loadLibrary("jni_abcc");
-    else
-      System.load("/system/lib/libjni_abcc.so");
   }
 }

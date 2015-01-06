@@ -33,6 +33,12 @@ using namespace abcc;
 # define CURRENT_ABI  "x86"
 #elif defined(__mips__)
 # define CURRENT_ABI  "mips"
+#elif defined(__aarch64__)
+# define CURRENT_ABI "arm64-v8a"
+#elif defined(__x86_64__)
+# define CURRENT_ABI "x86_64"
+#elif defined(__mips64)
+# define CURRENT_ABI "mips64"
 #else
 # error "Unsupport target abi"
 #endif
@@ -103,6 +109,7 @@ void DeviceBitcodeCompiler::getBitcodeFiles() {
   std::vector<std::string> bc_files,lib_files;
   DIR *dp = opendir(mWorkingDir.c_str());
   if (!dp) {
+    LOGE("Error opening working dir: %s", mWorkingDir.c_str());
     mRet = RET_FAIL_PREPARE_BITCODE;
     return;
   }
@@ -193,7 +200,12 @@ void DeviceBitcodeCompiler::prepareToolchain() {
   cmd += " " + mSysroot + "/usr/bin/ld.mcld";
   cmd += " -L" + mWorkingDir;
   cmd += " -L" + mSysroot + "/usr/lib";
-  cmd += " -L/system/lib";
+
+  if (mAbi == TargetAbi::X86_64 || mAbi == TargetAbi::ARM64_V8A || mAbi == TargetAbi::MIPS64)
+    cmd += " -L/system/lib64";
+  else
+    cmd += " -L/system/lib";
+
   mExecutableToolsPath[(unsigned)CMD_LINK] = cmd;
 
   cmd = " @" + mSysroot + "/usr/lib/libportable.wrap " + mSysroot + "/usr/lib/libportable.a";
