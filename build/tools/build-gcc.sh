@@ -472,7 +472,7 @@ unwind_library_for_abi ()
           pr-support.o \
           unwind-c.o"
     ;;
-    x86|mips|mipsr6)
+    x86|mips|mips32r6)
     BASE_DIR="$BUILD_OUT/gcc-$CONFIGURE_GCC_VERSION/$ABI_CONFIGURE_TARGET/libgcc/"
     if [ "$GCC_VERSION" = "4.6" -o "$GCC_VERSION" = "4.4.3" ]; then
        OBJS="unwind-c.o \
