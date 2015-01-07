@@ -342,7 +342,9 @@ copy_gnustl_libs ()
     esac
 
     LDIR=lib
-    if [ "$ARCH" != "${ARCH%%64*}" ]; then
+    if [ "$ABI" = "mips32r6" ]; then
+        LDIR=libr6
+    elif [ "$ARCH" != "${ARCH%%64*}" ]; then
         #Can't call $(get_default_libdir_for_arch $ARCH) which contain hack for arm64
         LDIR=lib64
     fi
@@ -443,7 +445,7 @@ if [ -n "$PACKAGE_DIR" ] ; then
                               lib64/libsupc++.a lib64/libgnustl_static.a lib64/libgnustl_shared.so
                               lib64r2/libsupc++.a lib64r2/libgnustl_static.a lib64r2/libgnustl_shared.so"
                     ;;
-                mips|mipsr6)
+                mips|mips32r6)
                     if [ "$VERSION" = "4.9" ]; then
                         MULTILIB="include/mips-r2/bits include/mips-r6/bits include/bits
                                   lib/libsupc++.a lib/libgnustl_static.a lib/libgnustl_shared.so

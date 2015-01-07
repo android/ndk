@@ -178,7 +178,7 @@ prepare_compiler_rt_source_for_abi ()
         ARCH_SOURCES="$COMPILER_RT_ARM_SOURCES"
     elif [ $ABI = "x86" ]; then
         ARCH_SOURCES="$COMPILER_RT_X86_SOURCES"
-    elif [ $ABI = "mips" -o $ABI = "mipsr6" ]; then
+    elif [ $ABI = "mips" -o $ABI = "mips32r6" ]; then
         ARCH_SOURCES="$COMPILER_RT_MIPS_SOURCES"
     elif [ $ABI = "x86_64" ]; then
         ARCH_SOURCES="$COMPILER_RT_X86_64_SOURCES"

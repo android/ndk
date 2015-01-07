@@ -598,7 +598,7 @@ builder_begin_android ()
             x86_64)
                 LLVM_TRIPLE=x86_64-none-linux-android
                 ;;
-            mips|mipsr6)
+            mips|mips32r6)
                 LLVM_TRIPLE=mipsel-none-linux-android
                 ;;
             mips64)
