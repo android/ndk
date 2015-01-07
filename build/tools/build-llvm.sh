@@ -497,7 +497,7 @@ for ABI in $ABIS; do
       x86_64)
           LLVM_TARGET=x86_64-none-linux-android
           ;;
-      mips|mipsr6)
+      mips|mips32r6)
           LLVM_TARGET=mipsel-none-linux-android
           ;;
       mips64)

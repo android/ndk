@@ -150,7 +150,7 @@ get_default_abi_for_arch ()
         x86|x86_64|mips|mips64)
             RET="$1"
             ;;
-        mipsr6)
+        mips32r6)
             RET="mips"
             ;;
         *)
@@ -175,7 +175,7 @@ get_default_abis_for_arch ()
         arm64)
             RET="arm64-v8a"
             ;;
-        x86|x86_64|mips|mipsr6|mips64)
+        x86|x86_64|mips|mips32r6|mips64)
             RET="$1"
             ;;
         *)
