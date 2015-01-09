@@ -168,9 +168,11 @@ build_gnustl_for_abi ()
         exit 1
     fi
 
-    EXTRA_FLAGS="-ffunction-sections -fdata-sections"
+    EXTRA_CFLAGS="-ffunction-sections -fdata-sections"
+    EXTRA_LDFLAGS=
     if [ -n "$THUMB" ] ; then
-        EXTRA_FLAGS="$EXTRA_FLAGS -mthumb"
+        EXTRA_CFLAGS="$EXTRA_CFLAGS -mthumb"
+        EXTRA_LDFLAGS="$EXTRA_LDFLAGS -mthumb"
     fi
 
     case $ARCH in
@@ -194,8 +196,8 @@ build_gnustl_for_abi ()
             ;;
     esac
 
-    CFLAGS="-fPIC $CFLAGS --sysroot=$SYSROOT -fexceptions -funwind-tables -D__BIONIC__ -O2 $EXTRA_FLAGS"
-    CXXFLAGS="-fPIC $CXXFLAGS --sysroot=$SYSROOT -fexceptions -frtti -funwind-tables -D__BIONIC__ -O2 $EXTRA_FLAGS"
+    CFLAGS="-fPIC $CFLAGS --sysroot=$SYSROOT -fexceptions -funwind-tables -D__BIONIC__ -O2 $EXTRA_CFLAGS"
+    CXXFLAGS="-fPIC $CXXFLAGS --sysroot=$SYSROOT -fexceptions -frtti -funwind-tables -D__BIONIC__ -O2 $EXTRA_CFLAGS"
     CPPFLAGS="$CPPFLAGS --sysroot=$SYSROOT"
     if [ "$WITH_DEBUG_INFO" ]; then
         CFLAGS="$CFLAGS -g"
@@ -213,7 +215,7 @@ build_gnustl_for_abi ()
 
     setup_ccache
 
-    export LDFLAGS="-lc $EXTRA_FLAGS"
+    export LDFLAGS="-lc $EXTRA_LDFLAGS"
 
     case $ABI in
         armeabi-v7a|armeabi-v7a-hard)
