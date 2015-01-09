@@ -1327,7 +1327,7 @@ convert_abi_to_arch ()
         x86|mips|x86_64|mips64)
             RET=$ABI
             ;;
-        mipsr6)
+        mips32r6)
             RET=mips
             ;;
         arm64-v8a)
@@ -1495,7 +1495,7 @@ get_default_libdir_for_abi ()
     local ARCH
 
     case $1 in
-      mipsr6) echo "libr6" ;;
+      mips32r6) echo "libr6" ;;
       *)
         local ARCH=$(convert_abi_to_arch $1)
         echo "$(get_default_libdir_for_arch $ARCH)"

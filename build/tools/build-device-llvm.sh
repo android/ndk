@@ -175,7 +175,7 @@ for abi in $ABIS; do
         CFLAGS=$CFLAGS" -mhard-float -D_NDK_MATH_NO_SOFTFP=1 -Wl,--no-warn-mismatch -lm_hard"
       fi
       ;;
-    mips|mipsr6)
+    mips|mips32r6)
       CFLAGS=$CFLAGS" -fmessage-length=0 -fno-inline-functions-called-once -fgcse-after-reload -frerun-cse-after-loop -frename-registers"
       ;;
   esac
