@@ -615,6 +615,7 @@ builder_begin_android ()
                 ;;
         esac
         SCRATCH_FLAGS="-target $LLVM_TRIPLE $FLAGS"
+        builder_ldflags "$SCRATCH_FLAGS"
         if [ "$LLVM_VERSION" \> "3.4" ]; then
             # Turn off integrated-as for clang >= 3.5 due to ill-formed object it produces
             # involving inline-assembly .pushsection/.popsection which crashes ld.gold
@@ -623,7 +624,6 @@ builder_begin_android ()
         fi
         builder_cflags  "$SCRATCH_FLAGS"
         builder_cxxflags "$SCRATCH_FLAGS"
-        builder_ldflags "$SCRATCH_FLAGS"
         if [ ! -z $GCC_TOOLCHAIN ]; then
             SCRATCH_FLAGS="-gcc-toolchain $GCC_TOOLCHAIN"
             builder_cflags "$SCRATCH_FLAGS"
