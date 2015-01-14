@@ -549,13 +549,22 @@ fi
 # And check that they are supported by the application
 #
 COMPAT_ABI=none
-adb_var_shell CPU_ABI1 getprop ro.product.cpu.abi
-adb_var_shell CPU_ABI2 getprop ro.product.cpu.abi2
 
-# Both CPU_ABI1 and CPU_ABI2 may contain multiple comma-delimited abis.
-# Concatanate CPU_ABI1 and CPU_ABI2 and replace all ',' with space.
-# Add trailing space to ease whole-word matching of APP_ABI.
-CPU_ABIS="$CPU_ABI1,$CPU_ABI2"
+# All modern Android images must support ro.product.cpu.abilist32
+# and ro.product.cpu.abilist64. Otherwise fall back to obsolete
+# ro.product.cpu.abi and ro.product.cpu.abi2
+adb_var_shell CPU_ABILIST64 getprop ro.product.cpu.abilist64
+adb_var_shell CPU_ABILIST32 getprop ro.product.cpu.abilist32
+CPU_ABIS="$CPU_ABILIST64,$CPU_ABILIST32"
+if [ -z "$CPU_ABILIST64" ] && [ -z "$CPU_ABILIST32" ] ; then
+    adb_var_shell CPU_ABI1 getprop ro.product.cpu.abi
+    adb_var_shell CPU_ABI2 getprop ro.product.cpu.abi2
+    CPU_ABIS="$CPU_ABI1,$CPU_ABI2"
+fi
+
+# CPU_ABIS now may contain multiple comma-delimited abis.
+# Replace all ',' with space and add trailing space to
+# ease whole-word matching of APP_ABI
 CPU_ABIS=$(echo $CPU_ABIS | tr ',' ' ')
 log "Device CPU ABIs: $CPU_ABIS"
 
@@ -649,8 +658,8 @@ if [ $? != 0 ]; then
     TARGET_ARCH=none
 
     for ANDROID_ARCH in $ANDROID_NDK_ROOT/prebuilt/android-*; do
-        ANDROID_ARCH=${ANDROID_ARCH#*android-}
-        if [ x"$CPU_ABIS" != x"${CPU_ABIS#$ANDROID_ARCH*}" ]; then
+        ANDROID_ARCH=${ANDROID_ARCH#$ANDROID_NDK_ROOT/prebuilt/android-}
+        if [ "$COMPAT_ABI" = "$ANDROID_ARCH" ]; then
             TARGET_ARCH=$ANDROID_ARCH
             break;
         fi
@@ -754,10 +763,23 @@ if [ $? != 0 ] ; then
     exit 1
 fi
 
+# If we are debugging 32-bit application on 64-bit device
+# then we need to pull app_process32, not app_process
+APP_PROCESS_NAME=app_process
+if [ -n "$CPU_ABILIST32" ] && [ -n "$CPU_ABILIST64" ] ; then
+    CPU_ABILIST32=$(echo $CPU_ABILIST32 | tr ',' ' ')
+    for CPU_ABI32 in $CPU_ABILIST32; do
+        if [ "$CPU_ABI32" = "$COMPAT_ABI" ] ; then
+            APP_PROCESS_NAME=app_process32
+            log "We are debugging 32-bit app on 64-bit device"
+        fi
+    done
+fi
+
 # Get the app_server binary from the device
-APP_PROCESS=$APP_OUT/app_process
-run adb_cmd pull /system/bin/app_process `native_path $APP_PROCESS`
-log "Pulled app_process from device/emulator."
+APP_PROCESS=$APP_OUT/$APP_PROCESS_NAME
+run adb_cmd pull /system/bin/$APP_PROCESS_NAME `native_path $APP_PROCESS`
+log "Pulled $APP_PROCESS_NAME from device/emulator."
 
 run adb_cmd pull /system/bin/linker `native_path $APP_OUT/linker`
 log "Pulled linker from device/emulator."
