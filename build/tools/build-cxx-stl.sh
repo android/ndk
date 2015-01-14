@@ -494,14 +494,14 @@ HIDDEN_VISIBILITY_FLAGS="-fvisibility=hidden -fvisibility-inlines-hidden"
 # By default, all static libraries include hidden ELF symbols, except
 # if one uses the --visible-static option.
 if [ -z "$VISIBLE_STATIC" ]; then
+    STATIC_CONLYFLAGS="$HIDDEN_VISIBILITY_FLAGS"
     STATIC_CXXFLAGS="$HIDDEN_VISIBILITY_FLAGS"
 else
+    STATIC_CONLYFLAGS=
     STATIC_CXXFLAGS=
 fi
-SHARED_CXXFLAGS=
-# Mainlly deal with android_support.a
-STATIC_CONLYFLAGS="$HIDDEN_VISIBILITY_FLAGS"
 SHARED_CONLYFLAGS="$HIDDEN_VISIBILITY_FLAGS"
+SHARED_CXXFLAGS=
 
 
 # build_stl_libs_for_abi
