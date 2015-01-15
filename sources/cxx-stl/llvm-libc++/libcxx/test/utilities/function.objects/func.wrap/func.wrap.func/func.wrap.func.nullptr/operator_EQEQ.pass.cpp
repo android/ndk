@@ -1,1 +1,0 @@
-operator_==.pass.cpp
