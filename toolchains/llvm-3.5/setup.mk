@@ -224,6 +224,12 @@ include $(NDK_ROOT)/toolchains/mips64el-linux-android-clang3.5/setup.mk
 
 else
 
+# if unknown ABI ends with 64 suffix then use le64
+ifneq ($(filter %64,$(APP_ABI)),)
+UNKNOWN_ABI_64 := true
+NDK_APP_DST_DIR := $(NDK_APP_LIBS_OUT)/$(TARGET_ARCH_ABI)64
+endif
+
 TARGET_OBJ_EXTENSION := .bc
 TARGET_LIB_EXTENSION := .a
 TARGET_SONAME_EXTENSION := .bc

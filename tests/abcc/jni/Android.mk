@@ -21,6 +21,7 @@ SYSTEM_PREBUILT_PACKAGE ?= true
 LOCAL_MODULE    := libjni_abcc
 LOCAL_MODULE_CLASS := SHARED_LIBRARIES
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/device
+LOCAL_CFLAGS += -DON_DEVICE=1
 LOCAL_SRC_FILES := \
   Abcc.cpp \
   device/Abcc_device.cpp \
@@ -35,8 +36,8 @@ include external/stlport/libstlport.mk
 include $(BUILD_SHARED_LIBRARY)
 else  # SYSTEM_PREBUILT_PACKAGE
 
-LOCAL_CFLAGS += -DON_DEVICE=1
-LOCAL_CFLAGS += -DENABLE_PARALLEL_LLVM_CG=1
+#FIXME: parallel llvm codegen is not yet ported to llvm-3.5
+#LOCAL_CFLAGS += -DENABLE_PARALLEL_LLVM_CG=1
 LOCAL_CFLAGS += -DVERBOSE=0
 LOCAL_LDLIBS := -llog
 LOCAL_STATIC_LIBRARIES := cpufeatures
