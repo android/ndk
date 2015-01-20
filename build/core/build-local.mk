@@ -111,6 +111,22 @@ find-project-dir-inner-2 = \
     )
 
 NDK_PROJECT_PATH := $(strip $(NDK_PROJECT_PATH))
+APP_PROJECT_PATH := $(strip $(APP_PROJECT_PATH))
+
+ifneq (,$(APP_PROJECT_PATH))
+    ifeq (,$(NDK_PROJECT_PATH))
+        # If NDK_PROJECT_PATH isn't set and APP_PROJECT_PATH is present, use APP_PROJECT_PATH
+        $(call ndk_log,Use APP_PROJECT_PATH for NDK_PROJECT_PATH: $(APP_PROJECT_PATH))
+        NDK_PROJECT_PATH := $(APP_PROJECT_PATH)
+    else
+        # If both NDK_PROJECT_PATH and APP_PROJECT_PATH are present, check consistency
+        ifneq ($(NDK_PROJECT_PATH),$(APP_PROJECT_PATH))
+            $(call __ndk_info,WARNING: NDK_PROJECT_PATH and APP_PROJECT_PATH are both set but not equal literally)
+            $(call __ndk_info,  NDK_PROJECT_PATH = $(NDK_PROJECT_PATH))
+            $(call __ndk_info,  APP_PROJECT_PATH = $(APP_PROJECT_PATH))
+        endif
+    endif
+endif
 
 ifeq (null,$(NDK_PROJECT_PATH))
 
