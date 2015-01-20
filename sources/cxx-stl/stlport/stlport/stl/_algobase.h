@@ -625,7 +625,7 @@ __lexicographical_compare_3way(const unsigned char* __first1,
   const ptrdiff_t __len1 = __last1 - __first1;
   const ptrdiff_t __len2 = __last2 - __first2;
   const int __result = memcmp(__first1, __first2, (min) (__len1, __len2));
-  return __result != 0 ? __result
+  return __result != 0 ? (__result > 0 ? 1 : -1 )
                        : (__len1 == __len2 ? 0 : (__len1 < __len2 ? -1 : 1));
 }
 
