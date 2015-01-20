@@ -603,13 +603,35 @@ ndk-gdb will only work if your device is running Android 2.2 or higher.''')
         error('''ndk-gdb requires a target device running Android 2.2 (API level 8) or higher.
 The target device is running API level %d!''' % (API_LEVEL))
     COMPAT_ABI = []
-    _,CPU_ABI1 = adb_var_shell(['getprop', 'ro.product.cpu.abi'])
-    _,CPU_ABI2 = adb_var_shell(['getprop', 'ro.product.cpu.abi2'])
-    # Both CPU_ABI1 and CPU_ABI2 may contain multiple comma-delimited abis.
-    # Concatanate CPU_ABI1 and CPU_ABI2.
-    CPU_ABIS = CPU_ABI1.split(',')+CPU_ABI2.split(',')
+
+    _,CPU_ABILIST32 = adb_var_shell(['getprop', 'ro.product.cpu.abilist32'])
+    _,CPU_ABILIST64 = adb_var_shell(['getprop', 'ro.product.cpu.abilist64'])
+    # Both CPU_ABILIST32 and CPU_ABILIST64 may contain multiple comma-delimited abis.
+    # Concatanate CPU_ABILIST32 and CPU_ABILIST64.
+    CPU_ABIS = CPU_ABILIST64.split(',')+CPU_ABILIST32.split(',')
+    if not CPU_ABILIST64 and not CPU_ABILIST32:
+        _,CPU_ABI1 = adb_var_shell(['getprop', 'ro.product.cpu.abi'])
+        _,CPU_ABI2 = adb_var_shell(['getprop', 'ro.product.cpu.abi2'])
+        CPU_ABIS = CPU_ABI1.split(',')+CPU_ABI2.split(',')
+
     log('Device CPU ABIs: %s' % (' '.join(CPU_ABIS)))
-    COMPAT_ABI = [ABI for ABI in CPU_ABIS if ABI in APP_ABIS]
+
+    device_bits = 32
+    if len(CPU_ABILIST64):
+        device_bits = 64
+
+    app_bits = 32
+    # First look compatible ABI in the list of 64-bit ABIs.
+    COMPAT_ABI = [ABI for ABI in CPU_ABILIST64.split(',') if ABI in APP_ABIS]
+    if len(COMPAT_ABI):
+        # We found compatible ABI and it is 64-bit.
+        app_bits = 64
+    else:
+        # If we found nothing - look among 32-bit ABIs.
+        COMPAT_ABI = [ABI for ABI in CPU_ABILIST32.split(',') if ABI in APP_ABIS]
+        if not len(COMPAT_ABI):
+            # Lastly, lets check ro.product.cpu.abi and ro.product.cpu.abi2
+            COMPAT_ABI = [ABI for ABI in CPU_ABIS if ABI in APP_ABIS]
 
     if not len(COMPAT_ABI):
         error('''The device does not support the application's targetted CPU ABIs!
@@ -652,13 +674,24 @@ After one of these, re-install to the device!''' % (PACKAGE_NAME))
        *then* re-install to the device!''' % (PROJECT,COMPAT_ABI))
 
     # Let's check that 'gdbserver' is properly installed on the device too. If this
-    # is not the case, the user didn't install the proper package after rebuilding.
+    # is not the case, push 'gdbserver' found in prebuilt.
     #
-    retcode,DEVICE_GDBSERVER = adb_var_shell2(['ls', '/data/data/%s/lib/gdbserver' % (PACKAGE_NAME)])
-    if retcode:
-        error('''Non-debuggable application installed on the target device.
-       Please re-install the debuggable version!''')
-    log('Found device gdbserver: %s' % (DEVICE_GDBSERVER))
+    device_gdbserver = '/data/data/%s/lib/gdbserver' % (PACKAGE_NAME)
+    retcode,LS_GDBSERVER = adb_var_shell2(['ls', device_gdbserver])
+    if not retcode:
+        log('Found device gdbserver: %s' % (device_gdbserver))
+    else:
+        gdbserver_prebuilt_path = ('%s/prebuilt/android-%s/gdbserver/gdbserver' % (NDK, COMPAT_ABI))
+        if os.path.isfile(gdbserver_prebuilt_path):
+            log('Found prebuilt gdbserver. Copying it on device')
+            retcode,PUSH_OUTPUT=adb_cmd(True,
+                                       ['shell', 'push', '%s' % gdbserver_prebuilt_path, '/data/local/tmp/gdbserver'])
+            if retcode:
+                error('''Could not copy prebuilt gdberver to the device''')
+            device_gdbserver = '/data/local/tmp/gdbserver'
+        else:
+            error('''Non-debuggable application installed on the target device.
+               Please re-install the debuggable version!''')
 
     # Find the <dataDir> of the package on the device
     retcode,DATA_DIR = adb_var_shell2(['run-as', PACKAGE_NAME, '/system/bin/sh', '-c', 'pwd'])
@@ -721,7 +754,7 @@ After one of these, re-install to the device!''' % (PACKAGE_NAME))
     # Launch gdbserver now
     DEBUG_SOCKET = 'debug-socket'
     adb_cmd(False,
-            ['shell', 'run-as', PACKAGE_NAME, 'lib/gdbserver', '+%s' % (DEBUG_SOCKET), '--attach', str(PID)],
+            ['shell', 'run-as', PACKAGE_NAME, device_gdbserver, '+%s' % (DEBUG_SOCKET), '--attach', str(PID)],
             log_command=True, adb_trace=True, background=True)
     log('Launched gdbserver succesfully.')
 
@@ -741,16 +774,34 @@ After one of these, re-install to the device!''' % (PACKAGE_NAME))
         error('''Could not setup network redirection to gdbserver?
        Maybe using --port=<port> to use a different TCP port might help?''')
 
+    # If we are debugging 32-bit application on 64-bit device
+    # then we need to pull app_process32, not app_process
+    device_app_process = 'app_process'
+    if (device_bits == 64) and (app_bits == 32):
+        log('We are debuggin 32-bit app on 64-bit devices')
+        device_app_process = 'app_process32'
+
+    # If we are debugging 64-bit app, then we need to pull linker64
+    # and libc.so from lib64 directory.
+    linker_name = 'linker'
+    libdir_name = 'lib'
+    if (app_bits == 64):
+        linker_name = 'linker64'
+        libdir_name = 'lib64'
+
+
     # Get the app_server binary from the device
-    APP_PROCESS = '%s/app_process' % (APP_OUT)
-    adb_cmd(False, ['pull', '/system/bin/app_process', APP_PROCESS], log_command=True)
-    log('Pulled app_process from device/emulator.')
+    pulled_app_process = '%s/app_process' % (APP_OUT)
+    adb_cmd(False, ['pull', '/system/bin/%s' % (device_app_process), pulled_app_process], log_command=True)
+    log('Pulled %s from device/emulator.' % (device_app_process))
 
-    adb_cmd(False, ['pull', '/system/bin/linker', '%s/linker' % (APP_OUT)], log_command=True)
-    log('Pulled linker from device/emulator.')
+    pulled_linker = '%s/linker' % (APP_OUT)
+    adb_cmd(False, ['pull', '/system/bin/%s' % (linker_name), pulled_linker], log_command=True)
+    log('Pulled %s from device/emulator.' % (linker_name))
 
-    adb_cmd(False, ['pull', '/system/lib/libc.so', '%s/libc.so' % (APP_OUT)], log_command=True)
-    log('Pulled libc.so from device/emulator.')
+    pulled_libc = '%s/libc.so' % (APP_OUT)
+    adb_cmd(False, ['pull', '/system/%s/libc.so' % libdir_name, pulled_libc], log_command=True)
+    log('Pulled /system/%s/libc.so from device/emulator.' % libdir_name)
 
     # Setup JDB connection, for --start or --launch
     if (OPTION_START != None or OPTION_LAUNCH != None) and len(OPTION_WAIT):
@@ -798,7 +849,7 @@ After one of these, re-install to the device!''' % (PACKAGE_NAME))
     with open(GDBSETUP, "a") as gdbsetup:
         #uncomment the following to debug the remote connection only
         #gdbsetup.write('set debug remote 1\n')
-        gdbsetup.write('file '+APP_PROCESS+'\n')
+        gdbsetup.write('file '+pulled_app_process+'\n')
         gdbsetup.write('target remote :%d\n' % (DEBUG_PORT))
         gdbsetup.write('set breakpoint pending on\n')
 
