@@ -774,28 +774,28 @@ After one of these, re-install to the device!''' % (PACKAGE_NAME))
         error('''Could not setup network redirection to gdbserver?
        Maybe using --port=<port> to use a different TCP port might help?''')
 
-    # If we are debugging 32-bit application on 64-bit device
-    # then we need to pull app_process32, not app_process
-    device_app_process = 'app_process'
-    if (device_bits == 64) and (app_bits == 32):
-        log('We are debuggin 32-bit app on 64-bit devices')
-        device_app_process = 'app_process32'
-
-    # If we are debugging 64-bit app, then we need to pull linker64
-    # and libc.so from lib64 directory.
+    # If we are debugging 64-bit app, then we need to pull linker64,
+    # app_process64 and libc.so from lib64 directory.
     linker_name = 'linker'
     libdir_name = 'lib'
+    app_process_name = 'app_process32'
     if (app_bits == 64):
         linker_name = 'linker64'
         libdir_name = 'lib64'
-
+        app_process_name = 'app_process64'
+    else:
+        retcode,_ = adb_cmd(False, ['shell', 'test -e /system/bin/%s' % (app_process_name)])
+        if retcode:
+            # Old 32-bit devices do not have app_process32. Pull
+            # app_process in this case
+            app_process_name = 'app_process'
 
     # Get the app_server binary from the device
     pulled_app_process = '%s/app_process' % (APP_OUT)
-    adb_cmd(False, ['pull', '/system/bin/%s' % (device_app_process), pulled_app_process], log_command=True)
-    log('Pulled %s from device/emulator.' % (device_app_process))
+    adb_cmd(False, ['pull', '/system/bin/%s' % (app_process_name), pulled_app_process], log_command=True)
+    log('Pulled %s from device/emulator.' % (app_process_name))
 
-    pulled_linker = '%s/linker' % (APP_OUT)
+    pulled_linker = '%s/%s' % (APP_OUT, linker_name)
     adb_cmd(False, ['pull', '/system/bin/%s' % (linker_name), pulled_linker], log_command=True)
     log('Pulled %s from device/emulator.' % (linker_name))
 
