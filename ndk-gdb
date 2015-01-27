@@ -789,29 +789,30 @@ if [ $? != 0 ] ; then
     exit 1
 fi
 
-# If we are debugging 32-bit application on 64-bit device
-# then we need to pull app_process32, not app_process
-APP_PROCESS_NAME=app_process
-if [ "$COMPAT_ABI_BITS" = 32 ] && [ -n "$CPU_ABILIST64" ] ; then
-    APP_PROCESS_NAME=app_process32
-    log "We are debugging 32-bit app on 64-bit device"
-fi
-
-# If we are debugging 64-bit app, then we need to pull linker64
-# and libc.so from lib64 directory
+# If we are debugging 64-bit app, then we need to pull linker64,
+# app_process64 and libc.so from lib64 directory
 LINKER_NAME=linker
 LIBDIR_NAME=lib
+APP_PROCESS_NAME=app_process32
 if [ "$COMPAT_ABI_BITS" = 64 ] ; then
     LINKER_NAME=linker64
     LIBDIR_NAME=lib64
+    APP_PROCESS_NAME=app_process64
+else
+    # Old 32-bit devices do not have app_process32. Pull
+    # app_process in this case
+    run adb_cmd shell test -e /system/bin/$APP_PROCESS_NAME
+    if [ $? != 0 ] ; then
+        APP_PROCESS_NAME=app_process
+    fi
 fi
 
 # Get the app_server binary from the device
-APP_PROCESS=$APP_OUT/$APP_PROCESS_NAME
+APP_PROCESS=$APP_OUT/app_process
 run adb_cmd pull /system/bin/$APP_PROCESS_NAME `native_path $APP_PROCESS`
 log "Pulled $APP_PROCESS_NAME from device/emulator."
 
-run adb_cmd pull /system/bin/$LINKER_NAME `native_path $APP_OUT/linker`
+run adb_cmd pull /system/bin/$LINKER_NAME `native_path $APP_OUT/$LINKER_NAME`
 log "Pulled $LINKER_NAME from device/emulator."
 
 run adb_cmd pull /system/$LIBDIR_NAME/libc.so `native_path $APP_OUT/libc.so`
