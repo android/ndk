@@ -142,7 +142,6 @@ rm -rf $COMMON_ROOT
 mkdir -p $COMMON_ROOT
 
 LIB_ROOT=$SYSROOT/usr/lib
-INCLUDE_ROOT=$SYSROOT/usr/include
 
 install_file ()
 {
