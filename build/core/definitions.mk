@@ -1635,7 +1635,7 @@ _FLAGS := $$(call host-c-includes,$$(LOCAL_C_INCLUDES) $$(LOCAL_PATH)) \
           $$(LOCAL_ASMFLAGS) \
           $$(NDK_APP_ASMFLAGS) \
           $$(call host-c-includes,$$($(my)C_INCLUDES)) \
-          -f elf32 -m x86
+          $$(if $$(filter x86_64, $$(TARGET_ARCH_ABI)), -f elf64, -f elf32 -m x86)
 
 _TEXT := Assemble $$(call get-src-file-text,$1)
 _CC   := $$(NDK_CCACHE) $$(TARGET_ASM)
