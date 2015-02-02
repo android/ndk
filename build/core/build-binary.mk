@@ -347,7 +347,7 @@ LOCAL_DEPENDENCY_DIRS :=
 
 # all_source_patterns contains the list of filename patterns that correspond
 # to source files recognized by our build system
-ifeq ($(TARGET_ARCH_ABI),x86)
+ifneq ($(filter x86 x86_64, $(TARGET_ARCH_ABI)),)
 all_source_extensions := .c .s .S .asm $(LOCAL_CPP_EXTENSION) $(LOCAL_RS_EXTENSION)
 else
 all_source_extensions := .c .s .S $(LOCAL_CPP_EXTENSION) $(LOCAL_RS_EXTENSION)
@@ -462,7 +462,7 @@ $(foreach src,$(filter $(all_rs_patterns),$(LOCAL_SRC_FILES)),\
     $(call compile-rs-source,$(src),$(call get-rs-scriptc-name,$(src)),$(call get-rs-bc-name,$(src)),$(call get-rs-so-name,$(src)),$(call get-object-name,$(src)),$(RS_COMPAT))\
 )
 
-ifeq ($(TARGET_ARCH_ABI),x86)
+ifneq ($(filter x86 x86_64, $(TARGET_ARCH_ABI)),)
 $(foreach src,$(filter %.asm,$(LOCAL_SRC_FILES)), $(call compile-asm-source,$(src),$(call get-object-name,$(src))))
 endif
 
