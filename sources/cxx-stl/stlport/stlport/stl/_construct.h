@@ -115,19 +115,19 @@ inline void _Construct(_T1* __p) {
 }
 
 template <class _Tp>
-inline void _Copy_Construct_aux(_Tp* __p, const _Tp& __val, const __false_type&) {
+__attribute__((always_inline)) inline void _Copy_Construct_aux(_Tp* __p, const _Tp& __val, const __false_type&) {
   new(__p) _Tp(__val);
 }
 
 template <class _Tp>
-inline void _Copy_Construct_aux(_Tp* __p, const _Tp& __val, const __true_type&) {
+__attribute__((always_inline)) inline void _Copy_Construct_aux(_Tp* __p, const _Tp& __val, const __true_type&) {
   // We use binary copying for POD types since it results
   // in a considerably better code at least on MSVC.
   *__p = __val;
 }
 
 template <class _Tp>
-inline void _Copy_Construct(_Tp* __p, const _Tp& __val) {
+__attribute__((always_inline)) inline void _Copy_Construct(_Tp* __p, const _Tp& __val) {
 #if defined (_STLP_DEBUG_UNINITIALIZED)
   memset((char*)__p, _STLP_SHRED_BYTE, sizeof(_Tp));
 #endif
@@ -135,19 +135,19 @@ inline void _Copy_Construct(_Tp* __p, const _Tp& __val) {
 }
 
 template <class _T1, class _T2>
-inline void _Param_Construct_aux(_T1* __p, const _T2& __val, const __false_type&) {
+__attribute__((always_inline)) inline void _Param_Construct_aux(_T1* __p, const _T2& __val, const __false_type&) {
   new(__p) _T1(__val);
 }
 
 template <class _T1, class _T2>
-inline void _Param_Construct_aux(_T1* __p, const _T2& __val, const __true_type&) {
+__attribute__((always_inline)) inline void _Param_Construct_aux(_T1* __p, const _T2& __val, const __true_type&) {
   // We use binary copying for POD types since it results
   // in a considerably better code at least on MSVC.
   *__p = _T1(__val);
 }
 
 template <class _T1, class _T2>
-inline void _Param_Construct(_T1* __p, const _T2& __val) {
+__attribute__((always_inline)) inline void _Param_Construct(_T1* __p, const _T2& __val) {
 #if defined (_STLP_DEBUG_UNINITIALIZED)
   memset((char*)__p, _STLP_SHRED_BYTE, sizeof(_T1));
 #endif
@@ -155,7 +155,7 @@ inline void _Param_Construct(_T1* __p, const _T2& __val) {
 }
 
 template <class _T1, class _T2>
-inline void _Move_Construct_Aux(_T1* __p, _T2& __val, const __false_type& /*_IsPOD*/) {
+__attribute__((always_inline)) inline void _Move_Construct_Aux(_T1* __p, _T2& __val, const __false_type& /*_IsPOD*/) {
 #if !defined (_STLP_NO_MOVE_SEMANTIC)
   new(__p) _T1(_STLP_PRIV _AsMoveSource(__val));
 #else
@@ -164,14 +164,14 @@ inline void _Move_Construct_Aux(_T1* __p, _T2& __val, const __false_type& /*_IsP
 }
 
 template <class _T1, class _T2>
-inline void _Move_Construct_Aux(_T1* __p, _T2& __val, const __true_type& /*_IsPOD*/) {
+__attribute__((always_inline)) inline void _Move_Construct_Aux(_T1* __p, _T2& __val, const __true_type& /*_IsPOD*/) {
   // We use binary copying for POD types since it results
   // in a considerably better code at least on MSVC.
   *__p = _T1(__val);
 }
 
 template <class _T1, class _T2>
-inline void _Move_Construct(_T1* __p, _T2& __val) {
+__attribute__((always_inline)) inline void _Move_Construct(_T1* __p, _T2& __val) {
 #if defined (_STLP_DEBUG_UNINITIALIZED)
   memset((char*)__p, _STLP_SHRED_BYTE, sizeof(_T1));
 #endif

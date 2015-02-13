@@ -78,7 +78,7 @@ void vector<_Tp, _Alloc>::reserve(size_type __n) {
 }
 
 template <class _Tp, class _Alloc>
-void vector<_Tp, _Alloc>::_M_insert_overflow_aux(pointer __pos, const _Tp& __x, const __false_type& /*DO NOT USE!!*/,
+__attribute__((noinline)) void vector<_Tp, _Alloc>::_M_insert_overflow_aux(pointer __pos, const _Tp& __x, const __false_type& /*DO NOT USE!!*/,
                                                  size_type __fill_len, bool __atend ) {
   typedef typename __type_traits<_Tp>::has_trivial_copy_constructor _TrivialUCopy;
 #if !defined (_STLP_NO_MOVE_SEMANTIC)
