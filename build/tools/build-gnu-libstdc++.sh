@@ -184,9 +184,15 @@ build_gnustl_for_abi ()
             ;;
         x86)
             BUILD_HOST=i686-linux-android
+            # ToDo: remove the following once all x86-based device call JNI function with
+            #       stack aligned to 16-byte
+            EXTRA_CFLAGS="$EXTRA_CFLAGS -mstackrealign"
             ;;
         x86_64)
             BUILD_HOST=x86_64-linux-android
+            # ToDo: remove the following once all x86-based device call JNI function with
+            #       stack aligned to 16-byte
+            EXTRA_CFLAGS="$EXTRA_CFLAGS -mstackrealign"
             ;;
         mips)
             BUILD_HOST=mipsel-linux-android
