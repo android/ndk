@@ -133,7 +133,7 @@ parse_toolchain_name $TOOLCHAIN
 check_toolchain_install $NDK_DIR $TOOLCHAIN
 
 if [ -z "$PLATFORM" ]; then
-   PLATFORM="android-"$(get_default_api_level_for_arch $ARCH)
+    PLATFORM="android-"$(get_default_api_level_for_arch $ARCH)
 fi
 
 # Check build directory
@@ -182,13 +182,13 @@ fi
 log "Using build sysroot: $BUILD_SYSROOT"
 
 # configure the gdbserver build now
-dump "Configure: $TOOLCHAIN gdbserver-$GDBVER build."
+dump "Configure: $TOOLCHAIN gdbserver-$GDBVER build with $PLATFORM"
 
 case "$GDBVER" in
     6.6)
         CONFIGURE_FLAGS="--with-sysroot=$BUILD_SYSROOT"
         ;;
-    7.3.x)
+    7.3.x|7.6|7.7)
         # This flag is required to link libthread_db statically to our
         # gdbserver binary. Otherwise, the program will try to dlopen()
         # the threads binary, which is not possible since we build a
@@ -196,10 +196,6 @@ case "$GDBVER" in
         CONFIGURE_FLAGS="--with-libthread-db=$BUILD_SYSROOT/usr/$LIBDIR/libthread_db.a"
         # Disable libinproctrace.so which needs crtbegin_so.o and crtbend_so.o instead of
         # CRTBEGIN/END above.  Clean it up and re-enable it in the future.
-        CONFIGURE_FLAGS=$CONFIGURE_FLAGS" --disable-inprocess-agent"
-        ;;
-    7.6)
-        CONFIGURE_FLAGS="--with-libthread-db=$BUILD_SYSROOT/usr/$LIBDIR/libthread_db.a"
         CONFIGURE_FLAGS=$CONFIGURE_FLAGS" --disable-inprocess-agent"
         ;;
     *)
