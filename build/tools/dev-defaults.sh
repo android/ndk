@@ -269,7 +269,7 @@ get_toolchain_name_list_for_arch ()
 get_default_binutils_version_for_gcc ()
 {
     case $1 in
-        mips*) echo "2.24";;
+        mips*) echo "2.25";;
         *-4.6) echo "2.21";;
         *-4.4.3) echo "2.19";;
         x86*-4.7) echo "2.23";;  # Use 2.23 to get x32 support in ld.gold
