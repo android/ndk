@@ -493,12 +493,12 @@ if [ ! -z "$OPTION_PACKAGE_NAME" ]; then
 else
     # Extract the package name from the manifest
     PACKAGE_NAME=`run_awk_manifest_script extract-package-name.awk`
-    log "Found package name: $PACKAGE_NAME"
     if [ $? != 0 -o "$PACKAGE_NAME" = "<none>" ] ; then
         echo "ERROR: Could not extract package name from $PROJECT/$MANIFEST."
         echo "       Please check that the file is well-formed!"
         exit 1
     fi
+    log "Found package name: $PACKAGE_NAME"
 fi
 
 # If --launch-list is used, list all launchable activities, and be done with it
@@ -633,8 +633,9 @@ log "Using app out directory: $APP_OUT"
 
 # Check that the application is debuggable, or nothing will work
 DEBUGGABLE=`run_awk_manifest_script extract-debuggable.awk`
+RET=$?
 log "Found debuggable flag: $DEBUGGABLE"
-if [ $? != 0 -o "$DEBUGGABLE" != "true" ] ; then
+if [ "$RET" != 0 -o "$DEBUGGABLE" != "true" ] ; then
     # If gdb.setup exists, then we built with 'ndk-build NDK_DEBUG=1' and it's
     # ok to not have android:debuggable set to true in the original manifest.
     # However, if this is not the case, then complain!!
@@ -730,7 +731,7 @@ fi
 
 if [ -n "$OPTION_LAUNCH" ] ; then
     log "Launching activity: $PACKAGE_NAME/$OPTION_LAUNCH"
-    run adb_cmd shell am start $OPTION_WAIT -n $PACKAGE_NAME/$OPTION_LAUNCH
+    adb_var_shell2 DUMMY am start $OPTION_WAIT -n $PACKAGE_NAME/$OPTION_LAUNCH
     if [ $? != 0 ] ; then
         echo "ERROR: Could not launch specified activity: $OPTION_LAUNCH"
         echo "       Use --launch-list to dump a list of valid values."
@@ -743,8 +744,9 @@ fi
 
 # Find the PID of the application being run
 PID=$(get_pid_of "$PACKAGE_NAME")
+RET=$?
 log "Found running PID: $PID"
-if [ $? != 0 -o "$PID" = "0" ] ; then
+if [ "$RET" != 0 -o "$PID" = "0" ] ; then
     echo "ERROR: Could not extract PID of application on device/emulator."
     if [ -n "$OPTION_LAUNCH" ] ; then
         echo "       Weird, this probably means one of these:"
@@ -773,7 +775,7 @@ fi
 
 # Launch gdbserver now
 DEBUG_SOCKET=debug-socket
-run adb_cmd shell run-as $PACKAGE_NAME $DEVICE_GDBSERVER +$DEBUG_SOCKET --attach $PID &
+adb_var_shell2 DUMMY run-as $PACKAGE_NAME $DEVICE_GDBSERVER +$DEBUG_SOCKET --attach $PID &
 if [ $? != 0 ] ; then
     echo "ERROR: Could not launch gdbserver on the device?"
     exit 1
@@ -801,7 +803,7 @@ if [ "$COMPAT_ABI_BITS" = 64 ] ; then
 else
     # Old 32-bit devices do not have app_process32. Pull
     # app_process in this case
-    run adb_cmd shell test -e /system/bin/$APP_PROCESS_NAME
+    adb_var_shell2 DUMMY test -e /system/bin/$APP_PROCESS_NAME
     if [ $? != 0 ] ; then
         APP_PROCESS_NAME=app_process
     fi
