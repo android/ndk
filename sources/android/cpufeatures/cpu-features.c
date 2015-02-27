@@ -492,25 +492,34 @@ cpulist_read_from(CpuList* list, const char* filename)
 // C runtime initialization layer.
 static uint32_t
 get_elf_hwcap_from_getauxval(int hwcap_type) {
-    typedef unsigned long getauxval_func_t(unsigned long);
-
-    dlerror();
-    void* libc_handle = dlopen("libc.so", RTLD_NOW);
-    if (!libc_handle) {
-        D("Could not dlopen() C library: %s\n", dlerror());
-        return 0;
-    }
-
     uint32_t ret = 0;
-    getauxval_func_t* func = (getauxval_func_t*)
-            dlsym(libc_handle, "getauxval");
-    if (!func) {
-        D("Could not find getauxval() in C library\n");
-    } else {
-        // Note: getauxval() returns 0 on failure. Doesn't touch errno.
-        ret = (uint32_t)(*func)(hwcap_type);
+    char version_string[PROP_VALUE_MAX + 1];
+
+    /* A length 0 indicates that property is not defined */
+    if (__system_property_get("ro.build.version.sdk", version_string) > 0) {
+        if (atol(version_string) >= 20) {
+
+            typedef unsigned long getauxval_func_t(unsigned long);
+        
+            dlerror();
+            void* libc_handle = dlopen("libc.so", RTLD_NOW);
+            if (!libc_handle) {
+                D("Could not dlopen() C library: %s\n", dlerror());
+                return 0;
+            }
+        
+            getauxval_func_t* func = (getauxval_func_t*)
+                    dlsym(libc_handle, "getauxval");
+            if (!func) {
+                D("Could not find getauxval() in C library\n");
+            } else {
+                // Note: getauxval() returns 0 on failure. Doesn't touch errno.
+                ret = (uint32_t)(*func)(hwcap_type);
+            }
+            dlclose(libc_handle);
+        }
     }
-    dlclose(libc_handle);
+
     return ret;
 }
 #endif
