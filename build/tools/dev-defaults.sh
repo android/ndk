@@ -57,7 +57,7 @@ DEFAULT_LLVM_GCC32_VERSION=4.8
 DEFAULT_LLVM_GCC64_VERSION=4.9
 
 DEFAULT_BINUTILS_VERSION=2.24
-DEFAULT_GDB_VERSION=7.3.x
+DEFAULT_GDB_VERSION=7.7
 DEFAULT_MPFR_VERSION=3.1.1
 DEFAULT_GMP_VERSION=5.0.5
 DEFAULT_MPC_VERSION=1.0.1
@@ -301,8 +301,6 @@ get_default_binutils_version_for_llvm ()
 get_default_gdb_version_for_gcc ()
 {
     case $1 in
-        mips*) echo "7.7";;
-        x86*|aarch64-*|*-4.8|*-4.8l|*-4.9|*-4.9l) echo "7.6";;
         *) echo "$DEFAULT_GDB_VERSION";;
     esac
 }
@@ -315,7 +313,6 @@ get_default_gdb_version_for_gcc ()
 get_default_gdbserver_version_for_gcc ()
 {
     case $1 in
-        mips*) echo "7.7";;
-        *) echo "7.6";;
+        *) echo "7.7";;
     esac
 }

@@ -202,6 +202,10 @@ case "$GDBVER" in
         CONFIGURE_FLAGS="--with-libthread-db=$BUILD_SYSROOT/usr/$LIBDIR/libthread_db.a"
         CONFIGURE_FLAGS=$CONFIGURE_FLAGS" --disable-inprocess-agent"
         ;;
+    7.7)
+        CONFIGURE_FLAGS="--with-libthread-db=$BUILD_SYSROOT/usr/$LIBDIR/libthread_db.a"
+        CONFIGURE_FLAGS=$CONFIGURE_FLAGS" --disable-inprocess-agent"
+        ;;
     *)
         CONFIGURE_FLAGS=""
 esac
