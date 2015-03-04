@@ -168,8 +168,7 @@ if [ "$NOTHREADS" != "yes" ] ; then
         dump "ERROR: Missing directory: $LIBTHREAD_DB_DIR"
         exit 1
     fi
-    # Small trick, to avoid calling ar, we store the single object file
-    # with an .a suffix. The linker will handle that seamlessly.
+
     run cp $LIBTHREAD_DB_DIR/thread_db.h $BUILD_SYSROOT/usr/include/
     run $TOOLCHAIN_PREFIX-gcc --sysroot=$BUILD_SYSROOT -o $BUILD_SYSROOT/usr/$LIBDIR/libthread_db.o -c $LIBTHREAD_DB_DIR/libthread_db.c
     run $TOOLCHAIN_PREFIX-ar -rD $BUILD_SYSROOT/usr/$LIBDIR/libthread_db.a $BUILD_SYSROOT/usr/$LIBDIR/libthread_db.o
