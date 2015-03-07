@@ -211,7 +211,7 @@ export CFLAGS="-O2 $GDBSERVER_CFLAGS"  &&
 export LDFLAGS="-static -Wl,-z,nocopyreloc -Wl,--no-undefined" &&
 run $SRC_DIR/configure \
 --host=$GDBSERVER_HOST \
-$CONFIGURE_FLAGS
+$CONFIGURE_FLAGS --disable-werror
 if [ $? != 0 ] ; then
     dump "Could not configure gdbserver build. See $TMPLOG"
     exit 1
