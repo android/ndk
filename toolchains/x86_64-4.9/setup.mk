@@ -29,6 +29,7 @@ TOOLCHAIN_PREFIX := $(TOOLCHAIN_PREBUILT_ROOT)/bin/x86_64-linux-android-
 TARGET_CFLAGS := \
     -ffunction-sections \
     -funwind-tables \
+    -fstack-check \
     -fstack-protector-strong \
     -no-canonical-prefixes
 
