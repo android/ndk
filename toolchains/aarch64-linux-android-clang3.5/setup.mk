@@ -49,7 +49,7 @@ TARGET_CFLAGS := \
     -target $(LLVM_TRIPLE) \
     -ffunction-sections \
     -funwind-tables \
-    -fstack-protector \
+    -fstack-protector-strong \
     -fpic \
     -Wno-invalid-command-line-argument \
     -Wno-unused-command-line-argument \
