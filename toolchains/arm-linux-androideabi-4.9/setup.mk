@@ -27,6 +27,7 @@ TARGET_CFLAGS := \
     -fpic \
     -ffunction-sections \
     -funwind-tables \
+    -fstack-check \
     -fstack-protector-strong \
     -no-canonical-prefixes
 
