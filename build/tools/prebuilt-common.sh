@@ -1119,7 +1119,7 @@ parse_toolchain_name ()
         ABI_INSTALL_NAME="mips"
         ABI_CONFIGURE_TARGET="mipsel-linux-android"
         # Set default to mips32
-        ABI_CONFIGURE_EXTRA_FLAGS="--with-arch=mips32 -with-fp-32=xx --with-odd-spreg-32=no"
+        ABI_CONFIGURE_EXTRA_FLAGS="--with-arch=mips32"
         # Enable C++ exceptions, RTTI and GNU libstdc++ at the same time
         # You can't really build these separately at the moment.
         # Add -fpic, because MIPS NDK will need to link .a into .so.
