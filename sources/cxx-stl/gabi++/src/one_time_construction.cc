@@ -52,7 +52,7 @@
  *
  * Cons: Slower than necessary.
  */
-static pthread_mutex_t  sMutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+static pthread_mutex_t  sMutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER;
 static pthread_cond_t   sCond  = PTHREAD_COND_INITIALIZER;
 
 
