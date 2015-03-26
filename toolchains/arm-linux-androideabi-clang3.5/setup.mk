@@ -51,7 +51,7 @@ TARGET_CFLAGS := \
     -fpic \
     -ffunction-sections \
     -funwind-tables \
-    -fstack-protector \
+    -fstack-protector-strong \
     -Wno-invalid-command-line-argument \
     -Wno-unused-command-line-argument \
     -no-canonical-prefixes

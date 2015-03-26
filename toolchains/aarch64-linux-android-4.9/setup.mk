@@ -30,7 +30,7 @@ TARGET_CFLAGS := \
     -fpic \
     -ffunction-sections \
     -funwind-tables \
-    -fstack-protector \
+    -fstack-protector-strong \
     -no-canonical-prefixes
 
 TARGET_C_INCLUDES := \

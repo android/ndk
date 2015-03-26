@@ -37,7 +37,7 @@ TARGET_C_INCLUDES := \
 # Add and LDFLAGS for the target here
 TARGET_LDFLAGS := -no-canonical-prefixes
 
-TARGET_CFLAGS += -fstack-protector
+TARGET_CFLAGS += -fstack-protector-strong
 
 TARGET_x86_release_CFLAGS := -O2 \
                              -g \
