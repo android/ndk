@@ -561,7 +561,7 @@ if [ -n "$WITH_PYTHON" -a "$MINGW" = "yes" ] ; then
 fi
 
 # don't forget to copy the GPL and LGPL license files
-run cp -f $TOOLCHAIN_LICENSES/COPYING $TOOLCHAIN_LICENSES/COPYING.LIB $TOOLCHAIN_PATH
+run cp -f $TOOLCHAIN_LICENSES/COPYING* $TOOLCHAIN_PATH
 
 # remove some unneeded files
 run rm -f $TOOLCHAIN_PATH/bin/*-gccbug
