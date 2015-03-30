@@ -56,8 +56,8 @@ FIRST_GCC64_VERSION=4.9
 DEFAULT_LLVM_GCC32_VERSION=4.8
 DEFAULT_LLVM_GCC64_VERSION=4.9
 
-DEFAULT_BINUTILS_VERSION=2.24
-DEFAULT_GDB_VERSION=7.3.x
+DEFAULT_BINUTILS_VERSION=2.25
+DEFAULT_GDB_VERSION=7.7
 DEFAULT_MPFR_VERSION=3.1.1
 DEFAULT_GMP_VERSION=5.0.5
 DEFAULT_MPC_VERSION=1.0.1
@@ -67,7 +67,7 @@ DEFAULT_PPL_VERSION=1.0
 DEFAULT_PYTHON_VERSION=2.7.5
 DEFAULT_PERL_VERSION=5.16.2
 
-RECENT_BINUTILS_VERSION=2.24
+RECENT_BINUTILS_VERSION=2.25
 
 # Default platform to build target binaries against.
 DEFAULT_PLATFORM=android-9
@@ -268,14 +268,7 @@ get_toolchain_name_list_for_arch ()
 #
 get_default_binutils_version_for_gcc ()
 {
-    case $1 in
-        mips*|aarch64*) echo "2.25";;
-        *-4.6) echo "2.21";;
-        *-4.4.3) echo "2.19";;
-        x86*-4.7) echo "2.23";;  # Use 2.23 to get x32 support in ld.gold
-        *-4.7) echo "2.22";;
-        *) echo "$DEFAULT_BINUTILS_VERSION";;
-    esac
+    echo "$DEFAULT_BINUTILS_VERSION"
 }
 
 # Return the binutils version to be used by default when
@@ -287,10 +280,7 @@ get_default_binutils_version_for_gcc ()
 #
 get_default_binutils_version_for_llvm ()
 {
-    case $1 in
-        *-3.3|*-3.2) echo "2.21";;
-        *) echo "2.24";;
-    esac
+    echo "$DEFAULT_BINUTILS_VERSION"
 }
 
 # Return the gdb version to be used by default when building a given
@@ -300,7 +290,7 @@ get_default_binutils_version_for_llvm ()
 #
 get_default_gdb_version_for_gcc ()
 {
-    echo "7.7";
+    echo "$DEFAULT_GDB_VERSION"
 }
 
 # Return the gdbserver version to be used by default when building a given
@@ -310,5 +300,5 @@ get_default_gdb_version_for_gcc ()
 #
 get_default_gdbserver_version_for_gcc ()
 {
-    echo "7.7";
+    echo "$DEFAULT_GDB_VERSION"
 }
