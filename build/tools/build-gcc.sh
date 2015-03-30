@@ -326,15 +326,20 @@ esac
 # Disable libsanitizer (which depends on libstdc++ built separately) for now
 EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --disable-libsanitizer"
 
-# Enable Gold as default
+# Enable Gold
 case "$TOOLCHAIN" in
-    # Note that only ARM and X86 >= GCC 4.6 are supported
+    # Note that only ARM/X86 >= GCC 4.6 and AARCH64 >= GCC 4.9 are supported
     mips*)
     ;;
     *-4.4.3)
     ;;
+    aarch64*)
+        # Enable ld.gold but ld.bfd remain the default
+        EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-gold --enable-ld=default --enable-threads"
+    ;;
     *)
-        EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-gold=default"
+        # Enable ld.gold as default
+        EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-gold=default --enable-threads"
     ;;
 esac
 
@@ -648,7 +653,15 @@ do_relink_bin () {
 do_relink_bin c++ g++
 do_relink_bin gcc-$GCC_VERSION gcc
 # symlink ld to either ld.gold or ld.bfd
-do_relink_bin ld ld.gold ld.bfd
+case "$TOOLCHAIN" in
+    aarch64*)
+    # Don't make ld.gold as default for now because it's new
+    do_relink_bin ld ld.bfd ld.gold 
+    ;;
+    *)
+    do_relink_bin ld ld.gold ld.bfd
+    ;;
+esac
 
 # copy SOURCES file if present
 if [ -f "$SRC_DIR/SOURCES" ]; then
