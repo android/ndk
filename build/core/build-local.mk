@@ -78,11 +78,11 @@ ifeq ($(HOST_OS),windows)
 #   $(dir C:/foo) -> C:/      (correct)
 #   $(dir C:\foo) -> C:\      (correct)
 #
-host-dir-parent = $(strip \
+host-dir-parent = $(patsubst %/,%,$(strip \
     $(eval __host_dir_node := $(patsubst %/,%,$(subst \,/,$1)))\
     $(eval __host_dir_parent := $(dir $(__host_dir_node)))\
     $(filter-out $1,$(__host_dir_parent))\
-    )
+    ))
 else
 host-dir-parent = $(patsubst %/,%,$(dir $1))
 endif
