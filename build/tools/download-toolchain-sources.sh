@@ -217,7 +217,7 @@ toolchain_checkout "" $BRANCH ppl .
 toolchain_checkout "" $BRANCH expat .
 toolchain_checkout "" $BRANCH binutils binutils-2.24 binutils-2.25
 toolchain_checkout "" $BRANCH gcc gcc-4.8 gcc-4.9
-toolchain_checkout "" $BRANCH gdb gdb-7.3.x gdb-7.6 gdb-7.7
+toolchain_checkout "" $BRANCH gdb gdb-7.7
 toolchain_checkout "" $BRANCH python Python-2.7.5
 toolchain_checkout "" $BRANCH perl perl-5.16.2
 toolchain_checkout "" $BRANCH mclinker .
