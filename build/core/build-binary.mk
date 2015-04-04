@@ -206,6 +206,12 @@ else
   LOCAL_CFLAGS += $($(my)FORMAT_STRING_CFLAGS)
 endif
 
+# By default, perform standards compliant hardening against buffer overflows.
+ifeq ($(LOCAL_FORTIFY_LEVEL),)
+  LOCAL_FORTIFY_LEVEL := 1
+endif
+LOCAL_CFLAGS += -D_FORTIFY_SOURCE=$(LOCAL_FORTIFY_LEVEL)
+
 # enable PIE for executable beyond certain API level, unless "-static"
 ifneq (,$(filter true,$(NDK_APP_PIE) $(TARGET_PIE)))
   ifeq ($(call module-get-class,$(LOCAL_MODULE)),EXECUTABLE)
