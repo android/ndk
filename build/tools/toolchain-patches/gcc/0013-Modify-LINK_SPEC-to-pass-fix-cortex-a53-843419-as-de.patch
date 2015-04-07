@@ -1,0 +1,88 @@
+From 0e1b74b6ffbeadab5351d6a426e530886e00aa69 Mon Sep 17 00:00:00 2001
+From: Lai Wei-Chih <Robert.Lai@mediatek.com>
+Date: Mon, 6 Apr 2015 13:59:54 +0800
+Subject: [PATCH] Modify LINK_SPEC to pass --fix-cortex-a53-843419 as default.
+
+For NDK toolchains, always enable the fix of cortex-a53 erratum 843419.
+Use -mno-fix-cortex-a53-843419 to disable this workaround.
+
+Change-Id: I69b8a71113abb172138bf0986697a94e42a5117e
+---
+ gcc-4.9/gcc/config/aarch64/aarch64-elf-raw.h | 6 +++++-
+ gcc-4.9/gcc/config/aarch64/aarch64-linux.h   | 7 ++++++-
+ gcc-4.9/gcc/config/aarch64/aarch64.c         | 5 +++++
+ gcc-4.9/gcc/config/aarch64/aarch64.opt       | 4 ++++
+ 4 files changed, 20 insertions(+), 2 deletions(-)
+
+diff --git a/gcc-4.9/gcc/config/aarch64/aarch64-elf-raw.h b/gcc-4.9/gcc/config/aarch64/aarch64-elf-raw.h
+index eafdd55..99611c5 100644
+--- a/gcc-4.9/gcc/config/aarch64/aarch64-elf-raw.h
++++ b/gcc-4.9/gcc/config/aarch64/aarch64-elf-raw.h
+@@ -33,10 +33,14 @@
+   " %{mfix-cortex-a53-835769:--fix-cortex-a53-835769}"
+ #endif
+ 
++#define CA53_ERR_843419_SPEC \
++  " %{!mno-fix-cortex-a53-843419:--fix-cortex-a53-843419}"
++
+ #ifndef LINK_SPEC
+ #define LINK_SPEC "%{mbig-endian:-EB} %{mlittle-endian:-EL} -X \
+   -maarch64elf%{mabi=ilp32*:32}%{mbig-endian:b}" \
+-  CA53_ERR_835769_SPEC
++  CA53_ERR_835769_SPEC \
++  CA53_ERR_843419_SPEC
+ #endif
+ 
+ #endif /* GCC_AARCH64_ELF_RAW_H */
+diff --git a/gcc-4.9/gcc/config/aarch64/aarch64-linux.h b/gcc-4.9/gcc/config/aarch64/aarch64-linux.h
+index b77becd..7b77c42 100644
+--- a/gcc-4.9/gcc/config/aarch64/aarch64-linux.h
++++ b/gcc-4.9/gcc/config/aarch64/aarch64-linux.h
+@@ -48,7 +48,12 @@
+   " %{mfix-cortex-a53-835769:--fix-cortex-a53-835769}"
+ #endif
+ 
+-#define LINUX_TARGET_LINK_SPEC LINUX_TARGET_LINK_SPEC0 CA53_ERR_835769_SPEC
++#define CA53_ERR_843419_SPEC \
++  " %{!mno-fix-cortex-a53-843419:--fix-cortex-a53-843419}"
++
++#define LINUX_TARGET_LINK_SPEC LINUX_TARGET_LINK_SPEC0 \
++                               CA53_ERR_835769_SPEC \
++                               CA53_ERR_843419_SPEC
+ 
+ #define LINK_SPEC LINUX_TARGET_LINK_SPEC
+ 
+diff --git a/gcc-4.9/gcc/config/aarch64/aarch64.c b/gcc-4.9/gcc/config/aarch64/aarch64.c
+index 2ff6c7c..0efb7e4 100644
+--- a/gcc-4.9/gcc/config/aarch64/aarch64.c
++++ b/gcc-4.9/gcc/config/aarch64/aarch64.c
+@@ -5265,6 +5265,11 @@ aarch64_override_options (void)
+ #endif
+     }
+ 
++  if (aarch64_fix_a53_err843419 == 2)
++    {
++      aarch64_fix_a53_err843419 = 1;
++    }
++
+   aarch64_override_options_after_change ();
+ 
+   if (TARGET_ANDROID)
+diff --git a/gcc-4.9/gcc/config/aarch64/aarch64.opt b/gcc-4.9/gcc/config/aarch64/aarch64.opt
+index fc0307e..ca27f50 100644
+--- a/gcc-4.9/gcc/config/aarch64/aarch64.opt
++++ b/gcc-4.9/gcc/config/aarch64/aarch64.opt
+@@ -71,6 +71,10 @@ mfix-cortex-a53-835769
+ Target Report Var(aarch64_fix_a53_err835769) Init(2)
+ Workaround for ARM Cortex-A53 Erratum number 835769
+ 
++mfix-cortex-a53-843419
++Target Report Var(aarch64_fix_a53_err843419) Init(2)
++Workaround for ARM Cortex-A53 Erratum number 843419
++
+ mlittle-endian
+ Target Report RejectNegative InverseMask(BIG_END)
+ Assume target CPU is configured as little endian
+-- 
+1.9.1
+
