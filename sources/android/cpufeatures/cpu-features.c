@@ -28,7 +28,9 @@
 
 /* ChangeLog for this library:
  *
- * NDK r9?: Support for 64-bit CPUs (Intel, ARM & MIPS).
+ * NDK r10e?: Add MIPS MSA feature.
+ *
+ * NDK r10: Support for 64-bit CPUs (Intel, ARM & MIPS).
  *
  * NDK r8d: Add android_setCpu().
  *
@@ -471,7 +473,13 @@ cpulist_read_from(CpuList* list, const char* filename)
     HWCAP_IDIVT )
 #endif
 
-#if defined(__arm__) || defined(__aarch64__)
+#if defined(__mips__)
+// see <uapi/asm/hwcap.h> kernel header
+#define HWCAP_MIPS_R6           (1 << 0)
+#define HWCAP_MIPS_MSA          (1 << 1)
+#endif
+
+#if defined(__arm__) || defined(__aarch64__) || defined(__mips__)
 
 #define AT_HWCAP 16
 #define AT_HWCAP2 26
@@ -993,6 +1001,21 @@ android_cpuInit(void)
         g_cpuFeatures |= ANDROID_CPU_X86_FEATURE_MOVBE;
     }
 #endif
+#if defined( __mips__)
+    {   /* MIPS and MIPS64 */
+        /* Extract the list of CPU features from ELF hwcaps */
+        uint32_t hwcaps = 0;
+        hwcaps = get_elf_hwcap_from_getauxval(AT_HWCAP);
+        if (hwcaps != 0) {
+            int has_r6      = (hwcaps & HWCAP_MIPS_R6);
+            int has_msa     = (hwcaps & HWCAP_MIPS_MSA);
+            if (has_r6)
+                g_cpuFeatures |= ANDROID_CPU_MIPS_FEATURE_R6;
+            if (has_msa)
+                g_cpuFeatures |= ANDROID_CPU_MIPS_FEATURE_MSA;
+        }
+    }
+#endif /* __mips__ */
 
     free(cpuinfo);
 }
