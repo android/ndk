@@ -65,10 +65,7 @@ extern AndroidCpuFamily android_getCpuFamily(void);
  * NOTE: This will return 0 for the following architectures that don't have
  *       optional features listed at the moment:
  *
- *   ANDROID_CPU_FAMILY_MIPS
- *   ANDROID_CPU_FAMILY_ARM64
  *   ANDROID_CPU_FAMILY_X86_64
- *   ANDROID_CPU_FAMILY_MIPS64
  */
 extern uint64_t android_getCpuFeatures(void);
 
@@ -260,6 +257,7 @@ enum {
     ANDROID_CPU_ARM64_FEATURE_SHA2    = (1 << 5),
     ANDROID_CPU_ARM64_FEATURE_CRC32   = (1 << 6),
 };
+
 /* The bit flags corresponding to the output of android_getCpuFeatures()
  * when android_getCpuFamily() returns ANDROID_CPU_FAMILY_X86.
  */
@@ -268,6 +266,23 @@ enum {
     ANDROID_CPU_X86_FEATURE_POPCNT = (1 << 1),
     ANDROID_CPU_X86_FEATURE_MOVBE  = (1 << 2),
 };
+
+/* The bit flags corresponding to the output of android_getCpuFeatures()
+ * when android_getCpuFamily() returns ANDROID_CPU_FAMILY_MIPS
+ * or ANDROID_CPU_FAMILY_MIPS64.  Values are:
+ *
+ *   R6:
+ *     CPU executes MIPS Release 6 instructions natively, and
+ *     supports obsoleted R1..R5 instructions only via kernel traps.
+ *
+ *   MSA:
+ *     CPU supports Mips SIMD Architecture instructions.
+ */
+enum {
+    ANDROID_CPU_MIPS_FEATURE_R6    = (1 << 0),
+    ANDROID_CPU_MIPS_FEATURE_MSA   = (1 << 1),
+};
+
 
 /* Return the number of CPU cores detected on this device. */
 extern int android_getCpuCount(void);
