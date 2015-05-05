@@ -156,7 +156,26 @@ find-first = $(firstword $(call filter-by,$1,$2))
 # Arguments: 1: path
 # Returns  : Parent dir or path of $1, with final separator removed.
 # -----------------------------------------------------------------------------
+ifeq ($(HOST_OS),windows)
+# On Windows, defining parent-dir is a bit more tricky because the
+# GNU Make $(dir ...) function doesn't return an empty string when it
+# reaches the top of the directory tree, and we want to enforce this to
+# avoid infinite loops.
+#
+#   $(dir C:)     -> C:       (empty expected)
+#   $(dir C:/)    -> C:/      (empty expected)
+#   $(dir C:\)    -> C:\      (empty expected)
+#   $(dir C:/foo) -> C:/      (correct)
+#   $(dir C:\foo) -> C:\      (correct)
+#
+parent-dir = $(patsubst %/,%,$(strip \
+    $(eval __dir_node := $(patsubst %/,%,$(subst \,/,$1)))\
+    $(eval __dir_parent := $(dir $(__dir_node)))\
+    $(filter-out $1,$(__dir_parent))\
+    ))
+else
 parent-dir = $(patsubst %/,%,$(dir $(1:%/=%)))
+endif
 
 -test-parent-dir = \
   $(call test-expect,,$(call parent-dir))\
