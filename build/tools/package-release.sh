@@ -565,6 +565,12 @@ for SYSTEM in $SYSTEMS; do
     # Remove include-fixed/linux/a.out.h.   See b.android.com/73728
     find "$DSTDIR/toolchains" "$DSTDIR64/toolchains" -name a.out.h | grep include-fixed/ | xargs rm
 
+    # Remove python *.pyc and *.pyo files
+    find $DSTDIR/prebuilt/*/lib/python* -name "*.pyc" -exec rm -rf {} \;
+    find $DSTDIR/prebuilt/*/lib/python* -name "*.pyo" -exec rm -rf {} \;
+    find $DSTDIR64/prebuilt/*/lib/python* -name "*.pyc"  -exec rm -rf {} \;
+    find $DSTDIR64/prebuilt/*/lib/python* -name "*.pyo"  -exec rm -rf {} \;
+
     # Create an archive for the final package. Extension depends on the
     # host system.
     ARCHIVE=$BIN_RELEASE
