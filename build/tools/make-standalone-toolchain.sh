@@ -78,40 +78,49 @@ if [ ! -d "$NDK_DIR/build/core" ] ; then
     exit 1
 fi
 
-# Check ARCH
-if [ -z "$ARCH" ]; then
+# Check TOOLCHAIN_NAME
+ARCH_BY_TOOLCHAIN_NAME=
+if [ -n "$TOOLCHAIN_NAME" ]; then
     case $TOOLCHAIN_NAME in
         arm-*)
-            ARCH=arm
+            ARCH_BY_TOOLCHAIN_NAME=arm
             ;;
         x86-*)
-            ARCH=x86
+            ARCH_BY_TOOLCHAIN_NAME=x86
             ;;
         mipsel-*)
-            ARCH=mips
+            ARCH_BY_TOOLCHAIN_NAME=mips
             ;;
         aarch64-*)
-            ARCH=arm64
+            ARCH_BY_TOOLCHAIN_NAME=arm64
             ;;
         x86_64-linux-android-*)
-            ARCH=x86_64
+            ARCH_BY_TOOLCHAIN_NAME=x86_64
             TOOLCHAIN_NAME=$(echo "$TOOLCHAIN_NAME" | sed -e 's/-linux-android//')
             echo "Auto-truncate: --toolchain=$TOOLCHAIN_NAME"
             ;;
         x86_64-*)
-            ARCH=x86_64
+            ARCH_BY_TOOLCHAIN_NAME=x86_64
             ;;
         mips64el-*)
-            ARCH=mips64
+            ARCH_BY_TOOLCHAIN_NAME=mips64
             ;;
         *)
-            ARCH=null
-            echo "Unable to auto-config arch from toolchain $TOOLCHAIN_NAME"
+            echo "Invalid toolchain $TOOLCHAIN_NAME"
             exit 1
             ;;
     esac
+fi
+# Check ARCH
+if [ -z "$ARCH" ]; then
+echo ARCH=$ARCH
+echo ARCH_BY_TOOLCHAIN_NAME=$ARCH_BY_TOOLCHAIN_NAME
+    ARCH=$ARCH_BY_TOOLCHAIN_NAME
+    if [ -z "$ARCH" ]; then
+        ARCH=arm
+    fi
     ARCH_INC=$ARCH
-    log "Auto-config: --arch=$ARCH"
+    echo "Auto-config: --arch=$ARCH"
 else
     ARCH_INC=$ARCH
     case $ARCH in
@@ -141,6 +150,10 @@ else
             ;;
     esac
 
+    if [ -n "$ARCH_BY_TOOLCHAIN_NAME" -a "$ARCH" != "$ARCH_BY_TOOLCHAIN_NAME" ]; then
+        echo "Conflict --arch $ARCH and --toolchain $TOOLCHAIN_NAME"
+        exit 1
+    fi
 fi
 
 if [ -z "$ABIS" ]; then
@@ -214,10 +227,10 @@ if [ -z "$PLATFORM" -a "$ARCH_INC" = "$ARCH" ] ; then
         *)
             dump "ERROR: Unsupported NDK architecture $ARCH!"
     esac
-    log "Auto-config: --platform=$PLATFORM"
+    echo "Auto-config: --platform=$PLATFORM"
 elif [ -z "$PLATFORM" ] ; then
     PLATFORM=android-9
-    log "Auto-config: --platform=$PLATFORM"
+    echo "Auto-config: --platform=$PLATFORM"
 fi
 
 if [ ! -d "$NDK_DIR/platforms/$PLATFORM" ] ; then
@@ -700,7 +713,7 @@ copy_stl_libs_for_abi () {
                 copy_stl_libs x86_64       "bits"                "bits"       "../lib64"           "lib64"
                 copy_stl_libs x86_64       "x32/bits"            "x32/bits"   "../libx32"          "libx32"
             else
-                copy_stl_libs "$ABI"
+                copy_stl_libs x86_64       ""                    ""           "../lib64"           "."
             fi
             ;;
         mips64)
@@ -711,7 +724,7 @@ copy_stl_libs_for_abi () {
                 copy_stl_libs mips64       "bits"                "bits"             "../lib64"     "lib64"
                 copy_stl_libs mips64       "mips64-r2/bits"      "mips64-r2/bits"   "../lib64r2"   "lib64r2"
             else
-                copy_stl_libs "$ABI"
+                copy_stl_libs mips64       ""                    ""                 "../lib64"     "."
             fi
             ;;
         mips|mips32r6)
