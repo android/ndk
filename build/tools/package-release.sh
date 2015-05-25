@@ -533,6 +533,7 @@ for SYSTEM in $SYSTEMS; do
         unpack_prebuilt ndk-stack-$SYSTEM "$DSTDIR" "$DSTDIR64" "yes"
         unpack_prebuilt ndk-depends-$SYSTEM "$DSTDIR" "$DSTDIR64" "yes"
         unpack_prebuilt ndk-make-$SYSTEM "$DSTDIR" "$DSTDIR64"
+        unpack_prebuilt ndk-sed-$SYSTEM "$DSTDIR" "$DSTDIR64"
         unpack_prebuilt ndk-awk-$SYSTEM "$DSTDIR" "$DSTDIR64"
         unpack_prebuilt ndk-perl-$SYSTEM "$DSTDIR" "$DSTDIR64"
         unpack_prebuilt ndk-python-$SYSTEM "$DSTDIR" "$DSTDIR64"
@@ -564,12 +565,26 @@ for SYSTEM in $SYSTEMS; do
 
     # Remove include-fixed/linux/a.out.h.   See b.android.com/73728
     find "$DSTDIR/toolchains" "$DSTDIR64/toolchains" -name a.out.h | grep include-fixed/ | xargs rm
+    
+    # Remove redundant pretty-printers/libstdcxx
+    rm -rf $DSTDIR/prebuilt/*/share/pretty-printers/libstdcxx/gcc-l*
+    rm -rf $DSTDIR/prebuilt/*/share/pretty-printers/libstdcxx/gcc-4.9-*
+    rm -rf $DSTDIR64/prebuilt/*/share/pretty-printers/libstdcxx/gcc-l*
+    rm -rf $DSTDIR64/prebuilt/*/share/pretty-printers/libstdcxx/gcc-4.9-*
+
+    # Remove python tests
+    find $DSTDIR/prebuilt/*/lib/python* -name test -exec rm -rf {} \;
+    find $DSTDIR64/prebuilt/*/lib/python* -name test -exec rm -rf {} \;
 
     # Remove python *.pyc and *.pyo files
     find $DSTDIR/prebuilt/*/lib/python* -name "*.pyc" -exec rm -rf {} \;
     find $DSTDIR/prebuilt/*/lib/python* -name "*.pyo" -exec rm -rf {} \;
     find $DSTDIR64/prebuilt/*/lib/python* -name "*.pyc"  -exec rm -rf {} \;
     find $DSTDIR64/prebuilt/*/lib/python* -name "*.pyo"  -exec rm -rf {} \;
+
+    # Remove .git*
+    find $DSTDIR -name ".git*" -exec rm -rf {} \;
+    find $DSTDIR64 -name ".git*" -exec rm -rf {} \;
 
     # Create an archive for the final package. Extension depends on the
     # host system.
