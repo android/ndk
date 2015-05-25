@@ -13,8 +13,8 @@
 # limitations under the License.
 #
 
-# config file for the arm64 llvm-3.4 toolchain for the Android NDK
+# config file for the mipsel llvm-3.6 toolchain for the Android NDK
 # the real meat is in the setup.mk file adjacent to this one
 #
-TOOLCHAIN_ARCH := arm64
-TOOLCHAIN_ABIS := arm64-v8a
+TOOLCHAIN_ARCH := mips
+TOOLCHAIN_ABIS := mips
