@@ -573,6 +573,12 @@ if [ -f "$SRC_DIR/SOURCES" ]; then
     cp "$SRC_DIR/SOURCES" "$TOOLCHAIN_PATH/SOURCES"
 fi
 
+# check GLIBC/GLBICXX symbols
+if [ "$HOST_OS" = "linux" ]; then
+    SUBDIR=$(get_toolchain_install_subdir $TOOLCHAIN $HOST_TAG)
+    $ANDROID_NDK_ROOT/build/tools/check-glibc.sh $NDK_DIR/$SUBDIR
+fi
+
 if [ "$PACKAGE_DIR" ]; then
     ARCHIVE="$TOOLCHAIN-$HOST_TAG.tar.bz2"
     SUBDIR=$(get_toolchain_install_subdir $TOOLCHAIN $HOST_TAG)
