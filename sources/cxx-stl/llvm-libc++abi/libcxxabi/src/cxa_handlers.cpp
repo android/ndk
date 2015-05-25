@@ -109,7 +109,7 @@ extern "C" new_handler __cxa_new_handler = 0;
 new_handler
 set_new_handler(new_handler handler) _NOEXCEPT
 {
-    return __sync_swap(&__cxa_new_handler, handler);
+    return __atomic_exchange_n(&__cxa_new_handler, handler, __ATOMIC_ACQ_REL);
 //  Using of C++11 atomics this should be rewritten
 //  return __cxa_new_handler.exchange(handler, memory_order_acq_rel);
 }
