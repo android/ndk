@@ -1,4 +1,4 @@
-# Copyright (C) 2009 The Android Open Source Project
+# Copyright (C) 2014 The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 
-# this file is used to prepare the NDK to build with the x86_64 llvm-3.4
+# this file is used to prepare the NDK to build with the x86 llvm-3.6
 # toolchain any number of source files
 #
 # its purpose is to define (or re-define) templates used to build
@@ -27,47 +27,51 @@
 # Override the toolchain prefix
 #
 
-LLVM_VERSION := 3.4
+LLVM_VERSION := 3.6
 LLVM_NAME := llvm-$(LLVM_VERSION)
 LLVM_TOOLCHAIN_ROOT := $(NDK_ROOT)/toolchains/$(LLVM_NAME)
 LLVM_TOOLCHAIN_PREBUILT_ROOT := $(call host-prebuilt-tag,$(LLVM_TOOLCHAIN_ROOT))
 LLVM_TOOLCHAIN_PREFIX := $(LLVM_TOOLCHAIN_PREBUILT_ROOT)/bin/
 
-TOOLCHAIN_VERSION := 4.9
-TOOLCHAIN_NAME := x86_64-$(TOOLCHAIN_VERSION)
+TOOLCHAIN_VERSION := 4.8
+TOOLCHAIN_NAME := x86-$(TOOLCHAIN_VERSION)
 TOOLCHAIN_ROOT := $(NDK_ROOT)/toolchains/$(TOOLCHAIN_NAME)
 TOOLCHAIN_PREBUILT_ROOT := $(call host-prebuilt-tag,$(TOOLCHAIN_ROOT))
-TOOLCHAIN_PREFIX := $(TOOLCHAIN_PREBUILT_ROOT)/bin/x86_64-linux-android-
+TOOLCHAIN_PREFIX := $(TOOLCHAIN_PREBUILT_ROOT)/bin/i686-linux-android-
 
 TARGET_CC := $(LLVM_TOOLCHAIN_PREFIX)clang$(HOST_EXEEXT)
 TARGET_CXX := $(LLVM_TOOLCHAIN_PREFIX)clang++$(HOST_EXEEXT)
 
-LLVM_TRIPLE := x86_64-none-linux-android
+LLVM_TRIPLE := i686-none-linux-android
 
 TARGET_CFLAGS := \
     -gcc-toolchain $(call host-path,$(TOOLCHAIN_PREBUILT_ROOT)) \
     -target $(LLVM_TRIPLE) \
     -ffunction-sections \
     -funwind-tables \
-    -fstack-protector \
+    -fstack-protector-strong \
     -fPIC \
+    -Wno-invalid-command-line-argument \
+    -Wno-unused-command-line-argument \
     -no-canonical-prefixes
 
 TARGET_C_INCLUDES := \
     $(SYSROOT_INC)/usr/include
 
+# Add and LDFLAGS for the target here
 TARGET_LDFLAGS += \
     -gcc-toolchain $(call host-path,$(TOOLCHAIN_PREBUILT_ROOT)) \
     -target $(LLVM_TRIPLE) \
     -no-canonical-prefixes
 
-TARGET_x86_64_release_CFLAGS := -O2 \
+TARGET_x86_release_CFLAGS := -O2 \
                              -g \
                              -DNDEBUG \
                              -fomit-frame-pointer \
                              -fstrict-aliasing
 
-TARGET_x86_64_debug_CFLAGS := $(TARGET_x86_64_release_CFLAGS) \
+# When building for debug, compile everything as x86.
+TARGET_x86_debug_CFLAGS := $(TARGET_x86_release_CFLAGS) \
                            -O0 \
                            -UNDEBUG \
                            -fno-omit-frame-pointer \
@@ -79,9 +83,9 @@ TARGET_x86_64_debug_CFLAGS := $(TARGET_x86_64_release_CFLAGS) \
 TARGET-process-src-files-tags = \
 $(eval __debug_sources := $(call get-src-files-with-tag,debug)) \
 $(eval __release_sources := $(call get-src-files-without-tag,debug)) \
-$(call set-src-files-target-cflags, $(__debug_sources), $(TARGET_x86_64_debug_CFLAGS)) \
-$(call set-src-files-target-cflags, $(__release_sources),$(TARGET_x86_64_release_CFLAGS)) \
+$(call set-src-files-target-cflags, $(__debug_sources), $(TARGET_x86_debug_CFLAGS)) \
+$(call set-src-files-target-cflags, $(__release_sources),$(TARGET_x86_release_CFLAGS)) \
 
 # The ABI-specific sub-directory that the SDK tools recognize for
 # this toolchain's generated binaries
-TARGET_ABI_SUBDIR := x86_64
+TARGET_ABI_SUBDIR := x86
