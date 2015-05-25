@@ -1,4 +1,4 @@
-# Copyright (C) 2012 The Android Open Source Project
+# Copyright (C) 2014 The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,8 +13,8 @@
 # limitations under the License.
 #
 
-# config file for the mipsel llvm-3.4 toolchain for the Android NDK
+# config file for the mips64el llvm-3.6 toolchain for the Android NDK
 # the real meat is in the setup.mk file adjacent to this one
 #
-TOOLCHAIN_ARCH := mips
-TOOLCHAIN_ABIS := mips
+TOOLCHAIN_ARCH := mips64
+TOOLCHAIN_ABIS := mips64
