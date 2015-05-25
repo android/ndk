@@ -48,6 +48,7 @@ rm -rf $DIR/$LIBPORTABLE_SUBDIR
 rm -rf $DIR/$COMPILER_RT_SUBDIR/libs
 rm -rf $DIR/$GCCUNWIND_SUBDIR/libs
 rm -rf $DIR/$LIBCXX_SUBDIR/libs
+rm -rf $DIR/$SUPPORT_SUBDIR/libs
 
 rm -f $DIR/ndk-stack*
 rm -f $DIR/ndk-depends*
