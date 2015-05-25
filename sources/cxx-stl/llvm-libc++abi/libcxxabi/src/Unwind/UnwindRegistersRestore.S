@@ -347,7 +347,7 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm19restoreVFPWithFL
   @ these registers implies they are, actually, available on the target, so
   @ it's ok to execute.
   @ So, generate the instruction using the corresponding coprocessor mnemonic.
-  ldc p11, cr0, [r0], {#0x20}  @ fldmiad r0, {d0-d15}
+  ldc p11, cr0, [r0], {0x20}  @ fldmiad r0, {d0-d15}
   mov pc, lr
 
 @
@@ -358,7 +358,7 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm19restoreVFPWithFL
 @
   .p2align 2
 DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm19restoreVFPWithFLDMXEPy)
-  ldc p11, cr0, [r0], {#0x21}  @ fldmiax r0, {d0-d15}
+  ldc p11, cr0, [r0], {0x21}  @ fldmiax r0, {d0-d15}
   mov pc, lr
 
 @
@@ -369,7 +369,7 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm19restoreVFPWithFL
 @
   .p2align 2
 DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm12restoreVFPv3EPy)
-  ldcl p11, cr0, [r0], {#0x20}  @ vldm r0, {d16-d31}
+  ldcl p11, cr0, [r0], {0x20}  @ vldm r0, {d16-d31}
   mov pc, lr
 
 @
