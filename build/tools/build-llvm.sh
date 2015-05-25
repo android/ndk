@@ -359,6 +359,7 @@ fi
 
 # build mclinker only against default the LLVM version, once
 if [ "$MCLINKER" = "yes" -o "$TOOLCHAIN" = "llvm-$DEFAULT_LLVM_VERSION" ] ; then
+  if [ "$TOOLCHAIN" != "llvm-3.6" ] ; then
     dump "Copy     : mclinker source"
     MCLINKER_SRC_DIR=$BUILD_OUT/mclinker
     mkdir -p $MCLINKER_SRC_DIR
@@ -413,6 +414,7 @@ if [ "$MCLINKER" = "yes" -o "$TOOLCHAIN" = "llvm-$DEFAULT_LLVM_VERSION" ] ; then
         run make check
         fail_warning "Couldn't pass all mclinker regression test"  # change to fail_panic later
     fi
+  fi
 fi
 
 # remove redundant bits
