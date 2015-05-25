@@ -73,8 +73,6 @@ register_var_option "--platform=<name>"  PLATFORM "Specify platform name"
 
 register_jobs_option
 
-register_try64_option
-
 extract_parameters "$@"
 
 ABIS=$(commas_to_spaces $ABIS)
@@ -95,6 +93,7 @@ if [ -z "$OPTION_BUILD_DIR" ]; then
 else
     BUILD_DIR=$OPTION_BUILD_DIR
 fi
+rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 fail_panic "Could not create build directory: $BUILD_DIR"
 
