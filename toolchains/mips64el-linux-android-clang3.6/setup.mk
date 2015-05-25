@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 
-# this file is used to prepare the NDK to build with the mips64el llvm-3.4
+# this file is used to prepare the NDK to build with the mips64el llvm-3.6
 # toolchain any number of source files
 #
 # its purpose is to define (or re-define) templates used to build
@@ -27,7 +27,7 @@
 # Override the toolchain prefix
 #
 
-LLVM_VERSION := 3.4
+LLVM_VERSION := 3.6
 LLVM_NAME := llvm-$(LLVM_VERSION)
 LLVM_TOOLCHAIN_ROOT := $(NDK_ROOT)/toolchains/$(LLVM_NAME)
 LLVM_TOOLCHAIN_PREBUILT_ROOT := $(call host-prebuilt-tag,$(LLVM_TOOLCHAIN_ROOT))
@@ -57,6 +57,8 @@ TARGET_CFLAGS := \
         -ffunction-sections \
         -funwind-tables \
         -fmessage-length=0 \
+        -Wno-invalid-command-line-argument \
+        -Wno-unused-command-line-argument \
         -no-canonical-prefixes
 
 TARGET_LDFLAGS += \

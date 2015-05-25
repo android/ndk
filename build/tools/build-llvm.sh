@@ -28,7 +28,7 @@ PROGRAM_DESCRIPTION=\
 
 Where <src-dir> is the location of toolchain sources, <ndk-dir> is
 the top-level NDK installation path and <toolchain> is the name of
-the toolchain to use (e.g. llvm-3.5)."
+the toolchain to use (e.g. llvm-3.6)."
 
 RELEASE=`date +%Y%m%d`
 BUILD_OUT=/tmp/ndk-$USER/build/toolchain
@@ -148,7 +148,7 @@ if [ "$MINGW" != "yes" -a "$DARWIN" != "yes" ] ; then
 fi
 
 if [ "$MINGW" = "yes" -a "$TRY64" != "yes" ]; then
-    # Clang3.5 and later needs gcc4.7+ to build, and some of
+    # Clang3.5+ needs gcc4.7+ to build, and some of
     # cross toolchain "i586-*" we search for in find_mingw_toolchain()
     # can no longer build.  One solution is to provide DEBIAN_NAME=mingw32
     # BINPREFIX=i686-pc-mingw32msvc- MINGW_GCC=/path/to/i686-w64-mingw32,
@@ -187,6 +187,17 @@ if [ "$MINGW" = "yes" -o "$HOST_TAG" = "linux-x86" -o "$LLVM_VERSION" \> "3.4" ]
     if [ "$CC" = "${CC%%clang*}" ]; then
         LDFLAGS_FOR_BUILD=$LDFLAGS_FOR_BUILD" -static-libgcc"
     fi
+fi
+
+# Static link to avoid dependencies on libwinpthread-1.dll in mingw
+if [ "$MINGW" = "yes" ]; then
+    LDFLAGS_FOR_BUILD=$LDFLAGS_FOR_BUILD" -static"
+fi
+
+# Starting from llvm-3.7 lib/Support/Signals.cpp needs set_abort_behavior() doesn't exist in
+# Windows until -lmsvcr90
+if [ "$MINGW" = "yes" -a "$LLVM_VERSION" \> "3.5" ]; then
+    XXX_MAKE_FLAGS="$MAKE_FLAGS LIBS=-lmsvcr90"
 fi
 
 CFLAGS="$CFLAGS $CFLAGS_FOR_BUILD $HOST_CFLAGS"
@@ -427,10 +438,10 @@ rm -rf $TOOLCHAIN_BUILD_PREFIX/share
 
 UNUSED_LLVM_EXECUTABLES="
 bugpoint c-index-test clang-check clang-format clang-tblgen lli llvm-bcanalyzer
-llvm-config llvm-config-host llvm-cov llvm-diff llvm-dwarfdump llvm-extract llvm-ld
+llvm-config llvm-config-host llvm-cov llvm-diff llvm-dsymutil llvm-dwarfdump llvm-extract llvm-ld
 llvm-mc llvm-nm llvm-mcmarkup llvm-objdump llvm-prof llvm-ranlib llvm-readobj llvm-rtdyld
 llvm-size llvm-stress llvm-stub llvm-symbolizer llvm-tblgen llvm-vtabledump macho-dump cloog
-llvm-vtabledump lli-child-target not count FileCheck llvm-profdata"
+llvm-vtabledump lli-child-target not count FileCheck llvm-profdata obj2yaml yaml2obj verify-uselistorder"
 
 for i in $UNUSED_LLVM_EXECUTABLES; do
     rm -f $TOOLCHAIN_BUILD_PREFIX/bin/$i

@@ -4,7 +4,7 @@ DEVICE_arm="$1"
 DEVICE_x86="$2"
 DEVICE_mips="$3"
 
-LLVM_VERSION=3.5 # 3.4
+LLVM_VERSION=3.6 # 3.5 # 3.4
 
 MODES="--static --shared"
 
