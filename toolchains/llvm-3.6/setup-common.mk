@@ -1,4 +1,4 @@
-# Copyright (C) 2013 The Android Open Source Project
+# Copyright (C) 2014 The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-TOOLCHAIN_NAME   := clang-3.4
+TOOLCHAIN_NAME   := clang-3.6
 TOOLCHAIN_PREFIX := $(TOOLCHAIN_PREBUILT_ROOT)/bin/
 ifneq ($(UNKNOWN_ABI_64),)
 LLVM_TRIPLE := le64-none-ndk
