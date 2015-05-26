@@ -23,7 +23,7 @@ which put them in libpthread.so (and provide weak stubs in libc.so).
 ---
  gcc-4.8/libgcc/gthr-posix.h | 13 +++++++++++++
  gcc-4.9/libgcc/gthr-posix.h | 13 +++++++++++++
- 3 files changed, 39 insertions(+)
+ 2 files changed, 26 insertions(+)
 
 diff --git a/gcc-4.8/libgcc/gthr-posix.h b/gcc-4.8/libgcc/gthr-posix.h
 index f0d8cd7..1d03af0 100644

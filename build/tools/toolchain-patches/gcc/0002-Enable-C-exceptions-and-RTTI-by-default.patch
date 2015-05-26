@@ -8,7 +8,7 @@ when compiling C++ sources.
 ---
  gcc-4.8/gcc/config/linux-android.h | 4 ++--
  gcc-4.9/gcc/config/linux-android.h | 4 ++--
- 3 files changed, 6 insertions(+), 6 deletions(-)
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/gcc-4.8/gcc/config/linux-android.h b/gcc-4.8/gcc/config/linux-android.h
 index 87957e3..e88ab78 100644
