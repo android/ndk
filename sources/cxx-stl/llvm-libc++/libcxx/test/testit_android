@@ -74,7 +74,7 @@ VALID_ABIS="armeabi armeabi-v7a x86 mips"
 HOST_OS=`uname -s`
 if [ "$HOST_OS" = "Darwin" ]; then
     # darwin doesn't have readelf.  hard-code a known one
-    READELF=../../../../../toolchains/arm-linux-androideabi-4.6/prebuilt/darwin-x86/bin/arm-linux-androideabi-readelf
+    READELF=../../../../../toolchains/arm-linux-androideabi-4.8/prebuilt/darwin-x86/bin/arm-linux-androideabi-readelf
 else
     READELF=readelf
 fi

@@ -10,7 +10,7 @@ Change-Id: I63fb5be818115c6d0c7e96b937ba39f225b475cf
 ---
  gcc-4.8/libstdc++-v3/src/Makefile.in | 5 ++++-
  gcc-4.9/libstdc++-v3/src/Makefile.in | 5 ++++-
- 3 files changed, 12 insertions(+), 3 deletions(-)
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
 diff --git a/gcc-4.8/libstdc++-v3/src/Makefile.in b/gcc-4.8/libstdc++-v3/src/Makefile.in
 index 9721ebb..dd3d426 100644
