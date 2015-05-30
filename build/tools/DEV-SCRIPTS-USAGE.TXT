@@ -270,7 +270,7 @@ then use with:
 
 The script doesn't simply copy the current HEAD of the toolchain
 repositories. Instead, it will checkout the sources as they were
-at a given known date, defined as TOOLCHAIN_GIT_DATE in 'prebuilt-common.sh'.
+at a given known date, defined as TOOLCHAIN_GIT_DATE in 'dev-defaults.sh'.
 
 If you adjust TOOLCHAIN_GIT_DATE, verify that all patches still apply
 correctly, you might need to remove patches if they have been integrated
