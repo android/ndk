@@ -511,18 +511,12 @@ for SYSTEM in $SYSTEMS; do
             rm -rf $DSTDIR64/toolchains/$TC/prebuilt/${SYSTEM}_64/sysroot
             rm -rf $DSTDIR64/toolchains/$TC/prebuilt/${SYSTEM}-x86_64/sysroot
         done
-        echo "Remove ld.mcld deployed/packaged earlier by accident "
-        find $DSTDIR/toolchains $DSTDIR64/toolchains  -name "*ld.mcld*" -exec rm -f {} \;
 
         # Unpack clang/llvm
         for LLVM_VERSION in $LLVM_VERSION_LIST; do
             unpack_prebuilt llvm-$LLVM_VERSION-$SYSTEM "$DSTDIR" "$DSTDIR64"
         done
 
-        # Unpack mclinker
-        if [ -n "$LLVM_VERSION_LIST" ]; then
-            unpack_prebuilt ld.mcld-$SYSTEM "$DSTDIR" "$DSTDIR64"
-        fi
         rm -rf $DSTDIR/toolchains/*l
         rm -rf $DSTDIR64/toolchains/*l
 

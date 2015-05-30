@@ -326,13 +326,6 @@ dump "Copying prebuilt binaries..."
 # Now copy the GCC toolchain prebuilt binaries
 copy_directory "$TOOLCHAIN_PATH" "$TMPDIR"
 
-# Replace soft-link mcld by real file
-ALL_LDS=`find $TMPDIR -name "*mcld"`
-for LD in $ALL_LDS; do
-  rm -f "$LD"
-  cp -a "$NDK_DIR/toolchains/llvm-$DEFAULT_LLVM_VERSION/prebuilt/$SYSTEM/bin/ld.mcld" "$LD"
-done
-
 # Copy python-related to for gdb.exe
 PYTHON=python
 PYTHON_x=python$(echo "$DEFAULT_PYTHON_VERSION" | cut -d . -f 1)
