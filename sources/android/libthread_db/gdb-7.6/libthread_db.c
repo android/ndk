@@ -325,7 +325,7 @@ td_thr_get_info(td_thrhandle_t const * handle, td_thrinfo_t * info)
 /* NOTE: not used by gdb 7.0 */
 
 td_err_e
-td_thr_event_enable(td_thrhandle_t const * handle, td_event_e event)
+td_thr_event_enable(const td_thrhandle_t * handle, int event)
 {
     // I don't think we need to do anything here...
     return TD_OK;

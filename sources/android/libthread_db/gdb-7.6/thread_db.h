@@ -160,15 +160,13 @@ extern td_err_e td_ta_map_lwp2thr(td_thragent_t const * agent, lwpid_t lwpid,
 extern td_err_e td_thr_get_info(td_thrhandle_t const * handle,
 				td_thrinfo_t * info);
 
-extern td_err_e td_thr_event_enable(td_thrhandle_t const * handle,
-				    td_event_e event);
+extern td_err_e td_thr_event_enable(const td_thrhandle_t * handle,
+				    int event);
 
 extern td_err_e td_ta_thr_iter(td_thragent_t const * agent, td_thr_iter_f * func, void * cookie,
                                td_thr_state_e state, int32_t prio, sigset_t * sigmask, uint32_t user_flags);
 
 extern char const ** td_symbol_list(void);
-
-extern td_err_e td_thr_event_enable(td_thrhandle_t const * handle, td_event_e event);
 
 extern td_err_e td_thr_get_info(td_thrhandle_t const * handle, td_thrinfo_t * info);
 
