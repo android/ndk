@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-#  This shell script is used to rebuild the on-device llvm and mclinker
-#  binaries for the Android NDK.
+#  This shell script is used to rebuild the on-device llvm binaries for the
+#  Android NDK.
 #
 
 # include common function and variable definitions
@@ -127,17 +127,6 @@ if [ "$VERBOSE" = "yes" ]; then
     MAKE_FLAGS="VERBOSE=1"
 fi
 
-dump "Copy     : mclinker source"
-MCLINKER_SRC_DIR=$BUILD_OUT/mclinker
-mkdir -p $MCLINKER_SRC_DIR
-fail_panic "Couldn't create mclinker source directory: $MCLINKER_SRC_DIR"
-
-run copy_directory "$SRC_DIR/mclinker" "$MCLINKER_SRC_DIR"
-fail_panic "Couldn't copy mclinker source: $MCLINKER_SRC_DIR"
-
-cd $MCLINKER_SRC_DIR && run ./autogen.sh
-fail_panic "Couldn't run autogen.sh in $MCLINKER_SRC_DIR"
-
 # Remove aosp stuff away from PATH to prevent configure error.
 aosp="${ANDROID_NDK_ROOT%/}"
 aosp="${aosp%/ndk}"
@@ -200,10 +189,8 @@ for abi in $ABIS; do
   export CC CXX LDFLAGS
 
   EXTRA_LLVM_CONFIG=""
-  EXTRA_MCLINKER_CONFIG=""
   if [ "$SHARED" = "yes" ]; then
     EXTRA_LLVM_CONFIG="--enable-shared --with-extra-ld-options=\"-l${STL}_shared\""
-    EXTRA_MCLINKER_CONFIG="--with-llvm-shared-lib=$LLVM_BUILD_OUT/Release/lib/libLLVM-${DEFAULT_LLVM_VERSION}.so"
   fi
 
   run $SRC_DIR/$TOOLCHAIN/llvm/configure \
@@ -236,38 +223,12 @@ for abi in $ABIS; do
   run cd $TOOLCHAIN_BUILD_PREFIX/$abi && ln -s ndk-translate le32-none-ndk-translate
   run cd $TOOLCHAIN_BUILD_PREFIX/$abi && ln -s ndk-translate le64-none-ndk-translate
 
-  # build mclinker only against default the LLVM version, once
-  dump "Configure: mclinker against $TOOLCHAIN"
-  MCLINKER_BUILD_OUT=$MCLINKER_SRC_DIR/build/$abi
-  run mkdir -p $MCLINKER_BUILD_OUT && cd $MCLINKER_BUILD_OUT
-  fail_panic "Couldn't cd into mclinker build path: $MCLINKER_BUILD_OUT"
-
   CC="$BUILD_OUT/ndk-standalone-$arch/bin/$toolchain_prefix-gcc $CFLAGS"
   CXX="$BUILD_OUT/ndk-standalone-$arch/bin/$toolchain_prefix-g++ $CFLAGS"
   if [ "$SHARED" = "yes" ]; then
     CXX="$CXX -l${STL}_shared"
   fi
   export CC CXX
-
-  run $MCLINKER_SRC_DIR/configure \
-    --prefix=$TOOLCHAIN_BUILD_PREFIX/$abi \
-    --with-llvm-config=$LLVM_BUILD_OUT/BuildTools/Release/bin/llvm-config \
-    --enable-targets=$arch \
-    --host=$toolchain_prefix \
-    --enable-shrink-binary-size \
-    $EXTRA_MCLINKER_CONFIG
-  fail_panic "Couldn't configure mclinker for ABI $abi"
-
-  CXXFLAGS="$CXXFLAGS -fexceptions"  # optimized/ScriptParser.cc needs it
-  export CXXFLAGS
-  dump "Building : mclinker"
-  cd $MCLINKER_BUILD_OUT
-  run make -j$NUM_JOBS $MAKE_FLAGS CXXFLAGS="$CXXFLAGS"
-  fail_panic "Couldn't compile mclinker"
-
-  run mkdir -p $TOOLCHAIN_BUILD_PREFIX/$abi
-  run cp -f $MCLINKER_BUILD_OUT/tools/mcld/ld.mcld $TOOLCHAIN_BUILD_PREFIX/$abi
-  fail_panic "Couldn't copy mclinker"
 
   # Strip
   STRIP=$BUILD_OUT/ndk-standalone-$arch/bin/$toolchain_prefix-strip

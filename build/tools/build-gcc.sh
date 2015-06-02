@@ -685,15 +685,7 @@ if [ "$PACKAGE_DIR" ]; then
     ARCHIVE="$TOOLCHAIN-$HOST_TAG.tar.bz2"
     SUBDIR=$(get_toolchain_install_subdir $TOOLCHAIN $HOST_TAG)
     dump "Packaging $ARCHIVE"
-  # exlude ld.mcld
-    EXCLUSIONS=
-    if [ -f $SUBDIR/bin/$ABI_CONFIGURE_TARGET-ld.mcld${HOST_EXE} ] ; then
-        EXCLUSIONS=$EXCLUSIONS" --exclude=$SUBDIR/bin/$ABI_CONFIGURE_TARGET-ld.mcld${HOST_EXE}"
-    fi
-    if [ -f $SUBDIR/$ABI_CONFIGURE_TARGET/bin/ld.mcld${HOST_EXE} ] ; then
-        EXCLUSIONS=$EXCLUSIONS" --exclude=$SUBDIR/$ABI_CONFIGURE_TARGET/bin/ld.mcld${HOST_EXE}"
-    fi
-    pack_archive "$PACKAGE_DIR/$ARCHIVE" "$NDK_DIR" "$SUBDIR" $EXCLUSIONS
+    pack_archive "$PACKAGE_DIR/$ARCHIVE" "$NDK_DIR" "$SUBDIR"
     # package libgccunwind.a
     if [ "$HOST_OS" = "linux" -a "$GCC_VERSION" = "$DEFAULT_GCC_VERSION" ]; then
         ABIS=$(commas_to_spaces $(convert_archs_to_abis $ARCH))
