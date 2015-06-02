@@ -295,6 +295,7 @@ LIBCXXABI_SOURCES=\
 ../llvm-libc++abi/libcxxabi/src/cxa_handlers.cpp \
 ../llvm-libc++abi/libcxxabi/src/cxa_new_delete.cpp \
 ../llvm-libc++abi/libcxxabi/src/cxa_personality.cpp \
+../llvm-libc++abi/libcxxabi/src/cxa_thread_atexit.cpp \
 ../llvm-libc++abi/libcxxabi/src/cxa_unexpected.cpp \
 ../llvm-libc++abi/libcxxabi/src/cxa_vector.cpp \
 ../llvm-libc++abi/libcxxabi/src/cxa_virtual.cpp \
@@ -304,6 +305,7 @@ LIBCXXABI_SOURCES=\
 ../llvm-libc++abi/libcxxabi/src/typeinfo.cpp \
 ../llvm-libc++abi/libcxxabi/src/Unwind/libunwind.cpp \
 ../llvm-libc++abi/libcxxabi/src/Unwind/Unwind-EHABI.cpp \
+../llvm-libc++abi/libcxxabi/src/Unwind/Unwind-sjlj.c \
 ../llvm-libc++abi/libcxxabi/src/Unwind/UnwindLevel1.c \
 ../llvm-libc++abi/libcxxabi/src/Unwind/UnwindLevel1-gcc-ext.c \
 ../llvm-libc++abi/libcxxabi/src/Unwind/UnwindRegistersRestore.S \
@@ -547,6 +549,15 @@ build_stl_libs_for_abi ()
             EXTRA_CFLAGS="-mips32r6"
             EXTRA_CXXFLAGS="-mips32r6"
             EXTRA_LDFLAGS="-mips32r6"
+            ;;
+    esac
+
+    case $ABI in
+        armeabi*)
+            EXTRA_CXXFLAGS="$EXTRA_CXXFLAGS -DLIBCXXABI_USE_LLVM_UNWINDER=1"
+            ;;
+        *)
+            EXTRA_CXXFLAGS="$EXTRA_CXXFLAGS -DLIBCXXABI_USE_LLVM_UNWINDER=0"
             ;;
     esac
 

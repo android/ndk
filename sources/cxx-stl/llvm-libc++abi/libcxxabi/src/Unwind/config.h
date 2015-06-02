@@ -14,27 +14,21 @@
 #ifndef LIBUNWIND_CONFIG_H
 #define LIBUNWIND_CONFIG_H
 
-#ifndef NDEBUG
-#include <stdio.h> // for logging
-#endif
-
 #include <assert.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 // Define static_assert() unless already defined by compiler.
 #ifndef __has_feature
   #define __has_feature(__x) 0
 #endif
 #if !(__has_feature(cxx_static_assert)) && !defined(static_assert)
-// TODO(ajwong): This caused some compile failures on gcc.
-//  #define static_assert(__b, __m) \
-//      extern int compile_time_assert_failed[ ( __b ) ? 1 : -1 ]  \
-//                                                  __attribute__( ( unused ) );
+  #define static_assert(__b, __m) \
+      extern int compile_time_assert_failed[ ( __b ) ? 1 : -1 ]  \
+                                                  __attribute__( ( unused ) );
 #endif
 
 // Platform specific configuration defines.
-#if __APPLE__
+#ifdef __APPLE__
   #include <Availability.h>
   #ifdef __cplusplus
     extern "C" {
@@ -45,45 +39,53 @@
     }
   #endif
 
-  #define _LIBUNWIND_BUILD_ZERO_COST_APIS (__i386__ || __x86_64__ || __arm64__)
-  #define _LIBUNWIND_BUILD_SJLJ_APIS      (__arm__)
-  #define _LIBUNWIND_SUPPORT_FRAME_APIS   (__i386__ || __x86_64__)
+  #define _LIBUNWIND_BUILD_ZERO_COST_APIS (defined(__i386__) || \
+                                           defined(__x86_64__) || \
+                                           defined(__arm64__))
+  #define _LIBUNWIND_BUILD_SJLJ_APIS      defined(__arm__)
+  #define _LIBUNWIND_SUPPORT_FRAME_APIS   (defined(__i386__) || \
+                                           defined(__x86_64__))
   #define _LIBUNWIND_EXPORT               __attribute__((visibility("default")))
   #define _LIBUNWIND_HIDDEN               __attribute__((visibility("hidden")))
-  #define _LIBUNWIND_LOG(msg, ...) fprintf(stderr, "libuwind: " msg, __VA_ARGS__)
+  #define _LIBUNWIND_LOG(msg, ...) fprintf(stderr, "libunwind: " msg, __VA_ARGS__)
   #define _LIBUNWIND_ABORT(msg) __assert_rtn(__func__, __FILE__, __LINE__, msg)
 
-  #if FOR_DYLD
-    #define _LIBUNWIND_SUPPORT_COMPACT_UNWIND   1
-    #define _LIBUNWIND_SUPPORT_DWARF_UNWIND     0
-    #define _LIBUNWIND_SUPPORT_DWARF_INDEX      0
-    #define _LIBUNWIND_IS_BAREMETAL             0
+  #if defined(FOR_DYLD)
+    #define _LIBUNWIND_SUPPORT_COMPACT_UNWIND 1
+    #define _LIBUNWIND_SUPPORT_DWARF_UNWIND   0
+    #define _LIBUNWIND_SUPPORT_DWARF_INDEX    0
   #else
-    #define _LIBUNWIND_SUPPORT_COMPACT_UNWIND   1
-    #define _LIBUNWIND_SUPPORT_DWARF_UNWIND     1
-    #define _LIBUNWIND_SUPPORT_DWARF_INDEX      0
-    #define _LIBUNWIND_IS_BAREMETAL             0
+    #define _LIBUNWIND_SUPPORT_COMPACT_UNWIND 1
+    #define _LIBUNWIND_SUPPORT_DWARF_UNWIND   1
+    #define _LIBUNWIND_SUPPORT_DWARF_INDEX    0
   #endif
 
 #else
+  #include <stdlib.h>
+
   static inline void assert_rtn(const char* func, const char* file, int line, const char* msg)  __attribute__ ((noreturn));
   static inline void assert_rtn(const char* func, const char* file, int line, const char* msg) {
     fprintf(stderr, "libunwind: %s %s:%d - %s\n",  func, file, line, msg);
     assert(false);
     abort();
   }
-  #define _LIBUNWIND_BUILD_ZERO_COST_APIS (__i386__ || __x86_64__ || __arm64__ || __arm__ || __mips__)
+
+  #define _LIBUNWIND_BUILD_ZERO_COST_APIS (defined(__i386__) || \
+                                           defined(__x86_64__) || \
+                                           defined(__arm64__) || \
+                                           defined(__arm__))
   #define _LIBUNWIND_BUILD_SJLJ_APIS      0
-  #define _LIBUNWIND_SUPPORT_FRAME_APIS   (__i386__ || __x86_64__)
+  #define _LIBUNWIND_SUPPORT_FRAME_APIS   (defined(__i386__) || \
+                                           defined(__x86_64__))
   #define _LIBUNWIND_EXPORT               __attribute__((visibility("default")))
   #define _LIBUNWIND_HIDDEN               __attribute__((visibility("hidden")))
   #define _LIBUNWIND_LOG(msg, ...) fprintf(stderr, "libuwind: " msg, __VA_ARGS__)
   #define _LIBUNWIND_ABORT(msg) assert_rtn(__func__, __FILE__, __LINE__, msg)
 
-  #define _LIBUNWIND_SUPPORT_COMPACT_UNWIND   0
-  #define _LIBUNWIND_SUPPORT_DWARF_UNWIND     defined(__mips__)
-  #define _LIBUNWIND_SUPPORT_DWARF_INDEX      0
-  #define _LIBUNWIND_IS_BAREMETAL             0
+  #define _LIBUNWIND_SUPPORT_COMPACT_UNWIND 0
+  #define _LIBUNWIND_SUPPORT_DWARF_UNWIND !defined(__arm__) || \
+                                          defined(__ARM_DWARF_EH__)
+  #define _LIBUNWIND_SUPPORT_DWARF_INDEX _LIBUNWIND_SUPPORT_DWARF_UNWIND
 #endif
 
 

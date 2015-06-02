@@ -17,17 +17,11 @@
 #include <stdint.h>
 #include <stddef.h>
 
-// TODO(danakj): This is also in unwind.h and cxxabi.h, can we consolidate?
-#if !defined(__USING_SJLJ_EXCEPTIONS__) && defined(__arm__) && \
-    !defined(__ARM_DWARF_EH__) && !defined(__APPLE__)
-#define LIBCXXABI_ARM_EHABI 1
-#else
-#define LIBCXXABI_ARM_EHABI 0
-#endif
+#include <__cxxabi_config.h>
 
-#if __APPLE__
+#ifdef __APPLE__
   #include <Availability.h>
-    #if __arm__
+    #ifdef __arm__
        #define LIBUNWIND_AVAIL __attribute__((unavailable))
     #else
       #define LIBUNWIND_AVAIL __OSX_AVAILABLE_STARTING(__MAC_10_6, __IPHONE_5_0)
@@ -64,15 +58,11 @@ typedef struct unw_cursor_t unw_cursor_t;
 typedef struct unw_addr_space *unw_addr_space_t;
 
 typedef int unw_regnum_t;
-#if __arm__
+#if LIBCXXABI_ARM_EHABI
 typedef uint32_t unw_word_t;
-#else
-typedef uint64_t unw_word_t;
-#endif
-
-#if __arm__
 typedef uint64_t unw_fpreg_t;
 #else
+typedef uint64_t unw_word_t;
 typedef double unw_fpreg_t;
 #endif
 
@@ -104,7 +94,7 @@ extern int unw_set_reg(unw_cursor_t *, unw_regnum_t, unw_word_t) LIBUNWIND_AVAIL
 extern int unw_set_fpreg(unw_cursor_t *, unw_regnum_t, unw_fpreg_t)  LIBUNWIND_AVAIL;
 extern int unw_resume(unw_cursor_t *) LIBUNWIND_AVAIL;
 
-#if __arm__
+#ifdef __arm__
 /* Save VFP registers in FSTMX format (instead of FSTMD). */
 extern void unw_save_vfp_as_X(unw_cursor_t *) LIBUNWIND_AVAIL;
 #endif
@@ -117,16 +107,17 @@ extern int unw_is_signal_frame(unw_cursor_t *) LIBUNWIND_AVAIL;
 extern int unw_get_proc_name(unw_cursor_t *, char *, size_t, unw_word_t *) LIBUNWIND_AVAIL;
 //extern int       unw_get_save_loc(unw_cursor_t*, int, unw_save_loc_t*);
 
-#if UNW_REMOTE
+extern unw_addr_space_t unw_local_addr_space;
+
+#ifdef UNW_REMOTE
 /*
  * Mac OS X "remote" API for unwinding other processes on same machine
  *
  */
-extern unw_addr_space_t unw_local_addr_space;
 extern unw_addr_space_t unw_create_addr_space_for_task(task_t);
 extern void unw_destroy_addr_space(unw_addr_space_t);
 extern int unw_init_remote_thread(unw_cursor_t *, unw_addr_space_t, thread_t *);
-#endif
+#endif /* UNW_REMOTE */
 
 /*
  * traditional libuwind "remote" API
@@ -456,12 +447,12 @@ enum {
   UNW_ARM_WR15 = 127,
   // 128-133 -- SPSR, SPSR_{FIQ|IRQ|ABT|UND|SVC}
   // 134-143 -- Reserved
-  // 144-150 -- R8_USR–R14_USR
-  // 151-157 -- R8_FIQ–R14_FIQ
-  // 158-159 -- R13_IRQ–R14_IRQ
-  // 160-161 -- R13_ABT–R14_ABT
-  // 162-163 -- R13_UND–R14_UND
-  // 164-165 -- R13_SVC–R14_SVC
+  // 144-150 -- R8_USR-R14_USR
+  // 151-157 -- R8_FIQ-R14_FIQ
+  // 158-159 -- R13_IRQ-R14_IRQ
+  // 160-161 -- R13_ABT-R14_ABT
+  // 162-163 -- R13_UND-R14_UND
+  // 164-165 -- R13_SVC-R14_SVC
   // 166-191 -- Reserved
   UNW_ARM_WC0 = 192,
   UNW_ARM_WC1 = 193,
