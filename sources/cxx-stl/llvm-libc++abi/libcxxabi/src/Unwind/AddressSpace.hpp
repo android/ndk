@@ -18,24 +18,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if !_LIBUNWIND_IS_BAREMETAL
+#ifndef _LIBUNWIND_IS_BAREMETAL
 #include <dlfcn.h>
-#if defined(__ANDROID__) && !__LP64__
-// dladdr only exits in API >= 8. Call to our my_dladdr in android/support for dynamic lookup
-#if __ANDROID_API__ < 8
-typedef struct {
-    const char *dli_fname;  /* Pathname of shared object that contains address */
-    void       *dli_fbase;  /* Address at which shared object is loaded */
-    const char *dli_sname;  /* Name of nearest symbol with address lower than addr */
-    void       *dli_saddr;  /* Exact address of symbol named in dli_sname */
-} Dl_info;
-#endif // __ANDROID_API__ >= 8
-extern "C" int my_dladdr(const void* addr, Dl_info *info);
-#define dladdr  my_dladdr
-#endif
 #endif
 
-#if __APPLE__
+#ifdef __APPLE__
 #include <mach-o/getsect.h>
 namespace libunwind {
    bool checkKeyMgrRegisteredFDEs(uintptr_t targetAddr, void *&fde);
@@ -48,51 +35,57 @@ namespace libunwind {
 #include "Registers.hpp"
 
 #if LIBCXXABI_ARM_EHABI
-#if __LINUX__
- // Emulate the BSD dl_unwind_find_exidx API when on a GNU libdl system.
- typedef long unsigned int *_Unwind_Ptr;
- extern "C" _Unwind_Ptr __gnu_Unwind_Find_exidx(_Unwind_Ptr targetAddr, int *length);
- _Unwind_Ptr (*dl_unwind_find_exidx)(_Unwind_Ptr targetAddr, int *length) =
-     __gnu_Unwind_Find_exidx;
-#else
- #include <link.h>
-#endif
-#endif  // LIBCXXABI_ARM_EHABI
+#ifdef __linux__
 
-#if LIBCXXABI_ARM_EHABI && _LIBUNWIND_IS_BAREMETAL
+typedef long unsigned int *_Unwind_Ptr;
+extern "C" _Unwind_Ptr __gnu_Unwind_Find_exidx(_Unwind_Ptr addr, int *len);
+
+// Emulate the BSD dl_unwind_find_exidx API when on a GNU libdl system.
+#define dl_unwind_find_exidx __gnu_Unwind_Find_exidx
+
+#elif !defined(_LIBUNWIND_IS_BAREMETAL)
+#include <link.h>
+#else // !defined(_LIBUNWIND_IS_BAREMETAL)
 // When statically linked on bare-metal, the symbols for the EH table are looked
 // up without going through the dynamic loader.
-// TODO(jroelofs): since Newlib on arm-none-eabi doesn't
-//                 have dl_unwind_find_exidx...
 struct EHTEntry {
   uint32_t functionOffset;
   uint32_t unwindOpcodes;
 };
 extern EHTEntry __exidx_start;
 extern EHTEntry __exidx_end;
+#endif // !defined(_LIBUNWIND_IS_BAREMETAL)
+#endif  // LIBCXXABI_ARM_EHABI
+
+#if defined(__linux__)
+#if _LIBUNWIND_SUPPORT_DWARF_UNWIND && _LIBUNWIND_SUPPORT_DWARF_INDEX
+#include <link.h>
+#include "EHHeaderParser.hpp"
+#endif
 #endif
 
 namespace libunwind {
 
 /// Used by findUnwindSections() to return info about needed sections.
 struct UnwindInfoSections {
-#if _LIBUNWIND_SUPPORT_DWARF_UNWIND
+#if _LIBUNWIND_SUPPORT_DWARF_UNWIND || _LIBUNWIND_SUPPORT_DWARF_INDEX ||       \
+    _LIBUNWIND_SUPPORT_COMPACT_UNWIND
+  // No dso_base for ARM EHABI.
   uintptr_t       dso_base;
+#endif
+#if _LIBUNWIND_SUPPORT_DWARF_UNWIND
   uintptr_t       dwarf_section;
   uintptr_t       dwarf_section_length;
 #endif
 #if _LIBUNWIND_SUPPORT_DWARF_INDEX
-  uintptr_t       dso_base;
   uintptr_t       dwarf_index_section;
   uintptr_t       dwarf_index_section_length;
 #endif
 #if _LIBUNWIND_SUPPORT_COMPACT_UNWIND
-  uintptr_t       dso_base;
   uintptr_t       compact_unwind_section;
   uintptr_t       compact_unwind_section_length;
 #endif
 #if LIBCXXABI_ARM_EHABI
-  // No dso_base for ARM EHABI.
   uintptr_t       arm_section;
   uintptr_t       arm_section_length;
 #endif
@@ -104,7 +97,7 @@ struct UnwindInfoSections {
 /// making local unwinds fast.
 class __attribute__((visibility("hidden"))) LocalAddressSpace {
 public:
-#if __LP64__
+#ifdef __LP64__
   typedef uint64_t pint_t;
   typedef int64_t  sint_t;
 #else
@@ -145,7 +138,8 @@ public:
   static uint64_t getULEB128(pint_t &addr, pint_t end);
   static int64_t  getSLEB128(pint_t &addr, pint_t end);
 
-  pint_t getEncodedP(pint_t &addr, pint_t end, uint8_t encoding);
+  pint_t getEncodedP(pint_t &addr, pint_t end, uint8_t encoding,
+                     pint_t datarelBase = 0);
   bool findFunctionName(pint_t addr, char *buf, size_t bufLen,
                         unw_word_t *offset);
   bool findUnwindSections(pint_t targetAddr, UnwindInfoSections &info);
@@ -155,7 +149,7 @@ public:
 };
 
 inline uintptr_t LocalAddressSpace::getP(pint_t addr) {
-#if __LP64__
+#ifdef __LP64__
   return get64(addr);
 #else
   return get32(addr);
@@ -208,9 +202,9 @@ inline int64_t LocalAddressSpace::getSLEB128(pint_t &addr, pint_t end) {
   return result;
 }
 
-inline LocalAddressSpace::pint_t LocalAddressSpace::getEncodedP(pint_t &addr,
-                                                         pint_t end,
-                                                         uint8_t encoding) {
+inline LocalAddressSpace::pint_t
+LocalAddressSpace::getEncodedP(pint_t &addr, pint_t end, uint8_t encoding,
+                               pint_t datarelBase) {
   pint_t startAddr = addr;
   const uint8_t *p = (uint8_t *)addr;
   pint_t result;
@@ -276,7 +270,12 @@ inline LocalAddressSpace::pint_t LocalAddressSpace::getEncodedP(pint_t &addr,
     _LIBUNWIND_ABORT("DW_EH_PE_textrel pointer encoding not supported");
     break;
   case DW_EH_PE_datarel:
-    _LIBUNWIND_ABORT("DW_EH_PE_datarel pointer encoding not supported");
+    // DW_EH_PE_datarel is only valid in a few places, so the parameter has a
+    // default value of 0, and we abort in the event that someone calls this
+    // function with a datarelBase of 0 and DW_EH_PE_datarel encoding.
+    if (datarelBase == 0)
+      _LIBUNWIND_ABORT("DW_EH_PE_datarel is invalid with a datarelBase of 0");
+    result += datarelBase;
     break;
   case DW_EH_PE_funcrel:
     _LIBUNWIND_ABORT("DW_EH_PE_funcrel pointer encoding not supported");
@@ -295,7 +294,7 @@ inline LocalAddressSpace::pint_t LocalAddressSpace::getEncodedP(pint_t &addr,
   return result;
 }
 
-#if __APPLE__ 
+#ifdef __APPLE__ 
   struct dyld_unwind_sections
   {
     const struct mach_header*   mh;
@@ -339,7 +338,7 @@ inline LocalAddressSpace::pint_t LocalAddressSpace::getEncodedP(pint_t &addr,
 
 inline bool LocalAddressSpace::findUnwindSections(pint_t targetAddr,
                                                   UnwindInfoSections &info) {
-#if __APPLE__
+#ifdef __APPLE__
   dyld_unwind_sections dyldInfo;
   if (_dyld_find_unwind_sections((void *)targetAddr, &dyldInfo)) {
     info.dso_base                      = (uintptr_t)dyldInfo.mh;
@@ -352,20 +351,78 @@ inline bool LocalAddressSpace::findUnwindSections(pint_t targetAddr,
     return true;
   }
 #elif LIBCXXABI_ARM_EHABI
- #if !_LIBUNWIND_IS_BAREMETAL
+ #ifdef _LIBUNWIND_IS_BAREMETAL
+  // Bare metal is statically linked, so no need to ask the dynamic loader
+  info.arm_section =        (uintptr_t)(&__exidx_start);
+  info.arm_section_length = (uintptr_t)(&__exidx_end - &__exidx_start);
+ #else
   int length = 0;
   info.arm_section = (uintptr_t) dl_unwind_find_exidx(
       (_Unwind_Ptr) targetAddr, &length);
-  info.arm_section_length = length;
- #else
-  // Bare metal, statically linked
-  info.arm_section =        (uintptr_t)(&__exidx_start);
-  info.arm_section_length = (uintptr_t)(&__exidx_end - &__exidx_start);
+  info.arm_section_length = (uintptr_t)length;
  #endif
   _LIBUNWIND_TRACE_UNWINDING("findUnwindSections: section %X length %x\n",
                              info.arm_section, info.arm_section_length);
   if (info.arm_section && info.arm_section_length)
     return true;
+#elif _LIBUNWIND_SUPPORT_DWARF_UNWIND
+#if _LIBUNWIND_SUPPORT_DWARF_INDEX
+  struct dl_iterate_cb_data {
+    LocalAddressSpace *addressSpace;
+    UnwindInfoSections *sects;
+    uintptr_t targetAddr;
+  };
+
+  dl_iterate_cb_data cb_data = {this, &info, targetAddr};
+  int found = dl_iterate_phdr(
+      [](struct dl_phdr_info *pinfo, size_t, void *data) -> int {
+        auto cbdata = static_cast<dl_iterate_cb_data *>(data);
+        size_t object_length;
+        bool found_obj = false;
+        bool found_hdr = false;
+
+        assert(cbdata);
+        assert(cbdata->sects);
+
+        if (cbdata->targetAddr < pinfo->dlpi_addr) {
+          return false;
+        }
+
+        for (ElfW(Half) i = 0; i < pinfo->dlpi_phnum; i++) {
+          const ElfW(Phdr) *phdr = &pinfo->dlpi_phdr[i];
+          if (phdr->p_type == PT_LOAD) {
+            uintptr_t begin = pinfo->dlpi_addr + phdr->p_vaddr;
+            uintptr_t end = begin + phdr->p_memsz;
+            if (cbdata->targetAddr >= begin && cbdata->targetAddr < end) {
+              cbdata->sects->dso_base = begin;
+              object_length = phdr->p_memsz;
+              found_obj = true;
+            }
+          } else if (phdr->p_type == PT_GNU_EH_FRAME) {
+            EHHeaderParser<LocalAddressSpace>::EHHeaderInfo hdrInfo;
+            uintptr_t eh_frame_hdr_start = pinfo->dlpi_addr + phdr->p_vaddr;
+            cbdata->sects->dwarf_index_section = eh_frame_hdr_start;
+            cbdata->sects->dwarf_index_section_length = phdr->p_memsz;
+            EHHeaderParser<LocalAddressSpace>::decodeEHHdr(
+                *cbdata->addressSpace, eh_frame_hdr_start, phdr->p_memsz,
+                hdrInfo);
+            cbdata->sects->dwarf_section = hdrInfo.eh_frame_ptr;
+            found_hdr = true;
+          }
+        }
+
+        if (found_obj && found_hdr) {
+          cbdata->sects->dwarf_section_length = object_length;
+          return true;
+        } else {
+          return false;
+        }
+      },
+      &cb_data);
+  return static_cast<bool>(found);
+#else
+#error "_LIBUNWIND_SUPPORT_DWARF_UNWIND requires _LIBUNWIND_SUPPORT_DWARF_INDEX on this platform."
+#endif
 #endif
 
   return false;
@@ -373,10 +430,12 @@ inline bool LocalAddressSpace::findUnwindSections(pint_t targetAddr,
 
 
 inline bool LocalAddressSpace::findOtherFDE(pint_t targetAddr, pint_t &fde) {
-#if __APPLE__
+#ifdef __APPLE__
   return checkKeyMgrRegisteredFDEs(targetAddr, *((void**)&fde));
 #else
   // TO DO: if OS has way to dynamically register FDEs, check that.
+  (void)targetAddr;
+  (void)fde;
   return false;
 #endif
 }
@@ -384,11 +443,11 @@ inline bool LocalAddressSpace::findOtherFDE(pint_t targetAddr, pint_t &fde) {
 inline bool LocalAddressSpace::findFunctionName(pint_t addr, char *buf,
                                                 size_t bufLen,
                                                 unw_word_t *offset) {
-#if !_LIBUNWIND_IS_BAREMETAL
+#ifndef _LIBUNWIND_IS_BAREMETAL
   Dl_info dyldInfo;
   if (dladdr((void *)addr, &dyldInfo)) {
     if (dyldInfo.dli_sname != NULL) {
-      strlcpy(buf, dyldInfo.dli_sname, bufLen);
+      snprintf(buf, bufLen, "%s", dyldInfo.dli_sname);
       *offset = (addr - (pint_t) dyldInfo.dli_saddr);
       return true;
     }
@@ -399,7 +458,7 @@ inline bool LocalAddressSpace::findFunctionName(pint_t addr, char *buf,
 
 
 
-#if UNW_REMOTE
+#ifdef UNW_REMOTE
 
 /// OtherAddressSpace is used as a template parameter to UnwindCursor when
 /// unwinding a thread in the another process.  The other process can be a
@@ -419,7 +478,8 @@ public:
   pint_t    getP(pint_t addr);
   uint64_t  getULEB128(pint_t &addr, pint_t end);
   int64_t   getSLEB128(pint_t &addr, pint_t end);
-  pint_t    getEncodedP(pint_t &addr, pint_t end, uint8_t encoding);
+  pint_t    getEncodedP(pint_t &addr, pint_t end, uint8_t encoding,
+                        pint_t datarelBase = 0);
   bool      findFunctionName(pint_t addr, char *buf, size_t bufLen,
                         unw_word_t *offset);
   bool      findUnwindSections(pint_t targetAddr, UnwindInfoSections &info);

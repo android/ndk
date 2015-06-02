@@ -11,7 +11,7 @@
 
     .text
 
-#if __i386__
+#if defined(__i386__)
 
 #
 # extern int unw_getcontext(unw_context_t* thread_state)
@@ -52,7 +52,7 @@ DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
   xorl  %eax, %eax    # return UNW_ESUCCESS
   ret
 
-#elif __x86_64__
+#elif defined(__x86_64__)
 
 #
 # extern int unw_getcontext(unw_context_t* thread_state)
@@ -87,7 +87,7 @@ DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
   xorl  %eax, %eax    # return UNW_ESUCCESS
   ret
 
-#elif __ppc__
+#elif defined(__ppc__)
 
 ;
 ; extern int unw_getcontext(unw_context_t* thread_state)
@@ -230,7 +230,7 @@ DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
   blr
 
 
-#elif __arm64__
+#elif defined(__arm64__)
 
 ;
 ; extern int unw_getcontext(unw_context_t* thread_state)
@@ -280,7 +280,11 @@ DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
   ldr    x0, #0      ; return UNW_ESUCCESS
   ret
 
-#elif __arm__ && !__APPLE__
+#elif defined(__arm__) && !defined(__APPLE__)
+
+#if !defined(__ARM_ARCH_ISA_ARM)
+  .thumb
+#endif
 
 @
 @ extern int unw_getcontext(unw_context_t* thread_state)
@@ -291,11 +295,19 @@ DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
 @ Per EHABI #4.7 this only saves the core integer registers.
 @ EHABI #7.4.5 notes that in general all VRS registers should be restored
 @ however this is very hard to do for VFP registers because it is unknown
-@ to the lbirary how many registers are implemented by the architecture.
+@ to the library how many registers are implemented by the architecture.
 @ Instead, VFP registers are demand saved by logic external to unw_getcontext.
 @
   .p2align 2
 DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
+#if !defined(__ARM_ARCH_ISA_ARM)
+  stm r0!, {r0-r7}
+  mov r2, sp
+  mov r3, lr
+  str r2, [r0, #52]
+  str r3, [r0, #56]
+  str r3, [r0, #60]  @ store return address as pc
+#else
   @ 32bit thumb-2 restrictions for stm:
   @ . the sp (r13) cannot be in the list
   @ . the pc (r15) cannot be in the list in an STM instruction
@@ -303,12 +315,16 @@ DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
   str sp, [r0, #52]
   str lr, [r0, #56]
   str lr, [r0, #60]  @ store return address as pc
-  mov r0, #0         @ return UNW_ESUCCESS
-#if _ARM_ARCH > 4
-  bx lr
-#else
-  mov pc, lr
 #endif
+#if __ARM_ARCH_ISA_THUMB == 1
+  @ T1 does not have a non-cpsr-clobbering register-zeroing instruction.
+  @ It is safe to use here though because we are about to return, and cpsr is
+  @ not expected to be preserved.
+  movs r0, #0        @ return UNW_ESUCCESS
+#else
+  mov r0, #0         @ return UNW_ESUCCESS
+#endif
+  JMP(lr)
 
 @
 @ static void libunwind::Registers_arm::saveVFPWithFSTMD(unw_fpreg_t* values)
@@ -317,9 +333,10 @@ DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
 @  values pointer is in r0
 @
   .p2align 2
+  .fpu vfpv3-d16
 DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm16saveVFPWithFSTMDEPy)
-  stc p11, cr0, [r0], {#0x20}  @ fstmiad r0, {d0-d15}
-  mov pc, lr
+  vstmia r0, {d0-d15}
+  JMP(lr)
 
 @
 @ static void libunwind::Registers_arm::saveVFPWithFSTMX(unw_fpreg_t* values)
@@ -328,9 +345,10 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm16saveVFPWithFSTMD
 @  values pointer is in r0
 @
   .p2align 2
+  .fpu vfpv3-d16
 DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm16saveVFPWithFSTMXEPy)
-  stc p11, cr0, [r0], {#0x21}  @ fstmiax r0, {d0-d15}
-  mov pc, lr
+  vstmia r0, {d0-d15} @ fstmiax is deprecated in ARMv7+ and now behaves like vstmia
+  JMP(lr)
 
 @
 @ static void libunwind::Registers_arm::saveVFPv3(unw_fpreg_t* values)
@@ -339,16 +357,17 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm16saveVFPWithFSTMX
 @  values pointer is in r0
 @
   .p2align 2
+  .fpu vfpv3
 DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm9saveVFPv3EPy)
   @ VFP and iwMMX instructions are only available when compiling with the flags
-  @ that enable them. We don't want to do that in the library (because we don't
+  @ that enable them. We do not want to do that in the library (because we do not
   @ want the compiler to generate instructions that access those) but this is
   @ only accessed if the personality routine needs these registers. Use of
   @ these registers implies they are, actually, available on the target, so
   @ it's ok to execute.
   @ So, generate the instructions using the corresponding coprocessor mnemonic.
-  stcl p11, cr0, [r0], {#0x20}  @ vldm r0, {d16-d31}
-  mov pc, lr
+  vstmia r0, {d16-d31}
+  JMP(lr)
 
 @
 @ static void libunwind::Registers_arm::saveiWMMX(unw_fpreg_t* values)
@@ -358,6 +377,7 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm9saveVFPv3EPy)
 @
   .p2align 2
 DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm9saveiWMMXEPy)
+#if (!defined(__ARM_ARCH_6M__) && !defined(__ARM_ARCH_6SM__)) || defined(__ARM_WMMX)
   stcl p1, cr0, [r0], #8  @ wstrd wR0, [r0], #8
   stcl p1, cr1, [r0], #8  @ wstrd wR1, [r0], #8
   stcl p1, cr2, [r0], #8  @ wstrd wR2, [r0], #8
@@ -374,7 +394,8 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm9saveiWMMXEPy)
   stcl p1, cr13, [r0], #8  @ wstrd wR13, [r0], #8
   stcl p1, cr14, [r0], #8  @ wstrd wR14, [r0], #8
   stcl p1, cr15, [r0], #8  @ wstrd wR15, [r0], #8
-  mov pc, lr
+#endif
+  JMP(lr)
 
 @
 @ static void libunwind::Registers_arm::saveiWMMXControl(unw_uint32_t* values)
@@ -384,26 +405,12 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm9saveiWMMXEPy)
 @
   .p2align 2
 DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm16saveiWMMXControlEPj)
+#if (!defined(__ARM_ARCH_6M__) && !defined(__ARM_ARCH_6SM__)) || defined(__ARM_WMMX)
   stc2 p1, cr8, [r0], #4  @ wstrw wCGR0, [r0], #4
   stc2 p1, cr9, [r0], #4  @ wstrw wCGR1, [r0], #4
   stc2 p1, cr10, [r0], #4  @ wstrw wCGR2, [r0], #4
   stc2 p1, cr11, [r0], #4  @ wstrw wCGR3, [r0], #4
-  mov pc, lr
-
-#elif __mips64
-#
-# extern int unw_getcontext(unw_context_t* thread_state)
-# ToDo:
-#
-DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
-  j $31
-
-#elif __mips__
-#
-# extern int unw_getcontext(unw_context_t* thread_state)
-# ToDo:
-#
-DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
-  j $31
+#endif
+  JMP(lr)
 
 #endif

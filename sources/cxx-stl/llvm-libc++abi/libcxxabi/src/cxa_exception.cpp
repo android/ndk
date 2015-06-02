@@ -17,7 +17,7 @@
 #include <exception>        // for std::terminate
 #include <cstdlib>          // for malloc, free
 #include <cstring>          // for memset
-#if !LIBCXXABI_SINGLE_THREADED
+#if !LIBCXXABI_HAS_NO_THREADS
 #  include <pthread.h>      // for fallback_malloc.ipp's mutexes
 #endif
 #include "cxa_exception.hpp"
@@ -234,7 +234,7 @@ __cxa_throw(void* thrown_object, std::type_info* tinfo, void (*dest)(void*))
     globals->uncaughtExceptions += 1;   // Not atomically, since globals are thread-local
 
     exception_header->unwindHeader.exception_cleanup = exception_cleanup_func;
-#if __USING_SJLJ_EXCEPTIONS__
+#ifdef __USING_SJLJ_EXCEPTIONS__
     _Unwind_SjLj_RaiseException(&exception_header->unwindHeader);
 #else
     _Unwind_RaiseException(&exception_header->unwindHeader);
@@ -258,12 +258,10 @@ __cxa_get_exception_ptr(void* unwind_exception) throw()
 {
 #if LIBCXXABI_ARM_EHABI
     return reinterpret_cast<void*>(
-           static_cast<_Unwind_Control_Block*>(unwind_exception)->barrier_cache.bitpattern[0]);
+        static_cast<_Unwind_Control_Block*>(unwind_exception)->barrier_cache.bitpattern[0]);
 #else
-    return cxa_exception_from_exception_unwind_exception
-           (
-               static_cast<_Unwind_Exception*>(unwind_exception)
-           )->adjustedPtr;
+    return cxa_exception_from_exception_unwind_exception(
+        static_cast<_Unwind_Exception*>(unwind_exception))->adjustedPtr;
 #endif
 }
 
@@ -447,12 +445,17 @@ For a foreign exception:
 */
 void __cxa_end_catch()
 {
-    static_assert(sizeof(__cxa_exception) == sizeof(__cxa_dependent_exception),
-                  "sizeof(__cxa_exception) must be equal to sizeof(__cxa_dependent_exception)");
-    static_assert(offsetof(__cxa_exception, referenceCount) == offsetof(__cxa_dependent_exception, primaryException),
-                  "the layout of __cxa_exception must match the layout of __cxa_dependent_exception");
-    static_assert(offsetof(__cxa_exception, handlerCount) == offsetof(__cxa_dependent_exception, handlerCount),
-                  "the layout of __cxa_exception must match the layout of __cxa_dependent_exception");
+  static_assert(sizeof(__cxa_exception) == sizeof(__cxa_dependent_exception),
+                "sizeof(__cxa_exception) must be equal to "
+                "sizeof(__cxa_dependent_exception)");
+    static_assert(offsetof(__cxa_exception, referenceCount) ==
+                      offsetof(__cxa_dependent_exception, primaryException),
+                  "the layout of __cxa_exception must match the layout of "
+                  "__cxa_dependent_exception");
+    static_assert(offsetof(__cxa_exception, handlerCount) ==
+                      offsetof(__cxa_dependent_exception, handlerCount),
+                  "the layout of __cxa_exception must match the layout of "
+                  "__cxa_dependent_exception");
     __cxa_eh_globals* globals = __cxa_get_globals_fast(); // __cxa_get_globals called in __cxa_begin_catch
     __cxa_exception* exception_header = globals->caughtExceptions;
     // If we've rethrown a foreign exception, then globals->caughtExceptions
@@ -566,7 +569,7 @@ __cxa_rethrow()
         //   nothing
         globals->caughtExceptions = 0;
     }
-#if __USING_SJLJ_EXCEPTIONS__
+#ifdef __USING_SJLJ_EXCEPTIONS__
     _Unwind_SjLj_RaiseException(&exception_header->unwindHeader);
 #else
     _Unwind_RaiseException(&exception_header->unwindHeader);
@@ -695,7 +698,7 @@ __cxa_rethrow_primary_exception(void* thrown_object)
         setDependentExceptionClass(&dep_exception_header->unwindHeader);
         __cxa_get_globals()->uncaughtExceptions += 1;
         dep_exception_header->unwindHeader.exception_cleanup = dependent_exception_cleanup;
-#if __USING_SJLJ_EXCEPTIONS__
+#ifdef __USING_SJLJ_EXCEPTIONS__
         _Unwind_SjLj_RaiseException(&dep_exception_header->unwindHeader);
 #else
         _Unwind_RaiseException(&dep_exception_header->unwindHeader);

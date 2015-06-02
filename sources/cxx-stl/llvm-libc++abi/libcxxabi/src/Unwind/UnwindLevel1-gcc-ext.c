@@ -10,27 +10,30 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <stdint.h>
+#include <inttypes.h>
 #include <stdbool.h>
-#include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-#include "libunwind.h"
-#include "unwind.h"
-#include "libunwind_ext.h"
 #include "config.h"
+#include "libunwind_ext.h"
+#include "libunwind.h"
+#include "Unwind-EHABI.h"
+#include "unwind.h"
 
 #if _LIBUNWIND_BUILD_ZERO_COST_APIS
 
 ///  Called by __cxa_rethrow().
 _LIBUNWIND_EXPORT _Unwind_Reason_Code
 _Unwind_Resume_or_Rethrow(_Unwind_Exception *exception_object) {
-  _LIBUNWIND_TRACE_API("_Unwind_Resume_or_Rethrow(ex_obj=%p), "
-                       "private_1=%ld\n",
-                       exception_object,
 #if LIBCXXABI_ARM_EHABI
+  _LIBUNWIND_TRACE_API("_Unwind_Resume_or_Rethrow(ex_obj=%p), private_1=%ld\n",
+                       (void *)exception_object,
                        (long)exception_object->unwinder_cache.reserved1);
 #else
+  _LIBUNWIND_TRACE_API("_Unwind_Resume_or_Rethrow(ex_obj=%p), private_1=%ld\n",
+                       (void *)exception_object,
                        (long)exception_object->private_1);
 #endif
 
@@ -62,7 +65,7 @@ _Unwind_Resume_or_Rethrow(_Unwind_Exception *exception_object) {
 _LIBUNWIND_EXPORT uintptr_t
 _Unwind_GetDataRelBase(struct _Unwind_Context *context) {
   (void)context;
-  _LIBUNWIND_TRACE_API("_Unwind_GetDataRelBase(context=%p)\n", context);
+  _LIBUNWIND_TRACE_API("_Unwind_GetDataRelBase(context=%p)\n", (void *)context);
   _LIBUNWIND_ABORT("_Unwind_GetDataRelBase() not implemented");
 }
 
@@ -72,7 +75,7 @@ _Unwind_GetDataRelBase(struct _Unwind_Context *context) {
 _LIBUNWIND_EXPORT uintptr_t
 _Unwind_GetTextRelBase(struct _Unwind_Context *context) {
   (void)context;
-  _LIBUNWIND_TRACE_API("_Unwind_GetTextRelBase(context=%p)\n", context);
+  _LIBUNWIND_TRACE_API("_Unwind_GetTextRelBase(context=%p)\n", (void *)context);
   _LIBUNWIND_ABORT("_Unwind_GetTextRelBase() not implemented");
 }
 
@@ -95,7 +98,6 @@ _LIBUNWIND_EXPORT void *_Unwind_FindEnclosingFunction(void *pc) {
     return NULL;
 }
 
-
 /// Walk every frame and call trace function at each one.  If trace function
 /// returns anything other than _URC_NO_REASON, then walk is terminated.
 _LIBUNWIND_EXPORT _Unwind_Reason_Code
@@ -105,10 +107,12 @@ _Unwind_Backtrace(_Unwind_Trace_Fn callback, void *ref) {
   unw_getcontext(&uc);
   unw_init_local(&cursor, &uc);
 
-  _LIBUNWIND_TRACE_API("_Unwind_Backtrace(callback=%p)\n", callback);
+  _LIBUNWIND_TRACE_API("_Unwind_Backtrace(callback=%p)\n",
+                       (void *)(uintptr_t)callback);
 
   // walk each frame
   while (true) {
+    _Unwind_Reason_Code result;
 
     // ask libuwind to get next frame (skip over first frame which is
     // _Unwind_Backtrace())
@@ -119,26 +123,68 @@ _Unwind_Backtrace(_Unwind_Trace_Fn callback, void *ref) {
       return _URC_END_OF_STACK;
     }
 
+#if LIBCXXABI_ARM_EHABI
+    // Get the information for this frame.
+    unw_proc_info_t frameInfo;
+    if (unw_get_proc_info(&cursor, &frameInfo) != UNW_ESUCCESS) {
+      return _URC_END_OF_STACK;
+    }
+
+    struct _Unwind_Context *context = (struct _Unwind_Context *)&cursor;
+    const uint32_t* unwindInfo = (uint32_t *) frameInfo.unwind_info;
+    if ((*unwindInfo & 0x80000000) == 0) {
+      // 6.2: Generic Model
+      // EHT entry is a prel31 pointing to the PR, followed by data understood
+      // only by the personality routine. Since EHABI doesn't guarantee the
+      // location or availability of the unwind opcodes in the generic model,
+      // we have to call personality functions with (_US_VIRTUAL_UNWIND_FRAME |
+      // _US_FORCE_UNWIND) state.
+
+      // Create a mock exception object for force unwinding.
+      _Unwind_Exception ex;
+      ex.exception_class = 0x434C4E47554E5700; // CLNGUNW\0
+      ex.pr_cache.fnstart = frameInfo.start_ip;
+      ex.pr_cache.ehtp = (_Unwind_EHT_Header *) unwindInfo;
+      ex.pr_cache.additional= frameInfo.flags;
+
+      // Get and call the personality function to unwind the frame.
+      __personality_routine pr = (__personality_routine) readPrel31(unwindInfo);
+      if (pr(_US_VIRTUAL_UNWIND_FRAME | _US_FORCE_UNWIND, &ex, context) !=
+              _URC_CONTINUE_UNWIND) {
+        return _URC_END_OF_STACK;
+      }
+    } else {
+      size_t off, len;
+      unwindInfo = decode_eht_entry(unwindInfo, &off, &len);
+      if (unwindInfo == NULL) {
+        return _URC_FAILURE;
+      }
+
+      result = _Unwind_VRS_Interpret(context, unwindInfo, off, len);
+      if (result != _URC_CONTINUE_UNWIND) {
+        return _URC_END_OF_STACK;
+      }
+    }
+#endif // LIBCXXABI_ARM_EHABI
+
     // debugging
     if (_LIBUNWIND_TRACING_UNWINDING) {
       char functionName[512];
-      unw_proc_info_t frameInfo;
+      unw_proc_info_t frame;
       unw_word_t offset;
       unw_get_proc_name(&cursor, functionName, 512, &offset);
-      unw_get_proc_info(&cursor, &frameInfo);
+      unw_get_proc_info(&cursor, &frame);
       _LIBUNWIND_TRACE_UNWINDING(
           " _backtrace: start_ip=0x%llX, func=%s, lsda=0x%llX, context=%p\n",
-          (long long)frameInfo.start_ip, functionName, (long long)frameInfo.lsda,
-          &cursor);
+          (long long)frame.start_ip, functionName, (long long)frame.lsda,
+          (void *)&cursor);
     }
 
     // call trace function with this frame
-    _Unwind_Reason_Code result =
-        (*callback)((struct _Unwind_Context *)(&cursor), ref);
+    result = (*callback)((struct _Unwind_Context *)(&cursor), ref);
     if (result != _URC_NO_REASON) {
-      _LIBUNWIND_TRACE_UNWINDING(" _backtrace: ended because callback "
-                                 "returned %d\n",
-                                 result);
+      _LIBUNWIND_TRACE_UNWINDING(
+          " _backtrace: ended because callback returned %d\n", result);
       return result;
     }
   }
@@ -171,8 +217,8 @@ _LIBUNWIND_EXPORT uintptr_t _Unwind_GetCFA(struct _Unwind_Context *context) {
   unw_cursor_t *cursor = (unw_cursor_t *)context;
   unw_word_t result;
   unw_get_reg(cursor, UNW_REG_SP, &result);
-  _LIBUNWIND_TRACE_API("_Unwind_GetCFA(context=%p) => 0x%llX\n", context,
-                  (uint64_t) result);
+  _LIBUNWIND_TRACE_API("_Unwind_GetCFA(context=%p) => 0x%" PRIx64 "\n",
+                       (void *)context, (uint64_t)result);
   return (uintptr_t)result;
 }
 
@@ -182,7 +228,7 @@ _LIBUNWIND_EXPORT uintptr_t _Unwind_GetCFA(struct _Unwind_Context *context) {
 /// site address.  Normally IP is the return address.
 _LIBUNWIND_EXPORT uintptr_t _Unwind_GetIPInfo(struct _Unwind_Context *context,
                                               int *ipBefore) {
-  _LIBUNWIND_TRACE_API("_Unwind_GetIPInfo(context=%p)\n", context);
+  _LIBUNWIND_TRACE_API("_Unwind_GetIPInfo(context=%p)\n", (void *)context);
   *ipBefore = 0;
   return _Unwind_GetIP(context);
 }

@@ -295,15 +295,20 @@ LIBCXXABI_SOURCES=\
 ../llvm-libc++abi/libcxxabi/src/cxa_handlers.cpp \
 ../llvm-libc++abi/libcxxabi/src/cxa_new_delete.cpp \
 ../llvm-libc++abi/libcxxabi/src/cxa_personality.cpp \
+../llvm-libc++abi/libcxxabi/src/cxa_thread_atexit.cpp \
 ../llvm-libc++abi/libcxxabi/src/cxa_unexpected.cpp \
 ../llvm-libc++abi/libcxxabi/src/cxa_vector.cpp \
 ../llvm-libc++abi/libcxxabi/src/cxa_virtual.cpp \
 ../llvm-libc++abi/libcxxabi/src/exception.cpp \
 ../llvm-libc++abi/libcxxabi/src/private_typeinfo.cpp \
 ../llvm-libc++abi/libcxxabi/src/stdexcept.cpp \
-../llvm-libc++abi/libcxxabi/src/typeinfo.cpp \
-../llvm-libc++abi/libcxxabi/src/Unwind/libunwind.cpp \
+../llvm-libc++abi/libcxxabi/src/typeinfo.cpp
+"
+
+LIBCXXABI_UNWIND_SOURCES=\
+"../llvm-libc++abi/libcxxabi/src/Unwind/libunwind.cpp \
 ../llvm-libc++abi/libcxxabi/src/Unwind/Unwind-EHABI.cpp \
+../llvm-libc++abi/libcxxabi/src/Unwind/Unwind-sjlj.c \
 ../llvm-libc++abi/libcxxabi/src/Unwind/UnwindLevel1.c \
 ../llvm-libc++abi/libcxxabi/src/Unwind/UnwindLevel1-gcc-ext.c \
 ../llvm-libc++abi/libcxxabi/src/Unwind/UnwindRegistersRestore.S \
@@ -550,6 +555,17 @@ build_stl_libs_for_abi ()
             ;;
     esac
 
+    USE_LLVM_UNWIND=
+    case $ABI in
+        armeabi*)
+            EXTRA_CXXFLAGS="$EXTRA_CXXFLAGS -DLIBCXXABI_USE_LLVM_UNWINDER=1"
+            USE_LLVM_UNWIND=true
+            ;;
+        *)
+            EXTRA_CXXFLAGS="$EXTRA_CXXFLAGS -DLIBCXXABI_USE_LLVM_UNWINDER=0"
+            ;;
+    esac
+
     if [ -n "$THUMB" ]; then
         EXTRA_CFLAGS="$EXTRA_CFLAGS -mthumb"
         EXTRA_CXXFLAGS="$EXTRA_CXXFLAGS -mthumb"
@@ -632,7 +648,11 @@ build_stl_libs_for_abi ()
       builder_ldflags "$CXX_STL_LDFLAGS $EXTRA_LDFLAGS"
       builder_sources $CXX_STL_SOURCES
       if [ "$CXX_SUPPORT_LIB" = "libc++abi" ]; then
-          builder_sources $LIBCXXABI_SOURCES
+          if [ "$USE_LLVM_UNWIND" = "true" ]; then
+              builder_sources $LIBCXXABI_SOURCES $LIBCXXABI_UNWIND_SOURCES
+          else
+              builder_sources $LIBCXXABI_SOURCES
+          fi
           builder_ldflags "-ldl"
       fi
       if [ "$CXX_STL" = "libc++" ]; then

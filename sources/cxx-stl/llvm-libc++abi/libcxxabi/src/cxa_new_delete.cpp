@@ -230,8 +230,6 @@ bad_array_new_length::what() const _NOEXCEPT
     return "bad_array_new_length";
 }
 
-#if 0  // WE DONT WANT NO C++14 FIXME can remove this if 0 now?
-
 // bad_array_length
 
 #ifndef _LIBCPP_BAD_ARRAY_LENGTH_DEFINED
@@ -260,7 +258,5 @@ bad_array_length::what() const _NOEXCEPT
 {
     return "bad_array_length";
 }
-
-#endif // WE DONT WANT NO C++14
 
 }  // std

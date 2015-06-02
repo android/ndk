@@ -34,7 +34,7 @@
 // 
 // _LIBCXX_DYNAMIC_FALLBACK is currently off by default.
 
-#if _LIBCXX_DYNAMIC_FALLBACK
+#ifdef _LIBCXX_DYNAMIC_FALLBACK
 #include "abort_message.h"
 #include <string.h>
 #include <sys/syslog.h>
@@ -57,7 +57,7 @@ namespace __cxxabiv1
 
 #pragma GCC visibility push(hidden)
 
-#if _LIBCXX_DYNAMIC_FALLBACK
+#ifdef _LIBCXX_DYNAMIC_FALLBACK
 
 inline
 bool
@@ -347,30 +347,34 @@ bool
 __pbase_type_info::can_catch(const __shim_type_info* thrown_type,
                              void*&) const
 {
-    if (is_equal(this, thrown_type, false))
-        return true;
-    return is_equal(thrown_type, &typeid(std::nullptr_t), false);
+    return is_equal(this, thrown_type, false) ||
+           is_equal(thrown_type, &typeid(std::nullptr_t), false);
 }
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-field-initializers"
 
 // Handles bullets 1, 3 and 4
+// NOTE: It might not be safe to adjust the pointer if it is not not a pointer
+// type. Only adjust the pointer after we know it is safe to do so.
 bool
 __pointer_type_info::can_catch(const __shim_type_info* thrown_type,
                                void*& adjustedPtr) const
 {
-    // Do the dereference adjustment
-    if (adjustedPtr != NULL)
-        adjustedPtr = *static_cast<void**>(adjustedPtr);
     // bullets 1 and 4
-    if (__pbase_type_info::can_catch(thrown_type, adjustedPtr))
+    if (__pbase_type_info::can_catch(thrown_type, adjustedPtr)) {
+        if (adjustedPtr != NULL)
+            adjustedPtr = *static_cast<void**>(adjustedPtr);
         return true;
+    }
     // bullet 3
     const __pointer_type_info* thrown_pointer_type =
         dynamic_cast<const __pointer_type_info*>(thrown_type);
     if (thrown_pointer_type == 0)
         return false;
+    // Do the dereference adjustment
+    if (adjustedPtr != NULL)
+        adjustedPtr = *static_cast<void**>(adjustedPtr);
     // bullet 3B
     if (thrown_pointer_type->__flags & ~__flags)
         return false;
@@ -511,7 +515,7 @@ __dynamic_cast(const void* static_ptr,
         info.number_of_dst_type = 1;
         // Do the  search
         dynamic_type->search_above_dst(&info, dynamic_ptr, dynamic_ptr, public_path, false);
-#if _LIBCXX_DYNAMIC_FALLBACK
+#ifdef _LIBCXX_DYNAMIC_FALLBACK
         // The following if should always be false because we should definitely
         //   find (static_ptr, static_type), either on a public or private path
         if (info.path_dst_ptr_to_static_ptr == unknown)
@@ -535,7 +539,7 @@ __dynamic_cast(const void* static_ptr,
     {
         // Not using giant short cut.  Do the search
         dynamic_type->search_below_dst(&info, dynamic_ptr, public_path, false);
- #if _LIBCXX_DYNAMIC_FALLBACK
+ #ifdef _LIBCXX_DYNAMIC_FALLBACK
         // The following if should always be false because we should definitely
         //   find (static_ptr, static_type), either on a public or private path
         if (info.path_dst_ptr_to_static_ptr == unknown &&
@@ -957,7 +961,6 @@ __class_type_info::search_below_dst(__dynamic_cast_info* info,
                                     int path_below,
                                     bool use_strcmp) const
 {
-    typedef const __base_class_type_info* Iter;
     if (is_equal(this, info->static_type, use_strcmp))
         process_static_type_below_dst(info, current_ptr, path_below);
     else if (is_equal(this, info->dst_type, use_strcmp))
