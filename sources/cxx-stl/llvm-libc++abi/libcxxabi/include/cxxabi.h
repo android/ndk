@@ -8,7 +8,7 @@
 //===----------------------------------------------------------------------===//
 
 #ifndef __CXXABI_H
-#define __CXXABI_H 
+#define __CXXABI_H
 
 /*
  * This header provides the interface to the C++ ABI as defined at:
@@ -18,34 +18,28 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <__cxxabi_config.h>
+
 #define _LIBCPPABI_VERSION 1001
 #define LIBCXXABI_NORETURN  __attribute__((noreturn))
-
-// TODO(danakj): This is also in unwind.h and libunwind.h, can we consolidate?
-#if !defined(__USING_SJLJ_EXCEPTIONS__) && defined(__arm__) && \
-    !defined(__ARM_DWARF_EH__) && !defined(__APPLE__)
-#define LIBCXXABI_ARM_EHABI 1
-#else
-#define LIBCXXABI_ARM_EHABI 0
-#endif
 
 #ifdef __cplusplus
 
 namespace std {
-    class type_info; // forward declaration
+class type_info; // forward declaration
 }
 
 
 // runtime routines use C calling conventions, but are in __cxxabiv1 namespace
-namespace __cxxabiv1 {  
-  extern "C"  {
+namespace __cxxabiv1 {
+extern "C"  {
 
 // 2.4.2 Allocating the Exception Object
 extern void * __cxa_allocate_exception(size_t thrown_size) throw();
 extern void __cxa_free_exception(void * thrown_exception) throw();
 
 // 2.4.3 Throwing the Exception Object
-extern LIBCXXABI_NORETURN void __cxa_throw(void * thrown_exception, 
+extern LIBCXXABI_NORETURN void __cxa_throw(void * thrown_exception,
         std::type_info * tinfo, void (*dest)(void *));
 
 // 2.5.3 Exception Handlers
@@ -66,6 +60,7 @@ extern LIBCXXABI_NORETURN void __cxa_rethrow();
 // 2.6 Auxiliary Runtime APIs
 extern LIBCXXABI_NORETURN void __cxa_bad_cast(void);
 extern LIBCXXABI_NORETURN void __cxa_bad_typeid(void);
+extern LIBCXXABI_NORETURN void __cxa_throw_bad_array_new_length(void);
 
 
 
@@ -76,7 +71,7 @@ extern LIBCXXABI_NORETURN void __cxa_pure_virtual(void);
 extern LIBCXXABI_NORETURN void __cxa_deleted_virtual(void);
 
 // 3.3.2 One-time Construction API
-#if __arm__
+#ifdef __arm__
 extern int  __cxa_guard_acquire(uint32_t*);
 extern void __cxa_guard_release(uint32_t*);
 extern void __cxa_guard_abort(uint32_t*);
@@ -87,84 +82,76 @@ extern void __cxa_guard_abort(uint64_t*);
 #endif
 
 // 3.3.3 Array Construction and Destruction API
-extern void* __cxa_vec_new(size_t element_count, 
-                           size_t element_size, 
-                           size_t padding_size, 
+extern void* __cxa_vec_new(size_t element_count,
+                           size_t element_size,
+                           size_t padding_size,
                            void (*constructor)(void*),
-                           void (*destructor)(void*) );
+                           void (*destructor)(void*));
 
 extern void* __cxa_vec_new2(size_t element_count,
-                            size_t element_size, 
+                            size_t element_size,
                             size_t padding_size,
                             void  (*constructor)(void*),
                             void  (*destructor)(void*),
-                            void* (*alloc)(size_t), 
-                            void  (*dealloc)(void*) );
+                            void* (*alloc)(size_t),
+                            void  (*dealloc)(void*));
 
 extern void* __cxa_vec_new3(size_t element_count,
-                            size_t element_size, 
+                            size_t element_size,
                             size_t padding_size,
                             void  (*constructor)(void*),
                             void  (*destructor)(void*),
-                            void* (*alloc)(size_t), 
-                            void  (*dealloc)(void*, size_t) );
-  
-extern void __cxa_vec_ctor(void*  array_address, 
+                            void* (*alloc)(size_t),
+                            void  (*dealloc)(void*, size_t));
+
+extern void __cxa_vec_ctor(void*  array_address,
                            size_t element_count,
-                           size_t element_size, 
+                           size_t element_size,
                            void (*constructor)(void*),
-                           void (*destructor)(void*) );
+                           void (*destructor)(void*));
 
-
-extern void __cxa_vec_dtor(void*  array_address, 
+extern void __cxa_vec_dtor(void*  array_address,
                            size_t element_count,
-                           size_t element_size, 
-                           void (*destructor)(void*) );
+                           size_t element_size,
+                           void (*destructor)(void*));
 
-
-extern void __cxa_vec_cleanup(void* array_address, 
+extern void __cxa_vec_cleanup(void* array_address,
                              size_t element_count,
-                             size_t element_size, 
-                             void  (*destructor)(void*) );
+                             size_t element_size,
+                             void  (*destructor)(void*));
 
+extern void __cxa_vec_delete(void*  array_address,
+                             size_t element_size,
+                             size_t padding_size,
+                             void  (*destructor)(void*));
 
-extern void __cxa_vec_delete(void*  array_address, 
-                             size_t element_size, 
-                             size_t padding_size, 
-                             void  (*destructor)(void*) );
-
-
-extern void __cxa_vec_delete2(void* array_address, 
-                             size_t element_size, 
-                             size_t padding_size, 
+extern void __cxa_vec_delete2(void* array_address,
+                             size_t element_size,
+                             size_t padding_size,
                              void  (*destructor)(void*),
-                             void  (*dealloc)(void*) );
-  
+                             void  (*dealloc)(void*));
 
-extern void __cxa_vec_delete3(void* __array_address, 
-                             size_t element_size, 
-                             size_t padding_size, 
+extern void __cxa_vec_delete3(void* __array_address,
+                             size_t element_size,
+                             size_t padding_size,
                              void  (*destructor)(void*),
-                             void  (*dealloc) (void*, size_t));
+                             void  (*dealloc)(void*, size_t));
 
-
-extern void __cxa_vec_cctor(void*  dest_array, 
-                            void*  src_array, 
-                            size_t element_count, 
-                            size_t element_size, 
-                            void  (*constructor) (void*, void*), 
-                            void  (*destructor)(void*) );
-
+extern void __cxa_vec_cctor(void*  dest_array,
+                            void*  src_array,
+                            size_t element_count,
+                            size_t element_size,
+                            void  (*constructor)(void*, void*),
+                            void  (*destructor)(void*));
 
 // 3.3.5.3 Runtime API
 extern int __cxa_atexit(void (*f)(void*), void* p, void* d);
 extern int __cxa_finalize(void*);
 
-
 // 3.4 Demangler API
-extern char* __cxa_demangle(const char* mangled_name, 
+extern char* __cxa_demangle(const char* mangled_name,
                             char*       output_buffer,
-                            size_t*     length, 
+                            size_t*     length,
                             int*        status);
 
 // Apple additions to support C++ 0x exception_ptr class
@@ -177,6 +164,12 @@ extern void __cxa_decrement_exception_refcount(void* primary_exception) throw();
 // Apple addition to support std::uncaught_exception()
 extern bool __cxa_uncaught_exception() throw();
 
+#ifdef __linux__
+// Linux TLS support. Not yet an official part of the Itanium ABI.
+// https://sourceware.org/glibc/wiki/Destructor%20support%20for%20thread_local%20variables
+extern int __cxa_thread_atexit(void (*)(void *), void *, void *) throw();
+#endif
+
   } // extern "C"
 } // namespace __cxxabiv1
 
@@ -184,4 +177,4 @@ namespace abi = __cxxabiv1;
 
 #endif // __cplusplus
 
-#endif // __CXXABI_H 
+#endif // __CXXABI_H
