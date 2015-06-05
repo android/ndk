@@ -2,17 +2,12 @@ LOCAL_PATH := $(call my-dir)
 
 android_support_c_includes := $(LOCAL_PATH)/include
 
-ifneq ($(filter $(NDK_KNOWN_DEVICE_ABI64S),$(TARGET_ARCH_ABI)),)
-# 64-bit ABIs
-android_support_sources := \
+android_common_support_sources := \
     src/musl-locale/catclose.c \
     src/musl-locale/catgets.c \
     src/musl-locale/catopen.c
 
-else
-# 32-bit ABIs
-
-android_support_sources := \
+android_lp32_support_sources := \
     src/libdl_support.c \
     src/locale_support.c \
     src/math_support.c \
@@ -47,9 +42,6 @@ android_support_sources := \
     src/musl-ctype/wcswidth.c \
     src/musl-ctype/wctrans.c \
     src/musl-ctype/wcwidth.c \
-    src/musl-locale/catclose.c \
-    src/musl-locale/catgets.c \
-    src/musl-locale/catopen.c \
     src/musl-locale/iconv.c \
     src/musl-locale/intl.c \
     src/musl-locale/isalnum_l.c \
@@ -128,36 +120,34 @@ android_support_sources := \
     src/wcstox/wcstod.c \
 
 # Replaces broken implementations in x86 libm.so
-ifeq (x86,$(TARGET_ARCH_ABI))
-android_support_sources += \
+android_x86_support_sources += \
     src/musl-math/scalbln.c \
     src/musl-math/scalblnf.c \
     src/musl-math/scalblnl.c \
     src/musl-math/scalbnl.c \
 
-endif
-
-endif  # 64-/32-bit ABIs
-
 # This is only available as a static library for now.
 include $(CLEAR_VARS)
-LOCAL_MODULE := android_support
-LOCAL_SRC_FILES := $(android_support_sources)
+LOCAL_MODULE := libandroid_support
+LOCAL_SRC_FILES := $(android_common_support_sources)
+LOCAL_SRC_FILES_32 := $(android_lp32_support_sources)
+LOCAL_SRC_FILES_x86 := $(android_x86_support_sources)
 LOCAL_C_INCLUDES := $(android_support_c_includes)
 LOCAL_CFLAGS += -Drestrict=__restrict__ -ffunction-sections -fdata-sections -fvisibility=hidden
 LOCAL_CPPFLAGS += -fvisibility-inlines-hidden
+LOCAL_CLANG := true
+LOCAL_SDK_VERSION := 9
+LOCAL_NDK_STL_VARIANT := none
 
 # These Clang warnings are triggered by the Musl sources. The code is fine,
 # but we don't want to modify it. TODO(digit): This is potentially dangerous,
 # see if there is a way to build the Musl sources in a separate static library
 # and have the main one depend on it, or include its object files.
-ifneq ($(TARGET_TOOLCHAIN),$(subst clang,,$(TARGET_TOOLCHAIN)))
 LOCAL_CFLAGS += \
   -Wno-shift-op-parentheses \
   -Wno-string-plus-int \
   -Wno-dangling-else \
   -Wno-bitwise-op-parentheses
-endif
 
 LOCAL_CFLAGS += $(android_support_cflags)
 LOCAL_EXPORT_CFLAGS := $(android_support_cflags)
