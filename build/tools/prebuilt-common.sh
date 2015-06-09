@@ -60,7 +60,7 @@ extract_minor_version ()
 }
 
 # Compare two version numbers and only succeeds if the first one is
-# greather or equal than the second one.
+# greater than or equal to the second one.
 #
 # $1: first version (e.g. 4.9)
 # $2: second version (e.g. 4.8)
