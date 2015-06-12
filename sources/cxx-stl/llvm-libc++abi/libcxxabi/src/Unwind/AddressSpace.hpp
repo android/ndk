@@ -20,6 +20,19 @@
 
 #ifndef _LIBUNWIND_IS_BAREMETAL
 #include <dlfcn.h>
+#if defined(__ANDROID__) && !__LP64__
+// dladdr only exits in API >= 8. Call to our my_dladdr in android/support for dynamic lookup
+#if __ANDROID_API__ < 8
+typedef struct {
+    const char *dli_fname;  /* Pathname of shared object that contains address */
+    void       *dli_fbase;  /* Address at which shared object is loaded */
+    const char *dli_sname;  /* Name of nearest symbol with address lower than addr */
+    void       *dli_saddr;  /* Exact address of symbol named in dli_sname */
+} Dl_info;
+#endif // __ANDROID_API__ >= 8
+extern "C" int my_dladdr(const void* addr, Dl_info *info);
+#define dladdr  my_dladdr
+#endif
 #endif
 
 #ifdef __APPLE__
