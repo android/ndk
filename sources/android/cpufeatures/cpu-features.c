@@ -997,6 +997,12 @@ android_cpuInit(void)
     if ((regs[2] & (1 << 23)) != 0) {
         g_cpuFeatures |= ANDROID_CPU_X86_FEATURE_POPCNT;
     }
+    if ((regs[2] & (1 << 19)) != 0) {
+        g_cpuFeatures |= ANDROID_CPU_X86_FEATURE_SSE4;
+    }
+    if ((regs[2] & (1 << 20)) != 0) {
+        g_cpuFeatures |= ANDROID_CPU_X86_FEATURE_SSE42;
+    }
     if (vendorIsIntel && (regs[2] & (1 << 22)) != 0) {
         g_cpuFeatures |= ANDROID_CPU_X86_FEATURE_MOVBE;
     }
