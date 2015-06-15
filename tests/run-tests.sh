@@ -174,6 +174,8 @@ if [ "$OPTION_HELP" = "yes" ] ; then
     echo "    --only-awk        Only run awk tests."
     echo "    --full            Run all device tests, even very long ones."
     echo "    --wine            Build all tests with wine on Linux"
+    echo "    --continue-on-build-fail"
+    echo "                      Do not stop running tests after the first failure"
     echo ""
     echo "NOTE: You cannot use --ndk and --package at the same time."
     echo ""
