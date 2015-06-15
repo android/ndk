@@ -559,33 +559,37 @@ is_broken_build ()
 # $1: project directory
 is_incompatible_abi ()
 {
-    local PROJECT="$1"
-    # Basically accept all for unknown arch, even some cases may not be suitable for this way
-    if [ "$ABI" != "default" -a "$ABI" != "$(find_ndk_unknown_archs)" ] ; then
-        # check APP_ABI
-        local APP_ABIS=`get_build_var $PROJECT APP_ABI`
-        APP_ABIS=$APP_ABIS" "
-        if [ "$APP_ABIS" != "${APP_ABIS%%all*}" ] ; then
-        # replace "all", "all32" and "all64"
-          _EXPANDED=`get_build_var $PROJECT NDK_APP_ABI_ALL_EXPANDED`
-          _FRONT="${APP_ABIS%%all*}"
-          _BACK="${APP_ABIS#*all}"
-          APP_ABIS="${_FRONT}${_EXPANDED}${_BACK}"
-          _EXPANDED=`get_build_var $PROJECT NDK_APP_ABI_ALL32_EXPANDED`
-          _FRONT="${APP_ABIS%%all32*}"
-          _BACK="${APP_ABIS#*all32}"
-          APP_ABIS="${_FRONT}${_EXPANDED}${_BACK}"
-          _EXPANDED=`get_build_var $PROJECT NDK_APP_ABI_ALL64_EXPANDED`
-          _FRONT="${APP_ABIS%%all64*}"
-          _BACK="${APP_ABIS#*all64}"
-          APP_ABIS="${_FRONT}${_EXPANDED}${_BACK}"
-        fi
-        if [ "$APP_ABIS" = "${APP_ABIS%$ABI *}" ] ; then
-            echo "Skipping `basename $PROJECT`: incompatible ABI, needs $APP_ABIS"
-            return 0
-        fi
-    fi
-    return 1
+    local PROJECT="$1" 
+    # Basically accept all for unknown arch, even some cases may not be suitable for this way 
+    if [ "$ABI" != "default" -a "$ABI" != "$(find_ndk_unknown_archs)" ] ; then  
+        # check APP_ABI 
+        local APP_ABIS=`get_build_var $PROJECT APP_ABI` 
+        APP_ABIS=$APP_ABIS" " 
+        if [ "$APP_ABIS" != "${APP_ABIS%%all *}" ] ; then  
+        # replace "all", "all32" and "all64" 
+          _EXPANDED=`get_build_var $PROJECT NDK_APP_ABI_ALL_EXPANDED` 
+          _FRONT="${APP_ABIS%%all *}" 
+          _BACK="${APP_ABIS#*all }" 
+          APP_ABIS="${_FRONT}${_EXPANDED}${_BACK}" 
+        fi    
+        if [ "$APP_ABIS" != "${APP_ABIS%%all32 *}" ] ; then  
+          _EXPANDED=`get_build_var $PROJECT NDK_APP_ABI_ALL32_EXPANDED` 
+          _FRONT="${APP_ABIS%%all32 *}" 
+          _BACK="${APP_ABIS#*all32 }" 
+          APP_ABIS="${_FRONT}${_EXPANDED}${_BACK}" 
+        fi    
+        if [ "$APP_ABIS" != "${APP_ABIS%%all64 *}" ] ; then  
+          _EXPANDED=`get_build_var $PROJECT NDK_APP_ABI_ALL64_EXPANDED` 
+          _FRONT="${APP_ABIS%%all64*}" 
+          _BACK="${APP_ABIS#*all64}" 
+          APP_ABIS="${_FRONT}${_EXPANDED}${_BACK}" 
+        fi    
+        if [ "$APP_ABIS" = "${APP_ABIS%$ABI *}" ] ; then  
+            echo "Skipping `basename $PROJECT`: incompatible ABI, needs $APP_ABIS" 
+            return 0 
+        fi    
+    fi    
+    return 1 
 }
 
 compile_on_the_fly()
@@ -710,7 +714,7 @@ if is_testable samples; then
     build_sample ()
     {
         echo "Building NDK sample: `basename $1`"
-        build_project $1 "no"
+        build_project $1 "yes"
     }
 
     for DIR in $SAMPLES_DIRS; do
