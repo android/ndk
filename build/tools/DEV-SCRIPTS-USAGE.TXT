@@ -76,12 +76,7 @@ First, a small description of the NDK's overall directory structure:
 
   $NDK/sources/android/libthread_db/
     This directory contains the sources of the libthread_db implementation
-    that is linked into the prebuilt target gdbserver binary. Note that two
-    versions are provided, corresponding to different versions of gdb.
-
-    The sources are customized versions of the ones found under
-    $ANDROID/bionic/libthread_db. They contain various changes used to
-    deal with platform bugs.
+    that is linked into the prebuilt target gdbserver binary.
 
   $NDK/sources/
     The rest of $NDK/sources/ is used to store the sources of helper
