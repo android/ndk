@@ -1,0 +1,155 @@
+From eb97118b488350bcd536835d5fd432d3cb77f7f6 Mon Sep 17 00:00:00 2001
+From: Lai Wei-Chih <Robert.Lai@mediatek.com>
+Date: Tue, 25 Nov 2014 10:31:27 +0800
+Subject: [PATCH] Fix for migrating to llvm-3.6
+
+---
+ include/mcld/LD/MergedStringTable.h | 12 +++++-------
+ lib/Core/Linker.cpp                 |  4 ++--
+ lib/LD/DebugString.cpp              |  2 +-
+ lib/LD/MergedStringTable.cpp        | 10 ++--------
+ lib/Support/FileOutputBuffer.cpp    | 20 +++++++++++++-------
+ 5 files changed, 23 insertions(+), 25 deletions(-)
+
+diff --git a/include/mcld/LD/MergedStringTable.h b/include/mcld/LD/MergedStringTable.h
+index 2d51f07..7468ca9 100644
+--- a/include/mcld/LD/MergedStringTable.h
++++ b/include/mcld/LD/MergedStringTable.h
+@@ -24,13 +24,13 @@ namespace mcld {
+ class MergedStringTable {
+  public:
+   typedef llvm::StringMap<size_t> StringMapTy;
+-  typedef StringMapTy::MapEntryTy StringMapEntryTy;
+ 
+  public:
+   MergedStringTable() {}
+ 
+-  /// getOrCreateString - get or create a string to the string table
+-  StringMapEntryTy& getOrCreateString(llvm::StringRef pString);
++  /// insertString - insert a string to the string table
++  /// @return false if the string already exists in the map.
++  bool insertString(llvm::StringRef pString);
+ 
+   /// finalizeOffset - finalize the output offset of strings. After this
+   /// function been called, any string should not be added to this table
+@@ -41,10 +41,8 @@ class MergedStringTable {
+   void emit(MemoryRegion& pRegion);
+ 
+   /// ----- observers -----///
+-  /// getOutputOffset - get the output offset of the string entry. This should
+-  /// be called after finalizeOffset.
+-  size_t getOutputOffset(StringMapEntryTy& pEntry);
+-
++  /// getOutputOffset - get the output offset of the string. This should be
++  /// called after finalizeOffset.
+   size_t getOutputOffset(llvm::StringRef pStr);
+ 
+  private:
+diff --git a/lib/Core/Linker.cpp b/lib/Core/Linker.cpp
+index edec9f7..407192d 100644
+--- a/lib/Core/Linker.cpp
++++ b/lib/Core/Linker.cpp
+@@ -281,7 +281,7 @@ bool Linker::emit(const Module& pModule, const std::string& pPath) {
+   FileOutputBuffer::create(
+       file, m_pObjLinker->getWriter()->getOutputSize(pModule), output);
+ 
+-  result = emit(*output.get());
++  result = emit(*output);
+   file.close();
+   return result;
+ }
+@@ -294,7 +294,7 @@ bool Linker::emit(const Module& pModule, int pFileDescriptor) {
+   FileOutputBuffer::create(
+       file, m_pObjLinker->getWriter()->getOutputSize(pModule), output);
+ 
+-  return emit(*output.get());
++  return emit(*output);
+ }
+ 
+ bool Linker::reset() {
+diff --git a/lib/LD/DebugString.cpp b/lib/LD/DebugString.cpp
+index 86c6667..760a324 100644
+--- a/lib/LD/DebugString.cpp
++++ b/lib/LD/DebugString.cpp
+@@ -53,7 +53,7 @@ void DebugString::merge(LDSection& pSection) {
+   const char* str_end = str + pSection.size();
+   while (str < str_end) {
+     size_t len = string_length(str);
+-    m_StringTable.getOrCreateString(llvm::StringRef(str, len));
++    m_StringTable.insertString(llvm::StringRef(str, len));
+     str = str + len + 1;
+   }
+ }
+diff --git a/lib/LD/MergedStringTable.cpp b/lib/LD/MergedStringTable.cpp
+index e53ccc0..d381475 100644
+--- a/lib/LD/MergedStringTable.cpp
++++ b/lib/LD/MergedStringTable.cpp
+@@ -10,9 +10,8 @@
+ 
+ namespace mcld {
+ 
+-MergedStringTable::StringMapEntryTy&
+-MergedStringTable::getOrCreateString(llvm::StringRef pString) {
+-  return m_StringMap.GetOrCreateValue(pString);
++bool MergedStringTable::insertString(llvm::StringRef pString) {
++  return m_StringMap.insert(std::make_pair(pString, 0)).second;
+ }
+ 
+ uint64_t MergedStringTable::finalizeOffset() {
+@@ -35,11 +34,6 @@ void MergedStringTable::emit(MemoryRegion& pRegion) {
+   }
+ }
+ 
+-size_t MergedStringTable::getOutputOffset(
+-    MergedStringTable::StringMapEntryTy& pEntry) {
+-  return pEntry.getValue();
+-}
+-
+ size_t MergedStringTable::getOutputOffset(llvm::StringRef pStr) {
+   assert(m_StringMap.find(pStr) != m_StringMap.end());
+   return m_StringMap[pStr];
+diff --git a/lib/Support/FileOutputBuffer.cpp b/lib/Support/FileOutputBuffer.cpp
+index 62b3e61..964ccb2 100644
+--- a/lib/Support/FileOutputBuffer.cpp
++++ b/lib/Support/FileOutputBuffer.cpp
+@@ -19,24 +19,30 @@ FileOutputBuffer::FileOutputBuffer(llvm::sys::fs::mapped_file_region* pRegion,
+ 
+ FileOutputBuffer::~FileOutputBuffer() {
+   // Unmap buffer, letting OS flush dirty pages to file on disk.
+-  m_pRegion.reset(0);
++  m_pRegion.reset();
+ }
+ 
+-std::error_code FileOutputBuffer::create(
+-    FileHandle& pFileHandle,
+-    size_t pSize,
+-    std::unique_ptr<FileOutputBuffer>& pResult) {
++std::error_code
++FileOutputBuffer::create(FileHandle& pFileHandle,
++                         size_t pSize,
++                         std::unique_ptr<FileOutputBuffer>& pResult) {
+   std::error_code ec;
++
++  // Resize the file before mapping the file region.
++  ec = llvm::sys::fs::resize_file(pFileHandle.handler(), pSize);
++  if (ec)
++    return ec;
++
+   std::unique_ptr<llvm::sys::fs::mapped_file_region> mapped_file(
+       new llvm::sys::fs::mapped_file_region(pFileHandle.handler(),
+-          false, llvm::sys::fs::mapped_file_region::readwrite, pSize, 0, ec));
+-
++          llvm::sys::fs::mapped_file_region::readwrite, pSize, 0, ec));
+   if (ec)
+     return ec;
+ 
+   pResult.reset(new FileOutputBuffer(mapped_file.get(), pFileHandle));
+   if (pResult)
+     mapped_file.release();
++
+   return std::error_code();
+ }
+ 
+-- 
+1.9.1
+

@@ -1,0 +1,35 @@
+From 7b2bc50282c75c028b674a55c12318d229e7c731 Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Thu, 16 Oct 2014 18:02:42 +0800
+Subject: [PATCH 2/7] Fixed darwin ld.mcld GNU -m emulation fail
+
+Change-Id: I4190a509767f4c124b2b95d1ac9061aac06039ef
+---
+ tools/mcld/lib/TripleOptions.cpp | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/tools/mcld/lib/TripleOptions.cpp b/tools/mcld/lib/TripleOptions.cpp
+index c64e2bb..27a828d 100644
+--- a/tools/mcld/lib/TripleOptions.cpp
++++ b/tools/mcld/lib/TripleOptions.cpp
+@@ -87,13 +87,13 @@ inline void ParseEmulation(llvm::Triple& pTriple,
+           .Case("aarch64linux", llvm::Triple("aarch64", "", "linux", "gnu"))
+           .Case("armelf_linux_eabi",
+                 llvm::Triple("arm", "", "linux", "gnueabi"))
+-          .Case("elf_i386", llvm::Triple("i386", "", "", "gnu"))
+-          .Case("elf_x86_64", llvm::Triple("x86_64", "", "", "gnu"))
++          .Case("elf_i386", llvm::Triple("i386", "", "linux", "gnu"))
++          .Case("elf_x86_64", llvm::Triple("x86_64", "", "linux", "gnu"))
+           .Case("elf32_x86_64", llvm::Triple("x86_64", "", "", "gnux32"))
+           .Case("elf_i386_fbsd", llvm::Triple("i386", "", "freebsd", "gnu"))
+           .Case("elf_x86_64_fbsd", llvm::Triple("x86_64", "", "freebsd", "gnu"))
+-          .Case("elf32ltsmip", llvm::Triple("mipsel", "", "", "gnu"))
+-          .Case("elf64ltsmip", llvm::Triple("mips64el", "", "", "gnu"))
++          .Case("elf32ltsmip", llvm::Triple("mipsel", "", "linux", "gnu"))
++          .Case("elf64ltsmip", llvm::Triple("mips64el", "", "linux", "gnu"))
+           .Default(llvm::Triple());
+ 
+   if (triple.getArch() == llvm::Triple::UnknownArch &&
+-- 
+2.2.0.rc0.207.ga3a616c
+

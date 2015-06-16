@@ -1,0 +1,36 @@
+From 09fa56b93667a0784f41d3664f8aa7a790114341 Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Tue, 4 Nov 2014 10:58:11 +0800
+Subject: [PATCH 7/7] Add fix-cortex-a53-835769
+
+--fix-cortex-a53-835769 is passed from gcc4.9 by default unless
+user specify -mno-fix-cortex-a53-835769.
+
+Add but ignore it for now, otherwise lots of existing testing
+not affected by A53 errata 835769 break
+
+Change-Id: Ie96e5b4bf4a64d0811c67949b67f7c06ec559da1
+---
+ tools/mcld/lib/OutputFormatOptions.cpp | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/tools/mcld/lib/OutputFormatOptions.cpp b/tools/mcld/lib/OutputFormatOptions.cpp
+index 821a808..a77b4a8 100644
+--- a/tools/mcld/lib/OutputFormatOptions.cpp
++++ b/tools/mcld/lib/OutputFormatOptions.cpp
+@@ -175,6 +175,12 @@ llvm::cl::opt<bool> ArgNoWarnMismatch(
+     llvm::cl::ZeroOrMore,
+     llvm::cl::init(false));
+ 
++llvm::cl::opt<bool> ArgFixCortexA53Errata835769(
++    "fix-cortex-a53-835769",
++    llvm::cl::desc("Fix AArch64 A53 Errata 835769."),
++    llvm::cl::ZeroOrMore,
++    llvm::cl::init(false));
++
+ // Not supported yet {
+ llvm::cl::opt<bool> ArgExportDynamic(
+     "export-dynamic",
+-- 
+2.2.0.rc0.207.ga3a616c
+

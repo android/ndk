@@ -1,0 +1,38 @@
+From 077432301ff38f492d311683581badabc7f17889 Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Thu, 16 Oct 2014 18:03:20 +0800
+Subject: [PATCH 3/7] Allow multiple of the same options
+
+Change-Id: I8fa12e2401b0b828546a07ebe36a1acaf1f54caf
+---
+ tools/mcld/lib/OutputFormatOptions.cpp  | 1 +
+ tools/mcld/lib/TargetControlOptions.cpp | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/tools/mcld/lib/OutputFormatOptions.cpp b/tools/mcld/lib/OutputFormatOptions.cpp
+index a8a81c3..821a808 100644
+--- a/tools/mcld/lib/OutputFormatOptions.cpp
++++ b/tools/mcld/lib/OutputFormatOptions.cpp
+@@ -172,6 +172,7 @@ llvm::cl::opt<mcld::GeneralOptions::HashStyle> ArgHashStyle(
+ llvm::cl::opt<bool> ArgNoWarnMismatch(
+     "no-warn-mismatch",
+     llvm::cl::desc("Allow linking together mismatched input files."),
++    llvm::cl::ZeroOrMore,
+     llvm::cl::init(false));
+ 
+ // Not supported yet {
+diff --git a/tools/mcld/lib/TargetControlOptions.cpp b/tools/mcld/lib/TargetControlOptions.cpp
+index 58ef3a0..88ad045 100644
+--- a/tools/mcld/lib/TargetControlOptions.cpp
++++ b/tools/mcld/lib/TargetControlOptions.cpp
+@@ -38,6 +38,7 @@ llvm::cl::opt<bool> ArgEL(
+     "EL",
+     llvm::cl::desc(
+         "Link little-endian objects. This affects the output format."),
++    llvm::cl::ZeroOrMore,
+     llvm::cl::init(false));
+ 
+ llvm::cl::opt<bool> ArgSVR4Compatibility(
+-- 
+2.2.0.rc0.207.ga3a616c
+

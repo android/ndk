@@ -1,0 +1,55 @@
+From cff9dd78fda9efc705724d8f1f9d9dca3f5aa776 Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Thu, 16 Oct 2014 18:05:47 +0800
+Subject: [PATCH 6/7] Fix mingw and darwin builds
+
+Change-Id: I99cdaad48b89a8022a67920f1f282a684442de7e
+---
+ lib/Support/Unix/FileSystem.inc    | 3 +++
+ lib/Support/Windows/FileSystem.inc | 2 +-
+ lib/Support/Windows/PathV3.inc     | 2 +-
+ 3 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/lib/Support/Unix/FileSystem.inc b/lib/Support/Unix/FileSystem.inc
+index dae5685..de52e8c 100644
+--- a/lib/Support/Unix/FileSystem.inc
++++ b/lib/Support/Unix/FileSystem.inc
+@@ -18,6 +18,9 @@
+ #include <sys/types.h>
+ #include <sys/stat.h>
+ #include <sys/mman.h>
++#ifdef __APPLE__
++#include <sys/syslimits.h>  // to get PATH_MAX
++#endif
+ #include <unistd.h>
+ 
+ namespace mcld {
+diff --git a/lib/Support/Windows/FileSystem.inc b/lib/Support/Windows/FileSystem.inc
+index faa22ba..622e031 100644
+--- a/lib/Support/Windows/FileSystem.inc
++++ b/lib/Support/Windows/FileSystem.inc
+@@ -60,7 +60,7 @@ void open_dir(Directory& pDir) {
+   std::string path(FindFileData.cFileName);
+   fs::PathCache::entry_type* entry = pDir.m_Cache.insert(path, exist);
+   if (!exist)
+-    entry->setValue(path);
++    entry->setValue(sys::fs::Path(path));
+ }
+ 
+ void close_dir(Directory& pDir) {
+diff --git a/lib/Support/Windows/PathV3.inc b/lib/Support/Windows/PathV3.inc
+index 4d7089f..1b26f4e 100644
+--- a/lib/Support/Windows/PathV3.inc
++++ b/lib/Support/Windows/PathV3.inc
+@@ -170,7 +170,7 @@ mcld::sys::fs::PathCache::entry_type* bring_one_into_cache(DirIterator& pIter) {
+     path += std::string(FindFileData.cFileName);
+     entry = pIter.m_pParent->m_Cache.insert(path, exist);
+     if (!exist)
+-      entry->setValue(path);
++      entry->setValue(sys::fs::Path(path));
+   } else if (ERROR_NO_MORE_FILES == GetLastError()) {
+     // meet real end
+     pIter.m_pParent->m_CacheFull = true;
+-- 
+2.2.0.rc0.207.ga3a616c
+

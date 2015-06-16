@@ -56,6 +56,9 @@ ifeq (,$(filter clang%,$(NDK_TOOLCHAIN_VERSION)))
 include $(CLEAR_VARS)
 LOCAL_MODULE := hard-float-softfp-abi
 LOCAL_CFLAGS += -mhard-float
+ifeq (,$(filter -fuse-ld=mcld,$(APP_LDFLAGS) $(LOCAL_LDFLAGS)))
+LOCAL_LDFLAGS += -Wl,--no-warn-mismatch
+endif
 LOCAL_SRC_FILES := test-float.c
 include $(BUILD_EXECUTABLE)
 
@@ -86,6 +89,9 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := hard-float-hard-abi
 LOCAL_CFLAGS += -mhard-float -D_NDK_MATH_NO_SOFTFP=1
 LOCAL_LDLIBS += -lm_hard
+ifeq (,$(filter -fuse-ld=mcld,$(APP_LDFLAGS) $(LOCAL_LDFLAGS)))
+LOCAL_LDFLAGS += -Wl,--no-warn-mismatch
+endif
 LOCAL_SRC_FILES := test-float.c
 include $(BUILD_EXECUTABLE)
 

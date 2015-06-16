@@ -1,0 +1,25 @@
+From 8672a5ccfaabd2e4743c098b6439f5b2c7242941 Mon Sep 17 00:00:00 2001
+From: Andrew Hsieh <andrewhsieh@google.com>
+Date: Thu, 16 Oct 2014 18:04:10 +0800
+Subject: [PATCH 4/7] Fix build FileSystem.cpp
+
+Change-Id: I4b3106c4fceefbfb83ae135be8ee69fb6b64cafd
+---
+ lib/Support/FileSystem.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/lib/Support/FileSystem.cpp b/lib/Support/FileSystem.cpp
+index c8587b5..f615f4b 100644
+--- a/lib/Support/FileSystem.cpp
++++ b/lib/Support/FileSystem.cpp
+@@ -7,6 +7,7 @@
+ //
+ //===----------------------------------------------------------------------===//
+ #include <mcld/Config/Config.h>
++#include <llvm/Support/ErrorHandling.h>
+ #include <mcld/Support/FileSystem.h>
+ #include <mcld/Support/Path.h>
+ 
+-- 
+2.2.0.rc0.207.ga3a616c
+
