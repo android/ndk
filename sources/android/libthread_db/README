@@ -8,6 +8,3 @@ Applications don't need to link to libthread_db anyway, this library is
 a small interface used by gdbserver to manage the list of threads on the
 target process. Its API and ABI are not stable and may change in the
 future.
-
-Each implementation is also highly specific to the version of gdbserver
-you are compiling, hence the subdirectories like "gdb-6.6"
