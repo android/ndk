@@ -116,6 +116,25 @@ static __inline__ void x86_cpuid(int func, int values[4])
     values[2] = c;
     values[3] = d;
 }
+#elif defined(__x86_64__)
+static __inline__ void x86_cpuid(int func, int values[4])
+{
+    int64_t a, b, c, d;
+    /* We need to preserve ebx since we're compiling PIC code */
+    /* this means we can't use "=b" for the second output register */
+    __asm__ __volatile__ ( \
+      "push %%rbx\n"
+      "cpuid\n" \
+      "mov %%rbx, %1\n"
+      "pop %%rbx\n"
+      : "=a" (a), "=r" (b), "=c" (c), "=d" (d) \
+      : "a" (func) \
+    );
+    values[0] = a;
+    values[1] = b;
+    values[2] = c;
+    values[3] = d;
+}
 #endif
 
 /* Get the size of a file by reading it until the end. This is needed
@@ -977,7 +996,7 @@ android_cpuInit(void)
     }
 #endif /* __aarch64__ */
 
-#ifdef __i386__
+#if defined(__i386__) || defined(__x86_64__)
     int regs[4];
 
 /* According to http://en.wikipedia.org/wiki/CPUID */
