@@ -20,8 +20,13 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdint.h>
-#include <sys/procfs.h>
 #include <sys/types.h>
+
+typedef void *psaddr_t;
+#define HAVE_PSADDR_T 1
+
+typedef pid_t lwpid_t;
+#define HAVE_LWPID_T 1
 
 #define TD_THR_ANY_USER_FLAGS       0xffffffff
 #define TD_THR_LOWEST_PRIORITY      -20
@@ -86,7 +91,6 @@ typedef struct
 {
     pid_t pid;
     pid_t tid;
-    psaddr_t th_unique;
 } td_thrhandle_t;
 
 typedef struct
