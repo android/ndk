@@ -1,9 +1,9 @@
-From 97f802983fe49576b40c3505d80ac3f8131b34b3 Mon Sep 17 00:00:00 2001
-From: davidxl <davidxl@138bc75d-0d04-0410-961f-82ee72b054a4>
-Date: Wed, 8 Oct 2014 15:08:53 +0800
+From aa3e79cc859042daace21ae1f5f791c74dcd839e Mon Sep 17 00:00:00 2001
+From: Xinliang David Li <davidxl@google.com>
+Date: Wed, 17 Jun 2015 14:52:19 -0700
 Subject: [PATCH] Fix PR target/63209
 
-Change-Id: I1ff0bdad04222c41e3486121c5580808c364d3b1
+Change-Id: I63ffb60a6e1e4c42bdc39560a45e64397cfdbb03
 ---
  gcc-4.9/gcc/ChangeLog                              |  7 ++++++
  gcc-4.9/gcc/config/arm/arm.md                      | 10 ++++++--
@@ -54,10 +54,13 @@ index 467f9ce..13c9b37 100644
      operands[6] = gen_rtx_fmt_ee (rc, VOIDmode, operands[6], const0_rtx);
    }
 diff --git a/gcc-4.9/gcc/testsuite/ChangeLog b/gcc-4.9/gcc/testsuite/ChangeLog
-index 1881e17..4c69bf4 100644
+index 4eefcba..5ce1f53 100644
 --- a/gcc-4.9/gcc/testsuite/ChangeLog
 +++ b/gcc-4.9/gcc/testsuite/ChangeLog
-@@ -1,3 +1,9 @@
+@@ -3,6 +3,12 @@
+ 	PR middle-end/63762
+ 	* gcc.dg/pr63762.c: New test.
+ 
 +2014-09-10  Xinliang David Li  <davidxl@google.com>
 +
 +	Backport from mainline
@@ -101,5 +104,5 @@ index 0000000..9bcb587
 +
 +
 -- 
-2.1.0.rc2.206.gedb03e5
+2.4.3.573.g4eafbef
 
