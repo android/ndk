@@ -72,9 +72,6 @@ register_var_option "--cloog-version=<version>" CLOOG_VERSION "Specify cloog ver
 ISL_VERSION=$DEFAULT_ISL_VERSION
 register_var_option "--isl-version=<version>" ISL_VERSION "Specify ISL version"
 
-PPL_VERSION=$DEFAULT_PPL_VERSION
-register_var_option "--ppl-version=<version>" PPL_VERSION "Specify ppl version"
-
 WITH_PYTHON=
 register_var_option "--with-python=<path/to/python-config.sh>" WITH_PYTHON "Specify python config script, or prebuilt"
 
@@ -347,15 +344,7 @@ case "$TOOLCHAIN" in
 esac
 
 # Enable Graphite
-case "$TOOLCHAIN" in
-    *-4.4.3) ;;
-    *-4.6|*-4.7)
-        EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-graphite=yes --with-cloog-version=$CLOOG_VERSION --with-ppl-version=$PPL_VERSION"
-    ;;
-    *)
-        EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-graphite=yes --with-cloog-version=$CLOOG_VERSION --with-isl-version=$ISL_VERSION"
-    ;;
-esac
+EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-graphite=yes --with-cloog-version=$CLOOG_VERSION --with-isl-version=$ISL_VERSION"
 
 # Enable linker option -eh-frame-hdr also for static executable
 EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-eh-frame-hdr-for-static"
