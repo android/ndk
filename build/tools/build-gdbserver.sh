@@ -191,6 +191,11 @@ CONFIGURE_FLAGS="--with-libthread-db=$BUILD_SYSROOT/usr/$LIBDIR/libthread_db.a"
 # Disable libinproctrace.so which needs crtbegin_so.o and crtbend_so.o instead of
 # CRTBEGIN/END above.  Clean it up and re-enable it in the future.
 CONFIGURE_FLAGS=$CONFIGURE_FLAGS" --disable-inprocess-agent"
+# gdb 7.7 builds with -Werror by default, but they redefine constants such as
+# HWCAP_VFPv3 in a way that's compatible with glibc's headers but not our
+# kernel uapi headers. We should send a patch upstream to add the missing
+# #ifndefs, but for now just build gdbserver without -Werror.
+CONFIGURE_FLAGS=$CONFIGURE_FLAGS" --enable-werror=no"
 
 cd $BUILD_OUT &&
 export CC="$TOOLCHAIN_PREFIX-gcc --sysroot=$BUILD_SYSROOT" &&
