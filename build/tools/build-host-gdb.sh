@@ -139,34 +139,6 @@ python_build_install_dir ()
 }
 
 # $1: host system tag
-build_expat ()
-{
-    local ARGS
-    local SRCDIR=$TOOLCHAIN_SRC_DIR/expat/expat-2.0.1
-    local BUILDDIR=$BH_BUILD_DIR/build-expat-2.0.1-$1
-    local INSTALLDIR=$BH_BUILD_DIR/install-host-$1
-
-    ARGS=" --prefix=$INSTALLDIR"
-    ARGS=$ARGS" --disable-shared --enable-static"
-    ARGS=$ARGS" --build=$BH_BUILD_CONFIG"
-    ARGS=$ARGS" --host=$BH_HOST_CONFIG"
-
-    TEXT="$(bh_host_text) expat:"
-
-    mkdir -p "$BUILDDIR" && rm -rf "$BUILDDIR"/* &&
-    cd "$BUILDDIR" &&
-    dump "$TEXT Building"
-    run2 "$SRCDIR"/configure $ARGS &&
-    run2 make -j$NUM_JOBS &&
-    run2 make -j$NUM_JOBS install
-}
-
-need_build_expat ()
-{
-    bh_stamps_do host-expat-$1 build_expat $1
-}
-
-# $1: host system tag
 # $2: target tag
 # $3: gdb version
 build_host_gdb ()
@@ -183,9 +155,6 @@ build_host_gdb ()
     bh_set_target_tag $2
     bh_setup_host_env
 
-    need_build_expat $1
-    local EXPATPREFIX=$BH_BUILD_DIR/install-host-$1
-
     ARGS=" --prefix=$INSTALLDIR"
     ARGS=$ARGS" --disable-shared"
     ARGS=$ARGS" --build=$BH_BUILD_CONFIG"
@@ -194,8 +163,7 @@ build_host_gdb ()
     ARGS=$ARGS" --disable-werror"
     ARGS=$ARGS" --disable-nls"
     ARGS=$ARGS" --disable-docs"
-    ARGS=$ARGS" --with-expat"
-    ARGS=$ARGS" --with-libexpat-prefix=$EXPATPREFIX"
+    ARGS=$ARGS" --with-expat=no"
     if [ -n "$PYTHON_VERSION" ]; then
         ARGS=$ARGS" --with-python=$(python_build_install_dir $BH_HOST_TAG)/bin/python-config.sh"
         if [ $1 = windows-x86 -o $1 = windows-x86_64 ]; then
