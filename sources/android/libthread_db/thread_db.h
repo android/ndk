@@ -166,9 +166,9 @@ extern char const ** td_symbol_list(void);
 
 extern td_err_e td_thr_get_info(td_thrhandle_t const * handle, td_thrinfo_t * info);
 
-extern td_err_e td_thr_tls_get_addr(const td_thrhandle_t * th,
-				    psaddr_t map_address, size_t offset,
-				    psaddr_t * address);
+extern td_err_e td_thr_tlsbase(const td_thrhandle_t*, unsigned long int, psaddr_t*);
+
+extern td_err_e td_thr_tls_get_addr(const td_thrhandle_t*, psaddr_t, size_t, psaddr_t*);
 
 #ifdef __cplusplus
 }
