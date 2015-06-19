@@ -31,7 +31,7 @@ the top-level NDK installation path and <toolchain> is the name of
 the toolchain to use (e.g. arm-linux-androideabi-4.8)."
 
 RELEASE=`date +%Y%m%d`
-BUILD_OUT=/tmp/ndk-$USER/build/toolchain
+BUILD_OUT=$TMPDIR/build/toolchain
 OPTION_BUILD_OUT=
 register_var_option "--build-out=<path>" OPTION_BUILD_OUT "Set temporary build directory"
 
@@ -90,7 +90,7 @@ register_try64_option
 
 extract_parameters "$@"
 
-prepare_canadian_toolchain /tmp/ndk-$USER/build
+prepare_canadian_toolchain $TMPDIR/build
 
 fix_option BUILD_OUT "$OPTION_BUILD_OUT" "build directory"
 setup_default_log_file $BUILD_OUT/config.log
@@ -242,7 +242,7 @@ TOOLCHAIN_LICENSES=$ANDROID_NDK_ROOT/build/tools/toolchain-licenses
 #  3) The path exists but not accessible, which crashes GCC!
 #
 # For canadian build --with-sysroot has to be sub-directory of --prefix.
-# Put TOOLCHAIN_BUILD_PREFIX to BUILD_OUT which is in /tmp by default,
+# Put TOOLCHAIN_BUILD_PREFIX to BUILD_OUT which is in $TMPDIR by default,
 # and TOOLCHAIN_BUILD_SYSROOT underneath.
 
 TOOLCHAIN_BUILD_PREFIX=$BUILD_OUT/prefix

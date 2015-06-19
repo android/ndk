@@ -181,7 +181,7 @@ download_package ()
 }
 
 if [ -z "$BUILD_DIR" ] ; then
-    BUILD_DIR=/tmp/ndk-$USER/buildhost
+    BUILD_DIR=$TMPDIR/buildhost
 fi
 
 bh_setup_build_dir $BUILD_DIR

@@ -20,6 +20,10 @@
 # Get current script name into PROGNAME
 PROGNAME=`basename $0`
 
+if [ -z "$TMPDIR" ]; then
+  export TMPDIR=/tmp/ndk-$USER
+fi
+
 # Find the Android NDK root, assuming we are invoked from a script
 # within its directory structure.
 #
@@ -99,7 +103,7 @@ setup_default_log_file ()
     if [ -n "$1" ] ; then
         NDK_LOGFILE="$1"
     else
-        NDK_LOGFILE=/tmp/ndk-log-$$.txt
+        NDK_LOGFILE=$TMPDIR/ndk-log-$$.txt
     fi
     export NDK_LOGFILE
     TMPLOG="$NDK_LOGFILE"
@@ -431,12 +435,12 @@ disable_cygwin ()
 }
 
 # Various probes are going to need to run a small C program
-mkdir -p /tmp/ndk-$USER/tmp/tests
+mkdir -p $TMPDIR/tmp/tests
 
-TMPC=/tmp/ndk-$USER/tmp/tests/test-$$.c
-TMPO=/tmp/ndk-$USER/tmp/tests/test-$$.o
-TMPE=/tmp/ndk-$USER/tmp/tests/test-$$$EXE
-TMPL=/tmp/ndk-$USER/tmp/tests/test-$$.log
+TMPC=$TMPDIR/tmp/tests/test-$$.c
+TMPO=$TMPDIR/tmp/tests/test-$$.o
+TMPE=$TMPDIR/tmp/tests/test-$$$EXE
+TMPL=$TMPDIR/tmp/tests/test-$$.log
 
 # cleanup temporary files
 clean_temp ()

@@ -2,7 +2,7 @@
 set -e
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"
-TOOLCHAIN_DIR=$(mktemp -d /tmp/ndk-toolchain.XXXXXX)
+TOOLCHAIN_DIR=$(mktemp -d $(TMPDIR)/ndk-toolchain.XXXXXX)
 
 function cleanup {
   rm -rf $TOOLCHAIN_DIR

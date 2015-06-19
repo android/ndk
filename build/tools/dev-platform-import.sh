@@ -30,7 +30,7 @@ ARCH=
 register_option "--arch=<name>" do_arch "Specify architecture name [autodetect]"
 do_arch () { ARCH=$1; }
 
-OUT_DIR=/tmp/ndk-$USER/platforms-import
+OUT_DIR=$TMPDIR/platforms-import
 register_var_option "--out-dir=<path>" OUT_DIR "Specify output directory"
 
 TOOLCHAIN_PREFIX=

@@ -1628,7 +1628,8 @@ check_toolchain_src_dir ()
 # call after that use the same one.
 #
 if [ -z "$NDK_TMPDIR" ]; then
-    NDK_TMPDIR=/tmp/ndk-$USER/tmp/build-$$
+    
+    NDK_TMPDIR=$TMPDIR/tmp/build-$$
     mkdir -p $NDK_TMPDIR
     if [ $? != 0 ]; then
         echo "ERROR: Could not create NDK_TMPDIR: $NDK_TMPDIR"

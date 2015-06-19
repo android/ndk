@@ -43,7 +43,7 @@ OPTION_BUILD_OUT=
 OPTION_FROM=
 
 register_option "--from=<url>" do_from "Specify source package" "$PACKAGE"
-register_option "--build-out=<path>" do_build_out "Set temporary build directory" "/tmp/ndk-$USER/<random>"
+register_option "--build-out=<path>" do_build_out "Set temporary build directory" "$TMPDIR/<random>"
 
 do_from () { CCACHE_URL=$1; CCACHE_PACKAGE=`basename $1`; }
 do_build_out () { OPTION_BUILD_OUT=$1; }

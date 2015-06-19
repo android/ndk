@@ -127,7 +127,7 @@ if [ -z "$BUILD_NUM_CPUS" ] ; then
 fi
 
 # CLEAN
-rm -rf /tmp/ndk-$USER/{build,tmp}
+rm -rf $TMPDIR/{build,tmp}
 
 
 #######################################
@@ -147,7 +147,7 @@ echo
 echo "Checking for Toolchain sources"
 if [ -z "$OPTION_SRC_DIR" ]
 then
-    OPTION_SRC_DIR=/tmp/ndk-$USER/src/android-ndk-src-${TOOLCHAIN_GIT_DATE}${PATCHES_SHA1}
+    OPTION_SRC_DIR=$TMPDIR/src/android-ndk-src-${TOOLCHAIN_GIT_DATE}${PATCHES_SHA1}
 fi
 if [ ! -d $OPTION_SRC_DIR ]
 then

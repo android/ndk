@@ -33,7 +33,7 @@ RELEASE=`date +%Y%m%d`
 ABIS="$PREBUILT_ABIS"
 BUILDTOOLS=$ANDROID_NDK_ROOT/build/tools
 
-BUILD_OUT=/tmp/ndk-$USER/build/toolchain
+BUILD_OUT=$TMPDIR/build/toolchain
 OPTION_BUILD_OUT=
 register_var_option "--build-out=<path>" OPTION_BUILD_OUT "Set temporary build directory"
 
@@ -58,7 +58,7 @@ register_jobs_option
 
 extract_parameters "$@"
 
-prepare_canadian_toolchain /tmp/ndk-$USER/build
+prepare_canadian_toolchain $TMPDIR/build
 
 fix_option ABIS "$OPTION_ABIS" "on-device architecture"
 ABIS=($commas_to_spaces $ABIS)

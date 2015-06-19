@@ -31,7 +31,7 @@ the top-level NDK installation path and <toolchain> is the name of
 the toolchain to use (e.g. llvm-3.6)."
 
 RELEASE=`date +%Y%m%d`
-BUILD_OUT=/tmp/ndk-$USER/build/toolchain
+BUILD_OUT=$TMPDIR/build/toolchain
 OPTION_BUILD_OUT=
 register_var_option "--build-out=<path>" OPTION_BUILD_OUT "Set temporary build directory"
 
@@ -62,7 +62,7 @@ register_try64_option
 
 extract_parameters "$@"
 
-prepare_canadian_toolchain /tmp/ndk-$USER/build
+prepare_canadian_toolchain $TMPDIR/build
 
 fix_option BUILD_OUT "$OPTION_BUILD_OUT" "build directory"
 setup_default_log_file $BUILD_OUT/config.log

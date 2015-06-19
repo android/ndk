@@ -53,7 +53,7 @@ else
 fi
 register_var_option "--system=<name>" SYSTEM "Specify host system"
 
-PACKAGE_DIR=/tmp/ndk-$USER
+PACKAGE_DIR=$TMPDIR
 register_var_option "--package-dir=<path>" PACKAGE_DIR "Place package file in <path>"
 
 INSTALL_DIR=
