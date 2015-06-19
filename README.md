@@ -80,6 +80,11 @@ Prerequisites
         ```bash
         repo init -u https://android.googlesource.com/platform/manifest \
             -b master-ndk
+
+        # Googlers, use
+        repo init -u \
+            persistent-https://android.git.corp.google.com/platform/manifest \
+            -b master-ndk
         ```
 
     * The only difference between the NDK branch and master is that the NDK
