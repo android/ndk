@@ -399,9 +399,10 @@ td_ta_thr_iter(td_thragent_t const * agent, td_thr_iter_f * func, void * cookie,
     return err;
 }
 
-td_err_e
-td_thr_tls_get_addr(const td_thrhandle_t * th,
-		    psaddr_t map_address, size_t offset, psaddr_t * address)
-{
-    return TD_NOAPLIC; // FIXME: TODO
+td_err_e td_thr_tlsbase(const td_thrhandle_t* unused1, unsigned long int unused2, psaddr_t* unused3) {
+  return TD_NOAPLIC; // TODO: fix this if/when we support ELF TLS.
+}
+
+td_err_e td_thr_tls_get_addr(const td_thrhandle_t* unused1, psaddr_t unused2, size_t unused3, psaddr_t* unused4) {
+  return TD_NOAPLIC; // TODO: fix this if/when we support ELF TLS.
 }
