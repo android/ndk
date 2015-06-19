@@ -338,14 +338,9 @@ for SYSTEM in $SYSTEMS; do
         done
     done
 
-    # Build llvm and clang
-    POLLY_FLAGS=
-    if [ "$TRY64" != "yes" -a "$SYSTEM" != "windows" ]; then
-        POLLY_FLAGS="--with-polly"
-    fi
     for LLVM_VERSION in $LLVM_VERSION_LIST; do
         echo "Building $SYSNAME clang/llvm-$LLVM_VERSION"
-        run $BUILDTOOLS/build-llvm.sh "$SRC_DIR" "$NDK_DIR" "llvm-$LLVM_VERSION" $TOOLCHAIN_FLAGS $POLLY_FLAGS $CHECK_FLAG -j$BUILD_NUM_CPUS
+        run $BUILDTOOLS/build-llvm.sh "$SRC_DIR" "$NDK_DIR" "llvm-$LLVM_VERSION" $TOOLCHAIN_FLAGS $CHECK_FLAG -j$BUILD_NUM_CPUS
         fail_panic "Could not build llvm for $SYSNAME"
     done
 
