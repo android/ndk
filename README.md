@@ -107,29 +107,14 @@ Host/Target prebuilts
 ### On Linux:
 
 ```bash
-$ export AOSP=/absolute/path/to/aosp
-$ export NDK=$AOSP/ndk
-$ export PREBUILT_PATH=/absolute/path/to/packaged/output
-$ cd $NDK
-$ build/tools/dev-cleanup.sh
-$ build/tools/download-toolchain-sources.sh /tmp/ndk-$USER/src
-$ build/tools/rebuild-all-prebuilt.sh /tmp/ndk-$USER/src \
-    --package-dir=$PREBUILT_PATH --also-64 --systems=linux-x86,windows
+$ checkbuild.sh --also-64 --systems=linux-x86,windows
 ```
 
 ### On MacOS X:
 
 ```bash
-$ export AOSP=/absolute/path/to/aosp
-$ export NDK=$AOSP/ndk
-$ export PREBUILT_PATH=/absolute/path/to/packaged/output
-$ cd $NDK
-$ build/tools/dev-cleanup.sh
-$ build/tools/build-host-prebuilts.sh --ndk-dir=$NDK \
-    --package-dir=$PREBUILT_PATH --systems=darwin-x86 /tmp/ndk-$USER/src \
-    --try-64
-$ build/tools/build-host-prebuilts.sh --ndk-dir=$NDK \
-    --package-dir=$PREBUILT_PATH --systems=darwin-x86 /tmp/ndk-$USER/src
+$ checkbuild.sh --systems=darwin-x86 --try-64
+$ checkbuild.sh --systems=darwin-x86
 ```
 
 Packaging
@@ -149,9 +134,6 @@ Best Practices for Incremental Builds
 * Do not run `build/tools/dev-cleanup.sh` which erases all prebuilts.
 * Remove the individual prebuilt directory if new build deletes files. This is
   rare.
-* Avoid running `build/tools/download-toolchain-sources.sh` during development
-  because the size of toolchains repo is ~8GB. Changes made to individual
-  projects can be cherry-picked to `/tmp/ndk-$USER/src`.
 * Package NDK from prebuilt tarballs in `$PREBUILT_PATH`. It runs
   `build/tools/build-docs.sh` which produces no tarball in `$PREBUILT_PATH`.
 * Unpack and compare against the previous package.
