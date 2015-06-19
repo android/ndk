@@ -36,9 +36,6 @@ LIBPORTABLE_SUBDIR=sources/android/libportable
 # Location of the gccunwind sources, relative to the NDK root directory
 GCCUNWIND_SUBDIR=sources/android/gccunwind
 
-# Location of the compiler-rt sources, relative to the NDK root directory
-COMPILER_RT_SUBDIR=sources/android/compiler-rt
-
 # Location of the support sources for libc++, relative to the NDK root directory
 SUPPORT_SUBDIR=sources/android/support
 

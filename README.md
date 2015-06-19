@@ -58,8 +58,6 @@ The NDK consists of three parts: host binaries, target prebuilts, and others
       user-specified `APP_ABI` and `APP_PLATFORM`.
 * `sources/cxx-stl/$STL/$ABI/` contains the headers and libraries for the various
   C++ STLs.
-* `sources/android/compiler-rt/libs/` contains compiler-rt libraries for use
-  with Clang.
 * `prebuilt/android-$ARCH/gdbserver/` contains gdbserver.
 
 ### Others

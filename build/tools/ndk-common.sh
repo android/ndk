@@ -21,7 +21,14 @@
 PROGNAME=`basename $0`
 
 if [ -z "$TMPDIR" ]; then
-  export TMPDIR=/tmp/ndk-$USER
+    export TMPDIR=/tmp/ndk-$USER
+fi
+
+if [ -z "$ANDROID_BUILD_TOP" ]; then
+    >&2 echo 'ANDROID_BUILD_TOP not set. Cannot continue.'
+    >&2 echo 'Please set ANDROID_BUILD_TOP to point to the root of an Android' \
+             'tree.'
+    exit 1
 fi
 
 # Find the Android NDK root, assuming we are invoked from a script

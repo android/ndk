@@ -1417,9 +1417,7 @@ get_llvm_toolchain_binprefix ()
 {
     local NAME DIR BINPREFIX
     local SYSTEM=${2:-$(get_prebuilt_host_tag)}
-    NAME=llvm-$1
-    DIR=$(get_toolchain_install . $NAME $SYSTEM)
-    BINPREFIX=${DIR#./}/bin/
+    BINPREFIX=$ANDROID_BUILD_TOP/prebuilts/clang/$SYSTEM/host/$1/bin
     echo "$BINPREFIX"
 }
 
