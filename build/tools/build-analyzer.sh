@@ -21,14 +21,12 @@
 # include common function and variable definitions
 . `dirname $0`/prebuilt-common.sh
 
-PROGRAM_PARAMETERS="<src-dir> <ndk-dir> <toolchain>"
+PROGRAM_PARAMETERS="<ndk-dir>"
 
 PROGRAM_DESCRIPTION=\
 "Copy clang static code analyzer for the Android NDK.
 
-Where <src-dir> is the location of toolchain sources, <ndk-dir> is
-the top-level NDK installation path and <toolchain> is the name of
-the toolchain to use (e.g. llvm-3.1)."
+Where <ndk-dir> is the top-level NDK installation path."
 
 RELEASE=`date +%Y%m%d`
 
@@ -39,36 +37,26 @@ extract_parameters "$@"
 
 set_parameters ()
 {
-    SRC_DIR="$1"
-    NDK_DIR="$2"
-    TOOLCHAIN="$3"
+    NDK_DIR="$1"
+    CLANG_DIR=$ANDROID_BUILD_TOP/external/clang
 
-    # Check source directory
-    #
-    if [ -z "$SRC_DIR" ] ; then
-        echo "ERROR: Missing source directory parameter. See --help for details."
-        exit 1
-    fi
-
-    SCAN_BUILD_SRC_DIR=$SRC_DIR/$TOOLCHAIN/clang/tools/scan-build
+    SCAN_BUILD_SRC_DIR=$CLANG_DIR/tools/scan-build
     if [ ! -d "$SCAN_BUILD_SRC_DIR" ] ; then
         echo "ERROR: Source directory does not contain scan-build: $SCAN_BUILD_SRC_DIR"
         exit 1
     fi
 
-    SCAN_VIEW_SRC_DIR=$SRC_DIR/$TOOLCHAIN/clang/tools/scan-view
+    SCAN_VIEW_SRC_DIR=$CLANG_DIR/tools/scan-view
     if [ ! -d "$SCAN_VIEW_SRC_DIR" ] ; then
         echo "ERROR: Source directory does not contain scan-view: $SCAN_VIEW_SRC_DIR"
         exit 1
     fi
 
-    LICENSE_FILE=$SRC_DIR/$TOOLCHAIN/clang/LICENSE.TXT
+    LICENSE_FILE=$CLANG_DIR/LICENSE.TXT
     if [ ! -f "$LICENSE_FILE" ] ; then
         echo "ERROR: Source directory does not contain clang license file: $LICENSE_FILE"
         exit 1
     fi
-
-    log "Using source directory: $SRC_DIR"
 
     # Check NDK installation directory
     #
@@ -83,13 +71,6 @@ set_parameters ()
     fi
 
     log "Using NDK directory: $NDK_DIR"
-
-    # Check toolchain name
-    #
-    if [ -z "$TOOLCHAIN" ] ; then
-        echo "ERROR: Missing toolchain name parameter. See --help for details."
-        exit 1
-    fi
 }
 
 set_parameters $PARAMETERS
