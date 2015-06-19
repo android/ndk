@@ -150,7 +150,9 @@ UNKNOWN_ABIS=$(convert_archs_to_abis $UNKNOWN_ARCH)
 
 if [ ! -z "$LLVM_VERSION" ]; then
    dump "Building $ABIS compiler-rt binaries..."
-   run $BUILDTOOLS/build-compiler-rt.sh --abis="$ABIS" $FLAGS --src-dir="$SRC_DIR/llvm-$LLVM_VERSION/compiler-rt" $BUILD_TOOLCHAIN
+   run $BUILDTOOLS/build-compiler-rt.sh --abis="$ABIS" $FLAGS \
+       --src-dir="$SRC_DIR/llvm-$LLVM_VERSION/llvm/projects/compiler-rt" \
+       $BUILD_TOOLCHAIN
    fail_panic "Could not build compiler-rt!"
 fi
 

@@ -233,47 +233,11 @@ git repositories of interest here:
     mpfr/
 
 The AOSP toolchain/ repository contains sources corresponding to toolchains
-that are used to build the Android platform tree. For various reasons, they
-need to be slightly patched for use with the NDK.
+that are used to build the Android platform tree.
 
-All patches are located under $NDK/build/tools/toolchain-patches/
-
-The script 'download-toolchain-sources.sh' can be used to download and patch
-the toolchain sources from the server. You simply need to give it the name of
-a destination directory, for example:
-
-  $NDK/build/tools/download-toolchain-sources.sh /tmp/ndk-$USER/src
-
-Note that this process can take several minutes. If you happen to already
-have a clone of the repo toolchain/ tree, you can speed this up considerably
-using the --git-reference or --git-base option. See --help for more options
-and details.
-
-Note, to create a local toolchain repo:
-
-   mkdir -p /tmp/ndk-$USER/toolchain
-   cd /tmp/ndk-$USER/toolchain
-   repo init https://android.googlesource.com/toolchain/manifest.git
-   repo sync
-
-then use with:
-
-  $NDK/build/tools/download-toolchain-sources.sh \
-       --git-reference=/tmp/ndk-$USER/toolchain \
-       /tmp/ndk-$USER/src
-
-
-The script doesn't simply copy the current HEAD of the toolchain
-repositories. Instead, it will checkout the sources as they were
-at a given known date, defined as TOOLCHAIN_GIT_DATE in 'dev-defaults.sh'.
-
-If you adjust TOOLCHAIN_GIT_DATE, verify that all patches still apply
-correctly, you might need to remove patches if they have been integrated
-into the toolchain/ repositories.
-
-Note: you can avoid the patching with the --no-patches option to
-'download-toolchain-patches.sh', and later use 'patch-sources.sh' manually
-to verify that the patches apply cleanly.
+The master-ndk branch of AOSP contains an already checked out and patched
+version of the toolchain repository at toolchain/. The process of using
+download-toolchain-sources.sh is now obsolete.
 
 The toolchains binaries are typically placed under the directory
 $NDK/toolchains/$NAME/prebuilt/$SYSTEM, where $NAME is the toolchain name's
@@ -284,8 +248,8 @@ host system it is meant to run on (e.g. 'linux-x86', 'windows' or 'darwin-x86')
 I.2. Building the toolchains:
 - - - - - - - - - - - - - - -
 
-After downloading and patching the toolchain sources, you will need to build
-a proper "sysroot" directory before being able to configure/build them.
+First you will need to build a proper "sysroot" directory before being able to
+configure/build them.
 
 A sysroot is a directory containing system headers and libraries that the
 compiler will use to build a few required target-specific binaries (e.g. libgcc.a)

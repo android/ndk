@@ -1,0 +1,15 @@
+#!/usr/bin/env python
+"""Provides the same functionality as realpath(1).
+
+Needed because Mac has no simple way of doing this from the command line.
+"""
+import os.path
+import sys
+
+
+def main():
+    print os.path.normpath(os.path.abspath(sys.argv[1]))
+
+
+if __name__ == '__main__':
+    main()

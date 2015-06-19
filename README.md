@@ -74,15 +74,16 @@ The NDK consists of three parts: host binaries, target prebuilts, and others
 Prerequisites
 -------------
 
-* [AOSP Platform Repository](http://source.android.com/source/downloading.html)
-    * Only `ndk/` and `development/` are actually needed.
-* Toolchain Repository
-    * Contains binutils, GCC, LLVM/Clang, etc.
-    * To initialize:
+* [AOSP NDK Repository](http://source.android.com/source/downloading.html)
+    * Check out the branch `master-ndk`
 
         ```bash
-        $ build/tools/download-toolchain-sources.sh desired/toolchain/src/dir
+        repo init -u https://android.googlesource.com/platform/manifest \
+            -b master-ndk
         ```
+
+    * The only difference between the NDK branch and master is that the NDK
+      repository already has the toolchain repository checked out and patched.
 
 * Additional Linux Dependencies (available from apt):
     * texinfo
