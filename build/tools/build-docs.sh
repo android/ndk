@@ -18,7 +18,7 @@
 # include common function and variable definitions
 . `dirname $0`/prebuilt-common.sh
 
-DEFAULT_OUT_DIR=/tmp/ndk-$USER/docs
+DEFAULT_OUT_DIR=$TMPDIR/docs
 
 IN_DIR=
 OUT_DIR=$DEFAULT_OUT_DIR

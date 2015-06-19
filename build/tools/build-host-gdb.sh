@@ -98,7 +98,7 @@ for VERSION in $(commas_to_spaces $GDB_VERSION); do
 done
 
 if [ -z "$BUILD_DIR" ] ; then
-    BUILD_DIR=/tmp/ndk-$USER/buildgdb
+    BUILD_DIR=$TMPDIR/buildgdb
 fi
 
 bh_setup_build_dir $BUILD_DIR

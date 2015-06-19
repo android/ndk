@@ -152,7 +152,7 @@ FORCE_ALL=
 FORCE_BUILD=
 CLEANUP=
 
-TEMP_DIR=/tmp/build-mingw64-toolchain-$USER
+TEMP_DIR=$TMPDIR/build-mingw64-toolchain-$USER
 
 for opt; do
     optarg=`expr "x$opt" : 'x[^=]*=\(.*\)'`

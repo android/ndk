@@ -71,7 +71,7 @@ PREFIX=android-ndk
 register_var_option "--prefix=<name>" PREFIX "Specify package prefix"
 
 # default location for generated packages
-OUT_DIR=/tmp/ndk-$USER/release
+OUT_DIR=$TMPDIR/release
 OPTION_OUT_DIR=
 register_var_option "--out-dir=<path>" OPTION_OUT_DIR "Specify output package directory" "$OUT_DIR"
 

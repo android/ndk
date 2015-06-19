@@ -181,7 +181,7 @@ if [ -z "$TOOLCHAIN_SRC_DIR" ]; then
 fi
 
 if [ -z "$BUILD_DIR" ]; then
-    BUILD_DIR=/tmp/ndk-$USER/build/host-gcc
+    BUILD_DIR=$TMPDIR/build/host-gcc
 fi
 
 case $DEFAULT_LD in
@@ -445,7 +445,7 @@ stamps_do ()
 check_compiler ()
 {
     local CC="$1"
-    local TMPC=/tmp/build-host-gcc-$USER-$$.c
+    local TMPC=$TMPDIR/build-host-gcc-$USER-$$.c
     local TMPE=${TMPC%%.c}
     local TMPL=$TMPC.log
     local RET
@@ -548,7 +548,7 @@ check_compiler_bitness ()
 {
     local CC="$1"
     local BITS="$2"
-    local TMPC=/tmp/build-host-gcc-bits-$USER-$$.c
+    local TMPC=$TMPDIR/build-host-gcc-bits-$USER-$$.c
     local TMPL=$TMPC.log
     local RET
     shift; shift;
