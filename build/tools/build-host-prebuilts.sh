@@ -164,7 +164,7 @@ do_remote_host_build ()
     # Do it first so we can fail fast, not after spending time preparing
     # large tarballs.
     dump "Creating remote temp directory"
-    TMPREMOTE=/tmp/ndk-$USER/darwin-prebuild
+    TMPREMOTE=$TMPDIR/darwin-prebuild
     run ssh $REMOTE_HOST "mkdir -p $TMPREMOTE && rm -rf $TMPREMOTE/*"
     fail_panic "Could not create temporary build directory on $REMOTE_HOST"
 

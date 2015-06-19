@@ -45,10 +45,10 @@ otherwise we copy it to the same location.
 Repeat for all files under \$SRC/android-N for increasing values of N.
 "
 
-SRCDIR=/tmp/ndk-$USER/platforms
+SRCDIR=$TMPDIR/platforms
 register_var_option "--src-dir=<path>" SRCDIR "Specify source platforms directory"
 
-DSTDIR=/tmp/ndk-$USER/platforms-compressed
+DSTDIR=$TMPDIR/platforms-compressed
 register_var_option "--dst-dir=<path>" DSTDIR "Specify destination directory"
 
 API_LEVELS=$(spaces_to_commas $API_LEVELS)

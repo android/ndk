@@ -31,7 +31,7 @@ register_try64_option
 register_canadian_option
 register_jobs_option
 
-BUILD_OUT=/tmp/ndk-$USER/build/perl
+BUILD_OUT=$TMPDIR/build/perl
 OPTION_BUILD_OUT=
 register_var_option "--build-out=<path>" OPTION_BUILD_OUT "Set temporary build directory"
 

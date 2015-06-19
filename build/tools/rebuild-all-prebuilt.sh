@@ -24,7 +24,7 @@ PROGDIR=`dirname $0`
 NDK_DIR=$ANDROID_NDK_ROOT
 register_var_option "--ndk-dir=<path>" NDK_DIR "Put binaries into NDK install directory"
 
-BUILD_DIR=/tmp/ndk-$USER/build
+BUILD_DIR=$TMPDIR/build
 register_var_option "--build-dir=<path>" BUILD_DIR "Specify temporary build directory"
 
 ARCHS=$(find_ndk_unknown_archs)
@@ -57,7 +57,7 @@ register_option "--also-64" do_ALSO_64 "Also build 64-bit host toolchain"
 do_ALSO_64 () { ALSO_64=yes; }
 
 RELEASE=`date +%Y%m%d`
-PACKAGE_DIR=/tmp/ndk-$USER/prebuilt-$RELEASE
+PACKAGE_DIR=$TMPDIR/prebuilt-$RELEASE
 register_var_option "--package-dir=<path>" PACKAGE_DIR "Put prebuilt tarballs into <path>."
 
 DARWIN_SSH=

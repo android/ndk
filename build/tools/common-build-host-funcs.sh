@@ -263,7 +263,7 @@ bh_arch_text ()
 bh_check_compiler ()
 {
     local CC="$1"
-    local TMPC=/tmp/build-host-$USER-$$.c
+    local TMPC=$TMPDIR/build-host-$USER-$$.c
     local TMPE=${TMPC%%.c}
     local TMPL=$TMPC.log
     local RET
@@ -363,7 +363,7 @@ _bh_check_compiler_bitness ()
 {
     local CC="$1"
     local BITS="$2"
-    local TMPC=/tmp/build-host-gcc-bits-$USER-$$.c
+    local TMPC=$TMPDIR/build-host-gcc-bits-$USER-$$.c
     local TMPL=$TMPC.log
     local RET
     shift; shift;
@@ -641,7 +641,7 @@ bh_setup_build_dir ()
 {
     BH_BUILD_DIR="$1"
     if [ -z "$BH_BUILD_DIR" ]; then
-        BH_BUILD_DIR=/tmp/ndk-$USER/buildhost
+        BH_BUILD_DIR=$TMPDIR/buildhost
     fi
     mkdir -p "$BH_BUILD_DIR"
     fail_panic "Could not create build directory: $BH_BUILD_DIR"

@@ -52,10 +52,10 @@ extract_platforms_from ()
 }
 
 # Override tmp file to be predictable
-TMPC=/tmp/ndk-$USER/tmp/tests/tmp-platform.c
-TMPO=/tmp/ndk-$USER/tmp/tests/tmp-platform.o
-TMPE=/tmp/ndk-$USER/tmp/tests/tmp-platform$EXE
-TMPL=/tmp/ndk-$USER/tmp/tests/tmp-platform.log
+TMPC=$TMPDIR/tmp/tests/tmp-platform.c
+TMPO=$TMPDIR/tmp/tests/tmp-platform.o
+TMPE=$TMPDIR/tmp/tests/tmp-platform$EXE
+TMPL=$TMPDIR/tmp/tests/tmp-platform.log
 
 SRCDIR="../development/ndk"
 DSTDIR="$ANDROID_NDK_ROOT"

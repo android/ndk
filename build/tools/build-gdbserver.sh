@@ -39,7 +39,7 @@ NOTE: The --platform option is ignored if --sysroot is used."
 VERBOSE=no
 
 OPTION_BUILD_OUT=
-BUILD_OUT=/tmp/ndk-$USER/build/gdbserver
+BUILD_OUT=$TMPDIR/build/gdbserver
 register_option "--build-out=<path>" do_build_out "Set temporary build directory"
 do_build_out () { OPTION_BUILD_OUT="$1"; }
 
