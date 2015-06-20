@@ -220,23 +220,11 @@ system supported by the NDK.
 II.1 Getting the toolchain sources:
 - - - - - - - - - - - - - - - - - -
 
-The NDK toolchain sources are located under the toolchain/ directly
-from the top of the public AOSP repositories. There are actually several
-git repositories of interest here:
-
-    binutils/
-    build/
-    gcc/
-    gdb/
-    gold/
-    gmp/
-    mpfr/
-
-The AOSP toolchain/ repository contains sources corresponding to toolchains
-that are used to build the Android platform tree.
+The AOSP toolchain/ repository contains the source for the toolchains
+used to build the Android platform and in the NDK.
 
 The master-ndk branch of AOSP contains an already checked out and patched
-version of the toolchain repository at toolchain/. The process of using
+version of the toolchain repository at toolchain/. The old process of using
 download-toolchain-sources.sh is now obsolete.
 
 The toolchains binaries are typically placed under the directory
@@ -273,8 +261,8 @@ rebuild other target prebuilts or run tests), do:
    $NDK/build/tools/build-gcc.sh /tmp/ndk-$USER/src $NDK arm-linux-androideabi-4.8
    $NDK/build/tools/build-gcc.sh /tmp/ndk-$USER/src $NDK x86-4.8
 
-Here, we assume you downloaded the toolchain sources in /tmp/ndk-$USER/src
-as described in the previous section.
+Here, we assume you're using the master-ndk branch as described in the previous
+section.
 
 This operation can take some time. The script automatically performs a parallel
 build to speed up the build on multi-core machine (use the -j<number> option to
@@ -434,16 +422,8 @@ Similarly, to rebuild the STLport binaries and package them:
 
 A dev-script is provided to rebuild _and_ package all prebuilts. It is called
 'rebuild-all-prebuilt.sh'. Note that by default, it will automatically
-invoke 'download-toolchain-sources.sh', and place the prebuilt tarballs
-under /tmp/ndk-$USER/prebuilt-$DATE, where $DATE is the current date in
-ISO format (e.g. 20110915 for the 15th of September of 2011).
-
-If you have already downloaded the toolchain sources, use the
---toolchain-src-dir=<path> option to save a few minutes to your rebuild,
-as in:
-
-  $NDK/build/tools/rebuild-all-prebuilt.sh \
-        --toolchain-src-dir=/tmp/ndk-$USER/src
+place the prebuilt tarballs under /tmp/ndk-$USER/prebuilt-$DATE, where $DATE
+is the current date in ISO order.
 
 By default, this only rebuilds the host prebuilds for the current host
 system. You can use --mingw to force the generation of Windows binaries on
