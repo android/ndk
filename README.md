@@ -25,8 +25,7 @@ binaries is built via MinGW cross compiler. Systems without a working MinGW
 compiler can use `build/tools/build-mingw64-toolchain.sh` to generate their own
 and be added to the `PATH` for build scripts to discover.
 
-Mac OS X host binaries should be built on the minimal Mac OS that the NDK
-supports (currently 10.8).
+Building binaries for Mac OS X requires at least 10.8.
 
 Target headers and binaries are built on Linux.
 
