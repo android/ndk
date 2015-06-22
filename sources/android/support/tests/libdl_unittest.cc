@@ -20,7 +20,7 @@ TEST(libdl, my_dladdr) {
 #if __ANDROID_API__ >= 8
     EXPECT_NE(0, r);
     EXPECT_EQ(h, info.dli_saddr);
-    EXPECT_EQ(0, strcmp("libc.so", info.dli_fname));
+    EXPECT_NE(0, strstr(info.dli_fname, "/libc.so"));
 #else
     EXPECT_EQ(0, r);
 #endif
