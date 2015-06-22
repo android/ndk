@@ -44,13 +44,13 @@ SUPPORT_SUBDIR=sources/android/support
 TOOLCHAIN_GIT_DATE=now
 
 # The space-separated list of all GCC versions we support in this NDK
-DEFAULT_GCC_VERSION_LIST="4.8 4.9"
+DEFAULT_GCC_VERSION_LIST="4.9"
 
-DEFAULT_GCC32_VERSION=4.8
+DEFAULT_GCC32_VERSION=4.9
 DEFAULT_GCC64_VERSION=4.9
-FIRST_GCC32_VERSION=4.8
+FIRST_GCC32_VERSION=4.9
 FIRST_GCC64_VERSION=4.9
-DEFAULT_LLVM_GCC32_VERSION=4.8
+DEFAULT_LLVM_GCC32_VERSION=4.9
 DEFAULT_LLVM_GCC64_VERSION=4.9
 
 DEFAULT_BINUTILS_VERSION=2.25
@@ -261,7 +261,7 @@ get_toolchain_name_list_for_arch ()
 # binutils was reverted to 2.19, to ensure at least
 # feature/bug compatibility.
 #
-# $1: toolchain with version numer (e.g. 'arm-linux-androideabi-4.8')
+# $1: toolchain with version number (e.g. 'arm-linux-androideabi-4.8')
 #
 get_default_binutils_version_for_gcc ()
 {
@@ -283,7 +283,7 @@ get_default_binutils_version_for_llvm ()
 # Return the gdb version to be used by default when building a given
 # version of GCC.
 #
-# $1: toolchain with version numer (e.g. 'arm-linux-androideabi-4.8')
+# $1: toolchain with version number (e.g. 'arm-linux-androideabi-4.8')
 #
 get_default_gdb_version_for_gcc ()
 {
@@ -293,7 +293,7 @@ get_default_gdb_version_for_gcc ()
 # Return the gdbserver version to be used by default when building a given
 # version of GCC.
 #
-# $1: toolchain with version numer (e.g. 'arm-linux-androideabi-4.8')
+# $1: toolchain with version number (e.g. 'arm-linux-androideabi-4.8')
 #
 get_default_gdbserver_version_for_gcc ()
 {
