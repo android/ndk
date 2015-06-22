@@ -13,7 +13,6 @@ else
 # 32-bit ABIs
 
 android_support_sources := \
-    src/libdl_support.c \
     src/locale_support.c \
     src/math_support.c \
     src/stdlib_support.c \
