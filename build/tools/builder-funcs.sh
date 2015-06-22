@@ -135,8 +135,8 @@ builder_set_binprefix ()
 builder_set_binprefix_llvm ()
 {
     _BUILD_BINPREFIX=$1
-    _BUILD_CC=${1}clang
-    _BUILD_CXX=${1}clang++
+    _BUILD_CC=${1}/clang
+    _BUILD_CXX=${1}/clang++
     _BUILD_AR=${2}ar
 }
 
@@ -554,7 +554,7 @@ builder_begin_android ()
     if [ -n "$LLVM_VERSION" ]; then
         GCC_TOOLCHAIN=`dirname $BINPREFIX`
         GCC_TOOLCHAIN=`dirname $GCC_TOOLCHAIN`
-        BINPREFIX=$NDK_DIR/$(get_llvm_toolchain_binprefix $LLVM_VERSION $TAG)
+        BINPREFIX=$(get_llvm_toolchain_binprefix $LLVM_VERSION $TAG)
     fi
 
     if [ -z "$PLATFORM" ]; then

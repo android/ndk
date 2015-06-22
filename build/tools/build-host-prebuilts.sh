@@ -338,17 +338,20 @@ for SYSTEM in $SYSTEMS; do
         done
     done
 
-    for LLVM_VERSION in $LLVM_VERSION_LIST; do
-        echo "Building $SYSNAME clang/llvm-$LLVM_VERSION"
-        run $BUILDTOOLS/build-llvm.sh "$SRC_DIR" "$NDK_DIR" "llvm-$LLVM_VERSION" $TOOLCHAIN_FLAGS $CHECK_FLAG -j$BUILD_NUM_CPUS
-        fail_panic "Could not build llvm for $SYSNAME"
-    done
+    echo "Packaging $SYSNAME LLVM"
+    PACKAGE_ARG=
+    if [ -n "$PACKAGE_DIR" ]; then
+        PACKAGE_ARG="--package-dir $PACKAGE_DIR"
+    fi
+    run $BUILDTOOLS/build-llvm.py --host $SYSTEM $PACKAGE_ARG
+    fail_panic "Could not build llvm for $SYSNAME"
 
-    # We're done for this system
+    # We're done for this system.
 done
 
-# Build tools common to all system
-run $BUILDTOOLS/build-analyzer.sh "$SRC_DIR" "$NDK_DIR" "llvm-$DEFAULT_LLVM_VERSION" --package-dir="$PACKAGE_DIR"
+# Build tools common to all systems.
+ANDROID_BUILD_TOP=$($BUILDTOOLS/../../realpath $BUILDTOOLS/../../..)
+run $BUILDTOOLS/build-analyzer.sh "$NDK_DIR" --package-dir="$PACKAGE_DIR"
 
 if [ "$PACKAGE_DIR" ]; then
     echo "Done, please look at $PACKAGE_DIR"
