@@ -21,7 +21,7 @@ Building the NDK
 that use the NDK.
 
 Both Linux and Windows host binaries are built on Linux machines. Windows host
-binaries is built via MinGW cross compiler. Systems without a working MinGW
+binaries are built via MinGW cross compiler. Systems without a working MinGW
 compiler can use `build/tools/build-mingw64-toolchain.sh` to generate their own
 and be added to the `PATH` for build scripts to discover.
 
@@ -41,7 +41,7 @@ The NDK consists of three parts: host binaries, target prebuilts, and others
     * `$TOOLCHAIN/config.mk` contains ARCH and ABIS this toolchain can handle.
     * `$TOOLCHAIN/setup.mk` contains toolchain-specific default CFLAGS/LDFLAGS
       when this toolchain is used.
-* `prebuilt/$HOST_ARCH/` contains various tools to make build system hermetic.
+* `prebuilt/$HOST_ARCH/` contains various tools to make the build system hermetic.
     * make, awk, sed, perl, python, yasm, and for Windows: cmp.exe and echo.exe
 * `prebuilt/common` contains the `scan-build` and `scan-view` scripts used by
   static analyzer via `NDK_ANALYZE=1`.
