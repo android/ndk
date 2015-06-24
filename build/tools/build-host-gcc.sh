@@ -172,7 +172,7 @@ extract_parameters "$@"
 
 TOOLCHAINS=$PARAMETERS
 if [ -z "$TOOLCHAINS" ]; then
-    TOOLCHAINS="arm-linux-androideabi-4.8,x86-4.8,mipsel-linux-android-4.8"
+    TOOLCHAINS="arm-linux-androideabi-4.9,x86-4.9,mipsel-linux-android-4.9"
     dump "Auto-config: $TOOLCHAINS"
 fi
 
