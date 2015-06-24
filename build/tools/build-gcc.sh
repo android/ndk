@@ -330,21 +330,36 @@ esac
 EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --disable-libsanitizer"
 
 # Enable Gold
+
+ENABLE_GOLD_FLAGS=
 case "$TOOLCHAIN" in
     # Note that only ARM/X86 >= GCC 4.6 and AARCH64 >= GCC 4.9 are supported
     mips*)
-    ;;
-    *-4.4.3)
+        # Don't use gold for mips/mips64.
     ;;
     aarch64*)
         # Enable ld.gold but ld.bfd remain the default
-        EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-gold --enable-ld=default --enable-threads"
+        ENABLE_GOLD_FLAGS="--enable-gold --enable-ld=default"
     ;;
     *)
         # Enable ld.gold as default
-        EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-gold=default --enable-threads"
+        ENABLE_GOLD_FLAGS="--enable-gold=default"
     ;;
 esac
+
+# Current mingw has an internal compiler error when building gold.
+# Bug: http://b/22045105
+if [ "$MINGW" = "yes" ]; then
+    ENABLE_GOLD_FLAGS=
+fi
+
+EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" "$ENABLE_GOLD_FLAGS
+
+# We're not using gold for mips yet, and there is no support for threaded
+# linking on Windows (no pthreads).
+if [ "$TOOLCHAIN" != mips* -a "$MINGW" != "yes"]; then
+    EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-threads"
+fi
 
 # Enable Graphite
 case "$TOOLCHAIN" in
