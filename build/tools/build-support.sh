@@ -92,8 +92,7 @@ SUPPORT_LDFLAGS=""
 
 # android/support files for libc++
 SUPPORT32_SOURCES=\
-"src/libdl_support.c \
-src/locale_support.c \
+"src/locale_support.c \
 src/math_support.c \
 src/stdlib_support.c \
 src/wchar_support.c \
