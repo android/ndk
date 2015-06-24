@@ -30,9 +30,6 @@ LIBCXX_SUBDIR=sources/cxx-stl/llvm-libc++
 # Location of the LLVM libc++abi headers, relative to the NDK # root directory.
 LIBCXXABI_SUBDIR=sources/cxx-stl/llvm-libc++abi/libcxxabi
 
-# Location of the libportable sources, relative to the NDK root directory
-LIBPORTABLE_SUBDIR=sources/android/libportable
-
 # Location of the gccunwind sources, relative to the NDK root directory
 GCCUNWIND_SUBDIR=sources/android/gccunwind
 
