@@ -92,10 +92,6 @@ run cp -r $SYSROOT/usr/lib/crtend_so.o $OUT_SYSROOT/usr/lib
 dump "Copy $ABI gabi++ library"
 run cp -f $NDK_DIR/$GABIXX_SUBDIR/libs/$ABI/libgabi++_shared.so $OUT_SYSROOT/usr/lib
 
-dump "Copy $ABI libportable library"
-run cp -f $NDK_DIR/$LIBPORTABLE_SUBDIR/libs/$ABI/libportable.a $OUT_SYSROOT/usr/lib
-run cp -f $NDK_DIR/$LIBPORTABLE_SUBDIR/libs/$ABI/libportable.wrap $OUT_SYSROOT/usr/lib
-
 dump "Copy $ABI compiler-rt library"
 run cp -f $NDK_DIR/$COMPILER_RT_SUBDIR/libs/$ABI/libcompiler_rt_static.a $OUT_SYSROOT/usr/lib
 

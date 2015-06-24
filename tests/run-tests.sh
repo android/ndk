@@ -451,7 +451,6 @@ case $ABI in
             GCC_TOOLCHAIN_VERSION=`cat $NDK/toolchains/llvm-$DEFAULT_LLVM_VERSION/setup.mk | grep '^TOOLCHAIN_VERSION' | awk '{print $3'}`
             run mkdir -p $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI
             run mkdir -p $NDK/$GABIXX_SUBDIR/libs/$ABI
-            run mkdir -p $NDK/$LIBPORTABLE_SUBDIR/libs/$ABI
             run gen_empty_archive $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI/libsupc++.a
             run gen_empty_archive $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI/libgnustl_static.a
             run gen_empty_bitcode $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI/libgnustl_shared.bc
@@ -586,53 +585,6 @@ is_incompatible_abi ()
         fi
     fi
     return 1
-}
-
-compile_on_the_fly()
-{
-    local DSTDIR="$1"
-    local COMPILER_PKGNAME="compiler.abcc"
-    if [ -z "`$ADB_CMD -s "$DEVICE" shell pm path $COMPILER_PKGNAME`" ]; then
-        dump "ERROR: No abcc found for unknown arch testing"
-        return 1
-    fi
-    run $ADB_CMD -s "$DEVICE" shell am force-stop $COMPILER_PKGNAME
-    run $ADB_CMD -s "$DEVICE" shell am startservice --user 0 -a ${COMPILER_PKGNAME}.BITCODE_COMPILE_TEST -n $COMPILER_PKGNAME/.AbccService -e working_dir $DSTDIR
-
-    old_pid="`$ADB_CMD -s "$DEVICE" shell top -n 1 | grep $COMPILER_PKGNAME | awk '{print $1}'`"
-    threshold=`echo $((60*10))` # Wait at most 10 minutes for large testcases
-    sleep_seconds=0
-    while [ 2 -eq 2 ]; do
-      if [ $sleep_seconds -gt $threshold ]; then
-        pid="`$ADB_CMD -s "$DEVICE" shell top -n 1 | grep $COMPILER_PKGNAME | awk '{print $1}'`"
-        if [ "$pid" = "$old_pid" ]; then
-          # Too much time
-          break
-        fi
-        old_pid="$pid"
-        sleep_seconds=0
-      fi
-      if [ -n "`$ADB_CMD -s "$DEVICE" shell ls $DSTDIR | grep compile_result`" ]; then
-        # Compile done
-        break
-      fi
-      sleep 3
-      sleep_seconds="`echo $sleep_seconds + 3 | bc`"
-    done
-    ret="`$ADB_CMD -s "$DEVICE" shell cat $DSTDIR/compile_result`"
-    ret=`echo $ret | tr -d "\r\n"`
-    if [ $sleep_seconds -gt $threshold ] || [ "$ret" != "0" ]; then
-      dump "ERROR: Could not compile bitcodes for $TEST_NAME on device"
-      if [ $sleep_seconds -gt $threshold ]; then
-        dump "- Reason: Compile time too long"
-      elif [ -n "`$ADB_CMD -s "$DEVICE" shell ls $DSTDIR | grep compile_error`" ]; then
-        dump "- Reason: `$ADB_CMD -s "$DEVICE" shell cat $DSTDIR/compile_error`"
-      fi
-      run $ADB_CMD -s "$DEVICE" shell am force-stop $COMPILER_PKGNAME
-      return 1
-    fi
-    run $ADB_CMD -s "$DEVICE" shell am force-stop $COMPILER_PKGNAME
-    return 0
 }
 
 
@@ -830,27 +782,6 @@ if is_testable device; then
         # those declared in $TEST/BROKEN_RUN
         adb_shell_mkdir "$DEVICE" $DSTDIR
 
-        if [ "$ABI" = "$(find_ndk_unknown_archs)" ]; then # on-the-fly on-device compilation
-            run $ADB_CMD -s "$DEVICE" shell rm -rf $DSTDIR/abcc_tmp
-            adb_shell_mkdir "$DEVICE" $DSTDIR/abcc_tmp
-            run $ADB_CMD -s "$DEVICE" shell chmod 0777 $DSTDIR/abcc_tmp
-            for SRCFILE in `ls $SRCDIR`; do
-                run $ADB_CMD -s "$DEVICE" push "$SRCDIR/$SRCFILE" $DSTDIR/abcc_tmp
-                run $ADB_CMD -s "$DEVICE" shell chmod 0644 $DSTDIR/abcc_tmp/$SRCFILE
-            done
-            compile_on_the_fly $DSTDIR/abcc_tmp
-            if [ $? -ne 0 ]; then
-                test "$CONTINUE_ON_BUILD_FAIL" != "yes" && exit 1
-                return 1
-            fi
-            run rm -f $SRCDIR/*
-            run $ADB_CMD -s "$DEVICE" pull $DSTDIR/abcc_tmp $SRCDIR
-            run rm -f $SRCDIR/compile_result
-            run rm -f $SRCDIR/compile_error
-            run rm -f $SRCDIR/*$(get_lib_suffix_for_abi $ABI)
-            run $ADB_CMD -s "$DEVICE" shell rm -rf $DSTDIR/abcc_tmp
-        fi
-
         for SRCFILE in `ls $SRCDIR`; do
             DSTFILE=`basename $SRCFILE`
             echo "$DSTFILE" | grep -q -e '\.so$'
@@ -1011,7 +942,6 @@ if [ "$ABI" = "$(find_ndk_unknown_archs)" ]; then
   # Cleanup some intermediate files for testing
   run rm -rf $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI
   run rm -rf $NDK/$GABIXX_SUBDIR/libs/$ABI
-  run rm -rf $NDK/$LIBPORTABLE_SUBDIR/libs/$ABI
 fi
 rm -rf $BUILD_DIR
 dump "Done."

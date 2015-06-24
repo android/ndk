@@ -539,7 +539,6 @@ esac
 
 if [ "$ARCH_INC" != "$ARCH" ]; then
     cp -a $NDK_DIR/$GABIXX_SUBDIR/libs/$ABI/* $TMPDIR/sysroot/usr/lib
-    cp -a $NDK_DIR/$LIBPORTABLE_SUBDIR/libs/$ABI/* $TMPDIR/sysroot/usr/lib
     cp -a $NDK_DIR/$GCCUNWIND_SUBDIR/libs/$ABI/* $TMPDIR/sysroot/usr/lib
     if [ "$ARCH" = "${ARCH%%64*}" ]; then
         cp -a $NDK_DIR/$COMPILER_RT_SUBDIR/libs/$ABI/* $TMPDIR/sysroot/usr/lib
