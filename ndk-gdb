@@ -81,8 +81,6 @@ AWK_CMD=${AWK_CMD:-$(find_program awk)}
 DEBUG_PORT=5039
 JDB_PORT=65534
 
-UNKNOWN_ABI=$(find_ndk_unknown_archs)
-
 # Delay in seconds between launching the activity and attaching gdbserver on it.
 # This is needed because there is no way to know when the activity has really
 # started, and sometimes this takes a few seconds.
@@ -571,40 +569,35 @@ log "Device CPU ABIs: $CPU_ABIS"
 
 APP_ABIS=$APP_ABIS" "
 
-adb_var_shell BCFILES run-as $PACKAGE_NAME /system/bin/sh -c "ls lib/*.bc"
-if [ $? = 0 ]; then
-    COMPAT_ABI="$UNKNOWN_ABI"
-else
-    # Assume that compatible ABI is 32-bit
-    COMPAT_ABI_BITS=32
-    # First look compatible ABI in the list of 64-bit ABIs
-    if [ -n "$CPU_ABILIST64" ] ; then
-        for CPU_ABI64 in $CPU_ABILIST64; do
-            if [ "$APP_ABIS" != "${APP_ABIS%$CPU_ABI64 *}" ] ; then
-                COMPAT_ABI=$CPU_ABI64
-                COMPAT_ABI_BITS=64
-                break
-            fi
-        done
-    fi
-    # If we found nothing - look among 32-bit ABIs
-    if [ "$COMPAT_ABI" = none ] && [ -n "$CPU_ABILIST32" ] ; then
-        for CPU_ABI32 in $CPU_ABILIST32; do
-            if [ "$APP_ABIS" != "${APP_ABIS%$CPU_ABI32 *}" ] ; then
-                COMPAT_ABI=$CPU_ABI32
-                break
-            fi
-        done
-    fi
-    # Lastly, lets check ro.product.cpu.abi and ro.product.cpu.abi2
-    if [ "$COMPAT_ABI" = none ] && [ -z "$CPU_ABILIST64" ] && [ -z "$CPU_ABILIST32" ]; then
-        for CPU_ABI in $CPU_ABIS; do
-            if [ "$APP_ABIS" != "${APP_ABIS%$CPU_ABI *}" ] ; then
-                COMPAT_ABI=$CPU_ABI
-                break
-            fi
-        done
-    fi
+# Assume that compatible ABI is 32-bit
+COMPAT_ABI_BITS=32
+# First look compatible ABI in the list of 64-bit ABIs
+if [ -n "$CPU_ABILIST64" ] ; then
+    for CPU_ABI64 in $CPU_ABILIST64; do
+        if [ "$APP_ABIS" != "${APP_ABIS%$CPU_ABI64 *}" ] ; then
+            COMPAT_ABI=$CPU_ABI64
+            COMPAT_ABI_BITS=64
+            break
+        fi
+    done
+fi
+# If we found nothing - look among 32-bit ABIs
+if [ "$COMPAT_ABI" = none ] && [ -n "$CPU_ABILIST32" ] ; then
+    for CPU_ABI32 in $CPU_ABILIST32; do
+        if [ "$APP_ABIS" != "${APP_ABIS%$CPU_ABI32 *}" ] ; then
+            COMPAT_ABI=$CPU_ABI32
+            break
+        fi
+    done
+fi
+# Lastly, lets check ro.product.cpu.abi and ro.product.cpu.abi2
+if [ "$COMPAT_ABI" = none ] && [ -z "$CPU_ABILIST64" ] && [ -z "$CPU_ABILIST32" ]; then
+    for CPU_ABI in $CPU_ABIS; do
+        if [ "$APP_ABIS" != "${APP_ABIS%$CPU_ABI *}" ] ; then
+            COMPAT_ABI=$CPU_ABI
+            break
+        fi
+    done
 fi
 
 if [ "$COMPAT_ABI" = none ] ; then
@@ -829,15 +822,6 @@ if [ "$OPTION_START" = "yes" ] || [ -n "$OPTION_LAUNCH" ] ; then
         $JDB_CMD -connect com.sun.jdi.SocketAttach:hostname=localhost,port=$JDB_PORT &
         sleep 1
     fi
-fi
-
-# If we are debugging UNKNOWN_ABI, download compiled *.so from device.
-#
-if [ "$COMPAT_ABI" = "$UNKNOWN_ABI" ]; then
-    for bc in $BCFILES; do
-        log "Pulled $(basename $bc .bc).so from device/emulator."
-        adb pull $DATA_DIR/lib/$(basename $bc .bc).so $PROJECT/obj/local/$UNKNOWN_ABI/
-    done
 fi
 
 # Now launch the appropriate gdb client with the right init commands
