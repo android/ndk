@@ -15,5 +15,6 @@ build/tools/dev-cleanup.sh
 build/tools/rebuild-all-prebuilt.sh \
     $(./realpath ../toolchain) \
     --verbose \
+    --try-64 \
     $PACKAGE_DIR_ARG \
     $*
