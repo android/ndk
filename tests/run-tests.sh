@@ -443,24 +443,8 @@ case $ABI in
         NDK_BUILD_FLAGS="$NDK_BUILD_FLAGS APP_ABI=$ABI"
         ;;
     *)
-        if [ -n "$(filter_out "$PREBUILT_ABIS" "$ABI")" ] && [ -n "$(find_ndk_unknown_archs)" ]; then
-            ABI=$(find_ndk_unknown_archs)
-            NDK_BUILD_FLAGS="$NDK_BUILD_FLAGS APP_ABI=$ABI"
-
-            # Create those temporarily files to make testing happy
-            GCC_TOOLCHAIN_VERSION=`cat $NDK/toolchains/llvm-$DEFAULT_LLVM_VERSION/setup.mk | grep '^TOOLCHAIN_VERSION' | awk '{print $3'}`
-            run mkdir -p $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI
-            run mkdir -p $NDK/$GABIXX_SUBDIR/libs/$ABI
-            run gen_empty_archive $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI/libsupc++.a
-            run gen_empty_archive $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI/libgnustl_static.a
-            run gen_empty_bitcode $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI/libgnustl_shared.bc
-            run gen_empty_archive $NDK/$GABIXX_SUBDIR/libs/$ABI/libgabi++_static.a
-            run gen_empty_bitcode $NDK/$GABIXX_SUBDIR/libs/$ABI/libgabi++_shared.bc
-            run cp -a $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$(get_default_abi_for_arch arm)/include $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI
-        else
-            echo "ERROR: Unsupported abi value: $ABI"
-            exit 1
-        fi
+        echo "ERROR: Unsupported abi value: $ABI"
+        exit 1
         ;;
 esac
 
