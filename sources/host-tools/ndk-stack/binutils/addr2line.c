@@ -390,11 +390,7 @@ process_file (const char *file_name, const char *section_name,
 }
 
 int
-#if defined(WITH_LIBBFD)
-addr2line_main (int argc, char **argv)
-#else
-main (int argc, char **argv)
-#endif
+addr2line_main (int argc, char **argv) // Android changed.
 {
   const char *file_name;
   const char *section_name;
