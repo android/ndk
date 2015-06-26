@@ -267,11 +267,11 @@ for SYSTEM in $SYSTEMS; do
 
     # First, ndk-stack
     echo "Building $SYSNAME ndk-stack"
-    run $BUILDTOOLS/build-ndk-stack.sh $TOOLCHAIN_FLAGS --with-libbfd --src-dir=$SRC_DIR
+    run $BUILDTOOLS/build-ndk-stack.sh $TOOLCHAIN_FLAGS --src-dir=$SRC_DIR
     fail_panic "ndk-stack build failure!"
 
     echo "Building $SYSNAME ndk-depends"
-    run $BUILDTOOLS/build-ndk-depends.sh $TOOLCHAIN_FLAGS
+    run $BUILDTOOLS/build-ndk-stack.sh $TOOLCHAIN_FLAGS --src-dir=$SRC_DIR --program-name=ndk-depends
     fail_panic "ndk-depends build failure!"
 
     echo "Building $SYSNAME ndk-make"

@@ -38,15 +38,6 @@ else
   strip-cmd = $(STRIP) $1
 endif
 
-ELFF_SOURCES := elff/dwarf_cu.cc \
-                elff/dwarf_die.cc \
-                elff/dwarf_utils.cc \
-                elff/elf_alloc.cc \
-                elff/elf_file.cc \
-                elff/elf_mapped_section.cc \
-                elff/elff_api.cc \
-                elff/mapfile.c
-
 BINUTILS_SOURCES := binutils/addr2line.c
 
 REGEX_SOURCES := regex/regcomp.c \
@@ -57,11 +48,7 @@ REGEX_SOURCES := regex/regcomp.c \
 NDK_STACK_SOURCES := ndk-stack.c \
                      ndk-stack-parser.c
 
-ifdef WITH_LIBBFD
 SOURCES := $(NDK_STACK_SOURCES) $(BINUTILS_SOURCES) $(REGEX_SOURCES)
-else
-SOURCES := $(NDK_STACK_SOURCES) $(ELFF_SOURCES) $(REGEX_SOURCES)
-endif
 
 OBJECTS=
 

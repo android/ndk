@@ -21,7 +21,6 @@
 #include <string.h>
 #include <errno.h>
 #include "regex/regex.h"
-#include "elff/elff_api.h"
 
 #include "ndk-stack-parser.h"
 
@@ -321,14 +320,9 @@ ParseFrame(NdkCrashParser* parser, const char* frame)
   char module_path[2048];
   char* module_name;
   char sym_file[2048];
-#if !defined(WITH_LIBBFD)
-  ELFF_HANDLE elff_handle;
-  Elf_AddressInfo pc_info;
-#else
   const int ac = 5;
   char *av[ac];
   FILE *f;
-#endif
 
   fprintf(parser->out_handle, "Stack frame %s", frame);
 
@@ -365,7 +359,6 @@ ParseFrame(NdkCrashParser* parser, const char* frame)
   // Build path to the symbol file.
   snprintf(sym_file, sizeof(sym_file), "%s/%s", parser->sym_root, module_name);
 
-#if defined(WITH_LIBBFD)
   if ((f=fopen(sym_file, "r")) == NULL) {
     if (errno == ENOENT) {
         printf("\n");
@@ -388,38 +381,4 @@ ParseFrame(NdkCrashParser* parser, const char* frame)
 
   printf(": Routine ");
   return addr2line_main(ac, av);
-#else
-  // Init ELFF wrapper for the symbol file.
-  elff_handle = elff_init(sym_file);
-  if (elff_handle == NULL) {
-    if (errno == ENOENT) {
-        fprintf(parser->out_handle, "\n");
-    } else {
-        fprintf(parser->out_handle,
-                ": Unable to open symbol file %s. Error (%d): %s\n",
-                sym_file, errno, strerror(errno));
-    }
-    return -1;
-  }
-  // Extract address info from the symbol file.
-  if (!elff_get_pc_address_info(elff_handle, address, &pc_info)) {
-    if (pc_info.dir_name != NULL) {
-      fprintf(parser->out_handle, ": Routine %s in %s/%s:%d\n",
-              pc_info.routine_name, pc_info.dir_name, pc_info.file_name,
-              pc_info.line_number);
-    } else {
-      fprintf(parser->out_handle, ": Routine %s in %s:%d\n",
-              pc_info.routine_name, pc_info.file_name, pc_info.line_number);
-    }
-    elff_free_pc_address_info(elff_handle, &pc_info);
-    elff_close(elff_handle);
-    return 0;
-  } else {
-    fprintf(parser->out_handle,
-            ": Unable to locate routine information for address %x in module %s\n",
-            (uint32_t)address, sym_file);
-    elff_close(elff_handle);
-    return -1;
-  }
-#endif // WITH_LIBBFD
 }

@@ -42,9 +42,6 @@ register_var_option "--make=<path>" GNUMAKE "Specify GNU Make program"
 DEBUG=
 register_var_option "--debug" DEBUG "Build debug version"
 
-WITH_LIBBFD=
-register_var_option "--with-libbfd" WITH_LIBBFD "Link with libbfd.a instead of elff/. Need to set --src-dir= too."
-
 SRC_DIR=
 register_var_option "--src-dir=<path>" SRC_DIR "Specify binutils source dir.  Must be set for --with-libbfd"
 
@@ -58,6 +55,12 @@ register_canadian_option
 register_try64_option
 
 extract_parameters "$@"
+
+# ndk-stack uses libbfd, but ndk-depends doesn't.
+WITH_LIBBFD=
+if [ "$PROGNAME" = "ndk-stack" ]; then
+    WITH_LIBBFD=true
+fi
 
 if [ "$WITH_LIBBFD" ]; then
     if [ -z "$SRC_DIR" ]; then
@@ -140,7 +143,6 @@ SRCDIR=$ANDROID_NDK_ROOT/sources/host-tools/$PROGNAME
 # Let's roll
 if [ "$WITH_LIBBFD" ]; then
     CFLAGS="$CFLAGS \
-       -DWITH_LIBBFD=1 \
        -DHAVE_CONFIG_H \
        -I$BINUTILS_BUILD_DIR/binutils \
        -I$BINUTILS_SRC_DIR/binutils \
@@ -164,7 +166,6 @@ export CFLAGS LDFLAGS
 run $GNUMAKE -C $SRCDIR -f $SRCDIR/GNUmakefile \
     -B -j$NUM_JOBS \
     PROGNAME="$OUT" \
-    WITH_LIBBFD=$WITH_LIBBFD \
     BUILD_DIR="$BUILD_DIR" \
     CC="$CC" CXX="$CXX" \
     STRIP="$STRIP" \
