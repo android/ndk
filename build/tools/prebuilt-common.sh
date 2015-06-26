@@ -385,7 +385,7 @@ do_try64_option () { TRY64=yes; }
 
 register_try64_option ()
 {
-    register_option "--try-64" do_try64_option "Generate 64-bit binaries."
+    register_option "--try-64" do_try64_option "Generate 64-bit only binaries."
 }
 
 
