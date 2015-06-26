@@ -107,8 +107,8 @@ CFLAGS=$HOST_CFLAGS" -O2 -s"
 export CC CFLAGS
 
 log "Configuring the build"
-cd $BUILD_OUT/src && run ./autogen.sh $CONFIGURE_FLAGS --build=$ABI_CONFIGURE_BUILD
-fail_panic "Couldn't run autogen.sh in $BUILD_OUT/yasm!"
+cd $BUILD_OUT/src && run ./configure $CONFIGURE_FLAGS --build=$ABI_CONFIGURE_BUILD
+fail_panic "configure failed in $BUILD_OUT/yasm!"
 
 log "Building yasm"
 # build yasm in -j1 to avoid a race condition not well understood at this moment
