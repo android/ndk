@@ -39,7 +39,7 @@ void check_cookie (int i)
   size_t x;
   
   // Compute the cookie location manually.
-#if defined(__ARM_EABI__) || defined(__le32__)
+#if defined(__ARM_EABI__)
   x = 8;
 #else
   x = __alignof__ (T);
@@ -54,7 +54,7 @@ void check_cookie (int i)
   if (*sp != 11)
     exit (i);
 
-#if defined(__ARM_EABI__) || defined(__le32__)
+#if defined(__ARM_EABI__)
   sp = ((size_t *) a) - 2;
   if (*sp != sizeof (T))
     exit (i);
@@ -69,7 +69,7 @@ void check_placement_cookie (int i)
   size_t x;
   
   // Compute the cookie location manually.
-#if defined(__ARM_EABI__) || defined(__le32__)
+#if defined(__ARM_EABI__)
   x = 8;
 #else
   x = __alignof__ (T);
@@ -84,7 +84,7 @@ void check_placement_cookie (int i)
   if (*sp != 11)
     exit (i);
 
-#if defined(__ARM_EABI__) || defined(__le32__)
+#if defined(__ARM_EABI__)
   sp = ((size_t *) a) - 2;
   if (*sp != sizeof (T))
     exit (i);

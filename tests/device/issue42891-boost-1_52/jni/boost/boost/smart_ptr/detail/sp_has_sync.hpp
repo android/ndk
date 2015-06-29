@@ -24,7 +24,7 @@
 
 #define BOOST_SP_HAS_SYNC
 
-#if defined( __arm__ )  || defined( __armel__ ) || defined( __le32__ ) || defined( __aarch64__)
+#if defined( __arm__ )  || defined( __armel__ ) || defined( __aarch64__)
 #undef BOOST_SP_HAS_SYNC
 #endif
 
