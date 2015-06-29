@@ -40,8 +40,7 @@ register_var_option "--release=<rel_name>" OPTION_NDK_RELEASE "Version of releas
 OPTION_QUICK_BUILD="no"
 register_var_option "--quick" OPTION_QUICK_BUILD "Only build the Linux basics"
 
-ARCHS=$(find_ndk_unknown_archs)
-ARCHS="$DEFAULT_ARCHS $ARCHS"
+ARCHS="$DEFAULT_ARCHS"
 register_var_option "--arch=<arch>" ARCHS "Specify target architectures"
 
 # List of toolchains to package

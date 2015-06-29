@@ -23,8 +23,7 @@ PROGDIR=$(dirname $0)
 NDK_DIR=$ANDROID_NDK_ROOT
 register_var_option "--ndk-dir=<path>" NDK_DIR "NDK installation directory"
 
-ARCHS=$(find_ndk_unknown_archs)
-ARCHS="$DEFAULT_ARCHS $ARCHS"
+ARCHS="$DEFAULT_ARCHS"
 register_var_option "--arch=<list>" ARCHS "List of target archs to build for"
 
 NO_GEN_PLATFORMS=
@@ -104,12 +103,6 @@ fi
 
 ARCHS=$(commas_to_spaces $ARCHS)
 
-# Detect unknown arch
-UNKNOWN_ARCH=$(filter_out "$DEFAULT_ARCHS" "$ARCHS")
-if [ ! -z "$UNKNOWN_ARCH" ]; then
-    ARCHS=$(filter_out "$UNKNOWN_ARCH" "$ARCHS")
-fi
-
 FLAGS=
 if [ "$DRYRUN" = "yes" ]; then
     FLAGS=$FLAGS" --dryrun"
@@ -146,14 +139,13 @@ done
 
 FLAGS=$FLAGS" --ndk-dir=\"$NDK_DIR\""
 ABIS=$(convert_archs_to_abis $ARCHS)
-UNKNOWN_ABIS=$(convert_archs_to_abis $UNKNOWN_ARCH)
 
 dump "Building $ABIS gabi++ binaries..."
 run $BUILDTOOLS/build-cxx-stl.sh --stl=gabi++ --abis="$ABIS" $FLAGS --with-debug-info $BUILD_TOOLCHAIN
 fail_panic "Could not build gabi++ with debug info!"
 
-dump "Building $ABIS $UNKNOWN_ABIS stlport binaries..."
-run $BUILDTOOLS/build-cxx-stl.sh --stl=stlport --abis="$ABIS,$UNKNOWN_ABIS" $FLAGS --with-debug-info $BUILD_TOOLCHAIN
+dump "Building $ABIS stlport binaries..."
+run $BUILDTOOLS/build-cxx-stl.sh --stl=stlport --abis="$ABIS" $FLAGS --with-debug-info $BUILD_TOOLCHAIN
 fail_panic "Could not build stlport with debug info!"
 
 dump "Building $ABIS libc++ binaries... with libc++abi"

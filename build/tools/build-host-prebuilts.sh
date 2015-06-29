@@ -42,8 +42,7 @@ CUSTOM_SYSTEMS=
 register_option "--systems=<names>" do_SYSTEMS "List of host systems to build for"
 do_SYSTEMS () { CUSTOM_SYSTEMS=true; SYSTEMS=$1; }
 
-ARCHS=$(find_ndk_unknown_archs)
-ARCHS="$DEFAULT_ARCHS $ARCHS"
+ARCHS="$DEFAULT_ARCHS"
 register_var_option "--arch=<list>" ARCHS "List of target archs to build for"
 
 PACKAGE_DIR=
@@ -113,12 +112,6 @@ fi
 
 SYSTEMS=$(commas_to_spaces $SYSTEMS)
 ARCHS=$(commas_to_spaces $ARCHS)
-
-# Detect unknown arch
-UNKNOWN_ARCH=$(filter_out "$DEFAULT_ARCHS" "$ARCHS")
-if [ ! -z "$UNKNOWN_ARCH" ]; then
-    ARCHS=$(filter_out "$UNKNOWN_ARCH" "$ARCHS")
-fi
 
 LLVM_VERSION_LIST=$(commas_to_spaces $LLVM_VERSION_LIST)
 
@@ -193,7 +186,7 @@ do_remote_host_build ()
     fail_panic "Could not copy toolchain!"
 
     # Time to run the show :-)
-    for ARCH in $(commas_to_spaces $ARCHS $UNKNOWN_ARCH); do
+    for ARCH in $(commas_to_spaces $ARCHS); do
         dump "Running remote $ARCH toolchain build..."
         SYSROOT=$TMPREMOTE/ndk/platforms/android-$(get_default_api_level_for_arch $ARCH)/arch-$ARCH
         run ssh $REMOTE_HOST "$TMPREMOTE/ndk/build/tools/build-host-prebuilts.sh $TMPREMOTE/toolchain --package-dir=$TMPREMOTE/packages --arch=$ARCH --ndk-dir=$TMPREMOTE/ndk --no-gen-platforms"
