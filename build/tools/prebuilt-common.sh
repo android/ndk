@@ -1234,81 +1234,13 @@ get_prebuilt_host_exe_ext ()
     fi
 }
 
-# Find all archs from $DEV_DIR/platforms or $NDK_DIR/platforms
-# Return: the list of found arch name
-find_ndk_archs ()
-{
-    local NDK_ROOT_DIR DEVDIR
-    local RESULT FOUND_ARCHS
-
-    if [ ! -z "$NDK_DIR" ]; then
-        NDK_ROOT_DIR=$NDK_DIR
-    else
-        NDK_ROOT_DIR=$ANDROID_NDK_ROOT
-    fi
-
-    DEVDIR="$ANDROID_NDK_ROOT/../development/ndk"
-
-    # Check development directory first
-    if [ -d $DEVDIR/platforms ]; then
-        RESULT=$(ls $DEVDIR/platforms/android-* | grep "arch-")
-        for arch in $RESULT; do
-            arch=$(basename $arch | sed -e 's/^arch-//')
-            FOUND_ARCHS="$FOUND_ARCHS $arch"
-        done
-    fi
-
-    # Check ndk directory
-    if [ -z "$FOUND_ARCHS" ] && [ -d $NDK_ROOT_DIR/platforms ]; then
-        RESULT=$(ls $NDK_ROOT_DIR/platforms/android-* | grep "arch-")
-        for arch in $RESULT; do
-            arch=$(basename $arch | sed -e 's/^arch-//')
-            FOUND_ARCHS="$FOUND_ARCHS $arch"
-        done
-    fi
-
-    # If we cannot find any arch, set to default archs
-    if [ -z "$FOUND_ARCHS" ]; then
-        FOUND_ARCHS=$DEFAULT_ARCHS
-    fi
-
-    echo "$(sort_uniq $FOUND_ARCHS)"
-}
-
-# Find unknown archs from $NDK_DIR/platforms
-# Return: arch names not in ndk default archs
-find_ndk_unknown_archs()
-{
-    local FOUND_ARCHS=$(find_ndk_archs)
-    # TODO: arm64, x86_64 is here just to be found as known arch.
-    # It can be removed as soon as it is added into $DEFAULT_ARCHS
-    echo "$(filter_out "$DEFAULT_ARCHS arm64 x86_64 mips64" "$FOUND_ARCHS")"
-}
-
-# Determine whether given arch is in unknown archs list
-# $1: arch
-# Return: yes or no
-arch_in_unknown_archs()
-{
-    local UNKNOWN_ARCH=$(find_ndk_unknown_archs | grep $1)
-    if [ -z "$UNKNOWN_ARCH" ]; then
-        echo "no"
-    else
-        echo "yes"
-    fi
-}
-
 # Get library suffix for given ABI
 # $1: ABI
 # Return: .so or .bc
 get_lib_suffix_for_abi ()
 {
     local ABI=$1
-    if [ $(arch_in_unknown_archs $ABI) = "yes" ]; then
-       echo ".bc"
-    else
-       echo ".so"
-    fi
+    echo ".so"
 }
 
 # Convert an ABI name into an Architecture name
@@ -1332,12 +1264,8 @@ convert_abi_to_arch ()
             RET=arm64
             ;;
         *)
-            if [ "$(arch_in_unknown_archs $ABI)" = "yes" ]; then
-                RET=$ABI
-            else
-                >&2 echo "ERROR: Unsupported ABI name: $ABI, use one of: armeabi, armeabi-v7a, x86, mips, armeabi-v7a-hard, arm64-v8a, x86_64 or mips64"
-                exit 1
-            fi
+            >&2 echo "ERROR: Unsupported ABI name: $ABI, use one of: armeabi, armeabi-v7a, x86, mips, armeabi-v7a-hard, arm64-v8a, x86_64 or mips64"
+            exit 1
             ;;
     esac
     echo "$RET"
@@ -1362,12 +1290,8 @@ convert_arch_to_abi ()
             RET=arm64-v8a
             ;;
         *)
-            if [ "$(arch_in_unknown_archs $ARCH)" = "yes" ]; then
-                RET=$ARCH
-            else
-                >&2 echo "ERROR: Unsupported ARCH name: $ARCH, use one of: arm, x86, mips"
-                exit 1
-            fi
+            >&2 echo "ERROR: Unsupported ARCH name: $ARCH, use one of: arm, x86, mips"
+            exit 1
             ;;
     esac
     echo "$RET"
@@ -1438,17 +1362,12 @@ get_default_toolchain_binprefix_for_arch ()
 # $1: Architecture name
 get_default_api_level_for_arch ()
 {
-    # For unknown arch, use API level $FIRST_API64_LEVEL
-    if [ $(arch_in_unknown_archs $1) = "yes" ]; then
-        echo $FIRST_API64_LEVEL
-    else
-        # For now, always build the toolchain against API level 9 for 32-bit arch
-        # and API level $FIRST_API64_LEVEL for 64-bit arch
-        case $1 in
-            *64) echo $FIRST_API64_LEVEL ;;
-            *) echo 9 ;;
-        esac
-    fi
+    # For now, always build the toolchain against API level 9 for 32-bit arch
+    # and API level $FIRST_API64_LEVEL for 64-bit arch
+    case $1 in
+        *64) echo $FIRST_API64_LEVEL ;;
+        *) echo 9 ;;
+    esac
 }
 
 # Return the default platform sysroot corresponding to a given architecture

@@ -117,41 +117,7 @@ if [ -z "$ARCH" ]; then
     if [ -z "$ARCH" ]; then
         ARCH=arm
     fi
-    ARCH_INC=$ARCH
     echo "Auto-config: --arch=$ARCH"
-else
-    ARCH_INC=$ARCH
-    case $ARCH in
-        *arm)
-            ARCH=arm
-            ;;
-        *x86)
-            ARCH=x86
-            ;;
-        *mips)
-            ARCH=mips
-            ;;
-        *arm64)
-            ARCH=arm64
-            ;;
-        *x86_64)
-            ARCH=x86_64
-            ;;
-        *mips64)
-            ARCH=mips64
-            ;;
-        *)
-            echo "Invalid --arch $ARCH"
-            echo "Please use one of arm, x86, mips, arm64, x86_64 or mips64"
-            ARCH=null
-            exit 1
-            ;;
-    esac
-
-    if [ -n "$ARCH_BY_TOOLCHAIN_NAME" -a "$ARCH" != "$ARCH_BY_TOOLCHAIN_NAME" ]; then
-        echo "Conflict --arch $ARCH and --toolchain $TOOLCHAIN_NAME"
-        exit 1
-    fi
 fi
 
 if [ -z "$ABIS" ]; then
@@ -163,35 +129,10 @@ if [ -z "$ABIS" ]; then
     exit 1
 fi
 
-ARCH_LIB=$ARCH
-ARCH_STL=$ARCH
-if [ "$ARCH_INC" != "$ARCH" ]; then
-    test -n "`echo $ARCH_INC | grep bc$ARCH`" && NEED_BC2NATIVE=yes
-    test -z "`echo $ARCH_INC | grep $ARCH`" && NEED_BC_LIB=yes
-    ARCH_INC=$(find_ndk_unknown_archs)
-    test -z "$ARCH_INC" && ARCH_INC="$ARCH"
-    test "$NEED_BC_LIB" = "yes" && ARCH_LIB=$ARCH_INC
-    test "$NEED_BC_LIB" = "yes" -o "$NEED_BC2NATIVE" = "yes" && ARCH_STL=$ARCH_INC
-fi
-
 # Check toolchain name
 if [ -z "$TOOLCHAIN_NAME" ]; then
     TOOLCHAIN_NAME=$(get_default_toolchain_name_for_arch $ARCH)
     echo "Auto-config: --toolchain=$TOOLCHAIN_NAME"
-fi
-
-if [ "$ARCH_STL" != "$ARCH" ]; then
-    if [ "$STL" != stlport ]; then
-        echo "Force-config: --stl=stlport"
-        STL=stlport
-    fi
-fi
-
-if [ "$ARCH_INC" != "$ARCH" ]; then
-    TARGET_ABI=$(convert_arch_to_abi $ARCH | tr ',' '\n' | tail -n 1)
-    if [ -z "$LLVM_VERSION" ]; then
-        LLVM_VERSION=$DEFAULT_LLVM_VERSION
-    fi
 fi
 
 # Detect LLVM version from toolchain name with *clang*
@@ -212,7 +153,7 @@ if [ -n "$LLVM_VERSION_EXTRACT" ]; then
 fi
 
 # Check PLATFORM
-if [ -z "$PLATFORM" -a "$ARCH_INC" = "$ARCH" ] ; then
+if [ -z "$PLATFORM" ] ; then
     case $ARCH in
         arm) PLATFORM=android-3
             ;;
@@ -225,9 +166,6 @@ if [ -z "$PLATFORM" -a "$ARCH_INC" = "$ARCH" ] ; then
         *)
             dump "ERROR: Unsupported NDK architecture $ARCH!"
     esac
-    echo "Auto-config: --platform=$PLATFORM"
-elif [ -z "$PLATFORM" ] ; then
-    PLATFORM=android-9
     echo "Auto-config: --platform=$PLATFORM"
 fi
 
@@ -259,17 +197,17 @@ case "$TOOLCHAIN_NAME" in
 esac
 
 # Check that there are any platform files for it!
-(cd $NDK_DIR/platforms && ls -d */arch-$ARCH_INC >/dev/null 2>&1 )
+(cd $NDK_DIR/platforms && ls -d */arch-$ARCH >/dev/null 2>&1 )
 if [ $? != 0 ] ; then
-    echo "Platform $PLATFORM doesn't have any files for this architecture: $ARCH_INC"
+    echo "Platform $PLATFORM doesn't have any files for this architecture: $ARCH"
     echo "Either use --platform=<name> or --toolchain=<name> to select a different"
     echo "platform or arch-dependent toolchain name (respectively)!"
     exit 1
 fi
 
 # Compute source sysroot
-SRC_SYSROOT_INC="$NDK_DIR/platforms/$PLATFORM/arch-$ARCH_INC/usr/include"
-SRC_SYSROOT_LIB="$NDK_DIR/platforms/$PLATFORM/arch-$ARCH_LIB/usr/lib"
+SRC_SYSROOT_INC="$NDK_DIR/platforms/$PLATFORM/arch-$ARCH/usr/include"
+SRC_SYSROOT_LIB="$NDK_DIR/platforms/$PLATFORM/arch-$ARCH/usr/lib"
 if [ ! -d "$SRC_SYSROOT_INC" -o ! -d "$SRC_SYSROOT_LIB" ] ; then
     echo "No platform files ($PLATFORM) for this architecture: $ARCH"
     exit 1
@@ -344,59 +282,6 @@ fi
 
 # Clang stuff
 
-dump_extra_compile_commands () {
-  if [ "$NEED_BC2NATIVE" != "yes" ]; then
-    return
-  fi
-
-  if [ -z "$HOST_EXE" ]; then
-    echo '# Call bc2native if needed'
-    echo ''
-    echo 'if [ -n "`echo $@ | grep '\'\\ \\-c\''`" ] || [ "$1" = "-c" ]; then'
-    echo '  exit'
-    echo 'fi'
-
-    echo 'while [ -n "$1" ]; do'
-    echo '  if [ "$1" = "-o" ]; then'
-    echo '    output="$2"'
-    echo '    break'
-    echo '  fi'
-    echo '  shift'
-    echo 'done'
-    echo 'test -z "$output" && output=a.out'
-    echo 'if [ -f "`dirname $0`/ndk-bc2native" ]; then'
-    echo '  `dirname $0`/ndk-bc2native --sysroot=`dirname $0`/../sysroot --abi='$TARGET_ABI' --platform='$PLATFORM' --file $output $output'
-    echo 'else'
-    echo '  export PYTHONPATH=`dirname $0`/../lib/python2.7/'
-    echo '  `dirname $0`/python `dirname $0`/ndk-bc2native.py --sysroot=`dirname $0`/../sysroot --abi='$TARGET_ABI' --platform='$PLATFORM' --file $output $output'
-    echo 'fi'
-  else
-    echo 'rem Call bc2native if needed'
-    echo ''
-    echo '  if not "%1" == "-c" goto :keep_going'
-    echo '  echo %* | grep "\\ \\-c"'
-    echo '  if ERRORLEVEL 1 goto :keep_going'
-    echo '  exit'
-    echo ':keep_going'
-
-    echo ':keep_find_output'
-    echo '  if not "%1" == "-o" goto :check_next'
-    echo '  set output=%2'
-    echo ':check_next'
-    echo '  shift'
-    echo '  if "%1" == "" goto :keep_find_output'
-    echo '  if not "%output%" == "" goto :check_done'
-    echo '  set output=a.out'
-    echo ':check_done'
-    echo 'if exist %~dp0\\ndk-bc2native'$HOST_EXE' ('
-    echo '  %~dp0\\ndk-bc2native'$HOST_EXE' --sysroot=%~dp0\\.\\sysroot --abi='$TARGET_ABI' --platform='$PLATFORM' --file %output% %output'
-    echo 'else ('
-    echo '  set PYTHONPATH=%~dp0\\..\\lib\\python2.7\\'
-    echo '  %~dp0\\python'$HOST_EXE' %~dp0\\ndk-bc2native.py --sysroot=%~dp0\\..\\sysroot --abi='$TARGET_ABI' --platform='$PLATFORM' --file %output% %output%'
-    echo ')'
-  fi
-}
-
 if [ -n "$LLVM_VERSION" ]; then
   # Copy the clang/llvm toolchain prebuilt binaries
   copy_directory "$LLVM_TOOLCHAIN_PATH" "$TMPDIR"
@@ -449,30 +334,20 @@ if [ -n "$LLVM_VERSION" ]; then
     mv "$TMPDIR/bin/clang++${HOST_EXE}" "$TMPDIR/bin/clang$LLVM_VERSION_WITHOUT_DOT++${HOST_EXE}"
   fi
 
-  EXTRA_CLANG_FLAGS=
-  EXTRA_CLANGXX_FLAGS=
-  if [ "$ARCH_STL" != "$ARCH" ]; then
-    LLVM_TARGET=le32-none-ndk
-    EXTRA_CLANG_FLAGS="-emit-llvm"
-    EXTRA_CLANGXX_FLAGS="$EXTRA_CLANG_FLAGS -I\`dirname \$0\`/../include/c++/$GCC_BASE_VERSION"
-  fi
-
   cat > "$TMPDIR/bin/clang" <<EOF
 if [ "\$1" != "-cc1" ]; then
-    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT -target $LLVM_TARGET "\$@" $EXTRA_CLANG_FLAGS
-    $(dump_extra_compile_commands)
+    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT -target $LLVM_TARGET "\$@"
 else
     # target/triple already spelled out.
-    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT "\$@" $EXTRA_CLANG_FLAGS
+    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT "\$@"
 fi
 EOF
   cat > "$TMPDIR/bin/clang++" <<EOF
 if [ "\$1" != "-cc1" ]; then
-    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT++ -target $LLVM_TARGET "\$@" $EXTRA_CLANGXX_FLAGS
-    $(dump_extra_compile_commands)
+    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT++ -target $LLVM_TARGET "\$@"
 else
     # target/triple already spelled out.
-    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT++ "\$@" $EXTRA_CLANGXX_FLAGS
+    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT++ "\$@"
 fi
 EOF
   chmod 0755 "$TMPDIR/bin/clang" "$TMPDIR/bin/clang++"
@@ -483,26 +358,24 @@ EOF
     cat > "$TMPDIR/bin/clang.cmd" <<EOF
 @echo off
 if "%1" == "-cc1" goto :L
-%~dp0\\clang${LLVM_VERSION_WITHOUT_DOT}${HOST_EXE} -target $LLVM_TARGET %* $EXTRA_CLANG_FLAGS
-$(dump_extra_compile_commands)
+%~dp0\\clang${LLVM_VERSION_WITHOUT_DOT}${HOST_EXE} -target $LLVM_TARGET %*
 if ERRORLEVEL 1 exit /b 1
 goto :done
 :L
 rem target/triple already spelled out.
-%~dp0\\clang${LLVM_VERSION_WITHOUT_DOT}${HOST_EXE} %* $EXTRA_CLANG_FLAGS
+%~dp0\\clang${LLVM_VERSION_WITHOUT_DOT}${HOST_EXE} %*
 if ERRORLEVEL 1 exit /b 1
 :done
 EOF
     cat > "$TMPDIR/bin/clang++.cmd" <<EOF
 @echo off
 if "%1" == "-cc1" goto :L
-%~dp0\\clang${LLVM_VERSION_WITHOUT_DOT}++${HOST_EXE} -target $LLVM_TARGET %* $EXTRA_CLANGXX_FLAGS
-$(dump_extra_compile_commands)
+%~dp0\\clang${LLVM_VERSION_WITHOUT_DOT}++${HOST_EXE} -target $LLVM_TARGET %*
 if ERRORLEVEL 1 exit /b 1
 goto :done
 :L
 rem target/triple already spelled out.
-%~dp0\\clang${LLVM_VERSION_WITHOUT_DOT}++${HOST_EXE} %* $EXTRA_CLANGXX_FLAGS
+%~dp0\\clang${LLVM_VERSION_WITHOUT_DOT}++${HOST_EXE} %*
 if ERRORLEVEL 1 exit /b 1
 :done
 EOF
@@ -536,18 +409,6 @@ case "$ARCH" in
 	fi
         ;;
 esac
-
-if [ "$ARCH_INC" != "$ARCH" ]; then
-    cp -a $NDK_DIR/$GABIXX_SUBDIR/libs/$ABI/* $TMPDIR/sysroot/usr/lib
-    cp -a $NDK_DIR/$GCCUNWIND_SUBDIR/libs/$ABI/* $TMPDIR/sysroot/usr/lib
-    if [ "$ARCH" = "${ARCH%%64*}" ]; then
-        cp -a $NDK_DIR/$COMPILER_RT_SUBDIR/libs/$ABI/* $TMPDIR/sysroot/usr/lib
-    fi
-fi
-
-if [ "$ARCH_LIB" != "$ARCH" ]; then
-    cp -a $NDK_DIR/platforms/$PLATFORM/arch-$ARCH/usr/lib/crt* $TMPDIR/sysroot/usr/lib
-fi
 
 GNUSTL_DIR=$NDK_DIR/$GNUSTL_SUBDIR/$GCC_VERSION
 GNUSTL_LIBS=$GNUSTL_DIR/libs
@@ -657,16 +518,8 @@ copy_stl_libs () {
             cp -p "$LIBCXX_LIBS/$ABI_SRC_DIR/libc++_static.a" "$ABI_STL/lib/$DEST_DIR/libstdc++.a"
             ;;
         stlport)
-            if [ "$ARCH_STL" != "$ARCH" ]; then
-              tmp_lib_dir=$TMPDIR/stl
-              $NDK_DIR/build/tools/build-cxx-stl.sh --stl=stlport --out-dir=$tmp_lib_dir --abis=unknown
-              cp -p "`ls $tmp_lib_dir/sources/cxx-stl/stlport/libs/*/libstlport_static.a`" "$ABI_STL/lib/$DEST_DIR/libstdc++.a"
-              cp -p "`ls $tmp_lib_dir/sources/cxx-stl/stlport/libs/*/libstlport_shared.bc`" "$ABI_STL/lib/$DEST_DIR/libstlport_shared.so"
-              rm -rf $tmp_lib_dir
-            else
-              copy_file_list "$STLPORT_LIBS/$ABI_SRC_DIR" "$ABI_STL/lib/$DEST_DIR" "libstlport_shared.so"
-              cp -p "$STLPORT_LIBS/$ABI_SRC_DIR/libstlport_static.a" "$ABI_STL/lib/$DEST_DIR/libstdc++.a"
-            fi
+            copy_file_list "$STLPORT_LIBS/$ABI_SRC_DIR" "$ABI_STL/lib/$DEST_DIR" "libstlport_shared.so"
+            cp -p "$STLPORT_LIBS/$ABI_SRC_DIR/libstlport_static.a" "$ABI_STL/lib/$DEST_DIR/libstdc++.a"
             ;;
         *)
             dump "ERROR: Unsupported STL: $STL"

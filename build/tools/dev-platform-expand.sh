@@ -63,8 +63,7 @@ DSTDIR=$TMPDIR/platforms
 register_var_option "--dst-dir=<path>" DSTDIR "Destination directory"
 
 # Default architecture, note we can have several ones here
-ARCHS=$(find_ndk_unknown_archs)
-ARCHS="$DEFAULT_ARCHS $ARCHS"
+ARCHS="$DEFAULT_ARCHS"
 register_var_option "--arch=<name>" ARCHS "List of target architectures"
 
 PROGRAM_PARAMETERS=""

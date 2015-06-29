@@ -534,9 +534,6 @@ builder_begin_android ()
     ARCH=$(convert_abi_to_arch $ABI)
     PLATFORM=$6
 
-    if [ "$(arch_in_unknown_archs $ARCH)" = "yes" ]; then
-        LLVM_VERSION=$DEFAULT_LLVM_VERSION
-    fi
     if [ -n "$LLVM_VERSION" ]; then
         # override GCC_VERSION to pick $DEFAULT_LLVM_GCC??_VERSION instead
         if [ "$ABI" != "${ABI%%64*}" ]; then
@@ -603,15 +600,6 @@ builder_begin_android ()
                 ;;
             mips64)
                 LLVM_TRIPLE=mips64el-none-linux-android
-                ;;
-            *)
-                LLVM_TRIPLE=le32-none-ndk
-                GCC_TOOLCHAIN=
-                CRTBEGIN_SO_O=
-                CRTEND_SO_O=
-                CRTBEGIN_EXE_O=
-                CRTEND_EXE_O=
-                FLAGS=-emit-llvm
                 ;;
         esac
         SCRATCH_FLAGS="-target $LLVM_TRIPLE $FLAGS"

@@ -97,14 +97,6 @@ if [ -n "${LLVM_VERSION}" -a -n "${GCC_VERSION}" ]; then
 fi
 
 ABIS=$(commas_to_spaces $ABIS)
-UNKNOWN_ABIS=
-if [ "$ABIS" = "${ABIS%%64*}" ]; then
-    UNKNOWN_ABIS="$(filter_out "$PREBUILT_ABIS mips32r6" "$ABIS" )"
-    if [ -n "$UNKNOWN_ABIS" ] && [ -n "$(find_ndk_unknown_archs)" ]; then
-        ABIS="$(filter_out "$UNKNOWN_ABIS" "$ABIS")"
-        ABIS="$ABIS $(find_ndk_unknown_archs)"
-    fi
-fi
 
 # Handle NDK_DIR
 if [ -z "$NDK_DIR" ] ; then
@@ -627,14 +619,7 @@ build_stl_libs_for_abi ()
         builder_cflags "$DEFAULT_CFLAGS $GABIXX_CFLAGS $EXTRA_CFLAGS"
         builder_cxxflags "$DEFAULT_CXXFLAGS $GABIXX_CXXFLAGS $EXTRA_CXXFLAGS"
         builder_ldflags "$GABIXX_LDFLAGS $EXTRA_LDFLAGS"
-        if [ "$(find_ndk_unknown_archs)" != "$ABI" ]; then
-            builder_sources $GABIXX_SOURCES
-        elif [ "$CXX_STL" = "gabi++" ]; then
-            log "Could not build gabi++ with unknown arch!"
-            exit 1
-        else
-            builder_sources src/delete.cc src/new.cc
-        fi
+        builder_sources $GABIXX_SOURCES
     fi
 
     # Build the runtime sources, except if we're only building GAbi++
@@ -672,12 +657,7 @@ build_stl_libs_for_abi ()
         builder_static_library ${CXX_STL_LIB}_static
     else
         log "Building $DSTDIR/${CXX_STL_LIB}_shared${LIB_SUFFIX}"
-        if [ "$(find_ndk_unknown_archs)" != "$ABI" ]; then
-            builder_shared_library ${CXX_STL_LIB}_shared $LIB_SUFFIX "$FLOAT_ABI"
-        else
-            builder_ldflags "-lm -lc"
-            builder_nostdlib_shared_library ${CXX_STL_LIB}_shared $LIB_SUFFIX # Don't use libgcc
-        fi
+        builder_shared_library ${CXX_STL_LIB}_shared $LIB_SUFFIX "$FLOAT_ABI"
     fi
 
     builder_end
