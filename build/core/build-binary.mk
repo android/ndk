@@ -69,15 +69,6 @@ system_libs := \
     GLESv3 \
     OpenSLES \
     OpenMAXAL \
-    bcc \
-    bcinfo \
-    cutils \
-    gui \
-    RScpp \
-    RScpp_static \
-    RS \
-    ui \
-    utils \
     mediandk \
     atomic
 
