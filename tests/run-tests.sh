@@ -423,19 +423,6 @@ if [ "$WINE" ]; then
     fail_panic "Can't locate $WINE"
 fi
 
-# $1: output bitcode path
-gen_empty_bitcode() {
-    TEMP_FILE=`mktemp`
-    mv $TEMP_FILE ${TEMP_FILE}.c
-    run $NDK/$(get_llvm_toolchain_binprefix $DEFAULT_LLVM_VERSION)/clang -shared -target le32-none-ndk -emit-llvm -o $1 ${TEMP_FILE}.c
-    rm -f ${TEMP_FILE}.c
-}
-
-# $1: output archive path
-gen_empty_archive() {
-    run ar crs $1
-}
-
 case $ABI in
     default)  # Let the APP_ABI in jni/Application.mk decide what to build
         ;;
@@ -543,8 +530,7 @@ is_broken_build ()
 is_incompatible_abi ()
 {
     local PROJECT="$1"
-    # Basically accept all for unknown arch, even some cases may not be suitable for this way
-    if [ "$ABI" != "default" -a "$ABI" != "$(find_ndk_unknown_archs)" ] ; then
+    if [ "$ABI" != "default" ] ; then
         # check APP_ABI
         local APP_ABIS=`get_build_var $PROJECT APP_ABI`
         APP_ABIS=$APP_ABIS" "
@@ -754,11 +740,8 @@ if is_testable device; then
                 fi
             fi
         fi
-        if [ "$ABI" = "$(find_ndk_unknown_archs)" ] && [ -d "$BUILD_DIR/`basename $TEST`/libs" ]; then
-            cd $BUILD_DIR/`basename $TEST`/libs && cp -a $ABI $CPU_ABI
-        fi
         SRCDIR="$BUILD_DIR/`basename $TEST`/libs/$CPU_ABI"
-        if [ ! -d "$SRCDIR" ] || [ -z "`ls $SRCDIR`" ]; then
+        if [ ! -d "$SRCDIR" ]; then
             dump "Skipping NDK device test run (no $CPU_ABI binaries): $TEST_NAME"
             return 0
         fi
@@ -904,7 +887,7 @@ if is_testable device; then
             fi
             log "CPU_ABIS=$CPU_ABIS"
             for CPU_ABI in $CPU_ABIS; do
-                if [ "$ABI" = "default" -o "$ABI" = "$CPU_ABI" -o "$ABI" = "$(find_ndk_unknown_archs)" ] ; then
+                if [ "$ABI" = "default" -o "$ABI" = "$CPU_ABI" ] ; then
                     AT_LEAST_CPU_ABI_MATCH="yes"
                     for DIR in `ls -d $ROOTDIR/tests/device/*`; do
                         if is_buildable $DIR; then
@@ -922,10 +905,5 @@ if is_testable device; then
 fi
 
 dump "Cleaning up..."
-if [ "$ABI" = "$(find_ndk_unknown_archs)" ]; then
-  # Cleanup some intermediate files for testing
-  run rm -rf $NDK/$GNUSTL_SUBDIR/$GCC_TOOLCHAIN_VERSION/libs/$ABI
-  run rm -rf $NDK/$GABIXX_SUBDIR/libs/$ABI
-fi
 rm -rf $BUILD_DIR
 dump "Done."

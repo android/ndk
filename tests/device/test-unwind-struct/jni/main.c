@@ -38,8 +38,6 @@ int main() {
   CHECK_EQ(8, offsetof(struct _Unwind_Exception, exception_cleanup));
   CHECK_EQ(16, offsetof(struct _Unwind_Exception, private_1));
   CHECK_EQ(24, offsetof(struct _Unwind_Exception, private_2));
-#elif defined(__le32__) || defined(__le64__)
-  // Should not check _Unwind_Exception since it is opaque conceptually
 #else
 #error "unsupported architecture"
 #endif

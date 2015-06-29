@@ -20,10 +20,8 @@ void func_2(const unsigned long pc)
 
 int func_1()
 {
-#if !defined(__le32__) && !defined(__le64__)
    register unsigned long pc asm ("pc");
    func_2(pc);
-#endif
    return 0;
 }
 
