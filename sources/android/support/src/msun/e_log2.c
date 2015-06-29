@@ -112,7 +112,7 @@ __ieee754_log2(double x)
 	return val_lo + val_hi;
 }
 
-#if (LDBL_MANT_DIG == 53) && !defined(__le32__) && !defined(__le64__)
+#if (LDBL_MANT_DIG == 53)
 #define __weak_reference(sym,alias) \
     __asm__(".weak " #alias); \
     __asm__(".equ "  #alias ", " #sym)
