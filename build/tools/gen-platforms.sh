@@ -371,10 +371,7 @@ get_default_compiler_for_arch()
     local ARCH=$1
     local TOOLCHAIN_PREFIX CC GCC_VERSION
 
-    if [ "$ARCH" = "mips" ]; then
-        # Support for mips32r6 in the new multilib mipsel-* toolchain is only available from 4.9
-        GCC_VERSION=4.9
-    elif [ -n "$OPTION_GCC_VERSION" -a "$OPTION_GCC_VERSION" != "default" ]; then
+    if [ -n "$OPTION_GCC_VERSION" -a "$OPTION_GCC_VERSION" != "default" ]; then
         GCC_VERSION=$OPTION_GCC_VERSION
     else
         GCC_VERSION=$(get_default_gcc_version_for_arch $ARCH)
