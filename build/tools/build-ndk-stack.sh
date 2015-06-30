@@ -97,7 +97,7 @@ else
 fi
 
 BINUTILS_BUILD_DIR=$BUILD_DIR/binutils
-BINUTILS_SRC_DIR=$SRC_DIR/binutils/binutils-$RECENT_BINUTILS_VERSION
+BINUTILS_SRC_DIR=$SRC_DIR/binutils/binutils-$DEFAULT_BINUTILS_VERSION
 if [ "$WITH_LIBBFD" ]; then
     # build binutils first
     if [ -z "$ABI_CONFIGURE_HOST" ]; then
