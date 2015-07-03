@@ -105,7 +105,7 @@ static int check_wait4(pid_t child_pid) {
   struct rusage ru;
   pid_t ret = wait4(-1, &status, 0, &ru);
   if (ret != child_pid) {
-    fprintf(stderr, "ERROR: wait3() returned %d, expected %d\n", ret, child_pid);
+    fprintf(stderr, "ERROR: wait4() returned %d, expected %d\n", ret, child_pid);
     return -1;
   }
   return WEXITSTATUS(status);
