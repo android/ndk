@@ -29,13 +29,6 @@ if [ "$OS" == "Darwin" -a -z "$MACOSX_DEPLOYMENT_TARGET" ]; then
     export MACOSX_DEPLOYMENT_TARGET="10.8"
 fi
 
-if [ -z "$ANDROID_BUILD_TOP" ]; then
-    >&2 echo 'ANDROID_BUILD_TOP not set. Cannot continue.'
-    >&2 echo 'Please set ANDROID_BUILD_TOP to point to the root of an Android' \
-             'tree.'
-    exit 1
-fi
-
 # Find the Android NDK root, assuming we are invoked from a script
 # within its directory structure.
 #

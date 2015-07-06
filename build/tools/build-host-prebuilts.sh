@@ -348,7 +348,6 @@ for SYSTEM in $SYSTEMS; do
 done
 
 # Build tools common to all systems.
-ANDROID_BUILD_TOP=$($BUILDTOOLS/../../realpath $BUILDTOOLS/../../..)
 run $BUILDTOOLS/build-analyzer.sh "$NDK_DIR" --package-dir="$PACKAGE_DIR"
 
 if [ "$PACKAGE_DIR" ]; then
