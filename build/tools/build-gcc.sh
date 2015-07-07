@@ -357,7 +357,7 @@ EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" "$ENABLE_GOLD_FLAGS
 
 # We're not using gold for mips yet, and there is no support for threaded
 # linking on Windows (no pthreads).
-if [ "$TOOLCHAIN" != mips* -a "$MINGW" != "yes"]; then
+if [ "$TOOLCHAIN" != mips* -a "$MINGW" != "yes" ]; then
     EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-threads"
 fi
 
