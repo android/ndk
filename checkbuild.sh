@@ -9,6 +9,8 @@ fi
 PACKAGE_DIR_ARG=
 if [ -n "$DIST_DIR" ]; then
     PACKAGE_DIR_ARG="--package-dir=$(./realpath $DIST_DIR)"
+elif [[ "$*" != *--package-dir=* ]]; then
+    PACKAGE_DIR_ARG="--package-dir=$(./realpath ../out/ndk)"
 fi
 
 build/tools/dev-cleanup.sh
