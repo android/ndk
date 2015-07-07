@@ -1,4 +1,5 @@
 #!/bin/sh
+#!/bin/sh
 #
 # Copyright (C) 2010 The Android Open Source Project
 #
@@ -90,7 +91,7 @@ while [ -n "$1" ]; do
             ;;
         --platform=*)
             PLATFORM="$optarg"
-	    ;;
+        ;;
         --test-dir=*)
             TEST_DIR="$optarg"
             ;;
@@ -179,6 +180,22 @@ if [ "$OPTION_HELP" = "yes" ] ; then
     echo ""
     exit 0
 fi
+
+# Statistics variables:
+for t in BUILDTESTS SAMPLES DEVTESTS; do
+  eval "${t}_TOTAL=0"
+  eval "${t}_COMPATIBLE=0"
+  eval "${t}_SUCCESSFUL=0"
+done
+BUILDTESTS_LABEL="Build tests"
+SAMPLES_LABEL="Samples"
+DEVTESTS_LABEL="Device tests"
+
+# usage: get_stats_variables project_path
+get_stats_variables () {
+    STAT_TARGET_ARCH="$(get_build_var "$1" TARGET_ARCH APP_ABI=$ABI)"
+    STAT_TARGET_TOOLCHAIN="$(get_build_var "$1" TARGET_TOOLCHAIN APP_ABI=$ABI NDK_TOOLCHAIN_VERSION=$NDK_TOOLCHAIN_VERSION | tr '-' '\n' | tail -1)"
+}
 
 # Run a command in ADB.
 #
@@ -466,15 +483,16 @@ run_ndk_build ()
 # get build var
 # $1: project directory
 # $2: var
+# $3... arguments to pass to make directly
 get_build_var ()
 {
     local PROJECT=$1
     local VAR=$2
-
+    shift 2
     if [ -z "$GNUMAKE" ] ; then
         GNUMAKE=make
     fi
-    $GNUMAKE --no-print-dir -f $NDK/build/core/build-local.mk -C $PROJECT DUMP_$VAR | tail -1
+    $GNUMAKE --no-print-dir -f $NDK/build/core/build-local.mk -C $PROJECT DUMP_$VAR "$@" | tail -1
 }
 
 
@@ -559,13 +577,36 @@ is_incompatible_abi ()
     return 1
 }
 
+# Store statistics about a test which failed to build
+# Usage:
+# log_test_build_failure testname [message]
+log_test_build_failure () 
+{
+    local TESTNAME="$1"
+    local msg="$2"
+    [ -z "$msg" ] && msg="build failed"
+    if [ "$TESTTYPE" = BUILDTESTS ]; then
+        if [ -n "$2" ]; then
+            eval "${TESTTYPE}_FAILED=\"\$${TESTTYPE}_FAILED $TESTNAME (<-- $2)\""
+        else
+            eval "${TESTTYPE}_FAILED=\"\$${TESTTYPE}_FAILED $TESTNAME\""
+        fi
+    elif [ "$TESTTYPE" = SAMPLES ]; then
+        eval "${TESTTYPE}_FAILED=\"\$${TESTTYPE}_FAILED $TESTNAME (<-- $msg)\""
+    else
+        # TESTTYPE is undefined here for device tests
+        # so that we do not record a successful devtest build as a successful test
+        DEVTESTS_FAILED="$DEVTESTS_FAILED $TESTNAME (<-- $msg)"
+    fi
+}
 
 build_project ()
 {
-    local NAME=`basename $1`
+    local NAME="`basename $1`"
     local CHECK_ABI=$2
     local DIR="$BUILD_DIR/$NAME"
 
+    [ -n "$TESTTYPE" ] && eval "${TESTTYPE}_TOTAL=\$((\$${TESTTYPE}_TOTAL + 1))"
     if is_broken_build $1; then
         return 0;
     fi
@@ -574,7 +615,9 @@ build_project ()
             return 0
         fi
     fi
+
     rm -rf "$DIR" && cp -r "$1" "$DIR"
+    [ -n "$TESTTYPE" ] && eval "${TESTTYPE}_COMPATIBLE=\$((\$${TESTTYPE}_COMPATIBLE + 1))"
     # build it
     (run cd "$DIR" && run_ndk_build $NDK_BUILD_FLAGS)
     RET=$?
@@ -583,18 +626,29 @@ build_project ()
             echo "!!! FAILURE: BUILD SHOULD HAVE FAILED [$1]"
             if [ "$CONTINUE_ON_BUILD_FAIL" != yes ] ; then
                 exit 1
+            else
+                log_test_build_failure "$NAME" "build should have failed"
+                return 1
             fi
         fi
+        [ -n "$TESTTYPE" ] && eval "${TESTTYPE}_SUCCESSFUL=\$((\$${TESTTYPE}_SUCCESSFUL + 1))"
         log "!!! SUCCESS: BUILD FAILED AS EXPECTED [$(basename $1)]"
         RET=0
-    fi
-    if [ $RET != 0 ] ; then
+    elif [ $RET != 0 ] ; then
         echo "!!! BUILD FAILURE [$1]!!! See $NDK_LOGFILE for details or use --verbose option!"
         if [ "$CONTINUE_ON_BUILD_FAIL" != yes ] ; then
             exit 1
+        else
+            log_test_build_failure "$NAME"
+            return 1
         fi
+    else
+        [ -n "$TESTTYPE" ] && eval "${TESTTYPE}_SUCCESSFUL=\$((\$${TESTTYPE}_SUCCESSFUL + 1))"
+        return 0
     fi
 }
+
+STAT_TARGET_ARCH=
 
 #
 # Determine list of samples directories.
@@ -634,13 +688,15 @@ if is_testable samples; then
     build_sample ()
     {
         echo "Building NDK sample: `basename $1`"
+        TESTTYPE=SAMPLES
         build_project $1 "no"
     }
 
     for DIR in $SAMPLES_DIRS; do
         for SUBDIR in `ls -d $DIR/*`; do
             if is_buildable $SUBDIR; then
-                build_sample $SUBDIR
+                build_sample $SUBDIR || continue
+                [ -z "$STAT_TARGET_ARCH" ] && get_stats_variables "$SUBDIR"
             fi
         done
     done
@@ -653,6 +709,7 @@ fi
 if is_testable build; then
     build_build_test ()
     {
+        BUILDTESTS_TOTAL=$(($BUILDTESTS_TOTAL + 1))
         local NAME="$(basename $1)"
         echo "Building NDK build test: `basename $1`"
         if [ -f $1/build.sh ]; then
@@ -666,6 +723,7 @@ if is_testable build; then
                     fi
                 fi
             fi
+            BUILDTESTS_COMPATIBLE=$(($BUILDTESTS_COMPATIBLE + 1))
             rm -rf "$DIR" && cp -r "$1" "$DIR"
             export NDK
             (cd "$DIR" && run ./build.sh -j$JOBS $NDK_BUILD_FLAGS)
@@ -674,15 +732,22 @@ if is_testable build; then
                 if [ "$CONTINUE_ON_BUILD_FAIL" != yes ] ; then
                     exit 1
                 fi
+                BUILDTESTS_FAILED="$BUILDTESTS_FAILED $NAME"
+                return 1
+            else
+                BUILDTESTS_SUCCESSFUL=$(($BUILDTESTS_SUCCESSFUL + 1))
+                return 0
             fi
         else
+            TESTTYPE=BUILDTESTS
             build_project $1 "yes"
         fi
     }
 
     for DIR in `ls -d $ROOTDIR/tests/build/*`; do
         if is_buildable $DIR; then
-            build_build_test $DIR
+            build_build_test $DIR || continue
+            [ -z "$STAT_TARGET_ARCH" ] && get_stats_variables "$SUBDIR"
         fi
     done
 fi
@@ -718,6 +783,7 @@ if is_testable device; then
         local DSTFILE
         local PROGRAM
         # Do not run the test if BROKEN_RUN is defined
+        DEVTESTS_TOTAL=$(($DEVTESTS_TOTAL + 1))
         if [ -z "$RUN_TESTS" ]; then
             if is_broken_build $TEST "NDK device test not built"; then
                 return 0
@@ -751,6 +817,8 @@ if is_testable device; then
         # those declared in $TEST/BROKEN_RUN
         adb_shell_mkdir "$DEVICE" $DSTDIR
 
+        DEVTESTS_COMPATIBLE=$(($DEVTESTS_COMPATIBLE + 1))
+        local ok=y
         for SRCFILE in `ls $SRCDIR`; do
             DSTFILE=`basename $SRCFILE`
             echo "$DSTFILE" | grep -q -e '\.so$'
@@ -813,6 +881,7 @@ if is_testable device; then
             adb_var_shell_cmd "$DEVICE" "" "cd $DSTDIR && LD_LIBRARY_PATH=$DSTDIR ./$PROGRAM"
             if [ $? != 0 ] ; then
                 dump "   ---> TEST FAILED!!"
+                unset ok
             fi
             adb_var_shell_cmd "$DEVICE" "" "rm -f $DSTPATH"
             if [ -n "$DATAPATHS" ]; then
@@ -821,6 +890,12 @@ if is_testable device; then
                 done
             fi
         done
+        if [ -n "$ok" ]; then
+            DEVTESTS_SUCCESSFUL=$(($DEVTESTS_SUCCESSFUL + 1))
+        else
+            DEVTESTS_FAILED="$DEVTESTS_FAILED $TEST_NAME"
+        fi
+
         # Cleanup
         adb_var_shell_cmd "$DEVICE" "" rm -r $DSTDIR
     }
@@ -867,6 +942,7 @@ if is_testable device; then
     fi
     if [ "$SKIP_TESTS" = "yes" ] ; then
         dump "SKIPPING RUNNING TESTS ON DEVICE!"
+        DEVICE_TESTS_SKIPPED=yes
     else
         AT_LEAST_CPU_ABI_MATCH=
         for DEVICE in $ADB_DEVICES; do
@@ -909,3 +985,54 @@ fi
 dump "Cleaning up..."
 rm -rf $BUILD_DIR
 dump "Done."
+
+echo
+echo " === Summary === "
+echo
+[ -z "$NDK_TOOLCHAIN_VERSION" ] && {
+    # this is roughly the logic used by ndk-build to get the default toolchain.
+    # See here: $NDK/build/core/setup-toolchain.mk, line near 56
+    # try the latest gcc
+    NDK_TOOLCHAIN_VERSION="$(basename "$(ls "$NDK/toolchains/$ABI"-[0-9]* -d -1 2>/dev/null | tail -n1)" |\
+        awk -F '-' '{print $2}')"
+    [ -z "$NDK_TOOLCHAIN_VERSION" ] && \
+        NDK_TOOLCHAIN_VERSION="$(basename "$(ls "$NDK/toolchains/$ABI"-* -d -1 2>/dev/null | tail -n1)" |\
+            awk -F '-' '{print $2}')" # or the latest clang
+
+}
+
+echo "ABI: $ABI"
+
+case "$STAT_TARGET_TOOLCHAIN" in
+[0-9]*) STAT_TARGET_TOOLCHAIN="GCC $STAT_TARGET_TOOLCHAIN" ;;
+esac
+
+echo "Toolchain: $STAT_TARGET_TOOLCHAIN"
+[ -z "$PLATFORM" ] || echo "Platform: $PLATFORM"
+echo
+echo ' Tests kind  | Total | Compatible | Successful | Pass rate'
+
+for t in BUILDTESTS SAMPLES DEVTESTS; do
+  eval total="\$${t}_TOTAL"
+  eval compatible="\$${t}_COMPATIBLE"
+  eval successful="\$${t}_SUCCESSFUL"
+  eval label="\$${t}_LABEL"
+  if [ $compatible != 0 ]; then
+    pass_rate="$(($successful*100/$compatible))%"
+  else
+    pass_rate='N/A'
+  fi
+  printf '%-12s | % 5s | % 10s | % 10s | % 9s\n' "$label" $total $compatible $successful $pass_rate
+done
+
+echo
+
+for t in BUILDTESTS SAMPLES DEVTESTS; do
+  eval label="\$${t}_LABEL"
+  label="$(echo $label|tr '[[:upper:]]' '[[:lower:]]')"
+  eval fails="\$${t}_FAILED"
+  [ -z "$fails" ] && continue
+  echo "Failed ${label}: ${fails[@]}"
+done
+
+[ -n "$DEVICE_TESTS_SKIPPED" ] && echo "Device tests have been skipped! Start an emulator or connect a device and rerun this script!"
