@@ -53,9 +53,9 @@ class ArgParser(argparse.ArgumentParser):
         super(ArgParser, self).__init__(
             description="Package the platform's LLVM for the NDK.")
 
-        # TODO(srhines): Make a prebuilt LLVM for Windows.
         self.add_argument(
-            '--host', choices=('darwin-x86', 'linux-x86'), required=True,
+            '--host', required=True,
+            choices=('darwin-x86', 'linux-x86', 'windows'),
             help='Host tag in the prebuilt path (e.g. linux-x86)')
         self.add_argument(
             '--package-dir', help='Directory to place the packaged LLVM.',
@@ -68,6 +68,9 @@ def main():
     args = ArgParser().parse_args()
     host = args.host
     package_dir = args.package_dir
+
+    if host == 'windows':
+        host = 'windows-x86'
 
     prebuilt_path = get_llvm_prebuilt_path(host, LLVM_VERSION)
 
