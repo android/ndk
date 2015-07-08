@@ -68,8 +68,15 @@ typedef _Unwind_Reason_Code (*_Unwind_Stop_Fn) (int version,
 struct _Unwind_Exception {
   uint64_t exception_class;
   _Unwind_Exception_Cleanup_Fn exception_cleanup;
-  uint32_t private_1;
-  uint32_t private_2;
+
+  /**
+   * The architectures supported by the following declarations are:
+   *  x86 with LP32, x86_64 with LP64
+   *  arm64 with LP64
+   *  mips, mips64
+   */
+  unsigned long private_1;
+  unsigned long private_2;
 }
 #if defined(__clang__) && defined(__mips__)
 // FIXME: It seems that mipsel-linux-android-gcc will use 24 as the object size
