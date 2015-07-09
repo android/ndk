@@ -55,8 +55,8 @@ class ArgParser(argparse.ArgumentParser):
 
         self.add_argument(
             '--host', required=True,
-            choices=('darwin-x86', 'linux-x86', 'windows'),
-            help='Host tag in the prebuilt path (e.g. linux-x86)')
+            choices=('darwin', 'linux', 'windows'),
+            help='Host tag in the prebuilt path (e.g. linux)')
         self.add_argument(
             '--package-dir', help='Directory to place the packaged LLVM.',
             default=get_default_package_dir())
@@ -69,14 +69,18 @@ def main():
     host = args.host
     package_dir = args.package_dir
 
-    if host == 'windows':
-        host = 'windows-x86'
+    prebuilt_path = get_llvm_prebuilt_path(host + '-x86', LLVM_VERSION)
 
-    prebuilt_path = get_llvm_prebuilt_path(host, LLVM_VERSION)
+    if host == 'darwin':
+        host = 'darwin-x86_64'
+    elif host == 'linux':
+        host = 'linux-x86_64'
+    elif host == 'windows':
+        host = 'windows-x86'
 
     package_name = 'llvm-{}-{}.tar.bz2'.format(LLVM_VERSION, host)
     package_path = os.path.join(package_dir, package_name)
-    with tarfile.TarFile(package_path, 'w') as tarball:
+    with tarfile.TarFile.open(package_path, 'w:bz2') as tarball:
         arcname = 'toolchains/llvm-{}/prebuilt/{}'.format(LLVM_VERSION, host)
 
         def package_filter(tarinfo):
