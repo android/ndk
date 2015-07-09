@@ -45,10 +45,13 @@ def main():
     package_dir_arg = '--package-dir={}'.format(package_dir)
 
     # Deal with --systems
+    args = []
     system = None
     for arg in sys.argv[1:]:
         if arg.startswith('--systems='):
             system = arg.partition('=')[2]
+        else:
+            args.append(arg)
 
     if system is not None:
         # Right now we can't build Linux and Windows at the same time because
@@ -60,8 +63,17 @@ def main():
         if ',' in system:
             sys.exit('Only one system allowed, received {}'.format(system))
 
+        # TODO(danalbert): Update build server to pass just 'linux'.
+        original_system = system
+        if system == 'darwin':
+            system = 'darwin-x86'
+        elif system == 'linux':
+            system = 'linux-x86'
+
         if system not in ('darwin-x86', 'linux-x86', 'windows'):
             sys.exit('Unknown system requested: {}'.format(original_system))
+
+        args.append('--systems={}'.format(system))
 
     # Run dev-cleanup
     invoke_build('dev-cleanup.sh')
@@ -80,9 +92,9 @@ def main():
         # Windows), so only build the host components.
         ndk_dir_arg = '--ndk-dir={}'.format(os.getcwd())
         invoke_build('build-host-prebuilts.sh',
-                     common_args + [ndk_dir_arg] + sys.argv[1:])
+                     common_args + [ndk_dir_arg] + args)
     else:
-        invoke_build('rebuild-all-prebuilt.sh', common_args + sys.argv[1:])
+        invoke_build('rebuild-all-prebuilt.sh', common_args + args)
 
 
 if __name__ == '__main__':
