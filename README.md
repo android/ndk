@@ -101,22 +101,16 @@ Prerequisites
 Host/Target prebuilts
 ---------------------
 
-### On Linux:
-
-```bash
-$ python checkbuild.py --systems=linux-x86
-```
-
-### On Linux, for Windows:
-
-```bash
-$ python checkbuild.py --systems=windows
-```
-
-### On MacOS X:
+### For Linux or Darwin:
 
 ```bash
 $ python checkbuild.py
+```
+
+### For Windows, from Linux:
+
+```bash
+$ python checkbuild.py --systems=windows
 ```
 
 Packaging

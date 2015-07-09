@@ -40,13 +40,6 @@ LLVM_VERSION_LIST=$DEFAULT_LLVM_VERSION_LIST
 register_var_option "--llvm-version-list=<vers>" LLVM_VERSION_LIST "List of LLVM release versions"
 
 SYSTEMS=$HOST_TAG32
-if [ "$HOST_TAG32" = "linux-x86" ]; then
-    SYSTEMS=$SYSTEMS",windows"
-    # If darwin toolchain exist, build darwin too
-    if [ -f "${DARWIN_TOOLCHAIN}-gcc" ]; then
-        SYSTEMS=$SYSTEMS",darwin-x86"
-    fi
-fi
 CUSTOM_SYSTEMS=
 register_option "--systems=<list>" do_SYSTEMS "Specify host systems"
 do_SYSTEMS () { CUSTOM_SYSTEMS=true; SYSTEMS=$1; }
