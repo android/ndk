@@ -104,14 +104,19 @@ Host/Target prebuilts
 ### On Linux:
 
 ```bash
-$ checkbuild.sh --also-64 --systems=linux-x86,windows
+$ python checkbuild.py --systems=linux-x86
+```
+
+### On Linux, for Windows:
+
+```bash
+$ python checkbuild.py --systems=windows
 ```
 
 ### On MacOS X:
 
 ```bash
-$ checkbuild.sh --systems=darwin-x86 --try-64
-$ checkbuild.sh --systems=darwin-x86
+$ python checkbuild.py
 ```
 
 Packaging
