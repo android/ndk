@@ -50,12 +50,27 @@ def main():
         if arg.startswith('--systems='):
             system = arg.partition('=')[2]
 
+    if system is not None:
+        # Right now we can't build Linux and Windows at the same time because
+        # Linux is 64-bit and Windows is 32-bit. The build scripts are
+        # inconsistent with the meaning of HOST_OS (sometimes means the OS
+        # we're building from, sometimes means the OS we're targeting), so hard
+        # wiring those behaviors is non-trivial. Since we can't specify both
+        # targets here either, just disallow building more than one at a time.
+        if ',' in system:
+            sys.exit('Only one system allowed, received {}'.format(system))
+
+        if system not in ('darwin-x86', 'linux-x86', 'windows'):
+            sys.exit('Unknown system requested: {}'.format(original_system))
+
     # Run dev-cleanup
     invoke_build('dev-cleanup.sh')
 
     # Configure common args
     toolchain_path = os.path.join(build_top, 'toolchain')
-    common_args = [toolchain_path, '--verbose', '--try-64', package_dir_arg]
+    common_args = [toolchain_path, '--verbose', package_dir_arg]
+    if system != 'windows':
+        common_args.append('--try-64')
 
     # Build
     if system == 'windows' or platform.system() == 'Darwin':
