@@ -20,6 +20,7 @@ Cleans old build artifacts, configures the required environment, determines
 build goals, and invokes the build scripts.
 """
 import argparse
+import datetime
 import inspect
 import os
 import platform
@@ -31,6 +32,17 @@ class ArgParser(argparse.ArgumentParser):
     def __init__(self):
         super(ArgParser, self).__init__(
             description=inspect.getdoc(sys.modules[__name__]))
+
+        self.add_argument(
+            '--package', action='store_true', dest='package', default=True,
+            help='Package the NDK when done building.')
+        self.add_argument(
+            '--no-package', action='store_false', dest='package',
+            help='Do not package the NDK when done building.')
+
+        self.add_argument(
+            '--release', default=datetime.date.today().strftime('%Y%m%d'),
+            help='Release name. Package will be named android-ndk-RELEASE.')
 
         system_group = self.add_mutually_exclusive_group()
         system_group.add_argument(
@@ -54,9 +66,35 @@ def invoke_build(script, args=None):
     subprocess.check_call([os.path.join('build/tools', script)] + args)
 
 
+def build_ndk(out_dir, system, build_args):
+    build_args = list(build_args)
+    build_args.append('--package-dir={}'.format(out_dir))
+    build_args.append('--verbose')
+
+    if system == 'windows' or platform.system() == 'Darwin':
+        # There's no sense in building the target libraries from Darwin (they
+        # shouldn't be any different from those built on Linux), and we can't
+        # build them using the Windows toolchains (because we aren't on
+        # Windows), so only build the host components.
+        ndk_dir_arg = '--ndk-dir={}'.format(os.getcwd())
+        invoke_build('build-host-prebuilts.sh',
+                     build_args + [ndk_dir_arg])
+    else:
+        invoke_build('rebuild-all-prebuilt.sh', build_args)
+
+
+def package_ndk(release_name, system, out_dir, build_args):
+    package_args = [
+        '--out-dir={}'.format(out_dir),
+        '--prebuilt-dir={}'.format(out_dir),
+        '--release={}'.format(release_name),
+        '--systems={}'.format(system),
+    ]
+    invoke_build('package-release.sh', package_args + build_args)
+
+
 def main():
     args, build_args = ArgParser().parse_known_args()
-    build_args.append('--verbose')
 
     os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
@@ -64,11 +102,6 @@ def main():
     if 'ANDROID_BUILD_TOP' not in os.environ:
         os.environ['ANDROID_BUILD_TOP'] = os.path.realpath('..')
     build_top = os.getenv('ANDROID_BUILD_TOP')
-
-    # Set default --package-dir
-    DEFAULT_OUT_DIR = os.path.join(build_top, 'out/ndk')
-    package_dir = os.path.realpath(os.getenv('DIST_DIR', DEFAULT_OUT_DIR))
-    build_args.append('--package-dir={}'.format(package_dir))
 
     system = args.system
     if system is not None:
@@ -83,26 +116,34 @@ def main():
             sys.exit('Unknown system requested: {}'.format(original_system))
 
         build_args.append('--systems={}'.format(system))
+    else:
+        # No flag provided. Use the current OS.
+        if platform.system() == 'Darwin':
+            system = 'darwin-x86'
+        elif platform.system() == 'Linux':
+            system = 'linux-x86'
+        else:
+            sys.exit('Unknown build host: {}'.format(platform.system()))
 
     if system != 'windows':
         build_args.append('--try-64')
 
     build_args.append(os.path.join(build_top, 'toolchain'))
 
-    # Run dev-cleanup
-    invoke_build('dev-cleanup.sh')
+    DEFAULT_OUT_DIR = os.path.join(build_top, 'out/ndk')
+    out_dir = os.path.realpath(os.getenv('DIST_DIR', DEFAULT_OUT_DIR))
 
-    # Build
-    if system == 'windows' or platform.system() == 'Darwin':
-        # There's no sense in building the target libraries from Darwin (they
-        # shouldn't be any different from those built on Linux), and we can't
-        # build them using the Windows toolchains (because we aren't on
-        # Windows), so only build the host components.
-        ndk_dir_arg = '--ndk-dir={}'.format(os.getcwd())
-        invoke_build('build-host-prebuilts.sh',
-                     build_args + [ndk_dir_arg])
-    else:
-        invoke_build('rebuild-all-prebuilt.sh', build_args)
+    invoke_build('dev-cleanup.sh')
+    build_ndk(out_dir, system, build_args)
+
+    # TODO(danalbert): Make --package work for Windows and Darwin.
+    # This doesn't work as-is because we don't build the target components on
+    # those platforms. Darwin can be fixed by flipping the switch (but then
+    # builds take longer without needing to), but Windows would actually be a
+    # two step process (first Linux, then Windows) because --try-64 is required
+    # for Linux but must not be supplied for Windows.
+    if args.package and system == 'linux-x86':
+        package_ndk(args.release, system, out_dir, build_args)
 
 
 if __name__ == '__main__':
