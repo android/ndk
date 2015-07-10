@@ -56,7 +56,7 @@ class ArgParser(argparse.ArgumentParser):
         self.add_argument(
             '--host', required=True,
             choices=('darwin', 'linux', 'windows'),
-            help='Host tag in the prebuilt path (e.g. linux)')
+            help='Package binaries for given OS (e.g. linux).')
         self.add_argument(
             '--package-dir', help='Directory to place the packaged LLVM.',
             default=get_default_package_dir())

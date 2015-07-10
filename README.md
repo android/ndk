@@ -110,7 +110,7 @@ $ python checkbuild.py
 ### For Windows, from Linux:
 
 ```bash
-$ python checkbuild.py --systems=windows
+$ python checkbuild.py --system windows
 ```
 
 Packaging
