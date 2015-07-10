@@ -19,10 +19,33 @@
 Cleans old build artifacts, configures the required environment, determines
 build goals, and invokes the build scripts.
 """
+import argparse
+import inspect
 import os
 import platform
 import subprocess
 import sys
+
+
+class ArgParser(argparse.ArgumentParser):
+    def __init__(self):
+        super(ArgParser, self).__init__(
+            description=inspect.getdoc(sys.modules[__name__]))
+
+        system_group = self.add_mutually_exclusive_group()
+        system_group.add_argument(
+            '--system', choices=('darwin', 'linux', 'windows'),
+            help='Build for the given OS.')
+
+        old_choices = (
+            'darwin', 'darwin-x86',
+            'linux', 'linux-x86',
+            'windows',
+        )
+
+        system_group.add_argument(
+            '--systems', choices=old_choices, dest='system',
+            help='Build for the given OS. Deprecated. Use --system instead.')
 
 
 def invoke_build(script, args=None):
@@ -32,6 +55,9 @@ def invoke_build(script, args=None):
 
 
 def main():
+    args, build_args = ArgParser().parse_known_args()
+    build_args.append('--verbose')
+
     os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
     # Set ANDROID_BUILD_TOP.
@@ -42,27 +68,10 @@ def main():
     # Set default --package-dir
     DEFAULT_OUT_DIR = os.path.join(build_top, 'out/ndk')
     package_dir = os.path.realpath(os.getenv('DIST_DIR', DEFAULT_OUT_DIR))
-    package_dir_arg = '--package-dir={}'.format(package_dir)
+    build_args.append('--package-dir={}'.format(package_dir))
 
-    # Deal with --systems
-    args = []
-    system = None
-    for arg in sys.argv[1:]:
-        if arg.startswith('--systems='):
-            system = arg.partition('=')[2]
-        else:
-            args.append(arg)
-
+    system = args.system
     if system is not None:
-        # Right now we can't build Linux and Windows at the same time because
-        # Linux is 64-bit and Windows is 32-bit. The build scripts are
-        # inconsistent with the meaning of HOST_OS (sometimes means the OS
-        # we're building from, sometimes means the OS we're targeting), so hard
-        # wiring those behaviors is non-trivial. Since we can't specify both
-        # targets here either, just disallow building more than one at a time.
-        if ',' in system:
-            sys.exit('Only one system allowed, received {}'.format(system))
-
         # TODO(danalbert): Update build server to pass just 'linux'.
         original_system = system
         if system == 'darwin':
@@ -73,16 +82,15 @@ def main():
         if system not in ('darwin-x86', 'linux-x86', 'windows'):
             sys.exit('Unknown system requested: {}'.format(original_system))
 
-        args.append('--systems={}'.format(system))
+        build_args.append('--systems={}'.format(system))
+
+    if system != 'windows':
+        build_args.append('--try-64')
+
+    build_args.append(os.path.join(build_top, 'toolchain'))
 
     # Run dev-cleanup
     invoke_build('dev-cleanup.sh')
-
-    # Configure common args
-    toolchain_path = os.path.join(build_top, 'toolchain')
-    common_args = [toolchain_path, '--verbose', package_dir_arg]
-    if system != 'windows':
-        common_args.append('--try-64')
 
     # Build
     if system == 'windows' or platform.system() == 'Darwin':
@@ -92,9 +100,9 @@ def main():
         # Windows), so only build the host components.
         ndk_dir_arg = '--ndk-dir={}'.format(os.getcwd())
         invoke_build('build-host-prebuilts.sh',
-                     common_args + [ndk_dir_arg] + args)
+                     build_args + [ndk_dir_arg])
     else:
-        invoke_build('rebuild-all-prebuilt.sh', common_args + args)
+        invoke_build('rebuild-all-prebuilt.sh', build_args)
 
 
 if __name__ == '__main__':
