@@ -337,10 +337,10 @@ for SYSTEM in $SYSTEMS; do
         PACKAGE_ARG="--package-dir $PACKAGE_DIR"
     fi
 
-    # Trim the trailing _64.
-    # linux-x86 and linux-x86_64 both become linux-x86 (same for darwin).
-    # Note that there is no 32-bit LLVM for Darwin or Linux.
+    # Trim the trailing -x86(_64)?. That is: darwin, linux, or windows.
+    # Windows is (currently) always 32-bit, and the other two are always 64-bit.
     LLVM_HOST=${SYSTEM%%_64}
+    LLVM_HOST=${SYSTEM%%-x86}
     run $BUILDTOOLS/build-llvm.py --host $LLVM_HOST $PACKAGE_ARG
     fail_panic "Could not build llvm for $SYSNAME"
 

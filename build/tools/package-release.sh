@@ -295,7 +295,7 @@ unpack_prebuilt ()
             fail_panic "Could not unpack prebuilt $PREBUILT64. Aborting."
         fi
     else
-        echo "WARNING: Could not find $PREBUILT in $PREBUILT_DIR"
+        fail_panic "Could not find $PREBUILT in $PREBUILT_DIR"
     fi
 }
 
@@ -491,17 +491,22 @@ for SYSTEM in $SYSTEMS; do
         rm -rf $DSTDIR/toolchains/*l
         rm -rf $DSTDIR64/toolchains/*l
 
-        # Unpack renderscript tools
-        unpack_prebuilt renderscript-$SYSTEM "$DSTDIR" "$DSTDIR64"
+        # Unpack renderscript tools; http://b/22377128.
+        echo "WARNING: no renderscript-$SYSTEM tools! http://b/22377128"
+        #unpack_prebuilt renderscript-$SYSTEM "$DSTDIR" "$DSTDIR64"
 
         # Unpack prebuilt ndk-stack and other host tools
-        unpack_prebuilt ndk-stack-$SYSTEM "$DSTDIR" "$DSTDIR64" "yes"
-        unpack_prebuilt ndk-depends-$SYSTEM "$DSTDIR" "$DSTDIR64" "yes"
-        unpack_prebuilt ndk-make-$SYSTEM "$DSTDIR" "$DSTDIR64"
-        unpack_prebuilt ndk-awk-$SYSTEM "$DSTDIR" "$DSTDIR64"
-        unpack_prebuilt ndk-perl-$SYSTEM "$DSTDIR" "$DSTDIR64"
-        unpack_prebuilt ndk-python-$SYSTEM "$DSTDIR" "$DSTDIR64"
-        unpack_prebuilt ndk-yasm-$SYSTEM "$DSTDIR" "$DSTDIR64"
+        LONG_SYSTEM=${SYSTEM}_64
+        if [ "$SYSTEM" = "windows" ]; then
+            LONG_SYSTEM=$SYSTEM
+        fi
+        unpack_prebuilt ndk-stack-$LONG_SYSTEM "$DSTDIR" "$DSTDIR64" "yes"
+        unpack_prebuilt ndk-depends-$LONG_SYSTEM "$DSTDIR" "$DSTDIR64" "yes"
+        unpack_prebuilt ndk-make-$LONG_SYSTEM "$DSTDIR" "$DSTDIR64"
+        unpack_prebuilt ndk-awk-$LONG_SYSTEM "$DSTDIR" "$DSTDIR64"
+        unpack_prebuilt ndk-perl-$LONG_SYSTEM "$DSTDIR" "$DSTDIR64"
+        unpack_prebuilt ndk-python-$LONG_SYSTEM "$DSTDIR" "$DSTDIR64"
+        unpack_prebuilt ndk-yasm-$LONG_SYSTEM "$DSTDIR" "$DSTDIR64"
 
         if [ "$SYSTEM" = "windows" ]; then
             unpack_prebuilt toolbox-$SYSTEM "$DSTDIR" "$DSTDIR64"
@@ -511,8 +516,9 @@ for SYSTEM in $SYSTEMS; do
     # Unpack other host tools
     unpack_prebuilt scan-build-view "$DSTDIR" "$DSTDIR64"
 
-    # Unpack renderscript headers/libs
-    unpack_prebuilt renderscript "$DSTDIR" "$DSTDIR64"
+    # Unpack renderscript headers/libs; http://b/22377128.
+    echo "WARNING: no renderscript headers/libs! http://b/22377128"
+    #unpack_prebuilt renderscript "$DSTDIR" "$DSTDIR64"
 
     # Unpack misc stuff
     if [ -f "$PREBUILT_DIR/misc.tar.bz2" ]; then
