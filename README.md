@@ -104,7 +104,7 @@ Host/Target prebuilts
 ### For Linux or Darwin:
 
 ```bash
-$ python checkbuild.py
+$ python checkbuild.py --no-package
 ```
 
 ### For Windows, from Linux:
@@ -116,13 +116,13 @@ $ python checkbuild.py --system windows
 Packaging
 ---------
 
-Once all prebuilt tarballs are at `$PREBUILT_PATH`, run the following to package
-the NDK:
+The simplest way to package an NDK on Linux is to just omit the `--no-package`
+flag when running `checkbuild.py`. This will take a little longer though, so it
+may not be desired for day to day development.
 
-```bash
-$ build/tools/package-release.sh --prebuilt-dir=/s/prebuilt --separate-64 \
-    --release=r9x
-```
+To package the NDK for Windows or Darwin (or if more control over the packaging
+process is needed), invoke `build/tools/package-release.sh` directly. This
+process will be improved in a future commit.
 
 Best Practices for Incremental Builds
 -------------------------------------
