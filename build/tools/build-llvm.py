@@ -76,7 +76,7 @@ def main():
     elif host == 'linux':
         host = 'linux-x86_64'
     elif host == 'windows':
-        host = 'windows-x86'
+        host = 'windows'
 
     package_name = 'llvm-{}-{}.tar.bz2'.format(LLVM_VERSION, host)
     package_path = os.path.join(package_dir, package_name)
