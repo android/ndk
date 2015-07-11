@@ -46,7 +46,7 @@ class ArgParser(argparse.ArgumentParser):
 
         system_group = self.add_mutually_exclusive_group()
         system_group.add_argument(
-            '--system', choices=('darwin', 'linux', 'windows'),
+            '--system', choices=('darwin', 'linux', 'windows', 'windows64'),
             help='Build for the given OS.')
 
         old_choices = (
@@ -104,6 +104,9 @@ def main():
     build_top = os.getenv('ANDROID_BUILD_TOP')
 
     system = args.system
+    if system != 'windows':
+        build_args.append('--try-64')
+
     if system is not None:
         # TODO(danalbert): Update build server to pass just 'linux'.
         original_system = system
@@ -111,6 +114,8 @@ def main():
             system = 'darwin-x86'
         elif system == 'linux':
             system = 'linux-x86'
+        elif system == 'windows64':
+            system = 'windows'
 
         if system not in ('darwin-x86', 'linux-x86', 'windows'):
             sys.exit('Unknown system requested: {}'.format(original_system))
@@ -124,9 +129,6 @@ def main():
             system = 'linux-x86'
         else:
             sys.exit('Unknown build host: {}'.format(platform.system()))
-
-    if system != 'windows':
-        build_args.append('--try-64')
 
     build_args.append(os.path.join(build_top, 'toolchain'))
 
