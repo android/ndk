@@ -86,17 +86,6 @@ register_var_option "--llvm-version-list=<versions>" LLVM_VERSION_LIST "List of 
 
 register_try64_option
 
-SEPARATE_64=no
-register_option "--separate-64" do_SEPARATE_64 "Separate 64-bit host toolchain to its own package"
-do_SEPARATE_64 ()
-{
-    if [ "$TRY64" = "yes" ]; then
-        echo "ERROR: You cannot use both --try-64 and --separate-64 at the same time."
-        exit 1
-    fi
-    SEPARATE_64=yes;
-}
-
 PROGRAM_PARAMETERS=
 PROGRAM_DESCRIPTION=\
 "Package a new set of release packages for the Android NDK.
@@ -410,9 +399,6 @@ rm -f $REFERENCE/CleanSpec.mk
 #
 DSTDIR=$TMPDIR/$RELEASE_PREFIX
 DSTDIR64=${DSTDIR}
-if [ "$SEPARATE_64" = "yes" ] ; then
-    DSTDIR64=$TMPDIR/64/${RELEASE_PREFIX}
-fi
 
 for SYSTEM in $SYSTEMS; do
     echo "Preparing package for system $SYSTEM."
@@ -566,17 +552,13 @@ for SYSTEM in $SYSTEMS; do
     fi
     case "$SYSTEM" in
         windows)
-            ARCHIVE64="${ARCHIVE}_64.zip"
             ARCHIVE="$ARCHIVE.zip"
             ;;
         *)
-            ARCHIVE64="${ARCHIVE}_64.tar.bz2"
             ARCHIVE="$ARCHIVE.tar.bz2"
             ;;
     esac
-    if [ "$TRY64" = "yes" ]; then
-        ARCHIVE=$ARCHIVE64
-    fi
+
     echo "Creating $ARCHIVE"
     # make all file universally readable, and all executable (including directory)
     # universally executable, punt intended
@@ -584,10 +566,6 @@ for SYSTEM in $SYSTEMS; do
     find $DSTDIR $DSTDIR64 -executable -exec chmod a+x {} \;
     pack_archive "$OUT_DIR/$ARCHIVE" "$TMPDIR" "$RELEASE_PREFIX"
     fail_panic "Could not create archive: $OUT_DIR/$ARCHIVE"
-    if [ "$SEPARATE_64" = "yes" ] ; then
-        pack_archive "$OUT_DIR/$ARCHIVE64" "$TMPDIR/64" "${RELEASE_PREFIX}"
-        fail_panic "Could not create archive: $OUT_DIR/$ARCHIVE64"
-    fi
 done
 
 echo "Cleaning up."
