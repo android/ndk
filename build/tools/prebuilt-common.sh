@@ -968,7 +968,7 @@ prepare_common_build ()
     int test_array[1-2*(sizeof(void*) != 4)];
 EOF
     log_n "Checking whether the compiler generates 32-bit binaries..."
-    log2 $CC $HOST_CFLAGS -c -o $TMPO $TMPC
+    log $CC $HOST_CFLAGS -c -o $TMPO $TMPC
     $NDK_CCACHE $CC $HOST_CFLAGS -c -o $TMPO $TMPC >$TMPL 2>&1
     if [ $? != 0 ] ; then
         log "no"
