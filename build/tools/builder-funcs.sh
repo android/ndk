@@ -501,7 +501,7 @@ builder_end ()
     fi
 
     if [ "$_BUILD_DIR_NEW" ]; then
-        log2 "Cleaning up build directory: $_BUILD_DIR"
+        log "Cleaning up build directory: $_BUILD_DIR"
         rm -rf "$_BUILD_DIR"
         _BUILD_DIR_NEW=
     fi

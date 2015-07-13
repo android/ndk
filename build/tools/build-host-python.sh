@@ -344,7 +344,7 @@ build_host_python ()
 
     dump "$TEXT Building"
     export CONFIG_SITE=$CFG_SITE &&
-    run2 "$SRCDIR"/configure $ARGS
+    run "$SRCDIR"/configure $ARGS
     fail_panic "Could not configure Python!"
 
     #
@@ -364,10 +364,10 @@ build_host_python ()
     #  and bininstall: doing
     #  (cd $(DESTDIR)$(BINDIR); $(LN) -s python$(VERSION)-config python2-config)
     #  Though the real fix is to make bininstall depend on libainstall.
-    run2 make -j$NUM_JOBS
+    run make -j$NUM_JOBS
     fail_panic "Could not build Python!"
 
-    run2 make install
+    run make install
     fail_panic "Could not install Python!"
 
     # Pretty printers.
@@ -380,13 +380,13 @@ build_host_python ()
         if [ -d "$GCC_DIR/libstdc++-v3/python" ]; then
             cd "$GCC_DIR/libstdc++-v3/python"
             [ -d "$PYPPDIR/libstdcxx/$(basename $GCC_DIR)" ] || mkdir -p "$PYPPDIR/libstdcxx/$(basename $GCC_DIR)"
-            run2 find . -path "*.py" -exec cp {} "$PYPPDIR/libstdcxx/$(basename $GCC_DIR)/" \;
+            run find . -path "*.py" -exec cp {} "$PYPPDIR/libstdcxx/$(basename $GCC_DIR)/" \;
         fi
         )
     done
 
     # .. for STLPort
-    run2 cp -rf $NDK_DIR/sources/host-tools/gdb-pretty-printers/stlport/gppfs-0.2 $PYPPDIR/stlport
+    run cp -rf $NDK_DIR/sources/host-tools/gdb-pretty-printers/stlport/gppfs-0.2 $PYPPDIR/stlport
 }
 
 need_build_host_python ()

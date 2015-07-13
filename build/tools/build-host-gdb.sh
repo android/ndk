@@ -156,9 +156,9 @@ build_expat ()
     mkdir -p "$BUILDDIR" && rm -rf "$BUILDDIR"/* &&
     cd "$BUILDDIR" &&
     dump "$TEXT Building"
-    run2 "$SRCDIR"/configure $ARGS &&
-    run2 make -j$NUM_JOBS &&
-    run2 make -j$NUM_JOBS install
+    run "$SRCDIR"/configure $ARGS &&
+    run make -j$NUM_JOBS &&
+    run make -j$NUM_JOBS install
 }
 
 need_build_expat ()
@@ -209,9 +209,9 @@ build_host_gdb ()
     mkdir -p "$BUILDDIR" && rm -rf "$BUILDDIR"/* &&
     cd "$BUILDDIR" &&
     dump "$TEXT Building"
-    run2 "$SRCDIR"/configure $ARGS &&
-    run2 make -j$NUM_JOBS &&
-    run2 make -j$NUM_JOBS install
+    run "$SRCDIR"/configure $ARGS &&
+    run make -j$NUM_JOBS &&
+    run make -j$NUM_JOBS install
     fail_panic "Failed to configure/make/install gdb"
 }
 
