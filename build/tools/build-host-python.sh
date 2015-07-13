@@ -344,7 +344,9 @@ build_host_python ()
 
     dump "$TEXT Building"
     export CONFIG_SITE=$CFG_SITE &&
-    run2 "$SRCDIR"/configure $ARGS &&
+    run2 "$SRCDIR"/configure $ARGS
+    fail_panic "Could not configure Python!"
+
     #
     # Note 1:
     # sharedmods is a phony target, but it's a dependency of both "make all" and also
@@ -362,8 +364,11 @@ build_host_python ()
     #  and bininstall: doing
     #  (cd $(DESTDIR)$(BINDIR); $(LN) -s python$(VERSION)-config python2-config)
     #  Though the real fix is to make bininstall depend on libainstall.
-    run2 make -j$NUM_JOBS &&
+    run2 make -j$NUM_JOBS
+    fail_panic "Could not build Python!"
+
     run2 make install
+    fail_panic "Could not install Python!"
 
     # Pretty printers.
     PYPPDIR="$INSTALLDIR/share/pretty-printers/"
@@ -413,6 +418,8 @@ install_host_python ()
     fi
 }
 
+# $1: host tag
+# $2: python version
 need_install_host_python ()
 {
     local SRCDIR="$(python_build_install_dir $1 $2)"
