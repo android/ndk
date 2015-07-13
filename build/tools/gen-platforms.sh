@@ -304,7 +304,7 @@ symlink_src_directory_inner ()
     files=$(cd $DSTDIR/$1 && ls -1p)
     for file in $files; do
         if [ "$file" = "${file%%/}" ]; then
-            log2 "Link \$DST/$2/$file --> $rev/$1/$file"
+            log "Link \$DST/$2/$file --> $rev/$1/$file"
             ln -s $rev/$1/$file $DSTDIR/$2/$file
         else
             file=${file%%/}

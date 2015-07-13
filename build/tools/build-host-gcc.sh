@@ -1004,7 +1004,7 @@ gen_minimal_sysroot ()
     local INSTALL_DIR=$(arch_sysroot_install_dir $ARCH)
 
     dump "$(arch_text) Generating minimal sysroot."
-    run2 $NDK_BUILDTOOLS_PATH/gen-platforms.sh --minimal --arch=$ARCH --dst-dir="$INSTALL_DIR"
+    run $NDK_BUILDTOOLS_PATH/gen-platforms.sh --minimal --arch=$ARCH --dst-dir="$INSTALL_DIR"
 }
 
 
@@ -1014,8 +1014,8 @@ extract_gmp_sources ()
     local SRC_DIR="$TOP_BUILD_DIR/temp-src"
 
     dump "Extracting gmp-$1"
-    run2 mkdir -p "$SRC_DIR" &&
-    run2 tar xjf "$TOOLCHAIN_SRC_DIR/gmp/gmp-$1.tar.bz2" -C "$SRC_DIR"
+    run mkdir -p "$SRC_DIR" &&
+    run tar xjf "$TOOLCHAIN_SRC_DIR/gmp/gmp-$1.tar.bz2" -C "$SRC_DIR"
 }
 
 # $1: gmp version
@@ -1031,15 +1031,15 @@ build_gmp ()
     (
         setup_host_env &&
         BUILD_DIR="$(host_build_dir_for gmp-$GMP_VERSION)" &&
-        run2 mkdir -p "$BUILD_DIR" && run2 rm -rf "$BUILD_DIR"/* &&
+        run mkdir -p "$BUILD_DIR" && run rm -rf "$BUILD_DIR"/* &&
         cd "$BUILD_DIR" &&
-        run2 "$SRC_DIR"/configure \
+        run "$SRC_DIR"/configure \
             --prefix=$INSTALL_DIR \
             --build=$BUILD \
             --host=$HOST \
             --disable-shared &&
-        run2 make -j$NUM_JOBS &&
-        run2 make install -j$NUM_INSTALL_JOBS
+        run make -j$NUM_JOBS &&
+        run make install -j$NUM_INSTALL_JOBS
     )
     return $?
 }
@@ -1049,8 +1049,8 @@ extract_mpfr_sources ()
     local SRC_DIR="$TOP_BUILD_DIR/temp-src"
 
     dump "Extracting mpfr-$1"
-    run2 mkdir -p "$SRC_DIR" &&
-    run2 tar xjf "$TOOLCHAIN_SRC_DIR/mpfr/mpfr-$1.tar.bz2" -C "$SRC_DIR"
+    run mkdir -p "$SRC_DIR" &&
+    run tar xjf "$TOOLCHAIN_SRC_DIR/mpfr/mpfr-$1.tar.bz2" -C "$SRC_DIR"
 }
 
 # $1: mpfr-version
@@ -1068,16 +1068,16 @@ build_mpfr ()
     (
         setup_host_env &&
         BUILD_DIR="$(host_build_dir_for mpfr-$MPFR_VERSION)" &&
-        run2 mkdir -p "$BUILD_DIR" && run2 rm -rf "$BUILD_DIR"/* &&
+        run mkdir -p "$BUILD_DIR" && run rm -rf "$BUILD_DIR"/* &&
         cd $BUILD_DIR &&
-        run2 "$SRC_DIR"/configure \
+        run "$SRC_DIR"/configure \
             --prefix=$INSTALL_DIR \
             --build=$BUILD \
             --host=$HOST \
             --disable-shared \
             --with-gmp=$INSTALL_DIR &&
-        run2 make -j$NUM_JOBS &&
-        run2 make -j$NUM_INSTALL_JOBS install
+        run make -j$NUM_JOBS &&
+        run make -j$NUM_INSTALL_JOBS install
     )
     return $?
 }
@@ -1088,8 +1088,8 @@ extract_mpc_sources ()
     local SRC_DIR="$TOP_BUILD_DIR/temp-src"
 
     dump "Extracting mpc-$1"
-    run2 mkdir -p "$SRC_DIR" &&
-    run2 tar xzf "$TOOLCHAIN_SRC_DIR/mpc/mpc-$1.tar.gz" -C "$SRC_DIR"
+    run mkdir -p "$SRC_DIR" &&
+    run tar xzf "$TOOLCHAIN_SRC_DIR/mpc/mpc-$1.tar.gz" -C "$SRC_DIR"
 }
 
 
@@ -1108,17 +1108,17 @@ build_mpc ()
     (
         setup_host_env &&
         BUILD_DIR="$(host_build_dir_for mpc-$MPC_VERSION)" &&
-        run2 mkdir -p "$BUILD_DIR" && run2 rm -rf "$BUILD_DIR"/* &&
+        run mkdir -p "$BUILD_DIR" && run rm -rf "$BUILD_DIR"/* &&
         cd $BUILD_DIR &&
-        run2 "$SRC_DIR"/configure \
+        run "$SRC_DIR"/configure \
             --prefix=$INSTALL_DIR \
             --build=$BUILD \
             --host=$HOST \
             --disable-shared \
             --with-gmp=$INSTALL_DIR \
             --with-mpfr=$INSTALL_DIR &&
-        run2 make -j$NUM_JOBS &&
-        run2 make -j$NUM_INSTALL_JOBS install
+        run make -j$NUM_JOBS &&
+        run make -j$NUM_INSTALL_JOBS install
     )
     return $?
 }
@@ -1227,7 +1227,7 @@ build_host_binutils ()
                 ARGS=$ARGS" --enable-gold=both/gold"
             fi
         fi
-	# This ARG needs quoting when passed to run2.
+	# This ARG needs quoting when passed to run.
 	GOLD_LDFLAGS_ARG=
         if [ "$HOST_OS" = 'windows' ]; then
             # gold may have runtime dependency on libgcc_sjlj_1.dll and
@@ -1265,9 +1265,9 @@ build_host_binutils ()
     (
         setup_host_env &&
         BUILD_DIR="$(host_build_dir_for binutils-$BINUTILS_VERSION-$TARGET)" &&
-        run2 mkdir -p "$BUILD_DIR" && run2 rm -rf "$BUILD_DIR"/* &&
+        run mkdir -p "$BUILD_DIR" && run rm -rf "$BUILD_DIR"/* &&
         cd "$BUILD_DIR" &&
-        run2 "$SRC_DIR"/configure \
+        run "$SRC_DIR"/configure \
             --prefix="$INSTALL_DIR" \
             --disable-shared \
             --disable-werror \
@@ -1277,14 +1277,14 @@ build_host_binutils ()
             --target=$TARGET \
             --with-sysroot="$INSTALL_DIR/sysroot" \
             $ARGS &&
-        run2 make -j$NUM_JOBS &&
-        run2 make -j$NUM_INSTALL_JOBS install &&
+        run make -j$NUM_JOBS &&
+        run make -j$NUM_INSTALL_JOBS install &&
         # We need to take care of something weird, binutils-2.21 on mips
         # does not seem to build gold, and the Makefile script forgets to
         # copy it to $INSTALL/bin/mipsel-linux-android-ld. Take care of this
         # here with a symlink, which will be enough for now.
         if [ ! -f "$INSTALL_DIR/bin/$TARGET-ld" ]; then
-            run2 ln -s "$TARGET-ld.bfd" "$INSTALL_DIR/bin/$TARGET-ld"
+            run ln -s "$TARGET-ld.bfd" "$INSTALL_DIR/bin/$TARGET-ld"
         fi
     )
     return $?
@@ -1299,8 +1299,8 @@ copy_target_sysroot ()
     stamps_do sysroot-arch-$TARGET_ARCH gen_minimal_sysroot $TARGET_ARCH
 
     dump "$(host_text)$(toolchain_text) Copying $TARGET_ARCH sysroot"
-    run2 rm -rf "$SYSROOT" &&
-    run2 copy_directory "$SRC_SYSROOT" "$SYSROOT"
+    run rm -rf "$SYSROOT" &&
+    run copy_directory "$SRC_SYSROOT" "$SYSROOT"
 }
 
 build_host_gcc_core ()
@@ -1385,18 +1385,18 @@ build_host_gcc_core ()
     (
         setup_host_env &&
         BUILD_DIR="$(host_build_dir_for gcc-$GCC_VERSION-$TARGET)" &&
-        run2 mkdir -p "$BUILD_DIR" && run2 rm -rf "$BUILD_DIR"/* &&
+        run mkdir -p "$BUILD_DIR" && run rm -rf "$BUILD_DIR"/* &&
         cd "$BUILD_DIR" &&
         PATH=$NEW_PATH:$PATH &&
-        run2 "$SRC_DIR"/configure \
+        run "$SRC_DIR"/configure \
             --prefix="$INSTALL_DIR" \
             --build=$BUILD \
             --host=$HOST \
             --target=$TARGET \
             --with-sysroot="$INSTALL_DIR/sysroot" \
             $HOST_PREREQS_ARGS $ARGS &&
-        run2 make -j$NUM_JOBS all-gcc &&
-        run2 make -j$NUM_INSTALL_JOBS install-gcc
+        run make -j$NUM_JOBS all-gcc &&
+        run make -j$NUM_INSTALL_JOBS install-gcc
     )
     return $?
 }
@@ -1417,8 +1417,8 @@ build_target_gcc_libs ()
         BUILD_DIR="$(host_build_dir_for gcc-$GCC_VERSION-$TARGET)" &&
         cd "$BUILD_DIR" &&
         PATH=$NEW_PATH:$PATH &&
-        run2 make -j$NUM_JOBS all &&
-        run2 make -j$NUM_INSTALL_JOBS install
+        run make -j$NUM_JOBS all &&
+        run make -j$NUM_INSTALL_JOBS install
     )
     return $?
 }
@@ -1431,7 +1431,7 @@ copy_target_gcc_libs ()
     SRC_DIR="$(build_gcc_install_dir)/$TARGET"
     DST_DIR="$(host_gcc_install_dir)/$TARGET"
 
-    run2 copy_directory "$SRC_DIR" "$DST_DIR"
+    run copy_directory "$SRC_DIR" "$DST_DIR"
 }
 
 build_host_gcc ()
@@ -1495,31 +1495,31 @@ install_gcc ()
     INSTALL_DIR=$TOOLCHAIN_INSTALL_DIR
 
     # Copy binutils binaries
-    run2 copy_directory "$BINUTILS_DIR/bin" "$INSTALL_DIR/bin" &&
-    run2 copy_directory "$BINUTILS_DIR/$TARGET/lib" "$INSTALL_DIR/$TARGET/lib" &&
+    run copy_directory "$BINUTILS_DIR/bin" "$INSTALL_DIR/bin" &&
+    run copy_directory "$BINUTILS_DIR/$TARGET/lib" "$INSTALL_DIR/$TARGET/lib" &&
 
     # The following is used to copy the libbfd. See --enable-install-libbfd
     # which is set in build_host_binutils above.
-    run2 copy_directory "$BINUTILS_DIR/$HOST/$TARGET/include" "$INSTALL_DIR/include" &&
-    run2 copy_directory "$BINUTILS_DIR/$HOST/$TARGET/lib"     "$INSTALL_DIR/lib$(tag_to_bits $SYSTEM)" &&
+    run copy_directory "$BINUTILS_DIR/$HOST/$TARGET/include" "$INSTALL_DIR/include" &&
+    run copy_directory "$BINUTILS_DIR/$HOST/$TARGET/lib"     "$INSTALL_DIR/lib$(tag_to_bits $SYSTEM)" &&
 
     # Copy gcc core binaries
-    run2 copy_directory "$GCC_DIR/bin" "$INSTALL_DIR/bin" &&
-    run2 copy_directory "$GCC_DIR/lib/gcc/$TARGET" "$INSTALL_DIR/lib/gcc/$TARGET" &&
-    run2 copy_directory "$GCC_DIR/libexec/gcc/$TARGET" "$INSTALL_DIR/libexec/gcc/$TARGET" &&
+    run copy_directory "$GCC_DIR/bin" "$INSTALL_DIR/bin" &&
+    run copy_directory "$GCC_DIR/lib/gcc/$TARGET" "$INSTALL_DIR/lib/gcc/$TARGET" &&
+    run copy_directory "$GCC_DIR/libexec/gcc/$TARGET" "$INSTALL_DIR/libexec/gcc/$TARGET" &&
 
     # Copy target gcc libraries
-    run2 copy_directory "$TARGET_LIBS_DIR/lib/gcc/$TARGET" "$INSTALL_DIR/lib/gcc/$TARGET"
-    run2 copy_directory "$TARGET_LIBS_DIR/$TARGET/lib" "$INSTALL_DIR/$TARGET/lib"
+    run copy_directory "$TARGET_LIBS_DIR/lib/gcc/$TARGET" "$INSTALL_DIR/lib/gcc/$TARGET"
+    run copy_directory "$TARGET_LIBS_DIR/$TARGET/lib" "$INSTALL_DIR/$TARGET/lib"
     # Multilib compiler should have these
     if [ -d "$TARGET_LIBS_DIR/$TARGET/libx32" ]; then
-       run2 copy_directory "$TARGET_LIBS_DIR/$TARGET/libx32" "$INSTALL_DIR/$TARGET/libx32"
+       run copy_directory "$TARGET_LIBS_DIR/$TARGET/libx32" "$INSTALL_DIR/$TARGET/libx32"
     fi
     if [ -d "$TARGET_LIBS_DIR/$TARGET/lib32" ]; then
-       run2 copy_directory "$TARGET_LIBS_DIR/$TARGET/lib32" "$INSTALL_DIR/$TARGET/lib32"
+       run copy_directory "$TARGET_LIBS_DIR/$TARGET/lib32" "$INSTALL_DIR/$TARGET/lib32"
     fi
     if [ -d "$TARGET_LIBS_DIR/$TARGET/lib64" ]; then
-       run2 copy_directory "$TARGET_LIBS_DIR/$TARGET/lib64" "$INSTALL_DIR/$TARGET/lib64"
+       run copy_directory "$TARGET_LIBS_DIR/$TARGET/lib64" "$INSTALL_DIR/$TARGET/lib64"
     fi
 
     # We need to generate symlinks for the binutils binaries from
@@ -1541,7 +1541,7 @@ install_gcc ()
     fail_panic
 
     # Remove unwanted $TARGET-run simulator to save about 800 KB.
-    run2 rm -f "$INSTALL_DIR"/bin/$TARGET-run
+    run rm -f "$INSTALL_DIR"/bin/$TARGET-run
 
     # Copy the license files
     local TOOLCHAIN_LICENSES="$ANDROID_NDK_ROOT"/build/tools/toolchain-licenses

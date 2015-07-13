@@ -96,7 +96,7 @@ if [ -n "$NDK_LOGFILE" ] ; then
     TMPLOG="$NDK_LOGFILE"
 fi
 
-# Setup a log file where all log() and log2() output will be sent
+# Setup a log file where all log() output will be sent
 #
 # $1: log file path  (optional)
 #
@@ -154,17 +154,6 @@ log_n ()
     fi
 }
 
-log2 ()
-{
-    if [ "$VERBOSE2" = "yes" ] ; then
-        echo "$@"
-    else
-        if [ -n "$TMPLOG" ] ; then
-            echo "$@" >> $TMPLOG
-        fi
-    fi
-}
-
 run ()
 {
     if [ "$DRYRUN" = "yes" ] ; then
@@ -175,30 +164,6 @@ run ()
     else
         if [ -n "$TMPLOG" ] ; then
             echo "## COMMAND: $@" >> $TMPLOG
-            "$@" >>$TMPLOG 2>&1
-        else
-            "$@" > /dev/null 2>&1
-        fi
-    fi
-}
-
-run2 ()
-{
-    if [ "$DRYRUN" = "yes" ] ; then
-        echo "## SKIP COMMAND: $@"
-    elif [ "$VERBOSE2" = "yes" ] ; then
-        echo "## COMMAND: $@"
-        "$@" 2>&1
-    elif [ "$VERBOSE" = "yes" ]; then
-        echo "## COMMAND: $@"
-        if [ -n "$TMPLOG" ]; then
-            echo "## COMMAND: $@" >> $TMPLOG
-            "$@" >>$TMPLOG 2>&1
-        else
-            "$@" > /dev/null 2>&1
-        fi
-    else
-        if [ -n "$TMPLOG" ]; then
             "$@" >>$TMPLOG 2>&1
         else
             "$@" > /dev/null 2>&1
@@ -279,8 +244,8 @@ case "$HOST_OS" in
         ;;
 esac
 
-log2 "HOST_OS=$HOST_OS"
-log2 "HOST_EXE=$HOST_EXE"
+log "HOST_OS=$HOST_OS"
+log "HOST_EXE=$HOST_EXE"
 
 ## Now find the host architecture. This must correspond to the bitness of
 ## the binaries we're going to run with this NDK. Certain platforms allow
@@ -326,13 +291,13 @@ case "$HOST_OS-$HOST_ARCH" in
     "$HOST_FILE_PROGRAM" -L "$SHELL" | grep -q "x86[_-]64"
     if [ $? != 0 ]; then
       # $SHELL is not a 64-bit executable, so assume our userland is too.
-      log2 "Detected 32-bit userland on 64-bit kernel system!"
+      log "Detected 32-bit userland on 64-bit kernel system!"
       HOST_ARCH=x86
     fi
     ;;
 esac
 
-log2 "HOST_ARCH=$HOST_ARCH"
+log "HOST_ARCH=$HOST_ARCH"
 
 # at this point, the supported values for HOST_ARCH are:
 #   x86
@@ -373,7 +338,7 @@ compute_host_tag ()
             HOST_TAG="windows"
             ;;
     esac
-    log2 "HOST_TAG=$HOST_TAG"
+    log "HOST_TAG=$HOST_TAG"
 }
 
 compute_host_tag
@@ -394,7 +359,7 @@ case "$HOST_OS" in
         HOST_NUM_CPUS=1
 esac
 
-log2 "HOST_NUM_CPUS=$HOST_NUM_CPUS"
+log "HOST_NUM_CPUS=$HOST_NUM_CPUS"
 
 # If BUILD_NUM_CPUS is not already defined in your environment,
 # define it as the double of HOST_NUM_CPUS. This is used to
@@ -404,7 +369,7 @@ if [ -z "$BUILD_NUM_CPUS" ] ; then
     BUILD_NUM_CPUS=`expr $HOST_NUM_CPUS \* 2`
 fi
 
-log2 "BUILD_NUM_CPUS=$BUILD_NUM_CPUS"
+log "BUILD_NUM_CPUS=$BUILD_NUM_CPUS"
 
 
 ##  HOST TOOLCHAIN SUPPORT
@@ -416,10 +381,10 @@ FORCE_32BIT=no
 force_32bit_binaries ()
 {
     if [ "$HOST_ARCH" = x86_64 ] ; then
-        log2 "Forcing generation of 32-bit host binaries on $HOST_ARCH"
+        log "Forcing generation of 32-bit host binaries on $HOST_ARCH"
         FORCE_32BIT=yes
         HOST_ARCH=x86
-        log2 "HOST_ARCH=$HOST_ARCH"
+        log "HOST_ARCH=$HOST_ARCH"
         compute_host_tag
     fi
 }
@@ -431,7 +396,7 @@ force_32bit_binaries ()
 disable_cygwin ()
 {
     if [ $HOST_OS = cygwin ] ; then
-        log2 "Disabling cygwin binaries generation"
+        log "Disabling cygwin binaries generation"
         CFLAGS="$CFLAGS -mno-cygwin"
         LDFLAGS="$LDFLAGS -mno-cygwin"
         HOST_OS=windows
@@ -479,7 +444,7 @@ setup_toolchain ()
         LD="$CC"
     fi
 
-    log2 "Using '$CC' as the C compiler"
+    log "Using '$CC' as the C compiler"
 
     # check that we can compile a trivial C program with this compiler
     mkdir -p $(dirname "$TMPC")
@@ -523,11 +488,11 @@ EOF
             clean_exit
         fi
     fi
-    log2 "Using '$LD' as the linker"
+    log "Using '$LD' as the linker"
     log "LD         : linker check ok ($LD)"
 
     # check the C++ compiler
-    log2 "Using '$CXX' as the C++ compiler"
+    log "Using '$CXX' as the C++ compiler"
 
     cat > $TMPC <<EOF
 #include <iostream>
@@ -558,13 +523,13 @@ EOF
 #
 compile ()
 {
-    log2 "Object     : $CC -o $TMPO -c $CFLAGS $TMPC"
+    log "Object     : $CC -o $TMPO -c $CFLAGS $TMPC"
     $CC -o $TMPO -c $CFLAGS $TMPC 2> $TMPL
 }
 
 compile_cpp ()
 {
-    log2 "Object     : $CXX -o $TMPO -c $CXXFLAGS $TMPC"
+    log "Object     : $CXX -o $TMPO -c $CXXFLAGS $TMPC"
     $CXX -o $TMPO -c $CXXFLAGS $TMPC 2> $TMPL
 }
 
@@ -572,7 +537,7 @@ compile_cpp ()
 #
 link()
 {
-    log2 "Link      : $LD -o $TMPE $TMPO $LDFLAGS"
+    log "Link      : $LD -o $TMPE $TMPO $LDFLAGS"
     $LD -o $TMPE $TMPO $LDFLAGS 2> $TMPL
 }
 
@@ -580,14 +545,14 @@ link()
 #
 execute()
 {
-    log2 "Running: $*"
+    log "Running: $*"
     $*
 }
 
 # perform a simple compile / link / run of the source file in $TMPC
 compile_exec_run()
 {
-    log2 "RunExec    : $CC -o $TMPE $CFLAGS $TMPC"
+    log "RunExec    : $CC -o $TMPE $CFLAGS $TMPC"
     compile
     if [ $? != 0 ] ; then
         echo "Failure to compile test program"
