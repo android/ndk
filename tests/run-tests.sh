@@ -431,6 +431,8 @@ case $ABI in
         ;;
     *)
         echo "ERROR: Unsupported abi value: $ABI"
+        echo "Supported ABIs: armeabi, armeabi-v7a, armeabi-v7a-hard,"
+        echo "                arm64-v8a, x86, x86_64, mips, mips64"
         exit 1
         ;;
 esac
