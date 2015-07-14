@@ -82,10 +82,8 @@ for PLATFORM in $API_LEVELS; do
         log "Compressing directory: $SDIR"
         PDIR=$SRCDIR/android-$PREV_PLATFORM
         FILES=$(cd $SDIR && find . -type f)
-        if [ "$VERBOSE2" = "yes" ]; then
-            echo "Files found:"
-            echo "$FILES" | tr ' ' '\n'
-        fi
+        echo "Files found:"
+        echo "$FILES" | tr ' ' '\n'
         for FILENAME in $FILES; do
             FILENAME=${FILENAME##./}  # Get rid of leading ./
             PFILE=$PDIR/$FILENAME

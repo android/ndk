@@ -126,9 +126,6 @@ fi
 if [ "$VERBOSE" = "yes" ]; then
     FLAGS=$FLAGS" --verbose"
 fi
-if [ "$VERBOSE2" = "yes" ]; then
-    FLAGS=$FLAGS" --verbose"
-fi
 if [ "$TRY64" = "yes" ]; then
     FLAGS=$FLAGS" --try-64"
 else

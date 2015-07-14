@@ -560,14 +560,9 @@ do_option_help ()
 }
 
 VERBOSE=no
-VERBOSE2=no
 do_option_verbose ()
 {
-    if [ $VERBOSE = "yes" ] ; then
-        VERBOSE2=yes
-    else
-        VERBOSE=yes
-    fi
+    VERBOSE=yes
 }
 
 DRYRUN=no
