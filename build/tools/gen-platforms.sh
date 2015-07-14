@@ -80,7 +80,6 @@ OPTION_LLVM_VERSION=$DEFAULT_LLVM_VERSION
 PACKAGE_DIR=
 
 VERBOSE=no
-VERBOSE2=no
 
 for opt do
   optarg=`expr "x$opt" : 'x[^=]*=\(.*\)'`
@@ -88,11 +87,7 @@ for opt do
   --help|-h|-\?) OPTION_HELP=yes
   ;;
   --verbose)
-    if [ "$VERBOSE" = "yes" ] ; then
-        VERBOSE2=yes
-    else
-        VERBOSE=yes
-    fi
+    VERBOSE=yes
     ;;
   --src-dir=*)
     OPTION_SRCDIR="$optarg"

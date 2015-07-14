@@ -335,10 +335,6 @@ else
     # copy platform and sample files
     echo "Copying platform and sample files"
     FLAGS="--src-dir=$DEVELOPMENT_ROOT --dst-dir=$REFERENCE"
-    if [ "$VERBOSE2" = "yes" ] ; then
-        FLAGS="$FLAGS --verbose"
-    fi
-
     FLAGS="$FLAGS --platform=$(spaces_to_commas $PLATFORMS)"
     FLAGS="$FLAGS --arch=$(spaces_to_commas $ARCHS)"
     $NDK_ROOT_DIR/build/tools/gen-platforms.sh $FLAGS

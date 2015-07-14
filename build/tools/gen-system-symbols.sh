@@ -29,7 +29,6 @@
 . `dirname $0`/prebuilt-common.sh
 
 VERBOSE=no
-VERBOSE2=no
 
 PROGRAM_PARAMETERS="<src-dir> <dst-dir>"
 PROGRAM_DESCRIPTION=\

@@ -86,7 +86,6 @@ DRYRUN=${DRYRUN-no}
 ## Logging support
 ##
 VERBOSE=${VERBOSE-yes}
-VERBOSE2=${VERBOSE2-no}
 
 
 # If NDK_LOGFILE is defined in the environment, use this as the log file
@@ -712,13 +711,8 @@ unpack_archive ()
     local DIR=${2-.}
     local RESULT TARFLAGS ZIPFLAGS
     mkdir -p "$DIR"
-    if [ "$VERBOSE2" = "yes" ] ; then
-        TARFLAGS="vxpf"
-        ZIPFLAGS=""
-    else
-        TARFLAGS="xpf"
-        ZIPFLAGS="q"
-    fi
+    TARFLAGS="xpf"
+    ZIPFLAGS="q"
     case "$ARCHIVE" in
         *.zip)
             (cd $DIR && run unzip $ZIPFLAGS "$ARCHIVE")
@@ -766,13 +760,8 @@ pack_archive ()
         ARCHIVE="`pwd`/$ARCHIVE"
     fi
     mkdir -p `dirname $ARCHIVE`
-    if [ "$VERBOSE2" = "yes" ] ; then
-        TARFLAGS="vcf"
-        ZIPFLAGS="-9r"
-    else
-        TARFLAGS="cf"
-        ZIPFLAGS="-9qr"
-    fi
+    TARFLAGS="cf"
+    ZIPFLAGS="-9qr"
     # Ensure symlinks are stored as is in zip files. for toolchains
     # this can save up to 7 MB in the size of the final archive
     #ZIPFLAGS="$ZIPFLAGS --symlinks"

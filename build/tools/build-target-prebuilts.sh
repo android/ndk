@@ -110,9 +110,6 @@ fi
 if [ "$VERBOSE" = "yes" ]; then
     FLAGS=$FLAGS" --verbose"
 fi
-if [ "$VERBOSE2" = "yes" ]; then
-    FLAGS=$FLAGS" --verbose"
-fi
 if [ "$PACKAGE_DIR" ]; then
     mkdir -p "$PACKAGE_DIR"
     fail_panic "Could not create package directory: $PACKAGE_DIR"
