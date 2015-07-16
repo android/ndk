@@ -19,9 +19,6 @@
 # You will need prebuilt toolchain binary tarballs or a previous
 # NDK release package to do that.
 #
-# See make-release.sh if you want to make a new release completely from
-# scratch.
-#
 
 . `dirname $0`/prebuilt-common.sh
 

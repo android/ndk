@@ -25,9 +25,6 @@
 PROGRAM_PARAMETERS="[<toolchain-name>+]"
 PROGRAM_DESCRIPTION="\
 This program is used to rebuild one or more NDK cross-toolchains from scratch.
-To use it, you will first need to call download-toolchain-sources.sh to download
-the toolchain sources, then pass the corresponding directory with the
---toolchain-src-dir=<path> option.
 
 If you don't pass any parameter, the script will rebuild all NDK toolchains
 for the current host system [$HOST_TAG]. You can otherwise give a list of

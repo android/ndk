@@ -1535,8 +1535,6 @@ check_toolchain_src_dir ()
         echo "ERROR: Either the file $SRC_DIR/build/configure or"
         echo "       the directory $SRC_DIR/gcc does not exist."
         echo "This is not the top of a toolchain tree: $SRC_DIR"
-        echo "You must give the path to a copy of the toolchain source directories"
-        echo "created by 'download-toolchain-sources.sh."
         exit 1
     fi
 }

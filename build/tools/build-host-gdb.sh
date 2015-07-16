@@ -25,11 +25,9 @@ NDK_BUILDTOOLS_PATH="$(dirname $0)"
 PROGRAM_PARAMETERS=""
 PROGRAM_DESCRIPTION="\
 This program is used to rebuild one or more NDK gdb client programs from
-sources. To use it, you will need a working set of toolchain sources, like
-those downloaded with download-toolchain-sources.sh, then pass the
-corresponding directory with the --toolchain-src-dir=<path> option.
+sources.
 
-By default, the script rebuilds GDB for you host system [$HOST_TAG],
+By default, the script rebuilds GDB for your host system [$HOST_TAG],
 but you can use --systems=<tag1>,<tag2>,.. to ask binaries that can run on
 several distinct systems. Each <tag> value in the list can be one of the
 following:
