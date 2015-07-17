@@ -67,10 +67,7 @@ register_option "--check" do_check_option "Check host prebuilts"
 register_try64_option
 
 PROGRAM_PARAMETERS="<toolchain-src-dir>"
-PROGRAM_DESCRIPTION=\
-"This script can be used to rebuild all the host NDK toolchains at once.
-You need to give it the path to the toolchain source directory, as
-downloaded by the 'download-toolchain-sources.sh' dev-script."
+PROGRAM_DESCRIPTION="This script can be used to rebuild all the host NDK toolchains at once."
 
 extract_parameters "$@"
 
@@ -91,8 +88,6 @@ if [ ! -f "$SRC_DIR/build/configure" -o ! -d "$SRC_DIR/gcc/gcc-$DEFAULT_GCC32_VE
     echo "       the directory $SRC_DIR/gcc/gcc-$DEFAULT_GCC32_VERSION or"
     echo "       $SRC_DIR/gcc/gcc-$DEFAULT_GCC64_VERSION does not exist"
     echo "This is not the top of a toolchain tree: $SRC_DIR"
-    echo "You must give the path to a copy of the toolchain source directories"
-    echo "created by 'download-toolchain-sources.sh."
     exit 1
 fi
 

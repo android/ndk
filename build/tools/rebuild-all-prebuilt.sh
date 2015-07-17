@@ -62,8 +62,6 @@ register_try64_option
 PROGRAM_PARAMETERS="<toolchain-src-dir>"
 PROGRAM_DESCRIPTION=\
 "This script is used to rebuild all host and target prebuilts from scratch.
-You will need to give the path of a toolchain source directory, one which
-is typically created with the download-toolchain-sources.sh script.
 
 Unless you use the --ndk-dir option, all binaries will be installed to the
 current NDK directory.
