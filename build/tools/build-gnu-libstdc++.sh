@@ -273,8 +273,6 @@ build_gnustl_for_abi ()
 
     if [ "$ARCH" = "x86_64" -o "$ARCH" = "mips64" -o "$ARCH" = "mips" ] ; then
         MULTILIB_FLAGS=
-    elif [ "$ARCH" = "mips" -a $GCC_VERSION = "4.9" ] ; then
-        MULTILIB_FLAGS=
     else
         MULTILIB_FLAGS=--disable-multilib
     fi
@@ -350,10 +348,8 @@ copy_gnustl_libs ()
             copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/mips64-r2/bits" "$DDIR/libs/$ABI/include/mips64-r2/bits"
             ;;
         mips)
-            if [ "$GCC_VERSION" = "4.9" ]; then
-                copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/mips-r2/bits" "$DDIR/libs/$ABI/include/mips-r2/bits"
-                copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/mips-r6/bits" "$DDIR/libs/$ABI/include/mips-r6/bits"
-	    fi
+            copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/mips-r2/bits" "$DDIR/libs/$ABI/include/mips-r2/bits"
+            copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/mips-r6/bits" "$DDIR/libs/$ABI/include/mips-r6/bits"
             ;;
     esac
 
@@ -394,14 +390,12 @@ copy_gnustl_libs ()
             cp "$SDIR/lib64r2/libgnustl_shared.a" "$DDIR/libs/$ABI/lib64r2/libgnustl_static.a"
             ;;
         mips)
-            if [ "$GCC_VERSION" = "4.9" ]; then
-                copy_file_list "$SDIR/lib" "$DDIR/libs/$ABI/lib" libsupc++.a libgnustl_shared.so
-                copy_file_list "$SDIR/libr2" "$DDIR/libs/$ABI/libr2" libsupc++.a libgnustl_shared.so
-                copy_file_list "$SDIR/libr6" "$DDIR/libs/$ABI/libr6" libsupc++.a libgnustl_shared.so
-                cp "$SDIR/lib/libgnustl_shared.a" "$DDIR/libs/$ABI/lib/libgnustl_static.a"
-                cp "$SDIR/libr2/libgnustl_shared.a" "$DDIR/libs/$ABI/libr2/libgnustl_static.a"
-                cp "$SDIR/libr6/libgnustl_shared.a" "$DDIR/libs/$ABI/libr6/libgnustl_static.a"
-	    fi
+            copy_file_list "$SDIR/lib" "$DDIR/libs/$ABI/lib" libsupc++.a libgnustl_shared.so
+            copy_file_list "$SDIR/libr2" "$DDIR/libs/$ABI/libr2" libsupc++.a libgnustl_shared.so
+            copy_file_list "$SDIR/libr6" "$DDIR/libs/$ABI/libr6" libsupc++.a libgnustl_shared.so
+            cp "$SDIR/lib/libgnustl_shared.a" "$DDIR/libs/$ABI/lib/libgnustl_static.a"
+            cp "$SDIR/libr2/libgnustl_shared.a" "$DDIR/libs/$ABI/libr2/libgnustl_static.a"
+            cp "$SDIR/libr6/libgnustl_shared.a" "$DDIR/libs/$ABI/libr6/libgnustl_static.a"
             ;;
     esac
 
@@ -462,14 +456,10 @@ if [ -n "$PACKAGE_DIR" ] ; then
                               lib64r2/libsupc++.a lib64r2/libgnustl_static.a lib64r2/libgnustl_shared.so"
                     ;;
                 mips|mips32r6)
-                    if [ "$VERSION" = "4.9" ]; then
-                        MULTILIB="include/mips-r2/bits include/mips-r6/bits include/bits
-                                  lib/libsupc++.a lib/libgnustl_static.a lib/libgnustl_shared.so
-                                  libr2/libsupc++.a libr2/libgnustl_static.a libr2/libgnustl_shared.so
-                                  libr6/libsupc++.a libr6/libgnustl_static.a libr6/libgnustl_shared.so"
-                    else
-                        MULTILIB=
-                    fi
+                    MULTILIB="include/mips-r2/bits include/mips-r6/bits include/bits
+                              lib/libsupc++.a lib/libgnustl_static.a lib/libgnustl_shared.so
+                              libr2/libsupc++.a libr2/libgnustl_static.a libr2/libgnustl_shared.so
+                              libr6/libsupc++.a libr6/libgnustl_static.a libr6/libgnustl_shared.so"
                     ;;
                 *)
                     MULTILIB=
