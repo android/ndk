@@ -318,18 +318,11 @@ else
 fi
 
 #
-# Create log file
+# Make build directory.
 #
 
 BUILD_DIR=$TEST_DIR/build
 mkdir -p "$BUILD_DIR" && rm -rf "$BUILD_DIR/*"
-
-#
-# Add -link-native-binary to allow linking native binaries
-#
-if [ "$NDK_ABI_FILTER" != "${NDK_ABI_FILTER%%bc*}" ] ; then
-  APP_LDFLAGS="$APP_LDFLAGS -Wl,-link-native-binary"
-fi
 
 
 ###
@@ -399,7 +392,6 @@ run_awk_test_dir ()
 }
 
 if is_testable awk; then
-    AWKDIR="$ROOTDIR/build/awk"
     for DIR in `ls -d "$PROGDIR"/awk/*`; do
         run_awk_test_dir "$DIR"
     done
