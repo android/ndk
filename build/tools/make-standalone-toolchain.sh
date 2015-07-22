@@ -403,10 +403,8 @@ case "$ARCH" in
         copy_directory_nolinks "$SRC_SYSROOT_LIB/../lib64r2" "$TMPDIR/sysroot/usr/lib64r2"
         ;;
     mips)
-        if [ "$GCC_VERSION" = "4.9" ]; then
-            copy_directory_nolinks "$SRC_SYSROOT_LIB/../libr2" "$TMPDIR/sysroot/usr/libr2"
-            copy_directory_nolinks "$SRC_SYSROOT_LIB/../libr6" "$TMPDIR/sysroot/usr/libr6"
-	fi
+        copy_directory_nolinks "$SRC_SYSROOT_LIB/../libr2" "$TMPDIR/sysroot/usr/libr2"
+        copy_directory_nolinks "$SRC_SYSROOT_LIB/../libr6" "$TMPDIR/sysroot/usr/libr6"
         ;;
 esac
 
@@ -571,7 +569,7 @@ copy_stl_libs_for_abi () {
             fi
             ;;
         mips|mips32r6)
-            if [ "$STL" = "gnustl" -a "$GCC_VERSION" = "4.9" ]; then
+            if [ "$STL" = "gnustl" ]; then
                 copy_stl_libs mips         "bits"                "bits"             "../lib"       "lib"
                 copy_stl_libs mips         "mips-r2/bits"        "mips-r2/bits"     "../libr2"     "libr2"
                 copy_stl_libs mips         "mips-r6/bits"        "mips-r6/bits"     "../libr6"     "libr6"
