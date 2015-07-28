@@ -496,9 +496,6 @@ for SYSTEM in $SYSTEMS; do
         fi
     fi
 
-    # Unpack other host tools
-    unpack_prebuilt scan-build-view "$DSTDIR" "$DSTDIR64"
-
     # Unpack renderscript headers/libs; http://b/22377128.
     echo "WARNING: no renderscript headers/libs! http://b/22377128"
     #unpack_prebuilt renderscript "$DSTDIR" "$DSTDIR64"
