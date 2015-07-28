@@ -553,6 +553,11 @@ for SYSTEM in $SYSTEMS; do
             ;;
     esac
 
+    repo forall -c 'echo $REPO_PROJECT $(git rev-parse HEAD)' > $DSTDIR/SOURCES
+    if [ "$DSTDIR" != "$DSTDIR64" ]; then
+      cp $DSTDIR/SOURCES $DSTDIR64/SOURCES
+    fi
+
     echo "Creating $ARCHIVE"
     # make all file universally readable, and all executable (including directory)
     # universally executable, punt intended
