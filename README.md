@@ -43,8 +43,6 @@ The NDK consists of three parts: host binaries, target prebuilts, and others
       when this toolchain is used.
 * `prebuilt/$HOST_ARCH/` contains various tools to make the build system hermetic.
     * make, awk, sed, perl, python, yasm, and for Windows: cmp.exe and echo.exe
-* `prebuilt/common` contains the `scan-build` and `scan-view` scripts used by
-  static analyzer via `NDK_ANALYZE=1`.
 * `ndk-depends` and `ndk-stack` should probably go in `prebuilt/` to avoid
   collisions between host variants.
 
