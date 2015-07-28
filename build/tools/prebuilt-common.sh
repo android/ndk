@@ -5,13 +5,6 @@
 # ensure stable sort order
 export LC_ALL=C
 
-if [ -z "$ANDROID_BUILD_TOP" ]; then
-    >&2 echo 'ANDROID_BUILD_TOP not set. Cannot continue.'
-    >&2 echo 'Please set ANDROID_BUILD_TOP to point to the root of an Android' \
-             'tree.'
-    exit 1
-fi
-
 # NDK_BUILDTOOLS_PATH should point to the directory containing
 # this script. If it is not defined, assume that this is one of
 # the scripts in the same directory that sourced this file.
