@@ -339,10 +339,6 @@ for SYSTEM in $SYSTEMS; do
     # We're done for this system.
 done
 
-# Build tools common to all systems.
-run $BUILDTOOLS/build-analyzer.sh "$NDK_DIR" --package-dir="$PACKAGE_DIR"
-fail_panic "Could not build analyzer!"
-
 if [ "$PACKAGE_DIR" ]; then
     echo "Done, please look at $PACKAGE_DIR"
 else
