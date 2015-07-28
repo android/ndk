@@ -334,9 +334,12 @@ if [ -n "$LLVM_VERSION" ]; then
     mv "$TMPDIR/bin/clang++${HOST_EXE}" "$TMPDIR/bin/clang$LLVM_VERSION_WITHOUT_DOT++${HOST_EXE}"
   fi
 
+  TARGET_FLAG="-target $LLVM_TARGET"
+  CLANG_FLAGS="$TARGET_FLAG --sysroot \`dirname \$0\`/../sysroot"
+
   cat > "$TMPDIR/bin/clang" <<EOF
 if [ "\$1" != "-cc1" ]; then
-    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT -target $LLVM_TARGET "\$@"
+    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT $CLANG_FLAGS "\$@"
 else
     # target/triple already spelled out.
     \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT "\$@"
@@ -344,7 +347,7 @@ fi
 EOF
   cat > "$TMPDIR/bin/clang++" <<EOF
 if [ "\$1" != "-cc1" ]; then
-    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT++ -target $LLVM_TARGET "\$@"
+    \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT++ $CLANG_FLAGS "\$@"
 else
     # target/triple already spelled out.
     \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT++ "\$@"
@@ -355,10 +358,11 @@ EOF
   cp -a "$TMPDIR/bin/clang++" "$TMPDIR/bin/$TOOLCHAIN_PREFIX-clang++"
 
   if [ -n "$HOST_EXE" ] ; then
+    CLANG_FLAGS="$TARGET_FLAG --sysroot %~dp0\\..\\sysroot"
     cat > "$TMPDIR/bin/clang.cmd" <<EOF
 @echo off
 if "%1" == "-cc1" goto :L
-%~dp0\\clang${LLVM_VERSION_WITHOUT_DOT}${HOST_EXE} -target $LLVM_TARGET %*
+%~dp0\\clang${LLVM_VERSION_WITHOUT_DOT}${HOST_EXE} $CLANG_FLAGS %*
 if ERRORLEVEL 1 exit /b 1
 goto :done
 :L
@@ -370,7 +374,7 @@ EOF
     cat > "$TMPDIR/bin/clang++.cmd" <<EOF
 @echo off
 if "%1" == "-cc1" goto :L
-%~dp0\\clang${LLVM_VERSION_WITHOUT_DOT}++${HOST_EXE} -target $LLVM_TARGET %*
+%~dp0\\clang${LLVM_VERSION_WITHOUT_DOT}++${HOST_EXE} $CLANG_FLAGS %*
 if ERRORLEVEL 1 exit /b 1
 goto :done
 :L
