@@ -315,7 +315,7 @@ if [ "$NDK_ANALYZE" = 1 ]; then
         TOOLCHAIN_PREFIX=`get_build_var_for_abi TOOLCHAIN_PREFIX $ABI`
         LLVM_PATH=$PROGDIR/toolchains/llvm-${DEFAULT_LLVM_VERSION}/prebuilt/$HOST_TAG
         PERL5LIB="$HOST_PERL_LIB" "$HOST_PERL" $LLVM_PATH/tools/scan-build/scan-build \
-            --use-analyzer $LLVM_PATH/bin/clang \
+            --use-analyzer $LLVM_PATH/bin/${ABI}/analyzer \
             --use-cc ${TOOLCHAIN_PREFIX}gcc \
             --use-c++ ${TOOLCHAIN_PREFIX}g++ \
             --status-bugs \
