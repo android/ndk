@@ -34,6 +34,10 @@ class ArgParser(argparse.ArgumentParser):
             description=inspect.getdoc(sys.modules[__name__]))
 
         self.add_argument(
+            '--host-only', action='store_true', default=True,
+            help='Skip building target components.')
+
+        self.add_argument(
             '--package', action='store_true', dest='package', default=True,
             help='Package the NDK when done building.')
         self.add_argument(
@@ -66,16 +70,12 @@ def invoke_build(script, args=None):
     subprocess.check_call([os.path.join('build/tools', script)] + args)
 
 
-def build_ndk(out_dir, system, build_args):
+def build_ndk(out_dir, build_args, host_only):
     build_args = list(build_args)
     build_args.append('--package-dir={}'.format(out_dir))
     build_args.append('--verbose')
 
-    if system == 'windows' or platform.system() == 'Darwin':
-        # There's no sense in building the target libraries from Darwin (they
-        # shouldn't be any different from those built on Linux), and we can't
-        # build them using the Windows toolchains (because we aren't on
-        # Windows), so only build the host components.
+    if host_only:
         ndk_dir_arg = '--ndk-dir={}'.format(os.getcwd())
         invoke_build('build-host-prebuilts.sh',
                      build_args + [ndk_dir_arg])
@@ -136,7 +136,17 @@ def main():
     out_dir = os.path.realpath(os.getenv('DIST_DIR', DEFAULT_OUT_DIR))
 
     invoke_build('dev-cleanup.sh')
-    build_ndk(out_dir, system, build_args)
+    if not args.host_only and system == 'windows':
+        # We need to build the Linux toolchains before we can build the target
+        # modules.
+        linux_build_args = []
+        for arg in build_args:
+            if arg.startswith('--systems='):
+                linux_build_args.append('--systems=linux-x86')
+            else:
+                linux_build_args.append(arg)
+        build_ndk(out_dir, linux_build_args, host_only=True)
+    build_ndk(out_dir, build_args, host_only=args.host_only)
 
     # TODO(danalbert): Make --package work for Windows and Darwin.
     # This doesn't work as-is because we don't build the target components on
