@@ -581,4 +581,4 @@ rm -rf $TMPDIR/reference
 rm -rf $TMPDIR/prev-ndk
 
 echo "Done, please see packages in $OUT_DIR:"
-ls -l $OUT_DIR
+ls -lh $OUT_DIR
