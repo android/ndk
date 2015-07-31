@@ -246,35 +246,6 @@ fi
 if [ "$NDK_ANALYZE" = 1 ]; then
     . $PROGDIR/build/tools/dev-defaults.sh  # for DEFAULT_LLVM_VERSION
 
-    # Find perl.  If HOST_PERL is defined, check that it points to a valid file
-    HOST_PERL_LIB=
-    if [ -n "$HOST_PERL" ] ; then
-        ABS_PERL=`which $HOST_PERL 2> /dev/null`
-        if [ $? != 0 ] ; then
-            echo "ERROR: Your HOST_PERL variable is defined to an invalid name: $HOST_PERL"
-            echo "Please fix it to point to a valid perl executable (e.g. /usr/bin/perl)"
-            exit 1
-        fi
-        HOST_PERL="$ABS_PERL"
-        log "HOST_PERL=$HOST_PERL (from environment variable)"
-    else
-        # Otherwise use the prebuilt version for our host tag
-        HOST_PERL="$PROGDIR/prebuilt/$HOST_TAG/bin/perl"
-        if [ ! -f "$HOST_PERL" ]; then
-            # Otherwise, use 'perl' and check that it is available
-            HOST_PERL=`which perl 2> /dev/null`
-            if [ $? != 0 ] ; then
-                echo "ERROR: Cannot find 'perl' program. Please install perl package"
-                echo "or define the HOST_PERL variable to point to it."
-                exit 1
-            fi
-            log "HOST_PERL=$HOST_PERL (system path)"
-        else
-            HOST_PERL_LIB="$PROGDIR/prebuilt/$HOST_TAG/lib/perl5"
-            log "HOST_PERL=$HOST_PERL (NDK prebuilt)"
-        fi
-    fi
-
     # Return flags send in env. or command line which are enough to retrive APP_ABI and TOOLCHAIN_PREFIX later
     gen_flags ()
     {
@@ -314,7 +285,7 @@ if [ "$NDK_ANALYZE" = 1 ]; then
     for ABI in $APP_ABIS; do
         TOOLCHAIN_PREFIX=`get_build_var_for_abi TOOLCHAIN_PREFIX $ABI`
         LLVM_PATH=$PROGDIR/toolchains/llvm-${DEFAULT_LLVM_VERSION}/prebuilt/$HOST_TAG
-        PERL5LIB="$HOST_PERL_LIB" "$HOST_PERL" $LLVM_PATH/tools/scan-build/scan-build \
+        perl $LLVM_PATH/tools/scan-build/scan-build \
             --use-analyzer $LLVM_PATH/bin/${ABI}/analyzer \
             --use-cc ${TOOLCHAIN_PREFIX}gcc \
             --use-c++ ${TOOLCHAIN_PREFIX}g++ \
