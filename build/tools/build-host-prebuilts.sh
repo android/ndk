@@ -267,28 +267,6 @@ for SYSTEM in $SYSTEMS; do
     run $BUILDTOOLS/build-host-awk.sh $TOOLCHAIN_FLAGS
     fail_panic "awk build failure!"
 
-    # ToDo: perl in windows/darwin cross.
-    MAKE_PERL=no
-    case $SYSTEM in
-        linux*)
-            MAKE_PERL=yes
-        ;;
-        darwin*)
-            # Only works if not cross compiling.
-            if [ "$CANADIAN_BUILD" = "no" ] ; then
-                MAKE_PERL=yes
-            fi
-        ;;
-        *)
-        ;;
-    esac
-
-    if [ "$MAKE_PERL" = "yes" ] ; then
-        echo "Building $SYSNAME ndk-perl"
-        run $BUILDTOOLS/build-host-perl.sh $TOOLCHAIN_FLAGS "$SRC_DIR"
-        fail_panic "perl build failure!"
-    fi
-
     echo "Building $SYSNAME ndk-python"
     run $BUILDTOOLS/build-host-python.sh $TOOLCHAIN_FLAGS "--toolchain-src-dir=$SRC_DIR" "--systems=$SYSTEM" "--force"
     fail_panic "python build failure!"
