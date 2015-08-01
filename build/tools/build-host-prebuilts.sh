@@ -311,6 +311,9 @@ for SYSTEM in $SYSTEMS; do
     # Windows is (currently) always 32-bit, and the other two are always 64-bit.
     LLVM_HOST=${SYSTEM%%_64}
     LLVM_HOST=${SYSTEM%%-x86}
+    if [ "$SYSTEM" = "windows-x86_64" ]; then
+        LLVM_HOST=windows64
+    fi
     run $BUILDTOOLS/build-llvm.py --host $LLVM_HOST $PACKAGE_ARG
     fail_panic "Could not build llvm for $SYSNAME"
 

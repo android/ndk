@@ -55,7 +55,7 @@ class ArgParser(argparse.ArgumentParser):
 
         self.add_argument(
             '--host', required=True,
-            choices=('darwin', 'linux', 'windows'),
+            choices=('darwin', 'linux', 'windows', 'windows64'),
             help='Package binaries for given OS (e.g. linux).')
         self.add_argument(
             '--package-dir', help='Directory to place the packaged LLVM.',
@@ -69,7 +69,14 @@ def main():
     host = args.host
     package_dir = args.package_dir
 
-    prebuilt_path = get_llvm_prebuilt_path(host + '-x86', LLVM_VERSION)
+    # TODO(danalbert): Fix 64-bit Windows LLVM.
+    # This wrongly packages 32-bit Windows LLVM for 64-bit as well, but the
+    # real bug here is that we don't have a 64-bit Windows LLVM.
+    # http://b/22414702
+    os_name = host
+    if os_name == 'windows64':
+        os_name = 'windows'
+    prebuilt_path = get_llvm_prebuilt_path(os_name + '-x86', LLVM_VERSION)
 
     if host == 'darwin':
         host = 'darwin-x86_64'
@@ -77,6 +84,8 @@ def main():
         host = 'linux-x86_64'
     elif host == 'windows':
         host = 'windows'
+    elif host == 'windows64':
+        host = 'windows-x86_64'
 
     package_name = 'llvm-{}-{}.tar.bz2'.format(LLVM_VERSION, host)
     package_path = os.path.join(package_dir, package_name)
