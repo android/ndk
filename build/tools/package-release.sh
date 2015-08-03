@@ -466,7 +466,16 @@ for SYSTEM in $SYSTEMS; do
 
         # Unpack clang/llvm
         for LLVM_VERSION in $LLVM_VERSION_LIST; do
-            unpack_prebuilt llvm-$LLVM_VERSION-$SYSTEM "$DSTDIR" "$DSTDIR64"
+            # TODO(danalbert): Fix 64-bit Windows LLVM.
+            # This wrongly packages 32-bit Windows LLVM for 64-bit as well, but
+            # the real bug here is that we don't have a 64-bit Windows LLVM.
+            # http://b/22414702
+            LLVM_32=
+            if [ "$SYSTEM" = "windows" -a "$TRY64" = "yes" ]; then
+                LLVM_32=yes
+            fi
+            unpack_prebuilt \
+                llvm-$LLVM_VERSION-$SYSTEM "$DSTDIR" "$DSTDIR64" $LLVM_32
         done
 
         rm -rf $DSTDIR/toolchains/*l
@@ -481,8 +490,8 @@ for SYSTEM in $SYSTEMS; do
         if [ "$SYSTEM" = "windows" ]; then
             LONG_SYSTEM=$SYSTEM
         fi
-        unpack_prebuilt ndk-stack-$LONG_SYSTEM "$DSTDIR" "$DSTDIR64" "yes"
-        unpack_prebuilt ndk-depends-$LONG_SYSTEM "$DSTDIR" "$DSTDIR64" "yes"
+        unpack_prebuilt ndk-stack-$LONG_SYSTEM "$DSTDIR" "$DSTDIR64"
+        unpack_prebuilt ndk-depends-$LONG_SYSTEM "$DSTDIR" "$DSTDIR64"
         unpack_prebuilt ndk-make-$LONG_SYSTEM "$DSTDIR" "$DSTDIR64"
         unpack_prebuilt ndk-awk-$LONG_SYSTEM "$DSTDIR" "$DSTDIR64"
         unpack_prebuilt ndk-python-$LONG_SYSTEM "$DSTDIR" "$DSTDIR64"
