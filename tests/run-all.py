@@ -43,6 +43,7 @@ import subprocess
 import sys
 
 import adb
+import filters
 import ndk
 
 
@@ -211,7 +212,7 @@ class Test(object):
         self.name = name
         self.test_dir = test_dir
 
-    def run(self, out_dir):
+    def run(self, out_dir, test_filters):
         raise NotImplementedError
 
 
@@ -237,17 +238,21 @@ class AwkTest(Test):
                 raise RuntimeError(msg)
         return cls(test_name, test_dir, script)
 
-    def run(self, out_dir):
+    def run(self, out_dir, test_filters):
         results = []
         for test_case in glob.glob(os.path.join(self.test_dir, '*.in')):
             golden_path = re.sub(r'\.in$', '.out', test_case)
-            result = self.run_case(out_dir, test_case, golden_path)
+            result = self.run_case(out_dir, test_case, golden_path,
+                                   test_filters)
             results.append(result)
         return results
 
-    def run_case(self, out_dir, test_case, golden_out_path):
+    def run_case(self, out_dir, test_case, golden_out_path, test_filters):
         case_name = os.path.splitext(os.path.basename(test_case))[0]
         name = make_subtest_name(self.name, case_name)
+
+        if not test_filters.filter(name):
+            return Skipped(name, 'filtered')
 
         out_path = os.path.join(out_dir, os.path.basename(golden_out_path))
 
@@ -330,7 +335,7 @@ class ShellBuildTest(Test):
         self.platform = platform
         self.build_flags = build_flags
 
-    def run(self, out_dir):
+    def run(self, out_dir, _):
         build_dir = os.path.join(out_dir, self.name)
         print('Running build test: {}'.format(self.name))
         return [run_build_sh_test(self.name, build_dir, self.test_dir,
@@ -344,7 +349,7 @@ class NdkBuildTest(Test):
         self.platform = platform
         self.build_flags = build_flags
 
-    def run(self, out_dir):
+    def run(self, out_dir, _):
         build_dir = os.path.join(out_dir, self.name)
         print('Running build test: {}'.format(self.name))
         return [run_ndk_build_test(self.name, build_dir, self.test_dir,
@@ -407,7 +412,7 @@ class DeviceTest(Test):
         test_name = os.path.basename(test_dir)
         return cls(test_name, test_dir, abi, platform, build_flags)
 
-    def run(self, out_dir):
+    def run(self, out_dir, test_filters):
         print('Running device test: {}'.format(self.name))
         build_dir = os.path.join(out_dir, self.name)
         build_result = run_ndk_build_test(self.name, build_dir, self.test_dir,
@@ -427,6 +432,9 @@ class DeviceTest(Test):
             test_cases = copy_test_to_device(build_dir, device_dir, self.abi)
             for case in test_cases:
                 case_name = make_subtest_name(self.name, case)
+                if not test_filters.filter(case_name):
+                    results.append(Skipped(case_name, 'filtered'))
+                    continue
                 if run_is_disabled(case, self.test_dir):
                     results.append(Skipped(case_name, 'run disabled'))
                     continue
@@ -465,12 +473,15 @@ class TestRunner(object):
             raise KeyError('suite {} already exists'.format(name))
         self.tests[name] = scan_test_suite(path, test_class, *args)
 
-    def run(self, out_dir):
+    def run(self, out_dir, test_filters):
         results = {suite: [] for suite in self.tests.keys()}
         for suite, tests in self.tests.items():
             test_results = []
             for test in tests:
-                test_results.extend(test.run(out_dir))
+                if test_filters.filter(test.name):
+                    test_results.extend(test.run(out_dir, test_filters))
+                else:
+                    test_results.append(Skipped(test.name, 'filtered'))
             results[suite] = test_results
         return results
 
@@ -575,6 +586,8 @@ class ArgParser(argparse.ArgumentParser):
             help=('Run only the chosen test suite.'))
 
         self.add_argument(
+            '--filter', help='Only run tests that match the given patterns.')
+        self.add_argument(
             '--quick', action='store_true', help='Skip long running tests.')
         self.add_argument(
             '--show-all', action='store_true',
@@ -625,7 +638,8 @@ def main():
         runner.add_suite('device', 'device', DeviceTest, args.abi,
                          args.platform, ndk_build_flags)
 
-    results = runner.run(out_dir)
+    test_filters = filters.TestFilter.from_string(args.filter)
+    results = runner.run(out_dir, test_filters)
 
     num_tests = sum(len(s) for s in results.values())
     zero_stats = {'pass': 0, 'skip': 0, 'fail': 0}
