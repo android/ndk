@@ -33,7 +33,6 @@ from __future__ import print_function
 import argparse
 import contextlib
 import distutils.spawn
-import functools
 import glob
 import inspect
 import multiprocessing
@@ -44,6 +43,7 @@ import subprocess
 import sys
 
 import adb
+import filters
 import ndk
 
 
@@ -101,12 +101,17 @@ def color_string(string, color):
 
 
 class TestResult(object):
-    def __init__(self, test_name, passed):
-        self.passed = passed
+    def __init__(self, test_name):
         self.test_name = test_name
 
     def __repr__(self):
         return self.to_string(colored=False)
+
+    def passed(self):
+        raise NotImplementedError
+
+    def failed(self):
+        raise NotImplementedError
 
     def to_string(self, colored=False):
         raise NotImplementedError
@@ -114,8 +119,14 @@ class TestResult(object):
 
 class Failure(TestResult):
     def __init__(self, test_name, message):
-        super(Failure, self).__init__(test_name, passed=False)
+        super(Failure, self).__init__(test_name)
         self.message = message
+
+    def passed(self):
+        return False
+
+    def failed(self):
+        return True
 
     def to_string(self, colored=False):
         label = color_string('FAIL', 'red') if colored else 'FAIL'
@@ -123,8 +134,11 @@ class Failure(TestResult):
 
 
 class Success(TestResult):
-    def __init__(self, test_name):
-        super(Success, self).__init__(test_name, passed=True)
+    def passed(self):
+        return True
+
+    def failed(self):
+        return False
 
     def to_string(self, colored=False):
         label = color_string('PASS', 'green') if colored else 'PASS'
@@ -133,8 +147,14 @@ class Success(TestResult):
 
 class Skipped(TestResult):
     def __init__(self, test_name, reason):
-        super(Skipped, self).__init__(test_name, passed=False)
+        super(Skipped, self).__init__(test_name)
         self.reason = reason
+
+    def passed(self):
+        return False
+
+    def failed(self):
+        return False
 
     def to_string(self, colored=False):
         label = color_string('SKIP', 'yellow') if colored else 'SKIP'
@@ -187,44 +207,75 @@ def should_skip_test(test_dir, abi, platform):
     return None
 
 
-def run_awk_test_case(out_dir, test_name, script, test_case, golden_out_path):
-    out_path = os.path.join(out_dir, os.path.basename(golden_out_path))
+class Test(object):
+    def __init__(self, name, test_dir):
+        self.name = name
+        self.test_dir = test_dir
 
-    with open(test_case, 'r') as test_in, open(out_path, 'w') as out_file:
-        print('awk -f {} < {} > {}'.format(script, test_case, out_path))
-        rc = subprocess.call(['awk', '-f', script], stdin=test_in,
-                             stdout=out_file)
-        if rc != 0:
-            return Failure(test_name, 'awk failed')
-
-    rc = subprocess.call(['cmp', out_path, golden_out_path], stdout=DEV_NULL,
-                         stderr=DEV_NULL)
-    if rc == 0:
-        return Success(test_name)
-    else:
-        p = subprocess.Popen(['diff', '-buN', out_path, golden_out_path],
-                             stdout=subprocess.PIPE, stderr=DEV_NULL)
-        out, _ = p.communicate()
-        if p.returncode != 0:
-            raise RuntimeError('Could not generate diff')
-        message = 'output does not match expected:\n\n' + out
-        return Failure(test_name, message)
+    def run(self, out_dir, test_filters):
+        raise NotImplementedError
 
 
-def run_awk_test(out_dir, test_dir):
-    test_name = '{}.awk'.format(os.path.basename(test_dir))
-    script = os.path.join(ndk.NDK_ROOT, 'build/awk', test_name)
-    if not os.path.isfile(script):
-        return [Failure(test_name, 'missing test script: {}'.format(script))]
-    results = []
-    for test_case in glob.glob(os.path.join(test_dir, '*.in')):
-        golden_path = re.sub(r'\.in$', '.out', test_case)
-        if not os.path.isfile(golden_path):
-            results.append(Failure(test_name,
-                                   'missing output: {}'.format(golden_path)))
-        results.append(run_awk_test_case(out_dir, test_name, script, test_case,
-                                         golden_path))
-    return results
+class AwkTest(Test):
+    def __init__(self, name, test_dir, script):
+        super(AwkTest, self).__init__(name, test_dir)
+        self.script = script
+
+    @classmethod
+    def from_dir(cls, test_dir):
+        test_name = os.path.basename(test_dir)
+        script_name = test_name + '.awk'
+        script = os.path.join(ndk.NDK_ROOT, 'build/awk', script_name)
+        if not os.path.isfile(script):
+            msg = '{} missing test script: {}'.format(test_name, script)
+            raise RuntimeError(msg)
+
+        # Check that all of our test cases are valid.
+        for test_case in glob.glob(os.path.join(test_dir, '*.in')):
+            golden_path = re.sub(r'\.in$', '.out', test_case)
+            if not os.path.isfile(golden_path):
+                msg = '{} missing output: {}'.format(test_name, golden_path)
+                raise RuntimeError(msg)
+        return cls(test_name, test_dir, script)
+
+    def run(self, out_dir, test_filters):
+        results = []
+        for test_case in glob.glob(os.path.join(self.test_dir, '*.in')):
+            golden_path = re.sub(r'\.in$', '.out', test_case)
+            result = self.run_case(out_dir, test_case, golden_path,
+                                   test_filters)
+            results.append(result)
+        return results
+
+    def run_case(self, out_dir, test_case, golden_out_path, test_filters):
+        case_name = os.path.splitext(os.path.basename(test_case))[0]
+        name = make_subtest_name(self.name, case_name)
+
+        if not test_filters.filter(name):
+            return Skipped(name, 'filtered')
+
+        out_path = os.path.join(out_dir, os.path.basename(golden_out_path))
+
+        with open(test_case, 'r') as test_in, open(out_path, 'w') as out_file:
+            print('awk -f {} < {} > {}'.format(
+                self.script, test_case, out_path))
+            rc = subprocess.call(['awk', '-f', self.script], stdin=test_in,
+                                 stdout=out_file)
+            if rc != 0:
+                return Failure(name, 'awk failed')
+
+        rc = subprocess.call(['cmp', out_path, golden_out_path],
+                             stdout=DEV_NULL, stderr=DEV_NULL)
+        if rc == 0:
+            return Success(name)
+        else:
+            p = subprocess.Popen(['diff', '-buN', out_path, golden_out_path],
+                                 stdout=subprocess.PIPE, stderr=DEV_NULL)
+            out, _ = p.communicate()
+            if p.returncode != 0:
+                raise RuntimeError('Could not generate diff')
+            message = 'output does not match expected:\n\n' + out
+            return Failure(name, message)
 
 
 def prep_build_dir(src_dir, out_dir):
@@ -240,7 +291,10 @@ def run_build_sh_test(test_name, build_dir, test_dir, build_flags, abi,
     if os.path.isfile(android_mk) and os.path.isfile(application_mk):
         result = subprocess.call(['grep', '-q', 'import-module', android_mk])
         if result != 0:
-            reason = should_skip_test(test_dir, abi, platform)
+            try:
+                reason = should_skip_test(test_dir, abi, platform)
+            except RuntimeError as ex:
+                return Failure(test_name, ex)
             if reason is not None:
                 return Skipped(test_name, reason)
 
@@ -255,7 +309,10 @@ def run_build_sh_test(test_name, build_dir, test_dir, build_flags, abi,
 
 def run_ndk_build_test(test_name, build_dir, test_dir, build_flags, abi,
                        platform):
-    reason = should_skip_test(test_dir, abi, platform)
+    try:
+        reason = should_skip_test(test_dir, abi, platform)
+    except RuntimeError as ex:
+        return Failure(test_name, ex)
     if reason is not None:
         return Skipped(test_name, reason)
 
@@ -271,17 +328,46 @@ def run_ndk_build_test(test_name, build_dir, test_dir, build_flags, abi,
     return Success(test_name)
 
 
-def run_build_test(out_dir, test_dir, build_flags, abi, platform):
-    test_name = os.path.basename(test_dir)
-    print('Running build test: {}'.format(test_name))
+class ShellBuildTest(Test):
+    def __init__(self, name, test_dir, abi, platform, build_flags):
+        super(ShellBuildTest, self).__init__(name, test_dir)
+        self.abi = abi
+        self.platform = platform
+        self.build_flags = build_flags
 
-    build_dir = os.path.join(out_dir, test_name)
-    if os.path.isfile(os.path.join(test_dir, 'build.sh')):
-        return [run_build_sh_test(test_name, build_dir, test_dir, build_flags,
-                                  abi, platform)]
-    else:
-        return [run_ndk_build_test(test_name, build_dir, test_dir, build_flags,
-                                   abi, platform)]
+    def run(self, out_dir, _):
+        build_dir = os.path.join(out_dir, self.name)
+        print('Running build test: {}'.format(self.name))
+        return [run_build_sh_test(self.name, build_dir, self.test_dir,
+                                  self.build_flags, self.abi, self.platform)]
+
+
+class NdkBuildTest(Test):
+    def __init__(self, name, test_dir, abi, platform, build_flags):
+        super(NdkBuildTest, self).__init__(name, test_dir)
+        self.abi = abi
+        self.platform = platform
+        self.build_flags = build_flags
+
+    def run(self, out_dir, _):
+        build_dir = os.path.join(out_dir, self.name)
+        print('Running build test: {}'.format(self.name))
+        return [run_ndk_build_test(self.name, build_dir, self.test_dir,
+                                   self.build_flags, self.abi,
+                                   self.platform)]
+
+
+class BuildTest(object):
+    @classmethod
+    def from_dir(cls, test_dir, abi, platform, build_flags):
+        test_name = os.path.basename(test_dir)
+
+        if os.path.isfile(os.path.join(test_dir, 'build.sh')):
+            return ShellBuildTest(test_name, test_dir, abi, platform,
+                                  build_flags)
+        else:
+            return NdkBuildTest(test_name, test_dir, abi, platform,
+                                build_flags)
 
 
 def copy_test_to_device(build_dir, device_dir, abi):
@@ -314,51 +400,90 @@ def copy_test_to_device(build_dir, device_dir, abi):
     return test_cases
 
 
-def run_device_test(out_dir, test_dir, build_flags, abi, platform):
-    test_name = os.path.basename(test_dir)
-    build_dir = os.path.join(out_dir, test_name)
-    build_result = run_ndk_build_test(test_name, build_dir, test_dir,
-                                      build_flags, abi, platform)
-    if not build_result.passed:
-        return [build_result]
+class DeviceTest(Test):
+    def __init__(self, name, test_dir, abi, platform, build_flags):
+        super(DeviceTest, self).__init__(name, test_dir)
+        self.abi = abi
+        self.platform = platform
+        self.build_flags = build_flags
 
-    device_dir = os.path.join('/data/local/tmp/ndk-tests', test_name)
+    @classmethod
+    def from_dir(cls, test_dir, abi, platform, build_flags):
+        test_name = os.path.basename(test_dir)
+        return cls(test_name, test_dir, abi, platform, build_flags)
 
-    result, out = adb.shell('mkdir -p {}'.format(device_dir))
-    if result != 0:
-        raise RuntimeError('mkdir failed:\n' + '\n'.join(out))
+    def run(self, out_dir, test_filters):
+        print('Running device test: {}'.format(self.name))
+        build_dir = os.path.join(out_dir, self.name)
+        build_result = run_ndk_build_test(self.name, build_dir, self.test_dir,
+                                          self.build_flags, self.abi,
+                                          self.platform)
+        if not build_result.passed():
+            return [build_result]
 
-    results = []
-    try:
-        test_cases = copy_test_to_device(build_dir, device_dir, abi)
-        for case in test_cases:
-            case_name = '.'.join([test_name, case])
-            if run_is_disabled(case, test_dir):
-                results.append(Skipped(case_name, 'run disabled'))
-                continue
+        device_dir = os.path.join('/data/local/tmp/ndk-tests', self.name)
 
-            cmd = 'cd {} && LD_LIBRARY_PATH={} ./{}'.format(
-                device_dir, device_dir, case)
-            result, out = adb.shell(cmd)
-            if result == 0:
-                results.append(Success(case_name))
-            else:
-                results.append(Failure(case_name, '\n'.join(out)))
-        return results
-    finally:
-        adb.shell('rm -rf {}'.format(device_dir))
+        result, out = adb.shell('mkdir -p {}'.format(device_dir))
+        if result != 0:
+            raise RuntimeError('mkdir failed:\n' + '\n'.join(out))
+
+        results = []
+        try:
+            test_cases = copy_test_to_device(build_dir, device_dir, self.abi)
+            for case in test_cases:
+                case_name = make_subtest_name(self.name, case)
+                if not test_filters.filter(case_name):
+                    results.append(Skipped(case_name, 'filtered'))
+                    continue
+                if run_is_disabled(case, self.test_dir):
+                    results.append(Skipped(case_name, 'run disabled'))
+                    continue
+
+                cmd = 'cd {} && LD_LIBRARY_PATH={} ./{}'.format(
+                    device_dir, device_dir, case)
+                result, out = adb.shell(cmd)
+                if result == 0:
+                    results.append(Success(case_name))
+                else:
+                    results.append(Failure(case_name, '\n'.join(out)))
+            return results
+        finally:
+            adb.shell('rm -rf {}'.format(device_dir))
 
 
-def run_tests(out_dir, test_dir, test_func):
-    results = []
-    for dentry in os.listdir(test_dir):
-        path = os.path.join(test_dir, dentry)
+def make_subtest_name(test, case):
+    return '.'.join([test, case])
+
+
+def scan_test_suite(suite_dir, test_class, *args):
+    tests = []
+    for dentry in os.listdir(suite_dir):
+        path = os.path.join(suite_dir, dentry)
         if os.path.isdir(path):
-            try:
-                results.extend(test_func(out_dir, path))
-            except RuntimeError as ex:
-                results.append(Failure(os.path.basename(dentry), ex))
-    return results
+            tests.append(test_class.from_dir(path, *args))
+    return tests
+
+
+class TestRunner(object):
+    def __init__(self):
+        self.tests = {}
+
+    def add_suite(self, name, path, test_class, *args):
+        if name in self.tests:
+            raise KeyError('suite {} already exists'.format(name))
+        self.tests[name] = scan_test_suite(path, test_class, *args)
+
+    def run(self, out_dir, test_filters):
+        results = {suite: [] for suite in self.tests.keys()}
+        for suite, tests in self.tests.items():
+            test_results = []
+            for test in tests:
+                if test_filters.filter(test.name):
+                    test_results.extend(test.run(out_dir, test_filters))
+                else:
+                    test_results.append(Skipped(test.name, 'filtered'))
+            results[suite] = test_results
+        return results
 
 
 def get_test_device():
@@ -461,6 +586,8 @@ class ArgParser(argparse.ArgumentParser):
             help=('Run only the chosen test suite.'))
 
         self.add_argument(
+            '--filter', help='Only run tests that match the given patterns.')
+        self.add_argument(
             '--quick', action='store_true', help='Skip long running tests.')
         self.add_argument(
             '--show-all', action='store_true',
@@ -495,16 +622,6 @@ def main():
         shutil.rmtree(out_dir)
     os.makedirs(out_dir)
 
-    my_run_build_test = functools.partial(run_build_test,
-                                          build_flags=ndk_build_flags,
-                                          abi=args.abi,
-                                          platform=args.platform)
-
-    my_run_device_test = functools.partial(run_device_test,
-                                           build_flags=ndk_build_flags,
-                                           abi=args.abi,
-                                           platform=args.platform)
-
     suites = ['awk', 'build', 'device', 'samples']
     if args.suite:
         suites = [args.suite]
@@ -516,16 +633,21 @@ def main():
 
     os.environ['ANDROID_SERIAL'] = get_test_device()
 
-    results = {suite: [] for suite in suites}
+    runner = TestRunner()
     if 'awk' in suites:
-        results['awk'] = run_tests(out_dir, 'awk', run_awk_test)
+        runner.add_suite('awk', 'awk', AwkTest)
     if 'build' in suites:
-        results['build'] = run_tests(out_dir, 'build', my_run_build_test)
+        runner.add_suite('build', 'build', BuildTest, args.abi, args.platform,
+                         ndk_build_flags)
     if 'samples' in suites:
-        results['samples'] = run_tests(out_dir, '../samples',
-                                       my_run_build_test)
+        runner.add_suite('samples', '../samples', BuildTest, args.abi,
+                         args.platform, ndk_build_flags)
     if 'device' in suites:
-        results['device'] = run_tests(out_dir, 'device', my_run_device_test)
+        runner.add_suite('device', 'device', DeviceTest, args.abi,
+                         args.platform, ndk_build_flags)
+
+    test_filters = filters.TestFilter.from_string(args.filter)
+    results = runner.run(out_dir, test_filters)
 
     num_tests = sum(len(s) for s in results.values())
     zero_stats = {'pass': 0, 'skip': 0, 'fail': 0}
@@ -533,15 +655,15 @@ def main():
     global_stats = dict(zero_stats)
     for suite, test_results in results.items():
         for result in test_results:
-            if isinstance(result, Failure):
+            if result.failed():
                 stats[suite]['fail'] += 1
                 global_stats['fail'] += 1
-            if isinstance(result, Skipped):
-                stats[suite]['skip'] += 1
-                global_stats['skip'] += 1
-            if isinstance(result, Success):
+            elif result.passed():
                 stats[suite]['pass'] += 1
                 global_stats['pass'] += 1
+            else:
+                stats[suite]['skip'] += 1
+                global_stats['skip'] += 1
 
     def format_stats(num_tests, stats, use_color):
         return '{pl} {p}/{t} {fl} {f}/{t} {sl} {s}/{t}'.format(
@@ -559,7 +681,7 @@ def main():
         print()
         print('{}: {}'.format(suite, stats_str))
         for result in test_results:
-            if args.show_all or isinstance(result, Failure):
+            if args.show_all or result.failed():
                 print(result.to_string(colored=use_color))
 
     sys.exit(global_stats['fail'] == 0)
