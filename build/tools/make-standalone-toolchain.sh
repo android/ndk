@@ -338,6 +338,7 @@ if [ -n "$LLVM_VERSION" ]; then
   CLANG_FLAGS="$TARGET_FLAG --sysroot \`dirname \$0\`/../sysroot"
 
   cat > "$TMPDIR/bin/clang" <<EOF
+#!/bin/bash
 if [ "\$1" != "-cc1" ]; then
     \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT $CLANG_FLAGS "\$@"
 else
@@ -346,6 +347,7 @@ else
 fi
 EOF
   cat > "$TMPDIR/bin/clang++" <<EOF
+#!/bin/bash
 if [ "\$1" != "-cc1" ]; then
     \`dirname \$0\`/clang$LLVM_VERSION_WITHOUT_DOT++ $CLANG_FLAGS "\$@"
 else
