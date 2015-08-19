@@ -208,24 +208,8 @@ LOCAL_CPP_FEATURES := rtti exceptions
 LOCAL_EXPORT_C_INCLUDES := $(llvm_libc++_export_includes)
 LOCAL_EXPORT_CPPFLAGS := $(llvm_libc++_export_cxxflags)
 LOCAL_STATIC_LIBRARIES := android_support
-# For armeabi's shared version of libc++ compiled by clang, we need compiler-rt or libatomic
-# for __atomic_fetch_add_4.  Note that "clang -gcc-toolchain" uses gcc4.8's as/ld/libs, including
-# libatomic (which is not available in gcc4.6)
-#
-# On the other hand, all prebuilt libc++ libaries at sources/cxx-stl/llvm-libc++/libs are
-# compiled with "clang -gcc-toolchain *4.8*" with -latomic, such that uses of prebuilt
-# libc++_shared.so don't automatically requires -latomic or compiler-rt, unless code does
-# "#include <atomic>" where  __atomic_is_lock_free is needed for armeabi and mips
-#
-ifeq ($(TARGET_ARCH_ABI),armeabi)
-ifneq (,$(filter clang%,$(NDK_TOOLCHAIN_VERSION)))
-LOCAL_SHARED_LIBRARIES := compiler_rt_shared
-endif
-endif
-
 include $(BUILD_SHARED_LIBRARY)
 
 endif # __libcxx_force_rebuild == true
 
 $(call import-module, android/support)
-$(call import-module, android/compiler-rt)
