@@ -630,6 +630,13 @@ def main():
     # run all the build tests.
     if 'device' in suites:
         check_adb_works_or_die(args.abi)
+        api_level = int(adb.get_prop('ro.build.version.sdk'))
+
+        # PIE is required in L. All of the device tests are written toward the
+        # ndk-build defaults, so we need to inform the build that we need PIE
+        # if we're running on a newer device.
+        if api_level >= 21:
+            ndk_build_flags.append('APP_PIE=true')
 
     os.environ['ANDROID_SERIAL'] = get_test_device()
 
