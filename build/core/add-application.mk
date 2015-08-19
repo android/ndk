@@ -63,7 +63,7 @@ endif
 ifeq (null,$(APP_PROJECT_PATH))
 
 ifndef APP_PLATFORM
-    APP_PLATFORM := android-3
+    APP_PLATFORM := android-9
     $(call ndk_log,  Defaulted to APP_PLATFORM=$(APP_PLATFORM))
 endif
 
@@ -84,7 +84,7 @@ ifndef APP_PLATFORM
         APP_PLATFORM := $(strip $(shell $(HOST_AWK) -f $(BUILD_AWK)/extract-platform.awk $(call host-path,$(_local_props))))
         $(call ndk_log,  Found APP_PLATFORM=$(APP_PLATFORM) in $(_local_props))
     else
-        APP_PLATFORM := android-3
+        APP_PLATFORM := android-9
         $(call ndk_log,  Defaulted to APP_PLATFORM=$(APP_PLATFORM))
     endif
 endif
