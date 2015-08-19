@@ -136,13 +136,7 @@ include $(libcxxabi_sources_dir)/sources.mk
 llvm_libc++_sources += $(addprefix $(libcxxabi_sources_prefix:%/=%)/,$(libcxxabi_src_files))
 llvm_libc++_includes += $(libcxxabi_c_includes)
 llvm_libc++_export_includes += $(libcxxabi_c_includes)
-
-ifeq (clang3.5,$(NDK_TOOLCHAIN_VERSION))
-# Workaround an issue of integrated-as (default in clang3.5) where it fails to compile
-# llvm-libc++abi/libcxxabi/src/Unwind/UnwindRegistersRestore.S
-llvm_libc++_cflags += -no-integrated-as
-endif
-
+llvm_libc++_cflags += -D__STDC_FORMAT_MACROS
 endif
 
 ifneq ($(__libcxx_force_rebuild),true)
