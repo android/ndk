@@ -41,7 +41,7 @@ def build(build_flags):
 
 
 def expand_app_abi(abi):
-    all32 = ('armeabi', 'armeabi-v7a', 'mips', 'x86')
+    all32 = ('armeabi', 'armeabi-v7a', 'armeabi-v7a-hard', 'mips', 'x86')
     all64 = ('arm64-v8a', 'mips64', 'x86_64')
     all_abis = all32 + all64
     if abi == 'all':

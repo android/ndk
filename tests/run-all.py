@@ -50,6 +50,7 @@ from tests import AwkTest, BuildTest, DeviceTest
 SUPPORTED_ABIS = (
     'armeabi',
     'armeabi-v7a',
+    'armeabi-v7a-hard',
     'arm64-v8a',
     'mips',
     'mips64',
@@ -117,6 +118,8 @@ def get_device_abis():
     abi2 = adb.get_prop('ro.product.cpu.abi2')
     if abi2 is not None:
         abis.append(abi2)
+    if 'armeabi-v7a' in abis:
+        abis.append('armeabi-v7a-hard')
     return abis
 
 
