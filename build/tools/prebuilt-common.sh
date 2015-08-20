@@ -12,7 +12,7 @@ export LC_ALL=C
 if [ -z "$NDK_BUILDTOOLS_PATH" ]; then
     NDK_BUILDTOOLS_PATH=$(dirname $0)
     if [ ! -f "$NDK_BUILDTOOLS_PATH/prebuilt-common.sh" ]; then
-        echo "INTERNAL ERROR: Please define NDK_BUILDTOOLS_PATH to point to $$NDK/build/tools"
+        echo "INTERNAL ERROR: Please define NDK_BUILDTOOLS_PATH to point to \$NDK/build/tools"
         exit 1
     fi
 fi
