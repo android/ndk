@@ -534,7 +534,7 @@ builder_begin_android ()
         fi
     fi
     for TAG in $HOST_TAG $HOST_TAG32; do
-        BINPREFIX=$NDK_DIR/$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION $TAG)
+        BINPREFIX=$ANDROID_BUILD_TOP/prebuilts/ndk/current/$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION $TAG)
         if [ -f ${BINPREFIX}gcc ]; then
             break;
         fi

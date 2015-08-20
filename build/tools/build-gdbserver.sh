@@ -130,7 +130,7 @@ fi
 prepare_target_build
 
 parse_toolchain_name $TOOLCHAIN
-check_toolchain_install $NDK_DIR $TOOLCHAIN
+check_toolchain_install $ANDROID_BUILD_TOP/prebuilts/ndk/current $TOOLCHAIN
 
 if [ -z "$PLATFORM" ]; then
     PLATFORM="android-"$(get_default_api_level_for_arch $ARCH)
