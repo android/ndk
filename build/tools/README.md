@@ -33,11 +33,11 @@ adding the `--try-64` option. Note that as of now, 64-bit binaries are never
 distributed as part of official NDK releases.
 
 When building 32-bit Linux host programs, the dev-scripts will look for
-$NDK/../prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6/, which is part of
-the Android platform source tree. It is a special toolchain that ensures that
-the generated programs can run on old systems like Ubuntu 8.04 that only have
-GLibc 2.7. Otherwise, the corresponding binaries may not run due to ABI changes
-in more recent versions of GLibc.
+`$ANDROID_BUILD_TOP/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.11-4.8`,
+which is part of the Android platform source tree. It is a special toolchain
+that ensures that the generated programs can run on old systems like Ubuntu 8.04
+that only have GLibc 2.7. Otherwise, the corresponding binaries may not run due
+to ABI changes in more recent versions of GLibc.
 
 I. Organization:
 ================
