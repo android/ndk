@@ -1,10 +1,6 @@
 APP_ABI := all
 
-# This is a different with test-googletest-stlport:
-# target API level 9 since it allows the use of clone() and regex()
-# in the GoogleTest implementation.
-#
-APP_PLATFORM := android-9
+APP_PLATFORM := android-16
 
 APP_MODULES := \
     googletest_sample_1 \
