@@ -1341,16 +1341,6 @@ get_llvm_toolchain_binprefix ()
     echo "$BINPREFIX"
 }
 
-# Return the default toochain binary path prefix for a given architecture
-# For example: arm -> toolchains/arm-linux-androideabi-4.8/prebuilt/<system>/bin/arm-linux-androideabi-
-# $1: Architecture name
-# $2: optional, system name, defaults to $HOST_TAG
-get_default_toolchain_binprefix_for_arch ()
-{
-    local GCCVER=$(get_default_gcc_version_for_arch $ARCH)
-    get_toolchain_binprefix_for_arch $1 $GCCVER $2
-}
-
 # Return default API level for a given arch
 # This is the level used to build the toolchains.
 #
