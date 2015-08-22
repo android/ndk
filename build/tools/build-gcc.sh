@@ -28,7 +28,7 @@ PROGRAM_DESCRIPTION=\
 
 Where <src-dir> is the location of toolchain sources, <ndk-dir> is
 the top-level NDK installation path and <toolchain> is the name of
-the toolchain to use (e.g. arm-linux-androideabi-4.8)."
+the toolchain to use (e.g. arm-linux-androideabi-4.9)."
 
 RELEASE=`date +%Y%m%d`
 BUILD_OUT=$TMPDIR/build/toolchain
@@ -141,14 +141,6 @@ set_parameters ()
 }
 
 set_parameters $PARAMETERS
-
-# Disable x86_64 build for toolchains older than 4.7
-case "$TOOLCHAIN" in
-  x86_64-4.4.3|x86_64-4.6)
-    echo "ERROR: x86_64 toolchain is enabled in 4.7+. Please try to build newer version."
-    exit 1
-    ;;
-esac
 
 prepare_target_build
 
@@ -296,18 +288,7 @@ if [ "$DARWIN" = "yes" ]; then
     # ToDo
     EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --disable-plugin"
 else
-    # Plugins are not supported well before 4.7. On 4.7 it's required to have
-    # -flto working. Flag --enable-plugins (note 's') is actually for binutils,
-    # this is compiler requirement to have binutils configured this way. Flag
-    # --disable-plugin is for gcc.
-    case "$GCC_VERSION" in
-        4.4.3)
-            EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --disable-plugin"
-            ;;
-        *)
-            EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-plugins"
-            ;;
-    esac
+    EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-plugins"
 fi
 
 # Enable OpenMP
@@ -315,13 +296,11 @@ case "$TOOLCHAIN" in
     *) EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-libgomp" ;;
 esac
 
-# Enable indirect functions in the compilers that support it (4.6 and above)
-case "$TOOLCHAIN" in
-    *-4.4.3) ;;
-    *) EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-gnu-indirect-function" ;;
-esac
+# Enable indirect functions.
+EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-gnu-indirect-function"
 
-# Disable libcilkrts which needs C++ for now, because libstdlibc++ in NDK is built separately...
+# Disable libcilkrts which needs C++ for now, because libstdlibc++ in NDK is
+# built separately...
 case "$TOOLCHAIN" in
     x86*-4.9) EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --disable-libcilkrts"
 esac
@@ -362,15 +341,7 @@ if [ "$TOOLCHAIN" != mips* -a "$MINGW" != "yes" ]; then
 fi
 
 # Enable Graphite
-case "$TOOLCHAIN" in
-    *-4.4.3) ;;
-    *-4.6|*-4.7)
-        EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-graphite=yes --with-cloog-version=$CLOOG_VERSION --with-ppl-version=$PPL_VERSION"
-    ;;
-    *)
-        EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-graphite=yes --with-cloog-version=$CLOOG_VERSION --with-isl-version=$ISL_VERSION"
-    ;;
-esac
+EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-graphite=yes --with-cloog-version=$CLOOG_VERSION --with-isl-version=$ISL_VERSION"
 
 # Enable linker option -eh-frame-hdr also for static executable
 EXTRA_CONFIG_FLAGS=$EXTRA_CONFIG_FLAGS" --enable-eh-frame-hdr-for-static"
@@ -390,9 +361,6 @@ CONFIGURE_GCC_VERSION=$GCC_VERSION
 case "$TOOLCHAIN" in
   *4.9l)
     CONFIGURE_GCC_VERSION=4.9l
-    ;;
-  *4.8l)
-    CONFIGURE_GCC_VERSION=4.8l
     ;;
 esac
 
@@ -514,15 +482,9 @@ unwind_library_for_abi ()
     ;;
     x86|mips|mips32r6)
     BASE_DIR="$BUILD_OUT/gcc-$CONFIGURE_GCC_VERSION/$ABI_CONFIGURE_TARGET/libgcc/"
-    if [ "$GCC_VERSION" = "4.6" -o "$GCC_VERSION" = "4.4.3" ]; then
-       OBJS="unwind-c.o \
-          unwind-dw2-fde-glibc.o \
-          unwind-dw2.o"
-    else
-       OBJS="unwind-c.o \
+    OBJS="unwind-c.o \
           unwind-dw2-fde-dip.o \
           unwind-dw2.o"
-    fi
     ;;
     arm64-v8a|x86_64|mips64)
     BASE_DIR="$BUILD_OUT/gcc-$CONFIGURE_GCC_VERSION/$ABI_CONFIGURE_TARGET/libgcc/"
