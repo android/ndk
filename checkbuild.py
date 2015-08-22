@@ -160,25 +160,7 @@ def main():
 
     invoke_build('dev-cleanup.sh')
     invoke_build('../../../toolchain/gcc/build.py', gcc_build_args)
-    if not args.host_only and system == 'windows':
-        # Windows is weird because we have to use the Linux toolchains to build
-        # the target modules (since our Windows toolchains obviously only run
-        # on Windows). We have to build the target components as part of the
-        # Linux build step because otherwise the win32 build will try to use
-        # the 32-bit Linux toolchains, which don't exist.
-        #
-        # Instead, build the whole Linux NDK (host and target), and then build
-        # the Windows toolchains.
-        linux_build_args = ['--try-64']
-        for arg in build_args:
-            if arg.startswith('--systems='):
-                linux_build_args.append('--systems=linux-x86')
-            else:
-                linux_build_args.append(arg)
-        build_ndk(out_dir, linux_build_args, host_only=False)
-        build_ndk(out_dir, build_args, host_only=True)
-    else:
-        build_ndk(out_dir, build_args, host_only=args.host_only)
+    build_ndk(out_dir, build_args, host_only=args.host_only)
 
     if args.package and not args.host_only:
         package_ndk(args.release, system, out_dir, build_args)
