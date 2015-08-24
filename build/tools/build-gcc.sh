@@ -659,15 +659,17 @@ if [ "$PACKAGE_DIR" ]; then
     dump "Packaging $ARCHIVE"
     pack_archive "$PACKAGE_DIR/$ARCHIVE" "$NDK_DIR" "$SUBDIR"
     # package libgccunwind.a
-    ABIS=$(commas_to_spaces $(convert_archs_to_abis $ARCH))
-    for ABI in $ABIS; do
-        FILES="$GCCUNWIND_SUBDIR/libs/$ABI/libgccunwind.a"
-        PACKAGE="$PACKAGE_DIR/libgccunwind-libs-$ABI.tar.bz2"
-        log "Packaging: $PACKAGE"
-        pack_archive "$PACKAGE" "$NDK_DIR" "$FILES"
-        fail_panic "Could not package $ABI libgccunwind binaries!"
-        dump "Packaging: $PACKAGE"
-    done
+    if [ "$HOST_OS" = "linux" -a "$GCC_VERSION" = "$DEFAULT_GCC_VERSION" ]; then
+        ABIS=$(commas_to_spaces $(convert_archs_to_abis $ARCH))
+        for ABI in $ABIS; do
+            FILES="$GCCUNWIND_SUBDIR/libs/$ABI/libgccunwind.a"
+            PACKAGE="$PACKAGE_DIR/libgccunwind-libs-$ABI.tar.bz2"
+            log "Packaging: $PACKAGE"
+            pack_archive "$PACKAGE" "$NDK_DIR" "$FILES"
+            fail_panic "Could not package $ABI libgccunwind binaries!"
+            dump "Packaging: $PACKAGE"
+        done
+    fi
 fi
 
 dump "Done."
