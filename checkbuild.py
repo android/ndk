@@ -34,6 +34,11 @@ class ArgParser(argparse.ArgumentParser):
             description=inspect.getdoc(sys.modules[__name__]))
 
         self.add_argument(
+            '--arch',
+            choices=('arm', 'arm64', 'mips', 'mips64', 'x86', 'x86_64'),
+            help='Build for the given architecture. Build all by default.')
+
+        self.add_argument(
             '--host-only', action='store_true',
             help='Skip building target components.')
 
@@ -135,26 +140,27 @@ def main():
     DEFAULT_OUT_DIR = os.path.join(build_top, 'out/ndk')
     out_dir = os.path.realpath(os.getenv('DIST_DIR', DEFAULT_OUT_DIR))
 
+    gcc_build_args = ['--package-dir={}'.format(out_dir)]
+    if args.system is not None:
+        # Need to use args.system directly rather than system because system is
+        # the name used by the build/tools scripts (i.e. linux-x86 instead of
+        # linux).
+        gcc_build_args.append('--host={}'.format(args.system))
+    if args.arch is not None:
+        build_args.append('--arch={}'.format(args.arch))
+        toolchain_name = {
+            'arm': 'arm-linux-androideabi',
+            'arm64': 'aarch64-linux-android',
+            'mips': 'mipsel-linux-android',
+            'mips64': 'mips64el-linux-android',
+            'x86': 'x86',
+            'x86_64': 'x86_64',
+        }[args.arch]
+        gcc_build_args.append('--toolchain={}'.format(toolchain_name))
+
     invoke_build('dev-cleanup.sh')
-    if not args.host_only and system == 'windows':
-        # Windows is weird because we have to use the Linux toolchains to build
-        # the target modules (since our Windows toolchains obviously only run
-        # on Windows). We have to build the target components as part of the
-        # Linux build step because otherwise the win32 build will try to use
-        # the 32-bit Linux toolchains, which don't exist.
-        #
-        # Instead, build the whole Linux NDK (host and target), and then build
-        # the Windows toolchains.
-        linux_build_args = ['--try-64']
-        for arg in build_args:
-            if arg.startswith('--systems='):
-                linux_build_args.append('--systems=linux-x86')
-            else:
-                linux_build_args.append(arg)
-        build_ndk(out_dir, linux_build_args, host_only=False)
-        build_ndk(out_dir, build_args, host_only=True)
-    else:
-        build_ndk(out_dir, build_args, host_only=args.host_only)
+    invoke_build('../../../toolchain/gcc/build.py', gcc_build_args)
+    build_ndk(out_dir, build_args, host_only=args.host_only)
 
     if args.package and not args.host_only:
         package_ndk(args.release, system, out_dir, build_args)
