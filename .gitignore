@@ -6,7 +6,6 @@ local.properties
 build.xml
 /samples/
 platforms/
-toolchains/*/prebuilt/
 /ndk-stack*
 /ndk-depends*
-prebuilt/
+/prebuilt/

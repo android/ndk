@@ -281,26 +281,6 @@ for SYSTEM in $SYSTEMS; do
         fail_panic "Windows toolbox build failure!"
     fi
 
-    # Then the toolchains
-    for ARCH in $ARCHS; do
-        if [ "$GCC_VERSION_LIST" != "default" ]; then
-            VERSIONS=$(spaces_to_commas $GCC_VERSION_LIST)
-            TOOLCHAIN_NAMES=$(get_toolchain_name_list_for_arch $ARCH $VERSIONS)
-        else
-            TOOLCHAIN_NAMES=$(get_toolchain_name_list_for_arch $ARCH)
-        fi
-        if [ -z "$TOOLCHAIN_NAMES" ]; then
-            echo "ERROR: Toolchains: "$(spaces_to_commas $GCC_VERSION_LIST)" are not available for arch: $ARCH"
-            exit 1
-        fi
-
-        for TOOLCHAIN_NAME in $TOOLCHAIN_NAMES; do
-            echo "Building $SYSNAME toolchain for $ARCH architecture: $TOOLCHAIN_NAME"
-            run $BUILDTOOLS/build-gcc.sh "$SRC_DIR" "$NDK_DIR" $TOOLCHAIN_NAME $TOOLCHAIN_FLAGS --with-python=prebuilt -j$BUILD_NUM_CPUS
-            fail_panic "Could not build $TOOLCHAIN_NAME-$SYSNAME!"
-        done
-    done
-
     echo "Packaging $SYSNAME LLVM"
     PACKAGE_ARG=
     if [ -n "$PACKAGE_DIR" ]; then

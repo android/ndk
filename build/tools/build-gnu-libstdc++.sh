@@ -140,7 +140,7 @@ build_gnustl_for_abi ()
 
     ARCH=$(convert_abi_to_arch $ABI)
     for TAG in $HOST_TAG_LIST; do
-        BINPREFIX=$NDK_DIR/$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION $TAG)
+        BINPREFIX=$ANDROID_BUILD_TOP/prebuilts/ndk/current/$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION $TAG)
         if [ -f ${BINPREFIX}gcc ]; then
             break;
         fi

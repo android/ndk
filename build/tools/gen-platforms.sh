@@ -373,7 +373,7 @@ get_default_compiler_for_arch()
     fi
 
     for TAG in $HOST_TAG $HOST_TAG32; do
-        TOOLCHAIN_PREFIX="$NDK_DIR/$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION $TAG)"
+        TOOLCHAIN_PREFIX="$ANDROID_BUILD_TOP/prebuilts/ndk/current/$(get_toolchain_binprefix_for_arch $ARCH $GCC_VERSION $TAG)"
         TOOLCHAIN_PREFIX=${TOOLCHAIN_PREFIX%-}
         CC="$TOOLCHAIN_PREFIX-gcc"
         if [ -f "$CC" ]; then

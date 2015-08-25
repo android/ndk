@@ -34,7 +34,6 @@ fi
 
 # Remove generated directories
 rm -rf $DIR/platforms
-rm -rf $DIR/toolchains/*/prebuilt
 rm -rf $DIR/samples
 rm -rf $DIR/prebuilt
 
