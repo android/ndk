@@ -1205,15 +1205,11 @@ get_prebuilt_host_tag ()
         RET=darwin-x86_64  # let the following handles 32-bit case
     fi
     case $RET in
-        linux-x86_64)
-            if [ "$TRY64" = "no" ]; then
-                RET=linux-x86
-            fi
+        linux-*)
+            RET=linux-x86_64
             ;;
-        darwin-x86_64)
-            if [ "$TRY64" = "no" ]; then
-                RET=darwin-x86
-            fi
+        darwin-*)
+            RET=darwin-x86_64
             ;;
     esac
     echo $RET
