@@ -1310,7 +1310,7 @@ convert_archs_to_abis ()
 }
 
 # Return the default toolchain binary path prefix for given architecture and gcc version
-# For example: arm 4.8 -> toolchains/arm-linux-androideabi-4.8/prebuilt/<system>/bin/arm-linux-androideabi-
+# For example: arm 4.8 -> toolchains/<system>/arm-linux-androideabi-4.8/prebuilt/bin/arm-linux-androideabi-
 # $1: Architecture name
 # $2: GCC version
 # $3: optional, system name, defaults to $HOST_TAG
@@ -1419,7 +1419,7 @@ get_toolchain_install ()
 get_toolchain_install_subdir ()
 {
     local SYSTEM=${2:-$(get_prebuilt_host_tag)}
-    echo "toolchains/$1/prebuilt/$SYSTEM"
+    echo "toolchains/$SYSTEM/$1/prebuilt"
 }
 
 # Return the relative install prefix for prebuilt host

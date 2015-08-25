@@ -248,7 +248,7 @@ version of the toolchain repository at toolchain/. The old process of using
 download-toolchain-sources.sh is now obsolete.
 
 The toolchains binaries are typically placed under the directory
-$NDK/toolchains/$NAME/prebuilt/$SYSTEM, where $NAME is the toolchain name's full
+$NDK/toolchains/$SYSTEM/$NAME/prebuilt, where $NAME is the toolchain name's full
 name (e.g. arm-linux-androideabi-4.8), and $SYSTEM is the name of the host
 system it is meant to run on (e.g. `linux-x86`, `windows` or `darwin-x86`)
 
@@ -304,7 +304,7 @@ use the "--mingw" option, as in:
         /tmp/ndk-$USER/src $NDK x86-4.8
 
 The corresponding binaries are installed under
-$NDK/toolchains/$NAME/prebuilt/windows Note that these are native Windows
+$NDK/toolchains/windows/$NAME/prebuilt. Note that these are native Windows
 programs, not Cygwin ones.
 
 Building the Windows toolchains under MSys and Cygwin is completely unsupported
