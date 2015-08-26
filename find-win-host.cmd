@@ -19,8 +19,6 @@ if ERRORLEVEL 1 exit /b 1
 set TEMP=windows-x86_64
 
 rem Check if NDK_HOST_32BIT is not set to 1/true, Windows is 64-bit, and 64-bit make exists
-if "%NDK_HOST_32BIT%"=="1" set TEMP=
-if "%NDK_HOST_32BIT%"=="true" set TEMP=
 if not exist "%NDK_ROOT%prebuilt\%TEMP%" set TEMP=
 if "%ProgramW6432%"=="" if "%ProgramFiles(x86)%"=="" set TEMP=
 

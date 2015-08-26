@@ -41,15 +41,6 @@ ifeq ($(NDK_LOG),true)
     override NDK_LOG := 1
 endif
 
-# Define NDK_HOST_32BIT=1 in your environment to always use toolchain in 32-bit
-# even if 64-bit is present.  Note that toolchains in 64-bit still produce
-# 32-bit binaries for Android
-#
-NDK_HOST_32BIT := $(strip $(NDK_HOST_32BIT))
-ifeq ($(NDK_HOST_32BIT),true)
-    override NDK_HOST_32BIT := 1
-endif
-
 # Check that we have at least GNU Make 3.81
 # We do this by detecting whether 'lastword' is supported
 #

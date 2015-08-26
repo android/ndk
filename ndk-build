@@ -50,13 +50,8 @@ esac
 
 # If NDK_LOG is set to 1 or true in the environment, or the command-line
 # then enable log messages below
-# Also normalize NDK_HOST_32BIT and NDK_ANALYZE to 1 or 0
 if [ -z "$NDK_LOG" ]; then
   NDK_LOG=0
-fi
-
-if [ -z "$NDK_HOST_32BIT" ]; then
-  NDK_HOST_32BIT=0
 fi
 
 if [ -z "$NDK_ANALYZE" ]; then
@@ -76,12 +71,6 @@ for opt; do
             ;;
           NDK_LOG=*)
             NDK_LOG=0
-            ;;
-          NDK_HOST_32BIT=1|NDK_HOST_32BIT=true)
-            NDK_HOST_32BIT=1
-            ;;
-          NDK_HOST_32BIT=*)
-            NDK_HOST_32BIT=0
             ;;
           NDK_ANALYZE=1|NDK_ANALYZE=true)
             NDK_ANALYZE=1
@@ -104,10 +93,6 @@ done
 
 if [ "$NDK_LOG" = "true" ]; then
   NDK_LOG=1
-fi
-
-if [ "$NDK_HOST_32BIT" = "true" ]; then
-  NDK_HOST_32BIT=1
 fi
 
 if [ "$NDK_ANALYZE" = "true" ]; then
@@ -170,11 +155,6 @@ if [ $HOST_ARCH = x86_64 ]; then
   if [ ! -d $PROGDIR/prebuilt/$HOST_TAG ]; then
     HOST_ARCH=x86
     LOG_MESSAGE="(no 64-bit prebuilt binaries detected)"
-  fi
-
-  if [ "$NDK_HOST_32BIT" = "1" ]; then
-    HOST_ARCH=x86
-    LOG_MESSAGE="(force 32-bit host toolchain)"
   fi
 fi
 
@@ -256,9 +236,6 @@ if [ "$NDK_ANALYZE" = 1 ]; then
         fi
         if [ -n "$APP_ABI" ] ; then
             FLAGS=$FLAGS" APP_ABI=$APP_ABI"
-        fi
-        if [ -n "$NDK_HOST_32BIT" ] ; then
-            FLAGS=$FLAGS" NDK_HOST_32BIT=$NDK_HOST_32BIT"
         fi
         if [ -n "$NDK_TOOLCHAIN_VERSION" ] ; then
             FLAGS=$FLAGS" NDK_TOOLCHAIN_VERSION=$NDK_TOOLCHAIN_VERSION"
