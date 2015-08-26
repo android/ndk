@@ -177,8 +177,9 @@ class AwkTest(Test):
         out_path = os.path.join(out_dir, os.path.basename(golden_out_path))
 
         with open(test_case, 'r') as test_in, open(out_path, 'w') as out_file:
-            print('awk -f {} < {} > {}'.format(
-                self.script, test_case, out_path))
+            awk_path = ndk.get_tool('awk')
+            print('{} -f {} < {} > {}'.format(
+                awk_path, self.script, test_case, out_path))
             rc = subprocess.call(['awk', '-f', self.script], stdin=test_in,
                                  stdout=out_file)
             if rc != 0:
