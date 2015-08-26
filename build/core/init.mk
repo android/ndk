@@ -98,21 +98,20 @@ ndk_log :=
 endif
 
 # -----------------------------------------------------------------------------
-# Function : host-prebuilt-tag
-# Arguments: 1: parent path of "prebuilt"
-# Returns  : path $1/prebuilt/(HOST_TAG64) exists and NDK_HOST_32BIT isn't defined to 1,
-#            or $1/prebuilt/(HOST_TAG)
-# Usage    : $(call host-prebuilt-tag, <path>)
-# Rationale: This function is used to proble available 64-bit toolchain or
-#            return 32-bit one as default.  Note that HOST_TAG64==HOST_TAG for
-#            32-bit system (or 32-bit userland in 64-bit system)
+# Function : host-toolchain-path
+# Arguments: 1: NDK root
+# Returns  : The parent path of all toolchains for this host. Note that
+#            HOST_TAG64 == HOST_TAG for 32-bit systems.
 # -----------------------------------------------------------------------------
-ifeq ($(NDK_HOST_32BIT),1)
-host-prebuilt-tag = $1/prebuilt/$(HOST_TAG)
-else
-host-prebuilt-tag = \
-   $(if $(strip $(wildcard $1/prebuilt/$(HOST_TAG64))),$1/prebuilt/$(HOST_TAG64),$1/prebuilt/$(HOST_TAG))
-endif
+host-toolchain-path = $1/toolchains/$(HOST_TAG64)
+
+# -----------------------------------------------------------------------------
+# Function : get-toolchain-root
+# Arguments: 1: NDK root
+#            2: Toolchain name
+# Returns  : Path to the given prebuilt toolchain.
+# -----------------------------------------------------------------------------
+get-toolchain-root = $(call host-toolchain-path,$1)/$2/prebuilt
 
 # ====================================================================
 #
@@ -284,7 +283,7 @@ endif
 $(call ndk_log,HOST_TAG set to $(HOST_TAG))
 
 # Check for NDK-specific versions of our host tools
-HOST_PREBUILT_ROOT := $(call host-prebuilt-tag, $(NDK_ROOT))
+HOST_PREBUILT_ROOT := $(NDK_ROOT)/prebuilt/$(HOST_TAG64)
 HOST_PREBUILT := $(strip $(wildcard $(HOST_PREBUILT_ROOT)/bin))
 HOST_AWK := $(strip $(NDK_HOST_AWK))
 HOST_MAKE := $(strip $(NDK_HOST_MAKE))
