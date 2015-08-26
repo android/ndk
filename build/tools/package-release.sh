@@ -370,7 +370,7 @@ if [ -z "$PREBUILT_NDK" ]; then
         for VERSION in $DEFAULT_GCC_VERSION_LIST; do
             unpack_prebuilt gnu-libstdc++-libs-$VERSION-$ABI-g "$REFERENCE"
         done
-        if [ "$SYSTEMS" != "darwin-x86" ]; then
+        if [ "$SYSTEMS" = "linux-x86" ]; then
             unpack_prebuilt libgccunwind-libs-$ABI "$REFERENCE"
         fi
     done
