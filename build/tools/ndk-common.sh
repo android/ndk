@@ -72,11 +72,13 @@ fi
 
 if [ ! -d $ANDROID_NDK_ROOT ] ; then
     echo "ERROR: Your ANDROID_NDK_ROOT variable does not point to a directory."
+    echo "ANDROID_NDK_ROOT=$ANDROID_NDK_ROOT"
     exit 1
 fi
 
 if [ ! -f $ANDROID_NDK_ROOT/build/tools/ndk-common.sh ] ; then
-    echo "ERROR: Your ANDROID_NDK_ROOT variable does not point to a valid directory."
+    echo "ERROR: Your ANDROID_NDK_ROOT does not contain a valid NDK build system."
+    echo "ANDROID_NDK_ROOT=$ANDROID_NDK_ROOT"
     exit 1
 fi
 
