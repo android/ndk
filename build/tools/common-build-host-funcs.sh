@@ -89,7 +89,9 @@ bh_tag_to_arch ()
     local RET
     case $1 in
         *-arm) RET=arm;;
+        *-arm64) RET=arm64;;
         *-mips) RET=mips;;
+        *-mips64) RET=mips64;;
         windows|*-x86) RET=x86;;
         *-x86_64) RET=x86_64;;
     esac
@@ -104,7 +106,7 @@ bh_tag_to_bits ()
     local RET
     case $1 in
         windows|*-x86|*-arm|*-mips) RET=32;;
-        *-x86_64) RET=64;;
+        *-x86_64|*-arm64|*-mips64) RET=64;;
     esac
     echo $RET
 }
@@ -123,8 +125,11 @@ bh_tag_to_config_triplet ()
         windows|windows-x86) RET=i586-pc-mingw32msvc;;
         windows-x86_64) RET=x86_64-w64-mingw32;;
         android-arm) RET=arm-linux-androideabi;;
+        android-arm64) RET=aarch64-linux-android;;
         android-x86) RET=i686-linux-android;;
+        android-x86_64) RET=x86_64-linux-android;;
         android-mips) RET=mipsel-linux-android;;
+        android-mips64) RET=mips64el-linux-android;;
     esac
     echo "$RET"
 }
