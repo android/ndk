@@ -18,10 +18,33 @@
 import os
 import re
 import subprocess
+import sys
 
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 NDK_ROOT = os.path.realpath(os.path.join(THIS_DIR, '..'))
+
+
+def _host_tag():
+    if sys.platform.startswith('linux'):
+        return 'linux-x86_64'
+    elif sys.platform == 'darwin':
+        return 'darwin-x86_64'
+    elif sys.platform == 'win32':
+        test_path = os.path.join(NDK_ROOT, 'prebuilt/windows-x86_64')
+        if os.path.exists(test_path):
+            return 'windows-x86_64'
+        else:
+            return 'windows'
+    else:
+        raise RuntimeError('Unsupported system: {}'.format(sys.platform))
+
+
+def get_tool(tool):
+    ext = ''
+    if sys.platform == 'win32':
+        ext = '.exe'
+    return os.path.join(NDK_ROOT, 'prebuilt', _host_tag(), 'bin', tool) + ext
 
 
 def get_build_var(test_dir, var_name):
