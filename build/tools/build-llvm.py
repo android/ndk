@@ -90,7 +90,7 @@ def main():
     package_name = 'llvm-{}-{}.tar.bz2'.format(LLVM_VERSION, host)
     package_path = os.path.join(package_dir, package_name)
     with tarfile.TarFile.open(package_path, 'w:bz2') as tarball:
-        arcname = 'toolchains/llvm-{}/prebuilt/{}'.format(LLVM_VERSION, host)
+        arcname = 'toolchains/{}/llvm-{}/prebuilt'.format(host, LLVM_VERSION)
 
         def package_filter(tarinfo):
             if os.path.basename(tarinfo.name) == '.git':
