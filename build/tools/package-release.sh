@@ -409,7 +409,8 @@ for SYSTEM in $SYSTEMS; do
     fi
 
     if [ "$PREBUILT_NDK" ]; then
-        cd $UNZIP_DIR/android-ndk-* && cp -rP toolchains/* $DSTDIR/toolchains/
+        cd $UNZIP_DIR/android-ndk-* && cp -rP toolchains/$SYSTEM/* \
+            $DSTDIR/toolchains/$SYSTEM
         fail_panic "Could not copy toolchain files from $PREBUILT_NDK"
 
         if [ -d "$DSTDIR/$GABIXX_SUBDIR" ]; then
@@ -459,9 +460,12 @@ for SYSTEM in $SYSTEMS; do
         for TC in $TOOLCHAINS; do
             unpack_prebuilt $TC-$SYSTEM "$DSTDIR" "$DSTDIR64"
             echo "Removing sysroot for $TC"
-            rm -rf $DSTDIR/toolchains/$TC/prebuilt/$SYSTEM/sysroot
-            rm -rf $DSTDIR64/toolchains/$TC/prebuilt/${SYSTEM}_64/sysroot
-            rm -rf $DSTDIR64/toolchains/$TC/prebuilt/${SYSTEM}-x86_64/sysroot
+            rm -rf $DSTDIR/toolchains/$SYSTEM/$TC/prebuilt/sysroot
+
+            # TODO: Do we not actually know what $SYSTEM is going to be here?
+            # Why do we need to check these and the above?
+            rm -rf $DSTDIR64/toolchains/${SYSTEM}_64/$TC/prebuilt/sysroot
+            rm -rf $DSTDIR64/toolchains/${SYSTEM}-x86_64/$TC/prebuilt/sysroot
         done
 
         # Unpack clang/llvm
@@ -478,8 +482,8 @@ for SYSTEM in $SYSTEMS; do
                 llvm-$LLVM_VERSION-$SYSTEM "$DSTDIR" "$DSTDIR64" $LLVM_32
         done
 
-        rm -rf $DSTDIR/toolchains/*l
-        rm -rf $DSTDIR64/toolchains/*l
+        rm -rf $DSTDIR/toolchains/$SYSTEM/*l
+        rm -rf $DSTDIR64/toolchains/$SYSTEM/*l
 
         # Unpack renderscript tools; http://b/22377128.
         echo "WARNING: no renderscript-$SYSTEM tools! http://b/22377128"

@@ -176,11 +176,11 @@ if [ ! -d "$NDK_DIR/platforms/$PLATFORM" ] ; then
 fi
 
 # Check toolchain name
-TOOLCHAIN_PATH="$NDK_DIR/toolchains/$TOOLCHAIN_NAME"
+TOOLCHAIN_PATH="$NDK_DIR/toolchains/$SYSTEM/$TOOLCHAIN_NAME"
 if [ ! -d "$TOOLCHAIN_PATH" ] ; then
     echo "Invalid toolchain name: $TOOLCHAIN_NAME"
     echo "Please use --toolchain=<name> with the name of a toolchain supported by the source NDK."
-    echo "Try one of: " `(cd "$NDK_DIR/toolchains" && ls)`
+    echo "Try one of: " `(cd "$NDK_DIR/toolchains/$SYSTEM" && ls)`
     exit 1
 fi
 
@@ -235,7 +235,7 @@ if [ ! -f "$TOOLCHAIN_GCC" ] ; then
 fi
 
 if [ -n "$LLVM_VERSION" ]; then
-    LLVM_TOOLCHAIN_PATH="$NDK_DIR/toolchains/llvm-$LLVM_VERSION"
+    LLVM_TOOLCHAIN_PATH="$NDK_DIR/toolchains/$SYSTEM/llvm-$LLVM_VERSION"
     # Check that we have any prebuilts LLVM toolchain here
     if [ ! -d "$LLVM_TOOLCHAIN_PATH/prebuilt" ] ; then
         echo "LLVM Toolchain is missing prebuilt files"

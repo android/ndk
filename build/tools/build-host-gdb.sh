@@ -258,7 +258,7 @@ install_host_gdb ()
             # Sample (1):
             #  $NDK/gdb-arm-linux-androideabi-4.8/prebuilt/windows/bin/arm-linux-androideabi-gdb.exe
             # Sample (2):
-            #  $NDK/toolchains/arm-linux-androideabi-4.8/prebuilt/windows/bin/arm-linux-androideabi-gdb.exe
+            #  $NDK/toolchains/windows/arm-linux-androideabi-4.8/prebuilt/bin/arm-linux-androideabi-gdb.exe
             run $NDK_BUILDTOOLS_PATH/build-gdb-stub.sh \
                 --gdb-executable-path=${DSTDIR}/bin/$(bh_tag_to_config_triplet $2)-gdb.exe \
                 --python-prefix-dir=${PYDIR} \
