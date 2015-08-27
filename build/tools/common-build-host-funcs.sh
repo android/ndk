@@ -77,6 +77,7 @@ bh_tag_to_os ()
         linux-*) RET="linux";;
         darwin-*) RET="darwin";;
         windows|windows-*) RET="windows";;
+        *) echo "ERROR: Unknown tag $1" >&2; echo "INVALID"; exit 1;;
     esac
     echo $RET
 }
@@ -94,6 +95,7 @@ bh_tag_to_arch ()
         *-mips64) RET=mips64;;
         windows|*-x86) RET=x86;;
         *-x86_64) RET=x86_64;;
+        *) echo "ERROR: Unknown tag $1" >&2; echo "INVALID"; exit 1;;
     esac
     echo $RET
 }
@@ -107,6 +109,7 @@ bh_tag_to_bits ()
     case $1 in
         windows|*-x86|*-arm|*-mips) RET=32;;
         *-x86_64|*-arm64|*-mips64) RET=64;;
+        *) echo "ERROR: Unknown tag $1" >&2; echo "INVALID"; exit 1;;
     esac
     echo $RET
 }
@@ -130,6 +133,7 @@ bh_tag_to_config_triplet ()
         android-x86_64) RET=x86_64-linux-android;;
         android-mips) RET=mipsel-linux-android;;
         android-mips64) RET=mips64el-linux-android;;
+        *) echo "ERROR: Unknown tag $1" >&2; echo "INVALID"; exit 1;;
     esac
     echo "$RET"
 }
@@ -137,11 +141,14 @@ bh_tag_to_config_triplet ()
 
 bh_set_build_tag ()
 {
+  SAVED_OPTIONS=$(set +o)
+  set -e
   BH_BUILD_OS=$(bh_tag_to_os $1)
   BH_BUILD_ARCH=$(bh_tag_to_arch $1)
   BH_BUILD_BITS=$(bh_tag_to_bits $1)
   BH_BUILD_TAG=$BH_BUILD_OS-$BH_BUILD_ARCH
   BH_BUILD_CONFIG=$(bh_tag_to_config_triplet $1)
+  eval "$SAVED_OPTIONS"
 }
 
 # Set default BH_BUILD macros.
@@ -149,20 +156,26 @@ bh_set_build_tag $HOST_TAG
 
 bh_set_host_tag ()
 {
+  SAVED_OPTIONS=$(set +o)
+  set -e
   BH_HOST_OS=$(bh_tag_to_os $1)
   BH_HOST_ARCH=$(bh_tag_to_arch $1)
   BH_HOST_BITS=$(bh_tag_to_bits $1)
   BH_HOST_TAG=$BH_HOST_OS-$BH_HOST_ARCH
   BH_HOST_CONFIG=$(bh_tag_to_config_triplet $1)
+  eval "$SAVED_OPTIONS"
 }
 
 bh_set_target_tag ()
 {
+  SAVED_OPTIONS=$(set +o)
+  set -e
   BH_TARGET_OS=$(bh_tag_to_os $1)
   BH_TARGET_ARCH=$(bh_tag_to_arch $1)
   BH_TARGET_BITS=$(bh_tag_to_bits $1)
   BH_TARGET_TAG=$BH_TARGET_OS-$BH_TARGET_ARCH
   BH_TARGET_CONFIG=$(bh_tag_to_config_triplet $1)
+  eval "$SAVED_OPTIONS"
 }
 
 bh_sort_systems_build_first ()
