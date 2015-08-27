@@ -43,6 +43,10 @@ class ArgParser(argparse.ArgumentParser):
             help='Skip building target components.')
 
         self.add_argument(
+            '--skip-gcc', action='store_true',
+            help='Skip building and packaging GCC.')
+
+        self.add_argument(
             '--package', action='store_true', dest='package', default=True,
             help='Package the NDK when done building.')
         self.add_argument(
@@ -159,7 +163,8 @@ def main():
         gcc_build_args.append('--toolchain={}'.format(toolchain_name))
 
     invoke_build('dev-cleanup.sh')
-    invoke_build('../../../toolchain/gcc/build.py', gcc_build_args)
+    if not args.skip_gcc:
+        invoke_build('../../../toolchain/gcc/build.py', gcc_build_args)
     build_ndk(out_dir, build_args, host_only=args.host_only)
 
     if args.package and not args.host_only:
