@@ -370,9 +370,6 @@ if [ -z "$PREBUILT_NDK" ]; then
         for VERSION in $DEFAULT_GCC_VERSION_LIST; do
             unpack_prebuilt gnu-libstdc++-libs-$VERSION-$ABI-g "$REFERENCE"
         done
-        if [ "$SYSTEMS" = "linux-x86" ]; then
-            unpack_prebuilt libgccunwind-libs-$ABI "$REFERENCE"
-        fi
     done
 fi
 
@@ -446,15 +443,6 @@ for SYSTEM in $SYSTEMS; do
                 copy_prebuilt "$GNUSTL_SUBDIR/$VERSION/libs/$STL_ABI" "$GNUSTL_SUBDIR/$VERSION/libs"
             done
         done
-
-        if [ -d "$DSTDIR/$GCCUNWIND_SUBDIR" ]; then
-            GCCUNWIND_ABIS=$PREBUILT_ABIS
-            for GCCUNWIND_ABI in $GCCUNWIND_ABIS; do
-                copy_prebuilt "$GCCUNWIND_SUBDIR/libs/$GCCUNWIND_ABI" "$GCCUNWIND_SUBDIR/libs"
-            done
-        else
-            echo "WARNING: Could not find libgccunwind source tree!"
-        fi
     else
         # Unpack toolchains
         for TC in $TOOLCHAINS; do
