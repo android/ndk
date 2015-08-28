@@ -267,10 +267,6 @@ for SYSTEM in $SYSTEMS; do
     run $BUILDTOOLS/build-host-awk.sh $TOOLCHAIN_FLAGS
     fail_panic "awk build failure!"
 
-    echo "Building $SYSNAME ndk-python"
-    run $BUILDTOOLS/build-host-python.sh $TOOLCHAIN_FLAGS "--toolchain-src-dir=$SRC_DIR" "--systems=$SYSTEM" "--force"
-    fail_panic "python build failure!"
-
     if [ "$SYSTEM" = "windows" ]; then
         echo "Building $SYSNAME toolbox"
         run $BUILDTOOLS/build-host-toolbox.sh $FLAGS
