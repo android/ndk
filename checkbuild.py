@@ -166,6 +166,7 @@ def main():
     if not args.skip_gcc:
         invoke_build('../../../toolchain/gcc/build.py', gcc_build_args)
     build_ndk(out_dir, build_args, host_only=args.host_only)
+    invoke_build('../../../toolchain/gdb/build.py', gcc_build_args)
 
     if args.package and not args.host_only:
         package_ndk(args.release, system, out_dir, build_args)
