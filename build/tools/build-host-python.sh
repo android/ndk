@@ -391,7 +391,7 @@ build_host_python ()
 
 need_build_host_python ()
 {
-    bh_stamps_do host-python-$1-$2 build_host_python $1 $2
+    bh_do build_host_python $1 $2
 }
 
 # Install host Python binaries and support files to the NDK install dir.
@@ -424,7 +424,7 @@ need_install_host_python ()
 {
     local SRCDIR="$(python_build_install_dir $1 $2)"
 
-    bh_stamps_do install-host-python-$1-$2 install_host_python $1 $2
+    bh_do install_host_python $1 $2
 
     # make sharedmods (setup.py) needs to use the build machine's Python
     # for the other hosts to build correctly.
@@ -445,15 +445,13 @@ package_host_python ()
     local PACKAGENAME=ndk-python-$(install_dir_from_host_tag $1).tar.bz2
     local PACKAGE="$PACKAGE_DIR/$PACKAGENAME"
 
-    need_install_host_python $1 $2
-
     dump "$(bh_host_text) $PACKAGENAME: Packaging"
     run pack_archive "$PACKAGE" "$BLDDIR" "$SRCDIR"
 }
 
 need_package_host_python ()
 {
-    bh_stamps_do package-host-python-$1-$2 package_host_python $1 $2
+    bh_do package_host_python $1 $2
 }
 
 PYTHON_VERSION=$(commas_to_spaces $PYTHON_VERSION)

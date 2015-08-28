@@ -783,22 +783,16 @@ bh_register_options ()
     fi
 }
 
-# Execute a given command if the corresponding timestamp hasn't been touched
+# Execute a given command.
 #
 # NOTE: The command is run in its own sub-shell to avoid environment
 #        contamination.
 #
-# $1: timestamps name
-# $2+: command
-bh_stamps_do ()
+# $@: command
+bh_do ()
 {
-    local STAMP_NAME=$1
-    shift
-    if [ ! -f "$BH_STAMPS_DIR/$STAMP_NAME" ]; then
-        ("$@")
-        fail_panic
-        mkdir -p "$BH_STAMPS_DIR" && touch "$BH_STAMPS_DIR/$STAMP_NAME"
-    fi
+    ("$@")
+    fail_panic
 }
 
 # Return host tag with only translation that windows-x86 -> windows
