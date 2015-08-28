@@ -251,33 +251,17 @@ name64 ()
 # Unpack a prebuilt into specified destination directory
 # $1: prebuilt name, relative to $PREBUILT_DIR
 # $2: destination directory
-# $3: optional flag to use 32-bit prebuilt in place of 64-bit
 unpack_prebuilt ()
 {
-    local PREBUILT=
-    local PREBUILT64=null
+    local PREBUILT=$1
     local DDIR="$2"
-    local USE32="${3:-no}"
-
-    if [ "$TRY64" = "yes" -a "$USE32" = "no" ]; then
-        PREBUILT=`name64 $1`
-    else
-        PREBUILT=$1
-        PREBUILT64=`name64 $1`
-    fi
 
     PREBUILT=${PREBUILT}.tar.bz2
-    PREBUILT64=${PREBUILT64}.tar.bz2
 
     echo "Unpacking $PREBUILT"
     if [ -f "$PREBUILT_DIR/$PREBUILT" ] ; then
         unpack_archive "$PREBUILT_DIR/$PREBUILT" "$DDIR"
         fail_panic "Could not unpack prebuilt $PREBUILT. Aborting."
-        if [ -f "$PREBUILT_DIR/$PREBUILT64" ] ; then
-            echo "Unpacking $PREBUILT64"
-            unpack_archive "$PREBUILT_DIR/$PREBUILT64" "$DDIR"
-            fail_panic "Could not unpack prebuilt $PREBUILT64. Aborting."
-        fi
     else
         fail_panic "Could not find $PREBUILT in $PREBUILT_DIR"
     fi
@@ -390,6 +374,10 @@ rm -f $REFERENCE/CleanSpec.mk
 DSTDIR=$TMPDIR/$RELEASE_PREFIX
 
 for SYSTEM in $SYSTEMS; do
+    if [ "$TRY64" = "yes" ]; then
+        SYSTEM=`name64 $SYSTEM`
+    fi
+
     echo "Preparing package for system $SYSTEM."
     BIN_RELEASE=$RELEASE_PREFIX-$SYSTEM
     rm -rf "$DSTDIR" &&
@@ -449,12 +437,12 @@ for SYSTEM in $SYSTEMS; do
             # This wrongly packages 32-bit Windows LLVM for 64-bit as well, but
             # the real bug here is that we don't have a 64-bit Windows LLVM.
             # http://b/22414702
-            LLVM_32=
-            if [ "$SYSTEM" = "windows" -a "$TRY64" = "yes" ]; then
-                LLVM_32=yes
+            LLVM_SYSTEM=$SYSTEM
+            if [ "$SYSTEM" = "windows-x86_64" ]; then
+                LLVM_SYSTEM=windows
             fi
             unpack_prebuilt \
-                llvm-$LLVM_VERSION-$SYSTEM "$DSTDIR" $LLVM_32
+                llvm-$LLVM_VERSION-$LLVM_SYSTEM "$DSTDIR"
         done
 
         rm -rf $DSTDIR/toolchains/$SYSTEM/*l
@@ -464,18 +452,14 @@ for SYSTEM in $SYSTEMS; do
         #unpack_prebuilt renderscript-$SYSTEM "$DSTDIR"
 
         # Unpack prebuilt ndk-stack and other host tools
-        LONG_SYSTEM=${SYSTEM}_64
-        if [ "$SYSTEM" = "windows" ]; then
-            LONG_SYSTEM=$SYSTEM
-        fi
-        unpack_prebuilt ndk-stack-$LONG_SYSTEM "$DSTDIR"
-        unpack_prebuilt ndk-depends-$LONG_SYSTEM "$DSTDIR"
-        unpack_prebuilt ndk-make-$LONG_SYSTEM "$DSTDIR"
-        unpack_prebuilt ndk-awk-$LONG_SYSTEM "$DSTDIR"
-        unpack_prebuilt ndk-python-$LONG_SYSTEM "$DSTDIR"
-        unpack_prebuilt ndk-yasm-$LONG_SYSTEM "$DSTDIR"
+        unpack_prebuilt ndk-stack-$SYSTEM "$DSTDIR"
+        unpack_prebuilt ndk-depends-$SYSTEM "$DSTDIR"
+        unpack_prebuilt ndk-make-$SYSTEM "$DSTDIR"
+        unpack_prebuilt ndk-awk-$SYSTEM "$DSTDIR"
+        unpack_prebuilt ndk-python-$SYSTEM "$DSTDIR"
+        unpack_prebuilt ndk-yasm-$SYSTEM "$DSTDIR"
 
-        if [ "$SYSTEM" = "windows" ]; then
+        if [ "$SYSTEM" = "windows" -o "$SYSTEM" = "windows-x86_64" ]; then
             unpack_prebuilt toolbox-$SYSTEM "$DSTDIR"
         fi
     fi
@@ -490,7 +474,8 @@ for SYSTEM in $SYSTEMS; do
     fi
 
     # Remove duplicated files in case-insensitive file system
-    if [ "$SYSTEM" = "windows" -o "$SYSTEM" = "darwin-x86" ]; then
+    if [ "$SYSTEM" = "windows" -o "$SYSTEM" = "windows-x86_64" -o \
+         "$SYSTEM" = "darwin-x86" ]; then
         rm -rf $DSTDIR/tests/build/c++-stl-source-extensions
         find "$DSTDIR/platforms" | sort -f | uniq -di | xargs rm
     fi
@@ -515,13 +500,11 @@ for SYSTEM in $SYSTEMS; do
     # Create an archive for the final package. Extension depends on the
     # host system.
     ARCHIVE=$BIN_RELEASE
-    if [ "$TRY64" = "yes" ]; then
-        ARCHIVE=`name64 $ARCHIVE`
-    elif [ "$SYSTEM" = "windows" ]; then
+    if [ "$SYSTEM" = "windows" ]; then
         ARCHIVE=$ARCHIVE-x86
     fi
     case "$SYSTEM" in
-        windows)
+        windows|windows-x86_64)
             ARCHIVE="$ARCHIVE.zip"
             ;;
         *)
