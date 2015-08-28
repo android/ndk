@@ -251,15 +251,13 @@ name64 ()
 # Unpack a prebuilt into specified destination directory
 # $1: prebuilt name, relative to $PREBUILT_DIR
 # $2: destination directory
-# $3: optional destination directory for 64-bit toolchain
-# $4: optional flag to use 32-bit prebuilt in place of 64-bit
+# $3: optional flag to use 32-bit prebuilt in place of 64-bit
 unpack_prebuilt ()
 {
     local PREBUILT=
     local PREBUILT64=null
     local DDIR="$2"
-    local DDIR64="${3:-$DDIR}"
-    local USE32="${4:-no}"
+    local USE32="${3:-no}"
 
     if [ "$TRY64" = "yes" -a "$USE32" = "no" ]; then
         PREBUILT=`name64 $1`
@@ -277,7 +275,7 @@ unpack_prebuilt ()
         fail_panic "Could not unpack prebuilt $PREBUILT. Aborting."
         if [ -f "$PREBUILT_DIR/$PREBUILT64" ] ; then
             echo "Unpacking $PREBUILT64"
-            unpack_archive "$PREBUILT_DIR/$PREBUILT64" "$DDIR64"
+            unpack_archive "$PREBUILT_DIR/$PREBUILT64" "$DDIR"
             fail_panic "Could not unpack prebuilt $PREBUILT64. Aborting."
         fi
     else
@@ -390,20 +388,14 @@ rm -f $REFERENCE/CleanSpec.mk
 # now, for each system, create a package
 #
 DSTDIR=$TMPDIR/$RELEASE_PREFIX
-DSTDIR64=${DSTDIR}
 
 for SYSTEM in $SYSTEMS; do
     echo "Preparing package for system $SYSTEM."
     BIN_RELEASE=$RELEASE_PREFIX-$SYSTEM
-    rm -rf "$DSTDIR" "$DSTDIR64" &&
-    mkdir -p "$DSTDIR" "$DSTDIR64" &&
+    rm -rf "$DSTDIR" &&
+    mkdir -p "$DSTDIR" &&
     copy_directory "$REFERENCE" "$DSTDIR"
     fail_panic "Could not copy reference. Aborting."
-
-    if [ "$DSTDIR" != "$DSTDIR64" ]; then
-        copy_directory "$DSTDIR" "$DSTDIR64"
-        echo "$RELEASE (64-bit)" > $DSTDIR64/RELEASE.TXT
-    fi
 
     if [ "$PREBUILT_NDK" ]; then
         cd $UNZIP_DIR/android-ndk-* && cp -rP toolchains/$SYSTEM/* \
@@ -446,14 +438,9 @@ for SYSTEM in $SYSTEMS; do
     else
         # Unpack toolchains
         for TC in $TOOLCHAINS; do
-            unpack_prebuilt $TC-$SYSTEM "$DSTDIR" "$DSTDIR64"
+            unpack_prebuilt $TC-$SYSTEM "$DSTDIR"
             echo "Removing sysroot for $TC"
             rm -rf $DSTDIR/toolchains/$SYSTEM/$TC/prebuilt/sysroot
-
-            # TODO: Do we not actually know what $SYSTEM is going to be here?
-            # Why do we need to check these and the above?
-            rm -rf $DSTDIR64/toolchains/${SYSTEM}_64/$TC/prebuilt/sysroot
-            rm -rf $DSTDIR64/toolchains/${SYSTEM}-x86_64/$TC/prebuilt/sysroot
         done
 
         # Unpack clang/llvm
@@ -467,72 +454,63 @@ for SYSTEM in $SYSTEMS; do
                 LLVM_32=yes
             fi
             unpack_prebuilt \
-                llvm-$LLVM_VERSION-$SYSTEM "$DSTDIR" "$DSTDIR64" $LLVM_32
+                llvm-$LLVM_VERSION-$SYSTEM "$DSTDIR" $LLVM_32
         done
 
         rm -rf $DSTDIR/toolchains/$SYSTEM/*l
-        rm -rf $DSTDIR64/toolchains/$SYSTEM/*l
 
         # Unpack renderscript tools; http://b/22377128.
         echo "WARNING: no renderscript-$SYSTEM tools! http://b/22377128"
-        #unpack_prebuilt renderscript-$SYSTEM "$DSTDIR" "$DSTDIR64"
+        #unpack_prebuilt renderscript-$SYSTEM "$DSTDIR"
 
         # Unpack prebuilt ndk-stack and other host tools
         LONG_SYSTEM=${SYSTEM}_64
         if [ "$SYSTEM" = "windows" ]; then
             LONG_SYSTEM=$SYSTEM
         fi
-        unpack_prebuilt ndk-stack-$LONG_SYSTEM "$DSTDIR" "$DSTDIR64"
-        unpack_prebuilt ndk-depends-$LONG_SYSTEM "$DSTDIR" "$DSTDIR64"
-        unpack_prebuilt ndk-make-$LONG_SYSTEM "$DSTDIR" "$DSTDIR64"
-        unpack_prebuilt ndk-awk-$LONG_SYSTEM "$DSTDIR" "$DSTDIR64"
-        unpack_prebuilt ndk-python-$LONG_SYSTEM "$DSTDIR" "$DSTDIR64"
-        unpack_prebuilt ndk-yasm-$LONG_SYSTEM "$DSTDIR" "$DSTDIR64"
+        unpack_prebuilt ndk-stack-$LONG_SYSTEM "$DSTDIR"
+        unpack_prebuilt ndk-depends-$LONG_SYSTEM "$DSTDIR"
+        unpack_prebuilt ndk-make-$LONG_SYSTEM "$DSTDIR"
+        unpack_prebuilt ndk-awk-$LONG_SYSTEM "$DSTDIR"
+        unpack_prebuilt ndk-python-$LONG_SYSTEM "$DSTDIR"
+        unpack_prebuilt ndk-yasm-$LONG_SYSTEM "$DSTDIR"
 
         if [ "$SYSTEM" = "windows" ]; then
-            unpack_prebuilt toolbox-$SYSTEM "$DSTDIR" "$DSTDIR64"
+            unpack_prebuilt toolbox-$SYSTEM "$DSTDIR"
         fi
     fi
 
     # Unpack renderscript headers/libs; http://b/22377128.
     echo "WARNING: no renderscript headers/libs! http://b/22377128"
-    #unpack_prebuilt renderscript "$DSTDIR" "$DSTDIR64"
+    #unpack_prebuilt renderscript "$DSTDIR"
 
     # Unpack misc stuff
     if [ -f "$PREBUILT_DIR/misc.tar.bz2" ]; then
-        unpack_prebuilt misc "$DSTDIR" "$DSTDIR64"
+        unpack_prebuilt misc "$DSTDIR"
     fi
 
     # Remove duplicated files in case-insensitive file system
     if [ "$SYSTEM" = "windows" -o "$SYSTEM" = "darwin-x86" ]; then
         rm -rf $DSTDIR/tests/build/c++-stl-source-extensions
-        rm -rf $DSTDIR64/tests/build/c++-stl-source-extensions
         find "$DSTDIR/platforms" | sort -f | uniq -di | xargs rm
-        find "$DSTDIR64/platforms" | sort -f | uniq -di | xargs rm
     fi
 
     # Remove include-fixed/linux/a.out.h.   See b.android.com/73728
-    find "$DSTDIR/toolchains" "$DSTDIR64/toolchains" -name a.out.h | grep include-fixed/ | xargs rm
+    find "$DSTDIR/toolchains" -name a.out.h | grep include-fixed/ | xargs rm
 
     # Remove redundant pretty-printers/libstdcxx
     rm -rf $DSTDIR/prebuilt/*/share/pretty-printers/libstdcxx/gcc-l*
     rm -rf $DSTDIR/prebuilt/*/share/pretty-printers/libstdcxx/gcc-4.9-*
-    rm -rf $DSTDIR64/prebuilt/*/share/pretty-printers/libstdcxx/gcc-l*
-    rm -rf $DSTDIR64/prebuilt/*/share/pretty-printers/libstdcxx/gcc-4.9-*
 
     # Remove python tests
     find $DSTDIR/prebuilt/*/lib/python* -name test -exec rm -rf {} \;
-    find $DSTDIR64/prebuilt/*/lib/python* -name test -exec rm -rf {} \;
 
     # Remove python *.pyc and *.pyo files
     find $DSTDIR/prebuilt/*/lib/python* -name "*.pyc" -exec rm -rf {} \;
     find $DSTDIR/prebuilt/*/lib/python* -name "*.pyo" -exec rm -rf {} \;
-    find $DSTDIR64/prebuilt/*/lib/python* -name "*.pyc"  -exec rm -rf {} \;
-    find $DSTDIR64/prebuilt/*/lib/python* -name "*.pyo"  -exec rm -rf {} \;
 
     # Remove .git*
     find $DSTDIR -name ".git*" -exec rm -rf {} \;
-    find $DSTDIR64 -name ".git*" -exec rm -rf {} \;
 
     # Create an archive for the final package. Extension depends on the
     # host system.
@@ -561,15 +539,11 @@ for SYSTEM in $SYSTEMS; do
         -c 'echo $REPO_PROJECT $(git rev-parse HEAD)' > $DSTDIR/repo.prop
     fi
 
-    if [ "$DSTDIR" != "$DSTDIR64" ]; then
-      cp $DSTDIR/repo.prop $DSTDIR64/repo.prop
-    fi
-
     echo "Creating $ARCHIVE"
     # make all file universally readable, and all executable (including directory)
     # universally executable, punt intended
-    find $DSTDIR $DSTDIR64 -exec chmod a+r {} \;
-    find $DSTDIR $DSTDIR64 -executable -exec chmod a+x {} \;
+    find $DSTDIR -exec chmod a+r {} \;
+    find $DSTDIR -executable -exec chmod a+x {} \;
     pack_archive "$OUT_DIR/$ARCHIVE" "$TMPDIR" "$RELEASE_PREFIX"
     fail_panic "Could not create archive: $OUT_DIR/$ARCHIVE"
 done
