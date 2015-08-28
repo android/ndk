@@ -144,12 +144,14 @@ def main():
     DEFAULT_OUT_DIR = os.path.join(build_top, 'out/ndk')
     out_dir = os.path.realpath(os.getenv('DIST_DIR', DEFAULT_OUT_DIR))
 
-    gcc_build_args = ['--package-dir={}'.format(out_dir)]
+    common_build_args = ['--package-dir={}'.format(out_dir)]
     if args.system is not None:
         # Need to use args.system directly rather than system because system is
         # the name used by the build/tools scripts (i.e. linux-x86 instead of
         # linux).
-        gcc_build_args.append('--host={}'.format(args.system))
+        common_build_args.append('--host={}'.format(args.system))
+
+    gcc_build_args = list(common_build_args)
     if args.arch is not None:
         build_args.append('--arch={}'.format(args.arch))
         toolchain_name = {
@@ -165,6 +167,7 @@ def main():
     invoke_build('dev-cleanup.sh')
     if not args.skip_gcc:
         invoke_build('../../../toolchain/gcc/build.py', gcc_build_args)
+    invoke_build('../../../toolchain/yasm/build.py', common_build_args)
     build_ndk(out_dir, build_args, host_only=args.host_only)
     invoke_build('../../../toolchain/gdb/build.py', gcc_build_args)
 
