@@ -426,9 +426,15 @@ for SYSTEM in $SYSTEMS; do
     else
         # Unpack toolchains
         for TC in $TOOLCHAINS; do
-            unpack_prebuilt $TC-$SYSTEM "$DSTDIR"
-            echo "Removing sysroot for $TC"
-            rm -rf $DSTDIR/toolchains/$SYSTEM/$TC/prebuilt/sysroot
+            PREBUILT_ROOT=$ANDROID_BUILD_TOP/prebuilts/ndk/current/
+            GCC_SUBDIR=toolchains/$SYSTEM/$TC
+            GCC_PATH=$PREBUILT_ROOT/$GCC_SUBDIR
+            GCC_DST=$DSTDIR/$GCC_SUBDIR
+
+            echo "Copying ${TC}..."
+            mkdir -p $GCC_DST
+            cp -r $GCC_PATH/prebuilt $GCC_DST
+            fail_panic "Could not copy $TC!"
         done
 
         # Unpack clang/llvm
