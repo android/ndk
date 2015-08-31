@@ -172,6 +172,9 @@ def main():
 
     invoke_build('../../sources/host-tools/nawk-20071023/build.py',
                  common_build_args)
+    invoke_build('../../sources/host-tools/make-3.81/build.py',
+                 common_build_args)
+
     invoke_build('../../../toolchain/python/build.py', common_build_args)
     invoke_build('../../../toolchain/gdb/build.py', gdb_build_args)
     invoke_build('../../../toolchain/yasm/build.py', common_build_args)

@@ -259,10 +259,6 @@ for SYSTEM in $SYSTEMS; do
     run $BUILDTOOLS/build-ndk-stack.sh $TOOLCHAIN_FLAGS --src-dir=$SRC_DIR --program-name=ndk-depends
     fail_panic "ndk-depends build failure!"
 
-    echo "Building $SYSNAME ndk-make"
-    run $BUILDTOOLS/build-host-make.sh $TOOLCHAIN_FLAGS
-    fail_panic "make build failure!"
-
     if [ "$SYSTEM" = "windows" ]; then
         echo "Building $SYSNAME toolbox"
         run $BUILDTOOLS/build-host-toolbox.sh $FLAGS
