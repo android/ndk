@@ -24,8 +24,13 @@ import datetime
 import inspect
 import os
 import platform
+import site
 import subprocess
 import sys
+
+site.addsitedir(os.path.join(os.path.dirname(__file__), 'build/lib'))
+
+import build_support
 
 
 class ArgParser(argparse.ArgumentParser):
@@ -152,24 +157,21 @@ def main():
         common_build_args.append('--host={}'.format(args.system))
 
     gcc_build_args = list(common_build_args)
+    gdb_build_args = list(common_build_args)
     if args.arch is not None:
         build_args.append('--arch={}'.format(args.arch))
-        toolchain_name = {
-            'arm': 'arm-linux-androideabi',
-            'arm64': 'aarch64-linux-android',
-            'mips': 'mipsel-linux-android',
-            'mips64': 'mips64el-linux-android',
-            'x86': 'x86',
-            'x86_64': 'x86_64',
-        }[args.arch]
+
+        toolchain_name = build_support.arch_to_toolchain(args.arch)
         gcc_build_args.append('--toolchain={}'.format(toolchain_name))
+
+        gdb_build_args.append('--arch={}'.format(args.arch))
 
     invoke_build('dev-cleanup.sh')
     if not args.skip_gcc:
         invoke_build('../../../toolchain/gcc/build.py', gcc_build_args)
 
     invoke_build('../../../toolchain/python/build.py', common_build_args)
-    invoke_build('../../../toolchain/gdb/build.py', gcc_build_args)
+    invoke_build('../../../toolchain/gdb/build.py', gdb_build_args)
     invoke_build('../../../toolchain/yasm/build.py', common_build_args)
 
     build_ndk(out_dir, build_args, host_only=args.host_only)
