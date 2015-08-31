@@ -19,8 +19,8 @@
 #
 
 # include common function and variable definitions
-. `dirname $0`/prebuilt-common.sh
-. `dirname $0`/builder-funcs.sh
+. $NDK_BUILDTOOLS_PATH/prebuilt-common.sh
+. $NDK_BUILDTOOLS_PATH/builder-funcs.sh
 
 PROGRAM_PARAMETERS=""
 

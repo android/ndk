@@ -250,12 +250,6 @@ for SYSTEM in $SYSTEMS; do
         esac
     fi
 
-    if [ "$SYSTEM" = "windows" ]; then
-        echo "Building $SYSNAME toolbox"
-        run $BUILDTOOLS/build-host-toolbox.sh $FLAGS
-        fail_panic "Windows toolbox build failure!"
-    fi
-
     echo "Packaging $SYSNAME LLVM"
     PACKAGE_ARG=
     if [ -n "$PACKAGE_DIR" ]; then

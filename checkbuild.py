@@ -179,6 +179,10 @@ def main():
     invoke_build('../../sources/host-tools/make-3.81/build.py',
                  common_build_args)
 
+    if args.system in ('windows', 'windows64'):
+        invoke_build('../../sources/host-tools/toolbox/build.py',
+                     common_build_args)
+
     invoke_build('../../../toolchain/python/build.py', common_build_args)
     invoke_build('../../../toolchain/gdb/build.py', gdb_build_args)
     invoke_build('../../../toolchain/yasm/build.py', common_build_args)
