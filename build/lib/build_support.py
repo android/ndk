@@ -116,7 +116,7 @@ class ArgParser(argparse.ArgumentParser):
             default=get_default_host(),
             help='Build binaries for given OS (e.g. linux).')
         self.add_argument(
-            '--package-dir', help='Directory to place the packaged GCC.',
+            '--package-dir', help='Directory to place the packaged artifact.',
             type=os.path.realpath, default=get_default_package_dir())
 
 

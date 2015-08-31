@@ -18,54 +18,28 @@
 import argparse
 import datetime
 import os
-import tarfile
+import site
 import sys
+import tarfile
 
+site.addsitedir(os.path.join(os.path.dirname(__file__), '../lib'))
 
-def android_top():
-    top = os.getenv('ANDROID_BUILD_TOP', '')
-    if not top:
-        sys.exit('ANDROID_BUILD_TOP not set. Cannot continue.\n'
-                 'Please set ANDROID_BUILD_TOP to point to the root of an '
-                 'Android tree.')
-    return top
-
-
-def get_default_package_dir():
-    tmp_dir = '/tmp'
-    if 'TMPDIR' in os.environ:
-        tmp_dir = os.getenv('TMPDIR')
-    datestamp = datetime.date.today().isoformat().replace('-', '')
-    return os.path.join(tmp_dir, 'prebuilt-{}'.format(datestamp))
+import build_support
 
 
 def get_llvm_prebuilt_path(host, version):
     rel_prebuilt_path = 'prebuilts/clang/{}/host/{}'.format(
         host, version)
-    prebuilt_path = os.path.join(android_top(), rel_prebuilt_path)
+    prebuilt_path = os.path.join(build_support.android_path(),
+                                 rel_prebuilt_path)
     if not os.path.isdir(prebuilt_path):
         sys.exit('Could not find prebuilt LLVM at {}'.format(prebuilt_path))
     return prebuilt_path
 
 
-class ArgParser(argparse.ArgumentParser):
-    def __init__(self):
-        super(ArgParser, self).__init__(
-            description="Package the platform's LLVM for the NDK.")
-
-        self.add_argument(
-            '--host', required=True,
-            choices=('darwin', 'linux', 'windows', 'windows64'),
-            help='Package binaries for given OS (e.g. linux).')
-        self.add_argument(
-            '--package-dir', help='Directory to place the packaged LLVM.',
-            default=get_default_package_dir())
-
-
-def main():
+def main(args):
     LLVM_VERSION = '3.6'
 
-    args = ArgParser().parse_args()
     host = args.host
     package_dir = args.package_dir
 
@@ -101,4 +75,4 @@ def main():
         tarball.add(prebuilt_path, arcname, filter=package_filter)
 
 if __name__ == '__main__':
-    main()
+    build_support.run(main)

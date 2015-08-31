@@ -122,15 +122,6 @@ if [ "$DARWIN_SSH" ]; then
     HOST_FLAGS=$HOST_FLAGS" --darwin-ssh=$DARWIN_SSH"
 fi
 
-if [ "$ALSO_64" = "yes" -a "$TRY64" != "yes" ] ; then
-    echo "COMMAND: $PROGDIR/build-host-prebuilts.sh $HOST_FLAGS $SRC_DIR --try-64"
-    $PROGDIR/build-host-prebuilts.sh $HOST_FLAGS "$SRC_DIR" --try-64
-    fail_panic "Could not build host prebuilts in 64-bit!"
-fi
-echo "COMMAND: $PROGDIR/build-host-prebuilts.sh $HOST_FLAGS $SRC_DIR"
-$PROGDIR/build-host-prebuilts.sh $HOST_FLAGS "$SRC_DIR"
-fail_panic "Could not build host prebuilts!"
-
 if [ ! -z "$LLVM_VERSION_LIST" ]; then
     LLVM_VERSIONS=$(commas_to_spaces $LLVM_VERSION_LIST)
     LLVM_VERSION=${LLVM_VERSIONS%% *}
