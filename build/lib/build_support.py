@@ -14,7 +14,6 @@
 # limitations under the License.
 #
 import argparse
-import inspect
 import multiprocessing
 import os
 import subprocess
@@ -127,7 +126,8 @@ def run(main_func, arg_parser=ArgParser):
 
     args = arg_parser().parse_args()
 
-    caller_filename = inspect.getouterframes(inspect.currentframe())[1][1]
-    os.chdir(os.path.dirname(caller_filename))
+    # We want any paths to be relative to the invoked build script.
+    main_filename = sys.modules['__main__'].__file__
+    os.chdir(os.path.dirname(main_filename))
 
     main_func(args)
