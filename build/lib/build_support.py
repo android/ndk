@@ -116,8 +116,8 @@ class ArgParser(argparse.ArgumentParser):
             default=get_default_host(),
             help='Build binaries for given OS (e.g. linux).')
         self.add_argument(
-            '--package-dir', help='Directory to place the packaged GCC.',
-            default=get_default_package_dir())
+            '--package-dir', help='Directory to place the packaged artifact.',
+            type=os.path.realpath, default=get_default_package_dir())
 
 
 def run(main_func, arg_parser=ArgParser):
@@ -125,8 +125,9 @@ def run(main_func, arg_parser=ArgParser):
         top = os.path.join(os.path.dirname(__file__), '../../..')
         os.environ['ANDROID_BUILD_TOP'] = os.path.realpath(top)
 
+    args = arg_parser().parse_args()
+
     caller_filename = inspect.getouterframes(inspect.currentframe())[1][1]
     os.chdir(os.path.dirname(caller_filename))
 
-    args = arg_parser().parse_args()
     main_func(args)

@@ -84,17 +84,12 @@ def invoke_build(script, args=None):
     subprocess.check_call([os.path.join('build/tools', script)] + args)
 
 
-def build_ndk(out_dir, build_args, host_only):
+def build_ndk(out_dir, build_args):
     build_args = list(build_args)
     build_args.append('--package-dir={}'.format(out_dir))
     build_args.append('--verbose')
 
-    if host_only:
-        ndk_dir_arg = '--ndk-dir={}'.format(os.getcwd())
-        invoke_build('build-host-prebuilts.sh',
-                     build_args + [ndk_dir_arg])
-    else:
-        invoke_build('rebuild-all-prebuilt.sh', build_args)
+    invoke_build('rebuild-all-prebuilt.sh', build_args)
 
 
 def package_ndk(release_name, system, out_dir, build_args):
@@ -105,6 +100,45 @@ def package_ndk(release_name, system, out_dir, build_args):
         '--systems={}'.format(system),
     ]
     invoke_build('package-release.sh', package_args + build_args)
+
+
+def build_host(out_dir, args):
+    common_build_args = ['--package-dir={}'.format(out_dir)]
+    if args.system is not None:
+        # Need to use args.system directly rather than system because system is
+        # the name used by the build/tools scripts (i.e. linux-x86 instead of
+        # linux).
+        common_build_args.append('--host={}'.format(args.system))
+
+    gcc_build_args = list(common_build_args)
+    gdb_build_args = list(common_build_args)
+    if args.arch is not None:
+        toolchain_name = build_support.arch_to_toolchain(args.arch)
+        gcc_build_args.append('--toolchain={}'.format(toolchain_name))
+
+        gdb_build_args.append('--arch={}'.format(args.arch))
+
+    if not args.skip_gcc:
+        invoke_build('../../../toolchain/gcc/build.py', gcc_build_args)
+
+    invoke_build('../../sources/host-tools/ndk-stack/build.py',
+                 common_build_args)
+    invoke_build('../../sources/host-tools/ndk-depends/build.py',
+                 common_build_args)
+    invoke_build('../../sources/host-tools/nawk-20071023/build.py',
+                 common_build_args)
+    invoke_build('../../sources/host-tools/make-3.81/build.py',
+                 common_build_args)
+
+    if args.system in ('windows', 'windows64'):
+        invoke_build('../../sources/host-tools/toolbox/build.py',
+                     common_build_args)
+
+    invoke_build('../../../toolchain/python/build.py', common_build_args)
+    invoke_build('../../../toolchain/gdb/build.py', gdb_build_args)
+    invoke_build('../../../toolchain/yasm/build.py', common_build_args)
+
+    invoke_build('build-llvm.py', common_build_args)
 
 
 def main():
@@ -149,32 +183,14 @@ def main():
     DEFAULT_OUT_DIR = os.path.join(build_top, 'out/ndk')
     out_dir = os.path.realpath(os.getenv('DIST_DIR', DEFAULT_OUT_DIR))
 
-    common_build_args = ['--package-dir={}'.format(out_dir)]
-    if args.system is not None:
-        # Need to use args.system directly rather than system because system is
-        # the name used by the build/tools scripts (i.e. linux-x86 instead of
-        # linux).
-        common_build_args.append('--host={}'.format(args.system))
-
-    gcc_build_args = list(common_build_args)
-    gdb_build_args = list(common_build_args)
     if args.arch is not None:
         build_args.append('--arch={}'.format(args.arch))
 
-        toolchain_name = build_support.arch_to_toolchain(args.arch)
-        gcc_build_args.append('--toolchain={}'.format(toolchain_name))
-
-        gdb_build_args.append('--arch={}'.format(args.arch))
-
     invoke_build('dev-cleanup.sh')
-    if not args.skip_gcc:
-        invoke_build('../../../toolchain/gcc/build.py', gcc_build_args)
+    build_host(out_dir, args)
 
-    invoke_build('../../../toolchain/python/build.py', common_build_args)
-    invoke_build('../../../toolchain/gdb/build.py', gdb_build_args)
-    invoke_build('../../../toolchain/yasm/build.py', common_build_args)
-
-    build_ndk(out_dir, build_args, host_only=args.host_only)
+    if not args.host_only:
+        build_ndk(out_dir, build_args)
 
     if args.package and not args.host_only:
         package_ndk(args.release, system, out_dir, build_args)

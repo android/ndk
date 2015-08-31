@@ -18,7 +18,7 @@
 # at the right location
 
 PROGDIR=$(dirname $0)
-. $PROGDIR/prebuilt-common.sh
+. $NDK_BUILDTOOLS_PATH/prebuilt-common.sh
 
 PROGRAM_PARAMETERS=""
 PROGRAM_DESCRIPTION=\

@@ -14,14 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# This script is used to rebuild the host 'ndk-stack' tool from the
-# sources under sources/host-tools/ndk-stack.
+# This script is used to rebuild the host 'ndk-stack' tool.
 #
 # Note: The tool is installed under prebuilt/$HOST_TAG/bin/ndk-stack
 #       by default.
 #
 PROGDIR=$(dirname $0)
-. $PROGDIR/prebuilt-common.sh
+. $NDK_BUILDTOOLS_PATH/prebuilt-common.sh
 
 PROGRAM_PARAMETERS=""
 PROGRAM_DESCRIPTION=\
@@ -45,9 +44,6 @@ register_var_option "--debug" DEBUG "Build debug version"
 SRC_DIR=
 register_var_option "--src-dir=<path>" SRC_DIR "Specify binutils source dir.  Must be set for --with-libbfd"
 
-PROGNAME=ndk-stack
-register_var_option "--program-name=<name>" PROGNAME "Alternate NDK tool program name"
-
 PACKAGE_DIR=
 register_var_option "--package-dir=<path>" PACKAGE_DIR "Archive binary into specific directory"
 
@@ -56,17 +52,9 @@ register_try64_option
 
 extract_parameters "$@"
 
-# ndk-stack uses libbfd, but ndk-depends doesn't.
-WITH_LIBBFD=
-if [ "$PROGNAME" = "ndk-stack" ]; then
-    WITH_LIBBFD=true
-fi
-
-if [ "$WITH_LIBBFD" ]; then
-    if [ -z "$SRC_DIR" ]; then
-        echo "ERROR: Missing source directory parameter. See --help for details."
-        exit 1
-    fi
+if [ -z "$SRC_DIR" ]; then
+    echo "ERROR: Missing source directory parameter. See --help for details."
+    exit 1
 fi
 
 prepare_abi_configure_build
@@ -74,7 +62,7 @@ prepare_host_build
 
 # Choose a build directory if not specified by --build-dir
 if [ -z "$BUILD_DIR" ]; then
-    BUILD_DIR=$NDK_TMPDIR/build-$PROGNAME
+    BUILD_DIR=$NDK_TMPDIR/build-ndk-stack
     log "Auto-config: --build-dir=$BUILD_DIR"
 else
     OPTION_BUILD_DIR="yes"
@@ -98,27 +86,25 @@ fi
 
 BINUTILS_BUILD_DIR=$BUILD_DIR/binutils
 BINUTILS_SRC_DIR=$SRC_DIR/binutils/binutils-$DEFAULT_BINUTILS_VERSION
-if [ "$WITH_LIBBFD" ]; then
-    # build binutils first
-    if [ -z "$ABI_CONFIGURE_HOST" ]; then
-        ABI_CONFIGURE_HOST=$ABI_CONFIGURE_BUILD
-    fi
-    run mkdir -p $BINUTILS_BUILD_DIR
-    run export CC CFLAGS LDFLAGS
-    run cd $BINUTILS_BUILD_DIR && \
-    run $BINUTILS_SRC_DIR/configure \
-        --host=$ABI_CONFIGURE_HOST \
-        --build=$ABI_CONFIGURE_BUILD \
-        --disable-nls \
-        --with-bug-report-url=$DEFAULT_ISSUE_TRACKER_URL \
-	$EXTRA_CONFIG
-    fail_panic "Can't configure $BINUTILS_SRC_DIR"
-    run make -j$NUM_JOBS
-    fail_panic "Can't build $BINUTILS_SRC_DIR"
 
+# build binutils first
+if [ -z "$ABI_CONFIGURE_HOST" ]; then
+    ABI_CONFIGURE_HOST=$ABI_CONFIGURE_BUILD
 fi
+run mkdir -p $BINUTILS_BUILD_DIR
+run export CC CFLAGS LDFLAGS
+run cd $BINUTILS_BUILD_DIR && \
+run $BINUTILS_SRC_DIR/configure \
+    --host=$ABI_CONFIGURE_HOST \
+    --build=$ABI_CONFIGURE_BUILD \
+    --disable-nls \
+    --with-bug-report-url=$DEFAULT_ISSUE_TRACKER_URL \
+$EXTRA_CONFIG
+fail_panic "Can't configure $BINUTILS_SRC_DIR"
+run make -j$NUM_JOBS
+fail_panic "Can't build $BINUTILS_SRC_DIR"
 
-OUT=$NDK_DIR/$(get_host_exec_name $PROGNAME)
+OUT=$NDK_DIR/$(get_host_exec_name ndk-stack)
 
 # GNU Make
 if [ -z "$GNUMAKE" ]; then
@@ -138,28 +124,26 @@ if [ $? != 0 ]; then
     exit 1
 fi
 
-SRCDIR=$ANDROID_NDK_ROOT/sources/host-tools/$PROGNAME
+SRCDIR=$ANDROID_NDK_ROOT/sources/host-tools/ndk-stack
 
 # Let's roll
-if [ "$WITH_LIBBFD" ]; then
-    CFLAGS="$CFLAGS \
-       -DHAVE_CONFIG_H \
-       -I$BINUTILS_BUILD_DIR/binutils \
-       -I$BINUTILS_SRC_DIR/binutils \
-       -I$BINUTILS_BUILD_DIR/bfd \
-       -I$BINUTILS_SRC_DIR/bfd \
-       -I$BINUTILS_SRC_DIR/include \
-       "
-    LDFLAGS="$LDFLAGS \
-       $BINUTILS_BUILD_DIR/binutils/bucomm.o \
-       $BINUTILS_BUILD_DIR/binutils/version.o \
-       $BINUTILS_BUILD_DIR/binutils/filemode.o \
-       $BINUTILS_BUILD_DIR/bfd/libbfd.a \
-       $BINUTILS_BUILD_DIR/libiberty/libiberty.a \
-       "
-    if [ "$MINGW" != "yes" ]; then
-        LDFLAGS="$LDFLAGS -ldl -lz"
-    fi
+CFLAGS="$CFLAGS \
+   -DHAVE_CONFIG_H \
+   -I$BINUTILS_BUILD_DIR/binutils \
+   -I$BINUTILS_SRC_DIR/binutils \
+   -I$BINUTILS_BUILD_DIR/bfd \
+   -I$BINUTILS_SRC_DIR/bfd \
+   -I$BINUTILS_SRC_DIR/include \
+   "
+LDFLAGS="$LDFLAGS \
+   $BINUTILS_BUILD_DIR/binutils/bucomm.o \
+   $BINUTILS_BUILD_DIR/binutils/version.o \
+   $BINUTILS_BUILD_DIR/binutils/filemode.o \
+   $BINUTILS_BUILD_DIR/bfd/libbfd.a \
+   $BINUTILS_BUILD_DIR/libiberty/libiberty.a \
+   "
+if [ "$MINGW" != "yes" ]; then
+    LDFLAGS="$LDFLAGS -ldl -lz"
 fi
 
 export CFLAGS LDFLAGS
@@ -177,8 +161,8 @@ if [ $? != 0 ]; then
 fi
 
 if [ "$PACKAGE_DIR" ]; then
-    ARCHIVE=$PROGNAME-$HOST_TAG.tar.bz2
-    SUBDIR=$(get_host_exec_name $PROGNAME $HOST_TAG)
+    ARCHIVE=ndk-stack-$HOST_TAG.tar.bz2
+    SUBDIR=$(get_host_exec_name ndk-stack $HOST_TAG)
     dump "Packaging: $ARCHIVE"
     pack_archive "$PACKAGE_DIR/$ARCHIVE" "$NDK_DIR" "$SUBDIR"
     fail_panic "Could not create package: $PACKAGE_DIR/$ARCHIVE from $OUT"
