@@ -263,10 +263,6 @@ for SYSTEM in $SYSTEMS; do
     run $BUILDTOOLS/build-host-make.sh $TOOLCHAIN_FLAGS
     fail_panic "make build failure!"
 
-    echo "Building $SYSNAME ndk-awk"
-    run $BUILDTOOLS/build-host-awk.sh $TOOLCHAIN_FLAGS
-    fail_panic "awk build failure!"
-
     if [ "$SYSTEM" = "windows" ]; then
         echo "Building $SYSNAME toolbox"
         run $BUILDTOOLS/build-host-toolbox.sh $FLAGS

@@ -170,6 +170,8 @@ def main():
     if not args.skip_gcc:
         invoke_build('../../../toolchain/gcc/build.py', gcc_build_args)
 
+    invoke_build('../../sources/host-tools/nawk-20071023/build.py',
+                 common_build_args)
     invoke_build('../../../toolchain/python/build.py', common_build_args)
     invoke_build('../../../toolchain/gdb/build.py', gdb_build_args)
     invoke_build('../../../toolchain/yasm/build.py', common_build_args)
