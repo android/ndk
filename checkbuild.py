@@ -170,6 +170,10 @@ def main():
     if not args.skip_gcc:
         invoke_build('../../../toolchain/gcc/build.py', gcc_build_args)
 
+    invoke_build('../../sources/host-tools/ndk-stack/build.py',
+                 common_build_args)
+    invoke_build('../../sources/host-tools/ndk-depends/build.py',
+                 common_build_args)
     invoke_build('../../sources/host-tools/nawk-20071023/build.py',
                  common_build_args)
     invoke_build('../../sources/host-tools/make-3.81/build.py',
