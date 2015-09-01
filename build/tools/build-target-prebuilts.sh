@@ -102,19 +102,6 @@ if [ "$TRY64" = "yes" ]; then
     FLAGS=$FLAGS" --try-64"
 fi
 
-# First, gdbserver
-for ARCH in $ARCHS; do
-    if [ -z "$GCC_VERSION" ]; then
-       GDB_TOOLCHAIN=$(get_default_toolchain_name_for_arch $ARCH)
-    else
-       GDB_TOOLCHAIN=$(get_toolchain_name_for_arch $ARCH $GCC_VERSION)
-    fi
-    GDB_VERSION="--gdb-version="$(get_default_gdb_version_for_gcc $GDB_TOOLCHAIN)
-    dump "Building $GDB_TOOLCHAIN gdbserver binaries..."
-    run $BUILDTOOLS/build-gdbserver.sh "$SRC_DIR" "$NDK_DIR" "$GDB_TOOLCHAIN" "$GDB_VERSION" $FLAGS --platform=android-21
-    fail_panic "Could not build $GDB_TOOLCHAIN gdb-server!"
-done
-
 FLAGS=$FLAGS" --ndk-dir=\"$NDK_DIR\""
 ABIS=$(convert_archs_to_abis $ARCHS)
 

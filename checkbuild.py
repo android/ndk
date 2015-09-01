@@ -37,6 +37,7 @@ import build_support
 ALL_MODULES = {
     'clang',
     'gcc',
+    'gdbserver',
     'host-tools',
     'platforms',
     'target',
@@ -176,6 +177,14 @@ def build_host_tools(out_dir, args, _):
     invoke_external_build('toolchain/yasm/build.py', build_args)
 
 
+def build_gdbserver(out_dir, args, _):
+    print('Building gdbserver...')
+    build_args = common_build_args(out_dir, args)
+    if args.arch is not None:
+        build_args.append('--arch={}'.format(args.arch))
+    invoke_build('build-gdbserver.py', build_args)
+
+
 def build_platforms(out_dir, args, _):
     print('Building platforms...')
     invoke_build('build-platforms.py', common_build_args(out_dir, args))
@@ -269,6 +278,7 @@ def main():
     module_builds = collections.OrderedDict([
         ('clang', build_clang),
         ('gcc', build_gcc),
+        ('gdbserver', build_gdbserver),
         ('host-tools', build_host_tools),
         ('platforms', build_platforms),
         ('target', build_target),
