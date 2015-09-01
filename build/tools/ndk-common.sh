@@ -712,6 +712,11 @@ unpack_archive ()
     local ARCHIVE="$1"
     local DIR=${2-.}
     local RESULT TARFLAGS ZIPFLAGS
+
+    if [ ! -f $ARCHIVE ]; then
+        panic "$ARCHIVE does not exist!"
+    fi
+
     mkdir -p "$DIR"
     TARFLAGS="xpf"
     ZIPFLAGS="q"
