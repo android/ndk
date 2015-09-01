@@ -20,6 +20,7 @@ Cleans old build artifacts, configures the required environment, determines
 build goals, and invokes the build scripts.
 """
 import argparse
+import collections
 import datetime
 import inspect
 import os
@@ -33,6 +34,14 @@ site.addsitedir(os.path.join(os.path.dirname(__file__), 'build/lib'))
 import build_support
 
 
+ALL_MODULES = {
+    'clang',
+    'gcc',
+    'host-tools',
+    'target',
+}
+
+
 class ArgParser(argparse.ArgumentParser):
     def __init__(self):
         super(ArgParser, self).__init__(
@@ -42,14 +51,6 @@ class ArgParser(argparse.ArgumentParser):
             '--arch',
             choices=('arm', 'arm64', 'mips', 'mips64', 'x86', 'x86_64'),
             help='Build for the given architecture. Build all by default.')
-
-        self.add_argument(
-            '--host-only', action='store_true',
-            help='Skip building target components.')
-
-        self.add_argument(
-            '--skip-gcc', action='store_true',
-            help='Skip building and packaging GCC.')
 
         self.add_argument(
             '--package', action='store_true', dest='package', default=True,
@@ -67,29 +68,43 @@ class ArgParser(argparse.ArgumentParser):
             '--system', choices=('darwin', 'linux', 'windows', 'windows64'),
             help='Build for the given OS.')
 
-        old_choices = (
+        old_choices = {
             'darwin', 'darwin-x86',
             'linux', 'linux-x86',
             'windows',
-        )
+        }
 
         system_group.add_argument(
             '--systems', choices=old_choices, dest='system',
             help='Build for the given OS. Deprecated. Use --system instead.')
 
+        module_group = self.add_mutually_exclusive_group()
 
-def invoke_build(script, args=None):
+        module_group.add_argument(
+            '--module', choices=ALL_MODULES, help='NDK modules to build.')
+
+        module_group.add_argument(
+            '--host-only', action='store_true',
+            help='Skip building target components.')
+
+        module_group.add_argument(
+            '--skip-gcc', action='store_true',
+            help='Skip building and packaging GCC.')
+
+
+def _invoke_build(script, args):
     if args is None:
         args = []
-    subprocess.check_call([os.path.join('build/tools', script)] + args)
+    subprocess.check_call([build_support.android_path(script)] + args)
 
 
-def build_ndk(out_dir, build_args):
-    build_args = list(build_args)
-    build_args.append('--package-dir={}'.format(out_dir))
-    build_args.append('--verbose')
+def invoke_build(script, args=None):
+    script_path = os.path.join('build/tools', script)
+    _invoke_build(build_support.ndk_path(script_path), args)
 
-    invoke_build('rebuild-all-prebuilt.sh', build_args)
+
+def invoke_external_build(script, args=None):
+    _invoke_build(build_support.android_path(script), args)
 
 
 def package_ndk(release_name, system, out_dir, build_args):
@@ -102,44 +117,86 @@ def package_ndk(release_name, system, out_dir, build_args):
     invoke_build('package-release.sh', package_args + build_args)
 
 
-def build_host(out_dir, args):
-    common_build_args = ['--package-dir={}'.format(out_dir)]
+def common_build_args(out_dir, args):
+    build_args = ['--package-dir={}'.format(out_dir)]
     if args.system is not None:
         # Need to use args.system directly rather than system because system is
         # the name used by the build/tools scripts (i.e. linux-x86 instead of
         # linux).
-        common_build_args.append('--host={}'.format(args.system))
+        build_args.append('--host={}'.format(args.system))
+    return build_args
 
-    gcc_build_args = list(common_build_args)
+
+def build_clang(out_dir, args, _):
+    print('Building Clang...')
+    invoke_build('build-llvm.py', common_build_args(out_dir, args))
+
+
+def build_gcc(out_dir, args, _):
+    gcc_build_args = common_build_args(out_dir, args)
     if args.arch is not None:
         toolchain_name = build_support.arch_to_toolchain(args.arch)
         gcc_build_args.append('--toolchain={}'.format(toolchain_name))
+    print('Building GCC...')
+    invoke_external_build('toolchain/gcc/build.py', gcc_build_args)
 
-    if not args.skip_gcc:
-        invoke_build('../../../toolchain/gcc/build.py', gcc_build_args)
 
-    invoke_build('../../sources/host-tools/ndk-stack/build.py',
-                 common_build_args)
-    invoke_build('../../sources/host-tools/ndk-depends/build.py',
-                 common_build_args)
-    invoke_build('../../sources/host-tools/nawk-20071023/build.py',
-                 common_build_args)
-    invoke_build('../../sources/host-tools/make-3.81/build.py',
-                 common_build_args)
+def build_host_tools(out_dir, args, _):
+    build_args = common_build_args(out_dir, args)
+
+    print('Building ndk-stack...')
+    invoke_external_build(
+        'ndk/sources/host-tools/ndk-stack/build.py', build_args)
+
+    print('Building ndk-depends...')
+    invoke_external_build(
+        'ndk/sources/host-tools/ndk-depends/build.py', build_args)
+
+    print('Building awk...')
+    invoke_external_build(
+        'ndk/sources/host-tools/nawk-20071023/build.py', build_args)
+
+    print('Building make...')
+    invoke_external_build(
+        'ndk/sources/host-tools/make-3.81/build.py', build_args)
 
     if args.system in ('windows', 'windows64'):
-        invoke_build('../../sources/host-tools/toolbox/build.py',
-                     common_build_args)
+        print('Building toolbox...')
+        invoke_external_build(
+            'ndk/sources/host-tools/toolbox/build.py', build_args)
 
-    invoke_build('../../../toolchain/python/build.py', common_build_args)
-    invoke_build('../../../toolchain/gdb/build.py', common_build_args)
-    invoke_build('../../../toolchain/yasm/build.py', common_build_args)
+    print('Building Python...')
+    invoke_external_build('toolchain/python/build.py', build_args)
 
-    invoke_build('build-llvm.py', common_build_args)
+    print('Building GDB...')
+    invoke_external_build('toolchain/gdb/build.py', build_args)
+
+    print('Building YASM...')
+    invoke_external_build('toolchain/yasm/build.py', build_args)
+
+
+# TODO: Split up the target build.
+# TODO: Kill build_tools_args.
+# `build_tools_args` are the arguments that need to be passed to the scripts in
+# build/tools. `args`, by comparison, are the arguments parsed by ArgParser.
+# The build/tools scripts need to be called differently than the Python build
+# scripts we've built up because they typically were not called directly and
+# therefore do not have reasonable defaults.
+def build_target(out_dir, _, build_tools_args):
+    print('Building target modules...')
+    build_args = list(build_tools_args)
+    build_args.append('--package-dir={}'.format(out_dir))
+    build_args.append('--verbose')
+
+    invoke_build('rebuild-all-prebuilt.sh', build_args)
 
 
 def main():
     args, build_args = ArgParser().parse_known_args()
+
+    # Disable buffering on stdout so the build output doesn't hide all of our
+    # "Building..." messages.
+    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
 
     os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
@@ -179,17 +236,42 @@ def main():
 
     DEFAULT_OUT_DIR = os.path.join(build_top, 'out/ndk')
     out_dir = os.path.realpath(os.getenv('DIST_DIR', DEFAULT_OUT_DIR))
+    if not os.path.isdir(out_dir):
+        os.makedirs(out_dir)
+
+    if args.module is None:
+        modules = ALL_MODULES
+    else:
+        modules = {args.module}
+
+    if args.host_only:
+        modules = {
+            'clang',
+            'gcc',
+            'host-tools',
+        }
+
+    if args.skip_gcc:
+        modules = modules - {'gcc'}
 
     if args.arch is not None:
         build_args.append('--arch={}'.format(args.arch))
 
+    print('Cleaning up...')
     invoke_build('dev-cleanup.sh')
-    build_host(out_dir, args)
 
-    if not args.host_only:
-        build_ndk(out_dir, build_args)
+    module_builds = collections.OrderedDict([
+        ('clang', build_clang),
+        ('gcc', build_gcc),
+        ('host-tools', build_host_tools),
+        ('target', build_target),
+    ])
 
-    if args.package and not args.host_only:
+    print('Building modules: {}'.format(' '.join(modules)))
+    for module in modules:
+        module_builds[module](out_dir, args, build_args)
+
+    if args.package and modules == ALL_MODULES:
         package_ndk(args.release, system, out_dir, build_args)
 
 
