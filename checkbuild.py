@@ -38,6 +38,7 @@ ALL_MODULES = {
     'clang',
     'gcc',
     'host-tools',
+    'platforms',
     'target',
 }
 
@@ -175,6 +176,11 @@ def build_host_tools(out_dir, args, _):
     invoke_external_build('toolchain/yasm/build.py', build_args)
 
 
+def build_platforms(out_dir, args, _):
+    print('Building platforms...')
+    invoke_build('build-platforms.py', common_build_args(out_dir, args))
+
+
 # TODO: Split up the target build.
 # TODO: Kill build_tools_args.
 # `build_tools_args` are the arguments that need to be passed to the scripts in
@@ -264,6 +270,7 @@ def main():
         ('clang', build_clang),
         ('gcc', build_gcc),
         ('host-tools', build_host_tools),
+        ('platforms', build_platforms),
         ('target', build_target),
     ])
 
