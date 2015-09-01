@@ -38,6 +38,7 @@ ALL_MODULES = {
     'clang',
     'gcc',
     'gdbserver',
+    'gnustl',
     'host-tools',
     'platforms',
     'target',
@@ -185,6 +186,14 @@ def build_gdbserver(out_dir, args, _):
     invoke_build('build-gdbserver.py', build_args)
 
 
+def build_gnustl(out_dir, args, _):
+    print('Building gnustl...')
+    build_args = common_build_args(out_dir, args)
+    if args.arch is not None:
+        build_args.append('--arch={}'.format(args.arch))
+    invoke_build('build-gnustl.py', build_args)
+
+
 def build_platforms(out_dir, args, _):
     print('Building platforms...')
     invoke_build('build-platforms.py', common_build_args(out_dir, args))
@@ -279,6 +288,7 @@ def main():
         ('clang', build_clang),
         ('gcc', build_gcc),
         ('gdbserver', build_gdbserver),
+        ('gnustl', build_gnustl),
         ('host-tools', build_host_tools),
         ('platforms', build_platforms),
         ('target', build_target),
