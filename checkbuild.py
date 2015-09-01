@@ -111,12 +111,9 @@ def build_host(out_dir, args):
         common_build_args.append('--host={}'.format(args.system))
 
     gcc_build_args = list(common_build_args)
-    gdb_build_args = list(common_build_args)
     if args.arch is not None:
         toolchain_name = build_support.arch_to_toolchain(args.arch)
         gcc_build_args.append('--toolchain={}'.format(toolchain_name))
-
-        gdb_build_args.append('--arch={}'.format(args.arch))
 
     if not args.skip_gcc:
         invoke_build('../../../toolchain/gcc/build.py', gcc_build_args)
@@ -135,7 +132,7 @@ def build_host(out_dir, args):
                      common_build_args)
 
     invoke_build('../../../toolchain/python/build.py', common_build_args)
-    invoke_build('../../../toolchain/gdb/build.py', gdb_build_args)
+    invoke_build('../../../toolchain/gdb/build.py', common_build_args)
     invoke_build('../../../toolchain/yasm/build.py', common_build_args)
 
     invoke_build('build-llvm.py', common_build_args)
