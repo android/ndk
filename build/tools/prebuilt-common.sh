@@ -615,7 +615,7 @@ fix_sysroot ()
     else
         SYSROOT_SUFFIX=$PLATFORM/arch-$ARCH
         SYSROOT=
-        check_sysroot $NDK_DIR/platforms $SYSROOT_SUFFIX
+        check_sysroot $ANDROID_BUILD_TOP/prebuilts/ndk/current/platforms $SYSROOT_SUFFIX
         check_sysroot $ANDROID_NDK_ROOT/platforms $SYSROOT_SUFFIX
         check_sysroot `dirname $ANDROID_NDK_ROOT`/development/ndk/platforms $SYSROOT_SUFFIX
 

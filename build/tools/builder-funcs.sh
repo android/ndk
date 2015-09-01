@@ -512,10 +512,11 @@ builder_begin_android ()
     local CRTBEGIN_SO_O CRTEND_SO_O CRTBEGIN_EXE_SO CRTEND_SO_O
     local BINPREFIX GCC_TOOLCHAIN LLVM_TRIPLE GCC_VERSION
     local SCRATCH_FLAGS PLATFORM
-    if [ -z "$NDK_DIR" ]; then
-        panic "NDK_DIR is not defined!"
-    elif [ ! -d "$NDK_DIR/platforms" ]; then
-        panic "Missing directory: $NDK_DIR/platforms"
+    local PREBUILT_NDK=$ANDROID_BUILD_TOP/prebuilts/ndk/current
+    if [ -z "$ANDROID_BUILD_TOP" ]; then
+        panic "ANDROID_BUILD_TOP is not defined!"
+    elif [ ! -d "$PREBUILT_NDK/platforms" ]; then
+        panic "Missing directory: $PREBUILT_NDK/platforms"
     fi
     ABI=$1
     BUILDDIR=$2
@@ -546,9 +547,9 @@ builder_begin_android ()
     fi
 
     if [ -z "$PLATFORM" ]; then
-      SYSROOT=$NDK_DIR/$(get_default_platform_sysroot_for_arch $ARCH)
+      SYSROOT=$PREBUILT_NDK/$(get_default_platform_sysroot_for_arch $ARCH)
     else
-      SYSROOT=$NDK_DIR/platforms/$PLATFORM/arch-$ARCH
+      SYSROOT=$PREBUILT_NDK/platforms/$PLATFORM/arch-$ARCH
     fi
     LDIR=$SYSROOT"/usr/"$(get_default_libdir_for_abi $ABI)
 

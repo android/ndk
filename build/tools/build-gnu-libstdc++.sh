@@ -128,6 +128,7 @@ build_gnustl_for_abi ()
     local GCC_VERSION="$4"
     local THUMB="$5"
     local DSTDIR=$NDK_DIR/$GNUSTL_SUBDIR/$GCC_VERSION/libs/$ABI/$THUMB
+    local PREBUILT_NDK=$ANDROID_BUILD_TOP/prebuilts/ndk/current
     local SRC OBJ OBJECTS CFLAGS CXXFLAGS CPPFLAGS
 
     prepare_target_build $ABI $PLATFORM $NDK_DIR
@@ -158,7 +159,7 @@ build_gnustl_for_abi ()
         exit 1
     fi
 
-    SYSROOT=$NDK_DIR/$(get_default_platform_sysroot_for_arch $ARCH)
+    SYSROOT=$PREBUILT_NDK/$(get_default_platform_sysroot_for_arch $ARCH)
     LDIR=$SYSROOT"/usr/"$(get_default_libdir_for_arch $ARCH)
     # Sanity check
     if [ ! -f "$LDIR/libc.a" ]; then

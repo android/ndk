@@ -5,7 +5,6 @@ Thumbs.db
 local.properties
 build.xml
 /samples/
-platforms/
 /ndk-stack*
 /ndk-depends*
 /prebuilt/
