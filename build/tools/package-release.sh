@@ -78,6 +78,9 @@ register_var_option "--development-root=<path>" DEVELOPMENT_ROOT "Specify platfo
 GCC_VERSION_LIST="default" # it's arch defined by default so use default keyword
 register_var_option "--gcc-version-list=<vers>" GCC_VERSION_LIST "List of GCC release versions"
 
+GDB_VERSION=$DEFAULT_GDB_VERSION
+register_var_option "--gdb-version=<versions>" GDB_VERSION "GDB release version"
+
 LLVM_VERSION_LIST=$DEFAULT_LLVM_VERSION_LIST
 register_var_option "--llvm-version-list=<versions>" LLVM_VERSION_LIST "List of LLVM release versions"
 
@@ -464,6 +467,8 @@ for SYSTEM in $SYSTEMS; do
         unpack_prebuilt ndk-awk-$SYSTEM "$DSTDIR"
         unpack_prebuilt ndk-python-$SYSTEM "$DSTDIR"
         unpack_prebuilt ndk-yasm-$SYSTEM "$DSTDIR"
+
+        unpack_prebuilt gdb-multiarch-$GDB_VERSION-$SYSTEM "$DSTDIR"
 
         if [ "$SYSTEM" = "windows" -o "$SYSTEM" = "windows-x86_64" ]; then
             unpack_prebuilt toolbox-$SYSTEM "$DSTDIR"
