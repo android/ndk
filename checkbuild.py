@@ -116,8 +116,6 @@ def build_host(out_dir, args):
         toolchain_name = build_support.arch_to_toolchain(args.arch)
         gcc_build_args.append('--toolchain={}'.format(toolchain_name))
 
-        gdb_build_args.append('--arch={}'.format(args.arch))
-
     if not args.skip_gcc:
         invoke_build('../../../toolchain/gcc/build.py', gcc_build_args)
 
