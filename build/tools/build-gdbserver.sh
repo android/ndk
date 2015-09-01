@@ -43,8 +43,6 @@ BUILD_OUT=$TMPDIR/build/gdbserver
 register_option "--build-out=<path>" do_build_out "Set temporary build directory"
 do_build_out () { OPTION_BUILD_OUT="$1"; }
 
-register_var_option "--platform=<name>"  PLATFORM "Target specific platform"
-
 SYSROOT=
 register_var_option "--sysroot=<path>" SYSROOT "Specify sysroot directory directly"
 
@@ -132,9 +130,7 @@ prepare_target_build
 parse_toolchain_name $TOOLCHAIN
 check_toolchain_install $ANDROID_BUILD_TOP/prebuilts/ndk/current $TOOLCHAIN
 
-if [ -z "$PLATFORM" ]; then
-    PLATFORM="android-"$(get_default_api_level_for_arch $ARCH)
-fi
+PLATFORM="android-$LATEST_API_LEVEL"
 
 # Check build directory
 #
