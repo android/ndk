@@ -58,7 +58,7 @@ TMPE=$TMPDIR/tmp/tests/tmp-platform$EXE
 TMPL=$TMPDIR/tmp/tests/tmp-platform.log
 
 SRCDIR="../development/ndk"
-DSTDIR="$ANDROID_NDK_ROOT"
+DSTDIR="$TMPDIR"
 
 ARCHS="$DEFAULT_ARCHS"
 PLATFORMS=`extract_platforms_from "$SRCDIR"`

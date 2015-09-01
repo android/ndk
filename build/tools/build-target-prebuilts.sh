@@ -89,7 +89,7 @@ if [ -z "$NO_GEN_PLATFORMS" ]; then
     if [ ! -z "$GCC_VERSION" ]; then
 	PLATFORMS_BUILD_TOOLCHAIN="--gcc-version=$GCC_VERSION"
     fi
-    run $BUILDTOOLS/gen-platforms.sh --samples --fast-copy --dst-dir=$NDK_DIR --ndk-dir=$NDK_DIR --arch=$(spaces_to_commas $ARCHS) $PACKAGE_FLAGS $PLATFORMS_BUILD_TOOLCHAIN
+    run $BUILDTOOLS/gen-platforms.sh --samples --fast-copy --ndk-dir=$NDK_DIR --arch=$(spaces_to_commas $ARCHS) $PACKAGE_FLAGS $PLATFORMS_BUILD_TOOLCHAIN
     fail_panic "Could not generate platforms and samples directores!"
 else
     if [ ! -d "$NDK_DIR/platforms" ]; then
