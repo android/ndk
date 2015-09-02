@@ -40,7 +40,7 @@ ifeq ($(NDK_LOG),1)
     $(info Android NDK: NDK installation path auto-detected: '$(NDK_ROOT)')
 endif
 ifneq ($(words $(NDK_ROOT)),1)
-    $(info Android NDK: You NDK installation path contains spaces.)
+    $(info Android NDK: Your NDK installation path contains spaces.)
     $(info Android NDK: Please re-install to a different location to fix the issue !)
     $(error Aborting.)
 endif
