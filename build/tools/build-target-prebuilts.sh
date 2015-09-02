@@ -109,10 +109,6 @@ dump "Building $ABIS stlport binaries..."
 run $BUILDTOOLS/build-cxx-stl.sh --stl=stlport --abis="$ABIS" $FLAGS --with-debug-info $BUILD_TOOLCHAIN
 fail_panic "Could not build stlport with debug info!"
 
-dump "Building $ABIS libc++ binaries... with libc++abi"
-run $BUILDTOOLS/build-cxx-stl.sh --stl=libc++-libc++abi --abis="$ABIS" $FLAGS --with-debug-info $BUILD_TOOLCHAIN
-fail_panic "Could not build libc++ with libc++abi and debug info!"
-
 if [ "$PACKAGE_DIR" ]; then
     dump "Done, see $PACKAGE_DIR"
 else
