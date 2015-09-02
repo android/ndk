@@ -118,8 +118,7 @@ MANIFEST = 'AndroidManifest.xml'
 #
 DELAY = 2.0
 NDK = os.path.abspath(os.path.dirname(sys.argv[0])).replace('\\','/')
-DEVICE_SERIAL = ''
-ADB_FLAGS = ''
+ADB_FLAGS = []
 
 def log(string):
     global VERBOSE
@@ -131,7 +130,7 @@ def error(string, errcode=1):
     exit(errcode)
 
 def handle_args():
-    global VERBOSE, DEBUG_PORT, DELAY, DEVICE_SERIAL
+    global VERBOSE, DEBUG_PORT, DELAY
     global GNUMAKE_CMD, GNUMAKE_FLAGS
     global ADB_CMD, ADB_FLAGS
     global JDB_CMD
@@ -207,7 +206,6 @@ Read ''' + NDK + '''/docs/NDK-GDB.html for complete usage instructions.''',
 
     connect_group.add_argument( '-s',
                          help='Connect to specific emulator or device',
-                         default=DEVICE_SERIAL,
                          dest='device_serial')
 
     parser.add_argument( '-t','--tui',
@@ -245,18 +243,11 @@ Read ''' + NDK + '''/docs/NDK-GDB.html for complete usage instructions.''',
     log('Android NDK installation path: %s' % (NDK))
 
     if args.device:
-        ADB_FLAGS = '-d'
+        ADB_FLAGS = ['-d']
     if args.emulator:
-        if ADB_FLAGS != '':
-            parser.print_help()
-            exit(1)
-        ADB_FLAGS = '-e'
-    if args.device_serial != '':
-        DEVICE_SERIAL = args.device_serial
-        if ADB_FLAGS != '':
-            parser.print_help()
-            exit(1)
-        ADB_FLAGS = '-s'
+        ADB_FLAGS = ['-e']
+    if args.device_serial:
+        ADB_FLAGS = ['-s', args.device_serial]
     if args.adb_cmd != None:
         log('Using specific adb command: %s' % (args.adb_cmd))
         ADB_CMD = args.adb_cmd
@@ -384,12 +375,10 @@ def background_spawn(args, redirect_stderr, output_fn, redirect_stdin = None, in
         ti.start()
 
 def adb_cmd(redirect_stderr, args, log_command=False, adb_trace=False, background=False):
-    global ADB_CMD, ADB_FLAGS, DEVICE_SERIAL
+    global ADB_CMD, ADB_FLAGS
     fullargs = [ADB_CMD]
-    if ADB_FLAGS != '':
-        fullargs += [ADB_FLAGS]
-    if DEVICE_SERIAL != '':
-        fullargs += [DEVICE_SERIAL]
+    if ADB_FLAGS:
+        fullargs += ADB_FLAGS
     if isinstance(args, str):
         fullargs.append(args)
     else:
@@ -542,10 +531,7 @@ def main():
     ADB_VERSION = subprocess.check_output([ADB_CMD, 'version'],
                                         ).decode('ascii').replace('\r', '').splitlines()[0]
     log('ADB version found: %s' % (ADB_VERSION))
-    if DEVICE_SERIAL == '':
-        log('Using ADB flags: %s' % (ADB_FLAGS))
-    else:
-        log('Using ADB flags: %s "%s"' % (ADB_FLAGS,DEVICE_SERIAL))
+    log('Using ADB flags: %s' % (ADB_FLAGS))
     if PROJECT != None:
         log('Using specified project path: %s' % (PROJECT))
         if not os.path.isdir(PROJECT):
