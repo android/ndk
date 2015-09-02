@@ -105,10 +105,6 @@ fi
 FLAGS=$FLAGS" --ndk-dir=\"$NDK_DIR\""
 ABIS=$(convert_archs_to_abis $ARCHS)
 
-dump "Building $ABIS gabi++ binaries..."
-run $BUILDTOOLS/build-cxx-stl.sh --stl=gabi++ --abis="$ABIS" $FLAGS --with-debug-info $BUILD_TOOLCHAIN
-fail_panic "Could not build gabi++ with debug info!"
-
 dump "Building $ABIS stlport binaries..."
 run $BUILDTOOLS/build-cxx-stl.sh --stl=stlport --abis="$ABIS" $FLAGS --with-debug-info $BUILD_TOOLCHAIN
 fail_panic "Could not build stlport with debug info!"

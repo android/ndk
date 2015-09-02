@@ -17,7 +17,7 @@
 #  This shell script is used to rebuild one of the NDK C++ STL
 #  implementations from sources. To use it:
 #
-#   - Define CXX_STL to one of 'gabi++', 'stlport' or 'libc++'
+#   - Define CXX_STL to one of 'stlport' or 'libc++'
 #   - Run it.
 #
 
@@ -25,7 +25,7 @@
 . `dirname $0`/prebuilt-common.sh
 . `dirname $0`/builder-funcs.sh
 
-CXX_STL_LIST="gabi++ stlport libc++"
+CXX_STL_LIST="stlport libc++"
 
 PROGRAM_PARAMETERS=""
 
@@ -125,8 +125,6 @@ fi
 # Derive runtime, and normalize CXX_STL
 CXX_SUPPORT_LIB=gabi++
 case $CXX_STL in
-  gabi++)
-    ;;
   stlport)
     ;;
   libc++)
@@ -450,16 +448,6 @@ fi
 
 # Define a few common variables based on parameters.
 case $CXX_STL in
-  gabi++)
-    CXX_STL_LIB=libgabi++
-    CXX_STL_SUBDIR=$GABIXX_SUBDIR
-    CXX_STL_SRCDIR=$GABIXX_SRCDIR
-    CXX_STL_CFLAGS=$GABIXX_CFLAGS
-    CXX_STL_CXXFLAGS=$GABIXX_CXXFLAGS
-    CXX_STL_LDFLAGS=$GABIXX_LDFLAGS
-    CXX_STL_SOURCES=$GABIXX_SOURCES
-    CXX_STL_PACKAGE=gabixx
-    ;;
   stlport)
     CXX_STL_LIB=libstlport
     CXX_STL_SUBDIR=$STLPORT_SUBDIR

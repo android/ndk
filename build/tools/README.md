@@ -73,9 +73,8 @@ Contains the sources of various C++ runtime and libraries that can be used with
 sources/cxx-stl/gabi++
 ----------------------
 
-Contains the sources of the GAbi++ C++ runtime library. Note that the dev-script
-`build-cxx-stl.sh` can be used to generate prebuilt libraries from these
-sources, that will be copied under this directory.
+Contains the sources of the GAbi++ C++ runtime library. Only used via stlport or
+libc++.
 
 sources/cxx-stl/stlport
 -----------------------
@@ -363,8 +362,8 @@ III.3. Generating C++ runtime prebuilt binaries:
 Sources and support files for several C++ runtimes / standard libraries are
 provided under $NDK/sources/cxx-stl/. Several dev-scripts are provided to
 rebuild their binaries. The scripts place them to their respective location
-(e.g. the GAbi++ binaries will go to $NDK/sources/cxx-stl/gabi++/libs/) unless
-you use the --out-dir=<path> option.
+(e.g. the libc++ binaries will go to $NDK/sources/cxx-stl/llvm-libc++/libs/)
+unless you use the --out-dir=<path> option.
 
 Note that:
 
@@ -377,7 +376,6 @@ Note that:
 
 An example usage would be:
 
-    $NDK/build/tools/build-cxx-stl.sh --stl=gabi++
     $NDK/build/tools/build-cxx-stl.sh --stl=stlport
     $NDK/build/tools/build-cxx-stl.sh --stl=libc++
     $NDK/build/tools/build-gnu-libstdc++.sh /tmp/ndk-$USER/src
@@ -421,17 +419,17 @@ Most dev-scripts generating them typically support a --package-dir=<path> option
 to do this, where <path> points to a directory that will store compressed
 tarballs of the generated binaries.
 
-For example, to build and package the GAbi++ binaries, use:
+For example, to build and package the libc++ binaries, use:
 
-    $NDK/build/tools/build-cxx-stl.sh --stl=gabi++ \
+    $NDK/build/tools/build-cxx-stl.sh --stl=libc++ \
         --package-dir=/tmp/ndk-$USER/prebuilt/
 
-In NDK r7, this will actually create three tarballs (one per supported ABI),
-under the directory /tmp/ndk-$USER/prebuilt/, i.e.:
+This will actually create one tarball per supported ABI in
+`$ANDROID_BUILD_TOP/out/ndk`, i.e.:
 
- * gabixx-libs-armeabi.tar.bz2
- * gabixx-libs-armeabi-v7a.tar.bz2
- * gabixx-libs-x86.tar.bz2
+ * libcxx-libs-armeabi.tar.bz2
+ * libcxx-libs-armeabi-v7a.tar.bz2
+ * libcxx-libs-x86.tar.bz2
  * ...
 
 Note that these tarballs are built to be uncompressed from the top-level of an
