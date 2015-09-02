@@ -868,7 +868,6 @@ After one of these, re-install to the device!''' % (PACKAGE_NAME))
             with open(OPTION_EXEC, 'r') as execfile:
                 for line in execfile:
                     gdbsetup.write(line)
-    gdbsetup.close()
 
     gdbargs = [GDBCLIENT, '-x', '%s' % (GDBSETUP)]
     if OPTION_TUI:
