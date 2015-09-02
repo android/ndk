@@ -153,26 +153,31 @@ Read ''' + NDK + '''/docs/NDK-GDB.html for complete usage instructions.''',
                          help='Kill existing debug session if it exists',
                          action='store_true')
 
-    parser.add_argument( '--start',
+    app_group = parser.add_argument_group('application debugging')
+    app_group.add_argument( '--start',
                          help='Launch application instead of attaching to existing one',
                          action='store_true')
 
-    parser.add_argument( '--launch',
+    app_group.add_argument( '--launch',
                          help='Same as --start, but specify activity name (see below)',
                          dest='launch_name', nargs=1)
 
-    parser.add_argument( '--launch-list',
+    app_group.add_argument( '--launch-list',
                          help='List all launchable activity names from manifest',
                          action='store_true')
 
-    parser.add_argument( '--delay',
+    app_group.add_argument( '--delay',
                          help='Delay in seconds between activity start and gdbserver attach',
                          type=float, default=DELAY,
                          dest='delay')
 
-    parser.add_argument( '-p', '--project',
+    app_group.add_argument( '-p', '--project',
                          help='Specify application project path',
                          dest='project')
+
+    app_group.add_argument( '--nowait',
+                         help='Do not wait for debugger to attach (may miss early JNI breakpoints)',
+                         action='store_true', dest='nowait')
 
     parser.add_argument( '--port',
                          help='Use tcp:localhost:<DEBUG_PORT> to communicate with gdbserver',
@@ -187,19 +192,21 @@ Read ''' + NDK + '''/docs/NDK-GDB.html for complete usage instructions.''',
                          help='Use specific adb command',
                          dest='adb_cmd')
 
+    # Unused flag retained for compatibility
     parser.add_argument( '--awk',
-                         help='Use specific awk command (unused flag retained for compatability)')
+                         help=argparse.SUPPRESS)
 
-    parser.add_argument( '-e',
-                         help='Connect to single emulator instance....(either this,)',
+    connect_group = parser.add_argument_group('device selection').add_mutually_exclusive_group()
+    connect_group.add_argument( '-e',
+                         help='Connect to single emulator instance',
                          action='store_true', dest='emulator')
 
-    parser.add_argument( '-d',
-                         help='Connect to single target device........(this,)',
+    connect_group.add_argument( '-d',
+                         help='Connect to single target device',
                          action='store_true', dest='device')
 
-    parser.add_argument( '-s',
-                         help='Connect to specific emulator or device.(or this)',
+    connect_group.add_argument( '-s',
+                         help='Connect to specific emulator or device',
                          default=DEVICE_SERIAL,
                          dest='device_serial')
 
@@ -210,10 +217,6 @@ Read ''' + NDK + '''/docs/NDK-GDB.html for complete usage instructions.''',
     parser.add_argument( '--gnumake-flag',
                          help='Flag to pass to gnumake, e.g. NDK_TOOLCHAIN_VERSION=4.8',
                          action='append', dest='gnumake_flags')
-
-    parser.add_argument( '--nowait',
-                         help='Do not wait for debugger to attach (may miss early JNI breakpoints)',
-                         action='store_true', dest='nowait')
 
     if os.path.isdir(PYPRPR_GNUSTDCXX_BASE):
         stdcxx_pypr_versions = [ 'gnustdcxx'+d.replace('gcc','')
