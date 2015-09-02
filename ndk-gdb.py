@@ -676,8 +676,7 @@ After one of these, re-install to the device!''' % (PACKAGE_NAME))
                 error('''Could not copy prebuilt gdberver to the device''')
             device_gdbserver = '/data/local/tmp/gdbserver'
         else:
-            error('''Non-debuggable application installed on the target device.
-               Please re-install the debuggable version!''')
+            error('Cannot find prebuilt gdbserver for ABI \'{}\''.format(COMPAT_ABI))
 
     # Find the <dataDir> of the package on the device
     retcode,DATA_DIR = adb_var_shell2(['run-as', PACKAGE_NAME, '/system/bin/sh', '-c', 'pwd'])
