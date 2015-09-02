@@ -48,6 +48,17 @@ def toolchain_to_arch(toolchain):
     return dict(zip(ALL_TOOLCHAINS, ALL_ARCHITECTURES))[toolchain]
 
 
+def arch_to_abis(arch):
+    return {
+        'arm': ['armeabi', 'armeabi-v7a', 'armeabi-v7a-hard'],
+        'arm64': ['arm64-v8a'],
+        'mips': ['mips'],
+        'mips64': ['mips64'],
+        'x86': ['x86'],
+        'x86_64': ['x86_64'],
+    }[arch]
+
+
 def android_path(path=''):
     top = os.getenv('ANDROID_BUILD_TOP', '')
     return os.path.realpath(os.path.join(top, path))

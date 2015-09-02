@@ -126,20 +126,6 @@ for abi in $ABIS; do
   esac
 done
 
-if [ ! -z $VISIBLE_LIBGNUSTL_STATIC ]; then
-    GNUSTL_STATIC_VIS_FLAG=--visible-libgnustl-static
-fi
-
-if [ ! -z "$GCC_VERSION_LIST" ]; then
-  STDCXX_GCC_VERSIONS=
-  if [ "$GCC_VERSION_LIST" != "default" ]; then
-     STDCXX_GCC_VERSIONS="--gcc-version-list=$GCC_VERSION_LIST"
-  fi
-  dump "Building $ABIS gnustl binaries..."
-  run $BUILDTOOLS/build-gnu-libstdc++.sh --abis="$ABIS" $FLAGS $GNUSTL_STATIC_VIS_FLAG "$SRC_DIR" --with-debug-info $STDCXX_GCC_VERSIONS
-  fail_panic "Could not build gnustl with debug info!"
-fi
-
 if [ "$PACKAGE_DIR" ]; then
     dump "Done, see $PACKAGE_DIR"
 else
