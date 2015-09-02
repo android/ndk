@@ -442,16 +442,8 @@ for SYSTEM in $SYSTEMS; do
 
         # Unpack clang/llvm
         for LLVM_VERSION in $LLVM_VERSION_LIST; do
-            # TODO(danalbert): Fix 64-bit Windows LLVM.
-            # This wrongly packages 32-bit Windows LLVM for 64-bit as well, but
-            # the real bug here is that we don't have a 64-bit Windows LLVM.
-            # http://b/22414702
-            LLVM_SYSTEM=$SYSTEM
-            if [ "$SYSTEM" = "windows-x86_64" ]; then
-                LLVM_SYSTEM=windows
-            fi
             unpack_prebuilt \
-                llvm-$LLVM_VERSION-$LLVM_SYSTEM "$DSTDIR"
+                llvm-$LLVM_VERSION-$SYSTEM "$DSTDIR"
         done
 
         rm -rf $DSTDIR/toolchains/$SYSTEM/*l
