@@ -187,30 +187,27 @@ def build_gdbserver(out_dir, args):
     invoke_build('build-gdbserver.py', build_args)
 
 
-def build_gnustl(out_dir, args):
-    print('Building gnustl...')
+def _build_stl(out_dir, args, stl):
     build_args = common_build_args(out_dir, args)
     if args.arch is not None:
         build_args.append('--arch={}'.format(args.arch))
-    invoke_build('build-gnustl.py', build_args)
+    script = 'ndk/sources/cxx-stl/{}/build.py'.format(stl)
+    invoke_external_build(script, build_args)
+
+
+def build_gnustl(out_dir, args):
+    print('Building gnustl...')
+    _build_stl(out_dir, args, 'gnu-libstdc++')
 
 
 def build_libcxx(out_dir, args):
     print('Building libc++...')
-    build_args = common_build_args(out_dir, args)
-    if args.arch is not None:
-        build_args.append('--arch={}'.format(args.arch))
-    invoke_external_build(
-        'ndk/sources/cxx-stl/llvm-libc++/build.py', build_args)
+    _build_stl(out_dir, args, 'llvm-libc++')
 
 
 def build_stlport(out_dir, args):
     print('Building stlport...')
-    build_args = common_build_args(out_dir, args)
-    if args.arch is not None:
-        build_args.append('--arch={}'.format(args.arch))
-    invoke_external_build(
-        'ndk/sources/cxx-stl/stlport/build.py', build_args)
+    _build_stl(out_dir, args, 'stlport')
 
 
 def build_platforms(out_dir, args):
