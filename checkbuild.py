@@ -40,6 +40,7 @@ ALL_MODULES = {
     'gdbserver',
     'gnustl',
     'host-tools',
+    'libc++',
     'platforms',
     'target',
 }
@@ -194,6 +195,15 @@ def build_gnustl(out_dir, args, _):
     invoke_build('build-gnustl.py', build_args)
 
 
+def build_libcxx(out_dir, args, _):
+    print('Building libc++...')
+    build_args = common_build_args(out_dir, args)
+    if args.arch is not None:
+        build_args.append('--arch={}'.format(args.arch))
+    invoke_external_build(
+        'ndk/sources/cxx-stl/llvm-libc++/build.py', build_args)
+
+
 def build_platforms(out_dir, args, _):
     print('Building platforms...')
     invoke_build('build-platforms.py', common_build_args(out_dir, args))
@@ -290,6 +300,7 @@ def main():
         ('gdbserver', build_gdbserver),
         ('gnustl', build_gnustl),
         ('host-tools', build_host_tools),
+        ('libc++', build_libcxx),
         ('platforms', build_platforms),
         ('target', build_target),
     ])
