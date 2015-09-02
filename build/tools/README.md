@@ -440,24 +440,13 @@ Similarly, to rebuild the STLport binaries and package them:
     $NDK/build/tools/build-cxx-stl.sh --stl=stlport \
         --package-dir=/tmp/ndk-$USER/prebuilt
 
-A dev-script is provided to rebuild _and_ package all prebuilts. It is called
-`rebuild-all-prebuilt.sh`. Note that by default, it will automatically place the
-prebuilt tarballs under /tmp/ndk-$USER/prebuilt-$DATE, where $DATE is the
-current date in ISO order.
+The `rebuilt-all-prebuilt.sh` script has been entirely replaced by checkbuild.py
+in the root of the NDK.  Note that by default, it will automatically place the
+prebuilt tarballs under `$ANDROID_BUILD_TOP/out/ndk`.
 
 By default, this only rebuilds the host prebuilts for the current host system.
-You can use --mingw to force the generation of Windows binaries on Linux.
-
-Additionally, you can use the --darwin-ssh=<hostname> option to launch the build
-of the Darwin binaries from a Linux machine, by using ssh to access a remote
-Darwin machine. The script will package all required sources into a temporary
-tarball, copy it to the remote machine, launch the build there, then copy back
-all binaries to your own machine.
-
-This means that it is possible to generate the host binaries for all supported
-host systems from Linux (provided you have ssh access to a Darwin machine).
-
-Alternatively, you can run `rebuild-all-prebuilt.sh` on a Darwin machine.
+You can use `--system windows` or `--system windows64` to build Windows binaries
+on Linux.
 
 Once you have used the script three times (once per supported host systems), you
 should have plenty of files under /tmp/ndk-$USER/prebuilt-$DATE.  For the
