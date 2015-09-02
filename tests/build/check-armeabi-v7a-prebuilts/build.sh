@@ -242,7 +242,7 @@ case $(uname -s) in
       ;;
 esac
 
-ARM_READELF=$NDK/toolchains/$ARM_TOOLCHAIN_NAME/prebuilt/$HOST_TAG/bin/${ARM_TOOLCHAIN_PREFIX}-readelf
+ARM_READELF=$NDK/toolchains/$HOST_TAG/$ARM_TOOLCHAIN_NAME/prebuilt/bin/${ARM_TOOLCHAIN_PREFIX}-readelf
 if [ ! -f "$ARM_READELF" ]; then
     echo "ERROR: Missing binary: $ARM_READELF" >&2
     exit 1
