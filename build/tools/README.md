@@ -24,7 +24,7 @@ traces can be activated by using the --verbose option. Use it several times to
 increase the level of verbosity.
 
 Note that all Windows host programs can be built on Linux if you have the
-`mingw32` cross-toolchain installed (`apt-get install mingw32` on Debian or
+`mingw-w64` cross-toolchain installed (`apt-get install mingw-w64` on Debian or
 Ubuntu). You will need to add the `--mingw` option when invoking the script.
 
 All dev-scripts rebuilding host programs on Linux and Darwin will only generate
@@ -293,9 +293,9 @@ minutes.
 For the record, on a 2.4 GHz Xeon with 16 Hyper-threaded cores and 12GB of
 memory, rebuilding each toolchain takes between 2 and 4 minutes.
 
-You need to be on Linux to build the Windows binaries, using the "mingw32"
-cross-toolchain (install it with "apt-get install mingw32" on Ubuntu). To do so
-use the "--mingw" option, as in:
+You need to be on Linux to build the Windows binaries, using the "mingw-w64"
+cross-toolchain (install it with "apt-get install mingw-w64" on Ubuntu). To do
+so use the "--mingw" option, as in:
 
     $NDK/build/tools/build-gcc.sh --mingw \
         /tmp/ndk-$USER/src $NDK arm-linux-androideabi-4.8
