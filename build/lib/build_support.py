@@ -116,6 +116,15 @@ def get_default_host():
     else:
         raise RuntimeError('Unsupported host: {}'.format(sys.platform))
 
+def host_to_tag(host):
+    if host in ['darwin', 'linux']:
+        return host + '-x86_64'
+    elif host == 'windows':
+        return 'windows-x86'
+    elif host == 'windows64':
+        return 'windows-x86_64'
+    else:
+        raise RuntimeError('Unsupported host: {}'.format(host))
 
 class ArgParser(argparse.ArgumentParser):
     def __init__(self):
