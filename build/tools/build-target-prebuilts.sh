@@ -117,15 +117,6 @@ dump "Building $ABIS libc++ binaries... with libc++abi"
 run $BUILDTOOLS/build-cxx-stl.sh --stl=libc++-libc++abi --abis="$ABIS" $FLAGS --with-debug-info $BUILD_TOOLCHAIN
 fail_panic "Could not build libc++ with libc++abi and debug info!"
 
-# workaround issues in libc++/libc++abi for x86 and mips
-for abi in $ABIS; do
-  case $abi in
-     x86|x86_64|mips|mips32r6|mips64)
-  dump "Rebuilding $abi libc++ binaries... with gabi++"
-  run $BUILDTOOLS/build-cxx-stl.sh --stl=libc++-gabi++ --abis=$abi $FLAGS --with-debug-info $BUILD_TOOLCHAIN
-  esac
-done
-
 if [ "$PACKAGE_DIR" ]; then
     dump "Done, see $PACKAGE_DIR"
 else
