@@ -631,9 +631,6 @@ The target device is running API level %d!''' % (API_LEVEL))
     GDBSETUP_INIT = get_build_var_for_abi('NDK_APP_GDBSETUP', COMPAT_ABI)
     log('Using gdb setup init: %s' % (GDBSETUP_INIT))
 
-    TOOLCHAIN_PREFIX = get_build_var_for_abi('TOOLCHAIN_PREFIX', COMPAT_ABI)
-    log('Using toolchain prefix: %s' % (TOOLCHAIN_PREFIX))
-
     APP_OUT = get_build_var_for_abi('TARGET_OUT', COMPAT_ABI)
     log('Using app out directory: %s' % (APP_OUT))
     DEBUGGABLE = extract_debuggable(PROJECT+os.sep+MANIFEST)
@@ -832,7 +829,7 @@ After one of these, re-install to the device!''' % (PACKAGE_NAME))
 
     # Now launch the appropriate gdb client with the right init commands
     #
-    GDBCLIENT = '%sgdb' % (TOOLCHAIN_PREFIX)
+    GDBCLIENT = '{}/gdb'.format(ndk_bin_path(NDK))
     GDBSETUP = '%s/gdb.setup' % (APP_OUT)
     shutil.copyfile(GDBSETUP_INIT, GDBSETUP)
     with open(GDBSETUP, "a") as gdbsetup:
