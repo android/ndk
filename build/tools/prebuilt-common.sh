@@ -746,13 +746,13 @@ find_mingw_toolchain ()
     if [ "$HOST_ARCH" = "x86_64" -a "$TRY64" = "yes" ]; then
         BINPREFIX=x86_64-pc-mingw32msvc-
         BINPREFIXLST="x86_64-pc-mingw32msvc- x86_64-w64-mingw32- amd64-mingw32msvc-"
-        DEBIAN_NAME=mingw64
+        DEBIAN_NAME=mingw-w64
     else
         # we are trying 32 bit anyway, so forcing it to avoid build issues
         force_32bit_binaries
         BINPREFIX=i586-pc-mingw32msvc-
         BINPREFIXLST="i586-pc-mingw32msvc- i686-pc-mingw32- i586-mingw32msvc- i686-w64-mingw32-"
-        DEBIAN_NAME=mingw32
+        DEBIAN_NAME=mingw-w64
     fi
 
     # Scan $BINPREFIXLST list to find installed mingw toolchain. It will be
