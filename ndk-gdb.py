@@ -694,7 +694,7 @@ The target device is running API level %d!''' % (API_LEVEL))
             OPTION_LAUNCH = extract_launchable(PROJECT+os.sep+MANIFEST)
             if not len(OPTION_LAUNCH):
                 error('''Could not extract name of launchable activity from manifest!
-           Try to use --launch=<name> directly instead as a work-around.''')
+       Try to use --launch=<name> directly instead as a work-around.''')
             log('Found first launchable activity: %s' % (OPTION_LAUNCH[0]))
         if not len(OPTION_LAUNCH):
             error('''It seems that your Application does not have any launchable activity!
