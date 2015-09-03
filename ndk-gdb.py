@@ -37,6 +37,18 @@ try:
 except ImportError:
     from queue import Queue, Empty  # python 3.x
 
+def get_platform(abi):
+    '''Convert abi to a prebuilt platform name'''
+    if abi.startswith("armeabi"):
+        return "arm"
+    elif abi.startswith("arm64"):
+        return "arm64"
+    elif abi.startswith("mips64"):
+        return "mips64"
+    elif abi.startswith("mips"):
+        return "mips"
+    return abi
+
 def find_program(program, extra_paths = []):
     ''' extra_paths are searched before PATH '''
     PATHS = extra_paths+os.environ['PATH'].replace('"','').split(os.pathsep)
@@ -667,7 +679,7 @@ After one of these, re-install to the device!''' % (PACKAGE_NAME))
     if not retcode:
         log('Found device gdbserver: %s' % (device_gdbserver))
     else:
-        gdbserver_prebuilt_path = ('%s/prebuilt/android-%s/gdbserver/gdbserver' % (NDK, COMPAT_ABI))
+        gdbserver_prebuilt_path = ('%s/prebuilt/android-%s/gdbserver/gdbserver' % (NDK, get_platform(COMPAT_ABI)))
         if os.path.isfile(gdbserver_prebuilt_path):
             log('Found prebuilt gdbserver. Copying it on device')
             retcode,PUSH_OUTPUT=adb_cmd(True,
