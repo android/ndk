@@ -120,7 +120,7 @@ def host_to_tag(host):
     if host in ['darwin', 'linux']:
         return host + '-x86_64'
     elif host == 'windows':
-        return 'windows-x86'
+        return 'windows'
     elif host == 'windows64':
         return 'windows-x86_64'
     else:
