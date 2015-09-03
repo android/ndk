@@ -586,7 +586,7 @@ def main():
         APP_ABIS = APP_ABIS[:APP_ABIS.index('all')]+ALL_ABIS+APP_ABIS[APP_ABIS.index('all')+1:]
     log('ABIs targetted by application: %s' % (' '.join(APP_ABIS)))
 
-    retcode,ADB_TEST = adb_cmd(True,['shell', 'ls'])
+    retcode,ADB_TEST = adb_cmd(True,['shell', 'echo'])
     if retcode != 0:
         print(ADB_TEST)
         error('''Could not connect to device or emulator!
