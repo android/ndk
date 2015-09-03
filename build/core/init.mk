@@ -78,6 +78,9 @@ __ndk_info     = $(info $(__ndk_name): $1 $2 $3 $4 $5)
 __ndk_warning  = $(warning $(__ndk_name): $1 $2 $3 $4 $5)
 __ndk_error    = $(error $(__ndk_name): $1 $2 $3 $4 $5)
 
+ifdef NDK_NO_INFO
+__ndk_info :=
+endif
 ifdef NDK_NO_WARNINGS
 __ndk_warning :=
 endif

@@ -20,6 +20,14 @@
 # Detect the NDK installation path by processing this Makefile's location.
 # This assumes we are located under $NDK_ROOT/build/core/main.mk
 #
+
+# Don't output to stdout if we're being invoked to dump a variable
+DUMP_VAR := $(patsubst DUMP_%,%,$(filter DUMP_%,$(MAKECMDGOALS)))
+ifneq (,$(DUMP_VAR))
+    NDK_NO_INFO := 1
+    NDK_NO_WARNINGS := 1
+endif
+
 NDK_ROOT := $(dir $(lastword $(MAKEFILE_LIST)))
 NDK_ROOT := $(strip $(NDK_ROOT:%build/core/=%))
 NDK_ROOT := $(subst \,/,$(NDK_ROOT))
@@ -32,7 +40,7 @@ ifeq ($(NDK_LOG),1)
     $(info Android NDK: NDK installation path auto-detected: '$(NDK_ROOT)')
 endif
 ifneq ($(words $(NDK_ROOT)),1)
-    $(info Android NDK: You NDK installation path contains spaces.)
+    $(info Android NDK: Your NDK installation path contains spaces.)
     $(info Android NDK: Please re-install to a different location to fix the issue !)
     $(error Aborting.)
 endif
@@ -200,7 +208,6 @@ endif
 # If a goal is DUMP_xxx then we dump a variable xxx instead
 # of building anything
 #
-DUMP_VAR     := $(patsubst DUMP_%,%,$(filter DUMP_%,$(MAKECMDGOALS)))
 MAKECMDGOALS := $(filter-out DUMP_$(DUMP_VAR),$(MAKECMDGOALS))
 
 include $(BUILD_SYSTEM)/setup-imports.mk

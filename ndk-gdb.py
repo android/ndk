@@ -118,8 +118,7 @@ MANIFEST = 'AndroidManifest.xml'
 #
 DELAY = 2.0
 NDK = os.path.abspath(os.path.dirname(sys.argv[0])).replace('\\','/')
-DEVICE_SERIAL = ''
-ADB_FLAGS = ''
+ADB_FLAGS = []
 
 def log(string):
     global VERBOSE
@@ -131,7 +130,7 @@ def error(string, errcode=1):
     exit(errcode)
 
 def handle_args():
-    global VERBOSE, DEBUG_PORT, DELAY, DEVICE_SERIAL
+    global VERBOSE, DEBUG_PORT, DELAY
     global GNUMAKE_CMD, GNUMAKE_FLAGS
     global ADB_CMD, ADB_FLAGS
     global JDB_CMD
@@ -153,26 +152,31 @@ Read ''' + NDK + '''/docs/NDK-GDB.html for complete usage instructions.''',
                          help='Kill existing debug session if it exists',
                          action='store_true')
 
-    parser.add_argument( '--start',
+    app_group = parser.add_argument_group('application debugging')
+    app_group.add_argument( '--start',
                          help='Launch application instead of attaching to existing one',
                          action='store_true')
 
-    parser.add_argument( '--launch',
+    app_group.add_argument( '--launch',
                          help='Same as --start, but specify activity name (see below)',
                          dest='launch_name', nargs=1)
 
-    parser.add_argument( '--launch-list',
+    app_group.add_argument( '--launch-list',
                          help='List all launchable activity names from manifest',
                          action='store_true')
 
-    parser.add_argument( '--delay',
+    app_group.add_argument( '--delay',
                          help='Delay in seconds between activity start and gdbserver attach',
                          type=float, default=DELAY,
                          dest='delay')
 
-    parser.add_argument( '-p', '--project',
+    app_group.add_argument( '-p', '--project',
                          help='Specify application project path',
                          dest='project')
+
+    app_group.add_argument( '--nowait',
+                         help='Do not wait for debugger to attach (may miss early JNI breakpoints)',
+                         action='store_true', dest='nowait')
 
     parser.add_argument( '--port',
                          help='Use tcp:localhost:<DEBUG_PORT> to communicate with gdbserver',
@@ -187,20 +191,21 @@ Read ''' + NDK + '''/docs/NDK-GDB.html for complete usage instructions.''',
                          help='Use specific adb command',
                          dest='adb_cmd')
 
+    # Unused flag retained for compatibility
     parser.add_argument( '--awk',
-                         help='Use specific awk command (unused flag retained for compatability)')
+                         help=argparse.SUPPRESS)
 
-    parser.add_argument( '-e',
-                         help='Connect to single emulator instance....(either this,)',
+    connect_group = parser.add_argument_group('device selection').add_mutually_exclusive_group()
+    connect_group.add_argument( '-e',
+                         help='Connect to single emulator instance',
                          action='store_true', dest='emulator')
 
-    parser.add_argument( '-d',
-                         help='Connect to single target device........(this,)',
+    connect_group.add_argument( '-d',
+                         help='Connect to single target device',
                          action='store_true', dest='device')
 
-    parser.add_argument( '-s',
-                         help='Connect to specific emulator or device.(or this)',
-                         default=DEVICE_SERIAL,
+    connect_group.add_argument( '-s',
+                         help='Connect to specific emulator or device',
                          dest='device_serial')
 
     parser.add_argument( '-t','--tui',
@@ -210,10 +215,6 @@ Read ''' + NDK + '''/docs/NDK-GDB.html for complete usage instructions.''',
     parser.add_argument( '--gnumake-flag',
                          help='Flag to pass to gnumake, e.g. NDK_TOOLCHAIN_VERSION=4.8',
                          action='append', dest='gnumake_flags')
-
-    parser.add_argument( '--nowait',
-                         help='Do not wait for debugger to attach (may miss early JNI breakpoints)',
-                         action='store_true', dest='nowait')
 
     if os.path.isdir(PYPRPR_GNUSTDCXX_BASE):
         stdcxx_pypr_versions = [ 'gnustdcxx'+d.replace('gcc','')
@@ -242,18 +243,11 @@ Read ''' + NDK + '''/docs/NDK-GDB.html for complete usage instructions.''',
     log('Android NDK installation path: %s' % (NDK))
 
     if args.device:
-        ADB_FLAGS = '-d'
+        ADB_FLAGS = ['-d']
     if args.emulator:
-        if ADB_FLAGS != '':
-            parser.print_help()
-            exit(1)
-        ADB_FLAGS = '-e'
-    if args.device_serial != '':
-        DEVICE_SERIAL = args.device_serial
-        if ADB_FLAGS != '':
-            parser.print_help()
-            exit(1)
-        ADB_FLAGS = '-s'
+        ADB_FLAGS = ['-e']
+    if args.device_serial:
+        ADB_FLAGS = ['-s', args.device_serial]
     if args.adb_cmd != None:
         log('Using specific adb command: %s' % (args.adb_cmd))
         ADB_CMD = args.adb_cmd
@@ -381,12 +375,10 @@ def background_spawn(args, redirect_stderr, output_fn, redirect_stdin = None, in
         ti.start()
 
 def adb_cmd(redirect_stderr, args, log_command=False, adb_trace=False, background=False):
-    global ADB_CMD, ADB_FLAGS, DEVICE_SERIAL
+    global ADB_CMD, ADB_FLAGS
     fullargs = [ADB_CMD]
-    if ADB_FLAGS != '':
-        fullargs += [ADB_FLAGS]
-    if DEVICE_SERIAL != '':
-        fullargs += [DEVICE_SERIAL]
+    if ADB_FLAGS:
+        fullargs += ADB_FLAGS
     if isinstance(args, str):
         fullargs.append(args)
     else:
@@ -539,10 +531,7 @@ def main():
     ADB_VERSION = subprocess.check_output([ADB_CMD, 'version'],
                                         ).decode('ascii').replace('\r', '').splitlines()[0]
     log('ADB version found: %s' % (ADB_VERSION))
-    if DEVICE_SERIAL == '':
-        log('Using ADB flags: %s' % (ADB_FLAGS))
-    else:
-        log('Using ADB flags: %s "%s"' % (ADB_FLAGS,DEVICE_SERIAL))
+    log('Using ADB flags: %s' % (ADB_FLAGS))
     if PROJECT != None:
         log('Using specified project path: %s' % (PROJECT))
         if not os.path.isdir(PROJECT):
@@ -642,9 +631,6 @@ The target device is running API level %d!''' % (API_LEVEL))
     GDBSETUP_INIT = get_build_var_for_abi('NDK_APP_GDBSETUP', COMPAT_ABI)
     log('Using gdb setup init: %s' % (GDBSETUP_INIT))
 
-    TOOLCHAIN_PREFIX = get_build_var_for_abi('TOOLCHAIN_PREFIX', COMPAT_ABI)
-    log('Using toolchain prefix: %s' % (TOOLCHAIN_PREFIX))
-
     APP_OUT = get_build_var_for_abi('TARGET_OUT', COMPAT_ABI)
     log('Using app out directory: %s' % (APP_OUT))
     DEBUGGABLE = extract_debuggable(PROJECT+os.sep+MANIFEST)
@@ -690,8 +676,7 @@ After one of these, re-install to the device!''' % (PACKAGE_NAME))
                 error('''Could not copy prebuilt gdberver to the device''')
             device_gdbserver = '/data/local/tmp/gdbserver'
         else:
-            error('''Non-debuggable application installed on the target device.
-               Please re-install the debuggable version!''')
+            error('Cannot find prebuilt gdbserver for ABI \'{}\''.format(COMPAT_ABI))
 
     # Find the <dataDir> of the package on the device
     retcode,DATA_DIR = adb_var_shell2(['run-as', PACKAGE_NAME, '/system/bin/sh', '-c', 'pwd'])
@@ -843,7 +828,7 @@ After one of these, re-install to the device!''' % (PACKAGE_NAME))
 
     # Now launch the appropriate gdb client with the right init commands
     #
-    GDBCLIENT = '%sgdb' % (TOOLCHAIN_PREFIX)
+    GDBCLIENT = '{}/gdb'.format(ndk_bin_path(NDK))
     GDBSETUP = '%s/gdb.setup' % (APP_OUT)
     shutil.copyfile(GDBSETUP_INIT, GDBSETUP)
     with open(GDBSETUP, "a") as gdbsetup:
@@ -865,7 +850,6 @@ After one of these, re-install to the device!''' % (PACKAGE_NAME))
             with open(OPTION_EXEC, 'r') as execfile:
                 for line in execfile:
                     gdbsetup.write(line)
-    gdbsetup.close()
 
     gdbargs = [GDBCLIENT, '-x', '%s' % (GDBSETUP)]
     if OPTION_TUI:
