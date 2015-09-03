@@ -20,7 +20,7 @@
 #
 
 # include common function and variable definitions
-. `dirname $0`/prebuilt-common.sh
+. $NDK_BUILDTOOLS_PATH/prebuilt-common.sh
 
 PROGRAM_PARAMETERS="<src-dir>"
 

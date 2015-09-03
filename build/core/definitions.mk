@@ -2059,26 +2059,6 @@ $(call ndk-stl-register,\
     \
     )
 
-# Register the 'gabi++_static' STL implementation
-#
-$(call ndk-stl-register,\
-    gabi++_static,\
-    cxx-stl/gabi++,\
-    gabi++_static,\
-    ,\
-    \
-    )
-
-# Register the 'gabi++_shared' STL implementation
-#
-$(call ndk-stl-register,\
-    gabi++_shared,\
-    cxx-stl/gabi++,\
-    ,\
-    gabi++_shared,\
-    \
-    )
-
 # Register the 'c++_static' STL implementation
 #
 $(call ndk-stl-register,\

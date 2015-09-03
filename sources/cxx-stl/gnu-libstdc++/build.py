@@ -20,7 +20,7 @@ from __future__ import print_function
 import os
 import site
 
-site.addsitedir(os.path.join(os.path.dirname(__file__), '../lib'))
+site.addsitedir(os.path.join(os.path.dirname(__file__), '../../../build/lib'))
 
 import build_support
 

@@ -40,8 +40,9 @@ ALL_MODULES = {
     'gdbserver',
     'gnustl',
     'host-tools',
+    'libc++',
     'platforms',
-    'target',
+    'stlport',
 }
 
 
@@ -130,12 +131,12 @@ def common_build_args(out_dir, args):
     return build_args
 
 
-def build_clang(out_dir, args, _):
+def build_clang(out_dir, args):
     print('Building Clang...')
     invoke_build('build-llvm.py', common_build_args(out_dir, args))
 
 
-def build_gcc(out_dir, args, _):
+def build_gcc(out_dir, args):
     gcc_build_args = common_build_args(out_dir, args)
     if args.arch is not None:
         toolchain_name = build_support.arch_to_toolchain(args.arch)
@@ -144,7 +145,7 @@ def build_gcc(out_dir, args, _):
     invoke_external_build('toolchain/gcc/build.py', gcc_build_args)
 
 
-def build_host_tools(out_dir, args, _):
+def build_host_tools(out_dir, args):
     build_args = common_build_args(out_dir, args)
 
     print('Building ndk-stack...')
@@ -178,7 +179,7 @@ def build_host_tools(out_dir, args, _):
     invoke_external_build('toolchain/yasm/build.py', build_args)
 
 
-def build_gdbserver(out_dir, args, _):
+def build_gdbserver(out_dir, args):
     print('Building gdbserver...')
     build_args = common_build_args(out_dir, args)
     if args.arch is not None:
@@ -186,37 +187,36 @@ def build_gdbserver(out_dir, args, _):
     invoke_build('build-gdbserver.py', build_args)
 
 
-def build_gnustl(out_dir, args, _):
-    print('Building gnustl...')
+def _build_stl(out_dir, args, stl):
     build_args = common_build_args(out_dir, args)
     if args.arch is not None:
         build_args.append('--arch={}'.format(args.arch))
-    invoke_build('build-gnustl.py', build_args)
+    script = 'ndk/sources/cxx-stl/{}/build.py'.format(stl)
+    invoke_external_build(script, build_args)
 
 
-def build_platforms(out_dir, args, _):
+def build_gnustl(out_dir, args):
+    print('Building gnustl...')
+    _build_stl(out_dir, args, 'gnu-libstdc++')
+
+
+def build_libcxx(out_dir, args):
+    print('Building libc++...')
+    _build_stl(out_dir, args, 'llvm-libc++')
+
+
+def build_stlport(out_dir, args):
+    print('Building stlport...')
+    _build_stl(out_dir, args, 'stlport')
+
+
+def build_platforms(out_dir, args):
     print('Building platforms...')
     invoke_build('build-platforms.py', common_build_args(out_dir, args))
 
 
-# TODO: Split up the target build.
-# TODO: Kill build_tools_args.
-# `build_tools_args` are the arguments that need to be passed to the scripts in
-# build/tools. `args`, by comparison, are the arguments parsed by ArgParser.
-# The build/tools scripts need to be called differently than the Python build
-# scripts we've built up because they typically were not called directly and
-# therefore do not have reasonable defaults.
-def build_target(out_dir, _, build_tools_args):
-    print('Building target modules...')
-    build_args = list(build_tools_args)
-    build_args.append('--package-dir={}'.format(out_dir))
-    build_args.append('--verbose')
-
-    invoke_build('rebuild-all-prebuilt.sh', build_args)
-
-
 def main():
-    args, build_args = ArgParser().parse_known_args()
+    args, package_args = ArgParser().parse_known_args()
 
     # Disable buffering on stdout so the build output doesn't hide all of our
     # "Building..." messages.
@@ -231,7 +231,7 @@ def main():
 
     system = args.system
     if system != 'windows':
-        build_args.append('--try-64')
+        package_args.append('--try-64')
 
     if system is not None:
         # TODO(danalbert): Update build server to pass just 'linux'.
@@ -246,7 +246,7 @@ def main():
         if system not in ('darwin-x86', 'linux-x86', 'windows'):
             sys.exit('Unknown system requested: {}'.format(original_system))
 
-        build_args.append('--systems={}'.format(system))
+        package_args.append('--systems={}'.format(system))
     else:
         # No flag provided. Use the current OS.
         if platform.system() == 'Darwin':
@@ -256,7 +256,7 @@ def main():
         else:
             sys.exit('Unknown build host: {}'.format(platform.system()))
 
-    build_args.append(os.path.join(build_top, 'toolchain'))
+    package_args.append(os.path.join(build_top, 'toolchain'))
 
     DEFAULT_OUT_DIR = os.path.join(build_top, 'out/ndk')
     out_dir = os.path.realpath(os.getenv('DIST_DIR', DEFAULT_OUT_DIR))
@@ -279,7 +279,7 @@ def main():
         modules = modules - {'gcc'}
 
     if args.arch is not None:
-        build_args.append('--arch={}'.format(args.arch))
+        package_args.append('--arch={}'.format(args.arch))
 
     print('Cleaning up...')
     invoke_build('dev-cleanup.sh')
@@ -290,16 +290,17 @@ def main():
         ('gdbserver', build_gdbserver),
         ('gnustl', build_gnustl),
         ('host-tools', build_host_tools),
+        ('libc++', build_libcxx),
         ('platforms', build_platforms),
-        ('target', build_target),
+        ('stlport', build_stlport),
     ])
 
     print('Building modules: {}'.format(' '.join(modules)))
     for module in modules:
-        module_builds[module](out_dir, args, build_args)
+        module_builds[module](out_dir, args)
 
     if args.package and modules == ALL_MODULES:
-        package_ndk(args.release, system, out_dir, build_args)
+        package_ndk(args.release, system, out_dir, package_args)
 
 
 if __name__ == '__main__':

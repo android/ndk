@@ -91,9 +91,9 @@ PROGRAM_DESCRIPTION=\
 "Package a new set of release packages for the Android NDK.
 
 You will need to have generated one or more prebuilt binary tarballs
-with the build/tools/rebuild-all-prebuilts.sh script. These files should
-be named like <toolname>-<system>.tar.bz2, where <toolname> is an arbitrary
-tool name, and <system> is one of: $SYSTEMS
+with the checkbuild.py script. These files should be named like
+<toolname>-<system>.tar.bz2, where <toolname> is an arbitrary tool name, and
+<system> is one of: $SYSTEMS
 
 Use the --prebuilt-dir=<path> option to build release packages from the
 binary tarballs stored in <path>.
@@ -349,7 +349,6 @@ if [ -z "$PREBUILT_NDK" ]; then
         unpack_prebuilt gnu-libstdc++-headers-$VERSION "$REFERENCE"
     done
     for ABI in $ABIS; do
-        unpack_prebuilt gabixx-libs-$ABI-g "$REFERENCE"
         unpack_prebuilt stlport-libs-$ABI-g "$REFERENCE"
         unpack_prebuilt libcxx-libs-$ABI-g "$REFERENCE"
         for VERSION in $DEFAULT_GCC_VERSION_LIST; do

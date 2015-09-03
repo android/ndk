@@ -73,9 +73,8 @@ Contains the sources of various C++ runtime and libraries that can be used with
 sources/cxx-stl/gabi++
 ----------------------
 
-Contains the sources of the GAbi++ C++ runtime library. Note that the dev-script
-`build-cxx-stl.sh` can be used to generate prebuilt libraries from these
-sources, that will be copied under this directory.
+Contains the sources of the GAbi++ C++ runtime library. Only used via stlport or
+libc++.
 
 sources/cxx-stl/stlport
 -----------------------
@@ -363,8 +362,8 @@ III.3. Generating C++ runtime prebuilt binaries:
 Sources and support files for several C++ runtimes / standard libraries are
 provided under $NDK/sources/cxx-stl/. Several dev-scripts are provided to
 rebuild their binaries. The scripts place them to their respective location
-(e.g. the GAbi++ binaries will go to $NDK/sources/cxx-stl/gabi++/libs/) unless
-you use the --out-dir=<path> option.
+(e.g. the libc++ binaries will go to $NDK/sources/cxx-stl/llvm-libc++/libs/)
+unless you use the --out-dir=<path> option.
 
 Note that:
 
@@ -377,7 +376,6 @@ Note that:
 
 An example usage would be:
 
-    $NDK/build/tools/build-cxx-stl.sh --stl=gabi++
     $NDK/build/tools/build-cxx-stl.sh --stl=stlport
     $NDK/build/tools/build-cxx-stl.sh --stl=libc++
     $NDK/build/tools/build-gnu-libstdc++.sh /tmp/ndk-$USER/src
@@ -421,17 +419,17 @@ Most dev-scripts generating them typically support a --package-dir=<path> option
 to do this, where <path> points to a directory that will store compressed
 tarballs of the generated binaries.
 
-For example, to build and package the GAbi++ binaries, use:
+For example, to build and package the libc++ binaries, use:
 
-    $NDK/build/tools/build-cxx-stl.sh --stl=gabi++ \
+    $NDK/build/tools/build-cxx-stl.sh --stl=libc++ \
         --package-dir=/tmp/ndk-$USER/prebuilt/
 
-In NDK r7, this will actually create three tarballs (one per supported ABI),
-under the directory /tmp/ndk-$USER/prebuilt/, i.e.:
+This will actually create one tarball per supported ABI in
+`$ANDROID_BUILD_TOP/out/ndk`, i.e.:
 
- * gabixx-libs-armeabi.tar.bz2
- * gabixx-libs-armeabi-v7a.tar.bz2
- * gabixx-libs-x86.tar.bz2
+ * libcxx-libs-armeabi.tar.bz2
+ * libcxx-libs-armeabi-v7a.tar.bz2
+ * libcxx-libs-x86.tar.bz2
  * ...
 
 Note that these tarballs are built to be uncompressed from the top-level of an
@@ -442,24 +440,13 @@ Similarly, to rebuild the STLport binaries and package them:
     $NDK/build/tools/build-cxx-stl.sh --stl=stlport \
         --package-dir=/tmp/ndk-$USER/prebuilt
 
-A dev-script is provided to rebuild _and_ package all prebuilts. It is called
-`rebuild-all-prebuilt.sh`. Note that by default, it will automatically place the
-prebuilt tarballs under /tmp/ndk-$USER/prebuilt-$DATE, where $DATE is the
-current date in ISO order.
+The `rebuilt-all-prebuilt.sh` script has been entirely replaced by checkbuild.py
+in the root of the NDK.  Note that by default, it will automatically place the
+prebuilt tarballs under `$ANDROID_BUILD_TOP/out/ndk`.
 
 By default, this only rebuilds the host prebuilts for the current host system.
-You can use --mingw to force the generation of Windows binaries on Linux.
-
-Additionally, you can use the --darwin-ssh=<hostname> option to launch the build
-of the Darwin binaries from a Linux machine, by using ssh to access a remote
-Darwin machine. The script will package all required sources into a temporary
-tarball, copy it to the remote machine, launch the build there, then copy back
-all binaries to your own machine.
-
-This means that it is possible to generate the host binaries for all supported
-host systems from Linux (provided you have ssh access to a Darwin machine).
-
-Alternatively, you can run `rebuild-all-prebuilt.sh` on a Darwin machine.
+You can use `--system windows` or `--system windows64` to build Windows binaries
+on Linux.
 
 Once you have used the script three times (once per supported host systems), you
 should have plenty of files under /tmp/ndk-$USER/prebuilt-$DATE.  For the
