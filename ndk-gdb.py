@@ -647,55 +647,42 @@ The target device is running API level %d!''' % (API_LEVEL))
     log('Using app out directory: %s' % (APP_OUT))
     DEBUGGABLE = extract_debuggable(PROJECT+os.sep+MANIFEST)
     log('Found debuggable flag: %s' % ('true' if DEBUGGABLE==True else 'false'))
-    # If gdbserver exists, then we built with 'ndk-build NDK_DEBUG=1' and it's
-    # ok to not have android:debuggable set to true in the original manifest.
-    # However, if this is not the case, then complain!!
-    #
-    gdbserver_path = os.path.join(PROJECT,'libs',COMPAT_ABI,'gdbserver')
-    if not DEBUGGABLE:
-        if os.path.isfile(gdbserver_path):
-            log('Found gdbserver under libs/%s, assuming app was built with NDK_DEBUG=1' % (COMPAT_ABI))
-        else:
-            error('''Package %s is not debuggable ! You can fix that in two ways:
-
-  - Rebuilt with the NDK_DEBUG=1 option when calling 'ndk-build'.
-
-  - Modify your manifest to set android:debuggable attribute to "true",
-    then rebuild normally.
-
-After one of these, re-install to the device!''' % (PACKAGE_NAME))
-    elif not os.path.isfile(gdbserver_path):
-        error('''Could not find gdbserver binary under %s/libs/%s
-       This usually means you modified your AndroidManifest.xml to set
-       the android:debuggable flag to 'true' but did not rebuild the
-       native binaries. Please call 'ndk-build' to do so,
-       *then* re-install to the device!''' % (PROJECT,COMPAT_ABI))
-
-    # Let's check that 'gdbserver' is properly installed on the device too. If this
-    # is not the case, push 'gdbserver' found in prebuilt.
-    #
-    device_gdbserver = '/data/data/%s/lib/gdbserver' % (PACKAGE_NAME)
-    retcode,LS_GDBSERVER = adb_var_shell2(['ls', device_gdbserver])
-    if not retcode:
-        log('Found device gdbserver: %s' % (device_gdbserver))
-    else:
-        gdbserver_prebuilt_path = ('%s/prebuilt/android-%s/gdbserver/gdbserver' % (NDK, get_platform(COMPAT_ABI)))
-        if os.path.isfile(gdbserver_prebuilt_path):
-            log('Found prebuilt gdbserver. Copying it on device')
-            retcode,PUSH_OUTPUT=adb_cmd(True,
-                                       ['shell', 'push', '%s' % gdbserver_prebuilt_path, '/data/local/tmp/gdbserver'])
-            if retcode:
-                error('''Could not copy prebuilt gdberver to the device''')
-            device_gdbserver = '/data/local/tmp/gdbserver'
-        else:
-            error('Cannot find prebuilt gdbserver for ABI \'{}\''.format(COMPAT_ABI))
 
     # Find the <dataDir> of the package on the device
     retcode,DATA_DIR = adb_var_shell2(['run-as', PACKAGE_NAME, '/system/bin/sh', '-c', 'pwd'])
     if retcode or DATA_DIR == '':
-        error('''Could not extract package's data directory. Are you sure that
+        error('''Could not find package's data directory. Are you sure that
        your installed application is debuggable?''')
     log("Found data directory: '%s'" % (DATA_DIR))
+
+    # Let's check that 'gdbserver' is properly installed on the device too. If this
+    # is not the case, push 'gdbserver' found in prebuilt.
+    #
+    LIB_DIR = '%s/lib' % (DATA_DIR)
+    device_gdbserver = '%s/gdbserver' % (LIB_DIR)
+    retcode,LS_GDBSERVER = adb_var_shell2(['run-as', PACKAGE_NAME, 'ls', device_gdbserver])
+    if not retcode:
+        #TODO: Make sure that the existing gdbserver matches the size of our current one
+        log('Found device gdbserver: %s' % (device_gdbserver))
+    else:
+        gdbserver_prebuilt_path = ('%s/prebuilt/android-%s/gdbserver/gdbserver' % (NDK, get_platform(COMPAT_ABI)))
+        if os.path.isfile(gdbserver_prebuilt_path):
+            log('Found prebuilt gdbserver, copying it to the device')
+
+            # DATA_DIR/lib is probably read-only
+            device_gdbserver = '/data/local/tmp/gdbserver'
+            retcode,PUSH_OUTPUT=adb_cmd(True,
+                                       ['shell', 'push', '%s' % gdbserver_prebuilt_path, device_gdbserver])
+            if retcode:
+                error('''Could not copy prebuilt gdbserver to the device''')
+
+            # Check if gdbserver is readable by the application user
+            retcode, _ = adb_var_shell2(['run-as', PACKAGE_NAME, 'ls', device_gdbserver])
+            if retcode:
+                error('''Could not open the prebuilt gdbserver, please ensure
+       the installed application is debuggable.''')
+        else:
+            error('Cannot find prebuilt gdbserver for ABI \'{}\''.format(COMPAT_ABI))
 
     # Launch the activity if needed
     if OPTION_START:
