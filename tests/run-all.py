@@ -228,7 +228,7 @@ def main():
         if api_level >= 21:
             ndk_build_flags.append('APP_PIE=true')
 
-    os.environ['ANDROID_SERIAL'] = get_test_device()
+        os.environ['ANDROID_SERIAL'] = get_test_device()
 
     runner = tests.TestRunner()
     if 'awk' in suites:
