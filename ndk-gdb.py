@@ -165,15 +165,16 @@ Read ''' + NDK + '''/docs/NDK-GDB.html for complete usage instructions.''',
                          action='store_true')
 
     app_group = parser.add_argument_group('application debugging')
-    app_group.add_argument( '--start',
+    start_group = app_group.add_mutually_exclusive_group()
+    start_group.add_argument( '--start',
                          help='Launch application instead of attaching to existing one',
                          action='store_true')
 
-    app_group.add_argument( '--launch',
+    start_group.add_argument( '--launch',
                          help='Same as --start, but specify activity name (see below)',
                          dest='launch_name', nargs=1)
 
-    app_group.add_argument( '--launch-list',
+    start_group.add_argument( '--launch-list',
                          help='List all launchable activity names from manifest',
                          action='store_true')
 
