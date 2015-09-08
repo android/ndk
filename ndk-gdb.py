@@ -546,6 +546,7 @@ def main():
     log('ADB version found: %s' % (ADB_VERSION))
     log('Using ADB flags: %s' % (ADB_FLAGS))
     if PROJECT != None:
+        PROJECT = os.path.expanduser(PROJECT)
         log('Using specified project path: %s' % (PROJECT))
         if not os.path.isdir(PROJECT):
             error('Your --project option does not point to a directory!')
