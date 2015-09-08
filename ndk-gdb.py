@@ -451,13 +451,16 @@ def get_pid_of(package_name):
     package names like com.exampleisverylongtoolongbyfar.plasma
     exceed the limit.
     '''
-    ps_command = 'ps'
-    retcode,output = adb_cmd(False, ['shell', 'readlink $(which ps)'])
-    if output:
-        output = output.replace('\r', '').splitlines()[0]
-    if output == 'busybox':
-        ps_command = 'ps -w'
-    retcode,output = adb_cmd(False,['shell', ps_command])
+
+    ps_script = '''
+        if [ $(readlink $(which ps)) == "busybox"]; then
+            ps -w;
+        else
+            ps;
+        fi
+    '''
+    ps_script = " ".join([line.strip() for line in ps_script.splitlines()])
+    retcode, output = adb_cmd(False, ['shell', ps_script])
     output = output.replace('\r', '').splitlines()
     columns = output.pop(0).split()
     try:
