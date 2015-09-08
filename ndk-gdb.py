@@ -444,7 +444,7 @@ def adb_var_shell2(args, log_command=False):
 # $1: Package name ("com.example.hellojni") or program name ("/lib/gdbserver")
 # Out: PID number, or 0 if not running
 #
-def get_pid_of(package_name):
+def get_pid_of(package_name, use_cache = True):
     '''
     Some custom ROMs use busybox instead of toolbox for ps.
     Without -w, busybox truncates the output, and very long
@@ -452,21 +452,29 @@ def get_pid_of(package_name):
     exceed the limit.
     '''
 
-    # Perform the check on the device to avoid an adb roundtrip
-    # Some devices might not have readlink or ps, so we need to check for them
-    ps_script = '''
-        if [ ! -x /system/bin/readlink -o ! -x /system/bin/which ]; then
-            ps;
-        elif [ $(readlink $(which ps)) == "toolbox" ]; then
-            ps;
-        else
-            ps -w;
-        fi
-    '''
-    ps_script = " ".join([line.strip() for line in ps_script.splitlines()])
+    if 'cache' not in get_pid_of.__dict__:
+        get_pid_of.cache = ''
 
-    retcode, output = adb_cmd(False, ['shell', ps_script])
-    output = output.replace('\r', '').splitlines()
+    if use_cache and get_pid_of.cache:
+        output = get_pid_of.cache
+    else:
+        # Perform the check on the device to avoid an adb roundtrip
+        # Some devices might not have readlink or ps, so we need to check for them
+        ps_script = '''
+            if [ ! -x /system/bin/readlink -o ! -x /system/bin/which ]; then
+                ps;
+            elif [ $(readlink $(which ps)) == "toolbox" ]; then
+                ps;
+            else
+                ps -w;
+            fi
+        '''
+        ps_script = " ".join([line.strip() for line in ps_script.splitlines()])
+
+        retcode, output = adb_cmd(False, ['shell', ps_script])
+        output = output.replace('\r', '').splitlines()
+        get_pid_of.cache = output
+
     columns = output.pop(0).split()
     try:
         PID_column = columns.index('PID')
