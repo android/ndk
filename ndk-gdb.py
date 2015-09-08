@@ -348,8 +348,8 @@ def input_jdb(inhandle):
         inhandle.write('\n')
         time.sleep(1.0)
 
+background_children = []
 def background_spawn(args, redirect_stderr, output_fn, redirect_stdin = None, input_fn = None):
-
     def async_stdout(outhandle, queue, output_fn):
         for line in iter(outhandle.readline, b''):
             output_fn(line.replace('\r', '').replace('\n', ''))
@@ -373,7 +373,8 @@ def background_spawn(args, redirect_stderr, output_fn, redirect_stdin = None, in
     else:
         used_stdin = None
     p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=used_stderr, stdin=used_stdin,
-                         bufsize=1, close_fds='posix' in sys.builtin_module_names)
+                         bufsize=1, close_fds='posix' in sys.builtin_module_names,
+                         preexec_fn = os.setpgrp)
     qo = Queue()
     to = Thread(target=async_stdout, args=(p.stdout, qo, output_fn))
     to.daemon = True
@@ -386,6 +387,9 @@ def background_spawn(args, redirect_stderr, output_fn, redirect_stdin = None, in
         ti = Thread(target=async_stdin, args=(p.stdin, qo, input_fn))
         ti.daemon = True
         ti.start()
+
+    background_children.append(p)
+    return p
 
 def adb_cmd(redirect_stderr, args, log_command=False, adb_trace=False, background=False):
     global ADB_CMD, ADB_FLAGS
@@ -815,9 +819,9 @@ The target device is running API level %d!''' % (API_LEVEL))
         retcode,_ = adb_cmd(False,
                             ['forward', 'tcp:%d' % (JDB_PORT), 'jdwp:%d' % (PID)],
                             log_command=True)
-        time.sleep(1.0)
         if retcode:
             error('Could not forward JDB port')
+        time.sleep(1.0)
         background_spawn([JDB_CMD,'-connect','com.sun.jdi.SocketAttach:hostname=localhost,port=%d' % (JDB_PORT)], True, output_jdb, True, input_jdb)
         time.sleep(1.0)
 
@@ -888,6 +892,9 @@ The target device is running API level %d!''' % (API_LEVEL))
         except KeyboardInterrupt:
             pass
     log("Exited gdb, returncode %d" % gdbp.returncode)
+
+    for child in background_children:
+        child.kill()
 
 if __name__ == '__main__':
     main()
