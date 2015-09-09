@@ -652,9 +652,11 @@ The target device is running API level %d!''' % (API_LEVEL))
     COMPAT_ABI = COMPAT_ABI[0]
     log('Compatible device ABI: %s' % (COMPAT_ABI))
     GDBSETUP_INIT = get_build_var_for_abi('NDK_APP_GDBSETUP', COMPAT_ABI)
+    GDBSETUP_INIT = os.path.normpath(os.path.join(PROJECT, GDBSETUP_INIT))
     log('Using gdb setup init: %s' % (GDBSETUP_INIT))
 
     APP_OUT = get_build_var_for_abi('TARGET_OUT', COMPAT_ABI)
+    APP_OUT = os.path.normpath(os.path.join(PROJECT, APP_OUT))
     log('Using app out directory: %s' % (APP_OUT))
     DEBUGGABLE = extract_debuggable(PROJECT+os.sep+MANIFEST)
     log('Found debuggable flag: %s' % ('true' if DEBUGGABLE==True else 'false'))
