@@ -281,7 +281,7 @@ def main():
             if args.show_all or result.failed():
                 print(result.to_string(colored=use_color))
 
-    sys.exit(global_stats['fail'] == 0)
+    sys.exit(global_stats['fail'])
 
 
 if __name__ == '__main__':
