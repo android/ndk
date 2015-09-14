@@ -671,7 +671,7 @@ if [ -n "$PACKAGE_DIR" ] ; then
         FILES=""
         LIB_SUFFIX="$(get_lib_suffix_for_abi $ABI)"
         for LIB in ${CXX_STL_LIB}_static.a ${CXX_STL_LIB}_shared${LIB_SUFFIX}; do
-	    if [ -d "$CXX_STL_SUBDIR/libs/$ABI/thumb" ]; then
+            if [ -d "$ANDROID_NDK_ROOT/$CXX_STL_SUBDIR/libs/$ABI/thumb" ]; then
                 FILES="$FILES $CXX_STL_SUBDIR/libs/$ABI/thumb/$LIB"
             fi
             FILES="$FILES $CXX_STL_SUBDIR/libs/$ABI/$LIB"
