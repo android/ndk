@@ -19,6 +19,8 @@
 Cleans old build artifacts, configures the required environment, determines
 build goals, and invokes the build scripts.
 """
+from __future__ import print_function
+
 import argparse
 import collections
 import datetime
@@ -31,7 +33,7 @@ import sys
 
 site.addsitedir(os.path.join(os.path.dirname(__file__), 'build/lib'))
 
-import build_support
+import build_support  # pylint: disable=import-error
 
 
 ALL_MODULES = {
