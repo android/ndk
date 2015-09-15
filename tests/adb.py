@@ -28,18 +28,16 @@ def push(src, dst):
 
 def shell(command):
     # Work around the fact that adb doesn't return shell exit status.
-    p = subprocess.Popen(['adb', 'shell', command + '; echo $?'],
+    p = subprocess.Popen(['adb', 'shell', command + '; echo "x$?"'],
                          stdout=subprocess.PIPE)
     out, _ = p.communicate()
     if p.returncode != 0:
         raise RuntimeError('adb shell failed')
 
+    out, _, encoded_result = out.rpartition('x')
+    result = int(encoded_result)
+    out = out.rstrip()
     out = re.split(r'[\r\n]+', out)
-    if out[-1] == '':
-        # Splitting 'foo\n' will return ['foo', '']. Lose the last element.
-        out = out[:-1]
-    result = int(out[-1])
-    out = out[:-1]
     return result, out
 
 
