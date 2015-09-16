@@ -28,7 +28,7 @@ r'''
   adb install && <start-application-on-device>
 '''
 
-import sys, os, platform, argparse, subprocess, types
+import atexit, sys, os, platform, argparse, subprocess, types
 import xml.etree.cElementTree as ElementTree
 import shutil, time
 from threading import Thread
@@ -349,7 +349,6 @@ def input_jdb(inhandle):
         time.sleep(1.0)
 
 def background_spawn(args, redirect_stderr, output_fn, redirect_stdin = None, input_fn = None):
-
     def async_stdout(outhandle, queue, output_fn):
         for line in iter(outhandle.readline, b''):
             output_fn(line.replace('\r', '').replace('\n', ''))
@@ -372,8 +371,15 @@ def background_spawn(args, redirect_stderr, output_fn, redirect_stdin = None, in
         used_stdin = subprocess.PIPE
     else:
         used_stdin = None
+
+    windows = os.name == "nt"
+    creationflags = subprocess.CREATE_NEW_PROCESS_GROUP if windows else 0
+    preexec_fn = None if windows else os.setpgrp
     p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=used_stderr, stdin=used_stdin,
-                         bufsize=1, close_fds='posix' in sys.builtin_module_names)
+                         bufsize=1, close_fds='posix' in sys.builtin_module_names,
+                         creationflags=creationflags, preexec_fn=preexec_fn)
+    atexit.register(p.kill)
+
     qo = Queue()
     to = Thread(target=async_stdout, args=(p.stdout, qo, output_fn))
     to.daemon = True
@@ -386,6 +392,8 @@ def background_spawn(args, redirect_stderr, output_fn, redirect_stdin = None, in
         ti = Thread(target=async_stdin, args=(p.stdin, qo, input_fn))
         ti.daemon = True
         ti.start()
+
+    return p
 
 def adb_cmd(redirect_stderr, args, log_command=False, adb_trace=False, background=False):
     global ADB_CMD, ADB_FLAGS
@@ -440,21 +448,17 @@ def adb_var_shell(args, log_command=False):
 def adb_var_shell2(args, log_command=False):
     return _adb_var_shell(args, redirect_stderr=True, log_command=log_command)
 
-# Return the PID of a given package or program, or 0 if it doesn't run
-# $1: Package name ("com.example.hellojni") or program name ("/lib/gdbserver")
-# Out: PID number, or 0 if not running
-#
-def get_pid_of(package_name):
-    '''
-    Some custom ROMs use busybox instead of toolbox for ps.
-    Without -w, busybox truncates the output, and very long
-    package names like com.exampleisverylongtoolongbyfar.plasma
-    exceed the limit.
-    '''
+def get_processes():
+    '''Return a dict from process name to list of running PIDs on the device.'''
 
-    # Perform the check on the device to avoid an adb roundtrip
-    # Some devices might not have readlink or which, so we need to check for
-    # them.
+    # Some custom ROMs use busybox instead of toolbox for ps. Without -w,
+    # busybox truncates the output, and very long package names like
+    # com.exampleisverylongtoolongbyfar.plasma exceed the limit.
+    #
+    # Perform the check for this on the device to avoid an adb roundtrip
+    # Some devices might not have readlink or which, so we need to handle
+    # this as well.
+
     ps_script = '''
         if [ ! -x /system/bin/readlink -o ! -x /system/bin/which ]; then
             ps;
@@ -467,6 +471,10 @@ def get_pid_of(package_name):
     ps_script = " ".join([line.strip() for line in ps_script.splitlines()])
 
     retcode, output = adb_cmd(False, ['shell', ps_script])
+    if retcode != 0:
+        raise RuntimeException("Failed to get ps output")
+
+    processes = dict()
     output = output.replace('\r', '').splitlines()
     columns = output.pop(0).split()
     try:
@@ -475,9 +483,15 @@ def get_pid_of(package_name):
         PID_column = 1
     while output:
         columns = output.pop().split()
-        if columns.pop() == package_name:
-            return 0,int(columns[PID_column])
-    return 1,0
+        process_name = columns[-1]
+        pid = int(columns[PID_column])
+        if process_name in processes:
+            processes[process_name].append(pid)
+        else:
+            processes[process_name] = [pid]
+
+    return processes
+
 
 def extract_package_name(xmlfile):
     '''
@@ -657,6 +671,8 @@ The target device is running API level %d!''' % (API_LEVEL))
 
     APP_OUT = get_build_var_for_abi('TARGET_OUT', COMPAT_ABI)
     APP_OUT = os.path.normpath(os.path.join(PROJECT, APP_OUT))
+    if os.name == "nt":
+        APP_OUT = APP_OUT.replace("\\", "/")
     log('Using app out directory: %s' % (APP_OUT))
     DEBUGGABLE = extract_debuggable(PROJECT+os.sep+MANIFEST)
     log('Found debuggable flag: %s' % ('true' if DEBUGGABLE==True else 'false'))
@@ -665,7 +681,7 @@ The target device is running API level %d!''' % (API_LEVEL))
     retcode,DATA_DIR = adb_var_shell2(['run-as', PACKAGE_NAME, '/system/bin/sh', '-c', 'pwd'])
     if retcode or DATA_DIR == '':
         error('''Could not find package's data directory. Are you sure that
-       your installed application is debuggable?''')
+       the application is installed and debuggable?''')
     log("Found data directory: '%s'" % (DATA_DIR))
 
     # Let's check that 'gdbserver' is properly installed on the device too. If this
@@ -691,6 +707,20 @@ The target device is running API level %d!''' % (API_LEVEL))
             retcode, PUSH_OUTPUT = adb_cmd(True, push_args)
             if retcode:
                 error('Could not copy prebuilt gdbserver to the device')
+
+            if API_LEVEL >= 23:
+                # Copy gdbserver to the data directory since selinux prevents
+                # executing binaries in /data/local/tmp on M+, and we can't
+                # copy directly into the data directory because of permissions.
+                #
+                # Don't do this pre-M to avoid a ~100ms adb shell roundtrip.
+                temp_gdbserver = device_gdbserver
+                device_gdbserver = '%s/gdbserver' % (DATA_DIR)
+                args = ['cat', temp_gdbserver, '|', 'run-as', PACKAGE_NAME,
+                        'sh', '-c', "'cat > %s'" % device_gdbserver]
+                retcode, _ = adb_var_shell2(args)
+                if retcode:
+                    error('Failed to copy gdbserver to application directory')
 
             # Check if gdbserver is runnable by the application user
             retcode, _ = adb_var_shell2(['run-as', PACKAGE_NAME,
@@ -727,10 +757,10 @@ The target device is running API level %d!''' % (API_LEVEL))
         #
         adb_cmd(True, ['shell', 'sleep', '%f' % (DELAY)], log_command=True)
 
+    processes = get_processes()
+
     # Find the PID of the application being run
-    retcode,PID = get_pid_of(PACKAGE_NAME)
-    log('Found running PID: %d' % (PID))
-    if retcode or PID == 0:
+    if PACKAGE_NAME not in processes:
         if OPTION_LAUNCH:
             error('''Could not extract PID of application on device/emulator.
        Weird, this probably means one of these:
@@ -744,27 +774,26 @@ The target device is running API level %d!''' % (API_LEVEL))
        Are you sure the application is already started?
        Consider using --start or --launch=<name> if not.''')
 
+    if len(processes[PACKAGE_NAME]) > 1:
+        error('Multiple processes found for %s: %s' % (PACKAGE_NAME, processes[PACKAGE_NAME]))
+
+    pid = processes[PACKAGE_NAME][0]
+    log('Found running PID: %d' % (pid))
+
     # Check that there is no other instance of gdbserver running
-    retcode,GDBSERVER_PID = get_pid_of('lib/gdbserver')
-    if not retcode and not GDBSERVER_PID == 0:
+    if 'lib/gdbserver' in processes:
         if not OPTION_FORCE:
             error('Another debug session running, Use --force to kill it.')
         log('Killing existing debugging session')
-        adb_cmd(False, ['shell', 'kill -9 %s' % (GDBSERVER_PID)])
+        for gdbserver_pid in processes['lib/gdbserver']:
+            adb_cmd(False, ['shell', 'kill -9 %s' % (gdbserver_pid)])
 
     # Launch gdbserver now
     DEBUG_SOCKET = 'debug-socket'
     adb_cmd(False,
-            ['shell', 'run-as', PACKAGE_NAME, device_gdbserver, '+%s' % (DEBUG_SOCKET), '--attach', str(PID)],
+            ['shell', 'run-as', PACKAGE_NAME, device_gdbserver, '+%s' % (DEBUG_SOCKET), '--attach', str(pid)],
             log_command=True, adb_trace=True, background=True)
     log('Launched gdbserver succesfully.')
-
-# Make sure gdbserver was launched - debug check.
-#    adb_var_shell(['sleep', '0.1'], log_command=False)
-#    retcode,GDBSERVER_PID = get_pid_of('lib/gdbserver')
-#    if retcode or GDBSERVER_PID == 0:
-#        error('Could not launch gdbserver on the device?')
-#    log('Launched gdbserver succesfully (PID=%s)' % (GDBSERVER_PID))
 
     # Setup network redirection
     log('Setup network redirection')
@@ -808,11 +837,11 @@ The target device is running API level %d!''' % (API_LEVEL))
     if (OPTION_START != None or OPTION_LAUNCH != None) and len(OPTION_WAIT):
         log('Set up JDB connection, using jdb command: %s' % JDB_CMD)
         retcode,_ = adb_cmd(False,
-                            ['forward', 'tcp:%d' % (JDB_PORT), 'jdwp:%d' % (PID)],
+                            ['forward', 'tcp:%d' % (JDB_PORT), 'jdwp:%d' % (pid)],
                             log_command=True)
-        time.sleep(1.0)
         if retcode:
             error('Could not forward JDB port')
+        time.sleep(1.0)
         background_spawn([JDB_CMD,'-connect','com.sun.jdi.SocketAttach:hostname=localhost,port=%d' % (JDB_PORT)], True, output_jdb, True, input_jdb)
         time.sleep(1.0)
 
