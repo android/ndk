@@ -671,6 +671,8 @@ The target device is running API level %d!''' % (API_LEVEL))
 
     APP_OUT = get_build_var_for_abi('TARGET_OUT', COMPAT_ABI)
     APP_OUT = os.path.normpath(os.path.join(PROJECT, APP_OUT))
+    if os.name == "nt":
+        APP_OUT = APP_OUT.replace("\\", "/")
     log('Using app out directory: %s' % (APP_OUT))
     DEBUGGABLE = extract_debuggable(PROJECT+os.sep+MANIFEST)
     log('Found debuggable flag: %s' % ('true' if DEBUGGABLE==True else 'false'))
