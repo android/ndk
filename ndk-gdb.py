@@ -681,7 +681,7 @@ The target device is running API level %d!''' % (API_LEVEL))
     retcode,DATA_DIR = adb_var_shell2(['run-as', PACKAGE_NAME, '/system/bin/sh', '-c', 'pwd'])
     if retcode or DATA_DIR == '':
         error('''Could not find package's data directory. Are you sure that
-       your installed application is debuggable?''')
+       the application is installed and debuggable?''')
     log("Found data directory: '%s'" % (DATA_DIR))
 
     # Let's check that 'gdbserver' is properly installed on the device too. If this
