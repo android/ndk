@@ -702,11 +702,21 @@ The target device is running API level %d!''' % (API_LEVEL))
             log('Found prebuilt gdbserver, copying it to the device')
 
             # DATA_DIR/lib is probably read-only
-            device_gdbserver = '/data/local/tmp/gdbserver'
-            push_args = ['push', gdbserver_prebuilt_path, device_gdbserver]
+            temp_gdbserver = '/data/local/tmp/gdbserver'
+            push_args = ['push', gdbserver_prebuilt_path, temp_gdbserver]
             retcode, PUSH_OUTPUT = adb_cmd(True, push_args)
             if retcode:
                 error('Could not copy prebuilt gdbserver to the device')
+
+            if API_LEVEL >= 23:
+                # Copy gdbserver to the data directory since selinux prevents
+                # executing binaries in /data/local/tmp on M+.
+                device_gdbserver = '%s/gdbserver' % (DATA_DIR)
+                args = ['cat', temp_gdbserver, '|', 'run-as', PACKAGE_NAME,
+                        'sh', '-c', "'cat > %s'" % device_gdbserver]
+                retcode, _ = adb_var_shell2(args)
+                if retcode:
+                    error('Failed to copy gdbserver to application directory')
 
             # Check if gdbserver is runnable by the application user
             retcode, _ = adb_var_shell2(['run-as', PACKAGE_NAME,
