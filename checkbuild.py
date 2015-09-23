@@ -60,7 +60,7 @@ class ArgParser(argparse.ArgumentParser):
 
         self.add_argument(
             '--package', action='store_true', dest='package', default=True,
-            help='Package the NDK when done building.')
+            help='Package the NDK when done building (default).')
         self.add_argument(
             '--no-package', action='store_false', dest='package',
             help='Do not package the NDK when done building.')
@@ -93,9 +93,13 @@ class ArgParser(argparse.ArgumentParser):
             '--host-only', action='store_true',
             help='Skip building target components.')
 
-        module_group.add_argument(
-            '--skip-gcc', action='store_true',
-            help='Skip building and packaging GCC.')
+        gcc_group = module_group.add_mutually_exclusive_group()
+        gcc_group.add_argument(
+            '--skip-gcc', action='store_true', default=True,
+            help='Skip building and packaging GCC (default).')
+        gcc_group.add_argument(
+            '--no-skip-gcc', action='store_false', dest='skip_gcc',
+            help='Build and package GCC.')
 
 
 def _invoke_build(script, args):
@@ -266,19 +270,18 @@ def main():
         os.makedirs(out_dir)
 
     if args.module is None:
-        modules = ALL_MODULES
+        modules = ALL_MODULES - {'gcc'}
     else:
         modules = {args.module}
 
     if args.host_only:
         modules = {
             'clang',
-            'gcc',
             'host-tools',
         }
 
-    if args.skip_gcc:
-        modules = modules - {'gcc'}
+    if not args.skip_gcc:
+        modules |= {'gcc'}
 
     if args.arch is not None:
         package_args.append('--arch={}'.format(args.arch))
@@ -301,7 +304,8 @@ def main():
     for module in modules:
         module_builds[module](out_dir, args)
 
-    if args.package and modules == ALL_MODULES:
+    required_package_modules = ALL_MODULES - {'gcc'}
+    if args.package and required_package_modules <= modules:
         package_ndk(args.release, system, out_dir, package_args)
 
 
