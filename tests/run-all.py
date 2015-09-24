@@ -188,7 +188,7 @@ def main():
     os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
     # Defining _NDK_TESTING_ALL_=yes to put armeabi-v7a-hard in its own
-    # libs/armeabi-v7a-hard directoy and tested separately from armeabi-v7a.
+    # libs/armeabi-v7a-hard directory and tested separately from armeabi-v7a.
     # Some tests are now compiled with both APP_ABI=armeabi-v7a and
     # APP_ABI=armeabi-v7a-hard. Without _NDK_TESTING_ALL_=yes, tests may fail
     # to install due to race condition on the same libs/armeabi-v7a
