@@ -1,0 +1,10 @@
+{
+  "subtests": {
+    "test_wait-static": {
+      "broken": {
+        "abis": ["x86"],
+        "bug": "http://b/24507500"
+      }
+    }
+  }
+}
