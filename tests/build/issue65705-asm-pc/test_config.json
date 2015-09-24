@@ -1,0 +1,15 @@
+{
+  "broken": {
+    "toolchains": ["4.9"],
+    "bug": "http://b.android.com/65705"
+  },
+  "unsupported": {
+    "abis": [
+      "arm64-v8a",
+      "mips",
+      "mips64",
+      "x86",
+      "x86_64"
+    ]
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "subtests": {
+    "badalloc1": {
+      "broken": {
+        "toolchains": ["4.9", "clang3.6"],
+        "bug": "http://b/24541258"
+      }
+    },
+    "elide2": {
+      "broken": {
+        "toolchains": ["4.9", "clang3.6"],
+        "bug": "http://b/24541258"
+      }
+    },
+    "filter1": {
+      "broken": {
+        "toolchains": ["4.9", "clang3.6"],
+        "bug": "http://b/24403847"
+      }
+    },
+    "new3": {
+      "broken": {
+        "toolchains": ["4.9", "clang3.6"],
+        "bug": "http://b/24541258"
+      }
+    },
+    "terminate1": {
+      "broken": {
+        "toolchains": ["4.9", "clang3.6"],
+        "bug": "http://b/24541258"
+      }
+    },
+    "weak1": {
+      "broken": {
+        "toolchains": ["4.9", "clang3.6"],
+        "bug": "http://b/24541258"
+      }
+    }
+  }
+}
