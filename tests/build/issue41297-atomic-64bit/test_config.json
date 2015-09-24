@@ -1,0 +1,6 @@
+{
+  "broken": {
+    "abis": ["mips"],
+    "bug": "http://b.android.com/41297"
+  }
+}

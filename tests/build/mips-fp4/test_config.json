@@ -1,0 +1,13 @@
+{
+  "unsupported": {
+    "abis": [
+      "armeabi",
+      "armeabi-v7a",
+      "armeabi-v7a-hard",
+      "arm64-v8a",
+      "mips64",
+      "x86",
+      "x86_64"
+    ]
+  }
+}
