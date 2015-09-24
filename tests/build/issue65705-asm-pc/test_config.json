@@ -1,0 +1,13 @@
+{
+  "broken": {
+    "toolchains": ["4.9"],
+    "bug": "http://b.android.com/65705"
+  },
+  "requires": {
+    "abis": [
+      "armeabi",
+      "armeabi-v7a",
+      "armeabi-v7a-hard"
+    ]
+  }
+}

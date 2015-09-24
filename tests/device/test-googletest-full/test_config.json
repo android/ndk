@@ -1,0 +1,6 @@
+{
+  "broken": {
+    "toolchains": ["4.9", "clang3.6"],
+    "bug": "http://b/24380035"
+  }
+}

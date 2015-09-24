@@ -1,0 +1,9 @@
+{
+  "requires": {
+    "abis": [
+      "armeabi",
+      "armeabi-v7a",
+      "armeabi-v7a-hard"
+    ]
+  }
+}
