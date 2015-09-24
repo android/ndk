@@ -168,6 +168,10 @@ class ArgParser(argparse.ArgumentParser):
             help=('Run tests against the specified platform version. Defaults '
                   'to the contents of APP_PLATFORM in jni/Application.mk'))
         self.add_argument(
+            '--toolchain', default='4.9', choices=('4.9', 'clang3.6'),
+            help='Toolchain for building tests. Defaults to gcc-4.9.')
+
+        self.add_argument(
             '--show-commands', action='store_true',
             help='Show build commands for each test.')
         self.add_argument(
@@ -235,13 +239,13 @@ def main():
         runner.add_suite('awk', 'awk', AwkTest)
     if 'build' in suites:
         runner.add_suite('build', 'build', BuildTest, args.abi, args.platform,
-                         ndk_build_flags)
+                         args.toolchain, ndk_build_flags)
     if 'samples' in suites:
         runner.add_suite('samples', '../samples', BuildTest, args.abi,
-                         args.platform, ndk_build_flags)
+                         args.platform, args.toolchain, ndk_build_flags)
     if 'device' in suites:
         runner.add_suite('device', 'device', DeviceTest, args.abi,
-                         args.platform, ndk_build_flags)
+                         args.platform, args.toolchain, ndk_build_flags)
 
     test_filters = filters.TestFilter.from_string(args.filter)
     results = runner.run(out_dir, test_filters)
