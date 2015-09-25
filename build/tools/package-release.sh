@@ -73,7 +73,7 @@ register_var_option "--out-dir=<path>" OPTION_OUT_DIR "Specify output package di
 
 # Find the location of the platforms root directory
 DEVELOPMENT_ROOT=`dirname $ANDROID_NDK_ROOT`/development/ndk
-register_var_option "--development-root=<path>" DEVELOPMENT_ROOT "Specify platforms/samples directory"
+register_var_option "--development-root=<path>" DEVELOPMENT_ROOT "Specify platforms directory"
 
 GCC_VERSION_LIST="default" # it's arch defined by default so use default keyword
 register_var_option "--gcc-version-list=<vers>" GCC_VERSION_LIST "List of GCC release versions"
@@ -218,10 +218,6 @@ if [ "$NO_GIT" != "yes" ] ; then
     GIT_FILES=`cd $NDK_ROOT_DIR && git ls-files`
 else
     echo "Collecting all sources files under tree."
-    # Cleanup everything that is likely to not be part of the final NDK
-    # i.e. generated files...
-    rm -rf $NDK_ROOT_DIR/samples/*/obj
-    rm -rf $NDK_ROOT_DIR/samples/*/libs
     # Get all files under the NDK root
     GIT_FILES=`cd $NDK_ROOT_DIR && find .`
     GIT_FILES=`echo $GIT_FILES | sed -e "s!\./!!g"`
@@ -306,10 +302,8 @@ fail_panic "Could not create reference. Aborting."
 # Copy platform and sample files
 if [ "$PREBUILT_DIR" ]; then
     echo "Unpacking platform files" &&
-    unpack_archive "$PREBUILT_DIR/platforms.tar.bz2" "$REFERENCE" &&
-    echo "Unpacking samples files" &&
-    unpack_archive "$PREBUILT_DIR/samples.tar.bz2" "$REFERENCE"
-    fail_panic "Could not unpack platform and sample files"
+    unpack_archive "$PREBUILT_DIR/platforms.tar.bz2" "$REFERENCE"
+    fail_panic "Could not unpack platform files"
 elif [ "$PREBUILT_NDK" ]; then
     echo "ERROR: NOT IMPLEMENTED!"
     exit 1
@@ -323,11 +317,12 @@ else
     fail_panic "Could not copy platform files. Aborting."
 fi
 
+cp -r $NDK_ROOT_DIR/samples $REFERENCE
+
 # Remove the source for host tools to make the final package smaller
 rm -rf $REFERENCE/sources/host-tools
 
 # Remove leftovers, just in case...
-rm -rf $REFERENCE/samples/*/{obj,libs,build.xml,local.properties,Android.mk} &&
 rm -rf $REFERENCE/tests/build/*/{obj,libs} &&
 rm -rf $REFERENCE/tests/device/*/{obj,libs}
 
