@@ -12,8 +12,8 @@ Their purpose is to handle various sophisticated issues:
  * Rebuilding all target-specific prebuilt binaries from sources (this requires
    working host cross-toolchains).
 
- * Packaging final NDK release tarballs, including adding samples and
-   documentation which normally live in $NDK/../development/ndk.
+ * Packaging final NDK release tarballs, including adding documentation which
+   normally lives in $NDK/../development/ndk.
 
 This document is here to explain how to use these dev-scripts and how everything
 is architected / designed, in case you want to maintain it.
@@ -191,13 +191,6 @@ These files can be generated from a given platform build using the
 
 This is handy to compare which symbols were added between platform releases (and
 check that nothing disappeared).
-
-$DEVNDK/platforms/android-$PLATFORM/samples
--------------------------------------------
-
-Contains samples that are specific to a given API level. These are
-usually copied into $INSTALLED\_NDK/samples/ by the `gen-platforms.sh`
-script.
 
 $NDK/platforms
 --------------
@@ -459,7 +452,6 @@ Use the `package-release.sh` dev-script to generate full NDK release packages.
 These contain everything needed by a typical NDK user, including:
 
  * All prebuilt binaries (host toolchains, host tools, target libs, etc...).
- * All samples (including those collected from $DEVNDK/platforms/).
  * All documentation.
 
 You need to have a directory containing prebuilt tarballs, as described in the
