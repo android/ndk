@@ -176,7 +176,7 @@ class ArgParser(argparse.ArgumentParser):
             help='Show build commands for each test.')
         self.add_argument(
             '--suite', default=None,
-            choices=('awk', 'build', 'device', 'samples'),
+            choices=('awk', 'build', 'device'),
             help=('Run only the chosen test suite.'))
 
         self.add_argument(
@@ -216,7 +216,7 @@ def main():
         shutil.rmtree(out_dir)
     os.makedirs(out_dir)
 
-    suites = ['awk', 'build', 'device', 'samples']
+    suites = ['awk', 'build', 'device']
     if args.suite:
         suites = [args.suite]
 
@@ -240,9 +240,6 @@ def main():
     if 'build' in suites:
         runner.add_suite('build', 'build', BuildTest, args.abi, args.platform,
                          args.toolchain, ndk_build_flags)
-    if 'samples' in suites:
-        runner.add_suite('samples', '../samples', BuildTest, args.abi,
-                         args.platform, args.toolchain, ndk_build_flags)
     if 'device' in suites:
         runner.add_suite('device', 'device', DeviceTest, args.abi,
                          args.platform, args.toolchain, ndk_build_flags)

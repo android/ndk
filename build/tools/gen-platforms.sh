@@ -68,7 +68,6 @@ OPTION_HELP=no
 OPTION_PLATFORMS=
 OPTION_SRCDIR=
 OPTION_DSTDIR=
-OPTION_SAMPLES=
 OPTION_FAST_COPY=
 OPTION_MINIMAL=
 OPTION_ARCH=
@@ -106,9 +105,6 @@ for opt do
     ;;
   --abi=*)  # We still support this for backwards-compatibility
     OPTION_ABI=$optarg
-    ;;
-  --samples)
-    OPTION_SAMPLES=yes
     ;;
   --fast-copy)
     OPTION_FAST_COPY=yes
@@ -150,9 +146,8 @@ if [ $OPTION_HELP = "yes" ] ; then
     echo "  --ndk-dir=<path>      Use toolchains from this NDK directory [$NDK_DIR]"
     echo "  --platform=<list>     List of API levels [$PLATFORMS]"
     echo "  --arch=<list>         List of CPU architectures [$ARCHS]"
-    echo "  --minimal             Ignore samples, symlinks and generated shared libs."
+    echo "  --minimal             Ignore symlinks and generated shared libs."
     echo "  --fast-copy           Don't create symlinks, copy files instead"
-    echo "  --samples             Also generate samples directories."
     echo "  --package-dir=<path>  Package platforms archive in specific path."
     echo "  --debug-libs          Also generate C source file for generated libraries."
     echo ""
@@ -248,7 +243,6 @@ for PLATFORM in $PLATFORMS; do
 done
 
 if [ "$OPTION_MINIMAL" ]; then
-    OPTION_SAMPLES=
     OPTION_FAST_COPY=yes
 fi
 
@@ -272,7 +266,7 @@ fi
 
 # $1: source directory (relative to $SRCDIR)
 # $2: destination directory (relative to $DSTDIR)
-# $3: description of directory contents (e.g. "sysroot" or "samples")
+# $3: description of directory contents (e.g. "sysroot")
 copy_src_directory ()
 {
     local SDIR="$SRCDIR/$1"
@@ -615,7 +609,7 @@ generate_api_level ()
 EOF
 }
 
-# Copy platform sysroot and samples into your destination
+# Copy platform sysroot into your destination
 #
 
 # if $SRC/android-$PLATFORM/arch-$ARCH exists
@@ -809,32 +803,6 @@ for ARCH in $ARCHS; do
     done
 done
 
-#
-# $SRC/android-$PLATFORM/samples --> $DST/samples
-#
-if [ "$OPTION_SAMPLES" ] ; then
-    # Copy platform samples and generic samples into your destination
-    #
-    # $SRC/samples/ --> $DST/samples/
-    # $SRC/android-$PLATFORM/samples/ --> $DST/samples
-    #
-    dump "Copying generic samples"
-    if [ -z "$OPTION_OVERLAY" ]; then
-        rm -rf $DSTDIR/samples && mkdir -p $DSTDIR/samples
-    fi
-    copy_src_directory  samples samples samples
-
-    for PLATFORM in $PLATFORMS; do
-        dump "Copy android-$PLATFORM samples"
-        # $SRC/platform-$PLATFORM/samples --> $DST/samples
-        copy_src_directory platforms/android-$PLATFORM/samples samples samples
-    done
-
-    # Cleanup generated files in samples
-    rm -rf "$DSTDIR/samples/*/obj"
-    rm -rf "$DSTDIR/samples/*/libs"
-fi
-
 if [ "$PACKAGE_DIR" ]; then
     mkdir -p "$PACKAGE_DIR"
     fail_panic "Could not create package directory: $PACKAGE_DIR"
@@ -842,12 +810,6 @@ if [ "$PACKAGE_DIR" ]; then
     dump "Packaging $ARCHIVE"
     pack_archive "$PACKAGE_DIR/$ARCHIVE" "$DSTDIR" "platforms"
     fail_panic "Could not package platforms"
-    if [ "$OPTION_SAMPLES" ]; then
-        ARCHIVE=samples.tar.bz2
-        dump "Packaging $ARCHIVE"
-        pack_archive "$PACKAGE_DIR/$ARCHIVE" "$DSTDIR" "samples"
-        fail_panic "Could not package samples"
-    fi
 fi
 
 log "Done !"

@@ -43,8 +43,7 @@ def main(args):
     arch_arg = '--arch={}'.format(','.join(arches))
     ndk_dir_arg = '--ndk-dir={}'.format(build_support.ndk_path())
     build_cmd = [
-        'bash', 'gen-platforms.sh', '--samples', '--fast-copy',
-        arch_arg, ndk_dir_arg,
+        'bash', 'gen-platforms.sh', '--fast-copy', arch_arg, ndk_dir_arg,
     ]
 
     build_support.build(build_cmd, args)

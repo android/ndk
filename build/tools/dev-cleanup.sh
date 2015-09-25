@@ -34,7 +34,6 @@ fi
 
 # Remove generated directories
 rm -rf $DIR/platforms
-rm -rf $DIR/samples
 rm -rf $DIR/prebuilt
 
 # Remove prebuilt binaries
@@ -92,9 +91,3 @@ if [ ! -d $DIR ] ; then
     echo "WARNING: Development directory missing: $DIR"
     exit 0
 fi
-for PROJECT in $DIR/samples/*; do
-    cleanup_project $PROJECT
-done
-for PROJECT in $DIR/platforms/android-*/samples/*; do
-    cleanup_project $PROJECT
-done
