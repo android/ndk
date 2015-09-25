@@ -33,9 +33,9 @@ else
   NULL="/dev/null"
 fi
 
-ARM_GPP=$NDK/toolchains/arm-linux-androideabi-$VERSION/prebuilt/$SYSTEM/bin/arm-linux-androideabi-g++${HOST_EXE}
+ARM_GPP=$NDK/toolchains/$SYSTEM/arm-linux-androideabi-$VERSION/prebuilt/bin/arm-linux-androideabi-g++${HOST_EXE}
 if [ ! -f "$ARM_GPP" ]; then
-    ARM_GPP=$NDK/toolchains/arm-linux-androideabi-$VERSION/prebuilt/$SYSTEM64/bin/arm-linux-androideabi-g++${HOST_EXE}
+    ARM_GPP=$NDK/toolchains/$SYSTEM64/arm-linux-androideabi-$VERSION/prebuilt/bin/arm-linux-androideabi-g++${HOST_EXE}
 fi
 if [ ! -f "$ARM_GPP" ]; then
     echo "ERROR: Can't locate compiler $ARM_GPP"
