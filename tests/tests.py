@@ -339,7 +339,7 @@ class BuildTest(object):
                                 build_flags)
 
 
-def _copy_test_to_device(build_dir, device_dir, abi):
+def _copy_test_to_device(build_dir, device_dir, abi, test_filters, test_name):
     abi_dir = os.path.join(build_dir, 'libs', abi)
     if not os.path.isdir(abi_dir):
         raise RuntimeError('No libraries for {}'.format(abi))
@@ -350,6 +350,9 @@ def _copy_test_to_device(build_dir, device_dir, abi):
             continue
 
         if not test_file.endswith('.so'):
+            case_name = _make_subtest_name(test_name, test_file)
+            if not test_filters.filter(case_name):
+                continue
             test_cases.append(test_file)
 
         # TODO(danalbert): Libs with the same name will clobber each other.
@@ -398,7 +401,8 @@ class DeviceTest(Test):
 
         results = []
         try:
-            test_cases = _copy_test_to_device(build_dir, device_dir, self.abi)
+            test_cases = _copy_test_to_device(
+                build_dir, device_dir, self.abi, test_filters, self.name)
             for case in test_cases:
                 case_name = _make_subtest_name(self.name, case)
                 if not test_filters.filter(case_name):
