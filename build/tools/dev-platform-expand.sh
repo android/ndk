@@ -182,7 +182,7 @@ copy_optional_directory ()
     fi
 }
 
-# Copy platform sysroot and samples into your destination
+# Copy platform sysroot into your destination
 #
 
 # $SRC/android-$PLATFORM/include --> $DST/platforms/android-$PLATFORM/arch-$ARCH/usr/include
@@ -193,7 +193,6 @@ copy_optional_directory ()
 
 
 # $SRC/android-$PLATFORM/arch-$ARCH/usr --> $DST/platforms/android-$PLATFORM/arch-$ARCH/usr
-# $SRC/android-$PLATFORM/samples       --> $DST/samples
 #
 for LEVEL in $API_LEVELS; do
     if [ "$LEVEL" -gt "$PLATFORM" ]; then
