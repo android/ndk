@@ -359,6 +359,7 @@ def _copy_test_to_device(build_dir, device_dir, abi, test_filters, test_name):
         # This was the case with the old shell based script too. I'm trying not
         # to change too much in the translation.
         lib_path = os.path.join(abi_dir, test_file)
+        print('Pushing {} to {}'.format(lib_path, device_dir))
         adb.push(lib_path, device_dir)
 
         # TODO(danalbert): Sync data.
@@ -414,6 +415,7 @@ class DeviceTest(Test):
 
                 cmd = 'cd {} && LD_LIBRARY_PATH={} ./{}'.format(
                     device_dir, device_dir, case)
+                print('Executing test: {}'.format(cmd))
                 result, out = adb.shell(cmd)
                 if result == 0:
                     results.append(Success(case_name))
