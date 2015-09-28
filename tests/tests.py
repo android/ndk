@@ -207,22 +207,16 @@ def _prep_build_dir(src_dir, out_dir):
     shutil.copytree(src_dir, out_dir)
 
 
-def _test_is_disabled(test_dir, platform):
+def _test_is_disabled(test_dir, platform, toolchain):
     disable_file = os.path.join(test_dir, 'BROKEN_BUILD')
     if os.path.isfile(disable_file):
         if os.stat(disable_file).st_size == 0:
             return True
 
-        # This might look like clang-3.6 and gcc-3.6 would overlap (not a
-        # problem today, but maybe when we hit clang-4.9), but clang is
-        # actually written as clang3.6 (with no hypen), so toolchain_version
-        # will end up being 'clang3.6'.
-        toolchain = ndk.get_build_var(test_dir, 'TARGET_TOOLCHAIN')
-        toolchain_version = toolchain.split('-')[-1]
         with open(disable_file) as f:
             contents = f.read()
         broken_configs = re.split(r'\s+', contents)
-        if toolchain_version in broken_configs:
+        if toolchain in broken_configs:
             return True
         if platform is not None and platform in broken_configs:
             return True
@@ -241,8 +235,8 @@ def _run_is_disabled(test_case, test_dir):
     return subprocess.call(['grep', '-qw', test_case, disable_file]) == 0
 
 
-def _should_skip_test(test_dir, abi, platform):
-    if _test_is_disabled(test_dir, platform):
+def _should_skip_test(test_dir, abi, platform, toolchain):
+    if _test_is_disabled(test_dir, platform, toolchain):
         return 'disabled'
     if abi is not None:
         app_abi = ndk.get_build_var(test_dir, 'APP_ABI')
@@ -254,14 +248,14 @@ def _should_skip_test(test_dir, abi, platform):
 
 
 def _run_build_sh_test(test_name, build_dir, test_dir, build_flags, abi,
-                       platform):
+                       platform, toolchain):
     android_mk = os.path.join(test_dir, 'jni/Android.mk')
     application_mk = os.path.join(test_dir, 'jni/Application.mk')
     if os.path.isfile(android_mk) and os.path.isfile(application_mk):
         result = subprocess.call(['grep', '-q', 'import-module', android_mk])
         if result != 0:
             try:
-                reason = _should_skip_test(test_dir, abi, platform)
+                reason = _should_skip_test(test_dir, abi, platform, toolchain)
             except RuntimeError as ex:
                 return Failure(test_name, ex)
             if reason is not None:
@@ -270,16 +264,18 @@ def _run_build_sh_test(test_name, build_dir, test_dir, build_flags, abi,
     _prep_build_dir(test_dir, build_dir)
     with util.cd(build_dir):
         build_cmd = ['sh', 'build.sh', _get_jobs_arg()] + build_flags
-        if subprocess.call(build_cmd) == 0:
+        env = os.environ
+        env['NDK_TOOLCHAIN_VERSION'] = toolchain
+        if subprocess.call(build_cmd, env=env) == 0:
             return Success(test_name)
         else:
             return Failure(test_name, 'build failed')
 
 
 def _run_ndk_build_test(test_name, build_dir, test_dir, build_flags, abi,
-                        platform):
+                        platform, toolchain):
     try:
-        reason = _should_skip_test(test_dir, abi, platform)
+        reason = _should_skip_test(test_dir, abi, platform, toolchain)
     except RuntimeError as ex:
         return Failure(test_name, ex)
     if reason is not None:
@@ -287,7 +283,8 @@ def _run_ndk_build_test(test_name, build_dir, test_dir, build_flags, abi,
 
     _prep_build_dir(test_dir, build_dir)
     with util.cd(build_dir):
-        rc = ndk.build(build_flags + [_get_jobs_arg()])
+        toolchain_arg = 'NDK_TOOLCHAIN_VERSION=' + toolchain
+        rc = ndk.build(build_flags + [toolchain_arg, _get_jobs_arg()])
     expect_failure = os.path.isfile(
         os.path.join(test_dir, 'BUILD_SHOULD_FAIL'))
     if rc == 0 and expect_failure:
@@ -298,24 +295,27 @@ def _run_ndk_build_test(test_name, build_dir, test_dir, build_flags, abi,
 
 
 class ShellBuildTest(Test):
-    def __init__(self, name, test_dir, abi, platform, build_flags):
+    def __init__(self, name, test_dir, abi, platform, toolchain, build_flags):
         super(ShellBuildTest, self).__init__(name, test_dir)
         self.abi = abi
         self.platform = platform
+        self.toolchain = toolchain
         self.build_flags = build_flags
 
     def run(self, out_dir, _):
         build_dir = os.path.join(out_dir, self.name)
         print('Running build test: {}'.format(self.name))
         return [_run_build_sh_test(self.name, build_dir, self.test_dir,
-                                   self.build_flags, self.abi, self.platform)]
+                                   self.build_flags, self.abi, self.platform,
+                                   self.toolchain)]
 
 
 class NdkBuildTest(Test):
-    def __init__(self, name, test_dir, abi, platform, build_flags):
+    def __init__(self, name, test_dir, abi, platform, toolchain, build_flags):
         super(NdkBuildTest, self).__init__(name, test_dir)
         self.abi = abi
         self.platform = platform
+        self.toolchain = toolchain
         self.build_flags = build_flags
 
     def run(self, out_dir, _):
@@ -323,20 +323,20 @@ class NdkBuildTest(Test):
         print('Running build test: {}'.format(self.name))
         return [_run_ndk_build_test(self.name, build_dir, self.test_dir,
                                     self.build_flags, self.abi,
-                                    self.platform)]
+                                    self.platform, self.toolchain)]
 
 
 class BuildTest(object):
     @classmethod
-    def from_dir(cls, test_dir, abi, platform, build_flags):
+    def from_dir(cls, test_dir, abi, platform, toolchain, build_flags):
         test_name = os.path.basename(test_dir)
 
         if os.path.isfile(os.path.join(test_dir, 'build.sh')):
             return ShellBuildTest(test_name, test_dir, abi, platform,
-                                  build_flags)
+                                  toolchain, build_flags)
         else:
             return NdkBuildTest(test_name, test_dir, abi, platform,
-                                build_flags)
+                                toolchain, build_flags)
 
 
 def _copy_test_to_device(build_dir, device_dir, abi, test_filters, test_name):
@@ -374,23 +374,24 @@ def _copy_test_to_device(build_dir, device_dir, abi, test_filters, test_name):
 
 
 class DeviceTest(Test):
-    def __init__(self, name, test_dir, abi, platform, build_flags):
+    def __init__(self, name, test_dir, abi, platform, toolchain, build_flags):
         super(DeviceTest, self).__init__(name, test_dir)
         self.abi = abi
         self.platform = platform
+        self.toolchain = toolchain
         self.build_flags = build_flags
 
     @classmethod
-    def from_dir(cls, test_dir, abi, platform, build_flags):
+    def from_dir(cls, test_dir, abi, platform, toolchain, build_flags):
         test_name = os.path.basename(test_dir)
-        return cls(test_name, test_dir, abi, platform, build_flags)
+        return cls(test_name, test_dir, abi, platform, toolchain, build_flags)
 
     def run(self, out_dir, test_filters):
         print('Running device test: {}'.format(self.name))
         build_dir = os.path.join(out_dir, self.name)
         build_result = _run_ndk_build_test(self.name, build_dir, self.test_dir,
                                            self.build_flags, self.abi,
-                                           self.platform)
+                                           self.platform, self.toolchain)
         if not build_result.passed():
             return [build_result]
 
