@@ -16,6 +16,7 @@
 from __future__ import print_function
 
 import glob
+import imp
 import multiprocessing
 import os
 import re
@@ -25,6 +26,8 @@ import subprocess
 import adb
 import ndk
 import util
+
+# pylint: disable=no-self-use
 
 
 def _get_jobs_arg():
@@ -53,17 +56,45 @@ class TestRunner(object):
             raise KeyError('suite {} already exists'.format(name))
         self.tests[name] = _scan_test_suite(path, test_class, *args)
 
+    def _fixup_expected_failure(self, result, config, bug):
+        if result.failed():
+            return ExpectedFailure(result.test_name, config, bug)
+        elif result.passed():
+            return UnexpectedSuccess(result.test_name, config, bug)
+        else:  # A skipped test case.
+            return result
+
+    def _run_test(self, test, out_dir, test_filters):
+        if not test_filters.filter(test.name):
+            return [Skipped(test.name, 'filtered')]
+
+        config = test.check_unsupported()
+        if config is not None:
+            message = 'test unsupported for {}'.format(config)
+            return [Skipped(test.name, message)]
+
+        results = test.run(out_dir, test_filters)
+        config, bug = test.check_broken()
+        if config is None:
+            return results
+
+        # We need to check each individual test case for pass/fail and change
+        # it to either an ExpectedFailure or an UnexpectedSuccess as necessary.
+        return [self._fixup_expected_failure(r, config, bug) for r in results]
+
     def run(self, out_dir, test_filters):
         results = {suite: [] for suite in self.tests.keys()}
         for suite, tests in self.tests.items():
             test_results = []
             for test in tests:
-                if test_filters.filter(test.name):
-                    test_results.extend(test.run(out_dir, test_filters))
-                else:
-                    test_results.append(Skipped(test.name, 'filtered'))
+                test_results.extend(self._run_test(test, out_dir,
+                                                   test_filters))
             results[suite] = test_results
         return results
+
+
+def _maybe_color(text, color, do_color):
+    return util.color_string(text, color) if do_color else text
 
 
 class TestResult(object):
@@ -95,7 +126,7 @@ class Failure(TestResult):
         return True
 
     def to_string(self, colored=False):
-        label = util.color_string('FAIL', 'red') if colored else 'FAIL'
+        label = _maybe_color('FAIL', 'red', colored)
         return '{} {}: {}'.format(label, self.test_name, self.message)
 
 
@@ -107,7 +138,7 @@ class Success(TestResult):
         return False
 
     def to_string(self, colored=False):
-        label = util.color_string('PASS', 'green') if colored else 'PASS'
+        label = _maybe_color('PASS', 'green', colored)
         return '{} {}'.format(label, self.test_name)
 
 
@@ -123,17 +154,70 @@ class Skipped(TestResult):
         return False
 
     def to_string(self, colored=False):
-        label = util.color_string('SKIP', 'yellow') if colored else 'SKIP'
+        label = _maybe_color('SKIP', 'yellow', colored)
         return '{} {}: {}'.format(label, self.test_name, self.reason)
+
+
+class ExpectedFailure(TestResult):
+    def __init__(self, test_name, config, bug):
+        super(ExpectedFailure, self).__init__(test_name)
+        self.config = config
+        self.bug = bug
+
+    def passed(self):
+        return True
+
+    def failed(self):
+        return False
+
+    def to_string(self, colored=False):
+        label = _maybe_color('KNOWN FAIL', 'yellow', colored)
+        return '{} {}: known failure for {} ({})'.format(
+            label, self.test_name, self.config, self.bug)
+
+
+class UnexpectedSuccess(TestResult):
+    def __init__(self, test_name, config, bug):
+        super(UnexpectedSuccess, self).__init__(test_name)
+        self.config = config
+        self.bug = bug
+
+    def passed(self):
+        return False
+
+    def failed(self):
+        return True
+
+    def to_string(self, colored=False):
+        label = _maybe_color('SHOULD FAIL', 'red', colored)
+        return '{} {}: unexpected success for {} ({})'.format(
+            label, self.test_name, self.config, self.bug)
 
 
 class Test(object):
     def __init__(self, name, test_dir):
         self.name = name
         self.test_dir = test_dir
+        self.config = TestConfig.from_test_dir(self.test_dir)
 
     def run(self, out_dir, test_filters):
         raise NotImplementedError
+
+    def check_broken(self):
+        return self.config.match_broken(self.abi, self.platform,
+                                        self.toolchain)
+
+    def check_unsupported(self):
+        return self.config.match_unsupported(self.abi, self.platform,
+                                             self.toolchain)
+
+    def check_subtest_broken(self, name):
+        return self.config.match_broken(self.abi, self.platform,
+                                        self.toolchain, subtest=name)
+
+    def check_subtest_unsupported(self, name):
+        return self.config.match_unsupported(self.abi, self.platform,
+                                             self.toolchain, subtest=name)
 
 
 class AwkTest(Test):
@@ -157,6 +241,14 @@ class AwkTest(Test):
                 msg = '{} missing output: {}'.format(test_name, golden_path)
                 raise RuntimeError(msg)
         return cls(test_name, test_dir, script)
+
+    # Awk tests only run in a single configuration. Disabling them per ABI,
+    # platform, or toolchain has no meaning. Stub out the checks.
+    def check_broken(self):
+        return None, None
+
+    def check_unsupported(self):
+        return None
 
     def run(self, out_dir, test_filters):
         results = []
@@ -207,66 +299,108 @@ def _prep_build_dir(src_dir, out_dir):
     shutil.copytree(src_dir, out_dir)
 
 
-def _test_is_disabled(test_dir, platform, toolchain):
-    disable_file = os.path.join(test_dir, 'BROKEN_BUILD')
-    if os.path.isfile(disable_file):
-        if os.stat(disable_file).st_size == 0:
-            return True
+class TestConfig(object):
+    """Describes the status of a test.
 
-        with open(disable_file) as f:
-            contents = f.read()
-        broken_configs = re.split(r'\s+', contents)
-        if toolchain in broken_configs:
-            return True
-        if platform is not None and platform in broken_configs:
-            return True
-    return False
+    Each test directory can contain a "test_config.py" file that describes
+    the configurations a test is not expected to pass for. Previously this
+    information could be captured in one of two places: the Application.mk
+    file, or a BROKEN_BUILD/BROKEN_RUN file.
 
+    Application.mk was used to state that a test was only to be run for a
+    specific platform version, specific toolchain, or a set of ABIs.
+    Unfortunately Application.mk could only specify a single toolchain or
+    platform, not a set.
 
-def _run_is_disabled(test_case, test_dir):
-    """Returns True if the test case is disabled.
+    BROKEN_BUILD/BROKEN_RUN files were too general. An empty file meant the
+    test should always be skipped regardless of configuration. Any change that
+    would put a test in that situation should be reverted immediately. These
+    also didn't make it clear if the test was actually broken (and thus should
+    be fixed) or just not applicable.
 
-    There is no strict format for the BROKEN_RUN file; test cases are disabled
-    if their basename appears anywhere in the file.
+    A test_config.py file is more flexible. It is a Python module that defines
+    at least one function by the same name as one in TestConfig.NullTestConfig.
+    If a function is not defined the null implementation (not broken,
+    supported), will be used.
     """
-    disable_file = os.path.join(test_dir, 'BROKEN_RUN')
-    if not os.path.exists(disable_file):
-        return False
-    return subprocess.call(['grep', '-qw', test_case, disable_file]) == 0
 
+    class NullTestConfig(object):
+        def __init__(self):
+            pass
 
-def _should_skip_test(test_dir, abi, platform, toolchain):
-    if _test_is_disabled(test_dir, platform, toolchain):
-        return 'disabled'
-    if abi is not None:
-        app_abi = ndk.get_build_var(test_dir, 'APP_ABI')
-        supported_abis = ndk.expand_app_abi(app_abi)
-        if abi not in supported_abis:
-            abi_string = ', '.join(supported_abis)
-            return 'incompatible ABI (requires {})'.format(abi_string)
-    return None
+        # pylint: disable=unused-argument
+        @staticmethod
+        def match_broken(abi, platform, toolchain, subtest=None):
+            """Tests if a given configuration is known broken.
+
+            A broken test is a known failing test that should be fixed.
+
+            Any test with a non-empty broken section requires a "bug" entry
+            with a link to either an internal bug (http://b/BUG_NUMBER) or a
+            public bug (http://b.android.com/BUG_NUMBER).
+
+            These tests will still be built and run. If the test succeeds, it
+            will be reported as an error.
+
+            Returns: A tuple of (broken_configuration, bug) or (None, None).
+            """
+            return None, None
+
+        @staticmethod
+        def match_unsupported(abi, platform, toolchain, subtest=None):
+            """Tests if a given configuration is unsupported.
+
+            An unsupported test is a test that do not make sense to run for a
+            given configuration. Testing x86 assembler on MIPS, for example.
+
+            These tests will not be built or run.
+
+            Returns: The string unsupported_configuration or None.
+            """
+            return None
+        # pylint: enable=unused-argument
+
+    def __init__(self, file_path):
+
+        # Note that this namespace isn't actually meaningful from our side;
+        # it's only what the loaded module's __name__ gets set to.
+        dirname = os.path.dirname(file_path)
+        namespace = '.'.join([dirname, 'test_config'])
+
+        try:
+            self.module = imp.load_source(namespace, file_path)
+        except IOError:
+            self.module = None
+
+        try:
+            self.match_broken = self.module.match_broken
+        except AttributeError:
+            self.match_broken = self.NullTestConfig.match_broken
+
+        try:
+            self.match_unsupported = self.module.match_unsupported
+        except AttributeError:
+            self.match_unsupported = self.NullTestConfig.match_unsupported
+
+    @classmethod
+    def from_test_dir(cls, test_dir):
+        path = os.path.join(test_dir, 'test_config.py')
+        return cls(path)
 
 
 def _run_build_sh_test(test_name, build_dir, test_dir, build_flags, abi,
                        platform, toolchain):
-    android_mk = os.path.join(test_dir, 'jni/Android.mk')
-    application_mk = os.path.join(test_dir, 'jni/Application.mk')
-    if os.path.isfile(android_mk) and os.path.isfile(application_mk):
-        result = subprocess.call(['grep', '-q', 'import-module', android_mk])
-        if result != 0:
-            try:
-                reason = _should_skip_test(test_dir, abi, platform, toolchain)
-            except RuntimeError as ex:
-                return Failure(test_name, ex)
-            if reason is not None:
-                return Skipped(test_name, reason)
-
     _prep_build_dir(test_dir, build_dir)
     with util.cd(build_dir):
         build_cmd = ['sh', 'build.sh', _get_jobs_arg()] + build_flags
-        env = os.environ
-        env['NDK_TOOLCHAIN_VERSION'] = toolchain
-        if subprocess.call(build_cmd, env=env) == 0:
+        test_env = dict(os.environ)
+        if abi is not None:
+            test_env['APP_ABI'] = abi
+        if platform is not None:
+            test_env['APP_PLATFORM'] = platform
+        assert toolchain is not None
+        test_env['NDK_TOOLCHAIN_VERSION'] = toolchain
+        if subprocess.call(build_cmd, env=test_env) == 0:
             return Success(test_name)
         else:
             return Failure(test_name, 'build failed')
@@ -274,24 +408,19 @@ def _run_build_sh_test(test_name, build_dir, test_dir, build_flags, abi,
 
 def _run_ndk_build_test(test_name, build_dir, test_dir, build_flags, abi,
                         platform, toolchain):
-    try:
-        reason = _should_skip_test(test_dir, abi, platform, toolchain)
-    except RuntimeError as ex:
-        return Failure(test_name, ex)
-    if reason is not None:
-        return Skipped(test_name, reason)
-
     _prep_build_dir(test_dir, build_dir)
     with util.cd(build_dir):
-        toolchain_arg = 'NDK_TOOLCHAIN_VERSION=' + toolchain
-        rc = ndk.build(build_flags + [toolchain_arg, _get_jobs_arg()])
-    expect_failure = os.path.isfile(
-        os.path.join(test_dir, 'BUILD_SHOULD_FAIL'))
-    if rc == 0 and expect_failure:
-        return Failure(test_name, 'build should have failed')
-    elif rc != 0 and not expect_failure:
-        return Failure(test_name, 'build failed')
-    return Success(test_name)
+        args = [
+            'APP_ABI=' + abi,
+            'NDK_TOOLCHAIN_VERSION=' + toolchain,
+            _get_jobs_arg(),
+        ]
+        if platform is not None:
+            args.append('APP_PLATFORM=' + platform)
+        if ndk.build(build_flags + args) == 0:
+            return Success(test_name)
+        else:
+            return Failure(test_name, 'build failed')
 
 
 class ShellBuildTest(Test):
@@ -410,18 +539,30 @@ class DeviceTest(Test):
                 if not test_filters.filter(case_name):
                     results.append(Skipped(case_name, 'filtered'))
                     continue
-                if _run_is_disabled(case, self.test_dir):
-                    results.append(Skipped(case_name, 'run disabled'))
+
+                config = self.check_subtest_unsupported(case)
+                if config is not None:
+                    message = 'test unsupported for {}'.format(config)
+                    results.append(Skipped(case_name, message))
                     continue
 
                 cmd = 'cd {} && LD_LIBRARY_PATH={} ./{}'.format(
                     device_dir, device_dir, case)
                 print('Executing test: {}'.format(cmd))
                 result, out = adb.shell(cmd)
-                if result == 0:
-                    results.append(Success(case_name))
+
+                config, bug = self.check_subtest_broken(case)
+                if config is None:
+                    if result == 0:
+                        results.append(Success(case_name))
+                    else:
+                        results.append(Failure(case_name, '\n'.join(out)))
                 else:
-                    results.append(Failure(case_name, '\n'.join(out)))
+                    if result == 0:
+                        results.append(UnexpectedSuccess(case_name, config,
+                                                         bug))
+                    else:
+                        results.append(ExpectedFailure(case_name, config, bug))
             return results
         finally:
             adb.shell('rm -rf {}'.format(device_dir))
