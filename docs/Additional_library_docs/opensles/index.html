@@ -1017,7 +1017,7 @@ are available via OpenSL ES for device implementations that claim feature
 feature but supports API level 9 (Android platform version 2.3) or later,
 then you can still use the OpenSL ES APIs but the output latency may be higher.
 The lower output latency path is used only if the application requests a
-buffer count of 2 or more, and a buffer size and sample rate that are
+buffer size and sample rate that are
 compatible with the device's native output configuration.
 These parameters are device-specific and should be obtained as follows.
 <p>
@@ -1026,6 +1026,13 @@ can query for the native or optimal output sample rate and buffer size
 for the device's primary output stream.  When combined with the feature
 test just mentioned, an app can now configure itself appropriately for
 lower latency output on devices that claim support.
+<p>
+For API level 17 (Android platform version 4.2.2) and earlier,
+a buffer count of 2 or more is required for lower latency.
+Beginning with API level 18 (Android platform version 4.3),
+a buffer count of 1 is sufficient for lower latency.
+<p>
+OpenSL ES interfaces for output effects preclude the lower latency path.
 <p>
 The recommended sequence is:
 <ol>
@@ -1072,8 +1079,10 @@ given callback is significantly larger than the average.
 In summary, the ideal is for the CPU execution time of the handler to have
 variance near zero, and for the handler to not block for unbounded times.
 <p>
-Lower latency audio is for these outputs only: on-device speaker, wired
-headphones, wired headset, and line out.
+Lower latency audio is possible for these outputs only: on-device speaker, wired
+headphones, wired headset, line out, and USB digital audio.
+On some devices, speaker latency is higher than other paths due to
+digital signal processing for speaker correction and protection.
 <p>
 As of API level 21, lower latency audio input is supported on select
 devices. To take advantage of this feature, first confirm that lower
@@ -1081,6 +1090,12 @@ latency output is available as described above. The capability for lower
 latency output is a prerequisite for the lower latency input feature.
 Then create an AudioRecorder with the same sample rate and buffer size
 as would be used for output.
+OpenSL ES interfaces for input effects preclude the lower latency path.
+The record preset SL_ANDROID_RECORDING_PRESET_VOICE_RECOGNITION
+must be used for lower latency; this preset disables device-specific
+digital signal processing which may add latency to the input path.
+For more information on record presets,
+see section "Android configuration interface" above.
 <p>
 For simultaneous input and output, separate buffer queue
 completion handlers are used for each side.  There is no guarantee of
@@ -1109,6 +1124,10 @@ records audio, then it needs the <code>android.permission.RECORD_AUDIO</code>
 permission. Applications that use audio effects need
 <code>android.permission.MODIFY_AUDIO_SETTINGS</code>. Applications that play
 network URI resources need <code>android.permission.NETWORK</code>.
+For API level 22 and earlier, permissions can be declared via the manifest.
+For API level 23 and above, permissions must be requested at run time.
+See <a href="https://developer.android.com/training/permissions/index.html">Working with System Permissions</a>
+for more information.
 <p>
 Depending on the platform version and implementation,
 media content parsers and software codecs may run within the context
