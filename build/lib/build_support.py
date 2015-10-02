@@ -147,7 +147,7 @@ def run(main_func, arg_parser=ArgParser):
     args = arg_parser().parse_args()
 
     # We want any paths to be relative to the invoked build script.
-    main_filename = sys.modules['__main__'].__file__
+    main_filename = os.path.realpath(sys.modules['__main__'].__file__)
     os.chdir(os.path.dirname(main_filename))
 
     main_func(args)
