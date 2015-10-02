@@ -57,6 +57,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := hard-float-softfp-abi
 LOCAL_CFLAGS += -mhard-float
 LOCAL_SRC_FILES := test-float.c
+LOCAL_LDFLAGS := -Wl,--no-warn-mismatch
 include $(BUILD_EXECUTABLE)
 
 else
@@ -87,6 +88,7 @@ LOCAL_MODULE := hard-float-hard-abi
 LOCAL_CFLAGS += -mhard-float -D_NDK_MATH_NO_SOFTFP=1
 LOCAL_LDLIBS += -lm_hard
 LOCAL_SRC_FILES := test-float.c
+LOCAL_LDFLAGS := -Wl,--no-warn-mismatch
 include $(BUILD_EXECUTABLE)
 
 endif # check armeabi-v7a
