@@ -105,7 +105,11 @@ def build(cmd, args):
 
 
 def get_default_package_dir():
-    return android_path('out/ndk')
+    DEFAULT_OUT_DIR = android_path('out/ndk')
+    out_dir = os.path.realpath(os.getenv('DIST_DIR', DEFAULT_OUT_DIR))
+    if not os.path.isdir(out_dir):
+        os.makedirs(out_dir)
+    return out_dir
 
 
 def get_default_host():
@@ -116,6 +120,7 @@ def get_default_host():
     else:
         raise RuntimeError('Unsupported host: {}'.format(sys.platform))
 
+
 def host_to_tag(host):
     if host in ['darwin', 'linux']:
         return host + '-x86_64'
@@ -125,6 +130,7 @@ def host_to_tag(host):
         return 'windows-x86_64'
     else:
         raise RuntimeError('Unsupported host: {}'.format(host))
+
 
 class ArgParser(argparse.ArgumentParser):
     def __init__(self):
