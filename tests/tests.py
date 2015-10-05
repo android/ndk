@@ -66,7 +66,7 @@ class TestRunner(object):
 
     def _run_test(self, test, out_dir, test_filters):
         if not test_filters.filter(test.name):
-            return [Skipped(test.name, 'filtered')]
+            return []
 
         config = test.check_unsupported()
         if config is not None:
@@ -256,7 +256,8 @@ class AwkTest(Test):
             golden_path = re.sub(r'\.in$', '.out', test_case)
             result = self.run_case(out_dir, test_case, golden_path,
                                    test_filters)
-            results.append(result)
+            if result is not None:
+                results.append(result)
         return results
 
     def run_case(self, out_dir, test_case, golden_out_path, test_filters):
@@ -264,7 +265,7 @@ class AwkTest(Test):
         name = _make_subtest_name(self.name, case_name)
 
         if not test_filters.filter(name):
-            return Skipped(name, 'filtered')
+            return None
 
         out_path = os.path.join(out_dir, os.path.basename(golden_out_path))
 
@@ -537,7 +538,6 @@ class DeviceTest(Test):
             for case in test_cases:
                 case_name = _make_subtest_name(self.name, case)
                 if not test_filters.filter(case_name):
-                    results.append(Skipped(case_name, 'filtered'))
                     continue
 
                 config = self.check_subtest_unsupported(case)
