@@ -57,11 +57,11 @@ class TestRunner(object):
         self.tests[name] = _scan_test_suite(path, test_class, *args)
 
     def _fixup_expected_failure(self, result, config, bug):
-        if result.failed():
+        if isinstance(result, Failure):
             return ExpectedFailure(result.test_name, config, bug)
-        elif result.passed():
+        elif isinstance(result, Success):
             return UnexpectedSuccess(result.test_name, config, bug)
-        else:  # A skipped test case.
+        else:  # Skipped, UnexpectedSuccess, or ExpectedFailure.
             return result
 
     def _run_test(self, test, out_dir, test_filters):
