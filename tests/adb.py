@@ -27,9 +27,11 @@ def push(src, dst):
 
 
 def shell(command):
-    # Work around the fact that adb doesn't return shell exit status.
-    p = subprocess.Popen(['adb', 'shell', command + '; echo "x$?"'],
-                         stdout=subprocess.PIPE)
+    # Work around the fact that adb doesn't return shell exit status. We also
+    # redirect the process's stderr to stdout so we can be sure all the output
+    # is printed before the result code.
+    adb_command = command + ' 2>&1; echo "x$?"'
+    p = subprocess.Popen(['adb', 'shell', adb_command], stdout=subprocess.PIPE)
     out, _ = p.communicate()
     if p.returncode != 0:
         raise RuntimeError('adb shell failed')
