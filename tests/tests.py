@@ -401,10 +401,11 @@ def _run_build_sh_test(test_name, build_dir, test_dir, build_flags, abi,
             test_env['APP_PLATFORM'] = platform
         assert toolchain is not None
         test_env['NDK_TOOLCHAIN_VERSION'] = toolchain
-        if subprocess.call(build_cmd, env=test_env) == 0:
+        rc, out = util.call_output(build_cmd, env=test_env)
+        if rc == 0:
             return Success(test_name)
         else:
-            return Failure(test_name, 'build failed')
+            return Failure(test_name, out)
 
 
 def _run_ndk_build_test(test_name, build_dir, test_dir, build_flags, abi,
@@ -418,10 +419,11 @@ def _run_ndk_build_test(test_name, build_dir, test_dir, build_flags, abi,
         ]
         if platform is not None:
             args.append('APP_PLATFORM=' + platform)
-        if ndk.build(build_flags + args) == 0:
+        rc, out = ndk.build(build_flags + args)
+        if rc == 0:
             return Success(test_name)
         else:
-            return Failure(test_name, 'build failed')
+            return Failure(test_name, out)
 
 
 class ShellBuildTest(Test):
@@ -489,7 +491,7 @@ def _copy_test_to_device(build_dir, device_dir, abi, test_filters, test_name):
         # This was the case with the old shell based script too. I'm trying not
         # to change too much in the translation.
         lib_path = os.path.join(abi_dir, test_file)
-        print('Pushing {} to {}'.format(lib_path, device_dir))
+        print('\tPushing {} to {}...'.format(lib_path, device_dir))
         adb.push(lib_path, device_dir)
 
         # TODO(danalbert): Sync data.
@@ -548,7 +550,7 @@ class DeviceTest(Test):
 
                 cmd = 'cd {} && LD_LIBRARY_PATH={} ./{}'.format(
                     device_dir, device_dir, case)
-                print('Executing test: {}'.format(cmd))
+                print('\tExecuting {}...'.format(case_name))
                 result, out = adb.shell(cmd)
 
                 config, bug = self.check_subtest_broken(case)
