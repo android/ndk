@@ -47,17 +47,6 @@ def get_tool(tool):
     return os.path.join(NDK_ROOT, 'prebuilt', _host_tag(), 'bin', tool) + ext
 
 
-def get_build_var(test_dir, var_name):
-    makefile = os.path.join(NDK_ROOT, 'build/core/build-local.mk')
-    cmd = ['make', '--no-print-dir', '-f', makefile, '-C', test_dir,
-           'DUMP_{}'.format(var_name)]
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    out, _ = p.communicate()
-    if p.returncode != 0:
-        raise RuntimeError('Could not get build variable')
-    return out.strip().split('\n')[-1]
-
-
 def build(build_flags):
     ndk_build_path = os.path.join(NDK_ROOT, 'ndk-build')
     return subprocess.call([ndk_build_path] + build_flags)
