@@ -41,8 +41,8 @@ import sys
 
 import adb
 import filters
+import printers
 import tests
-import util
 
 from tests import AwkTest, BuildTest, DeviceTest
 
@@ -188,6 +188,29 @@ class ArgParser(argparse.ArgumentParser):
             help='Show all test results, not just failures.')
 
 
+class ResultStats(object):
+    def __init__(self, suites, results):
+        self.num_tests = sum(len(s) for s in results.values())
+
+        zero_stats = {'pass': 0, 'skip': 0, 'fail': 0}
+        self.global_stats = dict(zero_stats)
+        self.suite_stats = {suite: dict(zero_stats) for suite in suites}
+        self._analyze_results(results)
+
+    def _analyze_results(self, results):
+        for suite, test_results in results.items():
+            for result in test_results:
+                if result.failed():
+                    self.suite_stats[suite]['fail'] += 1
+                    self.global_stats['fail'] += 1
+                elif result.passed():
+                    self.suite_stats[suite]['pass'] += 1
+                    self.global_stats['pass'] += 1
+                else:
+                    self.suite_stats[suite]['skip'] += 1
+                    self.global_stats['skip'] += 1
+
+
 def main():
     os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
@@ -247,42 +270,12 @@ def main():
     test_filters = filters.TestFilter.from_string(args.filter)
     results = runner.run(out_dir, test_filters)
 
-    num_tests = sum(len(s) for s in results.values())
-    zero_stats = {'pass': 0, 'skip': 0, 'fail': 0}
-    stats = {suite: dict(zero_stats) for suite in suites}
-    global_stats = dict(zero_stats)
-    for suite, test_results in results.items():
-        for result in test_results:
-            if result.failed():
-                stats[suite]['fail'] += 1
-                global_stats['fail'] += 1
-            elif result.passed():
-                stats[suite]['pass'] += 1
-                global_stats['pass'] += 1
-            else:
-                stats[suite]['skip'] += 1
-                global_stats['skip'] += 1
+    stats = ResultStats(suites, results)
 
-    def format_stats(num_tests, stats, use_color):
-        return '{pl} {p}/{t} {fl} {f}/{t} {sl} {s}/{t}'.format(
-            pl=util.color_string('PASS', 'green') if use_color else 'PASS',
-            fl=util.color_string('FAIL', 'red') if use_color else 'FAIL',
-            sl=util.color_string('SKIP', 'yellow') if use_color else 'SKIP',
-            p=stats['pass'], f=stats['fail'],
-            s=stats['skip'], t=num_tests)
-
-    use_color = sys.stdin.isatty()
-    print()
-    print(format_stats(num_tests, global_stats, use_color))
-    for suite, test_results in results.items():
-        stats_str = format_stats(len(test_results), stats[suite], use_color)
-        print()
-        print('{}: {}'.format(suite, stats_str))
-        for result in test_results:
-            if args.show_all or result.failed():
-                print(result.to_string(colored=use_color))
-
-    sys.exit(global_stats['fail'])
+    printer = printers.StdoutPrinter(use_color=sys.stdin.isatty(),
+                                     show_all=args.show_all)
+    printer.print_results(results, stats)
+    sys.exit(stats.global_stats['fail'] > 0)
 
 
 if __name__ == '__main__':
