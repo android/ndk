@@ -423,7 +423,7 @@ for SYSTEM in $SYSTEMS; do
     else
         # Unpack toolchains
         for TC in $TOOLCHAINS; do
-            PREBUILT_ROOT=$ANDROID_BUILD_TOP/prebuilts/ndk/current/
+            # First GCC.
             GCC_SUBDIR=toolchains/$SYSTEM/$TC
             GCC_PATH=$PREBUILT_ROOT/$GCC_SUBDIR
             GCC_DST=$DSTDIR/$GCC_SUBDIR
@@ -432,6 +432,10 @@ for SYSTEM in $SYSTEMS; do
             mkdir -p $GCC_DST
             cp -r $GCC_PATH/prebuilt $GCC_DST
             fail_panic "Could not copy $TC!"
+
+            # Now binutils.
+            TC_NO_VERSION=${TC%-4.9}
+            unpack_prebuilt binutils-$TC_NO_VERSION "$DSTDIR"
         done
 
         # Unpack clang/llvm

@@ -37,6 +37,7 @@ import build_support  # pylint: disable=import-error
 
 
 ALL_MODULES = {
+    'binutils',
     'clang',
     'gcc',
     'gdbserver',
@@ -135,6 +136,128 @@ def common_build_args(out_dir, args):
         # linux).
         build_args.append('--host={}'.format(args.system))
     return build_args
+
+
+def fixup_toolchain_triple(toolchain):
+    """Maps toolchain names to their proper triple.
+
+    The x86 toolchains are named stupidly and aren't a proper triple.
+    """
+    return {
+        'x86': 'i686-linux-android',
+        'x86_64': 'x86_64-linux-android',
+    }.get(toolchain, toolchain)
+
+
+def get_binutils_files(triple, has_gold):
+    files = [
+        'ld.bfd',
+        'nm',
+        'as',
+        'objcopy',
+        'strip',
+        'objdump',
+        'ld',
+        'ar',
+        'ranlib',
+    ]
+
+    if has_gold:
+        files.append('ld.gold')
+
+    # binutils programs get installed to two locations:
+    # 1: $INSTALL_DIR/bin/$TRIPLE-$PROGRAM
+    # 2: $INSTALL_DIR/$TRIPLE/bin/$PROGRAM
+    #
+    # We need to copy both.
+
+    prefixed_files = []
+    for file_name in files:
+        prefixed_name = '-'.join([triple, file_name])
+        prefixed_files.append(os.path.join('bin', prefixed_name))
+
+    dir_prefixed_files = []
+    for file_name in files:
+        dir_prefixed_files.append(os.path.join(triple, 'bin', file_name))
+
+    ldscripts_dir = os.path.join(triple, 'lib/ldscripts')
+    return prefixed_files + dir_prefixed_files + [ldscripts_dir]
+
+
+def install_file(file_name, src_dir, dst_dir):
+    src_file = os.path.join(src_dir, file_name)
+    dst_file = os.path.join(dst_dir, file_name)
+
+    print('Copying {} to {}...'.format(src_file, dst_file))
+    if os.path.isdir(src_file):
+        _install_dir(src_file, dst_file)
+    elif os.path.islink(src_file):
+        _install_symlink(src_file, dst_file)
+    else:
+        _install_file(src_file, dst_file)
+
+
+def _install_dir(src_dir, dst_dir):
+    parent_dir = os.path.normpath(os.path.join(dst_dir, '..'))
+    if not os.path.exists(parent_dir):
+        os.makedirs(parent_dir)
+    shutil.copytree(src_dir, dst_dir, symlinks=True)
+
+
+def _install_symlink(src_file, dst_file):
+    dirname = os.path.dirname(dst_file)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
+    link_target = os.readlink(src_file)
+    os.symlink(link_target, dst_file)
+
+
+def _install_file(src_file, dst_file):
+    dirname = os.path.dirname(dst_file)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
+    # copy2 is just copy followed by copystat (preserves file metadata).
+    shutil.copy2(src_file, dst_file)
+
+
+def pack_binutils(toolchain, out_dir, binutils_path):
+    archive_name = os.path.join(out_dir, 'binutils-' + toolchain)
+    archive_base_path = os.path.relpath(binutils_path, out_dir)
+    shutil.make_archive(archive_name, 'bztar',
+                        root_dir=os.path.realpath(out_dir),
+                        base_dir=archive_base_path)
+
+
+def build_binutils(out_dir, args):
+    print('Extracting binutils package from GCC...')
+
+    if args.system is not None:
+        system = args.system
+    else:
+        system = build_support.get_default_host()
+    tag = build_support.host_to_tag(system)
+
+    system_subdir = 'prebuilts/ndk/current/toolchains/{}'.format(tag)
+    system_path = build_support.android_path(system_subdir)
+
+    arches = build_support.ALL_ARCHITECTURES
+    if args.arch is not None:
+        arches = [args.arch]
+
+    for arch in arches:
+        toolchain = build_support.arch_to_toolchain(arch)
+        toolchain_dir = toolchain + '-4.9'
+        toolchain_path = os.path.join(system_path, toolchain_dir, 'prebuilt')
+
+        triple = fixup_toolchain_triple(toolchain)
+        binutils_out = os.path.join(out_dir, 'binutils', toolchain)
+        if os.path.exists(binutils_out):
+            shutil.rmtree(binutils_out)
+
+        has_gold = not triple.startswith('mips')
+        for file_name in get_binutils_files(triple, has_gold):
+            install_file(file_name, toolchain_path, binutils_out)
+        pack_binutils(toolchain, out_dir, binutils_out)
 
 
 def build_clang(out_dir, args):
@@ -284,6 +407,7 @@ def main():
     invoke_build('dev-cleanup.sh')
 
     module_builds = collections.OrderedDict([
+        ('binutils', build_binutils),
         ('clang', build_clang),
         ('gcc', build_gcc),
         ('gdbserver', build_gdbserver),
