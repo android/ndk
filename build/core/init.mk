@@ -116,6 +116,14 @@ host-toolchain-path = $1/toolchains/$(HOST_TAG64)
 # -----------------------------------------------------------------------------
 get-toolchain-root = $(call host-toolchain-path,$1)/$2/prebuilt
 
+# -----------------------------------------------------------------------------
+# Function : get-binutils-root
+# Arguments: 1: NDK root
+#            2: Toolchain name (no version number)
+# Returns  : Path to the given prebuilt binutils.
+# -----------------------------------------------------------------------------
+get-binutils-root = $1/binutils/$(HOST_TAG64)/$2
+
 # ====================================================================
 #
 # Host system auto-detection.
