@@ -32,10 +32,9 @@ LLVM_NAME := llvm-$(LLVM_VERSION)
 LLVM_TOOLCHAIN_PREBUILT_ROOT := $(call get-toolchain-root,$(NDK_ROOT),$(LLVM_NAME))
 LLVM_TOOLCHAIN_PREFIX := $(LLVM_TOOLCHAIN_PREBUILT_ROOT)/bin/
 
-TOOLCHAIN_VERSION := 4.9
-TOOLCHAIN_NAME := arm-linux-androideabi-$(TOOLCHAIN_VERSION)
-TOOLCHAIN_PREBUILT_ROOT := $(call get-toolchain-root,$(NDK_ROOT),$(TOOLCHAIN_NAME))
-TOOLCHAIN_PREFIX := $(TOOLCHAIN_PREBUILT_ROOT)/bin/arm-linux-androideabi-
+TOOLCHAIN_NAME := arm-linux-androideabi
+BINUTILS_ROOT := $(call get-binutils-root,$(NDK_ROOT),$(TOOLCHAIN_NAME))
+TOOLCHAIN_PREFIX := $(BINUTILS_ROOT)/bin/$(TOOLCHAIN_NAME)-
 
 TARGET_CC := $(LLVM_TOOLCHAIN_PREFIX)clang$(HOST_EXEEXT)
 TARGET_CXX := $(LLVM_TOOLCHAIN_PREFIX)clang++$(HOST_EXEEXT)
@@ -45,7 +44,7 @@ TARGET_CXX := $(LLVM_TOOLCHAIN_PREFIX)clang++$(HOST_EXEEXT)
 #
 
 TARGET_CFLAGS := \
-    -gcc-toolchain $(call host-path,$(TOOLCHAIN_PREBUILT_ROOT)) \
+    -B $(call host-path,$(BINUTILS_ROOT))/$(TOOLCHAIN_NAME)/bin \
     -fpic \
     -ffunction-sections \
     -funwind-tables \
@@ -59,7 +58,7 @@ TARGET_CFLAGS += \
     -fno-integrated-as
 
 TARGET_LDFLAGS += \
-    -gcc-toolchain $(call host-path,$(TOOLCHAIN_PREBUILT_ROOT)) \
+    -B $(call host-path,$(BINUTILS_ROOT))/$(TOOLCHAIN_NAME)/bin \
     -no-canonical-prefixes
 
 TARGET_C_INCLUDES := \
