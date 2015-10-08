@@ -26,7 +26,7 @@ import collections
 import datetime
 import inspect
 import os
-import platform
+import shutil
 import site
 import subprocess
 import sys
@@ -254,13 +254,7 @@ def main():
 
         package_args.append('--systems={}'.format(system))
     else:
-        # No flag provided. Use the current OS.
-        if platform.system() == 'Darwin':
-            system = 'darwin-x86'
-        elif platform.system() == 'Linux':
-            system = 'linux-x86'
-        else:
-            sys.exit('Unknown build host: {}'.format(platform.system()))
+        system = build_support.get_default_host()
 
     package_args.append(os.path.join(build_top, 'toolchain'))
 
