@@ -254,7 +254,7 @@ def main():
 
         package_args.append('--systems={}'.format(system))
     else:
-        system = build_support.get_default_host()
+        system = build_support.get_default_host() + '-x86'
 
     package_args.append(os.path.join(build_top, 'toolchain'))
 
