@@ -17,8 +17,9 @@
 """Interface to NDK build information."""
 import os
 import re
-import subprocess
 import sys
+
+import util
 
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -49,7 +50,7 @@ def get_tool(tool):
 
 def build(build_flags):
     ndk_build_path = os.path.join(NDK_ROOT, 'ndk-build')
-    return subprocess.call([ndk_build_path] + build_flags)
+    return util.call_output([ndk_build_path] + build_flags)
 
 
 def expand_app_abi(abi):
