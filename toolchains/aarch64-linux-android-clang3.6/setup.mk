@@ -57,6 +57,7 @@ TARGET_C_INCLUDES := \
 
 TARGET_LDFLAGS += \
     -B $(call host-path,$(BINUTILS_ROOT))/$(TOOLCHAIN_NAME)/bin \
+    -L $(call get-gcclibs-path,$(NDK_ROOT),$(TOOLCHAIN_NAME)) \
     -target $(LLVM_TRIPLE) \
     -no-canonical-prefixes
 
