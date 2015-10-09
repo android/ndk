@@ -72,6 +72,7 @@ class ArgParser(argparse.ArgumentParser):
         system_group = self.add_mutually_exclusive_group()
         system_group.add_argument(
             '--system', choices=('darwin', 'linux', 'windows', 'windows64'),
+            default=build_support.get_default_host(),
             help='Build for the given OS.')
 
         old_choices = {
@@ -129,11 +130,9 @@ def package_ndk(release_name, system, out_dir, build_args):
 
 def common_build_args(out_dir, args):
     build_args = ['--package-dir={}'.format(out_dir)]
-    if args.system is not None:
-        # Need to use args.system directly rather than system because system is
-        # the name used by the build/tools scripts (i.e. linux-x86 instead of
-        # linux).
-        build_args.append('--host={}'.format(args.system))
+    # Need to use args.system directly rather than system because system is the
+    # name used by the build/tools scripts (i.e. linux-x86 instead of linux).
+    build_args.append('--host={}'.format(args.system))
     return build_args
 
 
@@ -239,22 +238,19 @@ def main():
     if system != 'windows':
         package_args.append('--try-64')
 
-    if system is not None:
-        # TODO(danalbert): Update build server to pass just 'linux'.
-        original_system = system
-        if system == 'darwin':
-            system = 'darwin-x86'
-        elif system == 'linux':
-            system = 'linux-x86'
-        elif system == 'windows64':
-            system = 'windows'
+    # TODO(danalbert): Update build server to pass just 'linux'.
+    original_system = system
+    if system == 'darwin':
+        system = 'darwin-x86'
+    elif system == 'linux':
+        system = 'linux-x86'
+    elif system == 'windows64':
+        system = 'windows'
 
-        if system not in ('darwin-x86', 'linux-x86', 'windows'):
-            sys.exit('Unknown system requested: {}'.format(original_system))
+    if system not in ('darwin-x86', 'linux-x86', 'windows'):
+        sys.exit('Unknown system requested: {}'.format(original_system))
 
-        package_args.append('--systems={}'.format(system))
-    else:
-        system = build_support.get_default_host() + '-x86'
+    package_args.append('--systems={}'.format(system))
 
     package_args.append(os.path.join(build_top, 'toolchain'))
 
