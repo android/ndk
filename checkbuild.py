@@ -41,6 +41,7 @@ ALL_MODULES = {
     'binutils',
     'clang',
     'gcc',
+    'gcclibs',
     'gdbserver',
     'gnustl',
     'host-tools',
@@ -278,6 +279,50 @@ def build_gcc(out_dir, args):
     invoke_external_build('toolchain/gcc/build.py', gcc_build_args)
 
 
+def build_gcc_libs(out_dir, args):
+    print('Packaging GCC libs...')
+
+    arches = build_support.ALL_ARCHITECTURES
+    if args.arch is not None:
+        arches = [args.arch]
+
+    for arch in arches:
+        libgccs = ['libgcc.a']
+        if arch == 'arm':
+            libgccs += [
+                'armv7-a/libgcc.a',
+                'armv7-a/hard/libgcc.a',
+                'armv7-a/thumb/libgcc.a',
+                'armv7-a/thumb/hard/libgcc.a',
+                'thumb/libgcc.a',
+            ]
+
+        tmpdir = tempfile.mkdtemp()
+        try:
+            install_dir = os.path.join(tmpdir, 'prebuilt/gcclibs')
+            os.makedirs(install_dir)
+
+            gcc_path = get_prebuilt_gcc(args.system, arch)
+            toolchain = build_support.arch_to_toolchain(arch)
+            triple = fixup_toolchain_triple(toolchain)
+            gcc_libpath = 'lib/gcc/{}/4.9'.format(triple)
+            for libgcc in libgccs:
+                src = os.path.join(gcc_path, gcc_libpath, libgcc)
+                dst = os.path.join(install_dir, triple, libgcc)
+                dst_dir = os.path.dirname(dst)
+                if not os.path.exists(dst_dir):
+                    os.makedirs(dst_dir)
+                shutil.copy2(src, dst)
+
+                archive_name = os.path.join(out_dir, 'gcclibs-' + toolchain)
+                base_dir = os.path.relpath(install_dir, tmpdir)
+                shutil.make_archive(archive_name, 'bztar',
+                                    root_dir=os.path.realpath(tmpdir),
+                                    base_dir=base_dir)
+        finally:
+            shutil.rmtree(tmpdir)
+
+
 def build_host_tools(out_dir, args):
     build_args = common_build_args(out_dir, args)
 
@@ -411,6 +456,7 @@ def main():
         ('binutils', build_binutils),
         ('clang', build_clang),
         ('gcc', build_gcc),
+        ('gcclibs', build_gcc_libs),
         ('gdbserver', build_gdbserver),
         ('gnustl', build_gnustl),
         ('host-tools', build_host_tools),
