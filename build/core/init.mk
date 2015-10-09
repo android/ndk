@@ -124,6 +124,14 @@ get-toolchain-root = $(call host-toolchain-path,$1)/$2/prebuilt
 # -----------------------------------------------------------------------------
 get-binutils-root = $1/binutils/$(HOST_TAG64)/$2
 
+# -----------------------------------------------------------------------------
+# Function : get-gcclibs-path
+# Arguments: 1: NDK root
+#            2: Toolchain name (no version number)
+# Returns  : Path to the given prebuilt gcclibs.
+# -----------------------------------------------------------------------------
+get-gcclibs-path = $1/prebuilt/gcclibs/$2
+
 # ====================================================================
 #
 # Host system auto-detection.
