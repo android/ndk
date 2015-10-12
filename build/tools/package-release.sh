@@ -423,7 +423,7 @@ for SYSTEM in $SYSTEMS; do
     else
         # Unpack toolchains
         for TC in $TOOLCHAINS; do
-            PREBUILT_ROOT=$(realpath $NDK_ROOT_DIR/../prebuilts/ndk/current)
+            PREBUILT_ROOT=$($NDK_ROOT_DIR/realpath $NDK_ROOT_DIR/../prebuilts/ndk/current)
             GCC_SUBDIR=toolchains/$SYSTEM/$TC
             GCC_PATH=$PREBUILT_ROOT/$GCC_SUBDIR
             GCC_DST=$DSTDIR/$GCC_SUBDIR
