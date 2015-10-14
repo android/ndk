@@ -32,10 +32,9 @@ LLVM_NAME := llvm-$(LLVM_VERSION)
 LLVM_TOOLCHAIN_PREBUILT_ROOT := $(call get-toolchain-root,$(NDK_ROOT),$(LLVM_NAME))
 LLVM_TOOLCHAIN_PREFIX := $(LLVM_TOOLCHAIN_PREBUILT_ROOT)/bin/
 
-TOOLCHAIN_VERSION := 4.9
-TOOLCHAIN_NAME := x86_64-$(TOOLCHAIN_VERSION)
-TOOLCHAIN_PREBUILT_ROOT := $(call get-toolchain-root,$(NDK_ROOT),$(TOOLCHAIN_NAME))
-TOOLCHAIN_PREFIX := $(TOOLCHAIN_PREBUILT_ROOT)/bin/x86_64-linux-android-
+TOOLCHAIN_NAME := x86_64-linux-android
+BINUTILS_ROOT := $(call get-binutils-root,$(NDK_ROOT),$(TOOLCHAIN_NAME))
+TOOLCHAIN_PREFIX := $(BINUTILS_ROOT)/bin/$(TOOLCHAIN_NAME)-
 
 TARGET_CC := $(LLVM_TOOLCHAIN_PREFIX)clang$(HOST_EXEEXT)
 TARGET_CXX := $(LLVM_TOOLCHAIN_PREFIX)clang++$(HOST_EXEEXT)
@@ -43,7 +42,7 @@ TARGET_CXX := $(LLVM_TOOLCHAIN_PREFIX)clang++$(HOST_EXEEXT)
 LLVM_TRIPLE := x86_64-none-linux-android
 
 TARGET_CFLAGS := \
-    -gcc-toolchain $(call host-path,$(TOOLCHAIN_PREBUILT_ROOT)) \
+    -B $(call host-path,$(BINUTILS_ROOT))/$(TOOLCHAIN_NAME)/bin \
     -target $(LLVM_TRIPLE) \
     -ffunction-sections \
     -funwind-tables \
@@ -57,7 +56,7 @@ TARGET_C_INCLUDES := \
     $(SYSROOT_INC)/usr/include
 
 TARGET_LDFLAGS += \
-    -gcc-toolchain $(call host-path,$(TOOLCHAIN_PREBUILT_ROOT)) \
+    -B $(call host-path,$(BINUTILS_ROOT))/$(TOOLCHAIN_NAME)/bin \
     -target $(LLVM_TRIPLE) \
     -no-canonical-prefixes
 
