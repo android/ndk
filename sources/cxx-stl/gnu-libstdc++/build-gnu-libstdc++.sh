@@ -39,7 +39,7 @@ By default, this will try with the current NDK directory, unless
 you use the --ndk-dir=<path> option.
 
 The output will be placed in appropriate sub-directories of
-<ndk>/$GNUSTL_SUBDIR/<gcc-version>, but you can override this with the --out-dir=<path>
+<ndk>/$GNUSTL_SUBDIR, but you can override this with the --out-dir=<path>
 option.
 "
 
@@ -127,7 +127,7 @@ build_gnustl_for_abi ()
     local LIBTYPE="$3"
     local GCC_VERSION="$4"
     local THUMB="$5"
-    local DSTDIR=$NDK_DIR/$GNUSTL_SUBDIR/$GCC_VERSION/libs/$ABI/$THUMB
+    local DSTDIR=$NDK_DIR/$GNUSTL_SUBDIR/libs/$ABI/$THUMB
     local PREBUILT_NDK=$ANDROID_BUILD_TOP/prebuilts/ndk/current
     local SRC OBJ OBJECTS CFLAGS CXXFLAGS CPPFLAGS
 
@@ -260,11 +260,7 @@ build_gnustl_for_abi ()
         # size of the code that will be linked against it.
         if [ -z "$VISIBLE_LIBGNUSTL_STATIC" ] ; then
             LIBTYPE_FLAGS="--enable-static --disable-shared"
-            if [ $GCC_VERSION = "4.4.3" -o $GCC_VERSION = "4.6" ]; then
-                LIBTYPE_FLAGS=$LIBTYPE_FLAGS" --disable-visibility"
-            else
-                LIBTYPE_FLAGS=$LIBTYPE_FLAGS" --disable-libstdcxx-visibility"
-            fi
+            LIBTYPE_FLAGS=$LIBTYPE_FLAGS" --disable-libstdcxx-visibility"
             CXXFLAGS=$CXXFLAGS" -fvisibility=hidden -fvisibility-inlines-hidden"
         fi
     else
@@ -322,7 +318,7 @@ copy_gnustl_libs ()
     PREFIX=${PREFIX%%-}
 
     local SDIR="$BUILDDIR/install-$ABI-$GCC_VERSION"
-    local DDIR="$NDK_DIR/$GNUSTL_SUBDIR/$GCC_VERSION"
+    local DDIR="$NDK_DIR/$GNUSTL_SUBDIR"
 
     local GCC_VERSION_NO_DOT=$(echo $GCC_VERSION|sed 's/\./_/g')
     # Copy the common headers only once per gcc version
@@ -433,11 +429,11 @@ if [ -n "$PACKAGE_DIR" ] ; then
         # First, the headers as a single package for a given gcc version
         PACKAGE="$PACKAGE_DIR/gnu-libstdc++-headers-$VERSION.tar.bz2"
         dump "Packaging: $PACKAGE"
-        pack_archive "$PACKAGE" "$NDK_DIR" "$GNUSTL_SUBDIR/$VERSION/include"
+        pack_archive "$PACKAGE" "$NDK_DIR" "$GNUSTL_SUBDIR/include"
 
         # Then, one package per version/ABI for libraries
         for ABI in $ABIS; do
-            if [ ! -d "$NDK_DIR/$GNUSTL_SUBDIR/$VERSION/libs/$ABI" ]; then
+            if [ ! -d "$NDK_DIR/$GNUSTL_SUBDIR/libs/$ABI" ]; then
                 continue
             fi
             FILES=""
@@ -467,8 +463,8 @@ if [ -n "$PACKAGE_DIR" ] ; then
                     ;;
             esac
             for LIB in include/bits $MULTILIB libsupc++.a libgnustl_static.a libgnustl_shared.so; do
-                FILES="$FILES $GNUSTL_SUBDIR/$VERSION/libs/$ABI/$LIB"
-                THUMB_FILE="$GNUSTL_SUBDIR/$VERSION/libs/$ABI/thumb/$LIB"
+                FILES="$FILES $GNUSTL_SUBDIR/libs/$ABI/$LIB"
+                THUMB_FILE="$GNUSTL_SUBDIR/libs/$ABI/thumb/$LIB"
                 if [ -f "$NDK_DIR/$THUMB_FILE" ] ; then
                     FILES="$FILES $THUMB_FILE"
                 fi
