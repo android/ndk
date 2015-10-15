@@ -437,6 +437,9 @@ for SYSTEM in $SYSTEMS; do
             # Now binutils.
             TC_NO_VERSION=${TC%-4.9}
             unpack_prebuilt binutils-$TC_NO_VERSION-$SYSTEM "$DSTDIR"
+
+            # Now the gcc libs.
+            unpack_prebuilt gcclibs-$TC_NO_VERSION "$DSTDIR"
         done
 
         # Unpack clang/llvm

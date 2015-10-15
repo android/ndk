@@ -74,6 +74,8 @@ ifneq ($(filter %armeabi-v7a,$(TARGET_ARCH_ABI)),)
 
     TARGET_LDFLAGS += -target $(LLVM_TRIPLE) \
                       -Wl,--fix-cortex-a8
+
+    GCCLIB_SUBDIR := armv7-a
 else
 ifneq ($(filter %armeabi-v7a-hard,$(TARGET_ARCH_ABI)),)
     LLVM_TRIPLE := armv7-none-linux-androideabi
@@ -88,6 +90,8 @@ ifneq ($(filter %armeabi-v7a-hard,$(TARGET_ARCH_ABI)),)
                       -Wl,--fix-cortex-a8 \
                       -Wl,--no-warn-mismatch \
                       -lm_hard
+
+    GCCLIB_SUBDIR := armv7-a/hard
 else
     LLVM_TRIPLE := armv5te-none-linux-androideabi
 
@@ -97,8 +101,14 @@ else
                      -msoft-float
 
     TARGET_LDFLAGS += -target $(LLVM_TRIPLE)
+
+    GCCLIB_SUBDIR :=
 endif
 endif
+
+GCCLIB_ROOT := $(call get-gcclibs-path,$(NDK_ROOT),$(TOOLCHAIN_NAME))
+TARGET_arm_LDFLAGS += -L $(GCCLIB_ROOT)/$(GCCLIB_SUBDIR)
+TARGET_thumb_LDFLAGS += -L $(GCCLIB_ROOT)/$(GCCLIB_SUBDIR)/thumb
 
 TARGET_CFLAGS.neon := -mfpu=neon
 
