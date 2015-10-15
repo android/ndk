@@ -150,7 +150,7 @@ def fixup_toolchain_triple(toolchain):
     }.get(toolchain, toolchain)
 
 
-def get_binutils_files(triple, has_gold):
+def get_binutils_files(triple, has_gold, is_windows):
     files = [
         'ld.bfd',
         'nm',
@@ -165,6 +165,9 @@ def get_binutils_files(triple, has_gold):
 
     if has_gold:
         files.append('ld.gold')
+
+    if is_windows:
+        files = [f + '.exe' for f in files]
 
     # binutils programs get installed to two locations:
     # 1: $INSTALL_DIR/bin/$TRIPLE-$PROGRAM
@@ -257,8 +260,9 @@ def build_binutils(out_dir, args):
             install_dir = os.path.join(tmpdir, 'binutils', host_tag,
                                        toolchain)
             os.makedirs(install_dir)
-            has_gold = not triple.startswith('mips')
-            for file_name in get_binutils_files(triple, has_gold):
+            is_windows = host_tag.startswith('windows')
+            has_gold = not triple.startswith('mips') and not is_windows
+            for file_name in get_binutils_files(triple, has_gold, is_windows):
                 install_file(file_name, toolchain_path, install_dir)
             pack_binutils(toolchain, host_tag, out_dir, tmpdir, install_dir)
         finally:
