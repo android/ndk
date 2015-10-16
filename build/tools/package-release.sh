@@ -337,7 +337,7 @@ fi
 if [ -z "$PREBUILT_NDK" ]; then
     # Unpack gdbserver
     for ARCH in $ARCHS; do
-        unpack_prebuilt $ARCH-gdbserver "$REFERENCE"
+        unpack_prebuilt gdbserver-$ARCH "$REFERENCE"
     done
     # Unpack C++ runtimes
     for VERSION in $DEFAULT_GCC_VERSION_LIST; do
