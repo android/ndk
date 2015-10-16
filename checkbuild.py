@@ -318,7 +318,7 @@ def build_gcc_libs(out_dir, args):
                     os.makedirs(dst_dir)
                 shutil.copy2(src, dst)
 
-                archive_name = os.path.join(out_dir, 'gcclibs-' + toolchain)
+                archive_name = os.path.join(out_dir, 'gcclibs-' + arch)
                 base_dir = os.path.relpath(install_dir, tmpdir)
                 shutil.make_archive(archive_name, 'bztar',
                                     root_dir=os.path.realpath(tmpdir),
