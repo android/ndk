@@ -426,17 +426,11 @@ done
 # If needed, package files into tarballs
 if [ -n "$PACKAGE_DIR" ] ; then
     for VERSION in $GCC_VERSION_LIST; do
-        # First, the headers as a single package for a given gcc version
-        PACKAGE="$PACKAGE_DIR/gnu-libstdc++-headers-$VERSION.tar.bz2"
-        dump "Packaging: $PACKAGE"
-        pack_archive "$PACKAGE" "$NDK_DIR" "$GNUSTL_SUBDIR/include"
-
-        # Then, one package per version/ABI for libraries
+        FILES="$GNUSTL_SUBDIR/include"
         for ABI in $ABIS; do
             if [ ! -d "$NDK_DIR/$GNUSTL_SUBDIR/libs/$ABI" ]; then
                 continue
             fi
-            FILES=""
             case "$ABI" in
                 x86_64)
                     MULTILIB="include/32/bits include/x32/bits
@@ -469,15 +463,12 @@ if [ -n "$PACKAGE_DIR" ] ; then
                     FILES="$FILES $THUMB_FILE"
                 fi
             done
-            PACKAGE="$PACKAGE_DIR/gnu-libstdc++-libs-$VERSION-$ABI"
-            if [ "$WITH_DEBUG_INFO" ]; then
-                PACKAGE="${PACKAGE}-g"
-            fi
-            PACKAGE="${PACKAGE}.tar.bz2"
-            dump "Packaging: $PACKAGE"
-            pack_archive "$PACKAGE" "$NDK_DIR" "$FILES"
-            fail_panic "Could not package $ABI GNU libstdc++ binaries!"
         done
+
+        PACKAGE="$PACKAGE_DIR/gnustl-${VERSION}.tar.bz2"
+        dump "Packaging: $PACKAGE"
+        pack_archive "$PACKAGE" "$NDK_DIR" "$FILES"
+        fail_panic "Could not package GNU libstdc++ binaries!"
     done
 fi
 
