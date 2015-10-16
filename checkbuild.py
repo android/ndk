@@ -224,8 +224,8 @@ def _install_file(src_file, dst_file):
     shutil.copy2(src_file, dst_file)
 
 
-def pack_binutils(toolchain, host_tag, out_dir, root_dir, binutils_path):
-    archive_name = '-'.join(['binutils', toolchain, host_tag])
+def pack_binutils(arch, host_tag, out_dir, root_dir, binutils_path):
+    archive_name = '-'.join(['binutils', arch, host_tag])
     archive_path = os.path.join(out_dir, archive_name)
     base_dir = os.path.relpath(binutils_path, root_dir)
     shutil.make_archive(archive_path, 'bztar', root_dir=root_dir,
@@ -264,7 +264,7 @@ def build_binutils(out_dir, args):
             has_gold = not triple.startswith('mips') and not is_windows
             for file_name in get_binutils_files(triple, has_gold, is_windows):
                 install_file(file_name, toolchain_path, install_dir)
-            pack_binutils(toolchain, host_tag, out_dir, tmpdir, install_dir)
+            pack_binutils(arch, host_tag, out_dir, tmpdir, install_dir)
         finally:
             shutil.rmtree(tmpdir)
 

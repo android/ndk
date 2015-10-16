@@ -434,12 +434,13 @@ for SYSTEM in $SYSTEMS; do
             cp -r $GCC_PATH/prebuilt $GCC_DST
             fail_panic "Could not copy $TC!"
 
-            # Now binutils.
-            TC_NO_VERSION=${TC%-4.9}
-            unpack_prebuilt binutils-$TC_NO_VERSION-$SYSTEM "$DSTDIR"
-
             # Now the gcc libs.
+            TC_NO_VERSION=${TC%-4.9}
             unpack_prebuilt gcclibs-$TC_NO_VERSION "$DSTDIR"
+        done
+
+        for ARCH in $ARCHS; do
+            unpack_prebuilt binutils-$ARCH-$SYSTEM "$DSTDIR"
         done
 
         # Unpack clang/llvm
