@@ -341,14 +341,11 @@ if [ -z "$PREBUILT_NDK" ]; then
     done
     # Unpack C++ runtimes
     for VERSION in $DEFAULT_GCC_VERSION_LIST; do
-        unpack_prebuilt gnu-libstdc++-headers-$VERSION "$REFERENCE"
+        unpack_prebuilt gnustl-$VERSION "$REFERENCE"
     done
     for ABI in $ABIS; do
         unpack_prebuilt stlport-libs-$ABI-g "$REFERENCE"
         unpack_prebuilt libcxx-libs-$ABI-g "$REFERENCE"
-        for VERSION in $DEFAULT_GCC_VERSION_LIST; do
-            unpack_prebuilt gnu-libstdc++-libs-$VERSION-$ABI-g "$REFERENCE"
-        done
     done
 fi
 
