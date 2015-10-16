@@ -48,6 +48,7 @@ ALL_MODULES = {
     'libc++',
     'platforms',
     'stlport',
+    'tests',
 }
 
 
@@ -397,6 +398,12 @@ def build_platforms(out_dir, args):
     invoke_build('build-platforms.py', common_build_args(out_dir, args))
 
 
+def build_tests(out_dir, _):
+    archive_name = os.path.join(out_dir, 'tests')
+    shutil.make_archive(archive_name, 'bztar', base_dir='tests',
+                        root_dir=build_support.ndk_path())
+
+
 def main():
     args, package_args = ArgParser().parse_known_args()
 
@@ -467,6 +474,7 @@ def main():
         ('libc++', build_libcxx),
         ('platforms', build_platforms),
         ('stlport', build_stlport),
+        ('tests', build_tests),
     ])
 
     print('Building modules: {}'.format(' '.join(modules)))
