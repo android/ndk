@@ -39,6 +39,7 @@ import build_support  # pylint: disable=import-error
 
 ALL_MODULES = {
     'binutils',
+    'build',
     'clang',
     'cpufeatures',
     'gcc',
@@ -427,6 +428,20 @@ def build_toolchains(out_dir, _):
                         root_dir=build_support.ndk_path())
 
 
+def build_build(out_dir, _):
+    archive_name = os.path.join(out_dir, 'build.tar.bz2')
+    root_dir = build_support.ndk_path()
+    files = [
+        'build',
+        'find-win-host.cmd',
+        'ndk-build',
+        'ndk-build.cmd',
+        'realpath',
+    ]
+    subprocess.check_call(
+        ['tar', 'cjf', archive_name, '-C', root_dir] + files)
+
+
 def main():
     args, package_args = ArgParser().parse_known_args()
 
@@ -488,6 +503,7 @@ def main():
 
     module_builds = collections.OrderedDict([
         ('binutils', build_binutils),
+        ('build', build_build),
         ('clang', build_clang),
         ('cpufeatures', build_cpufeatures),
         ('gcc', build_gcc),
