@@ -310,7 +310,7 @@ def build_gcc_libs(out_dir, args):
             gcc_path = get_prebuilt_gcc(args.system, arch)
             toolchain = build_support.arch_to_toolchain(arch)
             triple = fixup_toolchain_triple(toolchain)
-            gcc_libpath = 'lib/gcc/{}/4.9'.format(triple)
+            gcc_libpath = 'lib/gcc/{}/4.9.x-google'.format(triple)
             for libgcc in libgccs:
                 src = os.path.join(gcc_path, gcc_libpath, libgcc)
                 dst = os.path.join(install_dir, triple, libgcc)
