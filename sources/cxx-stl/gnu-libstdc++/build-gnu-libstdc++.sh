@@ -342,7 +342,6 @@ copy_gnustl_libs ()
             copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/32/mips-r1/bits" "$DDIR/libs/$ABI/include/32/mips-r1/bits"
             copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/32/mips-r2/bits" "$DDIR/libs/$ABI/include/32/mips-r2/bits"
             copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/32/mips-r6/bits" "$DDIR/libs/$ABI/include/32/mips-r6/bits"
-            copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/mips64-r2/bits" "$DDIR/libs/$ABI/include/mips64-r2/bits"
             ;;
         mips)
             copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/mips-r2/bits" "$DDIR/libs/$ABI/include/mips-r2/bits"
@@ -379,12 +378,10 @@ copy_gnustl_libs ()
             copy_file_list "$SDIR/libr2" "$DDIR/libs/$ABI/libr2" libsupc++.a libgnustl_shared.so
             copy_file_list "$SDIR/libr6" "$DDIR/libs/$ABI/libr6" libsupc++.a libgnustl_shared.so
             copy_file_list "$SDIR/lib64" "$DDIR/libs/$ABI/lib64" libsupc++.a libgnustl_shared.so
-            copy_file_list "$SDIR/lib64r2" "$DDIR/libs/$ABI/lib64r2" libsupc++.a libgnustl_shared.so
             cp "$SDIR/lib/libgnustl_shared.a" "$DDIR/libs/$ABI/lib/libgnustl_static.a"
             cp "$SDIR/libr2/libgnustl_shared.a" "$DDIR/libs/$ABI/libr2/libgnustl_static.a"
             cp "$SDIR/libr6/libgnustl_shared.a" "$DDIR/libs/$ABI/libr6/libgnustl_static.a"
             cp "$SDIR/lib64/libgnustl_shared.a" "$DDIR/libs/$ABI/lib64/libgnustl_static.a"
-            cp "$SDIR/lib64r2/libgnustl_shared.a" "$DDIR/libs/$ABI/lib64r2/libgnustl_static.a"
             ;;
         mips)
             copy_file_list "$SDIR/lib" "$DDIR/libs/$ABI/lib" libsupc++.a libgnustl_shared.so
@@ -439,12 +436,11 @@ if [ -n "$PACKAGE_DIR" ] ; then
                               lib64/libsupc++.a lib64/libgnustl_static.a lib64/libgnustl_shared.so"
                     ;;
                 mips64)
-                    MULTILIB="include/32/mips-r1/bits include/32/mips-r2/bits include/32/mips-r6/bits include/bits include/mips64-r2/bits
+                    MULTILIB="include/32/mips-r1/bits include/32/mips-r2/bits include/32/mips-r6/bits include/bits
                               lib/libsupc++.a lib/libgnustl_static.a lib/libgnustl_shared.so
                               libr2/libsupc++.a libr2/libgnustl_static.a libr2/libgnustl_shared.so
                               libr6/libsupc++.a libr6/libgnustl_static.a libr6/libgnustl_shared.so
-                              lib64/libsupc++.a lib64/libgnustl_static.a lib64/libgnustl_shared.so
-                              lib64r2/libsupc++.a lib64r2/libgnustl_static.a lib64r2/libgnustl_shared.so"
+                              lib64/libsupc++.a lib64/libgnustl_static.a lib64/libgnustl_shared.so"
                     ;;
                 mips|mips32r6)
                     MULTILIB="include/mips-r2/bits include/mips-r6/bits include/bits
