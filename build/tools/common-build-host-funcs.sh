@@ -795,6 +795,21 @@ bh_do ()
     fail_panic
 }
 
+# Return host tag with only translation that windows-x86 -> windows
+#
+# $1: host system tag
+install_dir_from_host_tag ()
+{
+    case $1 in
+        windows-x86)
+            echo "windows"
+            ;;
+        *)
+            echo "$1"
+            ;;
+    esac
+}
+
 # Return the build install directory of a given Python version
 #
 # $1: host system tag
@@ -805,7 +820,7 @@ bh_do ()
 #  python_ndk_install_dir with nothing.
 python_build_install_dir ()
 {
-    echo "$BH_BUILD_DIR/install/prebuilt"
+    echo "$BH_BUILD_DIR/install/prebuilt/$(install_dir_from_host_tag $1)"
 }
 
 # Same as python_build_install_dir, but for the final NDK installation
@@ -814,5 +829,5 @@ python_build_install_dir ()
 # $1: host system tag
 python_ndk_install_dir ()
 {
-    echo "prebuilt"
+    echo "prebuilt/$(install_dir_from_host_tag $1)"
 }
