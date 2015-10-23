@@ -343,10 +343,9 @@ if [ -z "$PREBUILT_NDK" ]; then
     for VERSION in $DEFAULT_GCC_VERSION_LIST; do
         unpack_prebuilt gnustl-$VERSION "$REFERENCE"
     done
-    for ABI in $ABIS; do
-        unpack_prebuilt stlport-libs-$ABI-g "$REFERENCE"
-        unpack_prebuilt libcxx-libs-$ABI-g "$REFERENCE"
-    done
+
+    unpack_prebuilt stlport "$REFERENCE"
+    unpack_prebuilt libcxx "$REFERENCE"
 fi
 
 # create a release file named 'RELEASE.TXT' containing the release

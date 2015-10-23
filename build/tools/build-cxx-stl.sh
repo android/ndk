@@ -163,13 +163,7 @@ STLPORT_SRCDIR=$BUILD_DIR/ndk/$STLPORT_SUBDIR
 LIBCXX_SRCDIR=$BUILD_DIR/ndk/$LIBCXX_SUBDIR
 LIBCXXABI_SRCDIR=$BUILD_DIR/ndk/$LIBCXXABI_SUBDIR
 
-if [ "$CXX_SUPPORT_LIB" = "gabi++" ]; then
-    LIBCXX_INCLUDES="-I$LIBCXX_SRCDIR/libcxx/include -I$ANDROID_NDK_ROOT/sources/android/support/include -I$GABIXX_SRCDIR/include"
-elif [ "$CXX_SUPPORT_LIB" = "libc++abi" ]; then
-    LIBCXX_INCLUDES="-I$LIBCXX_SRCDIR/libcxx/include -I$ANDROID_NDK_ROOT/sources/android/support/include -I$LIBCXXABI_SRCDIR/include"
-else
-    panic "Unknown CXX_SUPPORT_LIB: $CXX_SUPPORT_LIB"
-fi
+LIBCXX_INCLUDES="-I$LIBCXX_SRCDIR/libcxx/include -I$ANDROID_NDK_ROOT/sources/android/support/include -I$LIBCXXABI_SRCDIR/include"
 
 COMMON_C_CXX_FLAGS="-fPIC -O2 -ffunction-sections -fdata-sections"
 COMMON_CXXFLAGS="-fexceptions -frtti -fuse-cxa-atexit"
@@ -667,8 +661,15 @@ done
 
 # If needed, package files into tarballs
 if [ -n "$PACKAGE_DIR" ] ; then
+    FILES=""
+    if [ "$CXX_STL" = "libc++" ]; then
+        FILES="$FILES $LIBCXX_SUBDIR sources/cxx-stl/llvm-libc++abi
+               sources/android/support"
+    elif [ "$CXX_STL" = "stlport" ]; then
+        FILES="$FILES $STLPORT_SUBDIR $GABIXX_SUBDIR sources/cxx-stl/system"
+    fi
+
     for ABI in $ABIS; do
-        FILES=""
         LIB_SUFFIX="$(get_lib_suffix_for_abi $ABI)"
         for LIB in ${CXX_STL_LIB}_static.a ${CXX_STL_LIB}_shared${LIB_SUFFIX}; do
             if [ -d "$ANDROID_NDK_ROOT/$CXX_STL_SUBDIR/libs/$ABI/thumb" ]; then
@@ -676,16 +677,13 @@ if [ -n "$PACKAGE_DIR" ] ; then
             fi
             FILES="$FILES $CXX_STL_SUBDIR/libs/$ABI/$LIB"
         done
-        PACKAGE="$PACKAGE_DIR/${CXX_STL_PACKAGE}-libs-$ABI"
-        if [ "$WITH_DEBUG_INFO" ]; then
-            PACKAGE="${PACKAGE}-g"
-        fi
-        PACKAGE="${PACKAGE}.tar.bz2"
-        log "Packaging: $PACKAGE"
-        pack_archive "$PACKAGE" "$OUT_DIR" "$FILES"
-        fail_panic "Could not package $ABI $CXX_STL binaries!"
-        dump "Packaging: $PACKAGE"
     done
+
+    PACKAGE="$PACKAGE_DIR/${CXX_STL_PACKAGE}.tar.bz2"
+    log "Packaging: $PACKAGE"
+    pack_archive "$PACKAGE" "$OUT_DIR" "$FILES"
+    fail_panic "Could not package $CXX_STL binaries!"
+    dump "Packaging: $PACKAGE"
 fi
 
 if [ -z "$OPTION_BUILD_DIR" ]; then
