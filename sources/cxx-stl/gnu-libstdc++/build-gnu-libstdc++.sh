@@ -423,7 +423,7 @@ done
 # If needed, package files into tarballs
 if [ -n "$PACKAGE_DIR" ] ; then
     for VERSION in $GCC_VERSION_LIST; do
-        FILES="$GNUSTL_SUBDIR/include"
+        FILES="$GNUSTL_SUBDIR/Android.mk $GNUSTL_SUBDIR/include"
         for ABI in $ABIS; do
             if [ ! -d "$NDK_DIR/$GNUSTL_SUBDIR/libs/$ABI" ]; then
                 continue
