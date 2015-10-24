@@ -40,6 +40,7 @@ import build_support  # pylint: disable=import-error
 ALL_MODULES = {
     'binutils',
     'clang',
+    'cpufeatures',
     'gcc',
     'gcclibs',
     'gdbserver',
@@ -404,6 +405,13 @@ def build_tests(out_dir, _):
                         root_dir=build_support.ndk_path())
 
 
+def build_cpufeatures(out_dir, _):
+    archive_name = os.path.join(out_dir, 'cpufeatures')
+    shutil.make_archive(archive_name, 'bztar',
+                        base_dir='sources/android/cpufeatures',
+                        root_dir=build_support.ndk_path())
+
+
 def main():
     args, package_args = ArgParser().parse_known_args()
 
@@ -466,6 +474,7 @@ def main():
     module_builds = collections.OrderedDict([
         ('binutils', build_binutils),
         ('clang', build_clang),
+        ('cpufeatures', build_cpufeatures),
         ('gcc', build_gcc),
         ('gcclibs', build_gcc_libs),
         ('gdbserver', build_gdbserver),
