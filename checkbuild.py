@@ -45,6 +45,7 @@ ALL_MODULES = {
     'gcclibs',
     'gdbserver',
     'gnustl',
+    'gtest',
     'host-tools',
     'libc++',
     'platforms',
@@ -412,6 +413,13 @@ def build_cpufeatures(out_dir, _):
                         root_dir=build_support.ndk_path())
 
 
+def build_gtest(out_dir, _):
+    archive_name = os.path.join(out_dir, 'gtest')
+    shutil.make_archive(archive_name, 'bztar',
+                        base_dir='sources/third_party/googletest',
+                        root_dir=build_support.ndk_path())
+
+
 def main():
     args, package_args = ArgParser().parse_known_args()
 
@@ -479,6 +487,7 @@ def main():
         ('gcclibs', build_gcc_libs),
         ('gdbserver', build_gdbserver),
         ('gnustl', build_gnustl),
+        ('gtest', build_gtest),
         ('host-tools', build_host_tools),
         ('libc++', build_libcxx),
         ('platforms', build_platforms),
