@@ -179,7 +179,7 @@ fi
 # Check toolchain name
 TOOLCHAIN_PATH="$NDK_DIR/toolchains/$SYSTEM/$TOOLCHAIN_NAME"
 if [ ! -d "$TOOLCHAIN_PATH" ] ; then
-    echo "Invalid toolchain name: $TOOLCHAIN_NAME"
+    echo "Could not find toolchain: $TOOLCHAIN_PATH"
     echo "Please use --toolchain=<name> with the name of a toolchain supported by the source NDK."
     echo "Try one of: " `(cd "$NDK_DIR/toolchains/$SYSTEM" && ls)`
     exit 1
