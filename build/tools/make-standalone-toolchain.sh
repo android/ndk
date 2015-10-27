@@ -221,13 +221,7 @@ if [ ! -d "$TOOLCHAIN_PATH/prebuilt" ]; then
     exit 1
 fi
 
-if [ ! -d "$TOOLCHAIN_PATH/prebuilt/$SYSTEM" ] ; then
-    echo "Host system '$SYSTEM' is not supported by the source NDK!"
-    echo "Try --system=<name> with one of: " `(cd $TOOLCHAIN_PATH/prebuilt && ls) | grep -v gdbserver`
-    exit 1
-fi
-
-TOOLCHAIN_PATH="$TOOLCHAIN_PATH/prebuilt/$SYSTEM"
+TOOLCHAIN_PATH="$TOOLCHAIN_PATH/prebuilt"
 TOOLCHAIN_GCC=$TOOLCHAIN_PATH/bin/$ABI_CONFIGURE_TARGET-gcc
 
 if [ ! -f "$TOOLCHAIN_GCC" ] ; then
@@ -243,13 +237,7 @@ if [ -n "$LLVM_VERSION" ]; then
         echo "You must point to a valid NDK release package!"
         exit 1
     fi
-
-    if [ ! -d "$LLVM_TOOLCHAIN_PATH/prebuilt/$SYSTEM" ] ; then
-        echo "Host system '$SYSTEM' is not supported by the source NDK!"
-        echo "Try --system=<name> with one of: " `(cd $LLVM_TOOLCHAIN_PATH/prebuilt && ls)`
-        exit 1
-    fi
-    LLVM_TOOLCHAIN_PATH="$LLVM_TOOLCHAIN_PATH/prebuilt/$SYSTEM"
+    LLVM_TOOLCHAIN_PATH="$LLVM_TOOLCHAIN_PATH/prebuilt"
 fi
 
 # Get GCC_BASE_VERSION.  Note that GCC_BASE_VERSION may be slightly different from GCC_VERSION.
