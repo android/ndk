@@ -566,7 +566,7 @@ NDK_ALL_TOOLCHAINS :=
 NDK_ALL_ABIS       :=
 NDK_ALL_ARCHS      :=
 
-TOOLCHAIN_CONFIGS := $(wildcard $(NDK_ROOT)/toolchains/*/config.mk)
+TOOLCHAIN_CONFIGS := $(wildcard $(NDK_ROOT)/build/core/toolchains/*/config.mk)
 $(foreach _config_mk,$(TOOLCHAIN_CONFIGS),\
   $(eval include $(BUILD_SYSTEM)/add-toolchain.mk)\
 )

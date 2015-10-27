@@ -52,7 +52,6 @@ ALL_MODULES = {
     'platforms',
     'stlport',
     'tests',
-    'toolchains',
 }
 
 
@@ -422,12 +421,6 @@ def build_gtest(out_dir, _):
                         root_dir=build_support.ndk_path())
 
 
-def build_toolchains(out_dir, _):
-    archive_name = os.path.join(out_dir, 'toolchains')
-    shutil.make_archive(archive_name, 'bztar', base_dir='toolchains',
-                        root_dir=build_support.ndk_path())
-
-
 def build_build(out_dir, _):
     archive_name = os.path.join(out_dir, 'build.tar.bz2')
     root_dir = build_support.ndk_path()
@@ -516,7 +509,6 @@ def main():
         ('platforms', build_platforms),
         ('stlport', build_stlport),
         ('tests', build_tests),
-        ('toolchains', build_toolchains),
     ])
 
     print('Building modules: {}'.format(' '.join(modules)))
