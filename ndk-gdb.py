@@ -1,523 +1,146 @@
 #!/usr/bin/env python
-
-r'''
- Copyright (C) 2010 The Android Open Source Project
- Copyright (C) 2012 Ray Donnelly <mingw.android@gmail.com>
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
-      http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
-
-
- This wrapper script is used to launch a native debugging session
- on a given NDK application. The application must be debuggable, i.e.
- its android:debuggable attribute must be set to 'true' in the
- <application> element of its manifest.
-
- See docs/NDK-GDB.TXT for usage description. Essentially, you just
- need to launch ndk-gdb-py from your application project directory
- after doing ndk-build && ant debug && \
-  adb install && <start-application-on-device>
-'''
-
-import atexit, sys, os, platform, argparse, subprocess, types
-import xml.etree.cElementTree as ElementTree
-import shutil, time
-from threading import Thread
-try:
-    from Queue import Queue, Empty
-except ImportError:
-    from queue import Queue, Empty  # python 3.x
-
-def get_platform_arch(abi):
-    '''Convert sysprop abi to a platform architecture name.'''
-    if abi.startswith("armeabi"):
-        return "arm"
-    elif abi.startswith("arm64"):
-        return "arm64"
-    elif abi.startswith("mips64"):
-        return "mips64"
-    elif abi.startswith("mips"):
-        return "mips"
-    return abi
-
-def find_program(program, extra_paths = []):
-    ''' extra_paths are searched before PATH '''
-    PATHS = extra_paths+os.environ['PATH'].replace('"','').split(os.pathsep)
-    exts = ['']
-    if sys.platform.startswith('win'):
-        exts += ['.exe', '.bat', '.cmd']
-    for path in PATHS:
-        if os.path.isdir(path):
-            for ext in exts:
-                full = path + os.sep + program + ext
-                if os.path.isfile(full):
-                    return True, full
-    return False, None
-
-def ndk_bin_path(ndk):
-    '''
-    Return the prebuilt bin path for the host OS.
-
-    If Python executable is the NDK-prebuilt one (it should be)
-    then use the location of the executable as the first guess.
-    We take the grand-parent foldername and then ensure that it
-    starts with one of 'linux', 'darwin' or 'windows'.
-
-    If this is not the case, then we're using some other Python
-    and fall-back to using platform.platform() and sys.maxsize.
-    '''
-
-    try:
-        ndk_host = os.path.basename(
-                    os.path.dirname(
-                     os.path.dirname(sys.executable)))
-    except:
-        ndk_host = ''
-    # NDK-prebuilt Python?
-    if (not ndk_host.startswith('linux') and
-        not ndk_host.startswith('darwin') and
-        not ndk_host.startswith('windows')):
-        is64bit = True if sys.maxsize > 2**32 else False
-        if platform.platform().startswith('Linux'):
-            ndk_host = 'linux%s' % ('-x86_64' if is64bit else '-x86')
-        elif platform.platform().startswith('Darwin'):
-            ndk_host = 'darwin%s' % ('-x86_64' if is64bit else '-x86')
-        elif platform.platform().startswith('Windows'):
-            ndk_host = 'windows%s' % ('-x86_64' if is64bit else '')
-        else:
-            ndk_host = 'UNKNOWN'
-    return ndk+os.sep+'prebuilt'+os.sep+ndk_host+os.sep+'bin'
-
-VERBOSE = False
-PROJECT = None
-ADB_CMD = None
-GNUMAKE_CMD = None
-JDB_CMD = None
-# Extra arguments passed to the NDK build system when
-# querying it.
-GNUMAKE_FLAGS = []
-
-OPTION_FORCE = None
-OPTION_EXEC = None
-OPTION_START = None
-OPTION_LAUNCH = None
-OPTION_LAUNCH_LIST = None
-OPTION_TUI = None
-OPTION_WAIT = ['-D']
-OPTION_STDCXXPYPR = None
-
-PYPRPR_BASE = sys.prefix + '/share/pretty-printers/'
-PYPRPR_GNUSTDCXX_BASE = PYPRPR_BASE + 'libstdcxx/'
-
-DEBUG_PORT = 5039
-JDB_PORT = 65534
-
-# Name of the manifest file
-MANIFEST = 'AndroidManifest.xml'
-
-# Delay in seconds between launching the activity and attaching gdbserver on it.
-# This is needed because there is no way to know when the activity has really
-# started, and sometimes this takes a few seconds.
 #
-DELAY = 2.0
-NDK = os.path.abspath(os.path.dirname(sys.argv[0])).replace('\\','/')
-ADB_FLAGS = []
+# Copyright (C) 2015 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 
-def log(string):
-    global VERBOSE
-    if VERBOSE:
-        print(string)
+from __future__ import print_function
 
-def error(string, errcode=1):
-    print('ERROR: %s' % (string))
-    exit(errcode)
+import argparse
+import contextlib
+import multiprocessing
+import os
+import operator
+import posixpath
+import signal
+import subprocess
+import sys
+import time
+import xml.etree.cElementTree as ElementTree
 
-def handle_args():
-    global VERBOSE, DEBUG_PORT, DELAY
-    global GNUMAKE_CMD, GNUMAKE_FLAGS
-    global ADB_CMD, ADB_FLAGS
-    global JDB_CMD
-    global PROJECT, NDK
-    global OPTION_START, OPTION_LAUNCH, OPTION_LAUNCH_LIST
-    global OPTION_FORCE, OPTION_EXEC, OPTION_TUI, OPTION_WAIT
-    global OPTION_STDCXXPYPR
-    global PYPRPR_GNUSTDCXX_BASE
+import logging
 
-    parser = argparse.ArgumentParser(description='''
-Setup a gdb debugging session for your Android NDK application.
-Read ''' + NDK + '''/docs/NDK-GDB.html for complete usage instructions.''',
-    formatter_class=argparse.RawTextHelpFormatter)
+# Shared functions across gdbclient.py and ndk-gdb.py.
+import gdbrunner
 
-    parser.add_argument( '--verbose',
-                         help='Enable verbose mode', action='store_true', dest='verbose')
 
-    parser.add_argument( '--force',
-                         help='Kill existing debug session if it exists',
-                         action='store_true')
+def log(msg):
+    logger = logging.getLogger(__name__)
+    logger.info(msg)
 
-    app_group = parser.add_argument_group('application debugging')
-    start_group = app_group.add_mutually_exclusive_group()
-    start_group.add_argument( '--start',
-                         help='Launch application instead of attaching to existing one',
-                         action='store_true')
 
-    start_group.add_argument( '--launch',
-                         help='Same as --start, but specify activity name (see below)',
-                         dest='launch_name', nargs=1)
+def error(msg):
+    sys.exit("ERROR: {}".format(msg))
 
-    start_group.add_argument( '--launch-list',
-                         help='List all launchable activity names from manifest',
-                         action='store_true')
 
-    app_group.add_argument( '--delay',
-                         help='Delay in seconds between activity start and gdbserver attach',
-                         type=float, default=DELAY,
-                         dest='delay')
+class ArgumentParser(gdbrunner.ArgumentParser):
+    def __init__(self):
+        super(ArgumentParser, self).__init__()
+        self.add_argument(
+            "--verbose", "-v", action="store_true",
+            help="Enable verbose mode")
 
-    app_group.add_argument( '-p', '--project',
-                         help='Specify application project path',
-                         dest='project')
+        self.add_argument(
+            "--force", "-f", action="store_true",
+            help="Kill existing debug session if it exists")
 
-    app_group.add_argument( '--nowait',
-                         help='Do not wait for debugger to attach (may miss early JNI breakpoints)',
-                         action='store_true', dest='nowait')
+        self.add_argument(
+            "--port", type=int, nargs="?", default="5039",
+            help="override the port used on the host")
 
-    parser.add_argument( '--port',
-                         help='Use tcp:localhost:<DEBUG_PORT> to communicate with gdbserver',
-                         type=int, default=DEBUG_PORT,
-                         dest='debug_port')
+        self.add_argument(
+            "--delay", type=float, default=0.0,
+            help="Delay in seconds to wait after starting activity.\n"
+                 "This may be necessary on slower devices.")
 
-    parser.add_argument( '-x', '--exec',
-                         help='Execute gdb initialization commands in <EXEC_FILE> after connection',
-                         dest='exec_file')
+        self.add_argument(
+            "-p", "--project", dest="project",
+            help="Specify application project path")
 
-    parser.add_argument( '--adb',
-                         help='Use specific adb command',
-                         dest='adb_cmd')
+        app_group = self.add_argument_group("target selection")
+        start_group = app_group.add_mutually_exclusive_group()
 
-    # Unused flag retained for compatibility
-    parser.add_argument( '--awk',
-                         help=argparse.SUPPRESS)
+        class NoopAction(argparse.Action):
+            def __call__(self, *args, **kwargs):
+                pass
 
-    connect_group = parser.add_argument_group('device selection').add_mutually_exclusive_group()
-    connect_group.add_argument( '-e',
-                         help='Connect to single emulator instance',
-                         action='store_true', dest='emulator')
+        # Action for --attach is a noop, because --launch's action will store a
+        # False in launch if --launch isn't specified.
+        start_group.add_argument(
+            "--attach", action=NoopAction, nargs=0,
+            help="Attach to application [default]")
 
-    connect_group.add_argument( '-d',
-                         help='Connect to single target device',
-                         action='store_true', dest='device')
+        start_group.add_argument(
+            "--launch", action="store_true", dest="launch",
+            help="Launch application activity (defaults to main activity, "
+                 "configurable with --launch-activity)")
 
-    connect_group.add_argument( '-s',
-                         help='Connect to specific emulator or device',
-                         dest='device_serial')
+        start_group.add_argument(
+            "--launch-list", action="store_true",
+            help="List all launchable activity names from manifest")
 
-    parser.add_argument( '-t','--tui',
-                         help='Use tui mode',
-                         action='store_true', dest='tui')
+        app_group.add_argument(
+            "--launch-activity", action="store", metavar="ACTIVITY",
+            dest="launch_target", help="Launch specified application activity")
 
-    parser.add_argument( '--gnumake-flag',
-                         help='Flag to pass to gnumake, e.g. NDK_TOOLCHAIN_VERSION=4.8',
-                         action='append', dest='gnumake_flags')
 
-    if os.path.isdir(PYPRPR_GNUSTDCXX_BASE):
-        stdcxx_pypr_versions = [ 'gnustdcxx'+d.replace('gcc','')
-                                 for d in os.listdir(PYPRPR_GNUSTDCXX_BASE)
-                                 if os.path.isdir(os.path.join(PYPRPR_GNUSTDCXX_BASE, d)) ]
-    else:
-        stdcxx_pypr_versions = []
+        debug_group = self.add_argument_group("debugging options")
+        debug_group.add_argument(
+            "-x", "--exec", dest="exec_file",
+            help="Execute gdb commands in EXEC_FILE after connection")
 
-    parser.add_argument( '--stdcxx-py-pr',
-                         help='Specify stdcxx python pretty-printer',
-                         choices=['auto', 'none', 'gnustdcxx'] + stdcxx_pypr_versions + ['stlport'],
-                         default='none', dest='stdcxxpypr')
+        debug_group.add_argument(
+            "--nowait", action="store_true",
+            help="Do not wait for debugger to attach (may miss early JNI "
+                 "breakpoints)")
 
-    args = parser.parse_args()
+        debug_group.add_argument(
+            "-t", "--tui", action="store_true", dest="tui",
+            help="Use GDB's tui mode")
 
-    VERBOSE = args.verbose
+        debug_group.add_argument(
+            "--stdcxx-py-pr", dest="stdcxxpypr",
+            help="Use stdcxx python pretty-printer",
+            choices=["auto", "none", "gnustdcxx", "stlport"],
+            default="none")
 
-    ndk_bin = ndk_bin_path(NDK)
-    (found_adb,     ADB_CMD)     = find_program('adb',    [ndk_bin])
-    (found_gnumake, GNUMAKE_CMD) = find_program('make',   [ndk_bin])
-    (found_jdb,     JDB_CMD)     = find_program('jdb',    [])
 
-    if not found_gnumake:
-        error('Failed to find GNU make')
+def extract_package_name(xmlroot):
+    if "package" in xmlroot.attrib:
+        return xmlroot.attrib["package"]
+    error("Failed to find package name in AndroidManifest.xml")
 
-    log('Android NDK installation path: %s' % (NDK))
 
-    if args.device:
-        ADB_FLAGS = ['-d']
-    if args.emulator:
-        ADB_FLAGS = ['-e']
-    if args.device_serial:
-        ADB_FLAGS = ['-s', args.device_serial]
-    if args.adb_cmd != None:
-        log('Using specific adb command: %s' % (args.adb_cmd))
-        ADB_CMD = args.adb_cmd
-    if ADB_CMD is None:
-        error('''The 'adb' tool is not in your path.
-       You can change your PATH variable, or use
-       --adb=<executable> to point to a valid one.''')
-    if not os.path.isfile(ADB_CMD):
-        error('Could not run ADB with: %s' % (ADB_CMD))
-
-    if args.project != None:
-        PROJECT = args.project
-
-    if args.start != None:
-        OPTION_START = args.start
-
-    if args.launch_name != None:
-        OPTION_LAUNCH = args.launch_name
-
-    if args.launch_list != None:
-        OPTION_LAUNCH_LIST = args.launch_list
-
-    if args.force != None:
-        OPTION_FORCE = args.force
-
-    if args.exec_file != None:
-        OPTION_EXEC = args.exec_file
-
-    if args.tui != False:
-        OPTION_TUI = True
-
-    if args.delay != None:
-        DELAY = args.delay
-
-    if args.gnumake_flags != None:
-        GNUMAKE_FLAGS = args.gnumake_flags
-
-    if args.nowait == True:
-        OPTION_WAIT = []
-    elif not found_jdb:
-        error('Failed to find jdb.\n..you can use --nowait to disable jdb\n..but may miss early breakpoints.')
-
-    OPTION_STDCXXPYPR = args.stdcxxpypr
-
-def get_build_var(var):
-    global GNUMAKE_CMD, GNUMAKE_FLAGS, NDK, PROJECT
-    text = subprocess.check_output([GNUMAKE_CMD,
-                                  '--no-print-dir',
-                                  '-f',
-                                  NDK+'/build/core/build-local.mk',
-                                  '-C',
-                                  PROJECT,
-                                  'DUMP_'+var] + GNUMAKE_FLAGS
-                                  )
-    # replace('\r', '') due to Windows crlf (\r\n)
-    #  ...universal_newlines=True causes bytes to be returned
-    #     rather than a str
-    return text.decode('ascii').replace('\r', '').splitlines()[0]
-
-def get_build_var_for_abi(var, abi):
-    global GNUMAKE_CMD, GNUMAKE_FLAGS, NDK, PROJECT
-    text = subprocess.check_output([GNUMAKE_CMD,
-                                   '--no-print-dir',
-                                   '-f',
-                                   NDK+'/build/core/build-local.mk',
-                                   '-C',
-                                   PROJECT,
-                                   'DUMP_'+var,
-                                   'APP_ABI='+abi] + GNUMAKE_FLAGS,
-                                   )
-    return text.decode('ascii').replace('\r', '').splitlines()[0]
-
-# Silent if gdb is running in tui mode to keep things tidy.
-def output_gdbserver(text):
-    if not OPTION_TUI or OPTION_TUI != 'running':
-        print(text)
-
-# Likewise, silent in tui mode (also prepends 'JDB :: ')
-def output_jdb(text):
-    if not OPTION_TUI or OPTION_TUI != 'running':
-        print('JDB :: %s' % text)
-
-def input_jdb(inhandle):
-    while True:
-        inhandle.write('\n')
-        time.sleep(1.0)
-
-def background_spawn(args, redirect_stderr, output_fn, redirect_stdin = None, input_fn = None):
-    def async_stdout(outhandle, queue, output_fn):
-        for line in iter(outhandle.readline, b''):
-            output_fn(line.replace('\r', '').replace('\n', ''))
-        outhandle.close()
-
-    def async_stderr(outhandle, queue, output_fn):
-        for line in iter(outhandle.readline, b''):
-            output_fn(line.replace('\r', '').replace('\n', ''))
-        outhandle.close()
-
-    def async_stdin(inhandle, queue, input_fn):
-        input_fn(inhandle)
-        inhandle.close()
-
-    if redirect_stderr:
-        used_stderr = subprocess.PIPE
-    else:
-        used_stderr = subprocess.STDOUT
-    if redirect_stdin:
-        used_stdin = subprocess.PIPE
-    else:
-        used_stdin = None
-
-    windows = os.name == "nt"
-    creationflags = subprocess.CREATE_NEW_PROCESS_GROUP if windows else 0
-    preexec_fn = None if windows else os.setpgrp
-    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=used_stderr, stdin=used_stdin,
-                         bufsize=1, close_fds='posix' in sys.builtin_module_names,
-                         creationflags=creationflags, preexec_fn=preexec_fn)
-    atexit.register(p.kill)
-
-    qo = Queue()
-    to = Thread(target=async_stdout, args=(p.stdout, qo, output_fn))
-    to.daemon = True
-    to.start()
-    if redirect_stderr:
-        te = Thread(target=async_stderr, args=(p.stderr, qo, output_fn))
-        te.daemon = True
-        te.start()
-    if redirect_stdin:
-        ti = Thread(target=async_stdin, args=(p.stdin, qo, input_fn))
-        ti.daemon = True
-        ti.start()
-
-    return p
-
-def adb_cmd(redirect_stderr, args, log_command=False, adb_trace=False, background=False):
-    global ADB_CMD, ADB_FLAGS
-    fullargs = [ADB_CMD]
-    if ADB_FLAGS:
-        fullargs += ADB_FLAGS
-    if isinstance(args, str):
-        fullargs.append(args)
-    else:
-        fullargs += [arg for arg in args]
-    new_env = os.environ.copy()
-    retval = 0
-    if adb_trace:
-        new_env["ADB_TRACE"] = "1"
-    if background:
-        if log_command:
-            log('## COMMAND: adb_cmd %s [BACKGROUND]' % (' '.join(args)))
-        background_spawn(fullargs, redirect_stderr, output_gdbserver)
-        return 0, ''
-    else:
-        if log_command:
-            log('## COMMAND: adb_cmd %s' % (' '.join(args)))
-        try:
-            if redirect_stderr:
-                text = subprocess.check_output(fullargs,
-                                               stderr=subprocess.STDOUT,
-                                               env=new_env
-                                               )
-            else:
-                text = subprocess.check_output(fullargs,
-                                               env=new_env
-                                               )
-        except subprocess.CalledProcessError as e:
-            retval = e.returncode
-            text = e.output
-        # rstrip() because of final newline.
-        return retval, text.decode('ascii').replace('\r', '').rstrip()
-
-def _adb_var_shell(args, redirect_stderr=False, log_command=True):
-    if log_command:
-        log('## COMMAND: adb_cmd shell %s' % (' '.join(args)))
-    arg_str = str(' '.join(args)+' ; echo $?')
-    adb_ret,output = adb_cmd(redirect_stderr=redirect_stderr,
-                           args=['shell', arg_str], log_command=False)
-    output = output.splitlines()
-    retcode = int(output.pop())
-    return retcode,'\n'.join(output)
-
-def adb_var_shell(args, log_command=False):
-    return _adb_var_shell(args, redirect_stderr=False, log_command=log_command)
-
-def adb_var_shell2(args, log_command=False):
-    return _adb_var_shell(args, redirect_stderr=True, log_command=log_command)
-
-def get_processes():
-    '''Return a dict from process name to list of running PIDs on the device.'''
-
-    # Some custom ROMs use busybox instead of toolbox for ps. Without -w,
-    # busybox truncates the output, and very long package names like
-    # com.exampleisverylongtoolongbyfar.plasma exceed the limit.
-    #
-    # Perform the check for this on the device to avoid an adb roundtrip
-    # Some devices might not have readlink or which, so we need to handle
-    # this as well.
-
-    ps_script = '''
-        if [ ! -x /system/bin/readlink -o ! -x /system/bin/which ]; then
-            ps;
-        elif [ $(readlink $(which ps)) == "toolbox" ]; then
-            ps;
-        else
-            ps -w;
-        fi
-    '''
-    ps_script = " ".join([line.strip() for line in ps_script.splitlines()])
-
-    retcode, output = adb_cmd(False, ['shell', ps_script])
-    if retcode != 0:
-        raise RuntimeException("Failed to get ps output")
-
-    processes = dict()
-    output = output.replace('\r', '').splitlines()
-    columns = output.pop(0).split()
-    try:
-        PID_column = columns.index('PID')
-    except:
-        PID_column = 1
-    while output:
-        columns = output.pop().split()
-        process_name = columns[-1]
-        pid = int(columns[PID_column])
-        if process_name in processes:
-            processes[process_name].append(pid)
+ANDROID_XMLNS = "{http://schemas.android.com/apk/res/android}"
+def is_debuggable(xmlroot):
+    applications = xmlroot.findall("application")
+    if len(applications) > 1:
+        error("Multiple application tags found in AndroidManifest.xml")
+    debuggable_attrib = "{}debuggable".format(ANDROID_XMLNS)
+    if debuggable_attrib in applications[0].attrib:
+        debuggable = applications[0].attrib[debuggable_attrib]
+        if debuggable == "true":
+            return True
+        elif debuggable == "false":
+            return False
         else:
-            processes[process_name] = [pid]
-
-    return processes
-
-
-def extract_package_name(xmlfile):
-    '''
-    The name itself is the value of the 'package' attribute in the
-    'manifest' element.
-    '''
-    tree = ElementTree.ElementTree(file=xmlfile)
-    root = tree.getroot()
-    if 'package' in root.attrib:
-        return root.attrib['package']
-    return None
-
-def extract_debuggable(xmlfile):
-    '''
-    simply extract the 'android:debuggable' attribute value from
-    the first <manifest><application> element we find.
-    '''
-    tree = ElementTree.ElementTree(file=xmlfile)
-    root = tree.getroot()
-    for application in root.iter('application'):
-        for k in application.attrib.keys():
-            if str(k).endswith('debuggable'):
-                return application.attrib[k] == 'true'
+            msg = "Unexpected android:debuggable value: '{}'"
+            error(msg.format(debuggable))
     return False
 
-def extract_launchable(xmlfile):
+
+def extract_launchable(xmlroot):
     '''
     A given application can have several activities, and each activity
     can have several intent filters. We want to only list, in the final
@@ -527,391 +150,503 @@ def extract_launchable(xmlfile):
       <action android:name="android.intent.action.MAIN" />
       <category android:name="android.intent.category.LAUNCHER" />
     '''
-    tree = ElementTree.ElementTree(file=xmlfile)
-    root = tree.getroot()
     launchable_activities = []
-    for application in root.iter('application'):
-        for activity in application.iter('activity'):
-            for intent_filter in activity.iter('intent-filter'):
-                found_action_MAIN = False
-                found_category_LAUNCHER = False
-                for child in intent_filter:
-                    if child.tag == 'action':
-                        if True in [str(child.attrib[k]).endswith('MAIN') for k in child.attrib.keys()]:
-                            found_action_MAIN = True
-                    if child.tag == 'category':
-                        if True in [str(child.attrib[k]).endswith('LAUNCHER') for k in child.attrib.keys()]:
-                            found_category_LAUNCHER = True
-                if found_action_MAIN and found_category_LAUNCHER:
-                    names = [str(activity.attrib[k]) for k in activity.attrib.keys() if str(k).endswith('name')]
-                    for name in names:
-                        if name[0] != '.':
-                            name = '.'+name
-                        launchable_activities.append(name)
+    application = xmlroot.findall("application")[0]
+
+    main_action = "android.intent.action.MAIN"
+    launcher_category = "android.intent.category.LAUNCHER"
+    name_attrib = "{}name".format(ANDROID_XMLNS)
+
+    for activity in application.iter("activity"):
+        if name_attrib not in activity.attrib:
+            continue
+
+        for intent_filter in activity.iter("intent-filter"):
+            found_action = False
+            found_category = False
+            for child in intent_filter:
+                if child.tag == "action":
+                    if not found_action and name_attrib in child.attrib:
+                        if child.attrib[name_attrib] == main_action:
+                            found_action = True
+                if child.tag == "category":
+                    if not found_category and name_attrib in child.attrib:
+                        if child.attrib[name_attrib] == launcher_category:
+                            found_category = True
+            if found_action and found_category:
+                launchable_activities.append(activity.attrib[name_attrib])
     return launchable_activities
 
+
+def ndk_path():
+    ndk = os.path.abspath(os.path.dirname(sys.argv[0])).replace("\\", "/")
+    return ndk
+
+
+def ndk_bin_path():
+    ndk = ndk_path()
+    if sys.platform.startswith("linux"):
+        platform_name = "linux-x86_64"
+    elif sys.platform.startswith("darwin"):
+        platform_name = "darwin-x86_64"
+    elif sys.platform.startswith("win"):
+        # Check both x86 and x86_64.
+        platform_name = "windows-x86_64"
+        if not os.path.exists(os.path.join(ndk, "prebuilt", platform_name)):
+            platform_name = "windows"
+    else:
+        error("Unknown platform: {}".format(sys.platform))
+
+    path = os.path.join(ndk, "prebuilt", platform_name, "bin")
+    if not os.path.exists(path):
+        error("Failed to find ndk binary path, should be at '{}'".format(path))
+
+    return path
+
+
+def handle_args():
+    def find_program(program, paths):
+        '''Find a binary in paths'''
+        exts = [""]
+        if sys.platform.startswith("win"):
+            exts += [".exe", ".bat", ".cmd"]
+        for path in paths:
+            if os.path.isdir(path):
+                for ext in exts:
+                    full = path + os.sep + program + ext
+                    if os.path.isfile(full):
+                        return full
+        return None
+
+    # FIXME: This is broken for PATH that contains quoted colons.
+    paths = os.environ["PATH"].replace('"', '').split(os.pathsep)
+
+    args = ArgumentParser().parse_args()
+    ndk_bin = ndk_bin_path()
+    args.make_cmd = find_program("make", [ndk_bin])
+    args.jdb_cmd = find_program("jdb", paths)
+    if args.make_cmd is None:
+        error("Failed to find make in '{}'".format(ndk_bin))
+    if args.jdb_cmd is None:
+        print("WARNING: Failed to find jdb on your path, defaulting to "
+              "--nowait")
+        args.nowait = True
+
+    if args.verbose:
+        logger = logging.getLogger(__name__)
+        handler = logging.StreamHandler(sys.stdout)
+        formatter = logging.Formatter()
+
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+        logger.propagate = False
+
+        logger.setLevel(logging.INFO)
+
+    return args
+
+
+def find_project(args):
+    manifest_name = "AndroidManifest.xml"
+    if args.project is not None:
+        log("Using project directory: {}".format(args.project))
+        args.project = os.path.realpath(args.project)
+        if not os.path.exists(os.path.join(args.project, manifest_name)):
+            msg = "could not find AndroidManifest.xml in '{}'"
+            error(msg.format(args.project))
+    else:
+        # Walk upwards until we find AndroidManifest.xml, or run out of path.
+        current_dir = os.getcwdu()
+        while not os.path.exists(os.path.join(current_dir, manifest_name)):
+            parent_dir = os.path.dirname(current_dir)
+            if parent_dir == current_dir:
+                error("Could not find AndroidManifest.xml in current"
+                      " directory or a parent directory.\n"
+                      "       Launch this script from inside a project, or"
+                      " use --project=<path>.")
+            current_dir = parent_dir
+        args.project = current_dir
+        log("Using project directory: {} ".format(args.project))
+    args.manifest_path = os.path.join(args.project, manifest_name)
+    return args.project
+
+
+def canonicalize_activity(package_name, activity_name):
+    if activity_name.startswith("."):
+        return "{}{}".format(package_name, activity_name)
+    return activity_name
+
+
+def parse_manifest(args):
+    manifest = ElementTree.parse(args.manifest_path)
+    manifest_root = manifest.getroot()
+    package_name = extract_package_name(manifest_root)
+    log("Found package name: {}".format(package_name))
+
+    debuggable = is_debuggable(manifest_root)
+    if not debuggable:
+        error("Application is not marked as debuggable in its manifest.")
+
+    activities = extract_launchable(manifest_root)
+    activities = [canonicalize_activity(package_name, a) for a in activities]
+
+    if args.launch_list:
+        print("Launchable activities: {}".format(", ".join(activities)))
+        sys.exit(0)
+
+    args.activities = activities
+    args.package_name = package_name
+
+
+def select_target(args):
+    assert args.launch
+    if len(args.activities) == 0:
+        error("No launchable activities found.")
+
+    if args.launch_target is None:
+        args.launch_target = args.activities[0]
+
+        if len(args.activities) > 1:
+            print("WARNING: Multiple launchable activities found, choosing"
+                  " '{}'.".format(args.activities[0]))
+    else:
+        canonicalize = canonicalize_activity(args.package_name)
+        activity_name = canonicalize(args.launch_target)
+
+        if activity_name not in args.activities:
+            msg = "Could not find launchable activity: '{}'."
+            error(msg.format(activity_name))
+        args.launch_target = activity_name
+    return args.launch_target
+
+
+@contextlib.contextmanager
+def cd(path):
+    curdir = os.getcwd()
+    os.chdir(path)
+    os.environ["PWD"] = path
+    try:
+        yield
+    finally:
+        os.environ["PWD"] = curdir
+        os.chdir(curdir)
+
+
+def dump_var(args, variable, abi=None):
+    make_args = [args.make_cmd, "--no-print-dir", "-f",
+                 os.path.join(ndk_path(), "build/core/build-local.mk"),
+                 "-C", args.project, "DUMP_{}".format(variable)]
+
+    if abi is not None:
+        make_args.append("APP_ABI={}".format(abi))
+
+    with cd(args.project):
+        try:
+            make_output = subprocess.check_output(make_args, cwd=args.project)
+        except subprocess.CalledProcessError:
+            error("Failed to retrieve application ABI from Android.mk.")
+    return make_output.splitlines()[0]
+
+
+def get_api_level(device_props):
+    # Check the device API level
+    if "ro.build.version.sdk" not in device_props:
+        error("Failed to find target device's supported API level.\n"
+              "ndk-gdb only supports devices running Android 2.2 or higher.")
+    api_level = int(device_props["ro.build.version.sdk"])
+    if api_level < 8:
+        error("ndk-gdb only supports devices running Android 2.2 or higher.\n"
+              "(expected API level 8, actual: {})".format(api_level))
+
+    return api_level
+
+
+def fetch_abi(args):
+    '''
+    Figure out the intersection of which ABIs the application is built for and
+    which ones the device supports, then pick the one preferred by the device,
+    so that we know which gdbserver to push and run on the device.
+    '''
+
+    app_abis = dump_var(args, "APP_ABI").split(" ")
+    if "all" in app_abis:
+        app_abis = dump_var(args, "NDK_ALL_ABIS").split(" ")
+    app_abis_msg = "Application ABIs: {}".format(", ".join(app_abis))
+    log(app_abis_msg)
+
+    device_props = args.device.get_props()
+
+    new_abi_props = ["ro.product.cpu.abilist"]
+    old_abi_props = ["ro.product.cpu.abi", "ro.product.cpu.abi2"]
+    abi_props = new_abi_props
+    if len(set(new_abi_props).intersection(device_props.keys())) == 0:
+        abi_props = old_abi_props
+
+    device_abis = [device_props[key].split(",") for key in abi_props]
+
+    # Flatten the list.
+    device_abis = reduce(operator.add, device_abis)
+    device_abis_msg = "Device ABIs: {}".format(", ".join(device_abis))
+    log(device_abis_msg)
+
+    for abi in device_abis:
+        if abi in app_abis:
+            # TODO(jmgao): Do we expect gdb to work with ARM-x86 translation?
+            log("Selecting ABI: {}".format(abi))
+            return abi
+
+    msg = "Application cannot run on the selected device."
+
+    # Don't repeat ourselves.
+    if not args.verbose:
+        msg += "\n{}\n{}".format(app_abis_msg, device_abis_msg)
+
+    error(msg)
+
+
+def get_app_data_dir(args, package_name):
+    cmd = ["/system/bin/sh", "-c", "pwd", "2>/dev/null"]
+    cmd = gdbrunner.get_run_as_cmd(package_name, cmd)
+    (rc, stdout, _) = args.device.shell_nocheck(cmd)
+    if rc != 0:
+        error("Could not find application's data directory. Are you sure that "
+              "the application is installed and debuggable?")
+    data_dir = stdout.strip()
+    log("Found application data directory: {}".format(data_dir))
+    return data_dir
+
+
+def abi_to_arch(abi):
+    if abi.startswith("armeabi"):
+        return "arm"
+    elif abi == "arm64-v8a":
+        return "arm64"
+    else:
+        return abi
+
+
+def get_gdbserver_path(args, package_name, app_data_dir, arch):
+    app_gdbserver_path = "{}/lib/gdbserver".format(app_data_dir)
+    cmd = ["ls", app_gdbserver_path, "2>/dev/null"]
+    cmd = gdbrunner.get_run_as_cmd(package_name, cmd)
+    (rc, _, _) = args.device.shell_nocheck(cmd)
+    if rc == 0:
+        log("Found app gdbserver: {}".format(app_gdbserver_path))
+        return app_gdbserver_path
+
+    # We need to upload our gdbserver
+    log("App gdbserver not found at {}, uploading.".format(app_gdbserver_path))
+    local_path = "{}/prebuilt/android-{}/gdbserver/gdbserver"
+    local_path = local_path.format(ndk_path(), arch)
+    remote_path = "/data/local/tmp/{}-gdbserver".format(arch)
+    args.device.push(local_path, remote_path)
+
+    # Copy gdbserver into the data directory on M+, because selinux prevents
+    # execution of binaries directly from /data/local/tmp.
+    if get_api_level(args.props) >= 23:
+        destination = "{}/{}-gdbserver".format(app_data_dir, arch)
+        log("Copying gdbserver to {}.".format(destination))
+        cmd = ["cat", remote_path, "|", "run-as", package_name,
+               "sh", "-c", "'cat > {}'".format(destination)]
+        (rc, _, _) = args.device.shell_nocheck(cmd)
+        if rc != 0:
+            error("Failed to copy gdbserver to {}.".format(destination))
+        (rc, _, _) = args.device.shell_nocheck(["run-as", package_name,
+                                                "chmod", "700", destination])
+        if rc != 0:
+            error("Failed to chmod gdbserver at {}.".format(destination))
+
+        remote_path = destination
+
+    log("Uploaded gdbserver to {}".format(remote_path))
+    return remote_path
+
+
+def pull_binaries(device, out_dir, is64bit):
+    required_files = []
+    libraries = ["libc.so", "libm.so", "libdl.so"]
+
+    if is64bit:
+        required_files = ["/system/bin/app_process64", "/system/bin/linker64"]
+        library_path = "/system/lib64"
+    else:
+        required_files = ["/system/bin/app_process", "/system/bin/linker"]
+        library_path = "/system/lib"
+
+    for library in libraries:
+        posixpath.join(library_path, library)
+
+    for required_file in required_files:
+        local_name = os.path.join(out_dir, required_file)
+        dirname = os.path.dirname(required_file)
+        local_dirname = os.path.join(out_dir, dirname)
+        if not os.path.isdir(local_dirname):
+            os.makedirs(local_dirname)
+        device.pull(required_file, local_name)
+
+
+def generate_gdb_script(sysroot, binary_path, is64bit, port,
+                        connect_timeout=5):
+    gdb_commands = "file '{}'\n".format(binary_path)
+
+    solib_search_path = [sysroot, "{}/system/bin".format(sysroot)]
+    if is64bit:
+        solib_search_path.append("{}/system/lib64".format(sysroot))
+    else:
+        solib_search_path.append("{}/system/lib".format(sysroot))
+    solib_search_path = os.pathsep.join(solib_search_path)
+    gdb_commands += "set solib-absolute-prefix {}\n".format(sysroot)
+    gdb_commands += "set solib-search-path {}\n".format(solib_search_path)
+
+    # Try to connect for a few seconds, sometimes the device gdbserver takes
+    # a little bit to come up, especially on emulators.
+    gdb_commands += """
+python
+
+def target_remote_with_retry(target, timeout_seconds):
+  import time
+  end_time = time.time() + timeout_seconds
+  while True:
+    try:
+      gdb.execute('target remote ' + target)
+      return True
+    except gdb.error as e:
+      time_left = end_time - time.time()
+      if time_left < 0 or time_left > timeout_seconds:
+        print("Error: unable to connect to device.")
+        print(e)
+        return False
+      time.sleep(min(0.25, time_left))
+
+target_remote_with_retry(':{}', {})
+
+end
+""".format(port, connect_timeout)
+    return gdb_commands
+
+
 def main():
-    global ADB_CMD, NDK, PROJECT
-    global JDB_CMD
-    global OPTION_START, OPTION_LAUNCH, OPTION_LAUNCH_LIST
-    global OPTION_FORCE, OPTION_EXEC, OPTION_TUI, OPTION_WAIT
-    global OPTION_STDCXXPYPR
-    global PYPRPR_BASE, PYPRPR_GNUSTDCXX_BASE
+    args = handle_args()
+    device = args.device
 
-    if NDK.find(' ')!=-1:
-        error('NDK path cannot contain space')
-    handle_args()
-    if OPTION_EXEC:
-        if not os.path.isfile(OPTION_EXEC):
-            error('Invalid initialization file: %s' % (OPTION_EXEC))
-    ADB_VERSION = subprocess.check_output([ADB_CMD, 'version'],
-                                        ).decode('ascii').replace('\r', '').splitlines()[0]
-    log('ADB version found: %s' % (ADB_VERSION))
-    log('Using ADB flags: %s' % (ADB_FLAGS))
-    if PROJECT != None:
-        PROJECT = os.path.expanduser(PROJECT)
-        log('Using specified project path: %s' % (PROJECT))
-        if not os.path.isdir(PROJECT):
-            error('Your --project option does not point to a directory!')
-        if not os.path.isfile(PROJECT+os.sep+MANIFEST):
-            error('''Your --project does not point to an Android project path!
-       It is missing a %s file.''' % (MANIFEST))
+    if device is None:
+        error("Could not find a unique connected device/emulator.")
+
+    adb_version = subprocess.check_output(device.adb_cmd + ["version"])
+    log("ADB command used: '{}'".format(" ".join(device.adb_cmd)))
+    log("ADB version: {}".format(" ".join(adb_version.splitlines())))
+
+    args.props = device.get_props()
+
+    project = find_project(args)
+    parse_manifest(args)
+    pkg_name = args.package_name
+
+    if args.launch is False:
+        log("Attaching to existing application process.")
     else:
-        # Assume we are in the project directory
-        if os.path.isfile(MANIFEST):
-            PROJECT = '.'
-        else:
-            PROJECT = ''
-            CURDIR = os.getcwd()
+        launch_target = select_target(args)
+        log("Selected target activity: '{}'".format(launch_target))
 
-            while CURDIR != os.path.dirname(CURDIR):
-                if os.path.isfile(CURDIR+os.sep+MANIFEST):
-                    PROJECT=CURDIR
-                    break
-                CURDIR = os.path.dirname(CURDIR)
+    abi = fetch_abi(args)
 
-            if not os.path.isdir(PROJECT):
-                error('Launch this script from an application project directory, or use --project=<path>.')
-        log('Using auto-detected project path: %s' % (PROJECT))
+    out_dir = os.path.join(project, (dump_var(args, "TARGET_OUT", abi)))
+    out_dir = os.path.realpath(out_dir)
 
-    PACKAGE_NAME = extract_package_name(PROJECT+os.sep+MANIFEST)
-    if PACKAGE_NAME is None:
-        PACKAGE_NAME = '<none>'
-    log('Found package name: %s' % (PACKAGE_NAME))
-    if PACKAGE_NAME == '<none>':
-        error('''Could not extract package name from %s.
-       Please check that the file is well-formed!''' % (PROJECT+os.sep+MANIFEST))
-    if OPTION_LAUNCH_LIST:
-        log('Extracting list of launchable activities from manifest:')
-        print(' '.join(extract_launchable(PROJECT+os.sep+MANIFEST)))
-        exit(0)
-    APP_ABIS = get_build_var('APP_ABI').split(' ')
-    if 'all' in APP_ABIS:
-        ALL_ABIS = get_build_var('NDK_ALL_ABIS').split(' ')
-        APP_ABIS = APP_ABIS[:APP_ABIS.index('all')]+ALL_ABIS+APP_ABIS[APP_ABIS.index('all')+1:]
-    log('ABIs targetted by application: %s' % (' '.join(APP_ABIS)))
+    app_data_dir = get_app_data_dir(args, pkg_name)
+    arch = abi_to_arch(abi)
+    gdbserver_path = get_gdbserver_path(args, pkg_name, app_data_dir, arch)
 
-    retcode, ADB_TEST = adb_cmd(True, ['shell', 'echo'])
-    if retcode != 0:
-        print(ADB_TEST)
-        error('''Could not connect to device or emulator!
-       Please check that an emulator is running or a device is connected
-       through USB to this machine. You can use -e, -d and -s <serial>
-       in case of multiple ones.''')
+    # Kill the process and gdbserver if requested.
+    if args.force:
+        kill_pids = gdbrunner.get_pids(device, gdbserver_path)
+        if args.launch:
+            kill_pids += gdbrunner.get_pids(device, pkg_name)
+        kill_pids = map(str, kill_pids)
+        if kill_pids:
+            log("Killing processes: {}".format(", ".join(kill_pids)))
+            device.shell_nocheck(["run-as", pkg_name, "kill", "-9"] + kill_pids)
 
-    retcode,API_LEVEL = adb_var_shell(['getprop', 'ro.build.version.sdk'])
-    if retcode != 0 or API_LEVEL == '':
-        error('''Could not find target device's supported API level!
-ndk-gdb will only work if your device is running Android 2.2 or higher.''')
-    API_LEVEL = int(API_LEVEL)
-    log('Device API Level: %d' % (API_LEVEL))
-    if API_LEVEL < 8:
-        error('''ndk-gdb requires a target device running Android 2.2 (API level 8) or higher.
-The target device is running API level %d!''' % (API_LEVEL))
-    COMPAT_ABI = []
+    # Launch the application if needed, and get its pid
+    if args.launch:
+        am_cmd = ["am", "start"]
+        if not args.nowait:
+            am_cmd.append("-D")
+        component_name = "{}/{}".format(pkg_name, launch_target)
+        am_cmd.append(component_name)
+        log("Launching activity {}...".format(component_name))
+        (rc, _, _) = device.shell_nocheck(am_cmd)
+        if rc != 0:
+            error("Failed to start {}".format(component_name))
 
-    _,CPU_ABILIST32 = adb_var_shell(['getprop', 'ro.product.cpu.abilist32'])
-    _,CPU_ABILIST64 = adb_var_shell(['getprop', 'ro.product.cpu.abilist64'])
-    # Both CPU_ABILIST32 and CPU_ABILIST64 may contain multiple comma-delimited abis.
-    # Concatanate CPU_ABILIST32 and CPU_ABILIST64.
-    CPU_ABIS = CPU_ABILIST64.split(',')+CPU_ABILIST32.split(',')
-    if not CPU_ABILIST64 and not CPU_ABILIST32:
-        _,CPU_ABI1 = adb_var_shell(['getprop', 'ro.product.cpu.abi'])
-        _,CPU_ABI2 = adb_var_shell(['getprop', 'ro.product.cpu.abi2'])
-        CPU_ABIS = CPU_ABI1.split(',')+CPU_ABI2.split(',')
+        if args.delay > 0.0:
+            log("Sleeping for {} seconds.".format(args.delay))
+            time.sleep(args.delay)
 
-    log('Device CPU ABIs: %s' % (' '.join(CPU_ABIS)))
+    pids = gdbrunner.get_pids(device, pkg_name)
+    if len(pids) == 0:
+        error("Failed to find running process '{}'".format(pkg_name))
+    if len(pids) > 1:
+        error("Multiple running processes named '{}'".format(pkg_name))
+    pid = pids[0]
 
-    device_bits = 32
-    if len(CPU_ABILIST64):
-        device_bits = 64
-
-    app_bits = 32
-    # First look compatible ABI in the list of 64-bit ABIs.
-    COMPAT_ABI = [ABI for ABI in CPU_ABILIST64.split(',') if ABI in APP_ABIS]
-    if len(COMPAT_ABI):
-        # We found compatible ABI and it is 64-bit.
-        app_bits = 64
+    # Pull the linker, zygote, and notable system libraries
+    is64bit = "64" in abi
+    pull_binaries(device, out_dir, is64bit)
+    if is64bit:
+        zygote_path = os.path.join(out_dir, "system", "bin", "app_process64")
     else:
-        # If we found nothing - look among 32-bit ABIs.
-        COMPAT_ABI = [ABI for ABI in CPU_ABILIST32.split(',') if ABI in APP_ABIS]
-        if not len(COMPAT_ABI):
-            # Lastly, lets check ro.product.cpu.abi and ro.product.cpu.abi2
-            COMPAT_ABI = [ABI for ABI in CPU_ABIS if ABI in APP_ABIS]
+        zygote_path = os.path.join(out_dir, "system", "bin", "app_process")
 
-    if not len(COMPAT_ABI):
-        error('''The device does not support the application's targetted CPU ABIs!
-       Device supports:  %s
-       Package supports: %s''' % (' '.join(CPU_ABIS),' '.join(APP_ABIS)))
-    COMPAT_ABI = COMPAT_ABI[0]
-    log('Compatible device ABI: %s' % (COMPAT_ABI))
-    GDBSETUP_INIT = get_build_var_for_abi('NDK_APP_GDBSETUP', COMPAT_ABI)
-    GDBSETUP_INIT = os.path.normpath(os.path.join(PROJECT, GDBSETUP_INIT))
-    log('Using gdb setup init: %s' % (GDBSETUP_INIT))
+    # Start gdbserver.
+    debug_socket = os.path.join(app_data_dir, "debug_socket")
+    log("Starting gdbserver...")
+    gdbrunner.start_gdbserver(
+        device, None, gdbserver_path,
+        target_pid=pid, run_cmd=None, debug_socket=debug_socket,
+        port=args.port, user=pkg_name)
 
-    APP_OUT = get_build_var_for_abi('TARGET_OUT', COMPAT_ABI)
-    APP_OUT = os.path.normpath(os.path.join(PROJECT, APP_OUT))
-    if os.name == "nt":
-        APP_OUT = APP_OUT.replace("\\", "/")
-    log('Using app out directory: %s' % (APP_OUT))
-    DEBUGGABLE = extract_debuggable(PROJECT+os.sep+MANIFEST)
-    log('Found debuggable flag: %s' % ('true' if DEBUGGABLE==True else 'false'))
+    gdb_path = os.path.join(ndk_bin_path(), "gdb")
 
-    # Find the <dataDir> of the package on the device
-    retcode,DATA_DIR = adb_var_shell2(['run-as', PACKAGE_NAME, '/system/bin/sh', '-c', 'pwd'])
-    if retcode or DATA_DIR == '':
-        error('''Could not find package's data directory. Are you sure that
-       the application is installed and debuggable?''')
-    log("Found data directory: '%s'" % (DATA_DIR))
+    # Start jdb to unblock the application if necessary.
+    if args.launch and not args.nowait:
+        # Do this in a separate process before starting gdb, since jdb won't
+        # connect until gdb connects and continues.
+        def start_jdb():
+            log("Starting jdb to unblock application.")
 
-    # Let's check that 'gdbserver' is properly installed on the device too. If this
-    # is not the case, push 'gdbserver' found in prebuilt.
-    #
-    LIB_DIR = '%s/lib' % (DATA_DIR)
-    device_gdbserver = '%s/gdbserver' % (LIB_DIR)
-    retcode, LS_GDBSERVER = adb_var_shell2(['run-as', PACKAGE_NAME, 'ls', device_gdbserver])
-    if not retcode:
-        # TODO: Make sure that the existing gdbserver matches the size of our current one
-        log('Found device gdbserver: %s' % (device_gdbserver))
-    else:
-        gdbserver_prebuilt_path = '%s/prebuilt/android-%s/gdbserver/gdbserver'
-        prebuilt_arch = "android-%s" % get_platform_arch(COMPAT_ABI)
-        gdbserver_prebuilt_path = os.path.join(NDK, 'prebuilt', prebuilt_arch,
-                                               'gdbserver', 'gdbserver')
-        if os.path.isfile(gdbserver_prebuilt_path):
-            log('Found prebuilt gdbserver, copying it to the device')
+            # Do setup stuff to keep ^C in the parent from killing us.
+            signal.signal(signal.SIGINT, signal.SIG_IGN)
+            windows = sys.platform.startswith("win")
+            if not windows:
+                os.setpgrp()
 
-            # DATA_DIR/lib is probably read-only
-            device_gdbserver = '/data/local/tmp/gdbserver'
-            push_args = ['push', gdbserver_prebuilt_path, device_gdbserver]
-            retcode, PUSH_OUTPUT = adb_cmd(True, push_args)
-            if retcode:
-                error('Could not copy prebuilt gdbserver to the device')
+            jdb_port = 65534
+            device.forward("tcp:{}".format(jdb_port), "jdwp:{}".format(pid))
+            jdb_cmd = [args.jdb_cmd, "-connect",
+                       "com.sun.jdi.SocketAttach:hostname=localhost,port={}".format(jdb_port)]
 
-            if API_LEVEL >= 23:
-                # Copy gdbserver to the data directory since selinux prevents
-                # executing binaries in /data/local/tmp on M+, and we can't
-                # copy directly into the data directory because of permissions.
-                #
-                # Don't do this pre-M to avoid a ~100ms adb shell roundtrip.
-                temp_gdbserver = device_gdbserver
-                device_gdbserver = '%s/gdbserver' % (DATA_DIR)
-                args = ['cat', temp_gdbserver, '|', 'run-as', PACKAGE_NAME,
-                        'sh', '-c', "'cat > %s'" % device_gdbserver]
-                retcode, _ = adb_var_shell2(args)
-                if retcode:
-                    error('Failed to copy gdbserver to application directory')
+            flags = subprocess.CREATE_NEW_PROCESS_GROUP if windows else 0
+            jdb = subprocess.Popen(jdb_cmd,
+                                   stdin=subprocess.PIPE,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT,
+                                   creationflags=flags)
+            jdb.stdin.write("exit\n")
+            jdb.wait()
+            log("JDB finished unblocking application.")
 
-            # Check if gdbserver is runnable by the application user
-            retcode, _ = adb_var_shell2(['run-as', PACKAGE_NAME,
-                                         device_gdbserver, '--version'])
-            if retcode:
-                error('''Could not run the prebuilt gdbserver on the device,
-       please ensure that the installed application is debuggable.''')
-        else:
-            error('Cannot find prebuilt gdbserver for ABI \'%s\'' % COMPAT_ABI)
+        jdb_process = multiprocessing.Process(target=start_jdb)
+        jdb_process.start()
 
-    # Launch the activity if needed
-    if OPTION_START:
-        if not OPTION_LAUNCH:
-            OPTION_LAUNCH = extract_launchable(PROJECT+os.sep+MANIFEST)
-            if not len(OPTION_LAUNCH):
-                error('''Could not extract name of launchable activity from manifest!
-       Try to use --launch=<name> directly instead as a work-around.''')
-            log('Found first launchable activity: %s' % (OPTION_LAUNCH[0]))
-        if not len(OPTION_LAUNCH):
-            error('''It seems that your Application does not have any launchable activity!
-       Please fix your manifest file and rebuild/re-install your application.''')
 
-    if OPTION_LAUNCH:
-        log('Launching activity: %s/%s' % (PACKAGE_NAME,OPTION_LAUNCH[0]))
-        retcode,LAUNCH_OUTPUT=adb_cmd(True,
-                                      ['shell', 'am', 'start'] + OPTION_WAIT + ['-n', '%s/%s' % (PACKAGE_NAME,OPTION_LAUNCH[0])],
-                                      log_command=True)
-        if retcode:
-            error('''Could not launch specified activity: %s
-       Use --launch-list to dump a list of valid values.''' % (OPTION_LAUNCH[0]))
+    # Start gdb.
+    gdb_commands = generate_gdb_script(out_dir, zygote_path, is64bit,
+                                       args.port)
+    gdb_flags = []
+    if args.tui:
+        gdb_flags.append("--tui")
+    gdbrunner.start_gdb(gdb_path, gdb_commands, gdb_flags)
 
-        # Sleep a bit, it sometimes take one second to start properly
-        # Note that we use the 'sleep' command on the device here.
-        #
-        adb_cmd(True, ['shell', 'sleep', '%f' % (DELAY)], log_command=True)
-
-    processes = get_processes()
-
-    # Find the PID of the application being run
-    if PACKAGE_NAME not in processes:
-        if OPTION_LAUNCH:
-            error('''Could not extract PID of application on device/emulator.
-       Weird, this probably means one of these:
-
-         - The installed package does not match your current manifest.
-         - The application process was terminated.
-
-       Try using the --verbose option and look at its output for details.''')
-        else:
-            error('''Could not extract PID of application on device/emulator.
-       Are you sure the application is already started?
-       Consider using --start or --launch=<name> if not.''')
-
-    if len(processes[PACKAGE_NAME]) > 1:
-        error('Multiple processes found for %s: %s' % (PACKAGE_NAME, processes[PACKAGE_NAME]))
-
-    pid = processes[PACKAGE_NAME][0]
-    log('Found running PID: %d' % (pid))
-
-    # Check that there is no other instance of gdbserver running
-    if 'lib/gdbserver' in processes:
-        if not OPTION_FORCE:
-            error('Another debug session running, Use --force to kill it.')
-        log('Killing existing debugging session')
-        for gdbserver_pid in processes['lib/gdbserver']:
-            adb_cmd(False, ['shell', 'kill -9 %s' % (gdbserver_pid)])
-
-    # Launch gdbserver now
-    DEBUG_SOCKET = 'debug-socket'
-    adb_cmd(False,
-            ['shell', 'run-as', PACKAGE_NAME, device_gdbserver, '+%s' % (DEBUG_SOCKET), '--attach', str(pid)],
-            log_command=True, adb_trace=True, background=True)
-    log('Launched gdbserver succesfully.')
-
-    # Setup network redirection
-    log('Setup network redirection')
-    retcode,_ = adb_cmd(False,
-                        ['forward', 'tcp:%d' % (DEBUG_PORT), 'localfilesystem:%s/%s' % (DATA_DIR,DEBUG_SOCKET)],
-                        log_command=True)
-    if retcode:
-        error('''Could not setup network redirection to gdbserver?
-       Maybe using --port=<port> to use a different TCP port might help?''')
-
-    # If we are debugging 64-bit app, then we need to pull linker64,
-    # app_process64 and libc.so from lib64 directory.
-    linker_name = 'linker'
-    libdir_name = 'lib'
-    app_process_name = 'app_process32'
-    if (app_bits == 64):
-        linker_name = 'linker64'
-        libdir_name = 'lib64'
-        app_process_name = 'app_process64'
-    else:
-        retcode,_ = adb_cmd(False, ['shell', 'test -e /system/bin/%s' % (app_process_name)])
-        if retcode:
-            # Old 32-bit devices do not have app_process32. Pull
-            # app_process in this case
-            app_process_name = 'app_process'
-
-    # Get the app_server binary from the device
-    pulled_app_process = '%s/app_process' % (APP_OUT)
-    adb_cmd(False, ['pull', '/system/bin/%s' % (app_process_name), pulled_app_process], log_command=True)
-    log('Pulled %s from device/emulator.' % (app_process_name))
-
-    pulled_linker = '%s/%s' % (APP_OUT, linker_name)
-    adb_cmd(False, ['pull', '/system/bin/%s' % (linker_name), pulled_linker], log_command=True)
-    log('Pulled %s from device/emulator.' % (linker_name))
-
-    pulled_libc = '%s/libc.so' % (APP_OUT)
-    adb_cmd(False, ['pull', '/system/%s/libc.so' % libdir_name, pulled_libc], log_command=True)
-    log('Pulled /system/%s/libc.so from device/emulator.' % libdir_name)
-
-    # Setup JDB connection, for --start or --launch
-    if (OPTION_START != None or OPTION_LAUNCH != None) and len(OPTION_WAIT):
-        log('Set up JDB connection, using jdb command: %s' % JDB_CMD)
-        retcode,_ = adb_cmd(False,
-                            ['forward', 'tcp:%d' % (JDB_PORT), 'jdwp:%d' % (pid)],
-                            log_command=True)
-        if retcode:
-            error('Could not forward JDB port')
-        time.sleep(1.0)
-        background_spawn([JDB_CMD,'-connect','com.sun.jdi.SocketAttach:hostname=localhost,port=%d' % (JDB_PORT)], True, output_jdb, True, input_jdb)
-        time.sleep(1.0)
-
-    # Work out the python pretty printer details.
-    pypr_folder = None
-    pypr_function = None
-
-    # Automatic determination of pypr.
-    if OPTION_STDCXXPYPR == 'auto':
-        libdir = os.path.join(PROJECT,'libs',COMPAT_ABI)
-        libs = [ f for f in os.listdir(libdir)
-                 if os.path.isfile(os.path.join(libdir, f)) and f.endswith('.so') ]
-        if 'libstlport_shared.so' in libs:
-            OPTION_STDCXXPYPR = 'stlport'
-        elif 'libgnustl_shared.so' in libs:
-            OPTION_STDCXXPYPR = 'gnustdcxx'
-
-    if OPTION_STDCXXPYPR == 'stlport':
-        pypr_folder = PYPRPR_BASE + 'stlport/gppfs-0.2/stlport'
-        pypr_function = 'register_stlport_printers'
-    elif OPTION_STDCXXPYPR.startswith('gnustdcxx'):
-        if OPTION_STDCXXPYPR == 'gnustdcxx':
-            NDK_TOOLCHAIN_VERSION = get_build_var_for_abi('NDK_TOOLCHAIN_VERSION', COMPAT_ABI)
-            log('Using toolchain version: %s' % (NDK_TOOLCHAIN_VERSION))
-            pypr_folder = PYPRPR_GNUSTDCXX_BASE + 'gcc-' + NDK_TOOLCHAIN_VERSION
-        else:
-            pypr_folder = PYPRPR_GNUSTDCXX_BASE + OPTION_STDCXXPYPR.replace('gnustdcxx-','gcc-')
-        pypr_function = 'register_libstdcxx_printers'
-
-    # Now launch the appropriate gdb client with the right init commands
-    #
-    GDBCLIENT = '{}/gdb'.format(ndk_bin_path(NDK))
-    GDBSETUP = '%s/gdb.setup' % (APP_OUT)
-    shutil.copyfile(GDBSETUP_INIT, GDBSETUP)
-    with open(GDBSETUP, "a") as gdbsetup:
-        #uncomment the following to debug the remote connection only
-        #gdbsetup.write('set debug remote 1\n')
-        gdbsetup.write('file '+pulled_app_process+'\n')
-        gdbsetup.write('target remote :%d\n' % (DEBUG_PORT))
-        gdbsetup.write('set breakpoint pending on\n')
-
-        if pypr_function:
-            gdbsetup.write('python\n')
-            gdbsetup.write('import sys\n')
-            gdbsetup.write('sys.path.append("%s")\n' % pypr_folder)
-            gdbsetup.write('from printers import %s\n' % pypr_function)
-            gdbsetup.write('%s(None)\n' % pypr_function)
-            gdbsetup.write('end\n')
-
-        if OPTION_EXEC:
-            with open(OPTION_EXEC, 'r') as execfile:
-                for line in execfile:
-                    gdbsetup.write(line)
-
-    gdbargs = [GDBCLIENT, '-x', '%s' % (GDBSETUP)]
-    if OPTION_TUI:
-        gdbhelp = subprocess.check_output([GDBCLIENT, '--help']).decode('ascii')
-        try:
-            gdbhelp.index('--tui')
-            gdbargs.append('--tui')
-            OPTION_TUI = 'running'
-        except:
-            print('Warning: Disabled tui mode as %s does not support it' % (os.path.basename(GDBCLIENT)))
-    gdbp = subprocess.Popen(gdbargs)
-    while gdbp.returncode is None:
-        try:
-            gdbp.communicate()
-        except KeyboardInterrupt:
-            pass
-    log("Exited gdb, returncode %d" % gdbp.returncode)
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
