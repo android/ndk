@@ -20,6 +20,7 @@ import subprocess
 import sys
 
 
+# TODO: Make the x86 toolchain names just be the triple.
 ALL_TOOLCHAINS = (
     'arm-linux-androideabi',
     'aarch64-linux-android',
@@ -27,6 +28,16 @@ ALL_TOOLCHAINS = (
     'mips64el-linux-android',
     'x86',
     'x86_64',
+)
+
+
+ALL_TRIPLES = (
+    'arm-linux-androideabi',
+    'aarch64-linux-android',
+    'mipsel-linux-android',
+    'mips64el-linux-android',
+    'x86-linux-android',
+    'x86_64-linux-android',
 )
 
 
@@ -44,6 +55,10 @@ def arch_to_toolchain(arch):
     return dict(zip(ALL_ARCHITECTURES, ALL_TOOLCHAINS))[arch]
 
 
+def arch_to_triple(arch):
+    return dict(zip(ALL_ARCHITECTURES, ALL_TRIPLES))[arch]
+
+
 def toolchain_to_arch(toolchain):
     return dict(zip(ALL_TOOLCHAINS, ALL_ARCHITECTURES))[toolchain]
 
@@ -56,6 +71,19 @@ def arch_to_abis(arch):
         'mips64': ['mips64'],
         'x86': ['x86'],
         'x86_64': ['x86_64'],
+    }[arch]
+
+
+def abi_to_arch(arch):
+    return {
+        'armeabi': 'arm',
+        'armeabi-v7a': 'arm',
+        'armeabi-v7a-hard': 'arm',
+        'arm64-v8a': 'arm64',
+        'mips': 'mips',
+        'mips64': 'mips64',
+        'x86': 'x86',
+        'x86_64': 'x86_64',
     }[arch]
 
 
