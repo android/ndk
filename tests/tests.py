@@ -426,6 +426,42 @@ def _run_ndk_build_test(test_name, build_dir, test_dir, build_flags, abi,
             return Failure(test_name, out)
 
 
+class PythonBuildTest(Test):
+    """A test that is implemented by test.py.
+
+    A test.py test has a test.py file in its root directory. This module
+    contains a run_test function which returns a tuple of `(boolean_success,
+    string_failure_message)` and takes the following kwargs (all of which
+    default to None):
+
+    abi: ABI to test as a string.
+    platform: Platform to build against as a string.
+    toolchain: Toolchain to use as a string.
+    build_flags: Additional build flags that should be passed to ndk-build if
+                 invoked as a list of strings.
+    """
+    def __init__(self, name, test_dir, abi, platform, toolchain, build_flags):
+        super(PythonBuildTest, self).__init__(name, test_dir)
+        self.abi = abi
+        self.platform = platform
+        self.toolchain = toolchain
+        self.build_flags = build_flags
+
+    def run(self, out_dir, _):
+        build_dir = os.path.join(out_dir, self.name)
+        print('Running build test: {}'.format(self.name))
+        _prep_build_dir(self.test_dir, build_dir)
+        with util.cd(build_dir):
+            module = imp.load_source('test', 'test.py')
+            success, failure_message = module.run_test(
+                abi=self.abi, platform=self.platform, toolchain=self.toolchain,
+                build_flags=self.build_flags)
+            if success:
+                return [Success(self.name)]
+            else:
+                return [Failure(self.name, failure_message)]
+
+
 class ShellBuildTest(Test):
     def __init__(self, name, test_dir, abi, platform, toolchain, build_flags):
         super(ShellBuildTest, self).__init__(name, test_dir)
@@ -463,7 +499,10 @@ class BuildTest(object):
     def from_dir(cls, test_dir, abi, platform, toolchain, build_flags):
         test_name = os.path.basename(test_dir)
 
-        if os.path.isfile(os.path.join(test_dir, 'build.sh')):
+        if os.path.isfile(os.path.join(test_dir, 'test.py')):
+            return PythonBuildTest(test_name, test_dir, abi, platform,
+                                   toolchain, build_flags)
+        elif os.path.isfile(os.path.join(test_dir, 'build.sh')):
             return ShellBuildTest(test_name, test_dir, abi, platform,
                                   toolchain, build_flags)
         else:
