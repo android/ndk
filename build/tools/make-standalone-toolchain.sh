@@ -411,14 +411,7 @@ STLPORT_LIBS=$STLPORT_DIR/libs
 
 LIBCXX_DIR=$NDK_DIR/$LIBCXX_SUBDIR
 LIBCXX_LIBS=$LIBCXX_DIR/libs
-case $ARCH in
-    x86|x86_64|mips|mips64)
-        LIBCXX_SUPPORT_LIB=gabi++
-        ;;
-    *)
-        LIBCXX_SUPPORT_LIB=libc++abi
-        ;;
-esac
+LIBCXX_SUPPORT_LIB=libc++abi
 
 SUPPORT_DIR=$NDK_DIR/$SUPPORT_SUBDIR
 
