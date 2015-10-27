@@ -23,9 +23,8 @@ Some features are only available at Android API level 14 (Android
 platform version 4.0) and higher; these are noted.
 </p>
 <p>
-OpenSL ES provides a C language interface that is also callable from C++, and
-exposes features similar to the audio portions of these Android APIs
-callable from Java programming language code:
+OpenSL ES provides a C language interface that is also callable from C++. It
+exposes features similar to the audio portions of these Android Java APIs:
 </p>
 <ul>
 <li><a href="http://developer.android.com/reference/android/media/MediaPlayer.html">
@@ -39,14 +38,11 @@ android.media.MediaRecorder</a>
 <p>
 As with all of the Android Native Development Kit (NDK), the primary
 purpose of OpenSL ES for Android is to facilitate the implementation
-of shared libraries to be called from Java programming language code via Java Native
+of shared libraries to be called using the Java Native
 Interface (JNI).  NDK is not intended for writing pure C/C++
 applications.  That said, OpenSL ES is a full-featured API, and we
 expect that you should be able to accomplish most of your audio
-needs using only this API, without up-calls to code running in the Dalvik VM.
-</p>
-<p>
-(Throughout this document, "Dalvik" can be considered to also refer to "ART").
+needs using only this API, without up-calls to code running in the Android runtime.
 </p>
 
 <p>
@@ -67,7 +63,12 @@ are described in section "Android extensions" below.
 <p>
 Supported and tested example code, usable as a model
 for your own code, is located in NDK folder
-<code>platforms/android-9/samples/native-audio/</code>.
+<code>platforms/android-9/samples/native-audio/</code> and the
+<a href="https://github.com/googlesamples/android-ndk/tree/master/audio-echo">audio-echo</a>
+and
+<a href="https://github.com/googlesamples/android-ndk/tree/master/native-audio">native-audio</a>
+folders of the repository
+<a href="https://github.com/googlesamples/android-ndk">https://github.com/googlesamples/android-ndk</a>.
 </p>
 
 <h4>Not recommended</h4>
@@ -386,6 +387,14 @@ For API level 21 and above, see section "Floating-point data" below.
 <h4>Playback rate</h4>
 
 <p>
+<b>Note:</b>
+An OpenSL ES <em>playback rate</em> indicates the speed at which an
+object presents data, expressed in
+<a href="https://en.wikipedia.org/wiki/Per_mille">per mille</a>
+units.  A <em>rate range</em> is a closed interval that expresses
+possible rate ranges.
+</p>
+<p>
 The supported playback rate range(s) and capabilities may vary depending
 on the platform version and implementation, and so should be determined
 at runtime by querying with <code>PlaybackRate::GetRateRange</code>
@@ -397,7 +406,7 @@ In Android 2.3 a single playback rate range from 500 per mille to 2000 per mille
 inclusive is typically supported, with property
 <code>SL_RATEPROP_NOPITCHCORAUDIO</code>.
 In Android 4.0 the same rate range is typically supported for a data source
-in PCM format, and a unity rate range for other formats.
+in PCM format, and a unity rate range of 1000 per mille to 1000 per mille for other formats.
 </p>
 
 <h4>Record</h4>
@@ -410,7 +419,8 @@ The <code>SL_RECORDEVENT_HEADATLIMIT</code> and
 <h4>Seek</h4>
 
 <p>
-<code>SetLoop</code> enables whole file looping. The <code>startPos</code>
+<code>SetLoop</code> can only loop the whole file and not a portion of it;
+the parameters should be set as follows: the <code>startPos</code>
 parameter should be zero and the <code>endPos</code> parameter should
 be <code>SL_TIME_UNKNOWN</code>.
 </p>
@@ -465,7 +475,7 @@ and is thread-safe.
 </p>
 <p>
 OpenSL ES for Android supports a single engine per application, and
-up to 32 objects. Available device memory and CPU may further
+up to 32 objects per engine. Available device memory and CPU may further
 restrict the usable number of objects.
 </p>
 <p>
@@ -793,18 +803,50 @@ where # is the platform API level, 9 or higher
 <h3>Decode audio to PCM</h3>
 
 <p>
-<b>Note:</b>
-For decoding an encoded stream to PCM without immediate playback,
-<a
-href="http://developer.android.com/reference/android/media/MediaCodec.html">android.media.MediaCodec</a>
-is recommended for new applications at API level 16 and above.  The NDK
-equivalent (in &lt;media/NdkMedia*.h&gt;) is recommended for new native
-applications at API level 21 and above.
+This section describes a deprecated Android-specific extension to OpenSL ES 1.0.1
+for decoding an encoded stream to PCM without immediate playback.
+The table below gives recommendations for use of this extension and alternatives.
 </p>
+<table>
+<tr>
+  <th>API level</th>
+  <th>Extension<br /> is available</th>
+  <th>Extension<br /> is recommended</th>
+  <th>Alternatives</th>
+</tr>
+<tr>
+  <td>13<br /> and below</td>
+  <td>no</td>
+  <td>N/A</td>
+  <td>open source codec with suitable license</td>
+</tr>
+<tr>
+  <td>14 to 15</td>
+  <td>yes</td>
+  <td>no</td>
+  <td>open source codec with suitable license</td>
+</tr>
+<tr>
+  <td>16 to 20</td>
+  <td>yes</td>
+  <td>no</td>
+  <td>
+    <a href="http://developer.android.com/reference/android/media/MediaCodec.html">android.media.MediaCodec</a><br />
+    or open source codec with suitable license
+  </td>
+</tr>
+<tr>
+  <td>21<br /> and above</td>
+  <td>yes</td>
+  <td>no</td>
+  <td>
+    NDK MediaCodec in &lt;media/NdkMedia*.h&gt;<br />
+    or <a href="http://developer.android.com/reference/android/media/MediaCodec.html">android.media.MediaCodec</a><br />
+    or open source codec with suitable license
+  </td>
+</tr>
+</table>
 
-<p>
-Note: this feature is available at API level 14 and higher.
-</p>
 <p>
 A standard audio player plays back to an audio device, and the data sink
 is specified as an output mix.
@@ -820,7 +862,7 @@ audio assets when changing to a new game level, similar to
 </p>
 <p>
 The application should initially enqueue a set of empty buffers to the Android simple
-buffer queue, which will be filled with PCM data.  The Android simple
+buffer queue. These buffers will be filled with the decoded PCM data.  The Android simple
 buffer queue callback is invoked after each buffer is filled. The
 callback handler should process the PCM data, re-enqueue the
 now-empty buffer, and then return.  The application is responsible for
@@ -1110,7 +1152,7 @@ method for reporting a non-recoverable error.
 <p>
 In summary, a recommended code sequence is:
 </p>
-<ul>
+<ol>
 <li>Engine::CreateAudioPlayer
 </li>
 <li>Object:Realize
@@ -1130,7 +1172,7 @@ In summary, a recommended code sequence is:
 <li>preparation and prefetching occur here; during this time your
 callback will be called with periodic status updates
 </li>
-</ul>
+</ol>
 
 <h3>Destroy</h3>
 
@@ -1190,7 +1232,7 @@ would be critical for any production code.
 </p>
 <p>
 Callback handlers are called from internal
-non-application thread(s) which are not attached to the Dalvik virtual machine and thus
+non-application thread(s) which are not attached to the Android runtime and thus
 are ineligible to use JNI. Because these internal threads are
 critical to the integrity of the OpenSL ES implementation, a callback
 handler should also not block or perform excessive work.
@@ -1205,10 +1247,10 @@ next empty buffer (for an AudioRecorder), or simple APIs such as most
 of the "Get" family.  See section "Performance" below regarding the workload.
 </p>
 <p>
-Note that the converse is safe: a Dalvik application thread which has
+Note that the converse is safe: an Android application thread which has
 entered JNI is allowed to directly call OpenSL ES APIs, including
 those which block. However, blocking calls are not recommended from
-the main thread, as they may result in the dreaded "Application Not
+the main thread, as they may result in "Application Not
 Responding" (ANR).
 </p>
 <p>
@@ -1234,8 +1276,8 @@ for the same object, will not occur.  However, concurrent callbacks of
 <h3>Performance</h3>
 
 <p>
-As OpenSL ES is a native C API, non-Dalvik application threads which
-call OpenSL ES have no Dalvik-related overhead such as garbage
+As OpenSL ES is a native C API, non-runtime application threads which
+call OpenSL ES have no runtime-related overhead such as garbage
 collection pauses. With one exception described below, there is no additional performance
 benefit to the use of OpenSL ES other than this. In particular, use
 of OpenSL ES does not guarantee a lower audio latency, higher scheduling
@@ -1260,7 +1302,7 @@ These parameters are device-specific and should be obtained as follows.
 </p>
 <p>
 Beginning with API level 17 (Android platform version 4.2), an application
-can query for the native or optimal output sample rate and buffer size
+can query for the platform native or optimal output sample rate and buffer size
 for the device's primary output stream.  When combined with the feature
 test just mentioned, an app can now configure itself appropriately for
 lower latency output on devices that claim support.
@@ -1272,6 +1314,7 @@ Beginning with API level 18 (Android platform version 4.3),
 a buffer count of 1 is sufficient for lower latency.
 </p>
 <p>
+All
 OpenSL ES interfaces for output effects preclude the lower latency path.
 </p>
 <p>
@@ -1370,9 +1413,7 @@ More sophisticated conversions are possible.
 As far as who can do what, security in Android is done at the
 process level. Java programming language code can't do anything more than native code, nor
 can native code do anything more than Java programming language code. The only differences
-between them are what APIs are available that provide functionality
-that the platform promises to support in the future and across
-different devices.
+between them are what APIs are available.
 </p>
 <p>
 Applications using OpenSL ES must request whatever permissions they
@@ -1433,6 +1474,10 @@ Android NDK discussion group</a> (for developers of native code, including OpenS
 </li>
 <li><a href="http://code.google.com/p/android/issues/">
 Android open source bug database</a>
+</li>
+<li><a href="https://github.com/googlesamples/android-ndk">Android Studio NDK Samples</a>
+</li>
+<li><a href="http://developer.android.com/samples/index.html">Android Studio Samples</a>
 </li>
 </ul>
 
