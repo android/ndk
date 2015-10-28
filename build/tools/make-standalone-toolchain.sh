@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright (C) 2010 The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -178,7 +179,7 @@ fi
 # Check toolchain name
 TOOLCHAIN_PATH="$NDK_DIR/toolchains/$SYSTEM/$TOOLCHAIN_NAME"
 if [ ! -d "$TOOLCHAIN_PATH" ] ; then
-    echo "Invalid toolchain name: $TOOLCHAIN_NAME"
+    echo "Could not find toolchain: $TOOLCHAIN_PATH"
     echo "Please use --toolchain=<name> with the name of a toolchain supported by the source NDK."
     echo "Try one of: " `(cd "$NDK_DIR/toolchains/$SYSTEM" && ls)`
     exit 1
@@ -220,13 +221,7 @@ if [ ! -d "$TOOLCHAIN_PATH/prebuilt" ]; then
     exit 1
 fi
 
-if [ ! -d "$TOOLCHAIN_PATH/prebuilt/$SYSTEM" ] ; then
-    echo "Host system '$SYSTEM' is not supported by the source NDK!"
-    echo "Try --system=<name> with one of: " `(cd $TOOLCHAIN_PATH/prebuilt && ls) | grep -v gdbserver`
-    exit 1
-fi
-
-TOOLCHAIN_PATH="$TOOLCHAIN_PATH/prebuilt/$SYSTEM"
+TOOLCHAIN_PATH="$TOOLCHAIN_PATH/prebuilt"
 TOOLCHAIN_GCC=$TOOLCHAIN_PATH/bin/$ABI_CONFIGURE_TARGET-gcc
 
 if [ ! -f "$TOOLCHAIN_GCC" ] ; then
@@ -242,13 +237,7 @@ if [ -n "$LLVM_VERSION" ]; then
         echo "You must point to a valid NDK release package!"
         exit 1
     fi
-
-    if [ ! -d "$LLVM_TOOLCHAIN_PATH/prebuilt/$SYSTEM" ] ; then
-        echo "Host system '$SYSTEM' is not supported by the source NDK!"
-        echo "Try --system=<name> with one of: " `(cd $LLVM_TOOLCHAIN_PATH/prebuilt && ls)`
-        exit 1
-    fi
-    LLVM_TOOLCHAIN_PATH="$LLVM_TOOLCHAIN_PATH/prebuilt/$SYSTEM"
+    LLVM_TOOLCHAIN_PATH="$LLVM_TOOLCHAIN_PATH/prebuilt"
 fi
 
 # Get GCC_BASE_VERSION.  Note that GCC_BASE_VERSION may be slightly different from GCC_VERSION.
@@ -414,7 +403,7 @@ case "$ARCH" in
         ;;
 esac
 
-GNUSTL_DIR=$NDK_DIR/$GNUSTL_SUBDIR/$GCC_VERSION
+GNUSTL_DIR=$NDK_DIR/$GNUSTL_SUBDIR
 GNUSTL_LIBS=$GNUSTL_DIR/libs
 
 STLPORT_DIR=$NDK_DIR/$STLPORT_SUBDIR
@@ -422,14 +411,7 @@ STLPORT_LIBS=$STLPORT_DIR/libs
 
 LIBCXX_DIR=$NDK_DIR/$LIBCXX_SUBDIR
 LIBCXX_LIBS=$LIBCXX_DIR/libs
-case $ARCH in
-    x86|x86_64|mips|mips64)
-        LIBCXX_SUPPORT_LIB=gabi++
-        ;;
-    *)
-        LIBCXX_SUPPORT_LIB=libc++abi
-        ;;
-esac
+LIBCXX_SUPPORT_LIB=libc++abi
 
 SUPPORT_DIR=$NDK_DIR/$SUPPORT_SUBDIR
 
