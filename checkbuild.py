@@ -295,15 +295,31 @@ def build_gcc_libs(out_dir, args):
         arches = [args.arch]
 
     for arch in arches:
-        libgccs = ['libgcc.a']
+        toolchain = build_support.arch_to_toolchain(arch)
+        triple = fixup_toolchain_triple(toolchain)
+        libgcc_subdir = 'lib/gcc/{}/4.9.x-google'.format(triple)
+        is64 = arch.endswith('64')
+        libatomic_subdir = '{}/lib{}'.format(triple, '64' if is64 else '')
+
+        lib_names = [
+            (libatomic_subdir, 'libatomic.a'),
+            (libgcc_subdir, 'libgcc.a'),
+        ]
+
+        lib_dirs = ['']
         if arch == 'arm':
-            libgccs += [
-                'armv7-a/libgcc.a',
-                'armv7-a/hard/libgcc.a',
-                'armv7-a/thumb/libgcc.a',
-                'armv7-a/thumb/hard/libgcc.a',
-                'thumb/libgcc.a',
+            lib_dirs += [
+                'armv7-a',
+                'armv7-a/hard',
+                'armv7-a/thumb',
+                'armv7-a/thumb/hard',
+                'thumb',
             ]
+
+        libs = []
+        for lib_dir in lib_dirs:
+            for subdir, lib in lib_names:
+                libs.append((subdir, os.path.join(lib_dir, lib)))
 
         tmpdir = tempfile.mkdtemp()
         try:
@@ -311,12 +327,9 @@ def build_gcc_libs(out_dir, args):
             os.makedirs(install_dir)
 
             gcc_path = get_prebuilt_gcc(args.system, arch)
-            toolchain = build_support.arch_to_toolchain(arch)
-            triple = fixup_toolchain_triple(toolchain)
-            gcc_libpath = 'lib/gcc/{}/4.9.x-google'.format(triple)
-            for libgcc in libgccs:
-                src = os.path.join(gcc_path, gcc_libpath, libgcc)
-                dst = os.path.join(install_dir, triple, libgcc)
+            for gcc_subdir, lib in libs:
+                src = os.path.join(gcc_path, gcc_subdir, lib)
+                dst = os.path.join(install_dir, triple, lib)
                 dst_dir = os.path.dirname(dst)
                 if not os.path.exists(dst_dir):
                     os.makedirs(dst_dir)
