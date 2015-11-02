@@ -16,8 +16,11 @@
 import argparse
 import multiprocessing
 import os
+import shutil
 import subprocess
 import sys
+import tarfile
+import tempfile
 
 
 # TODO: Make the x86 toolchain names just be the triple.
@@ -158,6 +161,64 @@ def host_to_tag(host):
         return 'windows-x86_64'
     else:
         raise RuntimeError('Unsupported host: {}'.format(host))
+
+
+def make_repo_prop(out_dir):
+    file_name = 'repo.prop'
+
+    dist_dir = os.environ.get('DIST_DIR')
+    if dist_dir is not None:
+        dist_repo_prop = os.path.join(dist_dir, file_name)
+        shutil.copy(dist_repo_prop, out_dir)
+    else:
+        out_file = os.path.join(out_dir, file_name)
+        with open(out_file, 'w') as prop_file:
+            cmd = [
+                'repo', 'forall', '-c',
+                'echo $REPO_PROJECT $(git rev-parse HEAD)',
+            ]
+            subprocess.check_call(cmd, stdout=prop_file)
+
+
+def make_package(name, files, out_dir, root_dir, repo_prop_dir=''):
+    """Pacakges an NDK module for release.
+
+    Makes a tarball of the single NDK module that can be released in the SDK
+    manager. This will handle the details of creating the repo.prop file for
+    the package.
+
+    Args:
+        name: Name of the final package, excluding extension.
+        files: List of files (relative to root_dir) to be packaged.
+        out_dir: Directory to place package.
+        root_dir: Directory to make package from. Equivalent to tar(1)'s -C.
+    """
+    path = os.path.join(out_dir, name + '.tar.bz2')
+
+    def package_filter(path):
+        ignored_extensions = (
+            # Python junk.
+            '.pyc',
+            '.pyo',
+            '.pyd',
+        )
+
+        name = os.path.basename(path)
+        _, ext = os.path.splitext(name)
+        return ext in ignored_extensions or name.startswith('.')
+
+    with tarfile.open(path, 'w:bz2') as tarball:
+        for f in files:
+            real_file = os.path.join(root_dir, f)
+            tarball.add(real_file, f, exclude=package_filter)
+
+        tmpdir = tempfile.mkdtemp()
+        try:
+            make_repo_prop(tmpdir)
+            arcname = os.path.join(repo_prop_dir, 'repo.prop')
+            tarball.add(os.path.join(tmpdir, 'repo.prop'), arcname)
+        finally:
+            shutil.rmtree(tmpdir)
 
 
 class ArgParser(argparse.ArgumentParser):

@@ -804,6 +804,8 @@ for ARCH in $ARCHS; do
 done
 
 if [ "$PACKAGE_DIR" ]; then
+    make_repo_prop "$DSTDIR/platforms"
+
     mkdir -p "$PACKAGE_DIR"
     fail_panic "Could not create package directory: $PACKAGE_DIR"
     ARCHIVE=platforms.tar.bz2

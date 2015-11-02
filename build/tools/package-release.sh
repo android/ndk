@@ -511,15 +511,7 @@ for SYSTEM in $SYSTEMS; do
             ;;
     esac
 
-    # The build server generates a repo.prop file that contains the current SHAs
-    # of each project.
-    if [ -f $DIST_DIR/repo.prop ]; then
-      cp $DIST_DIR/repo.prop $DSTDIR/repo.prop
-    else
-      # Generate our own if we're building locally.
-      repo forall \
-        -c 'echo $REPO_PROJECT $(git rev-parse HEAD)' > $DSTDIR/repo.prop
-    fi
+    make_repo_prop $DSTDIR
 
     echo "Creating $ARCHIVE"
     # make all file universally readable, and all executable (including directory)

@@ -237,8 +237,10 @@ fi
 
 if [ "$PACKAGE_DIR" ]; then
     ARCHIVE=gdbserver-$ARCH.tar.bz2
+    GDBSERVER_SUBDIR="prebuilt/android-$ARCH/gdbserver"
+    make_repo_prop "$ANDROID_NDK_ROOT/$GDBSERVER_SUBDIR"
     dump "Packaging: $ARCHIVE"
-    pack_archive "$PACKAGE_DIR/$ARCHIVE" "$ANDROID_NDK_ROOT" "prebuilt/android-$ARCH/gdbserver/$DSTFILE"
+    pack_archive "$PACKAGE_DIR/$ARCHIVE" "$ANDROID_NDK_ROOT" "$GDBSERVER_SUBDIR"
 fi
 
 log "Cleaning up."
