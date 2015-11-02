@@ -326,7 +326,10 @@ def build_gcc_libs(out_dir, args):
             install_dir = os.path.join(tmpdir, 'prebuilt/gcclibs')
             os.makedirs(install_dir)
 
-            gcc_path = get_prebuilt_gcc(args.system, arch)
+            # These are target libraries, so the OS we use here is not
+            # important. We explicitly use Linux because for whatever reason
+            # the Windows aarch64 toolchain doesn't include libatomic.
+            gcc_path = get_prebuilt_gcc('linux', arch)
             for gcc_subdir, lib in libs:
                 src = os.path.join(gcc_path, gcc_subdir, lib)
                 dst = os.path.join(install_dir, triple, lib)
