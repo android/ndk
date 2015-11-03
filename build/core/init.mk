@@ -302,7 +302,7 @@ endif
 $(call ndk_log,HOST_TAG set to $(HOST_TAG))
 
 # Check for NDK-specific versions of our host tools
-HOST_PREBUILT_ROOT := $(NDK_ROOT)/prebuilt/$(HOST_TAG64)
+HOST_PREBUILT_ROOT := $(NDK_ROOT)/prebuilt
 HOST_PREBUILT := $(strip $(wildcard $(HOST_PREBUILT_ROOT)/bin))
 HOST_AWK := $(strip $(NDK_HOST_AWK))
 HOST_MAKE := $(strip $(NDK_HOST_MAKE))
