@@ -230,10 +230,10 @@ def _install_file(src_file, dst_file):
 
 def pack_binutils(arch, host_tag, out_dir, root_dir, binutils_path):
     archive_name = '-'.join(['binutils', arch, host_tag])
-    archive_path = os.path.join(out_dir, archive_name)
-    base_dir = os.path.relpath(binutils_path, root_dir)
-    shutil.make_archive(archive_path, 'bztar', root_dir=root_dir,
-                        base_dir=base_dir)
+    binutils_relpath = os.path.relpath(binutils_path, root_dir)
+    files = [binutils_relpath]
+    build_support.make_package(archive_name, files, out_dir, root_dir,
+                               repo_prop_dir=binutils_relpath)
 
 
 def get_prebuilt_gcc(host, arch):
@@ -323,7 +323,7 @@ def build_gcc_libs(out_dir, args):
 
         tmpdir = tempfile.mkdtemp()
         try:
-            install_dir = os.path.join(tmpdir, 'prebuilt/gcclibs')
+            install_dir = os.path.join(tmpdir, 'prebuilt/gcclibs', triple)
             os.makedirs(install_dir)
 
             # These are target libraries, so the OS we use here is not
@@ -332,17 +332,19 @@ def build_gcc_libs(out_dir, args):
             gcc_path = get_prebuilt_gcc('linux', arch)
             for gcc_subdir, lib in libs:
                 src = os.path.join(gcc_path, gcc_subdir, lib)
-                dst = os.path.join(install_dir, triple, lib)
+                dst = os.path.join(install_dir, lib)
                 dst_dir = os.path.dirname(dst)
                 if not os.path.exists(dst_dir):
                     os.makedirs(dst_dir)
                 shutil.copy2(src, dst)
 
                 archive_name = os.path.join(out_dir, 'gcclibs-' + arch)
-                base_dir = os.path.relpath(install_dir, tmpdir)
-                shutil.make_archive(archive_name, 'bztar',
-                                    root_dir=os.path.realpath(tmpdir),
-                                    base_dir=base_dir)
+                gcclibs_relpath = os.path.relpath(install_dir, tmpdir)
+                files = [gcclibs_relpath]
+                root_dir = os.path.realpath(tmpdir)
+                build_support.make_package(archive_name, files, out_dir,
+                                           root_dir,
+                                           repo_prop_dir=gcclibs_relpath)
         finally:
             shutil.rmtree(tmpdir)
 
@@ -418,27 +420,27 @@ def build_platforms(out_dir, args):
 
 
 def build_tests(out_dir, _):
-    archive_name = os.path.join(out_dir, 'tests')
-    shutil.make_archive(archive_name, 'bztar', base_dir='tests',
-                        root_dir=build_support.ndk_path())
+    root_dir = build_support.ndk_path()
+    path = 'tests'
+    build_support.make_package('tests', [path], out_dir, root_dir,
+                               repo_prop_dir=path)
 
 
 def build_cpufeatures(out_dir, _):
-    archive_name = os.path.join(out_dir, 'cpufeatures')
-    shutil.make_archive(archive_name, 'bztar',
-                        base_dir='sources/android/cpufeatures',
-                        root_dir=build_support.ndk_path())
+    root_dir = build_support.ndk_path()
+    path = 'sources/android/cpufeatures'
+    build_support.make_package('cpufeatures', [path], out_dir, root_dir,
+                               repo_prop_dir=path)
 
 
 def build_gtest(out_dir, _):
-    archive_name = os.path.join(out_dir, 'gtest')
-    shutil.make_archive(archive_name, 'bztar',
-                        base_dir='sources/third_party/googletest',
-                        root_dir=build_support.ndk_path())
+    root_dir = build_support.ndk_path()
+    path = 'sources/third_party/googletest'
+    build_support.make_package('gtest', [path], out_dir, root_dir,
+                               repo_prop_dir=path)
 
 
 def build_build(out_dir, _):
-    archive_name = os.path.join(out_dir, 'build.tar.bz2')
     root_dir = build_support.ndk_path()
     files = [
         'build',
@@ -446,8 +448,8 @@ def build_build(out_dir, _):
         'ndk-build.cmd',
         'realpath',
     ]
-    subprocess.check_call(
-        ['tar', 'cjf', archive_name, '-C', root_dir] + files)
+    build_support.make_package('build', files, out_dir, root_dir,
+                               repo_prop_dir='build')
 
 
 def main():

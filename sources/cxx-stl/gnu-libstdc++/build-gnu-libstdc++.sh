@@ -461,6 +461,9 @@ if [ -n "$PACKAGE_DIR" ] ; then
             done
         done
 
+        make_repo_prop "$NDK_DIR/$GNUSTL_SUBDIR"
+        FILES="$FILES $GNUSTL_SUBDIR/repo.prop"
+
         PACKAGE="$PACKAGE_DIR/gnustl-${VERSION}.tar.bz2"
         dump "Packaging: $PACKAGE"
         pack_archive "$PACKAGE" "$NDK_DIR" "$FILES"

@@ -1513,6 +1513,22 @@ check_toolchain_src_dir ()
     fi
 }
 
+make_repo_prop () {
+    local OUT_PATH="$($ANDROID_NDK_ROOT/realpath $1)/repo.prop"
+
+    # The build server generates a repo.prop file that contains the current SHAs
+    # of each project.
+    if [ -f $DIST_DIR/repo.prop ]; then
+        cp $DIST_DIR/repo.prop $OUT_PATH
+    else
+        # Generate our own if we're building locally.
+        pushd $ANDROID_NDK_ROOT
+        repo forall \
+            -c 'echo $REPO_PROJECT $(git rev-parse HEAD)' > $OUT_PATH
+        popd
+    fi
+}
+
 #
 # The NDK_TMPDIR variable is used to specify a root temporary directory
 # when invoking toolchain build scripts. If it is not defined, we will
@@ -1520,7 +1536,6 @@ check_toolchain_src_dir ()
 # call after that use the same one.
 #
 if [ -z "$NDK_TMPDIR" ]; then
-    
     NDK_TMPDIR=$TMPDIR/tmp/build-$$
     mkdir -p $NDK_TMPDIR
     if [ $? != 0 ]; then

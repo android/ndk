@@ -679,6 +679,8 @@ if [ -n "$PACKAGE_DIR" ] ; then
         done
     done
 
+    make_repo_prop "$OUT_DIR/$CXX_STL_SUBDIR"
+
     PACKAGE="$PACKAGE_DIR/${CXX_STL_PACKAGE}.tar.bz2"
     log "Packaging: $PACKAGE"
     pack_archive "$PACKAGE" "$OUT_DIR" "$FILES"

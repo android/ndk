@@ -15,16 +15,16 @@
 # limitations under the License.
 #
 """Packages the platform's LLVM for the NDK."""
-import argparse
-import datetime
 import os
+import shutil
 import site
 import sys
 import tarfile
+import tempfile
 
 site.addsitedir(os.path.join(os.path.dirname(__file__), '../lib'))
 
-import build_support
+import build_support  # pylint: disable=import-error
 
 
 def get_llvm_prebuilt_path(host, version):
@@ -73,6 +73,14 @@ def main(args):
                 return None
             return tarinfo
         tarball.add(prebuilt_path, arcname, filter=package_filter)
+
+        tmpdir = tempfile.mkdtemp()
+        try:
+            build_support.make_repo_prop(tmpdir)
+            arcname = os.path.join(arcname, 'repo.prop')
+            tarball.add(os.path.join(tmpdir, 'repo.prop'), arcname)
+        finally:
+            shutil.rmtree(tmpdir)
 
 if __name__ == '__main__':
     build_support.run(main)
