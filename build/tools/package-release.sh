@@ -486,9 +486,6 @@ for SYSTEM in $SYSTEMS; do
     rm -rf $DSTDIR/prebuilt/share/pretty-printers/libstdcxx/gcc-l*
     rm -rf $DSTDIR/prebuilt/share/pretty-printers/libstdcxx/gcc-4.9-*
 
-    # Remove python tests
-    find $DSTDIR/prebuilt/lib/python* -name test -exec rm -rf {} \;
-
     # Remove python *.pyc and *.pyo files
     find $DSTDIR/prebuilt/lib/python* -name "*.pyc" -exec rm -rf {} \;
     find $DSTDIR/prebuilt/lib/python* -name "*.pyo" -exec rm -rf {} \;
