@@ -382,6 +382,37 @@ def build_host_tools(out_dir, args):
     print('Building YASM...')
     invoke_external_build('toolchain/yasm/build.py', build_args)
 
+    package_host_tools(out_dir, args.system)
+
+
+def package_host_tools(out_dir, host):
+    packages = [
+        'gdb-multiarch-7.10',
+        'ndk-awk',
+        'ndk-depends',
+        'ndk-make',
+        'ndk-python',
+        'ndk-stack',
+        'ndk-yasm',
+    ]
+
+    if host in ('windows', 'windows64'):
+        packages.append('toolbox')
+
+    host_tag = build_support.host_to_tag(host)
+
+    package_names = [p + '-' + host_tag + '.tar.bz2' for p in packages]
+    temp_dir = tempfile.mkdtemp()
+    try:
+        for package_name in package_names:
+            package_path = os.path.join(out_dir, package_name)
+            subprocess.check_call(['tar', 'xf', package_path, '-C', temp_dir])
+        package_name = 'host-tools-' + host_tag
+        build_support.make_package(package_name, ['prebuilt'], out_dir,
+                                   temp_dir, repo_prop_dir='prebuilt')
+    finally:
+        shutil.rmtree(temp_dir)
+
 
 def build_gdbserver(out_dir, args):
     print('Building gdbserver...')

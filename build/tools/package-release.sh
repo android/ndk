@@ -449,18 +449,7 @@ for SYSTEM in $SYSTEMS; do
         #unpack_prebuilt renderscript-$SYSTEM "$DSTDIR"
 
         # Unpack prebuilt ndk-stack and other host tools
-        unpack_prebuilt ndk-stack-$SYSTEM "$DSTDIR"
-        unpack_prebuilt ndk-depends-$SYSTEM "$DSTDIR"
-        unpack_prebuilt ndk-make-$SYSTEM "$DSTDIR"
-        unpack_prebuilt ndk-awk-$SYSTEM "$DSTDIR"
-        unpack_prebuilt ndk-python-$SYSTEM "$DSTDIR"
-        unpack_prebuilt ndk-yasm-$SYSTEM "$DSTDIR"
-
-        unpack_prebuilt gdb-multiarch-$GDB_VERSION-$SYSTEM "$DSTDIR"
-
-        if [ "$SYSTEM" = "windows" -o "$SYSTEM" = "windows-x86_64" ]; then
-            unpack_prebuilt toolbox-$SYSTEM "$DSTDIR"
-        fi
+        unpack_prebuilt host-tools-$SYSTEM "$DSTDIR"
     fi
 
     # Unpack renderscript headers/libs; http://b/22377128.

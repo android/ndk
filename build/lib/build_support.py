@@ -205,7 +205,7 @@ def make_package(name, files, out_dir, root_dir, repo_prop_dir=''):
 
         name = os.path.basename(path)
         _, ext = os.path.splitext(name)
-        return ext in ignored_extensions or name.startswith('.')
+        return ext in ignored_extensions or name == '.gitignore'
 
     with tarfile.open(path, 'w:bz2') as tarball:
         for f in files:
