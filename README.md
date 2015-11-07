@@ -122,12 +122,17 @@ To package the NDK for Windows or Darwin (or if more control over the packaging
 process is needed), invoke `build/tools/package-release.sh` directly. This
 process will be improved in a future commit.
 
-Best Practices for Incremental Builds
--------------------------------------
+Testing
+-------
 
-* Do not run `build/tools/dev-cleanup.sh` which erases all prebuilts.
-* Remove the individual prebuilt directory if new build deletes files. This is
-  rare.
-* Package NDK from prebuilt tarballs in `$PREBUILT_PATH`. It runs
-  `build/tools/build-docs.sh` which produces no tarball in `$PREBUILT_PATH`.
-* Unpack and compare against the previous package.
+Running the NDK tests requires a complete NDK package (see previous steps). The
+full test suite includes tests which run on a device or emulator, so you'll need
+to have adb in your path and `ANDROID_SERIAL` set if more than one
+device/emulator is connected. With that package:
+
+```bash
+$ tar xf android-ndk-$BUILD_NUM-$HOST_TAG.tar.bz2
+$ cd android-ndk-$BUILD_NUM
+$ export NDK=`pwd`
+$ python tests/run-all.py --abi $ABI_TO_TEST
+```
