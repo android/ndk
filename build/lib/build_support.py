@@ -195,22 +195,32 @@ def make_package(name, files, out_dir, root_dir, repo_prop_dir=''):
     """
     path = os.path.join(out_dir, name + '.tar.bz2')
 
-    def package_filter(path):
+    def package_filter(tarinfo):
+        # The libc++ .git directory is in our tree.
+        basename = os.path.basename(tarinfo.name)
+        if basename in ('.git', '.gitignore'):
+            return None
+
         ignored_extensions = (
             # Python junk.
             '.pyc',
             '.pyo',
             '.pyd',
+
+            # Vim junk.
+            '.swp',
         )
 
-        name = os.path.basename(path)
-        _, ext = os.path.splitext(name)
-        return ext in ignored_extensions or name == '.gitignore'
+        _, ext = os.path.splitext(tarinfo.name)
+        if ext in ignored_extensions:
+            return None
+
+        return tarinfo
 
     with tarfile.open(path, 'w:bz2') as tarball:
         for f in files:
             real_file = os.path.join(root_dir, f)
-            tarball.add(real_file, f, exclude=package_filter)
+            tarball.add(real_file, f, filter=package_filter)
 
         tmpdir = tempfile.mkdtemp()
         try:
