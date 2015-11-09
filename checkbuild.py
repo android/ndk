@@ -101,14 +101,6 @@ class ArgParser(argparse.ArgumentParser):
             '--host-only', action='store_true',
             help='Skip building target components.')
 
-        gcc_group = module_group.add_mutually_exclusive_group()
-        gcc_group.add_argument(
-            '--skip-gcc', action='store_true', default=True,
-            help='Skip building and packaging GCC (default).')
-        gcc_group.add_argument(
-            '--no-skip-gcc', action='store_false', dest='skip_gcc',
-            help='Build and package GCC.')
-
 
 def _invoke_build(script, args):
     if args is None:
@@ -279,12 +271,11 @@ def build_clang(out_dir, args):
 
 
 def build_gcc(out_dir, args):
-    gcc_build_args = common_build_args(out_dir, args)
-    if args.arch is not None:
-        toolchain_name = build_support.arch_to_toolchain(args.arch)
-        gcc_build_args.append('--toolchain={}'.format(toolchain_name))
     print('Building GCC...')
-    invoke_external_build('toolchain/gcc/build.py', gcc_build_args)
+    build_args = common_build_args(out_dir, args)
+    if args.arch is not None:
+        build_args.append('--arch={}'.format(args.arch))
+    invoke_build('build-gcc.py', build_args)
 
 
 def build_gcc_libs(out_dir, args):
@@ -523,18 +514,16 @@ def main():
         os.makedirs(out_dir)
 
     if args.module is None:
-        modules = ALL_MODULES - {'gcc'}
+        modules = ALL_MODULES
     else:
         modules = {args.module}
 
     if args.host_only:
         modules = {
             'clang',
+            'gcc',
             'host-tools',
         }
-
-    if not args.skip_gcc:
-        modules |= {'gcc'}
 
     if args.arch is not None:
         package_args.append('--arch={}'.format(args.arch))
@@ -563,7 +552,7 @@ def main():
     for module in modules:
         module_builds[module](out_dir, args)
 
-    required_package_modules = ALL_MODULES - {'gcc'}
+    required_package_modules = ALL_MODULES
     if args.package and required_package_modules <= modules:
         package_ndk(args.release, system, out_dir, package_args)
 

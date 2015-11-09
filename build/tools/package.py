@@ -74,6 +74,7 @@ def get_all_packages(host, arches):
         'binutils-{arch}-{host}',
         'build',
         'cpufeatures',
+        'gcc-{arch}-{host}',
         'gcclibs-{arch}',
         'gdbserver-{arch}',
         'gnustl-4.9',
@@ -84,7 +85,6 @@ def get_all_packages(host, arches):
         'platforms',
         'stlport',
         'tests',
-        '{triple}-4.9-{host}',
     ]
 
     expanded = []
