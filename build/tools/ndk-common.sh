@@ -767,7 +767,8 @@ pack_archive ()
         ARCHIVE="`pwd`/$ARCHIVE"
     fi
     mkdir -p `dirname $ARCHIVE`
-    TARFLAGS="cf"
+
+    TARFLAGS="--exclude='*.py[cod]' --exclude='*.swp' --exclude=.git --exclude=.gitignore -cf"
     ZIPFLAGS="-9qr"
     # Ensure symlinks are stored as is in zip files. for toolchains
     # this can save up to 7 MB in the size of the final archive
@@ -785,9 +786,9 @@ pack_archive ()
         *.tar.bz2)
             find_pbzip2
             if [ -n "$PBZIP2" ] ; then
-                (cd $SRCDIR && run tar --use-compress-prog=pbzip2 -$TARFLAGS "$ARCHIVE" $SRCFILES)
+                (cd $SRCDIR && run tar --use-compress-prog=pbzip2 $TARFLAGS "$ARCHIVE" $SRCFILES)
             else
-                (cd $SRCDIR && run tar j$TARFLAGS "$ARCHIVE" $SRCFILES)
+                (cd $SRCDIR && run tar -j $TARFLAGS "$ARCHIVE" $SRCFILES)
             fi
             ;;
         *)
