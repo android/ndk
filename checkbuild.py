@@ -75,21 +75,10 @@ class ArgParser(argparse.ArgumentParser):
             '--release',
             help='Release name. Package will be named android-ndk-RELEASE.')
 
-        system_group = self.add_mutually_exclusive_group()
-        system_group.add_argument(
+        self.add_argument(
             '--system', choices=('darwin', 'linux', 'windows', 'windows64'),
             default=build_support.get_default_host(),
             help='Build for the given OS.')
-
-        old_choices = {
-            'darwin', 'darwin-x86',
-            'linux', 'linux-x86',
-            'windows',
-        }
-
-        system_group.add_argument(
-            '--systems', choices=old_choices, dest='system',
-            help='Build for the given OS. Deprecated. Use --system instead.')
 
         module_group = self.add_mutually_exclusive_group()
 
@@ -131,8 +120,6 @@ def package_ndk(out_dir, args):
 
 def common_build_args(out_dir, args):
     build_args = ['--package-dir={}'.format(out_dir)]
-    # Need to use args.system directly rather than system because system is the
-    # name used by the build/tools scripts (i.e. linux-x86 instead of linux).
     build_args.append('--host={}'.format(args.system))
     return build_args
 
@@ -489,19 +476,6 @@ def main():
     if 'ANDROID_BUILD_TOP' not in os.environ:
         os.environ['ANDROID_BUILD_TOP'] = os.path.realpath('..')
     build_top = os.getenv('ANDROID_BUILD_TOP')
-
-    # TODO(danalbert): Update build server to pass just 'linux'.
-    system = args.system
-    original_system = system
-    if system == 'darwin':
-        system = 'darwin-x86'
-    elif system == 'linux':
-        system = 'linux-x86'
-    elif system == 'windows64':
-        system = 'windows'
-
-    if system not in ('darwin-x86', 'linux-x86', 'windows'):
-        sys.exit('Unknown system requested: {}'.format(original_system))
 
     DEFAULT_OUT_DIR = os.path.join(build_top, 'out/ndk')
     out_dir = os.path.realpath(os.getenv('DIST_DIR', DEFAULT_OUT_DIR))
