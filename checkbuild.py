@@ -48,6 +48,8 @@ ALL_MODULES = {
     'gtest',
     'host-tools',
     'libc++',
+    'native_app_glue',
+    'ndk_helper',
     'platforms',
     'stlport',
     'tests',
@@ -444,6 +446,20 @@ def build_cpufeatures(out_dir, _):
                                repo_prop_dir=path)
 
 
+def build_native_app_glue(out_dir, _):
+    root_dir = build_support.android_path('development/ndk')
+    path = 'sources/android/native_app_glue'
+    build_support.make_package('native_app_glue', [path], out_dir, root_dir,
+                               repo_prop_dir=path)
+
+
+def build_ndk_helper(out_dir, _):
+    root_dir = build_support.android_path('development/ndk')
+    path = 'sources/android/ndk_helper'
+    build_support.make_package('ndk_helper', [path], out_dir, root_dir,
+                               repo_prop_dir=path)
+
+
 def build_gtest(out_dir, _):
     root_dir = build_support.ndk_path()
     path = 'sources/third_party/googletest'
@@ -509,6 +525,8 @@ def main():
         ('gtest', build_gtest),
         ('host-tools', build_host_tools),
         ('libc++', build_libcxx),
+        ('native_app_glue', build_native_app_glue),
+        ('ndk_helper', build_ndk_helper),
         ('platforms', build_platforms),
         ('stlport', build_stlport),
         ('tests', build_tests),
