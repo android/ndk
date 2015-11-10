@@ -82,6 +82,8 @@ def get_all_packages(host, arches):
         'host-tools-{host}',
         'libcxx',
         'llvm-3.6-{host}',
+        'native_app_glue',
+        'ndk_helper',
         'platforms',
         'stlport',
         'tests',
