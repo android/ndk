@@ -23,7 +23,6 @@ from __future__ import print_function
 
 import argparse
 import collections
-import datetime
 import inspect
 import os
 import shutil
@@ -73,7 +72,7 @@ class ArgParser(argparse.ArgumentParser):
             help='Do not package the NDK when done building.')
 
         self.add_argument(
-            '--release', default=datetime.date.today().strftime('%Y%m%d'),
+            '--release',
             help='Release name. Package will be named android-ndk-RELEASE.')
 
         system_group = self.add_mutually_exclusive_group()
@@ -117,14 +116,17 @@ def invoke_external_build(script, args=None):
     _invoke_build(build_support.android_path(script), args)
 
 
-def package_ndk(release_name, system, out_dir, build_args):
-    package_args = [
-        '--out-dir={}'.format(out_dir),
-        '--prebuilt-dir={}'.format(out_dir),
-        '--release={}'.format(release_name),
-        '--systems={}'.format(system),
-    ]
-    invoke_build('package-release.sh', package_args + build_args)
+def package_ndk(out_dir, args):
+    package_args = common_build_args(out_dir, args)
+    package_args.append(out_dir)
+
+    if args.release is not None:
+        package_args.append('--release={}'.format(args.release))
+
+    if args.arch is not None:
+        package_args.append('--arch={}'.format(args.arch))
+
+    invoke_build('package.py', package_args)
 
 
 def common_build_args(out_dir, args):
@@ -475,7 +477,7 @@ def build_build(out_dir, _):
 
 
 def main():
-    args, package_args = ArgParser().parse_known_args()
+    args = ArgParser().parse_args()
 
     # Disable buffering on stdout so the build output doesn't hide all of our
     # "Building..." messages.
@@ -488,11 +490,8 @@ def main():
         os.environ['ANDROID_BUILD_TOP'] = os.path.realpath('..')
     build_top = os.getenv('ANDROID_BUILD_TOP')
 
-    system = args.system
-    if system != 'windows':
-        package_args.append('--try-64')
-
     # TODO(danalbert): Update build server to pass just 'linux'.
+    system = args.system
     original_system = system
     if system == 'darwin':
         system = 'darwin-x86'
@@ -503,10 +502,6 @@ def main():
 
     if system not in ('darwin-x86', 'linux-x86', 'windows'):
         sys.exit('Unknown system requested: {}'.format(original_system))
-
-    package_args.append('--systems={}'.format(system))
-
-    package_args.append(os.path.join(build_top, 'toolchain'))
 
     DEFAULT_OUT_DIR = os.path.join(build_top, 'out/ndk')
     out_dir = os.path.realpath(os.getenv('DIST_DIR', DEFAULT_OUT_DIR))
@@ -524,9 +519,6 @@ def main():
             'gcc',
             'host-tools',
         }
-
-    if args.arch is not None:
-        package_args.append('--arch={}'.format(args.arch))
 
     print('Cleaning up...')
     invoke_build('dev-cleanup.sh')
@@ -554,7 +546,7 @@ def main():
 
     required_package_modules = ALL_MODULES
     if args.package and required_package_modules <= modules:
-        package_ndk(args.release, system, out_dir, package_args)
+        package_ndk(out_dir, args)
 
 
 if __name__ == '__main__':
