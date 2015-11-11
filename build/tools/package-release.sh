@@ -417,29 +417,15 @@ for SYSTEM in $SYSTEMS; do
             done
         done
     else
-        # Unpack toolchains
-        for TC in $TOOLCHAINS; do
-            # First GCC.
-            PREBUILT_ROOT=$($NDK_ROOT_DIR/realpath $NDK_ROOT_DIR/../prebuilts/ndk/current)
-            GCC_SUBDIR=toolchains/$SYSTEM/$TC
-            GCC_PATH=$PREBUILT_ROOT/$GCC_SUBDIR
-            GCC_DST=$DSTDIR/$GCC_SUBDIR
-
-            echo "Copying ${TC}..."
-            mkdir -p $GCC_DST
-            cp -r $GCC_PATH/prebuilt $GCC_DST
-            fail_panic "Could not copy $TC!"
-        done
-
         for ARCH in $ARCHS; do
+            unpack_prebuilt gcc-$ARCH-$SYSTEM "$DSTDIR"
             unpack_prebuilt binutils-$ARCH-$SYSTEM "$DSTDIR"
             unpack_prebuilt gcclibs-$ARCH "$DSTDIR"
         done
 
         # Unpack clang/llvm
         for LLVM_VERSION in $LLVM_VERSION_LIST; do
-            unpack_prebuilt \
-                llvm-$LLVM_VERSION-$SYSTEM "$DSTDIR"
+            unpack_prebuilt llvm-$LLVM_VERSION-$SYSTEM "$DSTDIR"
         done
 
         rm -rf $DSTDIR/toolchains/$SYSTEM/*l
