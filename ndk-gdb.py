@@ -185,19 +185,7 @@ def ndk_path():
 
 def ndk_bin_path():
     ndk = ndk_path()
-    if sys.platform.startswith("linux"):
-        platform_name = "linux-x86_64"
-    elif sys.platform.startswith("darwin"):
-        platform_name = "darwin-x86_64"
-    elif sys.platform.startswith("win"):
-        # Check both x86 and x86_64.
-        platform_name = "windows-x86_64"
-        if not os.path.exists(os.path.join(ndk, "prebuilt", platform_name)):
-            platform_name = "windows"
-    else:
-        error("Unknown platform: {}".format(sys.platform))
-
-    path = os.path.join(ndk, "prebuilt", platform_name, "bin")
+    path = os.path.join(ndk, "prebuilt", "bin")
     if not os.path.exists(path):
         error("Failed to find ndk binary path, should be at '{}'".format(path))
 
