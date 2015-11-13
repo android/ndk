@@ -32,6 +32,8 @@ import xml.etree.cElementTree as ElementTree
 import logging
 
 # Shared functions across gdbclient.py and ndk-gdb.py.
+NDK_PATH = os.path.dirname(__file__)
+sys.path.append(os.path.join(NDK_PATH, "python-packages"))
 import gdbrunner
 
 
@@ -178,14 +180,8 @@ def extract_launchable(xmlroot):
     return launchable_activities
 
 
-def ndk_path():
-    ndk = os.path.abspath(os.path.dirname(sys.argv[0])).replace("\\", "/")
-    return ndk
-
-
 def ndk_bin_path():
-    ndk = ndk_path()
-    path = os.path.join(ndk, "prebuilt", "bin")
+    path = os.path.join(NDK_PATH, "prebuilt", "bin")
     if not os.path.exists(path):
         error("Failed to find ndk binary path, should be at '{}'".format(path))
 
@@ -322,7 +318,7 @@ def cd(path):
 
 def dump_var(args, variable, abi=None):
     make_args = [args.make_cmd, "--no-print-dir", "-f",
-                 os.path.join(ndk_path(), "build/core/build-local.mk"),
+                 os.path.join(NDK_PATH, "build/core/build-local.mk"),
                  "-C", args.project, "DUMP_{}".format(variable)]
 
     if abi is not None:
@@ -425,7 +421,7 @@ def get_gdbserver_path(args, package_name, app_data_dir, arch):
     # We need to upload our gdbserver
     log("App gdbserver not found at {}, uploading.".format(app_gdbserver_path))
     local_path = "{}/prebuilt/android-{}/gdbserver/gdbserver"
-    local_path = local_path.format(ndk_path(), arch)
+    local_path = local_path.format(NDK_PATH, arch)
     remote_path = "/data/local/tmp/{}-gdbserver".format(arch)
     args.device.push(local_path, remote_path)
 
@@ -553,7 +549,7 @@ def find_pretty_printer(pretty_printer):
     elif pretty_printer == "stlport":
         path = os.path.join("stlport", "stlport")
         function = "register_stlport_printers"
-    return (os.path.join(ndk_path(), "prebuilt", "share", "pretty-printers", path),
+    return (os.path.join(NDK_PATH, "prebuilt", "share", "pretty-printers", path),
             function)
 
 def main():
