@@ -462,15 +462,16 @@ def pull_binaries(device, out_dir, is64bit):
         library_path = "/system/lib"
 
     for library in libraries:
-        posixpath.join(library_path, library)
+        required_files.append(posixpath.join(library_path, library))
 
     for required_file in required_files:
-        local_name = os.path.join(out_dir, required_file)
-        dirname = os.path.dirname(required_file)
-        local_dirname = os.path.join(out_dir, dirname)
+        # os.path.join not used because joining absolute paths will pick the last one
+        local_path = os.path.realpath(out_dir + required_file)
+        local_dirname = os.path.dirname(local_path)
         if not os.path.isdir(local_dirname):
             os.makedirs(local_dirname)
-        device.pull(required_file, local_name)
+        log("Pulling '{}' to '{}'".format(required_file, local_path))
+        device.pull(required_file, local_path)
 
 
 def generate_gdb_script(sysroot, binary_path, is64bit, port,
