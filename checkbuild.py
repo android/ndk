@@ -51,6 +51,7 @@ ALL_MODULES = {
     'native_app_glue',
     'ndk_helper',
     'platforms',
+    'python_packages',
     'stlport',
     'tests',
 }
@@ -478,6 +479,33 @@ def build_build(out_dir, _):
     build_support.make_package('build', files, out_dir, root_dir,
                                repo_prop_dir='build')
 
+def build_python_packages(out_dir, _):
+    root_dir = build_support.ndk_path()
+    files = [
+        'ndk-gdb',
+        'ndk-gdb.cmd',
+        'ndk-gdb.py',
+        '../development/python-packages',
+    ]
+
+    # Stage the files in a temporary directory to make things easier.
+    temp_dir = tempfile.mkdtemp()
+    def copy(path):
+        if os.path.isdir(path):
+            shutil.copytree(path, os.path.join(temp_dir, os.path.basename(path)))
+        else:
+            shutil.copy(path, temp_dir)
+
+    try:
+        files = [os.path.join(root_dir, path) for path in files]
+        for f in files:
+            copy(f)
+        files = [os.path.basename(path) for path in files]
+        build_support.make_package('python_packages', files, out_dir, temp_dir,
+                                   repo_prop_dir='python-packages')
+    finally:
+        shutil.rmtree(temp_dir)
+
 
 def main():
     args = ArgParser().parse_args()
@@ -528,6 +556,7 @@ def main():
         ('native_app_glue', build_native_app_glue),
         ('ndk_helper', build_ndk_helper),
         ('platforms', build_platforms),
+        ('python_packages', build_python_packages),
         ('stlport', build_stlport),
         ('tests', build_tests),
     ])
