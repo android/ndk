@@ -185,19 +185,7 @@ def ndk_path():
 
 def ndk_bin_path():
     ndk = ndk_path()
-    if sys.platform.startswith("linux"):
-        platform_name = "linux-x86_64"
-    elif sys.platform.startswith("darwin"):
-        platform_name = "darwin-x86_64"
-    elif sys.platform.startswith("win"):
-        # Check both x86 and x86_64.
-        platform_name = "windows-x86_64"
-        if not os.path.exists(os.path.join(ndk, "prebuilt", platform_name)):
-            platform_name = "windows"
-    else:
-        error("Unknown platform: {}".format(sys.platform))
-
-    path = os.path.join(ndk, "prebuilt", platform_name, "bin")
+    path = os.path.join(ndk, "prebuilt", "bin")
     if not os.path.exists(path):
         error("Failed to find ndk binary path, should be at '{}'".format(path))
 
@@ -474,15 +462,16 @@ def pull_binaries(device, out_dir, is64bit):
         library_path = "/system/lib"
 
     for library in libraries:
-        posixpath.join(library_path, library)
+        required_files.append(posixpath.join(library_path, library))
 
     for required_file in required_files:
-        local_name = os.path.join(out_dir, required_file)
-        dirname = os.path.dirname(required_file)
-        local_dirname = os.path.join(out_dir, dirname)
+        # os.path.join not used because joining absolute paths will pick the last one
+        local_path = os.path.realpath(out_dir + required_file)
+        local_dirname = os.path.dirname(local_path)
         if not os.path.isdir(local_dirname):
             os.makedirs(local_dirname)
-        device.pull(required_file, local_name)
+        log("Pulling '{}' to '{}'".format(required_file, local_path))
+        device.pull(required_file, local_path)
 
 
 def generate_gdb_script(sysroot, binary_path, is64bit, port,
