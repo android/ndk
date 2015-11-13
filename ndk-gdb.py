@@ -111,8 +111,8 @@ class ArgumentParser(gdbrunner.ArgumentParser):
 
         debug_group.add_argument(
             "--stdcxx-py-pr", dest="stdcxxpypr",
-            help="Use stdcxx python pretty-printer",
-            choices=["auto", "none", "gnustdcxx", "stlport"],
+            help="Use C++ library pretty-printer",
+            choices=["auto", "none", "gnustl", "stlport"],
             default="none")
 
 
@@ -474,8 +474,7 @@ def pull_binaries(device, out_dir, is64bit):
         device.pull(required_file, local_path)
 
 
-def generate_gdb_script(sysroot, binary_path, is64bit, port,
-                        connect_timeout=5):
+def generate_gdb_script(args, sysroot, binary_path, is64bit, connect_timeout=5):
     gdb_commands = "file '{}'\n".format(binary_path)
 
     solib_search_path = [sysroot, "{}/system/bin".format(sysroot)]
@@ -510,9 +509,52 @@ def target_remote_with_retry(target, timeout_seconds):
 target_remote_with_retry(':{}', {})
 
 end
-""".format(port, connect_timeout)
+""".format(args.port, connect_timeout)
+
+    # Set up the pretty printer if needed
+    if args.pypr_dir is not None and args.pypr_fn is not None:
+        gdb_commands += """
+python
+import sys
+sys.path.append("{pypr_dir}")
+from printers import {pypr_fn}
+{pypr_fn}(None)
+end""".format(pypr_dir=args.pypr_dir, pypr_fn=args.pypr_fn)
+
     return gdb_commands
 
+
+def detect_stl_pretty_printer(args):
+    stl = dump_var(args, "APP_STL")
+    if not stl:
+        detected = "none"
+        if args.stdcxxpypr == "auto":
+            log("APP_STL not found, disabling pretty printer")
+    elif stl.startswith("stlport"):
+        detected = "stlport"
+    elif stl.startswith("gnustl"):
+        detected = "gnustl"
+    else:
+        detected = "none"
+
+    if args.stdcxxpypr == "auto":
+        log("Detected pretty printer: {}".format(detected))
+        return detected
+    if detected != args.stdcxxpypr:
+        print("WARNING: detected APP_STL ('{}') does not match pretty printer".format(detected))
+    log("Using specified pretty printer: {}".format(args.stdcxxpypr))
+    return args.stdcxxpypr
+
+
+def find_pretty_printer(pretty_printer):
+    if pretty_printer == "gnustl":
+        path = os.path.join("libstdcxx", "gcc-4.9")
+        function = "register_libstdcxx_printers"
+    elif pretty_printer == "stlport":
+        path = os.path.join("stlport", "stlport")
+        function = "register_stlport_printers"
+    return (os.path.join(ndk_path(), "prebuilt", "share", "pretty-printers", path),
+            function)
 
 def main():
     args = handle_args()
@@ -541,6 +583,12 @@ def main():
 
     out_dir = os.path.join(project, (dump_var(args, "TARGET_OUT", abi)))
     out_dir = os.path.realpath(out_dir)
+
+    pretty_printer = detect_stl_pretty_printer(args)
+    if pretty_printer != "none":
+        (args.pypr_dir, args.pypr_fn) = find_pretty_printer(pretty_printer)
+    else:
+        (args.pypr_dir, args.pypr_fn) = (None, None)
 
     app_data_dir = get_app_data_dir(args, pkg_name)
     arch = abi_to_arch(abi)
@@ -630,8 +678,7 @@ def main():
 
 
     # Start gdb.
-    gdb_commands = generate_gdb_script(out_dir, zygote_path, is64bit,
-                                       args.port)
+    gdb_commands = generate_gdb_script(args, out_dir, zygote_path, is64bit)
     gdb_flags = []
     if args.tui:
         gdb_flags.append("--tui")
