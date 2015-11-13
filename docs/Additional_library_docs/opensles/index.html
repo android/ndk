@@ -9,7 +9,7 @@
 
 <body>
 
-<h1>OpenSL ES for Android</h1>
+<h1 id="title">OpenSL ES for Android</h1>
 
 <p>
 This article describes the Android native audio APIs based on the
@@ -54,11 +54,11 @@ Any known cases where Android behaves differently than the specification
 are described in section "Android extensions" below.
 </p>
 
-<h2>Getting started</h2>
+<h2 id="gettingStarted">Getting started</h2>
 
-<h3>Example code</h3>
+<h3 id="exampleCode">Example code</h3>
 
-<h4>Recommended</h4>
+<h4 id="recommended">Recommended</h4>
 
 <p>
 Supported and tested example code, usable as a model
@@ -71,7 +71,7 @@ folders of the repository
 <a href="https://github.com/googlesamples/android-ndk">https://github.com/googlesamples/android-ndk</a>.
 </p>
 
-<h4>Not recommended</h4>
+<h4 id="notRecommended">Not recommended</h4>
 
 <p>
 The OpenSL ES 1.0.1 specification contains example code in the
@@ -85,7 +85,7 @@ though the code may be helpful in understanding the full OpenSL ES
 standard, it should not be used as is with Android.
 </p>
 
-<h3>Adding OpenSL ES to your application source code</h3>
+<h3 id="adding">Adding OpenSL ES to your application source code</h3>
 
 <p>
 OpenSL ES is a C API, but is callable from both C and C++ code.
@@ -112,7 +112,7 @@ include these, they are shown as an aid in learning the API):
 #include &lt;SLES/OpenSLES_AndroidMetadata.h&gt;
 </pre>
 
-<h3>Makefile</h3>
+<h3 id="makefile">Makefile</h3>
 
 <p>
 Modify your Android.mk as follows:
@@ -121,7 +121,7 @@ Modify your Android.mk as follows:
 LOCAL_LDLIBS += -lOpenSLES
 </pre>
 
-<h3>Audio content</h3>
+<h3 id="audioContent">Audio content</h3>
 
 <p>
 There are many ways to package audio content for your
@@ -202,7 +202,7 @@ permitted to play or record content, and that there may be privacy
 considerations for recording content.
 </p>
 
-<h3>Debugging</h3>
+<h3 id="debugging">Debugging</h3>
 
 <p>
 For robustness, we recommend that you examine the <code>SLresult</code>
@@ -230,7 +230,7 @@ Eclipse ADT plugin</a> LogCat pane, or
 ddms logcat</a> to see the log.
 </p>
 
-<h2>Supported features from OpenSL ES 1.0.1</h2>
+<h2 id="supportedFeatures">Supported features from OpenSL ES 1.0.1</h2>
 
 <p>
 This section summarizes available features. In some
@@ -238,7 +238,7 @@ cases, there are limitations which are described in the next
 sub-section.
 </p>
 
-<h3>Global entry points</h3>
+<h3 id="globalEntry">Global entry points</h3>
 
 <p>
 Supported global entry points:
@@ -252,7 +252,7 @@ Supported global entry points:
 </li>
 </ul>
 
-<h3>Objects and interfaces</h3>
+<h3 id="objectsInterfaces">Objects and interfaces</h3>
 
 <p>
 The following figure indicates objects and interfaces supported by
@@ -264,21 +264,21 @@ is supported.
 <img src="chart1.png" alt="Supported objects and interfaces" />
 </p>
 
-<h3>Limitations</h3>
+<h3 id="limitations">Limitations</h3>
 
 <p>
 This section details limitations with respect to the supported
 objects and interfaces from the previous section.
 </p>
 
-<h4>Buffer queue data locator</h4>
+<h4 id="bufferQueueDataLocator">Buffer queue data locator</h4>
 
 <p>
 An audio player or recorder with buffer queue data locator supports
 PCM data format only.
 </p>
 
-<h4>Device data locator</h4>
+<h4 id="deviceDataLocator">Device data locator</h4>
 
 <p>
 The only supported use of an I/O device data locator is when it is
@@ -291,13 +291,13 @@ SLDataLocator_IODevice loc_dev =
   SL_DEFAULTDEVICEID_AUDIOINPUT, NULL};
 </pre>
 
-<h4>Dynamic interface management</h4>
+<h4 id="dynamicInterfaceManagementSupported">Dynamic interface management</h4>
 
 <p>
 <code>RemoveInterface</code> and <code>ResumeInterface</code> are not supported.
 </p>
 
-<h4>Effect combinations</h4>
+<h4 id="effectCombinations">Effect combinations</h4>
 
 <p>
 It is meaningless to have both environmental reverb and preset
@@ -308,13 +308,13 @@ The platform may ignore effect requests if it estimates that the
 CPU load would be too high.
 </p>
 
-<h4>Effect send</h4>
+<h4 id="effectSend">Effect send</h4>
 
 <p>
 <code>SetSendLevel</code> supports a single send level per audio player.
 </p>
 
-<h4>Environmental reverb</h4>
+<h4 id="environmentalReverb">Environmental reverb</h4>
 
 <p>
 Environmental reverb does not support the <code>reflectionsDelay</code>,
@@ -322,7 +322,7 @@ Environmental reverb does not support the <code>reflectionsDelay</code>,
 <code>struct SLEnvironmentalReverbSettings</code>.
 </p>
 
-<h4>MIME data format</h4>
+<h4 id="mimeDataFormat">MIME data format</h4>
 
 <p>
 The MIME data format can be used with URI data locator only, and only
@@ -354,7 +354,7 @@ will need to convert to cleartext in your application before playing,
 and enforce any DRM restrictions in your application.
 </p>
 
-<h4>Object</h4>
+<h4 id="object">Object</h4>
 
 <p>
 <code>Resume</code>, <code>RegisterCallback</code>,
@@ -363,7 +363,7 @@ and enforce any DRM restrictions in your application.
 are not supported.
 </p>
 
-<h4>PCM data format</h4>
+<h4 id="pcmDataFormat">PCM data format</h4>
 
 <p>
 The PCM data format can be used with buffer queues only. Supported PCM
@@ -384,7 +384,7 @@ of the symbolic constants defined for this purpose (such as
 For API level 21 and above, see section "Floating-point data" below.
 </p>
 
-<h4>Playback rate</h4>
+<h4 id="playbackRate">Playback rate</h4>
 
 <p>
 <b>Note:</b>
@@ -409,14 +409,14 @@ In Android 4.0 the same rate range is typically supported for a data source
 in PCM format, and a unity rate range of 1000 per mille to 1000 per mille for other formats.
 </p>
 
-<h4>Record</h4>
+<h4 id="record">Record</h4>
 
 <p>
 The <code>SL_RECORDEVENT_HEADATLIMIT</code> and
 <code>SL_RECORDEVENT_HEADMOVING</code> events are not supported.
 </p>
 
-<h4>Seek</h4>
+<h4 id="seek">Seek</h4>
 
 <p>
 <code>SetLoop</code> can only loop the whole file and not a portion of it;
@@ -425,7 +425,7 @@ parameter should be zero and the <code>endPos</code> parameter should
 be <code>SL_TIME_UNKNOWN</code>.
 </p>
 
-<h4>URI data locator</h4>
+<h4 id="uriDataLocator">URI data locator</h4>
 
 <p>
 The URI data locator can be used with MIME data format only, and
@@ -437,7 +437,7 @@ schemes such as <code>https:</code>, <code>ftp:</code>, and
 <code>rtsp:</code> is not verified.
 </p>
 
-<h3>Data structures</h3>
+<h3 id="dataStructures">Data structures</h3>
 
 <p>
 Android supports these OpenSL ES 1.0.1 data structures:
@@ -467,7 +467,7 @@ Android supports these OpenSL ES 1.0.1 data structures:
 </li>
 </ul>
 
-<h3>Platform configuration</h3>
+<h3 id="platformConfiguration">Platform configuration</h3>
 
 <p>
 OpenSL ES for Android is designed for multi-threaded applications,
@@ -498,7 +498,7 @@ reference count on the shared engine, so that it is correctly destroyed
 at the second destroy.
 </p>
 
-<h2>Planning for future versions of OpenSL ES</h2>
+<h2 id="planningFutureVersions">Planning for future versions of OpenSL ES</h2>
 
 <p>
 The Android native audio APIs are based on Khronos
@@ -529,7 +529,7 @@ your application source code to conform to the new API. We expect
 that most such changes will be minor; see details below.
 </p>
 
-<h3>Planning for binary compatibility</h3>
+<h3 id="planningBinary">Planning for binary compatibility</h3>
 
 <p>
 We recommend that your application follow these guidelines,
@@ -570,7 +570,7 @@ See section "Buffer queue behavior" below.
 </li>
 </ul>
 
-<h3>Planning for source compatibility</h3>
+<h3 id="planningSource">Planning for source compatibility</h3>
 
 <p>
 As mentioned, source code incompatibilities are expected in the next
@@ -640,7 +640,7 @@ immediate changes to your code.
 </li>
 </ul>
 
-<h2>Android extensions</h2>
+<h2 id="androidExtensions">Android extensions</h2>
 
 <p>
 The API for Android extensions is defined in <code>SLES/OpenSLES_Android.h</code>
@@ -663,7 +663,7 @@ data locators are available for each object type.
 <img src="chart2.png" alt="Android extensions" />
 </p>
 
-<h3>Android configuration interface</h3>
+<h3 id="androidConfiguration">Android configuration interface</h3>
 
 <p>
 The Android configuration interface provides a means to set
@@ -701,7 +701,7 @@ assert(SL_RESULT_SUCCESS == result);
 Similar code can be used to configure the preset for an audio recorder.
 </p>
 
-<h3>Android effects interfaces</h3>
+<h3 id="androidEffects">Android effects interfaces</h3>
 
 <p>
 The Android effect, effect send, and effect capabilities interfaces provide
@@ -714,7 +714,7 @@ Portable applications should use the OpenSL ES 1.0.1 APIs
 for audio effects instead of the Android effect extensions.
 </p>
 
-<h3>Android file descriptor data locator</h3>
+<h3 id="androidFile">Android file descriptor data locator</h3>
 
 <p>
 The Android file descriptor data locator permits the source for an
@@ -725,7 +725,7 @@ access. The data format must be MIME.
 This is especially useful in conjunction with the native asset manager.
 </p>
 
-<h3>Android simple buffer queue data locator and interface</h3>
+<h3 id="androidSimple">Android simple buffer queue data locator and interface</h3>
 
 <p>
 The Android simple buffer queue data locator and interface are
@@ -746,7 +746,7 @@ compatibility, we suggest that applications use Android simple
 buffer queues instead of OpenSL ES 1.0.1 buffer queues.
 </p>
 
-<h3>Dynamic interfaces at object creation</h3>
+<h3 id="dynamicInterfaceObjectCreation">Dynamic interfaces at object creation</h3>
 
 <p>
 For convenience, the Android implementation of OpenSL ES 1.0.1
@@ -755,7 +755,7 @@ as an alternative to adding these interfaces after object creation
 with <code>DynamicInterfaceManagement::AddInterface</code>.
 </p>
 
-<h3>Buffer queue behavior</h3>
+<h3 id="bufferQueueBehavior">Buffer queue behavior</h3>
 
 <p>
 The OpenSL ES 1.0.1 specification requires that "On transition to
@@ -787,7 +787,7 @@ code incompatibilities (see section "Planning for source compatibility"
 above).
 </p>
 
-<h3>Reporting of extensions</h3>
+<h3 id="reportingExtensions">Reporting of extensions</h3>
 
 <p>
 <code>Engine::QueryNumSupportedExtensions</code>,
@@ -800,7 +800,7 @@ where # is the platform API level, 9 or higher
 </li>
 </ul>
 
-<h3>Decode audio to PCM</h3>
+<h3 id="decodeAudio">Decode audio to PCM</h3>
 
 <p>
 This section describes a deprecated Android-specific extension to OpenSL ES 1.0.1
@@ -897,7 +897,7 @@ PCM data, pause the decoding process, or in severe cases terminate
 the decoder.
 </p>
 
-<h3>Decode streaming ADTS AAC to PCM</h3>
+<h3 id="decodeStreaming">Decode streaming ADTS AAC to PCM</h3>
 
 <p>
 Note: this feature is available at API level 14 and higher.
@@ -979,7 +979,7 @@ The Android buffer queue API is described in the Android native media
 API documentation, located in <a href="../openmaxal/index.html">docs/openmaxal/index.html</a>.
 </p>
 
-<h3>Determining the format of decoded PCM data via metadata</h3>
+<h3 id="determiningFormat">Determining the format of decoded PCM data via metadata</h3>
 
 <p>
 The metadata extraction interface <code>SLMetadataExtractionItf</code>
@@ -1010,7 +1010,7 @@ are persistent across different execution runs, and should not assume that
 indices are shared for different object instances within the same run.
 </p>
 
-<h3>Floating-point data</h3>
+<h3 id="floatingPoint">Floating-point data</h3>
 
 <p>
 As of API level 21 and above, data can be supplied to an AudioPlayer in
@@ -1037,14 +1037,14 @@ audiosrc.pLocator = ...
 audiosrc.pFormat = &amp;pcm;
 </pre>
 
-<h2>Programming notes</h2>
+<h2 id="programmingNotes">Programming notes</h2>
 
 <p>
 These notes supplement the OpenSL ES 1.0.1 specification,
 available in the "References" section below.
 </p>
 
-<h3>Objects and interface initialization</h3>
+<h3 id="objectsInitialization">Objects and interface initialization</h3>
 
 <p>
 Two aspects of the OpenSL ES programming model that may be unfamiliar
@@ -1100,7 +1100,7 @@ After your application is done with the object, you should explicitly
 destroy it; see section "Destroy" below.
 </p>
 
-<h3>Audio player prefetch</h3>
+<h3 id="audioPlayerPrefetch">Audio player prefetch</h3>
 
 <p>
 For an audio player with URI data source, <code>Object::Realize</code> allocates resources
@@ -1174,7 +1174,7 @@ callback will be called with periodic status updates
 </li>
 </ol>
 
-<h3>Destroy</h3>
+<h3 id="destroy">Destroy</h3>
 
 <p>
 Be sure to destroy all objects on exit from your application.  Objects
@@ -1202,7 +1202,7 @@ destruction sequence, to prevent the accidental misuse of a stale
 interface handle.
 </p>
 
-<h3>Stereo panning</h3>
+<h3 id="stereoPanning">Stereo panning</h3>
 
 <p>
 When <code>Volume::EnableStereoPosition</code> is used to enable
@@ -1216,7 +1216,7 @@ if you don't need it.  See the Wikipedia article on
 for more information.
 </p>
 
-<h3>Callbacks and threads</h3>
+<h3 id="callbacksThreads">Callbacks and threads</h3>
 
 <p>
 Callback handlers are generally called <i>synchronously</i> with
@@ -1273,7 +1273,7 @@ for the same object, will not occur.  However, concurrent callbacks of
 <i>different</i> kinds for the same object are possible, on different threads.
 </p>
 
-<h3>Performance</h3>
+<h3 id="performance">Performance</h3>
 
 <p>
 As OpenSL ES is a native C API, non-runtime application threads which
@@ -1407,7 +1407,7 @@ is to duplicate or drop samples as needed near a zero-crossing point.
 More sophisticated conversions are possible.
 </p>
 
-<h3>Security and permissions</h3>
+<h3 id="securityPermissions">Security and permissions</h3>
 
 <p>
 As far as who can do what, security in Android is done at the
@@ -1440,14 +1440,14 @@ would still run under the same UID, this separation does make an
 attack more difficult.
 </p>
 
-<h2>Platform issues</h2>
+<h2 id="platformIssues">Platform issues</h2>
 
 <p>
 This section describes known issues in the initial platform
 release which supports these APIs.
 </p>
 
-<h3>Dynamic interface management</h3>
+<h3 id="dynamicInterfaceManagementIssues">Dynamic interface management</h3>
 
 <p>
 <code>DynamicInterfaceManagement::AddInterface</code> does not work.
@@ -1455,7 +1455,7 @@ Instead, specify the interface in the array passed to Create, as
 shown in the example code for environmental reverb.
 </p>
 
-<h2>References and resources</h2>
+<h2 id="references">References and resources</h2>
 
 <p>
 Android:
