@@ -86,7 +86,7 @@ class ArgParser(argparse.ArgumentParser):
         module_group = self.add_mutually_exclusive_group()
 
         module_group.add_argument(
-            '--module', choices=ALL_MODULES, help='NDK modules to build.')
+            '--module', choices=sorted(ALL_MODULES), help='NDK modules to build.')
 
         module_group.add_argument(
             '--host-only', action='store_true',
