@@ -545,7 +545,7 @@ def detect_stl_pretty_printer(args):
     if args.stdcxxpypr == "auto":
         log("Detected pretty printer: {}".format(detected))
         return detected
-    if detected != args.stdcxxpypr:
+    if detected != args.stdcxxpypr and args.stdcxxpypr != "none":
         print("WARNING: detected APP_STL ('{}') does not match pretty printer".format(detected))
     log("Using specified pretty printer: {}".format(args.stdcxxpypr))
     return args.stdcxxpypr
