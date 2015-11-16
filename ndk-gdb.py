@@ -517,6 +517,15 @@ from printers import {pypr_fn}
 {pypr_fn}(None)
 end""".format(pypr_dir=args.pypr_dir, pypr_fn=args.pypr_fn)
 
+    if args.exec_file is not None:
+        try:
+            exec_file = open(args.exec_file, "r")
+        except IOError:
+            error("Failed to open GDB exec file: '{}'.".format(args.exec_file))
+
+        with exec_file:
+            gdb_commands += exec_file.read()
+
     return gdb_commands
 
 
