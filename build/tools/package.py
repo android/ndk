@@ -85,6 +85,7 @@ def get_all_packages(host, arches):
         'native_app_glue',
         'ndk_helper',
         'platforms',
+        'python-packages',
         'stlport',
         'tests',
     ]
