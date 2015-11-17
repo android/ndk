@@ -64,7 +64,7 @@ class Configuration(libcxx.test.config.Configuration):
         self.cxx.link_flags.append('-B' + binutils_dir)
 
         gcclibs_dir = os.path.join(
-            os.environ['NDK'], 'prebuilt/gcclibs', triple)
+            os.environ['NDK'], 'gcclibs', triple)
         self.cxx.link_flags.append('-L' + gcclibs_dir)
 
         self.cxx.link_flags.append('-lgcc')

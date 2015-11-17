@@ -257,16 +257,16 @@ copy_directory "$TOOLCHAIN_PATH" "$TMPDIR"
 PYTHON=python
 PYTHON_x=python$(echo "$DEFAULT_PYTHON_VERSION" | cut -d . -f 1)
 PYTHON_xdotx=python$(echo "$DEFAULT_PYTHON_VERSION" | cut -d . -f 1-2)
-copy_directory "$NDK_DIR/prebuilt/include/$PYTHON_xdotx" "$TMPDIR/include/$PYTHON_xdotx"
-copy_directory "$NDK_DIR/prebuilt/lib/$PYTHON_xdotx" "$TMPDIR/lib/$PYTHON_xdotx"
-copy_file_list "$NDK_DIR/prebuilt/bin" "$TMPDIR/bin" "$PYTHON$HOST_EXE" "$PYTHON_x$HOST_EXE" "$PYTHON_xdotx$HOST_EXE"
+copy_directory "$NDK_DIR/host-tools/include/$PYTHON_xdotx" "$TMPDIR/include/$PYTHON_xdotx"
+copy_directory "$NDK_DIR/host-tools/lib/$PYTHON_xdotx" "$TMPDIR/lib/$PYTHON_xdotx"
+copy_file_list "$NDK_DIR/host-tools/bin" "$TMPDIR/bin" "$PYTHON$HOST_EXE" "$PYTHON_x$HOST_EXE" "$PYTHON_xdotx$HOST_EXE"
 if [ "$HOST_TAG32" = "windows" ]; then
-  copy_file_list "$NDK_DIR/prebuilt/bin" "$TMPDIR/bin" lib$PYTHON_xdotx.dll
+  copy_file_list "$NDK_DIR/host-tools/bin" "$TMPDIR/bin" lib$PYTHON_xdotx.dll
 fi
 
 # Copy yasm for x86
 if [ "$ARCH" = "x86" ]; then
-  copy_file_list "$NDK_DIR/prebuilt/bin" "$TMPDIR/bin" "yasm$HOST_EXE"
+  copy_file_list "$NDK_DIR/host-tools/bin" "$TMPDIR/bin" "yasm$HOST_EXE"
 fi
 
 # Clang stuff

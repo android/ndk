@@ -1428,7 +1428,7 @@ get_toolchain_install_subdir ()
 # Out: relative path to prebuilt install prefix
 get_prebuilt_install_prefix ()
 {
-    echo "prebuilt"
+    echo "host-tools"
 }
 
 # Return the relative path of an installed prebuilt host
