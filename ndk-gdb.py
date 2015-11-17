@@ -421,7 +421,7 @@ def get_gdbserver_path(args, package_name, app_data_dir, arch):
 
     # We need to upload our gdbserver
     log("App gdbserver not found at {}, uploading.".format(app_gdbserver_path))
-    local_path = "{}/prebuilt/android-{}/gdbserver/gdbserver"
+    local_path = "{}/gdbserver/{}/gdbserver"
     local_path = local_path.format(NDK_PATH, arch)
     remote_path = "/data/local/tmp/{}-gdbserver".format(arch)
     args.device.push(local_path, remote_path)

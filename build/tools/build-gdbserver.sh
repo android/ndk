@@ -227,7 +227,8 @@ else
     DSTFILE="gdbserver"
 fi
 dump "Install  : $TOOLCHAIN $DSTFILE."
-DEST=$ANDROID_NDK_ROOT/prebuilt/android-$ARCH/gdbserver
+INSTALL_DIR=`mktemp -d`
+DEST=$INSTALL_DIR/gdbserver/$ARCH
 mkdir -p $DEST &&
 run $TOOLCHAIN_PREFIX-objcopy --strip-unneeded $BUILD_OUT/gdbserver $DEST/$DSTFILE
 if [ $? != 0 ] ; then
@@ -237,10 +238,10 @@ fi
 
 if [ "$PACKAGE_DIR" ]; then
     ARCHIVE=gdbserver-$ARCH.tar.bz2
-    GDBSERVER_SUBDIR="prebuilt/android-$ARCH/gdbserver"
-    make_repo_prop "$ANDROID_NDK_ROOT/$GDBSERVER_SUBDIR"
+    GDBSERVER_SUBDIR="gdbserver/$ARCH"
+    make_repo_prop "$INSTALL_DIR/$GDBSERVER_SUBDIR"
     dump "Packaging: $ARCHIVE"
-    pack_archive "$PACKAGE_DIR/$ARCHIVE" "$ANDROID_NDK_ROOT" "$GDBSERVER_SUBDIR"
+    pack_archive "$PACKAGE_DIR/$ARCHIVE" "$INSTALL_DIR" "$GDBSERVER_SUBDIR"
 fi
 
 log "Cleaning up."
