@@ -1514,7 +1514,7 @@ check_toolchain_src_dir ()
 }
 
 make_repo_prop () {
-    local OUT_PATH="$($ANDROID_NDK_ROOT/realpath $1)/repo.prop"
+    local OUT_PATH="$1/repo.prop"
 
     # The build server generates a repo.prop file that contains the current SHAs
     # of each project.
