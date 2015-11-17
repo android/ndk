@@ -143,7 +143,7 @@ TOOLCHAIN_PREFIX := $(call merge,-,$(call chop,$(call split,-,$(TOOLCHAIN_NAME))
 TOOLCHAIN_PREFIX := $(TOOLCHAIN_PREBUILT_ROOT)/bin/$(TOOLCHAIN_PREFIX)
 
 # We expect the gdbserver binary for this toolchain to be located at its root.
-TARGET_GDBSERVER := $(NDK_ROOT)/prebuilt/android-$(TARGET_ARCH)/gdbserver/gdbserver
+TARGET_GDBSERVER := $(NDK_ROOT)/gdbserver/$(TARGET_ARCH)/gdbserver
 
 # compute NDK_APP_DST_DIR as the destination directory for the generated files
 NDK_APP_DST_DIR := $(NDK_APP_LIBS_OUT)/$(TARGET_ARCH_ABI)
