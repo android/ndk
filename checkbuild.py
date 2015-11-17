@@ -86,7 +86,8 @@ class ArgParser(argparse.ArgumentParser):
         module_group = self.add_mutually_exclusive_group()
 
         module_group.add_argument(
-            '--module', choices=sorted(ALL_MODULES), help='NDK modules to build.')
+            '--module', choices=sorted(ALL_MODULES),
+            help='NDK modules to build.')
 
         module_group.add_argument(
             '--host-only', action='store_true',
@@ -488,6 +489,7 @@ def build_build(out_dir, _):
     ]
     build_support.make_package('build', files, out_dir, root_dir,
                                repo_prop_dir='build')
+
 
 def build_python_packages(out_dir, _):
     # Stage the files in a temporary directory to make things easier.
