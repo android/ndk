@@ -307,7 +307,7 @@ def build_gcc_libs(out_dir, args):
 
         tmpdir = tempfile.mkdtemp()
         try:
-            install_dir = os.path.join(tmpdir, 'prebuilt/gcclibs', triple)
+            install_dir = os.path.join(tmpdir, 'gcclibs', triple)
             os.makedirs(install_dir)
 
             # These are target libraries, so the OS we use here is not
