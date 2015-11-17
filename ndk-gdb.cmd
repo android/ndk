@@ -1,6 +1,6 @@
 @echo off
 setlocal
-set NDK_ROOT=%~dp0
+set PREBUILT_BIN=%~dp0
 set SHELL=cmd
-"%NDK_ROOT%prebuilt/bin/python.exe" -u "%~dp0ndk-gdb" %*
+"%PREBUILT_BIN%/python.exe" -u "%~dp0ndk-gdb" %*
 endlocal

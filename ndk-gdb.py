@@ -32,7 +32,8 @@ import xml.etree.cElementTree as ElementTree
 import logging
 
 # Shared functions across gdbclient.py and ndk-gdb.py.
-NDK_PATH = os.path.dirname(__file__)
+# ndk-gdb is installed to $NDK/prebuilt/bin
+NDK_PATH = os.path.normpath(os.path.join(os.path.dirname(__file__), '../..'))
 sys.path.append(os.path.join(NDK_PATH, "python-packages"))
 import gdbrunner
 
