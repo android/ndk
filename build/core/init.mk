@@ -130,7 +130,7 @@ get-binutils-root = $1/binutils/$(HOST_TAG64)/$2
 #            2: Toolchain name (no version number)
 # Returns  : Path to the given prebuilt gcclibs.
 # -----------------------------------------------------------------------------
-get-gcclibs-path = $1/prebuilt/gcclibs/$2
+get-gcclibs-path = $1/gcclibs/$2
 
 # ====================================================================
 #
