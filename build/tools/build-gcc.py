@@ -53,7 +53,7 @@ def package_gcc(package_dir, host_tag, arch, version):
     package_name = 'gcc-{}-{}.tar.bz2'.format(arch, host_tag)
     package_path = os.path.join(package_dir, package_name)
     with tarfile.TarFile.open(package_path, 'w:bz2') as tarball:
-        arcname = os.path.join('toolchains', host_tag, toolchain_name)
+        arcname = os.path.join('toolchains', toolchain_name)
 
         def package_filter(tarinfo):
             if os.path.basename(tarinfo.name) == '.git':

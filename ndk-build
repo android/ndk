@@ -261,7 +261,7 @@ if [ "$NDK_ANALYZE" = 1 ]; then
     APP_ABIS=`get_build_var APP_ABI`
     for ABI in $APP_ABIS; do
         TOOLCHAIN_PREFIX=`get_build_var_for_abi TOOLCHAIN_PREFIX $ABI`
-        LLVM_PATH=$PROGDIR/toolchains/llvm-${DEFAULT_LLVM_VERSION}/prebuilt/$HOST_TAG
+        LLVM_PATH=$PROGDIR/toolchains/llvm-${DEFAULT_LLVM_VERSION}/prebuilt
         perl $LLVM_PATH/tools/scan-build/scan-build \
             --use-analyzer $LLVM_PATH/bin/${ABI}/analyzer \
             --use-cc ${TOOLCHAIN_PREFIX}gcc \
