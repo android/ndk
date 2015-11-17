@@ -32,7 +32,7 @@ import xml.etree.cElementTree as ElementTree
 import logging
 
 # Shared functions across gdbclient.py and ndk-gdb.py.
-# ndk-gdb is installed to $NDK/prebuilt/bin
+# ndk-gdb is installed to $NDK/host-tools/bin
 NDK_PATH = os.path.normpath(os.path.join(os.path.dirname(__file__), '../..'))
 sys.path.append(os.path.join(NDK_PATH, "python-packages"))
 import gdbrunner
@@ -182,7 +182,7 @@ def extract_launchable(xmlroot):
 
 
 def ndk_bin_path():
-    path = os.path.join(NDK_PATH, "prebuilt", "bin")
+    path = os.path.join(NDK_PATH, "host-tools", "bin")
     if not os.path.exists(path):
         error("Failed to find ndk binary path, should be at '{}'".format(path))
 
@@ -559,8 +559,10 @@ def find_pretty_printer(pretty_printer):
     elif pretty_printer == "stlport":
         path = os.path.join("stlport", "stlport")
         function = "register_stlport_printers"
-    return (os.path.join(NDK_PATH, "prebuilt", "share", "pretty-printers", path),
-            function)
+    pp_path = os.path.join(
+        NDK_PATH, "host-tools", "share", "pretty-printers", path)
+    return pp_path, function
+
 
 def main():
     args = handle_args()
