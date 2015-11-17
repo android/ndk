@@ -399,11 +399,11 @@ def package_host_tools(out_dir, host):
             subprocess.check_call(['tar', 'xf', package_path, '-C', temp_dir])
 
         for f in files:
-            shutil.copy2(f, os.path.join(temp_dir, 'prebuilt/bin'))
+            shutil.copy2(f, os.path.join(temp_dir, 'host-tools/bin'))
 
         package_name = 'host-tools-' + host_tag
-        build_support.make_package(package_name, ['prebuilt'], out_dir,
-                                   temp_dir, repo_prop_dir='prebuilt')
+        build_support.make_package(package_name, ['host-tools'], out_dir,
+                                   temp_dir, repo_prop_dir='host-tools')
     finally:
         shutil.rmtree(temp_dir)
 
