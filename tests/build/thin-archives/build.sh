@@ -1,6 +1,6 @@
 #!/bin/sh
 
-$NDK/ndk-build "$@"
+$NDK/build/ndk-build "$@"
 if [ $? != 0 ]; then
   echo "ERROR: Could not build test program!"
   exit 1

@@ -5,4 +5,4 @@ PWD=$(pwd)
 export NDK_MODULE_PATH="$PWD"
 
 # Build everything
-$NDK/ndk-build "$@"
+$NDK/build/ndk-build "$@"

@@ -5,7 +5,7 @@ PWD=$(pwd)
 export NDK_MODULE_PATH="$PWD"
 
 # Build everything
-$NDK/ndk-build "$@"
+$NDK/build/ndk-build "$@"
 
 # Extract ABIs list from parameters, we're looking for something like APP_ABI=<something>
 PARAM_ABIS=$(echo "$@" | tr ' ' '\n' | grep -e "^APP_ABI=")

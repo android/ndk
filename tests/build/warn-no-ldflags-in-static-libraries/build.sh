@@ -1,7 +1,7 @@
 #!/bin/sh
 
 cd `dirname $0`
-BUILD_OUTPUT=$($NDK/ndk-build "$@" 2>&1)
+BUILD_OUTPUT=$($NDK/build/ndk-build "$@" 2>&1)
 if [ $? != 0 ]; then
     echo "ERROR: Can't build test library!"
     printf "%s\n" "$BUILD_OUTPUT"

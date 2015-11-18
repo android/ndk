@@ -50,7 +50,7 @@ fi
 if [ "$APP_ABI" != "${APP_ABI%%armeabi*}" ]; then
     APP_ABI=`echo $APP_ABI | tr ',' ' '`
     for ABI in $APP_ABI; do
-        $NDK/ndk-build -B APP_ABI=$ABI APP_CFLAGS=-save-temps
+        $NDK/build/ndk-build -B APP_ABI=$ABI APP_CFLAGS=-save-temps
         fail_panic "can't compile for APP_ABI=$ABI"
         fgrep -q "(GOT_PREL)" SkAlphaMulQ.s
         fail_panic "Fail to optimize GOT access with GOT_PREL, ABI=$ABI."
