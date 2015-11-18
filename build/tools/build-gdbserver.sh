@@ -227,7 +227,7 @@ else
     DSTFILE="gdbserver"
 fi
 dump "Install  : $TOOLCHAIN $DSTFILE."
-INSTALL_DIR=`mktemp -d`
+INSTALL_DIR=`mktemp -d gdbserver.XXXXXX`
 DEST=$INSTALL_DIR/gdbserver/$ARCH
 mkdir -p $DEST &&
 run $TOOLCHAIN_PREFIX-objcopy --strip-unneeded $BUILD_OUT/gdbserver $DEST/$DSTFILE
