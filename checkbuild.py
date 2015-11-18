@@ -480,12 +480,7 @@ def build_gtest(out_dir, _):
 
 def build_build(out_dir, _):
     root_dir = build_support.ndk_path()
-    files = [
-        'build',
-        'ndk-build',
-        'ndk-build.cmd',
-    ]
-    build_support.make_package('build', files, out_dir, root_dir,
+    build_support.make_package('build', ['build'], out_dir, root_dir,
                                repo_prop_dir='build')
 
 
