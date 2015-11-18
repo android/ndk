@@ -19,7 +19,7 @@ for opt do
     esac
 done
 
-$NDK/ndk-build -B APP_CFLAGS=-save-temps
+$NDK/build/ndk-build -B APP_CFLAGS=-save-temps
 fail_panic "can't compile!"
 grep -w madd cortex-a53-835769-1.s | grep -qw w0,
 fail_panic "fail to generate correct code for cortex-a53-835769-1.c"

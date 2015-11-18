@@ -1,7 +1,7 @@
 # Check that if there are no installable modules (i.e. shared libraries
 # or executables), ndk-build will automatically build static library
 # modules.
-$NDK/ndk-build "$@"
+$NDK/build/ndk-build "$@"
 if [ "$?" != 0 ]; then
   echo "ERROR: Could not build project!"
   exit 1

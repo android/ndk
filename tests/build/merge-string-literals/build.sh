@@ -21,10 +21,10 @@ if [ -z "$APP_ABI" ]; then
                 ;;
         esac
     done
-    $NDK/ndk-build -C "$PROGDIR" "$@"
+    $NDK/build/ndk-build -C "$PROGDIR" "$@"
     RET=$?
 else
-    $NDK/ndk-build -C "$PROGDIR" "$@" APP_ABI="$APP_ABI"
+    $NDK/build/ndk-build -C "$PROGDIR" "$@" APP_ABI="$APP_ABI"
     RET=$?
 fi
 

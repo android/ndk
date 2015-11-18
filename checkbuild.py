@@ -482,8 +482,6 @@ def build_build(out_dir, _):
     root_dir = build_support.ndk_path()
     files = [
         'build',
-        'ndk-build',
-        'ndk-build.cmd',
         'realpath',
     ]
     build_support.make_package('build', files, out_dir, root_dir,

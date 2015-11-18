@@ -307,7 +307,7 @@ if [ -n "$NDK_ROOT" ] ; then
         dump "Please use a valid path for this option."
         exit 1
     fi
-    if [ ! -f "$NDK_ROOT/ndk-build" -o ! -f "$NDK_ROOT/build/tools/prebuilt-common.sh" ] ; then
+    if [ ! -f "$NDK_ROOT/build/ndk-build" -o ! -f "$NDK_ROOT/build/tools/prebuilt-common.sh" ] ; then
         dump "ERROR: Your --ndk option does not point to a valid NDK install: $NDK_ROOT"
         dump "Please use a valid NDK install path for this option."
         exit 3
@@ -443,15 +443,15 @@ run_ndk_build ()
 {
     if [ "$WINE" ]; then
         if [ "$WINE" = "wine12" ]; then
-            run $WINE cmd /c Z:$NDK/ndk-build.cmd -j$JOBS "$@" APP_LDFLAGS="$APP_LDFLAGS" APP_CFLAGS="$APP_CFLAGS"
+            run $WINE cmd /c Z:$NDK/build/ndk-build.cmd -j$JOBS "$@" APP_LDFLAGS="$APP_LDFLAGS" APP_CFLAGS="$APP_CFLAGS"
         else
             # do "clean" instead of -B
-            run $WINE cmd /c Z:$NDK/ndk-build.cmd clean
+            run $WINE cmd /c Z:$NDK/build/ndk-build.cmd clean
             # make.exe can't do parallel build in wine > 1.2.x
-            run $WINE cmd /c Z:$NDK/ndk-build.cmd "$@" -j1 APP_LDFLAGS="$APP_LDFLAGS" APP_CFLAGS="$APP_CFLAGS"
+            run $WINE cmd /c Z:$NDK/build/ndk-build.cmd "$@" -j1 APP_LDFLAGS="$APP_LDFLAGS" APP_CFLAGS="$APP_CFLAGS"
         fi
     else
-        run $NDK/ndk-build -j$JOBS "$@" APP_LDFLAGS="$APP_LDFLAGS" APP_CFLAGS="$APP_CFLAGS"
+        run $NDK/build/ndk-build -j$JOBS "$@" APP_LDFLAGS="$APP_LDFLAGS" APP_CFLAGS="$APP_CFLAGS"
     fi
 }
 

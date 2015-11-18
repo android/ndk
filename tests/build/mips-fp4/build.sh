@@ -1,6 +1,6 @@
 cd $(dirname "$0")
 
-$NDK/ndk-build -B "$@"
+$NDK/build/ndk-build -B "$@"
 
 # Find instruction in file
 # $1: instruction

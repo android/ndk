@@ -2,7 +2,7 @@
 # See b.android.com/81440
 #
 
-result=$(NDK_TOOLCHAIN_VERSION=clang $NDK/ndk-build -B APP_ABI=armeabi 2>&1)
+result=$(NDK_TOOLCHAIN_VERSION=clang $NDK/build/ndk-build -B APP_ABI=armeabi 2>&1)
 echo $result | grep -q "error: expected"
 RET=$?
 rm -rf obj
