@@ -146,7 +146,7 @@ if [ $? != 0 ]; then
 fi
 
 # Now run the build
-$NDK/ndk-build -C "$PROGDIR" "$@"
+$NDK/build/ndk-build -C "$PROGDIR" "$@"
 RET=$?
 
 # check if linker.list is empty

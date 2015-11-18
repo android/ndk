@@ -34,7 +34,7 @@ def get_tool(tool):
 
 
 def build(build_flags):
-    ndk_build_path = os.path.join(NDK_ROOT, 'ndk-build')
+    ndk_build_path = os.path.join(NDK_ROOT, 'build', 'ndk-build')
     return util.call_output([ndk_build_path] + build_flags)
 
 

@@ -32,7 +32,7 @@ ifeq (,$(filter clang%,$(NDK_TOOLCHAIN_VERSION)))
 # 1. All code and library *must* be recompiled with consistent soft-abi.
 #    If your project use ndk-build and import other project, you may want to do
 #
-#    $NDK/ndk-build -B APP_ABI=armeabi-v7a APP_CFLAGS=-mhard-float APP_LDFLAGS=-Wl,--no-warn-mismatch
+#    $NDK/build/ndk-build -B APP_ABI=armeabi-v7a APP_CFLAGS=-mhard-float APP_LDFLAGS=-Wl,--no-warn-mismatch
 #
 #    If your project use libraries compiled by others, it's likely those were built with
 #    -msoft-abi=softfp or evan -msoft-float (for armeabi).  Recompile them with -mhard-float

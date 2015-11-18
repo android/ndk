@@ -21,7 +21,7 @@ done
 
 if [ -z "$APP_ABI" -o "$APP_ABI" = "all" -o "$APP_ABI" != "${APP_ABI%%armeabi-v7a*}" ]; then
     # checking armeabi-v7a
-    $NDK/ndk-build -B APP_ABI=armeabi-v7a APP_CFLAGS=-save-temps NDK_DEBUG=1
+    $NDK/build/ndk-build -B APP_ABI=armeabi-v7a APP_CFLAGS=-save-temps NDK_DEBUG=1
     fail_panic "can't compile for APP_ABI=armeabi-v7a"
     grep -qw rev16 issue17144-byteswap.s
     fail_panic "armeabi-v7a doesn't use rev16 instruction for __swap16()"
@@ -31,7 +31,7 @@ fi
 
 if [ -z "$APP_ABI" -o "$APP_ABI" = "all" -o "$APP_ABI" != "${APP_ABI%%x86*}" ]; then
     # checking x86
-    $NDK/ndk-build -B APP_ABI=x86 APP_CFLAGS=-save-temps NDK_DEBUG=1
+    $NDK/build/ndk-build -B APP_ABI=x86 APP_CFLAGS=-save-temps NDK_DEBUG=1
     fail_panic "can't compile for x86"
     grep -qw rorw issue17144-byteswap.s
     fail_panic "x86 doesn't use rorw instruction for __swap16()"
@@ -43,7 +43,7 @@ if [ -z "$APP_ABI" -o "$APP_ABI" = "all" -o "$APP_ABI" != "${APP_ABI%%mips*}" ];
     # checking mips
     # Note that MD_SWAP in machine/endian.h is only defined for r2.  Add
     # -mips32r2 because default Android toolchain support r1
-    $NDK/ndk-build -B APP_ABI=mips APP_CFLAGS="-save-temps -mips32r2" NDK_DEBUG=1
+    $NDK/build/ndk-build -B APP_ABI=mips APP_CFLAGS="-save-temps -mips32r2" NDK_DEBUG=1
     fail_panic "can't compile for mips"
     grep -qw wsbh issue17144-byteswap.s
     fail_panic "mips doesn't use wsbh instruction for __swap16()"

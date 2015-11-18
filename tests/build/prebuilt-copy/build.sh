@@ -43,10 +43,10 @@ rm -rf $PREBUILTS_DIR/obj/ $PREBUILTS_DIR/libs/
 
 # Step 1: Build prebuilt libraries.
 if [ -z "$APP_ABI" ]; then
-  $NDK/ndk-build -C "$PREBUILTS_DIR"
+  $NDK/build/ndk-build -C "$PREBUILTS_DIR"
   RET=$?
 else
-  $NDK/ndk-build -C "$PREBUILTS_DIR" APP_ABI="$APP_ABI"
+  $NDK/build/ndk-build -C "$PREBUILTS_DIR" APP_ABI="$APP_ABI"
   RET=$?
 fi
 
@@ -57,10 +57,10 @@ fi
 
 # Step 2: Build the project
 if [ -z "$APP_ABI" ]; then
-  PREBUILTS_DIR=$PREBUILTS_DIR $NDK/ndk-build -C "$PROGDIR"
+  PREBUILTS_DIR=$PREBUILTS_DIR $NDK/build/ndk-build -C "$PROGDIR"
   RET=$?
 else
-  PREBUILTS_DIR=$PREBUILTS_DIR $NDK/ndk-build -C "$PROGDIR" APP_ABI="$APP_ABI"
+  PREBUILTS_DIR=$PREBUILTS_DIR $NDK/build/ndk-build -C "$PROGDIR" APP_ABI="$APP_ABI"
   RET=$?
 fi
 

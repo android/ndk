@@ -202,7 +202,7 @@ fi
 if [ "$OSTYPE" = "cygwin" ] ; then
     GNUMAKE=`cygpath -u $GNUMAKE`
     PROGDIR_MIXED=`cygpath -m $PROGDIR`
-    CYGWIN_GNUMAKE=`$GNUMAKE -f "$PROGDIR_MIXED/build/core/check-cygwin-make.mk" 2>&1`
+    CYGWIN_GNUMAKE=`$GNUMAKE -f "$PROGDIR_MIXED/core/check-cygwin-make.mk" 2>&1`
     if [ $? != 0 ] ; then
         echo "ERROR: You are using a non-Cygwin compatible Make program."
         echo "Currently using: `cygpath -m $GNUMAKE`"
@@ -247,7 +247,7 @@ if [ "$NDK_ANALYZE" = 1 ]; then
     {
         local VAR=$1
         local FLAGS=`gen_flags`
-        $GNUMAKE --no-print-dir -f $PROGDIR/build/core/build-local.mk $FLAGS DUMP_${VAR} | tail -1
+        $GNUMAKE --no-print-dir -f $PROGDIR/core/build-local.mk $FLAGS DUMP_${VAR} | tail -1
     }
 
     get_build_var_for_abi ()
@@ -255,7 +255,7 @@ if [ "$NDK_ANALYZE" = 1 ]; then
         local VAR=$1
         local ABI=$2
         local FLAGS=`gen_flags`
-        $GNUMAKE --no-print-dir -f $PROGDIR/build/core/build-local.mk $FLAGS DUMP_${VAR} APP_ABI=${ABI} | tail -1
+        $GNUMAKE --no-print-dir -f $PROGDIR/core/build-local.mk $FLAGS DUMP_${VAR} APP_ABI=${ABI} | tail -1
     }
 
     APP_ABIS=`get_build_var APP_ABI`
@@ -267,9 +267,9 @@ if [ "$NDK_ANALYZE" = 1 ]; then
             --use-cc ${TOOLCHAIN_PREFIX}gcc \
             --use-c++ ${TOOLCHAIN_PREFIX}g++ \
             --status-bugs \
-            $GNUMAKE -f $PROGDIR/build/core/build-local.mk "$@" APP_ABI=$ABI
+            $GNUMAKE -f $PROGDIR/core/build-local.mk "$@" APP_ABI=$ABI
     done
 else
-    $GNUMAKE -f $PROGDIR/build/core/build-local.mk "$@"
+    $GNUMAKE -f $PROGDIR/core/build-local.mk "$@"
 fi
 
