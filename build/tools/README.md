@@ -240,9 +240,8 @@ version of the toolchain repository at toolchain/. The old process of using
 download-toolchain-sources.sh is now obsolete.
 
 The toolchains binaries are typically placed under the directory
-$NDK/toolchains/$SYSTEM/$NAME/prebuilt, where $NAME is the toolchain name's full
-name (e.g. arm-linux-androideabi-4.8), and $SYSTEM is the name of the host
-system it is meant to run on (e.g. `linux-x86`, `windows` or `darwin-x86`)
+$NDK/toolchains/$NAME/prebuilt, where $NAME is the toolchain name's full name
+(e.g. arm-linux-androideabi-4.8).
 
 I.2. Building the toolchains:
 -----------------------------
@@ -295,9 +294,8 @@ so use the "--mingw" option, as in:
     $NDK/build/tools/build-gcc.sh --mingw \
         /tmp/ndk-$USER/src $NDK x86-4.8
 
-The corresponding binaries are installed under
-$NDK/toolchains/windows/$NAME/prebuilt. Note that these are native Windows
-programs, not Cygwin ones.
+The corresponding binaries are installed under $NDK/toolchains/$NAME/prebuilt.
+Note that these are native Windows programs, not Cygwin ones.
 
 Building the Windows toolchains under MSys and Cygwin is completely unsupported
 and highly un-recommended: even if it works, it will probably take several
@@ -340,13 +338,8 @@ is run on the device through `ndk-gdb` during debugging. For a variety of
 technical reasons, it must be copied into a debuggable project's output
 directory when `ndk-build` is called.
 
-The prebuilt binary is placed under $NDK/toolchains/$NAME/prebuilt/gdbserver in
-the final NDK installation. You can generate with `build-gdbserver.sh` and takes
-the same parameters than `build-gcc.sh`. So one can do:
-
-    $NDK/build/tools/build-gcc.sh /tmp/ndk-$USER/src $NDK \
-        arm-linux-androideabi-4.8
-    $NDK/build/tools/build-gcc.sh /tmp/ndk-$USER/src $NDK x86-4.8
+The prebuilt binary is placed under $NDK/gdbserver/$ARCH in the final NDK
+installation. You can generate them with `build-gdbserver.py`.
 
 
 III.3. Generating C++ runtime prebuilt binaries:

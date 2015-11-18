@@ -48,7 +48,7 @@ LIT_ARGS=${@:2}
 
 LIBCXX_DIR=$NDK/sources/cxx-stl/llvm-libc++/libcxx
 sed -e "s:%ABI%:$ABI:g" -e "s:%TRIPLE%:$TRIPLE:g" \
-    -e "s:%HOST_TAG%:$HOST_TAG:g" -e "s:%ARCH%:$ARCH:g" \
+    -e "s:%ARCH%:$ARCH:g" \
     $LIBCXX_DIR/test/lit.ndk.cfg.in > $LIBCXX_DIR/test/lit.site.cfg
 
 adb push $LIBCXX_DIR/../libs/$ABI/libc++_shared.so /data/local/tmp

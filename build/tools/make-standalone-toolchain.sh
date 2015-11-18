@@ -47,13 +47,6 @@ NDK_DIR=`dirname $NDK_DIR`
 NDK_DIR=`dirname $NDK_DIR`
 register_var_option "--ndk-dir=<path>" NDK_DIR "Take source files from NDK at <path>"
 
-if [ -d "$NDK_DIR/toolchains/$HOST_TAG" ]; then
-  SYSTEM=$HOST_TAG
-else
-  SYSTEM=$HOST_TAG32
-fi
-register_var_option "--system=<name>" SYSTEM "Specify host system"
-
 PACKAGE_DIR=$TMPDIR
 register_var_option "--package-dir=<path>" PACKAGE_DIR "Place package file in <path>"
 
@@ -177,11 +170,11 @@ if [ ! -d "$NDK_DIR/platforms/$PLATFORM" ] ; then
 fi
 
 # Check toolchain name
-TOOLCHAIN_PATH="$NDK_DIR/toolchains/$SYSTEM/$TOOLCHAIN_NAME"
+TOOLCHAIN_PATH="$NDK_DIR/toolchains/$TOOLCHAIN_NAME"
 if [ ! -d "$TOOLCHAIN_PATH" ] ; then
     echo "Could not find toolchain: $TOOLCHAIN_PATH"
     echo "Please use --toolchain=<name> with the name of a toolchain supported by the source NDK."
-    echo "Try one of: " `(cd "$NDK_DIR/toolchains/$SYSTEM" && ls)`
+    echo "Try one of: " `(cd "$NDK_DIR/toolchains" && ls)`
     exit 1
 fi
 
@@ -230,7 +223,7 @@ if [ ! -f "$TOOLCHAIN_GCC" ] ; then
 fi
 
 if [ -n "$LLVM_VERSION" ]; then
-    LLVM_TOOLCHAIN_PATH="$NDK_DIR/toolchains/$SYSTEM/llvm-$LLVM_VERSION"
+    LLVM_TOOLCHAIN_PATH="$NDK_DIR/toolchains/llvm-$LLVM_VERSION"
     # Check that we have any prebuilts LLVM toolchain here
     if [ ! -d "$LLVM_TOOLCHAIN_PATH/prebuilt" ] ; then
         echo "LLVM Toolchain is missing prebuilt files"

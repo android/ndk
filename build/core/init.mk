@@ -106,7 +106,7 @@ endif
 # Returns  : The parent path of all toolchains for this host. Note that
 #            HOST_TAG64 == HOST_TAG for 32-bit systems.
 # -----------------------------------------------------------------------------
-host-toolchain-path = $1/toolchains/$(HOST_TAG64)
+host-toolchain-path = $1/toolchains
 
 # -----------------------------------------------------------------------------
 # Function : get-toolchain-root
@@ -122,7 +122,7 @@ get-toolchain-root = $(call host-toolchain-path,$1)/$2/prebuilt
 #            2: Toolchain name (no version number)
 # Returns  : Path to the given prebuilt binutils.
 # -----------------------------------------------------------------------------
-get-binutils-root = $1/binutils/$(HOST_TAG64)/$2
+get-binutils-root = $1/binutils/$2
 
 # -----------------------------------------------------------------------------
 # Function : get-gcclibs-path
