@@ -22,6 +22,7 @@ import datetime
 import os
 import shutil
 import site
+import stat
 import subprocess
 import sys
 import tempfile
@@ -120,10 +121,39 @@ def extract_all(path, packages, out_dir):
         subprocess.check_call(['tar', 'xf', package_path, '-C', out_dir])
 
 
+def make_ndk_build_shortcut(out_dir, host):
+    if host.startswith('windows'):
+        make_ndk_build_cmd_helper(out_dir)
+    else:
+        make_ndk_build_sh_helper(out_dir)
+
+
+def make_ndk_build_cmd_helper(out_dir):
+    with open(os.path.join(out_dir, 'ndk-build.cmd'), 'w') as helper:
+        helper.writelines([
+            '@echo off\n',
+            r'%~dp0\build\ndk-build.cmd %*',
+        ])
+
+
+def make_ndk_build_sh_helper(out_dir):
+    file_path = os.path.join(out_dir, 'ndk-build')
+    with open(file_path, 'w') as helper:
+        helper.writelines([
+            '#!/bin/sh\n',
+            'DIR="$(cd "$(dirname "$0")" && pwd)"\n',
+            '$DIR/build/ndk-build $*',
+        ])
+    mode = os.stat(file_path).st_mode
+    os.chmod(file_path, mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+
+
 def make_package(release, package_dir, packages, host, out_dir, temp_dir):
     release_name = 'android-ndk-{}'.format(release)
     extract_dir = os.path.join(temp_dir, release_name)
     extract_all(package_dir, packages, extract_dir)
+
+    make_ndk_build_shortcut(extract_dir, host)
 
     host_tag = build_support.host_to_tag(host)
     package_name = '{}-{}'.format(release_name, host_tag)
