@@ -241,6 +241,9 @@ def main():
     if '_NDK_TESTING_ALL_' not in os.environ:
         os.environ['_NDK_TESTING_ALL_'] = 'all'
 
+    if 'NDK' not in os.environ:
+        os.environ['NDK'] = os.path.dirname(os.getcwd())
+
     args = ArgParser().parse_args()
     ndk_build_flags = []
     if args.abi is not None:

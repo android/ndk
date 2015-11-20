@@ -30,11 +30,11 @@ def get_tool(tool):
     ext = ''
     if sys.platform == 'win32':
         ext = '.exe'
-    return os.path.join(NDK_ROOT, 'host-tools', 'bin', tool) + ext
+    return os.path.join(os.environ['NDK'], 'host-tools', 'bin', tool) + ext
 
 
 def build(build_flags):
-    ndk_build_path = os.path.join(NDK_ROOT, 'ndk-build')
+    ndk_build_path = os.path.join(os.environ['NDK'], 'ndk-build')
     return util.call_output([ndk_build_path] + build_flags)
 
 
