@@ -114,13 +114,25 @@ def get_test_device():
 
 
 def get_device_abis():
-    abis = [adb.get_prop('ro.product.cpu.abi')]
-    abi2 = adb.get_prop('ro.product.cpu.abi2')
-    if abi2 is not None:
-        abis.append(abi2)
+    abi_properties = [
+        'ro.product.cpu.abi',
+        'ro.product.cpu.abi2',
+        'ro.product.cpu.abilist',
+        'ro.product.cpu.abilist32',
+        'ro.product.cpu.abilist64',
+    ]
+    abis = set()
+    for abi_prop in abi_properties:
+        prop = adb.get_prop(abi_prop)
+        if prop is None:
+            continue
+
+        for abi in prop.split(','):
+            abis.add(abi)
+
     if 'armeabi-v7a' in abis:
-        abis.append('armeabi-v7a-hard')
-    return abis
+        abis.add('armeabi-v7a-hard')
+    return sorted(list(abis))
 
 
 def check_adb_works_or_die(abi):
