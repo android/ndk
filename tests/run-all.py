@@ -31,6 +31,7 @@ yet.
 from __future__ import print_function
 
 import argparse
+import atexit
 import distutils.spawn
 import inspect
 import os
@@ -38,6 +39,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 
 import adb
 import filters
@@ -199,6 +201,10 @@ class ArgParser(argparse.ArgumentParser):
             '--show-all', action='store_true',
             help='Show all test results, not just failures.')
 
+        self.add_argument(
+            '--out-dir',
+            help='Path to build tests to. Will not be removed upon exit.')
+
 
 class ResultStats(object):
     def __init__(self, suites, results):
@@ -224,6 +230,7 @@ class ResultStats(object):
 
 
 def main():
+    orig_cwd = os.getcwd()
     os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
     # Defining _NDK_TESTING_ALL_=yes to put armeabi-v7a-hard in its own
@@ -246,10 +253,16 @@ def main():
     if not os.path.exists(os.path.join('../build/tools/prebuilt-common.sh')):
         sys.exit('Error: Not run from a valid NDK.')
 
-    out_dir = 'out'
-    if os.path.exists(out_dir):
-        shutil.rmtree(out_dir)
-    os.makedirs(out_dir)
+    out_dir = args.out_dir
+    if out_dir is not None:
+        if not os.path.isabs(out_dir):
+            out_dir = os.path.join(orig_cwd, out_dir)
+        if os.path.exists(out_dir):
+            shutil.rmtree(out_dir)
+        os.makedirs(out_dir)
+    else:
+        out_dir = tempfile.mkdtemp()
+        atexit.register(lambda: shutil.rmtree(out_dir))
 
     suites = ['awk', 'build', 'device']
     if args.suite:
