@@ -114,13 +114,22 @@ def get_test_device():
 
 
 def get_device_abis():
-    abis = [adb.get_prop('ro.product.cpu.abi')]
-    abi2 = adb.get_prop('ro.product.cpu.abi2')
-    if abi2 is not None:
-        abis.append(abi2)
+    # 64-bit devices list their ABIs differently than 32-bit devices. Check all
+    # the possible places for stashing ABI info and merge them.
+    abi_properties = [
+        'ro.product.cpu.abi',
+        'ro.product.cpu.abi2',
+        'ro.product.cpu.abilist',
+    ]
+    abis = set()
+    for abi_prop in abi_properties:
+        prop = adb.get_prop(abi_prop)
+        if prop is not None:
+            abis.update(prop.split(','))
+
     if 'armeabi-v7a' in abis:
-        abis.append('armeabi-v7a-hard')
-    return abis
+        abis.add('armeabi-v7a-hard')
+    return sorted(list(abis))
 
 
 def check_adb_works_or_die(abi):
