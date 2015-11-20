@@ -296,7 +296,7 @@ namespace __cxxabiv1 {
 
   extern "C" void *__cxa_allocate_exception(size_t thrown_size) _GABIXX_NOEXCEPT {
     size_t size = thrown_size + sizeof(__cxa_exception);
-    __cxa_exception *buffer = static_cast<__cxa_exception*>(malloc(size));
+    __cxa_exception *buffer = static_cast<__cxa_exception*>(memalign(__alignof__(__cxa_exception), size));
     if (!buffer) {
       // Since Android uses memory-overcommit, we enter here only when
       // the exception object is VERY large. This will propably never happen.
