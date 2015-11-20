@@ -37,8 +37,8 @@ def make_standalone_toolchain(arch, platform, toolchain, install_dir):
         cmd.append('--platform=' + platform)
 
     if toolchain is not None:
-        triple = build_support.arch_to_triple(arch)
-        name = '{}-{}'.format(triple, toolchain)
+        toolchain_triple = build_support.arch_to_toolchain(arch)
+        name = '{}-{}'.format(toolchain_triple, toolchain)
         cmd.append('--toolchain=' + name)
 
     subprocess.check_call(cmd)
@@ -47,6 +47,9 @@ def make_standalone_toolchain(arch, platform, toolchain, install_dir):
 def test_standalone_toolchain(arch, toolchain, install_dir):
     if toolchain == '4.9':
         triple = build_support.arch_to_triple(arch)
+        # x86 toolchain names are dumb: http://b/25800583
+        if arch == 'x86':
+            triple = 'i686-linux-android'
         compiler_name = triple + '-g++'
     elif toolchain == 'clang3.6':
         compiler_name = 'clang++'
