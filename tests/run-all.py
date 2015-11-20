@@ -130,9 +130,12 @@ def check_adb_works_or_die(abi):
     except RuntimeError as ex:
         sys.exit('Error: {}'.format(ex))
 
-    if abi is not None and abi not in get_device_abis():
-        sys.exit('The test device ({}) does not support the requested ABI '
-                 '({})'.format(device, abi))
+    supported_abis = get_device_abis()
+    if abi is not None and abi not in supported_abis:
+        msg = ('The test device ({}) does not support the requested ABI '
+               '({}).\nSupported ABIs: {}'.format(device, abi,
+                                                  ', '.join(supported_abis)))
+        sys.exit(msg)
 
 
 def is_valid_platform_version(version_string):
