@@ -226,6 +226,8 @@ ifdef LOCAL_ARM_MODE
       $(call __ndk_info,   LOCAL_ARM_MODE must be defined to either 'arm' or 'thumb' in $(LOCAL_MAKEFILE) not '$(LOCAL_ARM_MODE)')\
       $(call __ndk_error, Aborting)\
   )
+else
+    LOCAL_ARM_MODE := thumb
 endif
 
 # As a special case, the original Android build system
