@@ -478,6 +478,11 @@ ifneq ($(filter -l%,$(LOCAL_LDLIBS)),)
     endif
 endif
 
+my_ldflags := $(TARGET_LDFLAGS) $(LOCAL_LDFLAGS) $(NDK_APP_LDFLAGS)
+ifneq ($(filter armeabi%,$(TARGET_ARCH_ABI)),)
+    my_ldflags += $(TARGET_$(LOCAL_ARM_MODE)_LDFLAGS)
+endif
+
 # When LOCAL_SHORT_COMMANDS is defined to 'true' we are going to write the
 # list of all object files and/or static/shared libraries that appear on the
 # command line to a file, then use the @<listfile> syntax to invoke it.
@@ -496,7 +501,7 @@ $(LOCAL_BUILT_MODULE): PRIVATE_OBJECTS := $(LOCAL_OBJECTS)
 $(LOCAL_BUILT_MODULE): PRIVATE_LIBGCC := $(TARGET_LIBGCC)
 
 $(LOCAL_BUILT_MODULE): PRIVATE_LD := $(TARGET_LD)
-$(LOCAL_BUILT_MODULE): PRIVATE_LDFLAGS := $(TARGET_LDFLAGS) $(LOCAL_LDFLAGS) $(NDK_APP_LDFLAGS)
+$(LOCAL_BUILT_MODULE): PRIVATE_LDFLAGS := $(my_ldflags)
 $(LOCAL_BUILT_MODULE): PRIVATE_LDLIBS  := $(LOCAL_LDLIBS) $(TARGET_LDLIBS)
 
 $(LOCAL_BUILT_MODULE): PRIVATE_NAME := $(notdir $(LOCAL_BUILT_MODULE))
