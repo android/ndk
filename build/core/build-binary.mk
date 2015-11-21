@@ -226,6 +226,9 @@ ifdef LOCAL_ARM_MODE
       $(call __ndk_info,   LOCAL_ARM_MODE must be defined to either 'arm' or 'thumb' in $(LOCAL_MAKEFILE) not '$(LOCAL_ARM_MODE)')\
       $(call __ndk_error, Aborting)\
   )
+  my_link_arm_mode := $(LOCAL_ARM_MODE)
+else
+  my_link_arm_mode := thumb
 endif
 
 # As a special case, the original Android build system
@@ -480,7 +483,7 @@ endif
 
 my_ldflags := $(TARGET_LDFLAGS) $(LOCAL_LDFLAGS) $(NDK_APP_LDFLAGS)
 ifneq ($(filter armeabi%,$(TARGET_ARCH_ABI)),)
-    my_ldflags += $(TARGET_$(LOCAL_ARM_MODE)_LDFLAGS)
+    my_ldflags += $(TARGET_$(my_link_arm_mode)_LDFLAGS)
 endif
 
 # When LOCAL_SHORT_COMMANDS is defined to 'true' we are going to write the
