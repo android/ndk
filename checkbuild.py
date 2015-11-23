@@ -227,7 +227,7 @@ def get_prebuilt_gcc(host, arch):
     system_path = build_support.android_path(system_subdir)
     toolchain = build_support.arch_to_toolchain(arch)
     toolchain_dir = toolchain + '-4.9'
-    return os.path.join(system_path, toolchain_dir, 'prebuilt')
+    return os.path.join(system_path, toolchain_dir)
 
 
 def build_binutils(out_dir, args):
@@ -280,7 +280,7 @@ def build_gcc_libs(out_dir, args):
     for arch in arches:
         toolchain = build_support.arch_to_toolchain(arch)
         triple = fixup_toolchain_triple(toolchain)
-        libgcc_subdir = 'lib/gcc/{}/4.9.x-google'.format(triple)
+        libgcc_subdir = 'lib/gcc/{}/4.9'.format(triple)
         is64 = arch.endswith('64')
         libatomic_subdir = '{}/lib{}'.format(triple, '64' if is64 else '')
 
