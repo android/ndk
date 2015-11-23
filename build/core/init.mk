@@ -114,7 +114,7 @@ host-toolchain-path = $1/toolchains
 #            2: Toolchain name
 # Returns  : Path to the given prebuilt toolchain.
 # -----------------------------------------------------------------------------
-get-toolchain-root = $(call host-toolchain-path,$1)/$2/prebuilt
+get-toolchain-root = $(call host-toolchain-path,$1)/$2
 
 # -----------------------------------------------------------------------------
 # Function : get-binutils-root
