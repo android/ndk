@@ -208,13 +208,13 @@ if [ ! -d "$SRC_SYSROOT_INC" -o ! -d "$SRC_SYSROOT_LIB" ] ; then
 fi
 
 # Check that we have any prebuilts GCC toolchain here
-if [ ! -d "$TOOLCHAIN_PATH/prebuilt" ]; then
+if [ ! -d "$TOOLCHAIN_PATH" ]; then
     echo "Toolchain is missing prebuilt files: $TOOLCHAIN_NAME"
     echo "You must point to a valid NDK release package!"
     exit 1
 fi
 
-TOOLCHAIN_PATH="$TOOLCHAIN_PATH/prebuilt"
+TOOLCHAIN_PATH="$TOOLCHAIN_PATH"
 TOOLCHAIN_GCC=$TOOLCHAIN_PATH/bin/$ABI_CONFIGURE_TARGET-gcc
 
 if [ ! -f "$TOOLCHAIN_GCC" ] ; then
@@ -225,12 +225,12 @@ fi
 if [ -n "$LLVM_VERSION" ]; then
     LLVM_TOOLCHAIN_PATH="$NDK_DIR/toolchains/llvm-$LLVM_VERSION"
     # Check that we have any prebuilts LLVM toolchain here
-    if [ ! -d "$LLVM_TOOLCHAIN_PATH/prebuilt" ] ; then
+    if [ ! -d "$LLVM_TOOLCHAIN_PATH" ] ; then
         echo "LLVM Toolchain is missing prebuilt files"
         echo "You must point to a valid NDK release package!"
         exit 1
     fi
-    LLVM_TOOLCHAIN_PATH="$LLVM_TOOLCHAIN_PATH/prebuilt"
+    LLVM_TOOLCHAIN_PATH="$LLVM_TOOLCHAIN_PATH"
 fi
 
 # Get GCC_BASE_VERSION.  Note that GCC_BASE_VERSION may be slightly different from GCC_VERSION.
