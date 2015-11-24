@@ -160,8 +160,26 @@ def make_package(release, package_dir, packages, host, out_dir, temp_dir):
     package_path = os.path.join(out_dir, package_name)
     print('Packaging ' + package_name)
     files = os.path.relpath(extract_dir, temp_dir)
+
+    if host.startswith('windows'):
+        _make_zip_package(package_path, temp_dir, files)
+    else:
+        _make_tar_package(package_path, temp_dir, files)
+
+
+def _make_tar_package(package_path, base_dir, files):
     subprocess.check_call(
-        ['tar', 'cjf', package_path + '.tar.bz2', '-C', temp_dir, files])
+        ['tar', 'cjf', package_path + '.tar.bz2', '-C', base_dir, files])
+
+
+def _make_zip_package(package_path, base_dir, files):
+    cwd = os.getcwd()
+    package_path = os.path.realpath(package_path)
+    os.chdir(base_dir)
+    try:
+        subprocess.check_call(['zip', '-9qr', package_path + '.zip', files])
+    finally:
+        os.chdir(cwd)
 
 
 class ArgParser(argparse.ArgumentParser):
