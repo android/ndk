@@ -217,6 +217,7 @@ def main():
 
     if args.unpack:
         extract_all(args.package_dir, packages, args.out_dir)
+        make_ndk_build_shortcut(args.out_dir, args.host)
     else:
         package_dir = tempfile.mkdtemp()
         try:
