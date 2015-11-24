@@ -473,6 +473,9 @@ class ShellBuildTest(Test):
     def run(self, out_dir, _):
         build_dir = os.path.join(out_dir, self.name)
         print('Running build test: {}'.format(self.name))
+        if os.name == 'nt':
+            reason = 'build.sh tests are not supported on Windows'
+            return [Skipped(self.name, reason)]
         return [_run_build_sh_test(self.name, build_dir, self.test_dir,
                                    self.build_flags, self.abi, self.platform,
                                    self.toolchain)]
