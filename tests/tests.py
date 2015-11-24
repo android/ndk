@@ -15,6 +15,8 @@
 #
 from __future__ import print_function
 
+import difflib
+import filecmp
 import glob
 import imp
 import multiprocessing
@@ -279,20 +281,17 @@ class AwkTest(Test):
             if rc != 0:
                 return Failure(name, 'awk failed')
 
-        with open(os.devnull, 'wb') as dev_null:
-            rc = subprocess.call(['cmp', out_path, golden_out_path],
-                                 stdout=dev_null, stderr=dev_null)
-            if rc == 0:
-                return Success(name)
-            else:
-                p = subprocess.Popen(
-                    ['diff', '-buN', out_path, golden_out_path],
-                    stdout=subprocess.PIPE, stderr=dev_null)
-                out, _ = p.communicate()
-                if p.returncode != 0:
-                    raise RuntimeError('Could not generate diff')
-                message = 'output does not match expected:\n\n' + out
-                return Failure(name, message)
+        if filecmp.cmp(out_path, golden_out_path):
+            return Success(name)
+        else:
+            with open(out_path) as out_file:
+                out_lines = out_file.readlines()
+            with open(golden_out_path) as golden_out_file:
+                golden_lines = golden_out_file.readlines()
+            diff = ''.join(difflib.unified_diff(
+                golden_lines, out_lines, fromfile='expected', tofile='actual'))
+            message = 'output does not match expected:\n\n' + diff
+            return Failure(name, message)
 
 
 def _prep_build_dir(src_dir, out_dir):
