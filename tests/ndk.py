@@ -35,6 +35,8 @@ def get_tool(tool):
 
 def build(build_flags):
     ndk_build_path = os.path.join(os.environ['NDK'], 'ndk-build')
+    if os.name == 'nt':
+        ndk_build_path += '.cmd'
     return util.call_output([ndk_build_path] + build_flags)
 
 
