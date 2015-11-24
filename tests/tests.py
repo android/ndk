@@ -279,7 +279,10 @@ class AwkTest(Test):
                 return Failure(name, 'awk failed')
 
         with open(os.devnull, 'wb') as dev_null:
-            rc = subprocess.call(['cmp', out_path, golden_out_path],
+            cmp_cmd = 'cmp'
+            if os.name == 'nt':
+                cmp_cmd = ndk.get_tool('cmp')
+            rc = subprocess.call([cmp_cmd, out_path, golden_out_path],
                                  stdout=dev_null, stderr=dev_null)
             if rc == 0:
                 return Success(name)
