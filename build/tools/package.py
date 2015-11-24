@@ -82,7 +82,7 @@ def get_all_packages(host, arches):
         'gtest',
         'host-tools-{host}',
         'libcxx',
-        'llvm-3.6-{host}',
+        'llvm-{host}',
         'native_app_glue',
         'ndk_helper',
         'platforms',

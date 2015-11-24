@@ -28,7 +28,7 @@ import build_support  # pylint: disable=import-error
 
 
 def get_llvm_prebuilt_path(host, version):
-    rel_prebuilt_path = 'prebuilts/clang/{}/host/{}'.format(
+    rel_prebuilt_path = 'prebuilts/clang/host/{}/{}'.format(
         host, version)
     prebuilt_path = os.path.join(build_support.android_path(),
                                  rel_prebuilt_path)
@@ -38,7 +38,7 @@ def get_llvm_prebuilt_path(host, version):
 
 
 def main(args):
-    LLVM_VERSION = '3.6'
+    LLVM_VERSION = 'clang-2445339'
 
     host = args.host
     package_dir = args.package_dir
@@ -61,10 +61,17 @@ def main(args):
     elif host == 'windows64':
         host = 'windows-x86_64'
 
-    package_name = 'llvm-{}-{}.tar.bz2'.format(LLVM_VERSION, host)
+    package_name = 'llvm-{}.tar.bz2'.format(host)
     package_path = os.path.join(package_dir, package_name)
     with tarfile.TarFile.open(package_path, 'w:bz2') as tarball:
-        arcname = 'toolchains/llvm-{}'.format(LLVM_VERSION)
+        # TODO(danalbert): Make this version not be a lie. http://b/25782259
+        # Right now the version number for clang is in waaaaaaaay to many
+        # places to update sanely. We either need to make that not be the case,
+        # or just drop the version number entirely.
+        #
+        # For now, we'll just let the version number continue being a lie (it
+        # already was anyway).
+        arcname = 'toolchains/llvm-{}'.format('3.6')
 
         def package_filter(tarinfo):
             if os.path.basename(tarinfo.name) == '.git':
