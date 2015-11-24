@@ -273,7 +273,7 @@ class AwkTest(Test):
             awk_path = ndk.get_tool('awk')
             print('{} -f {} < {} > {}'.format(
                 awk_path, self.script, test_case, out_path))
-            rc = subprocess.call(['awk', '-f', self.script], stdin=test_in,
+            rc = subprocess.call([awk_path, '-f', self.script], stdin=test_in,
                                  stdout=out_file)
             if rc != 0:
                 return Failure(name, 'awk failed')
