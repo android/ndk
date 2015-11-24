@@ -300,7 +300,8 @@ def main():
 
     stats = ResultStats(suites, results)
 
-    printer = printers.StdoutPrinter(use_color=sys.stdin.isatty(),
+    use_color = sys.stdin.isatty() and os.name != 'nt'
+    printer = printers.StdoutPrinter(use_color=use_color,
                                      show_all=args.show_all)
     printer.print_results(results, stats)
     sys.exit(stats.global_stats['fail'] > 0)
