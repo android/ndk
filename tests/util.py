@@ -53,3 +53,10 @@ def call_output(cmd, *args, **kwargs):
                             stderr=subprocess.STDOUT, *args, **kwargs)
     out, _ = proc.communicate()
     return proc.returncode, out
+
+
+def diff_files(orig, new):
+    if os.name == 'nt':
+        return subprocess.check_call(['fc', orig, new])
+    else:
+        return subprocess.check_call(['diff', '-buN', orig, new])

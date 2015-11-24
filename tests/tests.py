@@ -287,13 +287,8 @@ class AwkTest(Test):
             if rc == 0:
                 return Success(name)
             else:
-                p = subprocess.Popen(
-                    ['diff', '-buN', out_path, golden_out_path],
-                    stdout=subprocess.PIPE, stderr=dev_null)
-                out, _ = p.communicate()
-                if p.returncode != 0:
-                    raise RuntimeError('Could not generate diff')
-                message = 'output does not match expected:\n\n' + out
+                diff = util.diff_files(out_path, golden_out_path)
+                message = 'output does not match expected:\n\n' + diff
                 return Failure(name, message)
 
 
