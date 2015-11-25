@@ -37,9 +37,6 @@ def make_standalone_toolchain(arch, platform, toolchain, install_dir):
         cmd.append('--platform=' + platform)
 
     if toolchain is not None:
-        if toolchain == 'clang':
-            # make-standalone-toolchain.sh still expects a version.
-            toolchain = 'clang3.6'
         toolchain_triple = build_support.arch_to_toolchain(arch)
         name = '{}-{}'.format(toolchain_triple, toolchain)
         cmd.append('--toolchain=' + name)

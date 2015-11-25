@@ -29,8 +29,12 @@ make scripts."
 TOOLCHAIN_NAME=
 register_var_option "--toolchain=<name>" TOOLCHAIN_NAME "Specify toolchain name"
 
-LLVM_VERSION=
-register_var_option "--llvm-version=<ver>" LLVM_VERSION "Specify LLVM version"
+USE_LLVM=no
+do_option_use_llvm ()
+{
+    USE_LLVM=yes
+}
+register_option "--use-llvm" do_option_use_llvm "Use LLVM."
 
 STL=gnustl
 register_var_option "--stl=<name>" STL "Specify C++ STL"
@@ -130,19 +134,11 @@ if [ -z "$TOOLCHAIN_NAME" ]; then
 fi
 
 # Detect LLVM version from toolchain name with *clang*
-LLVM_VERSION_EXTRACT=$(echo "$TOOLCHAIN_NAME" | grep 'clang[0-9]\.[0-9]$' | sed -e 's/.*-clang//')
-if [ -n "$LLVM_VERSION_EXTRACT" ]; then
+TOOLCHAIN_LLVM=$(echo "$TOOLCHAIN_NAME" | grep clang)
+if [ -n "$TOOLCHAIN_LLVM" ]; then
+    USE_LLVM=yes
     DEFAULT_GCC_VERSION=$(get_default_gcc_version_for_arch $ARCH)
-    NEW_TOOLCHAIN_NAME=${TOOLCHAIN_NAME%-clang${LLVM_VERSION_EXTRACT}}-${DEFAULT_GCC_VERSION}
-    if [ -z "$LLVM_VERSION" ]; then
-        LLVM_VERSION=$LLVM_VERSION_EXTRACT
-        echo "Auto-config: --toolchain=$NEW_TOOLCHAIN_NAME, --llvm-version=$LLVM_VERSION"
-    else
-        if [ "$LLVM_VERSION" != "$LLVM_VERSION_EXTRACT" ]; then
-            echo "Conflict llvm-version: --llvm-version=$LLVM_VERSION and as implied by --toolchain=$TOOLCHAIN_NAME"
-            exit 1
-	fi
-    fi
+    NEW_TOOLCHAIN_NAME=${TOOLCHAIN_NAME%-clang}-${DEFAULT_GCC_VERSION}
     TOOLCHAIN_NAME=$NEW_TOOLCHAIN_NAME
 fi
 
@@ -222,8 +218,8 @@ if [ ! -f "$TOOLCHAIN_GCC" ] ; then
     exit 1
 fi
 
-if [ -n "$LLVM_VERSION" ]; then
-    LLVM_TOOLCHAIN_PATH="$NDK_DIR/toolchains/llvm-$LLVM_VERSION"
+if [ "$USE_LLVM" = "yes" ]; then
+    LLVM_TOOLCHAIN_PATH="$NDK_DIR/toolchains/llvm"
     # Check that we have any prebuilts LLVM toolchain here
     if [ ! -d "$LLVM_TOOLCHAIN_PATH" ] ; then
         echo "LLVM Toolchain is missing prebuilt files"
@@ -264,7 +260,7 @@ fi
 
 # Clang stuff
 
-if [ -n "$LLVM_VERSION" ]; then
+if [ "$USE_LLVM" = "yes" ]; then
   # Copy the clang/llvm toolchain prebuilt binaries
   copy_directory "$LLVM_TOOLCHAIN_PATH" "$TMPDIR"
 
@@ -303,6 +299,14 @@ if [ -n "$LLVM_VERSION" ]; then
       *)
         dump "ERROR: Unsupported NDK architecture $ARCH!"
   esac
+
+  # We need to copy clang and clang++ to some other named binary because clang
+  # and clang++ are going to be the shell scripts with the prefilled target. We
+  # have the version info available, and that's a typical alternate name (and is
+  # what we historically used).
+  LLVM_VERSION=$(cat $LLVM_TOOLCHAIN_PATH/AndroidVersion.txt | \
+      egrep -o '[[:digit:]]+\.[[:digit:]]')
+
   # Need to remove '.' from LLVM_VERSION when constructing new clang name,
   # otherwise clang3.3++ may still compile *.c code as C, not C++, which
   # is not consistent with g++
