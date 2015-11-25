@@ -91,11 +91,8 @@ DEFAULT_ARCH_TOOLCHAIN_PREFIX_mips=mipsel-linux-android
 DEFAULT_ARCH_TOOLCHAIN_NAME_mips64=mips64el-linux-android
 DEFAULT_ARCH_TOOLCHAIN_PREFIX_mips64=mips64el-linux-android
 
-# The space-separated list of all LLVM versions we support in NDK
-DEFAULT_LLVM_VERSION_LIST="3.6"
-
-# The default LLVM version (first item in the list)
-DEFAULT_LLVM_VERSION=$(echo "$DEFAULT_LLVM_VERSION_LIST" | tr ' ' '\n' | head -n 1)
+# The build number of clang used to build pieces of the NDK (like platforms).
+DEFAULT_LLVM_VERSION="2445339"
 
 # The default URL to download the LLVM tar archive
 DEFAULT_LLVM_URL="http://llvm.org/releases"
