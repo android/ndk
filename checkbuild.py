@@ -246,7 +246,7 @@ def build_binutils(out_dir, args):
         triple = fixup_toolchain_triple(toolchain)
         tmpdir = tempfile.mkdtemp()
         try:
-            install_dir = os.path.join(tmpdir, 'binutils', toolchain)
+            install_dir = os.path.join(tmpdir, 'binutils', triple)
             os.makedirs(install_dir)
             is_windows = host_tag.startswith('windows')
             has_gold = not triple.startswith('mips') and not is_windows
