@@ -524,7 +524,9 @@ def _copy_test_to_device(build_dir, device_dir, abi, test_filters, test_name):
         if test_file in ('gdbserver', 'gdb.setup'):
             continue
 
+        file_is_lib = False
         if not test_file.endswith('.so'):
+            file_is_lib = True
             case_name = _make_subtest_name(test_name, test_file)
             if not test_filters.filter(case_name):
                 continue
@@ -536,6 +538,11 @@ def _copy_test_to_device(build_dir, device_dir, abi, test_filters, test_name):
         lib_path = os.path.join(abi_dir, test_file)
         print('\tPushing {} to {}...'.format(lib_path, device_dir))
         adb.push(lib_path, device_dir)
+
+        # Binaries pushed from Windows may not have execute permissions.
+        if not file_is_lib:
+            file_path = posixpath.join(device_dir, test_file)
+            adb.shell('chmod +x ' + file_path)
 
         # TODO(danalbert): Sync data.
         # The libc++ tests contain a DATA file that lists test names and their
