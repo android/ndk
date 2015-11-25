@@ -37,6 +37,9 @@ def make_standalone_toolchain(arch, platform, toolchain, install_dir):
         cmd.append('--platform=' + platform)
 
     if toolchain is not None:
+        if toolchain == 'clang':
+            # make-standalone-toolchain.sh still expects a version.
+            toolchain = 'clang3.6'
         toolchain_triple = build_support.arch_to_toolchain(arch)
         name = '{}-{}'.format(toolchain_triple, toolchain)
         cmd.append('--toolchain=' + name)
@@ -51,7 +54,7 @@ def test_standalone_toolchain(arch, toolchain, install_dir):
         if arch == 'x86':
             triple = 'i686-linux-android'
         compiler_name = triple + '-g++'
-    elif toolchain == 'clang3.6':
+    elif toolchain == 'clang':
         compiler_name = 'clang++'
     else:
         raise ValueError

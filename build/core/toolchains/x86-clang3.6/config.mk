@@ -13,8 +13,8 @@
 # limitations under the License.
 #
 
-# config file for the x86 clang-3.6 toolchain for the Android NDK
-# the real meat is in the setup.mk file adjacent to this one
+# config file for the x86 clang toolchain for the Android NDK the real meat is
+# in the setup.mk file adjacent to this one
 #
 TOOLCHAIN_ARCH := x86
 TOOLCHAIN_ABIS := x86

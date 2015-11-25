@@ -64,14 +64,7 @@ def main(args):
     package_name = 'llvm-{}.tar.bz2'.format(host)
     package_path = os.path.join(package_dir, package_name)
     with tarfile.TarFile.open(package_path, 'w:bz2') as tarball:
-        # TODO(danalbert): Make this version not be a lie. http://b/25782259
-        # Right now the version number for clang is in waaaaaaaay to many
-        # places to update sanely. We either need to make that not be the case,
-        # or just drop the version number entirely.
-        #
-        # For now, we'll just let the version number continue being a lie (it
-        # already was anyway).
-        arcname = 'toolchains/llvm-{}'.format('3.6')
+        arcname = 'toolchains/llvm'
 
         def package_filter(tarinfo):
             if os.path.basename(tarinfo.name) == '.git':

@@ -13,8 +13,8 @@
 # limitations under the License.
 #
 
-# this file is used to prepare the NDK to build with the mipsel llvm-3.6
-# toolchain any number of source files
+# this file is used to prepare the NDK to build with the mipsel llvm toolchain
+# any number of source files
 #
 # its purpose is to define (or re-define) templates used to build
 # various sources into target object files, libraries or executables.
@@ -27,9 +27,7 @@
 # Override the toolchain prefix
 #
 
-LLVM_VERSION := 3.6
-LLVM_NAME := llvm-$(LLVM_VERSION)
-LLVM_TOOLCHAIN_PREBUILT_ROOT := $(call get-toolchain-root,$(NDK_ROOT),$(LLVM_NAME))
+LLVM_TOOLCHAIN_PREBUILT_ROOT := $(call get-toolchain-root,$(NDK_ROOT),llvm)
 LLVM_TOOLCHAIN_PREFIX := $(LLVM_TOOLCHAIN_PREBUILT_ROOT)/bin/
 
 TOOLCHAIN_NAME := mipsel-linux-android
