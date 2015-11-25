@@ -19,6 +19,7 @@ import glob
 import imp
 import multiprocessing
 import os
+import posixpath
 import re
 import shutil
 import subprocess
@@ -569,7 +570,7 @@ class DeviceTest(Test):
         if not build_result.passed():
             return [build_result]
 
-        device_dir = os.path.join('/data/local/tmp/ndk-tests', self.name)
+        device_dir = posixpath.join('/data/local/tmp/ndk-tests', self.name)
 
         result, out = adb.shell('mkdir -p {}'.format(device_dir))
         if result != 0:
