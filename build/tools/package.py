@@ -45,8 +45,8 @@ def expand_packages(package, host, arches):
     >>> expand_packages('gcclibs-{arch}', 'linux', ['arm64', 'x86_64'])
     ['gcclibs-arm64', 'gcclibs-x86_64']
 
-    >>> expand_packages('llvm-3.6-{host}', 'linux', ['arm'])
-    ['llvm-3.6-linux-x86_64']
+    >>> expand_packages('llvm-{host}', 'linux', ['arm'])
+    ['llvm-linux-x86_64']
 
     >>> expand_packages('platforms', 'linux', ['arm'])
     ['platforms']

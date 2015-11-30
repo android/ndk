@@ -81,9 +81,6 @@ register_var_option "--gcc-version-list=<vers>" GCC_VERSION_LIST "List of GCC re
 GDB_VERSION=$DEFAULT_GDB_VERSION
 register_var_option "--gdb-version=<versions>" GDB_VERSION "GDB release version"
 
-LLVM_VERSION_LIST=$DEFAULT_LLVM_VERSION_LIST
-register_var_option "--llvm-version-list=<versions>" LLVM_VERSION_LIST "List of LLVM release versions"
-
 register_try64_option
 
 PROGRAM_PARAMETERS=
@@ -124,9 +121,6 @@ for ARCH in $ARCHS; do
         ABIS=$ABIS" $DEFAULT_ABIS"
     fi
 done
-
-# Convert comma-separated list to space-separated list
-LLVM_VERSION_LIST=$(commas_to_spaces $LLVM_VERSION_LIST)
 
 # If --arch is used to list x86 as a target architecture, Add x86-4.8 to
 # the list of default toolchains to package. That is, unless you also
@@ -208,7 +202,6 @@ fi
 echo "Architectures: $ARCHS"
 echo "CPU ABIs: $ABIS"
 echo "GCC Toolchains: $TOOLCHAINS"
-echo "LLVM Toolchains: $LLVM_VERSION_LIST"
 echo "Host systems: $SYSTEMS"
 
 
@@ -424,9 +417,7 @@ for SYSTEM in $SYSTEMS; do
         done
 
         # Unpack clang/llvm
-        for LLVM_VERSION in $LLVM_VERSION_LIST; do
-            unpack_prebuilt llvm-$LLVM_VERSION-$SYSTEM "$DSTDIR"
-        done
+        unpack_prebuilt llvm-$SYSTEM "$DSTDIR"
 
         rm -rf $DSTDIR/toolchains/$SYSTEM/*l
 

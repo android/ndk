@@ -13,8 +13,8 @@
 # limitations under the License.
 #
 
-# config file for the arm llvm-3.6 toolchain for the Android NDK
-# the real meat is in the setup.mk file adjacent to this one
+# config file for the arm llvm toolchain for the Android NDK the real meat is in
+# the setup.mk file adjacent to this one
 #
 TOOLCHAIN_ARCH := arm
 TOOLCHAIN_ABIS := armeabi armeabi-v7a armeabi-v7a-hard
