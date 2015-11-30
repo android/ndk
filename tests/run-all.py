@@ -149,6 +149,12 @@ def check_adb_works_or_die(abi):
         sys.exit(msg)
 
 
+def asan_device_setup():
+    path = os.path.join(
+        os.environ['NDK'], 'toolchains', 'llvm', 'bin', 'asan_device_setup')
+    subprocess.check_call([path])
+
+
 def is_valid_platform_version(version_string):
     match = re.match(r'^android-(\d+)$', version_string)
     if not match:
@@ -284,6 +290,8 @@ def main():
             ndk_build_flags.append('APP_PIE=true')
 
         os.environ['ANDROID_SERIAL'] = get_test_device()
+
+        asan_device_setup()
 
     runner = tests.TestRunner()
     if 'awk' in suites:
