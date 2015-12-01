@@ -92,7 +92,7 @@ DEFAULT_ARCH_TOOLCHAIN_NAME_mips64=mips64el-linux-android
 DEFAULT_ARCH_TOOLCHAIN_PREFIX_mips64=mips64el-linux-android
 
 # The build number of clang used to build pieces of the NDK (like platforms).
-DEFAULT_LLVM_VERSION="2445339"
+DEFAULT_LLVM_VERSION="2455903"
 
 # The default URL to download the LLVM tar archive
 DEFAULT_LLVM_URL="http://llvm.org/releases"
