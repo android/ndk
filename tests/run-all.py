@@ -291,7 +291,9 @@ def main():
 
         os.environ['ANDROID_SERIAL'] = get_test_device()
 
-        asan_device_setup()
+        # ASAN is currently only supported for 32-bit ARM.
+        if args.abi.startswith('armeabi'):
+            asan_device_setup()
 
     runner = tests.TestRunner()
     if 'awk' in suites:
