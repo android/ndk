@@ -1,2 +1,4 @@
 def match_broken(abi, platform, toolchain, subtest=None):
-    return toolchain, 'http://b/24380035'
+    if abi != 'arm64-v8a':
+        return abi, 'http://b/24380035'
+    return None, None
