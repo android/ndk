@@ -11,7 +11,7 @@ def match_broken(abi, platform, device_platform, toolchain, subtest=None):
     if subtest in legacy_broken:
         return toolchain, 'http://b/24541258'
 
-    if subtest == 'filter1':
+    if subtest == 'filter1' and device_platform >= 21:
         return toolchain, 'http://b/24403847'
 
     return None, None
