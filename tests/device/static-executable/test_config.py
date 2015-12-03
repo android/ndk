@@ -1,4 +1,4 @@
-def match_broken(abi, platform, toolchain, subtest=None):
+def match_broken(abi, platform, device_platform, toolchain, subtest=None):
     lp64_abis = ('arm64-v8a', 'mips64', 'x86_64')
     if platform is not None:
         platform_version = int(platform.split('-')[1])
