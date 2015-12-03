@@ -1,2 +1,2 @@
-def match_unsupported(abi, platform, toolchain, subtest=None):
+def match_unsupported(abi, platform, device_platform, toolchain, subtest=None):
     return toolchain

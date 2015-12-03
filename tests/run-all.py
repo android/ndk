@@ -303,7 +303,8 @@ def main():
                          args.toolchain, ndk_build_flags)
     if 'device' in suites:
         runner.add_suite('device', 'device', DeviceTest, args.abi,
-                         args.platform, args.toolchain, ndk_build_flags)
+                         args.platform, api_level, args.toolchain,
+                         ndk_build_flags)
 
     test_filters = filters.TestFilter.from_string(args.filter)
     results = runner.run(out_dir, test_filters)

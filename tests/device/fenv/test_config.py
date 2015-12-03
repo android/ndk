@@ -1,4 +1,4 @@
-def match_unsupported(abi, platform, toolchain, subtest=None):
+def match_unsupported(abi, platform, device_platform, toolchain, subtest=None):
     if abi == 'armeabi':
         return abi
     return None
