@@ -9,10 +9,16 @@
 
 int main(int argc, char *argv[])
 {
-    void*  lib;
+    char cwd[PATH_MAX];
+    if (getcwd(cwd, sizeof(cwd)) == NULL) {
+        perror("getcwd");
+        return 1;
+    }
+
     char buf[PATH_MAX];
-    sprintf(buf, "%s/libbar.so", getcwd(NULL, 0));
-    lib = dlopen(buf, RTLD_NOW);
+    sprintf(buf, "%s/libbar.so", cwd);
+
+    void* lib = dlopen(buf, RTLD_NOW);
     if (lib == NULL) {
         fprintf(stderr, "Could not dlopen(\"libbar.so\"): %s\n", dlerror());
         return 1;
