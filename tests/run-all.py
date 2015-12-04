@@ -149,6 +149,26 @@ def check_adb_works_or_die(abi):
         sys.exit(msg)
 
 
+def can_use_asan(abi, api, toolchain):
+    # ASAN is currently only supported for 32-bit ARM...
+    if not abi.startswith('armeabi'):
+        return False
+
+    # On KitKat and newer...
+    if api < 19:
+        return False
+
+    # When using clang...
+    if toolchain != 'clang':
+        return False
+
+    # On rooted devices.
+    if int(adb.get_prop('ro.debuggable')) == 0:
+        return False
+
+    return True
+
+
 def asan_device_setup():
     path = os.path.join(
         os.environ['NDK'], 'toolchains', 'llvm', 'bin', 'asan_device_setup')
@@ -291,8 +311,7 @@ def main():
 
         os.environ['ANDROID_SERIAL'] = get_test_device()
 
-        # ASAN is currently only supported for 32-bit ARM with clang.
-        if args.abi.startswith('armeabi') and args.toolchain == 'clang':
+        if can_use_asan(args.abi, api_level, args.toolchain):
             asan_device_setup()
 
         # Do this as part of initialization rather than with a `mkdir -p` later
