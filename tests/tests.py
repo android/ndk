@@ -631,7 +631,10 @@ class DeviceTest(Test):
 
         device_dir = posixpath.join('/data/local/tmp/ndk-tests', self.name)
 
-        result, out = adb.shell('mkdir -p {}'.format(device_dir))
+        # We have to use `ls foo || mkdir foo` because Gingerbread was lacking
+        # `mkdir -p`, the -d check for directory existence, stat, dirname, and
+        # every other thing I could think of to implement this aside from ls.
+        result, out = adb.shell('ls {0} || mkdir {0}'.format(device_dir))
         if result != 0:
             raise RuntimeError('mkdir failed:\n' + '\n'.join(out))
 
@@ -669,4 +672,4 @@ class DeviceTest(Test):
                         results.append(ExpectedFailure(case_name, config, bug))
             return results
         finally:
-            adb.shell('rm -rf {}'.format(device_dir))
+            adb.shell('rm -r {}'.format(device_dir))

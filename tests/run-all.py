@@ -295,6 +295,11 @@ def main():
         if args.abi.startswith('armeabi') and args.toolchain == 'clang':
             asan_device_setup()
 
+        # Do this as part of initialization rather than with a `mkdir -p` later
+        # because Gingerbread didn't actually support -p :(
+        adb.shell('rm -r /data/local/tmp/ndk-tests')
+        adb.shell('mkdir /data/local/tmp/ndk-tests')
+
     runner = tests.TestRunner()
     if 'awk' in suites:
         runner.add_suite('awk', 'awk', AwkTest)
