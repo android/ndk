@@ -395,8 +395,8 @@ class TestConfig(object):
 class DeviceTestConfig(TestConfig):
     """Specialization of test_config.py that includes device API level.
 
-    We need to mark some tests as broken based on what device they are running
-    on, as opposed to just what they were built for.
+    We need to mark some tests as broken or unsupported based on what device
+    they are running on, as opposed to just what they were built for.
     """
     class NullTestConfig(object):
         def __init__(self):
