@@ -13,7 +13,7 @@ def match_broken(abi, platform, device_platform, toolchain, subtest=None):
     if subtest == 'badalloc1' and device_platform >= 23:
         return device_platform, 'http://b/26002885'
 
-    if subtest == 'filter1' and device_platform >= 21:
-        return toolchain, 'http://b/24403847'
+    if subtest == 'filter1' and device_platform >= 21 and toolchain == '4.9':
+        return '{} {}'.format(device_platform, toolchain), 'http://b/24403847'
 
     return None, None
