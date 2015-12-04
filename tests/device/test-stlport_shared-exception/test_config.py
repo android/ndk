@@ -1,4 +1,4 @@
-def match_broken(abi, platform, toolchain, subtest=None):
+def match_broken(abi, platform, device_platform, toolchain, subtest=None):
     # These were marked broken when we inherited them, so there's only one bug
     # for the whole group.
     legacy_broken = (

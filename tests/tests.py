@@ -201,7 +201,10 @@ class Test(object):
     def __init__(self, name, test_dir):
         self.name = name
         self.test_dir = test_dir
-        self.config = TestConfig.from_test_dir(self.test_dir)
+        self.config = self.get_test_config()
+
+    def get_test_config(self):
+        return TestConfig.from_test_dir(self.test_dir)
 
     def run(self, out_dir, test_filters):
         raise NotImplementedError
@@ -389,6 +392,29 @@ class TestConfig(object):
         return cls(path)
 
 
+class DeviceTestConfig(TestConfig):
+    """Specialization of test_config.py that includes device API level.
+
+    We need to mark some tests as broken based on what device they are running
+    on, as opposed to just what they were built for.
+    """
+    class NullTestConfig(object):
+        def __init__(self):
+            pass
+
+        # pylint: disable=unused-argument
+        @staticmethod
+        def match_broken(abi, platform, device_platform, toolchain,
+                         subtest=None):
+            return None, None
+
+        @staticmethod
+        def match_unsupported(abi, platform, device_platform, toolchain,
+                              subtest=None):
+            return None
+        # pylint: enable=unused-argument
+
+
 def _run_build_sh_test(test_name, build_dir, test_dir, build_flags, abi,
                        platform, toolchain):
     _prep_build_dir(test_dir, build_dir)
@@ -555,17 +581,44 @@ def _copy_test_to_device(build_dir, device_dir, abi, test_filters, test_name):
 
 
 class DeviceTest(Test):
-    def __init__(self, name, test_dir, abi, platform, toolchain, build_flags):
+    def __init__(self, name, test_dir, abi, platform, device_platform,
+                 toolchain, build_flags):
         super(DeviceTest, self).__init__(name, test_dir)
         self.abi = abi
         self.platform = platform
+        self.device_platform = device_platform
         self.toolchain = toolchain
         self.build_flags = build_flags
 
     @classmethod
-    def from_dir(cls, test_dir, abi, platform, toolchain, build_flags):
+    def from_dir(cls, test_dir, abi, platform, device_platform, toolchain,
+                 build_flags):
         test_name = os.path.basename(test_dir)
-        return cls(test_name, test_dir, abi, platform, toolchain, build_flags)
+        return cls(test_name, test_dir, abi, platform, device_platform,
+                   toolchain, build_flags)
+
+    def get_test_config(self):
+        return DeviceTestConfig.from_test_dir(self.test_dir)
+
+    def check_broken(self):
+        return self.config.match_broken(self.abi, self.platform,
+                                        self.device_platform,
+                                        self.toolchain)
+
+    def check_unsupported(self):
+        return self.config.match_unsupported(self.abi, self.platform,
+                                             self.device_platform,
+                                             self.toolchain)
+
+    def check_subtest_broken(self, name):
+        return self.config.match_broken(self.abi, self.platform,
+                                        self.device_platform,
+                                        self.toolchain, subtest=name)
+
+    def check_subtest_unsupported(self, name):
+        return self.config.match_unsupported(self.abi, self.platform,
+                                             self.device_platform,
+                                             self.toolchain, subtest=name)
 
     def run(self, out_dir, test_filters):
         print('Running device test: {}'.format(self.name))
