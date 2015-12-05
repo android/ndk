@@ -89,7 +89,7 @@ ifneq ($(filter %armeabi-v7a-hard,$(TARGET_ARCH_ABI)),)
                       -Wl,--no-warn-mismatch \
                       -lm_hard
 
-    GCCLIB_SUBDIR := armv7-a/hard
+    GCCLIB_SUBDIR := armv7-a
 else
     LLVM_TRIPLE := armv5te-none-linux-androideabi
 
