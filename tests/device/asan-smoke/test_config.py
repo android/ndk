@@ -3,4 +3,6 @@ def match_unsupported(abi, platform, device_platform, toolchain, subtest=None):
         return toolchain
     if not abi.startswith('armeabi'):
         return abi
+    if device_platform < 19:
+        return device_platform
     return None
