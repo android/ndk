@@ -88,7 +88,6 @@ def get_all_packages(host, arches):
         'platforms',
         'python-packages',
         'stlport',
-        'tests',
     ]
 
     expanded = []
