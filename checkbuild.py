@@ -53,7 +53,6 @@ ALL_MODULES = {
     'platforms',
     'python-packages',
     'stlport',
-    'tests',
 }
 
 
@@ -443,13 +442,6 @@ def build_platforms(out_dir, args):
     invoke_build('build-platforms.py', common_build_args(out_dir, args))
 
 
-def build_tests(out_dir, _):
-    root_dir = build_support.ndk_path()
-    path = 'tests'
-    build_support.make_package('tests', [path], out_dir, root_dir,
-                               repo_prop_dir=path)
-
-
 def build_cpufeatures(out_dir, _):
     root_dir = build_support.ndk_path()
     path = 'sources/android/cpufeatures'
@@ -549,7 +541,6 @@ def main():
         ('platforms', build_platforms),
         ('python-packages', build_python_packages),
         ('stlport', build_stlport),
-        ('tests', build_tests),
     ])
 
     print('Building modules: {}'.format(' '.join(modules)))
