@@ -9,7 +9,7 @@ void f (int i)
 
 int main ()
 {  
-  void *sp1 = __builtin_alloca (0);
+  void *sp1 = __builtin_frame_address (0);
 
   try
     {
@@ -19,7 +19,7 @@ int main ()
     {
     }
 
-  void *sp2 = __builtin_alloca (0);
+  void *sp2 = __builtin_frame_address (0);
 
   return (sp1 != sp2);
 }
