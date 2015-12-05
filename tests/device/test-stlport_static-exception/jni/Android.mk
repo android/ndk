@@ -1054,7 +1054,7 @@ include $(BUILD_EXECUTABLE)
 include $(CLEAR_VARS)
 LOCAL_MODULE := p755a
 LOCAL_SRC_FILES := p755a.cpp
-LOCAL_CPPFLAGS := -frtti -fexceptions -std=gnu++98
+LOCAL_CPPFLAGS := -frtti -fexceptions -std=gnu++98 -O0
 include $(BUILD_EXECUTABLE)
  
 include $(CLEAR_VARS)
