@@ -141,7 +141,7 @@ def make_ndk_build_sh_helper(out_dir):
         helper.writelines([
             '#!/bin/sh\n',
             'DIR="$(cd "$(dirname "$0")" && pwd)"\n',
-            '$DIR/build/ndk-build $*',
+            '$DIR/build/ndk-build "$@"',
         ])
     mode = os.stat(file_path).st_mode
     os.chmod(file_path, mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
