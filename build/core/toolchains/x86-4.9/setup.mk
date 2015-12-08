@@ -31,9 +31,6 @@ TARGET_CFLAGS := \
     -funwind-tables \
     -no-canonical-prefixes
 
-TARGET_C_INCLUDES := \
-    $(SYSROOT_INC)/usr/include
-
 # Add and LDFLAGS for the target here
 TARGET_LDFLAGS := -no-canonical-prefixes
 

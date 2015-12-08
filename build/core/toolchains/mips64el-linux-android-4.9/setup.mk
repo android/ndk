@@ -38,9 +38,6 @@ TARGET_CFLAGS := \
 
 TARGET_LDFLAGS := -no-canonical-prefixes
 
-TARGET_C_INCLUDES := \
-    $(SYSROOT_INC)/usr/include
-
 TARGET_mips64_release_CFLAGS := -O2 \
                                 -g \
                                 -DNDEBUG \

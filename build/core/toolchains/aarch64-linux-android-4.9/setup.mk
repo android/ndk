@@ -33,9 +33,6 @@ TARGET_CFLAGS := \
     -fstack-protector-strong \
     -no-canonical-prefixes
 
-TARGET_C_INCLUDES := \
-    $(SYSROOT_INC)/usr/include
-
 TARGET_LDFLAGS := -no-canonical-prefixes
 
 TARGET_arm64_release_CFLAGS := -O2 \
