@@ -4,15 +4,14 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := issue36131-flto-c++11
 LOCAL_SRC_FILES := issue36131-flto-c++11.cxx
 LOCAL_CFLAGS += -g -std=c++11
+LOCAL_CFLAGS += -flto
+LOCAL_LDFLAGS += -flto
 
-FLTO_FLAG := -flto
+# Clang LTO is only supported with gold. ARM64 still uses bfd by default, so
+# make sure this test uses gold when we're using clang.
 ifneq ($(filter clang%,$(NDK_TOOLCHAIN_VERSION)),)
-ifeq ($(TARGET_ARCH_ABI),mips)
-# clang does LTO via gold plugin, but gold doesn't support MIPS yet
-FLTO_FLAG :=
-endif
+LOCAL_CFLAGS += -fuse-ld=gold
+LOCAL_LDFLAGS += -fuse-ld=gold
 endif
 
-LOCAL_CFLAGS += $(FLTO_FLAG)
-LOCAL_LDFLAGS += $(FLTO_FLAG)
 include $(BUILD_EXECUTABLE)
