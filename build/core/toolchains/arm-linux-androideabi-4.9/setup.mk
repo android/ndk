@@ -32,9 +32,6 @@ TARGET_CFLAGS := \
 
 TARGET_LDFLAGS := -no-canonical-prefixes
 
-TARGET_C_INCLUDES := \
-    $(SYSROOT_INC)/usr/include
-
 ifneq ($(filter $(TARGET_ARCH_ABI), armeabi-v7a armeabi-v7a-hard),)
     TARGET_CFLAGS += -march=armv7-a \
                      -mfpu=vfpv3-d16

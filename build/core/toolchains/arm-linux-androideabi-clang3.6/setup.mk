@@ -59,9 +59,6 @@ TARGET_LDFLAGS += \
     -B $(call host-path,$(BINUTILS_ROOT))/$(TOOLCHAIN_NAME)/bin \
     -no-canonical-prefixes
 
-TARGET_C_INCLUDES := \
-    $(SYSROOT_INC)/usr/include
-
 ifneq ($(filter %armeabi-v7a,$(TARGET_ARCH_ABI)),)
     LLVM_TRIPLE := armv7-none-linux-androideabi
 

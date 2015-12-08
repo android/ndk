@@ -50,9 +50,6 @@ TARGET_CFLAGS := \
     -Wno-unused-command-line-argument \
     -no-canonical-prefixes
 
-TARGET_C_INCLUDES := \
-    $(SYSROOT_INC)/usr/include
-
 TARGET_LDFLAGS += \
     -B $(call host-path,$(BINUTILS_ROOT))/$(TOOLCHAIN_NAME)/bin \
     -L $(call get-gcclibs-path,$(NDK_ROOT),$(TOOLCHAIN_NAME)) \

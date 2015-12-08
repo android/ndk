@@ -62,9 +62,6 @@ TARGET_LDFLAGS += \
     -target $(LLVM_TRIPLE) \
     -no-canonical-prefixes
 
-TARGET_C_INCLUDES := \
-    $(SYSROOT_INC)/usr/include
-
 TARGET_mips_release_CFLAGS := -O2 \
                               -g \
                               -DNDEBUG \

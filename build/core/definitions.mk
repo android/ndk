@@ -1614,7 +1614,7 @@ _FLAGS := $$($$(my)CFLAGS) \
           $$(LOCAL_CONLYFLAGS) \
           $$(NDK_APP_CFLAGS) \
           $$(NDK_APP_CONLYFLAGS) \
-          $$(call host-c-includes,$$($(my)C_INCLUDES)) \
+          -isystem $$(call host-path,$$(SYSROOT_INC)/usr/include) \
           -c \
 
 _TEXT := Compile $$(call get-src-file-text,$1)
@@ -1638,7 +1638,7 @@ _OBJ:=$$(LOCAL_OBJS_DIR:%/=%)/$(2)
 _FLAGS := $$(call host-c-includes,$$(LOCAL_C_INCLUDES) $$(LOCAL_PATH)) \
           $$(LOCAL_ASMFLAGS) \
           $$(NDK_APP_ASMFLAGS) \
-          $$(call host-c-includes,$$($(my)C_INCLUDES)) \
+          -isystem $$(call host-path,$$(SYSROOT_INC)/usr/include) \
           $$(if $$(filter x86_64, $$(TARGET_ARCH_ABI)), -f elf64, -f elf32 -m x86)
 
 _TEXT := Assemble $$(call get-src-file-text,$1)
@@ -1716,7 +1716,7 @@ _FLAGS := $$($$(my)CXXFLAGS) \
           $$(NDK_APP_CFLAGS) \
           $$(NDK_APP_CPPFLAGS) \
           $$(NDK_APP_CXXFLAGS) \
-          $$(call host-c-includes,$$($(my)C_INCLUDES)) \
+          -isystem $$(call host-path,$$(SYSROOT_INC)/usr/include) \
           -c \
 
 _CC   := $$(NDK_CCACHE) $$($$(my)CXX)
@@ -1764,7 +1764,7 @@ _CPP_FLAGS := $$($$(my)CXXFLAGS) \
           $$(NDK_APP_CFLAGS) \
           $$(NDK_APP_CPPFLAGS) \
           $$(NDK_APP_CXXFLAGS) \
-          $$(call host-c-includes,$$($(my)C_INCLUDES)) \
+          -isystem $$(call host-path,$$(SYSROOT_INC)/usr/include) \
           -fno-rtti \
           -c \
 
