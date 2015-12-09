@@ -47,7 +47,7 @@ if [ -z "$APP_ABI" -o "$APP_ABI" = "all" -o "$APP_ABI" != "${APP_ABI%%mips*}" ];
     fail_panic "can't compile for mips"
     grep -qw wsbh issue17144-byteswap.s
     fail_panic "mips doesn't use wsbh instruction for __swap16()"
-    grep -w rotr issue17144-byteswap.s | grep -qw rotr
+    grep -wA1 wsbh issue17144-byteswap.s | egrep -qw 'rot?r'
     fail_panic "mips doesn't use wsbh/rotr instruction for __swap32()"
 fi
 
