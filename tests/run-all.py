@@ -150,8 +150,8 @@ def check_adb_works_or_die(abi):
 
 
 def can_use_asan(abi, api, toolchain):
-    # ASAN is currently only supported for 32-bit ARM...
-    if not abi.startswith('armeabi'):
+    # ASAN is currently only supported for 32-bit ARM and x86...
+    if not abi.startswith('armeabi') and not abi == 'x86':
         return False
 
     # On KitKat and newer...
