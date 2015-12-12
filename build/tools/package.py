@@ -147,12 +147,18 @@ def make_ndk_build_sh_helper(out_dir):
     os.chmod(file_path, mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
 
+def copy_changelog(out_dir):
+    changelog_path = build_support.ndk_path('CHANGELOG.md')
+    shutil.copy2(changelog_path, out_dir)
+
+
 def make_package(release, package_dir, packages, host, out_dir, temp_dir):
     release_name = 'android-ndk-{}'.format(release)
     extract_dir = os.path.join(temp_dir, release_name)
     extract_all(package_dir, packages, extract_dir)
 
     make_ndk_build_shortcut(extract_dir, host)
+    copy_changelog(extract_dir)
 
     host_tag = build_support.host_to_tag(host)
     package_name = '{}-{}'.format(release_name, host_tag)
