@@ -147,12 +147,21 @@ def make_ndk_build_sh_helper(out_dir):
     os.chmod(file_path, mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
 
+def make_release_txt(out_dir, host):
+    release = 'r11'
+    if host != 'windows':
+        release += ' (64-bit)'
+    with open(os.path.join(out_dir, 'RELEASE.TXT'), 'w') as release_file:
+        release_file.write(release)
+
+
 def make_package(release, package_dir, packages, host, out_dir, temp_dir):
     release_name = 'android-ndk-{}'.format(release)
     extract_dir = os.path.join(temp_dir, release_name)
     extract_all(package_dir, packages, extract_dir)
 
     make_ndk_build_shortcut(extract_dir, host)
+    make_release_txt(extract_dir, host)
 
     host_tag = build_support.host_to_tag(host)
     package_name = '{}-{}'.format(release_name, host_tag)
