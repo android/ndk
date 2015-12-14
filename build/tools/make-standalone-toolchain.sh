@@ -271,9 +271,10 @@ if [ "$USE_LLVM" = "yes" ]; then
   # "++" tells clang to compile in C++ mode
   LLVM_TARGET=
   case "$ARCH" in
-      arm) # NOte: -target may change by clang based on the
-           #        presence of subsequent -march=armv7-a and/or -mthumb
-          LLVM_TARGET=armv5te-none-linux-androideabi
+      arm)
+          # Note: -target may change by clang based on the presence of
+          # subsequent -march=armv5te and/or -mthumb.
+          LLVM_TARGET=armv7a-none-linux-androideabi
           TOOLCHAIN_PREFIX=$DEFAULT_ARCH_TOOLCHAIN_PREFIX_arm
           ;;
       x86)
