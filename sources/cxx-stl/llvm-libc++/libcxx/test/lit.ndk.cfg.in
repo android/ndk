@@ -15,7 +15,7 @@ libcxx_dir = os.path.join(ndk, 'sources/cxx-stl/llvm-libc++')
 libcxx_src_dir = os.path.join(libcxx_dir, 'libcxx')
 
 config.cxx_under_test = os.path.join(
-    ndk, "toolchains/llvm-3.6/prebuilt/bin/clang++")
+    ndk, "toolchains/llvm/bin/clang++")
 config.std = "c++11"
 config.libcxx_src_root = libcxx_src_dir
 config.libcxx_obj_root = libcxx_src_dir
