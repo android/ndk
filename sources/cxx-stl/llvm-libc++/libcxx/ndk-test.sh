@@ -30,7 +30,7 @@ case "$ABI" in
         ;;
     x86)
         ARCH=x86
-        TRIPLE=x86-linux-android
+        TRIPLE=i686-linux-android
         ;;
     x86_64)
         ARCH=x86_64
