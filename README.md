@@ -5,13 +5,7 @@ The NDK allows Android application developers to include
 native code in their Android application packages, compiled as JNI shared
 libraries.
 
-See [the Getting Started Guide](docs/Getting_Started/html/index.html) for an
-introduction.
-
-See [the changelist](docs/Change_Log.html) for a list of changes since the
-previous release.
-
-Finally, discussions related to the Android NDK happen on the
+Discussions related to the Android NDK happen on the
 [android-ndk](http://groups.google.com/group/android-ndk) Google Group.
 
 Building the NDK
@@ -37,15 +31,14 @@ The NDK consists of three parts: host binaries, target prebuilts, and others
 
 ### Host Binaries
 
-* `toolchains/` contains GCC, Clang, and Renderscript toolchains.
+* `toolchains/` contains GCC and Clang toolchains.
     * `$TOOLCHAIN/config.mk` contains ARCH and ABIS this toolchain can handle.
     * `$TOOLCHAIN/setup.mk` contains toolchain-specific default CFLAGS/LDFLAGS
       when this toolchain is used.
-* `prebuilt/$HOST_ARCH/` contains various tools to make the build system hermetic.
-    * make, awk, sed, python, yasm, and for Windows: cmp.exe and echo.exe
-* `ndk-depends` and `ndk-stack` should probably go in `prebuilt/` to avoid
-  collisions between host variants.
-
+* `binutils/` contains the standalone binutils installation for use with Clang.
+* `host-tools/` contains build dependencies and additional tools.
+    * make, awk, python, yasm, and for Windows: cmp.exe and echo.exe
+    * `ndk-depends`, `ndk-stack` and `ndk-gdb` can also be found here.
 
 ### Target Headers and Binaries
 
@@ -53,15 +46,14 @@ The NDK consists of three parts: host binaries, target prebuilts, and others
   API level.
     * The build system sets `--sysroot` to one of these directories based on
       user-specified `APP_ABI` and `APP_PLATFORM`.
-* `sources/cxx-stl/$STL/$ABI/` contains the headers and libraries for the various
-  C++ STLs.
-* `prebuilt/android-$ARCH/gdbserver/` contains gdbserver.
+* `sources/cxx-stl/$STL` contains the headers and libraries for the various C++
+  STLs.
+* `gdbserver/` contains gdbserver.
 
 ### Others
 
 * `build/` contains the ndk-build system and scripts to rebuild NDK.
 * `docs/`
-* `samples/`
 * `sources/` contains modules useful in samples and apps via
   `$(call import-module, $MODULE)`
 * `tests/`
@@ -81,9 +73,6 @@ Prerequisites
             persistent-https://android.git.corp.google.com/platform/manifest \
             -b master-ndk
         ```
-
-    * The only difference between the NDK branch and master is that the NDK
-      repository already has the toolchain repository checked out and patched.
 
 * Additional Linux Dependencies (available from apt):
     * texinfo
@@ -111,6 +100,9 @@ $ python checkbuild.py --no-package
 $ python checkbuild.py --system windows
 ```
 
+`checkbuild.py` also accepts a variety of other options to speed up local
+builds, namely `--arch` and `--module`.
+
 Packaging
 ---------
 
@@ -118,21 +110,42 @@ The simplest way to package an NDK on Linux is to just omit the `--no-package`
 flag when running `checkbuild.py`. This will take a little longer though, so it
 may not be desired for day to day development.
 
-To package the NDK for Windows or Darwin (or if more control over the packaging
-process is needed), invoke `build/tools/package-release.sh` directly. This
-process will be improved in a future commit.
+If you need to re-run just the packaging step without going through a build,
+packaging is handled by `build/tools/package.py`.
 
 Testing
 -------
 
-Running the NDK tests requires a complete NDK package (see previous steps). The
-full test suite includes tests which run on a device or emulator, so you'll need
-to have adb in your path and `ANDROID_SERIAL` set if more than one
-device/emulator is connected. With that package:
+Running the NDK tests requires a complete NDK package (see previous steps).
+From the NDK source directory (not the extracted package):
 
 ```bash
-$ tar xf android-ndk-$BUILD_NUM-$HOST_TAG.tar.bz2
-$ cd android-ndk-$BUILD_NUM
-$ export NDK=`pwd`
-$ python tests/run-all.py --abi $ABI_TO_TEST
+$ NDK=/path/to/extracted/ndk python tests/run-all.py --abi $ABI_TO_TEST
 ```
+
+To run the tests with Clang, use the option `--toolchain clang`.
+
+The full test suite includes tests which run on a device or emulator, so you'll
+need to have adb in your path and `ANDROID_SERIAL` set if more than one
+device/emulator is connected. If you do not have a device capable of running the
+tests, you can run just the `build` or `awk` test suites with the `--suite`
+flag.
+
+The libc++ tests are not currently integrated into the main NDK tests. To run
+the libc++ tests:
+
+```bash
+$ NDK=/path/to/extracted/ndk sources/cxx-stl/llvm-libc++/llvm/ndk-test.sh $ABI
+```
+
+Note that these tests are far from failure free (especially on 32-bit ARM). In
+general, most of these tests are locale related and fail because we don't
+support anything beyond the C locale. The ARM32 specific failures are because
+the libgcc unwinder does not get along with the LLVM unwinder. The test config
+file (`$NDK/sources/cxx-stl/llvm-libc++/libcxx/test/libcxx/ndk/test/config.py`)
+can be modified to use `-lc++_static` *before* `-lgcc` and the tests will then
+work on ARM (but will take considerably longer to run).
+
+Yes, this does mean that exception handling will often fail when using
+`c++_shared` on ARM32. We should fix this ASAP, but this actually is not a
+regression from r10e.
