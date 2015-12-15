@@ -67,11 +67,11 @@ class Configuration(libcxx.test.config.Configuration):
             os.environ['NDK'], 'gcclibs', triple)
         self.cxx.link_flags.append('-L' + gcclibs_dir)
 
+        self.cxx.link_flags.append('-lc++_shared')
         self.cxx.link_flags.append('-lgcc')
         if triple.startswith('arm-'):
             self.cxx.link_flags.append('-latomic')
 
-        self.cxx.link_flags.append('-lc++_shared')
         self.cxx.link_flags.append('-lc')
         self.cxx.link_flags.append('-lm')
         self.cxx.link_flags.append('-ldl')
