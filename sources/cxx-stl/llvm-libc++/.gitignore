@@ -1,2 +1,3 @@
 libs/
 /repo.prop
+/libcxx/test/lit.site.cfg
