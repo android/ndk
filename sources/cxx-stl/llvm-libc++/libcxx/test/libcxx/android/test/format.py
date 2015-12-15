@@ -18,19 +18,21 @@ class HostTestFormat(libcxx.test.format.LibcxxTestFormat):
         self.use_verify_for_fail = False
         self.executor = TimeoutExecutor(timeout, LocalExecutor())
 
-        # We need to use LD_LIBRARY_PATH because the build system's rpath is
-        # relative, which won't work since we're running from /tmp. We can
-        # either scan `cxx_under_test`/`link_template` to determine whether
-        # we're 32-bit or 64-bit, scan testconfig.mk, or just add both
-        # directories and let the linker sort it out. I'm choosing the lazy
-        # option.
-        outdir = os.getenv('ANDROID_HOST_OUT')
-        libpath = os.pathsep.join([
-            os.path.join(outdir, 'lib'),
-            os.path.join(outdir, 'lib64'),
-        ])
-        default_env = {'LD_LIBRARY_PATH': libpath}
-        self.exec_env = default_env if exec_env is None else exec_env
+        if exec_env is None:
+            # We need to use LD_LIBRARY_PATH because the build system's rpath
+            # is relative, which won't work since we're running from /tmp. We
+            # can either scan `cxx_under_test`/`link_template` to determine
+            # whether we're 32-bit or 64-bit, scan testconfig.mk, or just add
+            # both directories and let the linker sort it out. I'm choosing the
+            # lazy option.
+            outdir = os.getenv('ANDROID_HOST_OUT')
+            libpath = os.pathsep.join([
+                os.path.join(outdir, 'lib'),
+                os.path.join(outdir, 'lib64'),
+            ])
+            self.exec_env = {'LD_LIBRARY_PATH': libpath}
+        else:
+            self.exec_env = exec_env
 
 
 class TestFormat(HostTestFormat):
