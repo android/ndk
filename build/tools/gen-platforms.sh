@@ -392,6 +392,7 @@ get_default_compiler_for_arch()
 # $3: variables list
 # $4: destination file
 # $5: compiler command
+# $6: version script (optional)
 gen_shared_lib ()
 {
     local LIBRARY=$1
@@ -399,6 +400,7 @@ gen_shared_lib ()
     local VARS="$3"
     local DSTFILE="$4"
     local CC="$5"
+    local VERSION_SCRIPT="$6"
 
     # Now generate a small C source file that contains similarly-named stubs
     echo "/* Auto-generated file, do not edit */" > $TMPC
@@ -413,6 +415,9 @@ gen_shared_lib ()
     # Build it with our cross-compiler. It will complain about conflicting
     # types for built-in functions, so just shut it up.
     COMMAND="$CC -Wl,-shared,-Bsymbolic -Wl,-soname,$LIBRARY -nostdlib -o $TMPO $TMPC -Wl,--exclude-libs,libgcc.a -w"
+    if [ -n "$VERSION_SCRIPT" ]; then
+      COMMAND="$COMMAND -Wl,--version-script=$VERSION_SCRIPT -Wl,--no-undefined-version"
+    fi
     echo "## COMMAND: $COMMAND"
     $COMMAND
     if [ $? != 0 ] ; then
@@ -474,9 +479,14 @@ gen_shared_libraries ()
         vars=$(remove_unwanted_variable_symbols $ARCH $LIB $vars)
         numfuncs=$(echo $funcs | wc -w)
         numvars=$(echo $vars | wc -w)
+        version_script=""
+
+        if [ -f "$SYMDIR/$LIB.versions.txt" ]; then
+          version_script="$SYMDIR/$LIB.versions.txt"
+        fi
         log "Generating $ARCH shared library for $LIB ($numfuncs functions + $numvars variables)"
 
-        gen_shared_lib $LIB "$funcs" "$vars" "$DSTDIR/$LIB" "$CC"
+        gen_shared_lib $LIB "$funcs" "$vars" "$DSTDIR/$LIB" "$CC" "$version_script"
     done
 }
 
