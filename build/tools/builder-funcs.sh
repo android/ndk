@@ -543,7 +543,7 @@ builder_begin_android ()
     if [ -n "$LLVM_VERSION" ]; then
         GCC_TOOLCHAIN=`dirname $BINPREFIX`
         GCC_TOOLCHAIN=`dirname $GCC_TOOLCHAIN`
-        BINPREFIX=$(get_llvm_toolchain_binprefix $LLVM_VERSION $TAG)
+        LLVM_BINPREFIX=$(get_llvm_toolchain_binprefix $LLVM_VERSION $TAG)
     fi
 
     if [ -z "$PLATFORM" ]; then
@@ -570,7 +570,7 @@ builder_begin_android ()
     if [ -z "$LLVM_VERSION" ]; then
         builder_set_binprefix "$BINPREFIX"
     else
-        builder_set_binprefix_llvm "$BINPREFIX"
+        builder_set_binprefix_llvm "$LLVM_BINPREFIX" "$BINPREFIX"
         case $ABI in
             armeabi)
                 LLVM_TRIPLE=armv5te-none-linux-androideabi
