@@ -1,7 +1,7 @@
 Changelog for NDK Build 2490520
 ===============================
 
-TODO(danalbert): Link to bug tracker.
+We've moved our bug tracker to GitHub: https://github.com/android-ndk/ndk/issues
 
 Clang
 -----
