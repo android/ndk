@@ -89,7 +89,14 @@ Binutils
 GDB
 ---
 
-TODO(jmgao)
+ * gdb has been updated to version 7.10.
+ * ndk-gdb has been removed in favor of ndk-gdb.py.
+ * ndk-gdb.py has been significantly rewritten.
+   * Performance should be somewhat better.
+   * Error messages have been significantly improved.
+   * Relative project paths should always work now.
+   * Ctrl-C no longer kills the backgrounded gdbserver.
+   * Improve Windows support.
 
 Yasm
 ----
