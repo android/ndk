@@ -83,7 +83,7 @@ def get_all_packages(host, arches):
         ('gtest', '.'),
         ('host-tools-{host}', '.'),
         ('libcxx', '.'),
-        ('llvm-{host}', '.'),
+        ('llvm-{host}', 'toolchains/llvm'),
         ('native_app_glue', '.'),
         ('ndk_helper', '.'),
         ('python-packages', '.'),
