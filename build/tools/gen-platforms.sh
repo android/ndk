@@ -805,14 +805,14 @@ done
 
 if [ "$PACKAGE_DIR" ]; then
     for PLATFORM in $PLATFORMS; do
-        PLATFORM_DIR="platforms/android-$PLATFORM"
-        make_repo_prop "$DSTDIR/$PLATFORM_DIR"
+        PLATFORM_NAME="android-$PLATFORM"
+        make_repo_prop "$DSTDIR/platforms/$PLATFORM_NAME"
 
         mkdir -p "$PACKAGE_DIR"
         fail_panic "Could not create package directory: $PACKAGE_DIR"
         ARCHIVE=platform-$PLATFORM.tar.bz2
         dump "Packaging $ARCHIVE"
-        pack_archive "$PACKAGE_DIR/$ARCHIVE" "$DSTDIR" "$PLATFORM_DIR"
+        pack_archive "$PACKAGE_DIR/$ARCHIVE" "$DSTDIR/platforms" "$PLATFORM_NAME"
         fail_panic "Could not package platform-$PLATFORM"
     done
 fi
