@@ -54,14 +54,14 @@ def expand_packages(package, host, arches):
     >>> expand_packages('libc++-{abi}', 'linux', ['arm'])
     ['libc++-armeabi', 'libc++-armeabi-v7a', 'libc++-armeabi-v7a-hard']
 
-    >>> expand_packages('{triple}-4.9-{host}', 'linux', ['arm', 'x86_64'])
-    ['arm-linux-androideabi-4.9-linux-x86_64', 'x86_64-4.9-linux-x86_64']
+    >>> expand_packages('binutils/{triple}', 'linux', ['arm', 'x86_64'])
+    ['binutils/arm-linux-androideabi', 'binutils/x86_64-linux-android']
     """
     host_tag = build_support.host_to_tag(host)
     seen_packages = set()
     packages = []
     for arch in arches:
-        triple = build_support.arch_to_toolchain(arch)
+        triple = build_support.arch_to_triple(arch)
         for abi in build_support.arch_to_abis(arch):
             expanded = package.format(
                 abi=abi, arch=arch, host=host_tag, triple=triple)
