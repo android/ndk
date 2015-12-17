@@ -650,31 +650,61 @@ done
 
 # If needed, package files into tarballs
 if [ -n "$PACKAGE_DIR" ] ; then
-    FILES=""
     if [ "$CXX_STL" = "libc++" ]; then
-        FILES="$FILES $LIBCXX_SUBDIR sources/cxx-stl/llvm-libc++abi
-               sources/android/support"
+        STL_DIR="llvm-libc++"
     elif [ "$CXX_STL" = "stlport" ]; then
-        FILES="$FILES $STLPORT_SUBDIR $GABIXX_SUBDIR sources/cxx-stl/system"
+        STL_DIR="stlport"
+    else
+        panic "Unknown STL: $CXX_STL"
     fi
 
-    for ABI in $ABIS; do
-        LIB_SUFFIX="$(get_lib_suffix_for_abi $ABI)"
-        for LIB in ${CXX_STL_LIB}_static.a ${CXX_STL_LIB}_shared${LIB_SUFFIX}; do
-            if [ -d "$ANDROID_NDK_ROOT/$CXX_STL_SUBDIR/libs/$ABI/thumb" ]; then
-                FILES="$FILES $CXX_STL_SUBDIR/libs/$ABI/thumb/$LIB"
-            fi
-            FILES="$FILES $CXX_STL_SUBDIR/libs/$ABI/$LIB"
-        done
-    done
-
     make_repo_prop "$OUT_DIR/$CXX_STL_SUBDIR"
-
     PACKAGE="$PACKAGE_DIR/${CXX_STL_PACKAGE}.tar.bz2"
     log "Packaging: $PACKAGE"
-    pack_archive "$PACKAGE" "$OUT_DIR" "$FILES"
+    pack_archive "$PACKAGE" "$OUT_DIR/sources/cxx-stl" "$STL_DIR"
     fail_panic "Could not package $CXX_STL binaries!"
-    dump "Packaging: $PACKAGE"
+
+    # TODO(danalbert): Move these up into checkbuild.py?
+    # None of these actually have a build step, so we could just pack them up
+    # simply in checkbuild.py.
+    #
+    # gabi++ and libc++abi should actually probably be moved around to be in the
+    # same package as stlport and libc++ respectively since they are actually
+    # bound to each other.
+    if [ "$CXX_STL" = "libc++" ]; then
+        # We need to package libc++abi in case the user needs to rebuild libc++.
+        SUBDIR="sources/cxx-stl"
+        make_repo_prop "$OUT_DIR/$SUBDIR/llvm-libc++abi"
+        PACKAGE="$PACKAGE_DIR/libcxxabi.tar.bz2"
+        log "Packaging: $PACKAGE"
+        pack_archive "$PACKAGE" "$OUT_DIR/$SUBDIR" "llvm-libc++abi"
+        fail_panic "Could not package libc++abi!"
+
+        # libc++ needs libandroid_support.
+        make_repo_prop "$OUT_DIR/sources/android/support"
+        PACKAGE="$PACKAGE_DIR/libandroid_support.tar.bz2"
+        log "Packaging: $PACKAGE"
+        pack_archive "$PACKAGE" "$OUT_DIR/sources/android" "support"
+        fail_panic "Could not package libandroid_support!"
+    elif [ "$CXX_STL" = "stlport" ]; then
+        # Stlport depends on gabi++.
+        SUBDIR="sources/cxx-stl"
+        make_repo_prop "$OUT_DIR/$SUBDIR/gabi++"
+        PACKAGE="$PACKAGE_DIR/gabixx.tar.bz2"
+        log "Packaging: $PACKAGE"
+        pack_archive "$PACKAGE" "$OUT_DIR/$SUBDIR" "gabi++"
+        fail_panic "Could not package gabi++!"
+
+        # ... and the system STL.
+        SUBDIR="sources/cxx-stl"
+        make_repo_prop "$OUT_DIR/$SUBDIR/system"
+        PACKAGE="$PACKAGE_DIR/system-stl.tar.bz2"
+        log "Packaging: $PACKAGE"
+        pack_archive "$PACKAGE" "$OUT_DIR/$SUBDIR" "system"
+        fail_panic "Could not package gabi++!"
+    else
+        panic "Unknown STL: $CXX_STL"
+    fi
 fi
 
 if [ -z "$OPTION_BUILD_DIR" ]; then

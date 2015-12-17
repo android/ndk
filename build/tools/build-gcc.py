@@ -16,11 +16,9 @@
 #
 """Packages the platform's GCC for the NDK."""
 import os
-import shutil
 import site
+import subprocess
 import sys
-import tarfile
-import tempfile
 
 site.addsitedir(os.path.join(os.path.dirname(__file__), '../lib'))
 
@@ -36,9 +34,8 @@ class ArgParser(build_support.ArgParser):
             help='Architecture to build. Builds all if not present.')
 
 
-def get_gcc_prebuilt_path(host_tag, toolchain_name):
-    rel_prebuilt_path = 'prebuilts/ndk/current/toolchains/{}/{}'.format(
-        host_tag, toolchain_name)
+def get_gcc_prebuilt_path(host):
+    rel_prebuilt_path = 'prebuilts/ndk/current/toolchains/{}'.format(host)
     prebuilt_path = os.path.join(build_support.android_path(),
                                  rel_prebuilt_path)
     if not os.path.isdir(prebuilt_path):
@@ -48,26 +45,12 @@ def get_gcc_prebuilt_path(host_tag, toolchain_name):
 
 def package_gcc(package_dir, host_tag, arch, version):
     toolchain_name = build_support.arch_to_toolchain(arch) + '-' + version
-    prebuilt_path = get_gcc_prebuilt_path(host_tag, toolchain_name)
+    prebuilt_path = get_gcc_prebuilt_path(host_tag)
 
     package_name = 'gcc-{}-{}.tar.bz2'.format(arch, host_tag)
     package_path = os.path.join(package_dir, package_name)
-    with tarfile.TarFile.open(package_path, 'w:bz2') as tarball:
-        arcname = os.path.join('toolchains', toolchain_name)
-
-        def package_filter(tarinfo):
-            if os.path.basename(tarinfo.name) == '.git':
-                return None
-            return tarinfo
-        tarball.add(prebuilt_path, arcname, filter=package_filter)
-
-        tmpdir = tempfile.mkdtemp()
-        try:
-            build_support.make_repo_prop(tmpdir)
-            arcname = os.path.join(arcname, 'repo.prop')
-            tarball.add(os.path.join(tmpdir, 'repo.prop'), arcname)
-        finally:
-            shutil.rmtree(tmpdir)
+    subprocess.check_call(
+        ['tar', 'cjf', package_path, '-C', prebuilt_path, toolchain_name])
 
 
 def main(args):

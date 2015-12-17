@@ -54,17 +54,22 @@ def expand_packages(package, host, arches):
     >>> expand_packages('libc++-{abi}', 'linux', ['arm'])
     ['libc++-armeabi', 'libc++-armeabi-v7a', 'libc++-armeabi-v7a-hard']
 
-    >>> expand_packages('{triple}-4.9-{host}', 'linux', ['arm', 'x86_64'])
-    ['arm-linux-androideabi-4.9-linux-x86_64', 'x86_64-4.9-linux-x86_64']
+    >>> expand_packages('binutils/{triple}', 'linux', ['arm', 'x86_64'])
+    ['binutils/arm-linux-androideabi', 'binutils/x86_64-linux-android']
+
+    >> expand_packages('toolchains/{toolchain}-4.9', 'linux', ['arm', 'x86'])
+    ['toolchains/arm-linux-androideabi-4.9', 'toolchains/x86-4.9']
     """
     host_tag = build_support.host_to_tag(host)
     seen_packages = set()
     packages = []
     for arch in arches:
-        triple = build_support.arch_to_toolchain(arch)
+        triple = build_support.arch_to_triple(arch)
+        toolchain = build_support.arch_to_toolchain(arch)
         for abi in build_support.arch_to_abis(arch):
             expanded = package.format(
-                abi=abi, arch=arch, host=host_tag, triple=triple)
+                abi=abi, arch=arch, host=host_tag, triple=triple,
+                toolchain=toolchain)
             if expanded not in seen_packages:
                 packages.append(expanded)
             seen_packages.add(expanded)
@@ -73,21 +78,25 @@ def expand_packages(package, host, arches):
 
 def get_all_packages(host, arches):
     packages = [
-        ('binutils-{arch}-{host}', '.'),
-        ('build', '.'),
-        ('cpufeatures', '.'),
-        ('gcc-{arch}-{host}', '.'),
-        ('gcclibs-{arch}', '.'),
-        ('gdbserver-{arch}', '.'),
-        ('gnustl-4.9', '.'),
-        ('gtest', '.'),
-        ('host-tools-{host}', '.'),
-        ('libcxx', '.'),
-        ('llvm-{host}', '.'),
-        ('native_app_glue', '.'),
-        ('ndk_helper', '.'),
-        ('python-packages', '.'),
-        ('stlport', '.'),
+        ('binutils-{arch}-{host}', 'binutils/{triple}'),
+        ('build', 'build'),
+        ('cpufeatures', 'sources/android/cpufeatures'),
+        ('gabixx', 'sources/cxx-stl/gabi++'),
+        ('gcc-{arch}-{host}', 'toolchains/{toolchain}-4.9'),
+        ('gcclibs-{arch}', 'gcclibs/{triple}'),
+        ('gdbserver-{arch}', 'gdbserver/{arch}'),
+        ('gnustl-4.9', 'sources/cxx-stl/gnu-libstdc++'),
+        ('gtest', 'sources/third_party/googletest'),
+        ('host-tools-{host}', 'host-tools'),
+        ('libandroid_support', 'sources/android/support'),
+        ('libcxx', 'sources/cxx-stl/llvm-libc++'),
+        ('libcxxabi', 'sources/cxx-stl/llvm-libc++abi'),
+        ('llvm-{host}', 'toolchains/llvm'),
+        ('native_app_glue', 'sources/android/native_app_glue'),
+        ('ndk_helper', 'sources/android/ndk_helper'),
+        ('python-packages', 'python-packages'),
+        ('stlport', 'sources/cxx-stl/stlport'),
+        ('system-stl', 'sources/cxx-stl/system'),
     ]
 
     platforms_path = 'development/ndk/platforms'
@@ -95,7 +104,9 @@ def get_all_packages(host, arches):
         if not platform_dir.startswith('android-'):
             continue
         _, platform_str = platform_dir.split('-')
-        packages.append(('platform-' + platform_str, '.'))
+        package_name = 'platform-' + platform_str
+        install_path = 'platforms/android-' + platform_str
+        packages.append((package_name, install_path))
 
     expanded = []
     for package, extract_path in packages:
@@ -130,13 +141,10 @@ def extract_all(path, packages, out_dir):
         args = ['tar', 'xf', package_path, '-C', install_dir]
 
         if extract_path == '.':
-            # Special case for packages that haven't been fixed yet.
-            # TODO(danalbert): Fix any packages that need this.
-            # http://b/26235995
-            print('Warning: found old style package: ' + package)
-        else:
-            args.append('--strip-components=1')
-            os.makedirs(install_dir)
+            raise RuntimeError('Found old style package: ' + package)
+
+        args.append('--strip-components=1')
+        os.makedirs(install_dir)
 
         subprocess.check_call(args)
 

@@ -228,7 +228,8 @@ else
 fi
 dump "Install  : $TOOLCHAIN $DSTFILE."
 INSTALL_DIR=`mktemp -d $TMPDIR/gdbserver.XXXXXX`
-DEST=$INSTALL_DIR/gdbserver/$ARCH
+GDBSERVER_SUBDIR="gdbserver-$ARCH"
+DEST=$INSTALL_DIR/$GDBSERVER_SUBDIR
 mkdir -p $DEST &&
 run $TOOLCHAIN_PREFIX-objcopy --strip-unneeded $BUILD_OUT/gdbserver $DEST/$DSTFILE
 if [ $? != 0 ] ; then
@@ -238,7 +239,6 @@ fi
 
 if [ "$PACKAGE_DIR" ]; then
     ARCHIVE=gdbserver-$ARCH.tar.bz2
-    GDBSERVER_SUBDIR="gdbserver/$ARCH"
     make_repo_prop "$INSTALL_DIR/$GDBSERVER_SUBDIR"
     dump "Packaging: $ARCHIVE"
     pack_archive "$PACKAGE_DIR/$ARCHIVE" "$INSTALL_DIR" "$GDBSERVER_SUBDIR"
