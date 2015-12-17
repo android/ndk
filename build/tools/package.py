@@ -141,13 +141,10 @@ def extract_all(path, packages, out_dir):
         args = ['tar', 'xf', package_path, '-C', install_dir]
 
         if extract_path == '.':
-            # Special case for packages that haven't been fixed yet.
-            # TODO(danalbert): Fix any packages that need this.
-            # http://b/26235995
-            print('Warning: found old style package: ' + package)
-        else:
-            args.append('--strip-components=1')
-            os.makedirs(install_dir)
+            raise RuntimeError('Found old style package: ' + package)
+
+        args.append('--strip-components=1')
+        os.makedirs(install_dir)
 
         subprocess.check_call(args)
 
