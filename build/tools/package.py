@@ -58,35 +58,36 @@ def expand_packages(package, host, arches):
     ['arm-linux-androideabi-4.9-linux-x86_64', 'x86_64-4.9-linux-x86_64']
     """
     host_tag = build_support.host_to_tag(host)
-    packages = set()
+    seen_packages = set()
+    packages = []
     for arch in arches:
         triple = build_support.arch_to_toolchain(arch)
         for abi in build_support.arch_to_abis(arch):
-            packages.add(package.format(
-                abi=abi, arch=arch, host=host_tag, triple=triple))
-
-    # Sorting isn't really necessary; it's just for the benefit of the
-    # doctests. These are small sets, so it's basically free.
-    return sorted(packages)
+            expanded = package.format(
+                abi=abi, arch=arch, host=host_tag, triple=triple)
+            if expanded not in seen_packages:
+                packages.append(expanded)
+            seen_packages.add(expanded)
+    return packages
 
 
 def get_all_packages(host, arches):
     packages = [
-        'binutils-{arch}-{host}',
-        'build',
-        'cpufeatures',
-        'gcc-{arch}-{host}',
-        'gcclibs-{arch}',
-        'gdbserver-{arch}',
-        'gnustl-4.9',
-        'gtest',
-        'host-tools-{host}',
-        'libcxx',
-        'llvm-{host}',
-        'native_app_glue',
-        'ndk_helper',
-        'python-packages',
-        'stlport',
+        ('binutils-{arch}-{host}', '.'),
+        ('build', '.'),
+        ('cpufeatures', '.'),
+        ('gcc-{arch}-{host}', '.'),
+        ('gcclibs-{arch}', '.'),
+        ('gdbserver-{arch}', '.'),
+        ('gnustl-4.9', '.'),
+        ('gtest', '.'),
+        ('host-tools-{host}', '.'),
+        ('libcxx', '.'),
+        ('llvm-{host}', '.'),
+        ('native_app_glue', '.'),
+        ('ndk_helper', '.'),
+        ('python-packages', '.'),
+        ('stlport', '.'),
     ]
 
     platforms_path = 'development/ndk/platforms'
@@ -94,16 +95,18 @@ def get_all_packages(host, arches):
         if not platform_dir.startswith('android-'):
             continue
         _, platform_str = platform_dir.split('-')
-        packages.append('platform-' + platform_str)
+        packages.append(('platform-' + platform_str, '.'))
 
     expanded = []
-    for package in packages:
-        expanded.extend(expand_packages(package, host, arches))
+    for package, extract_path in packages:
+        package_names = expand_packages(package, host, arches)
+        extract_paths = expand_packages(extract_path, host, arches)
+        expanded.extend(zip(package_names, extract_paths))
     return expanded
 
 
 def check_packages(path, packages):
-    for package in packages:
+    for package, _ in packages:
         print('Checking ' + package)
         package_path = os.path.join(path, package + '.tar.bz2')
         if not os.path.exists(package_path):
@@ -120,10 +123,22 @@ def check_packages(path, packages):
 
 def extract_all(path, packages, out_dir):
     os.makedirs(out_dir)
-    for package in packages:
+    for package, extract_path in packages:
         print('Unpacking ' + package)
         package_path = os.path.join(path, package + '.tar.bz2')
-        subprocess.check_call(['tar', 'xf', package_path, '-C', out_dir])
+        install_dir = os.path.join(out_dir, extract_path)
+        args = ['tar', 'xf', package_path, '-C', install_dir]
+
+        if extract_path == '.':
+            # Special case for packages that haven't been fixed yet.
+            # TODO(danalbert): Fix any packages that need this.
+            # http://b/26235995
+            print('Warning: found old style package: ' + package)
+        else:
+            args.append('--strip-components=1')
+            os.makedirs(install_dir)
+
+        subprocess.check_call(args)
 
 
 def make_ndk_build_shortcut(out_dir, host):
