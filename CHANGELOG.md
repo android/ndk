@@ -41,6 +41,7 @@ NDK
    on the [Android Developer website].
  * The layout of the NDK has changed quite a bit. This was to facilitate
    splitting the many components into their own packages.
+     * **The current layout might not be final.**
      * This is likely to cause some disruption during the transition from r10
        for anyone not using `ndk-build` or `make-standalone-toolchain.sh`, as
        the compilers have moved.
