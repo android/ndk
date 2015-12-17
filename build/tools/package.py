@@ -26,6 +26,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import zipfile
 
 
 site.addsitedir(os.path.join(os.path.dirname(__file__), '../lib'))
@@ -119,34 +120,48 @@ def get_all_packages(host, arches):
 def check_packages(path, packages):
     for package, _ in packages:
         print('Checking ' + package)
-        package_path = os.path.join(path, package + '.tar.bz2')
+        package_path = os.path.join(path, package + '.zip')
         if not os.path.exists(package_path):
             raise RuntimeError('Missing package: ' + package_path)
-        output = subprocess.check_output(['tar', 'tf', package_path])
-        for f in output.splitlines():
-            file_name = os.path.basename(f)
-            if file_name == 'repo.prop':
-                break
-        else:
-            msg = 'Package does not contain a repo.prop: ' + package_path
-            raise RuntimeError(msg)
+        with zipfile.ZipFile(package_path, 'r') as zip_file:
+            for f in zip_file.namelist():
+                file_name = os.path.basename(f)
+                if file_name == 'repo.prop':
+                    break
+            else:
+                msg = 'Package does not contain a repo.prop: ' + package_path
+                raise RuntimeError(msg)
 
 
 def extract_all(path, packages, out_dir):
     os.makedirs(out_dir)
     for package, extract_path in packages:
         print('Unpacking ' + package)
-        package_path = os.path.join(path, package + '.tar.bz2')
+        package_path = os.path.join(path, package + '.zip')
         install_dir = os.path.join(out_dir, extract_path)
-        args = ['tar', 'xf', package_path, '-C', install_dir]
+
+        if os.path.exists(install_dir):
+            raise RuntimeError('Install path already exists: ' + install_dir)
 
         if extract_path == '.':
             raise RuntimeError('Found old style package: ' + package)
 
-        args.append('--strip-components=1')
-        os.makedirs(install_dir)
-
-        subprocess.check_call(args)
+        extract_dir = tempfile.mkdtemp()
+        try:
+            subprocess.check_call(
+                ['unzip', '-q', package_path, '-d', extract_dir])
+            dirs = os.listdir(extract_dir)
+            if len(dirs) > 1:
+                msg = 'Package has more than one root directory: ' + package
+                raise RuntimeError(msg)
+            elif len(dirs) == 0:
+                raise RuntimeError('Package was empty: ' + package)
+            parent_dir = os.path.dirname(install_dir)
+            if not os.path.exists(parent_dir):
+                os.makedirs(parent_dir)
+            os.rename(os.path.join(extract_dir, dirs[0]), install_dir)
+        finally:
+            shutil.rmtree(extract_dir)
 
 
 def make_ndk_build_shortcut(out_dir, host):

@@ -19,8 +19,8 @@ import os
 import shutil
 import subprocess
 import sys
-import tarfile
 import tempfile
+import zipfile
 
 
 # TODO: Make the x86 toolchain names just be the triple.
@@ -183,7 +183,7 @@ def make_repo_prop(out_dir):
 def make_package(name, directory, out_dir):
     """Pacakges an NDK module for release.
 
-    Makes a tarball of the single NDK module that can be released in the SDK
+    Makes a zipfile of the single NDK module that can be released in the SDK
     manager. This will handle the details of creating the repo.prop file for
     the package.
 
@@ -195,39 +195,26 @@ def make_package(name, directory, out_dir):
     if not os.path.isdir(directory):
         raise ValueError('directory must be a directory: ' + directory)
 
-    path = os.path.join(out_dir, name + '.tar.bz2')
+    path = os.path.join(out_dir, name + '.zip')
+    if os.path.exists(path):
+        os.unlink(path)
 
-    def package_filter(tarinfo):
-        # The libc++ .git directory is in our tree.
-        basename = os.path.basename(tarinfo.name)
-        if basename in ('.git', '.gitignore'):
-            return None
+    cwd = os.getcwd()
+    os.chdir(os.path.dirname(directory))
+    basename = os.path.basename(directory)
+    try:
+        subprocess.check_call(
+            ['zip', '-x', '*.pyc', '-x', '*.pyo', '-x', '*.pyd', '-x', '*.swp',
+             '-x', '*.git*', '-9qr', path, basename])
+    finally:
+        os.chdir(cwd)
 
-        ignored_extensions = (
-            # Python junk.
-            '.pyc',
-            '.pyo',
-            '.pyd',
-
-            # Vim junk.
-            '.swp',
-        )
-
-        _, ext = os.path.splitext(tarinfo.name)
-        if ext in ignored_extensions:
-            return None
-
-        return tarinfo
-
-    with tarfile.open(path, 'w:bz2') as tarball:
-        basename = os.path.basename(directory)
-        tarball.add(directory, basename, filter=package_filter)
-
+    with zipfile.ZipFile(path, 'a', zipfile.ZIP_DEFLATED) as zip_file:
         tmpdir = tempfile.mkdtemp()
         try:
             make_repo_prop(tmpdir)
             arcname = os.path.join(basename, 'repo.prop')
-            tarball.add(os.path.join(tmpdir, 'repo.prop'), arcname)
+            zip_file.write(os.path.join(tmpdir, 'repo.prop'), arcname)
         finally:
             shutil.rmtree(tmpdir)
 

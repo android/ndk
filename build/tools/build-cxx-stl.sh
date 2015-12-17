@@ -659,7 +659,7 @@ if [ -n "$PACKAGE_DIR" ] ; then
     fi
 
     make_repo_prop "$OUT_DIR/$CXX_STL_SUBDIR"
-    PACKAGE="$PACKAGE_DIR/${CXX_STL_PACKAGE}.tar.bz2"
+    PACKAGE="$PACKAGE_DIR/${CXX_STL_PACKAGE}.zip"
     log "Packaging: $PACKAGE"
     pack_archive "$PACKAGE" "$OUT_DIR/sources/cxx-stl" "$STL_DIR"
     fail_panic "Could not package $CXX_STL binaries!"
@@ -675,14 +675,14 @@ if [ -n "$PACKAGE_DIR" ] ; then
         # We need to package libc++abi in case the user needs to rebuild libc++.
         SUBDIR="sources/cxx-stl"
         make_repo_prop "$OUT_DIR/$SUBDIR/llvm-libc++abi"
-        PACKAGE="$PACKAGE_DIR/libcxxabi.tar.bz2"
+        PACKAGE="$PACKAGE_DIR/libcxxabi.zip"
         log "Packaging: $PACKAGE"
         pack_archive "$PACKAGE" "$OUT_DIR/$SUBDIR" "llvm-libc++abi"
         fail_panic "Could not package libc++abi!"
 
         # libc++ needs libandroid_support.
         make_repo_prop "$OUT_DIR/sources/android/support"
-        PACKAGE="$PACKAGE_DIR/libandroid_support.tar.bz2"
+        PACKAGE="$PACKAGE_DIR/libandroid_support.zip"
         log "Packaging: $PACKAGE"
         pack_archive "$PACKAGE" "$OUT_DIR/sources/android" "support"
         fail_panic "Could not package libandroid_support!"
@@ -690,7 +690,7 @@ if [ -n "$PACKAGE_DIR" ] ; then
         # Stlport depends on gabi++.
         SUBDIR="sources/cxx-stl"
         make_repo_prop "$OUT_DIR/$SUBDIR/gabi++"
-        PACKAGE="$PACKAGE_DIR/gabixx.tar.bz2"
+        PACKAGE="$PACKAGE_DIR/gabixx.zip"
         log "Packaging: $PACKAGE"
         pack_archive "$PACKAGE" "$OUT_DIR/$SUBDIR" "gabi++"
         fail_panic "Could not package gabi++!"
@@ -698,7 +698,7 @@ if [ -n "$PACKAGE_DIR" ] ; then
         # ... and the system STL.
         SUBDIR="sources/cxx-stl"
         make_repo_prop "$OUT_DIR/$SUBDIR/system"
-        PACKAGE="$PACKAGE_DIR/system-stl.tar.bz2"
+        PACKAGE="$PACKAGE_DIR/system-stl.zip"
         log "Packaging: $PACKAGE"
         pack_archive "$PACKAGE" "$OUT_DIR/$SUBDIR" "system"
         fail_panic "Could not package gabi++!"

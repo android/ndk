@@ -810,7 +810,7 @@ if [ "$PACKAGE_DIR" ]; then
 
         mkdir -p "$PACKAGE_DIR"
         fail_panic "Could not create package directory: $PACKAGE_DIR"
-        ARCHIVE=platform-$PLATFORM.tar.bz2
+        ARCHIVE=platform-$PLATFORM.zip
         dump "Packaging $ARCHIVE"
         pack_archive "$PACKAGE_DIR/$ARCHIVE" "$DSTDIR/platforms" "$PLATFORM_NAME"
         fail_panic "Could not package platform-$PLATFORM"
