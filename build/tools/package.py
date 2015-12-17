@@ -73,20 +73,20 @@ def expand_packages(package, host, arches):
 
 def get_all_packages(host, arches):
     packages = [
-        ('binutils-{arch}-{host}', '.'),
-        ('build', '.'),
-        ('cpufeatures', '.'),
+        ('binutils-{arch}-{host}', 'binutils/{triple}'),
+        ('build', 'build'),
+        ('cpufeatures', 'sources/android/cpufeatures'),
         ('gcc-{arch}-{host}', '.'),
-        ('gcclibs-{arch}', '.'),
+        ('gcclibs-{arch}', 'gcclibs/{triple}'),
         ('gdbserver-{arch}', '.'),
         ('gnustl-4.9', '.'),
-        ('gtest', '.'),
-        ('host-tools-{host}', '.'),
+        ('gtest', 'sources/third_party/googletest'),
+        ('host-tools-{host}', 'host-tools'),
         ('libcxx', '.'),
         ('llvm-{host}', 'toolchains/llvm'),
-        ('native_app_glue', '.'),
-        ('ndk_helper', '.'),
-        ('python-packages', '.'),
+        ('native_app_glue', 'sources/android/native_app_glue'),
+        ('ndk_helper', 'sources/android/ndk_helper'),
+        ('python-packages', 'python-packages'),
         ('stlport', '.'),
     ]
 
