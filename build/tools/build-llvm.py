@@ -18,8 +18,8 @@
 import os
 import shutil
 import site
+import subprocess
 import sys
-import tarfile
 import tempfile
 
 site.addsitedir(os.path.join(os.path.dirname(__file__), '../lib'))
@@ -27,9 +27,8 @@ site.addsitedir(os.path.join(os.path.dirname(__file__), '../lib'))
 import build_support  # pylint: disable=import-error
 
 
-def get_llvm_prebuilt_path(host, version):
-    rel_prebuilt_path = 'prebuilts/clang/host/{}/{}'.format(
-        host, version)
+def get_llvm_prebuilt_path(host):
+    rel_prebuilt_path = 'prebuilts/clang/host/{}'.format(host)
     prebuilt_path = os.path.join(build_support.android_path(),
                                  rel_prebuilt_path)
     if not os.path.isdir(prebuilt_path):
@@ -50,7 +49,7 @@ def main(args):
     os_name = host
     if os_name == 'windows64':
         os_name = 'windows'
-    prebuilt_path = get_llvm_prebuilt_path(os_name + '-x86', LLVM_VERSION)
+    prebuilt_path = get_llvm_prebuilt_path(os_name + '-x86')
 
     if host == 'darwin':
         host = 'darwin-x86_64'
@@ -63,24 +62,9 @@ def main(args):
 
     package_name = 'llvm-{}.tar.bz2'.format(host)
     package_path = os.path.join(package_dir, package_name)
-    with tarfile.TarFile.open(package_path, 'w:bz2') as tarball:
-        arcname = 'toolchains/llvm'
+    subprocess.check_call(
+        ['tar', 'cjf', package_path, '-C', prebuilt_path, LLVM_VERSION])
 
-        def package_filter(tarinfo):
-            if os.path.basename(tarinfo.name) == '.git':
-                return None
-            if os.path.splitext(tarinfo.name)[1] == '.sh':
-                return None
-            return tarinfo
-        tarball.add(prebuilt_path, arcname, filter=package_filter)
-
-        tmpdir = tempfile.mkdtemp()
-        try:
-            build_support.make_repo_prop(tmpdir)
-            arcname = os.path.join(arcname, 'repo.prop')
-            tarball.add(os.path.join(tmpdir, 'repo.prop'), arcname)
-        finally:
-            shutil.rmtree(tmpdir)
 
 if __name__ == '__main__':
     build_support.run(main)
