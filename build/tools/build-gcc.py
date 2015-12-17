@@ -47,10 +47,13 @@ def package_gcc(package_dir, host_tag, arch, version):
     toolchain_name = build_support.arch_to_toolchain(arch) + '-' + version
     prebuilt_path = get_gcc_prebuilt_path(host_tag)
 
-    package_name = 'gcc-{}-{}.tar.bz2'.format(arch, host_tag)
+    package_name = 'gcc-{}-{}.zip'.format(arch, host_tag)
     package_path = os.path.join(package_dir, package_name)
+    if os.path.exists(package_path):
+        os.unlink(package_path)
+    os.chdir(prebuilt_path)
     subprocess.check_call(
-        ['tar', 'cjf', package_path, '-C', prebuilt_path, toolchain_name])
+        ['zip', '-9qr', package_path, toolchain_name])
 
 
 def main(args):

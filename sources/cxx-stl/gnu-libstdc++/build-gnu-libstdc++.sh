@@ -467,7 +467,7 @@ if [ -n "$PACKAGE_DIR" ] ; then
         make_repo_prop "$NDK_DIR/$STL_DIR/$GNUSTL_DIR"
         FILES="$FILES $GNUSTL_DIR/repo.prop"
 
-        PACKAGE="$PACKAGE_DIR/gnustl-${VERSION}.tar.bz2"
+        PACKAGE="$PACKAGE_DIR/gnustl-${VERSION}.zip"
         dump "Packaging: $PACKAGE"
         pack_archive "$PACKAGE" "$NDK_DIR/$STL_DIR" "$FILES"
         fail_panic "Could not package GNU libstdc++ binaries!"

@@ -16,11 +16,9 @@
 #
 """Packages the platform's LLVM for the NDK."""
 import os
-import shutil
 import site
 import subprocess
 import sys
-import tempfile
 
 site.addsitedir(os.path.join(os.path.dirname(__file__), '../lib'))
 
@@ -60,11 +58,15 @@ def main(args):
     elif host == 'windows64':
         host = 'windows-x86_64'
 
-    package_name = 'llvm-{}.tar.bz2'.format(host)
+    package_name = 'llvm-{}.zip'.format(host)
     package_path = os.path.join(package_dir, package_name)
-    subprocess.check_call(
-        ['tar', 'cjf', package_path, '-C', prebuilt_path, LLVM_VERSION])
-
+    if os.path.exists(package_path):
+        os.unlink(package_path)
+    os.chdir(prebuilt_path)
+    args = ['zip', '-9qr', package_path, LLVM_VERSION]
+    if not host.startswith('windows'):
+        args.append('--symlinks')
+    subprocess.check_call(args)
 
 if __name__ == '__main__':
     build_support.run(main)
