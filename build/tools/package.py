@@ -56,15 +56,20 @@ def expand_packages(package, host, arches):
 
     >>> expand_packages('binutils/{triple}', 'linux', ['arm', 'x86_64'])
     ['binutils/arm-linux-androideabi', 'binutils/x86_64-linux-android']
+
+    >> expand_packages('toolchains/{toolchain}-4.9', 'linux', ['arm', 'x86'])
+    ['toolchains/arm-linux-androideabi-4.9', 'toolchains/x86-4.9']
     """
     host_tag = build_support.host_to_tag(host)
     seen_packages = set()
     packages = []
     for arch in arches:
         triple = build_support.arch_to_triple(arch)
+        toolchain = build_support.arch_to_toolchain(arch)
         for abi in build_support.arch_to_abis(arch):
             expanded = package.format(
-                abi=abi, arch=arch, host=host_tag, triple=triple)
+                abi=abi, arch=arch, host=host_tag, triple=triple,
+                toolchain=toolchain)
             if expanded not in seen_packages:
                 packages.append(expanded)
             seen_packages.add(expanded)
@@ -76,7 +81,7 @@ def get_all_packages(host, arches):
         ('binutils-{arch}-{host}', 'binutils/{triple}'),
         ('build', 'build'),
         ('cpufeatures', 'sources/android/cpufeatures'),
-        ('gcc-{arch}-{host}', '.'),
+        ('gcc-{arch}-{host}', 'toolchains/{toolchain}-4.9'),
         ('gcclibs-{arch}', 'gcclibs/{triple}'),
         ('gdbserver-{arch}', '.'),
         ('gnustl-4.9', '.'),
