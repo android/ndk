@@ -95,7 +95,9 @@ def get_all_packages(host, arches):
         if not platform_dir.startswith('android-'):
             continue
         _, platform_str = platform_dir.split('-')
-        packages.append(('platform-' + platform_str, '.'))
+        package_name = 'platform-' + platform_str
+        install_path = 'platforms/android-' + platform_str
+        packages.append((package_name, install_path))
 
     expanded = []
     for package, extract_path in packages:
