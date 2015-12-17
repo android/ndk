@@ -22,6 +22,9 @@
 # include common function and variable definitions
 . $NDK_BUILDTOOLS_PATH/prebuilt-common.sh
 
+STL_DIR=sources/cxx-stl
+GNUSTL_DIR=gnu-libstdc++
+
 PROGRAM_PARAMETERS="<src-dir>"
 
 PROGRAM_DESCRIPTION=\
@@ -423,7 +426,7 @@ done
 # If needed, package files into tarballs
 if [ -n "$PACKAGE_DIR" ] ; then
     for VERSION in $GCC_VERSION_LIST; do
-        FILES="$GNUSTL_SUBDIR/Android.mk $GNUSTL_SUBDIR/include"
+        FILES="$GNUSTL_DIR/Android.mk $GNUSTL_DIR/include"
         for ABI in $ABIS; do
             if [ ! -d "$NDK_DIR/$GNUSTL_SUBDIR/libs/$ABI" ]; then
                 continue
@@ -453,20 +456,20 @@ if [ -n "$PACKAGE_DIR" ] ; then
                     ;;
             esac
             for LIB in include/bits $MULTILIB libsupc++.a libgnustl_static.a libgnustl_shared.so; do
-                FILES="$FILES $GNUSTL_SUBDIR/libs/$ABI/$LIB"
-                THUMB_FILE="$GNUSTL_SUBDIR/libs/$ABI/thumb/$LIB"
+                FILES="$FILES $GNUSTL_DIR/libs/$ABI/$LIB"
+                THUMB_FILE="$GNUSTL_DIR/libs/$ABI/thumb/$LIB"
                 if [ -f "$NDK_DIR/$THUMB_FILE" ] ; then
                     FILES="$FILES $THUMB_FILE"
                 fi
             done
         done
 
-        make_repo_prop "$NDK_DIR/$GNUSTL_SUBDIR"
-        FILES="$FILES $GNUSTL_SUBDIR/repo.prop"
+        make_repo_prop "$NDK_DIR/$STL_DIR/$GNUSTL_DIR"
+        FILES="$FILES $GNUSTL_DIR/repo.prop"
 
         PACKAGE="$PACKAGE_DIR/gnustl-${VERSION}.tar.bz2"
         dump "Packaging: $PACKAGE"
-        pack_archive "$PACKAGE" "$NDK_DIR" "$FILES"
+        pack_archive "$PACKAGE" "$NDK_DIR/$STL_DIR" "$FILES"
         fail_panic "Could not package GNU libstdc++ binaries!"
     done
 fi
