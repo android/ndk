@@ -212,12 +212,9 @@ def _install_file(src_file, dst_file):
     shutil.copy2(src_file, dst_file)
 
 
-def pack_binutils(arch, host_tag, out_dir, root_dir, binutils_path):
+def pack_binutils(arch, host_tag, out_dir, binutils_path):
     archive_name = '-'.join(['binutils', arch, host_tag])
-    binutils_relpath = os.path.relpath(binutils_path, root_dir)
-    files = [binutils_relpath]
-    build_support.make_package(archive_name, files, out_dir, root_dir,
-                               repo_prop_dir=binutils_relpath)
+    build_support.make_package(archive_name, binutils_path, out_dir)
 
 
 def get_prebuilt_gcc(host, arch):
@@ -251,7 +248,7 @@ def build_binutils(out_dir, args):
             has_gold = not triple.startswith('mips') and not is_windows
             for file_name in get_binutils_files(triple, has_gold, is_windows):
                 install_file(file_name, toolchain_path, install_dir)
-            pack_binutils(arch, host_tag, out_dir, tmpdir, install_dir)
+            pack_binutils(arch, host_tag, out_dir, install_dir)
         finally:
             shutil.rmtree(tmpdir)
 
@@ -321,12 +318,7 @@ def build_gcc_libs(out_dir, args):
                 shutil.copy2(src, dst)
 
                 archive_name = os.path.join(out_dir, 'gcclibs-' + arch)
-                gcclibs_relpath = os.path.relpath(install_dir, tmpdir)
-                files = [gcclibs_relpath]
-                root_dir = os.path.realpath(tmpdir)
-                build_support.make_package(archive_name, files, out_dir,
-                                           root_dir,
-                                           repo_prop_dir=gcclibs_relpath)
+                build_support.make_package(archive_name, install_dir, out_dir)
         finally:
             shutil.rmtree(tmpdir)
 
@@ -400,8 +392,8 @@ def package_host_tools(out_dir, host):
             shutil.copy2(f, os.path.join(temp_dir, 'host-tools/bin'))
 
         package_name = 'host-tools-' + host_tag
-        build_support.make_package(package_name, ['host-tools'], out_dir,
-                                   temp_dir, repo_prop_dir='host-tools')
+        path = os.path.join(temp_dir, 'host-tools')
+        build_support.make_package(package_name, path, out_dir)
     finally:
         shutil.rmtree(temp_dir)
 
@@ -443,49 +435,40 @@ def build_platforms(out_dir, args):
 
 
 def build_cpufeatures(out_dir, _):
-    root_dir = build_support.ndk_path()
-    path = 'sources/android/cpufeatures'
-    build_support.make_package('cpufeatures', [path], out_dir, root_dir,
-                               repo_prop_dir=path)
+    path = build_support.ndk_path('sources/android/cpufeatures')
+    build_support.make_package('cpufeatures', path, out_dir)
 
 
 def build_native_app_glue(out_dir, _):
-    root_dir = build_support.android_path('development/ndk')
-    path = 'sources/android/native_app_glue'
-    build_support.make_package('native_app_glue', [path], out_dir, root_dir,
-                               repo_prop_dir=path)
+    path = build_support.android_path(
+        'development/ndk/sources/android/native_app_glue')
+    build_support.make_package('native_app_glue', path, out_dir)
 
 
 def build_ndk_helper(out_dir, _):
-    root_dir = build_support.android_path('development/ndk')
-    path = 'sources/android/ndk_helper'
-    build_support.make_package('ndk_helper', [path], out_dir, root_dir,
-                               repo_prop_dir=path)
+    path = build_support.android_path(
+        'development/ndk/sources/android/ndk_helper')
+    build_support.make_package('ndk_helper', path, out_dir)
 
 
 def build_gtest(out_dir, _):
-    root_dir = build_support.ndk_path()
-    path = 'sources/third_party/googletest'
-    build_support.make_package('gtest', [path], out_dir, root_dir,
-                               repo_prop_dir=path)
+    path = build_support.ndk_path('sources/third_party/googletest')
+    build_support.make_package('gtest', path, out_dir)
 
 
 def build_build(out_dir, _):
-    root_dir = build_support.ndk_path()
-    build_support.make_package('build', ['build'], out_dir, root_dir,
-                               repo_prop_dir='build')
+    path = build_support.ndk_path('build')
+    build_support.make_package('build', path, out_dir)
 
 
 def build_python_packages(out_dir, _):
     # Stage the files in a temporary directory to make things easier.
     temp_dir = tempfile.mkdtemp()
     try:
+        path = os.path.join(temp_dir, 'python-packages')
         shutil.copytree(
-            build_support.android_path('development/python-packages'),
-            os.path.join(temp_dir, 'python-packages'))
-        build_support.make_package('python-packages', ['python-packages'],
-                                   out_dir, temp_dir,
-                                   repo_prop_dir='python-packages')
+            build_support.android_path('development/python-packages'), path)
+        build_support.make_package('python-packages', path, out_dir)
     finally:
         shutil.rmtree(temp_dir)
 

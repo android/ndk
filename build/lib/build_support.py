@@ -180,7 +180,7 @@ def make_repo_prop(out_dir):
             subprocess.check_call(cmd, stdout=prop_file)
 
 
-def make_package(name, files, out_dir, root_dir, repo_prop_dir=''):
+def make_package(name, directory, out_dir):
     """Pacakges an NDK module for release.
 
     Makes a tarball of the single NDK module that can be released in the SDK
@@ -189,10 +189,12 @@ def make_package(name, files, out_dir, root_dir, repo_prop_dir=''):
 
     Args:
         name: Name of the final package, excluding extension.
-        files: List of files (relative to root_dir) to be packaged.
+        directory: Directory to be packaged.
         out_dir: Directory to place package.
-        root_dir: Directory to make package from. Equivalent to tar(1)'s -C.
     """
+    if not os.path.isdir(directory):
+        raise ValueError('directory must be a directory: ' + directory)
+
     path = os.path.join(out_dir, name + '.tar.bz2')
 
     def package_filter(tarinfo):
@@ -218,14 +220,13 @@ def make_package(name, files, out_dir, root_dir, repo_prop_dir=''):
         return tarinfo
 
     with tarfile.open(path, 'w:bz2') as tarball:
-        for f in files:
-            real_file = os.path.join(root_dir, f)
-            tarball.add(real_file, f, filter=package_filter)
+        basename = os.path.basename(directory)
+        tarball.add(directory, basename, filter=package_filter)
 
         tmpdir = tempfile.mkdtemp()
         try:
             make_repo_prop(tmpdir)
-            arcname = os.path.join(repo_prop_dir, 'repo.prop')
+            arcname = os.path.join(basename, 'repo.prop')
             tarball.add(os.path.join(tmpdir, 'repo.prop'), arcname)
         finally:
             shutil.rmtree(tmpdir)
