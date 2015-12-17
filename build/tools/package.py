@@ -85,10 +85,16 @@ def get_all_packages(host, arches):
         'llvm-{host}',
         'native_app_glue',
         'ndk_helper',
-        'platforms',
         'python-packages',
         'stlport',
     ]
+
+    platforms_path = 'development/ndk/platforms'
+    for platform_dir in os.listdir(build_support.android_path(platforms_path)):
+        if not platform_dir.startswith('android-'):
+            continue
+        _, platform_str = platform_dir.split('-')
+        packages.append('platform-' + platform_str)
 
     expanded = []
     for package in packages:
