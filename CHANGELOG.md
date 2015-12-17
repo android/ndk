@@ -117,6 +117,7 @@ Known Issues
  * Exception handling will often fail when using `c++_shared` on ARM32. The root
    cause is incompatibility between the LLVM unwinder used by libc++abi for
    ARM32 and libgcc. This is not a regression from r10e.
+ * Windows packages are missing ld.gold. http://b/22045105
 
 What's Next?
 ------------
