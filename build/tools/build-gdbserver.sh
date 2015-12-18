@@ -238,7 +238,7 @@ if [ $? != 0 ] ; then
 fi
 
 if [ "$PACKAGE_DIR" ]; then
-    ARCHIVE=gdbserver-$ARCH.tar.bz2
+    ARCHIVE=gdbserver-$ARCH.zip
     make_repo_prop "$INSTALL_DIR/$GDBSERVER_SUBDIR"
     dump "Packaging: $ARCHIVE"
     pack_archive "$PACKAGE_DIR/$ARCHIVE" "$INSTALL_DIR" "$GDBSERVER_SUBDIR"
