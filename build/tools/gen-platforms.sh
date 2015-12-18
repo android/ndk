@@ -76,6 +76,7 @@ OPTION_DEBUG_LIBS=
 OPTION_OVERLAY=
 OPTION_GCC_VERSION="default"
 OPTION_LLVM_VERSION=$DEFAULT_LLVM_VERSION
+OPTION_CASE_INSENSITIVE=no
 PACKAGE_DIR=
 
 VERBOSE=no
@@ -126,6 +127,9 @@ for opt do
     ;;
   --llvm-version=*)
     OPTION_LLVM_VERSION=$optarg
+    ;;
+  --case-insensitive)
+    OPTION_CASE_INSENSITIVE=yes
     ;;
   *)
     echo "unknown option '$opt', use --help"
@@ -804,6 +808,11 @@ for ARCH in $ARCHS; do
 done
 
 if [ "$PACKAGE_DIR" ]; then
+    # Remove "duplicate" files for case-insensitive platforms.
+    if [ "$OPTION_CASE_INSENSITIVE" = "yes" ]; then
+        find "$DSTDIR/platforms" | sort -f | uniq -di | xargs rm
+    fi
+
     for PLATFORM in $PLATFORMS; do
         PLATFORM_NAME="android-$PLATFORM"
         make_repo_prop "$DSTDIR/platforms/$PLATFORM_NAME"
