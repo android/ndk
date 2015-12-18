@@ -46,6 +46,9 @@ def main(args):
         'bash', 'gen-platforms.sh', '--fast-copy', arch_arg, ndk_dir_arg,
     ]
 
+    if args.host != 'linux':
+        build_cmd.append('--case-insensitive')
+
     build_support.build(build_cmd, args)
 
 if __name__ == '__main__':
