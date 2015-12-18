@@ -55,7 +55,6 @@ extract_platforms_from ()
 TMPC=$TMPDIR/tmp/tests/tmp-platform.c
 TMPO=$TMPDIR/tmp/tests/tmp-platform.o
 TMPE=$TMPDIR/tmp/tests/tmp-platform$EXE
-TMPL=$TMPDIR/tmp/tests/tmp-platform.log
 
 SRCDIR="../development/ndk"
 DSTDIR="$TMPDIR"
@@ -413,13 +412,12 @@ gen_shared_lib ()
 
     # Build it with our cross-compiler. It will complain about conflicting
     # types for built-in functions, so just shut it up.
-    COMMAND="$CC -Wl,-shared,-Bsymbolic -Wl,-soname,$LIBRARY -nostdlib -o $TMPO $TMPC -Wl,--exclude-libs,libgcc.a"
-    echo "## COMMAND: $COMMAND" > $TMPL
-    $COMMAND 1>>$TMPL 2>&1
+    COMMAND="$CC -Wl,-shared,-Bsymbolic -Wl,-soname,$LIBRARY -nostdlib -o $TMPO $TMPC -Wl,--exclude-libs,libgcc.a -w"
+    echo "## COMMAND: $COMMAND"
+    $COMMAND
     if [ $? != 0 ] ; then
-        dump "ERROR: Can't generate shared library for: $LIBNAME"
-        dump "See the content of $TMPC and $TMPL for details."
-        cat $TMPL | tail -10
+        dump "ERROR: Can't generate shared library for: $LIBRARY"
+        dump "See the content of $TMPC for details."
         exit 1
     fi
 
@@ -427,7 +425,7 @@ gen_shared_lib ()
     local libdir=$(dirname "$DSTFILE")
     mkdir -p "$libdir" && rm -f "$DSTFILE" && cp -f $TMPO "$DSTFILE"
     if [ $? != 0 ] ; then
-        dump "ERROR: Can't copy shared library for: $LIBNAME"
+        dump "ERROR: Can't copy shared library for: $LIBRARY"
         dump "target location is: $DSTFILE"
         exit 1
     fi
@@ -513,11 +511,9 @@ gen_crt_objects ()
     CRTBRAND_S=$DST_DIR/crtbrand.s
     log "Generating platform $API crtbrand assembly code: $CRTBRAND_S"
     (cd "$COMMON_SRC_DIR" && mkdir -p `dirname $CRTBRAND_S` && $CC -DPLATFORM_SDK_VERSION=$API -fpic -S -o - crtbrand.c | \
-        sed -e '/\.note\.ABI-tag/s/progbits/note/' > "$CRTBRAND_S") 1>>$TMPL 2>&1
+        sed -e '/\.note\.ABI-tag/s/progbits/note/' > "$CRTBRAND_S")
     if [ $? != 0 ]; then
         dump "ERROR: Could not generate $CRTBRAND_S from $COMMON_SRC_DIR/crtbrand.c"
-        dump "Please see the content of $TMPL for details!"
-        cat $TMPL | tail -10
         exit 1
     fi
 
@@ -552,11 +548,9 @@ gen_crt_objects ()
                  -I$SRCDIR/../../bionic/libc/arch-common/bionic \
                  -I$SRCDIR/../../bionic/libc/arch-$ARCH/include \
                  -DPLATFORM_SDK_VERSION=$API \
-                 -O2 -fpic -Wl,-r -nostdlib -o "$DST_DIR/$DST_FILE" $SRC_FILE) 1>>$TMPL 2>&1
+                 -O2 -fpic -Wl,-r -nostdlib -o "$DST_DIR/$DST_FILE" $SRC_FILE)
         if [ $? != 0 ]; then
             dump "ERROR: Could not generate $DST_FILE from $SRC_DIR/$SRC_FILE"
-            dump "Please see the content of $TMPL for details!"
-            cat $TMPL | tail -10
             exit 1
         fi
         if [ ! -s "$DST_DIR/crtbegin_static.o" ]; then
