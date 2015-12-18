@@ -702,50 +702,6 @@ relpath ()
     echo "$relative"
 }
 
-# Unpack a given archive
-#
-# $1: archive file path
-# $2: optional target directory (current one if omitted)
-#
-unpack_archive ()
-{
-    local ARCHIVE="$1"
-    local DIR=${2-.}
-    local RESULT TARFLAGS ZIPFLAGS
-
-    if [ ! -f $ARCHIVE ]; then
-        panic "$ARCHIVE does not exist!"
-    fi
-
-    mkdir -p "$DIR"
-    TARFLAGS="xpf"
-    ZIPFLAGS="q"
-    case "$ARCHIVE" in
-        *.zip)
-            (cd $DIR && run unzip $ZIPFLAGS "$ARCHIVE")
-            ;;
-        *.tar)
-            run tar $TARFLAGS "$ARCHIVE" -C $DIR
-            ;;
-        *.tar.gz)
-            run tar z$TARFLAGS "$ARCHIVE" -C $DIR
-            ;;
-        *.tar.bz2)
-            find_pbzip2
-            if [ -n "$PBZIP2" ] ; then
-                run tar --use-compress-prog=pbzip2 -$TARFLAGS "$ARCHIVE" -C $DIR
-            else
-                run tar j$TARFLAGS "$ARCHIVE" -C $DIR
-            fi
-            # remove ._* files by MacOSX to preserve resource forks we don't need
-            find $DIR -name "\._*" -exec rm {} \;
-            ;;
-        *)
-            panic "Cannot unpack archive with unknown extension: $ARCHIVE"
-            ;;
-    esac
-}
-
 # Pack a given archive
 #
 # $1: archive file path (including extension)
