@@ -244,10 +244,18 @@ def build_binutils(out_dir, args):
         try:
             install_dir = os.path.join(tmpdir, 'binutils', triple)
             os.makedirs(install_dir)
+
+            has_gold = True
+            if host_tag == 'windows':
+                # Note: 64-bit Windows is fine.
+                has_gold = False
+            if arch in ('mips', 'mips64'):
+                has_gold = False
+
             is_windows = host_tag.startswith('windows')
-            has_gold = not triple.startswith('mips') and not is_windows
             for file_name in get_binutils_files(triple, has_gold, is_windows):
                 install_file(file_name, toolchain_path, install_dir)
+
             pack_binutils(arch, host_tag, out_dir, install_dir)
         finally:
             shutil.rmtree(tmpdir)
