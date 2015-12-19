@@ -29,6 +29,7 @@ TARGET_CFLAGS := \
         -finline-functions \
         -ffunction-sections \
         -funwind-tables \
+        -fstack-protector-strong \
         -fmessage-length=0 \
         -fno-inline-functions-called-once \
         -fgcse-after-reload \
