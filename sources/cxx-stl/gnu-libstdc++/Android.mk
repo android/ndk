@@ -10,17 +10,17 @@ gnustl_exported_cppflags := $(strip \
 
 # Include path to export
 gnustl_exported_c_includes := \
-  $(LOCAL_PATH)/include \
-  $(LOCAL_PATH)/libs/$(TARGET_ARCH_ABI)/include \
-  $(LOCAL_PATH)/include/backward
+  $(LOCAL_PATH)/4.9/include \
+  $(LOCAL_PATH)/4.9/libs/$(TARGET_ARCH_ABI)/include \
+  $(LOCAL_PATH)/4.9/include/backward
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := gnustl_static
-LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/libgnustl_static$(TARGET_LIB_EXTENSION)
+LOCAL_SRC_FILES := 4.9/libs/$(TARGET_ARCH_ABI)/libgnustl_static$(TARGET_LIB_EXTENSION)
 # For armeabi*, choose thumb mode unless LOCAL_ARM_MODE := arm
 ifneq (,$(filter armeabi%,$(TARGET_ARCH_ABI)))
 ifneq (arm,$(LOCAL_ARM_MODE))
-LOCAL_SRC_FILES:= libs/$(TARGET_ARCH_ABI)/thumb/libgnustl_static$(TARGET_LIB_EXTENSION)
+LOCAL_SRC_FILES:= 4.9/libs/$(TARGET_ARCH_ABI)/thumb/libgnustl_static$(TARGET_LIB_EXTENSION)
 endif
 endif
 LOCAL_EXPORT_CPPFLAGS := $(gnustl_exported_cppflags)
@@ -29,14 +29,14 @@ include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := gnustl_shared
-LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/libgnustl_shared$(TARGET_SONAME_EXTENSION)
+LOCAL_SRC_FILES := 4.9/libs/$(TARGET_ARCH_ABI)/libgnustl_shared$(TARGET_SONAME_EXTENSION)
 # For armeabi*, choose thumb mode unless LOCAL_ARM_MODE := arm
 ifneq (,$(filter armeabi%,$(TARGET_ARCH_ABI)))
 ifneq (arm,$(LOCAL_ARM_MODE))
-LOCAL_SRC_FILES:= libs/$(TARGET_ARCH_ABI)/thumb/libgnustl_shared$(TARGET_SONAME_EXTENSION)
+LOCAL_SRC_FILES:= 4.9/libs/$(TARGET_ARCH_ABI)/thumb/libgnustl_shared$(TARGET_SONAME_EXTENSION)
 endif
 endif
 LOCAL_EXPORT_CPPFLAGS := $(gnustl_exported_cppflags)
 LOCAL_EXPORT_C_INCLUDES := $(gnustl_exported_c_includes)
-LOCAL_EXPORT_LDLIBS := $(call host-path,$(LOCAL_PATH)/libs/$(TARGET_ARCH_ABI)/libsupc++$(TARGET_LIB_EXTENSION))
+LOCAL_EXPORT_LDLIBS := $(call host-path,$(LOCAL_PATH)/4.9/libs/$(TARGET_ARCH_ABI)/libsupc++$(TARGET_LIB_EXTENSION))
 include $(PREBUILT_SHARED_LIBRARY)

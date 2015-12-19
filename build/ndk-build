@@ -179,7 +179,7 @@ else
     # Otherwise use the prebuilt version for our host tag, if it exists
     # Note: we intentionally do not provide prebuilt make binaries for Cygwin
     # or MSys.
-    GNUMAKE=$PROGDIR/host-tools/bin/make
+    GNUMAKE=$PROGDIR/prebuilt/$HOST_TAG/bin/make
     if [ ! -f "$GNUMAKE" ]; then
         # Otherwise, use 'make' and check that it is available
         GNUMAKE=`which make 2> /dev/null`

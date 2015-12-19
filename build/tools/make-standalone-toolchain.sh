@@ -165,8 +165,14 @@ if [ ! -d "$NDK_DIR/platforms/$PLATFORM" ] ; then
     exit 1
 fi
 
+if [ -d "$NDK_DIR/prebuilt/$HOST_TAG" ]; then
+    SYSTEM=$HOST_TAG
+else
+    SYSTEM=$HOST_TAG32
+fi
+
 # Check toolchain name
-TOOLCHAIN_PATH="$NDK_DIR/toolchains/$TOOLCHAIN_NAME"
+TOOLCHAIN_PATH="$NDK_DIR/toolchains/$TOOLCHAIN_NAME/prebuilt/$SYSTEM"
 if [ ! -d "$TOOLCHAIN_PATH" ] ; then
     echo "Could not find toolchain: $TOOLCHAIN_PATH"
     echo "Please use --toolchain=<name> with the name of a toolchain supported by the source NDK."
@@ -219,7 +225,7 @@ if [ ! -f "$TOOLCHAIN_GCC" ] ; then
 fi
 
 if [ "$USE_LLVM" = "yes" ]; then
-    LLVM_TOOLCHAIN_PATH="$NDK_DIR/toolchains/llvm"
+    LLVM_TOOLCHAIN_PATH="$NDK_DIR/toolchains/llvm/prebuilt/$SYSTEM"
     # Check that we have any prebuilts LLVM toolchain here
     if [ ! -d "$LLVM_TOOLCHAIN_PATH" ] ; then
         echo "LLVM Toolchain is missing prebuilt files"
@@ -246,16 +252,16 @@ copy_directory "$TOOLCHAIN_PATH" "$TMPDIR"
 PYTHON=python
 PYTHON_x=python$(echo "$DEFAULT_PYTHON_VERSION" | cut -d . -f 1)
 PYTHON_xdotx=python$(echo "$DEFAULT_PYTHON_VERSION" | cut -d . -f 1-2)
-copy_directory "$NDK_DIR/host-tools/include/$PYTHON_xdotx" "$TMPDIR/include/$PYTHON_xdotx"
-copy_directory "$NDK_DIR/host-tools/lib/$PYTHON_xdotx" "$TMPDIR/lib/$PYTHON_xdotx"
-copy_file_list "$NDK_DIR/host-tools/bin" "$TMPDIR/bin" "$PYTHON$HOST_EXE" "$PYTHON_x$HOST_EXE" "$PYTHON_xdotx$HOST_EXE"
+copy_directory "$NDK_DIR/prebuilt/$SYSTEM/include/$PYTHON_xdotx" "$TMPDIR/include/$PYTHON_xdotx"
+copy_directory "$NDK_DIR/prebuilt/$SYSTEM/lib/$PYTHON_xdotx" "$TMPDIR/lib/$PYTHON_xdotx"
+copy_file_list "$NDK_DIR/prebuilt/$SYSTEM/bin" "$TMPDIR/bin" "$PYTHON$HOST_EXE" "$PYTHON_x$HOST_EXE" "$PYTHON_xdotx$HOST_EXE"
 if [ "$HOST_TAG32" = "windows" ]; then
-  copy_file_list "$NDK_DIR/host-tools/bin" "$TMPDIR/bin" lib$PYTHON_xdotx.dll
+  copy_file_list "$NDK_DIR/prebuilt/$SYSTEM/bin" "$TMPDIR/bin" lib$PYTHON_xdotx.dll
 fi
 
 # Copy yasm for x86
 if [ "$ARCH" = "x86" ]; then
-  copy_file_list "$NDK_DIR/host-tools/bin" "$TMPDIR/bin" "yasm$HOST_EXE"
+  copy_file_list "$NDK_DIR/prebuilt/$SYSTEM/bin" "$TMPDIR/bin" "yasm$HOST_EXE"
 fi
 
 # Clang stuff
@@ -401,7 +407,7 @@ case "$ARCH" in
         ;;
 esac
 
-GNUSTL_DIR=$NDK_DIR/$GNUSTL_SUBDIR
+GNUSTL_DIR=$NDK_DIR/$GNUSTL_SUBDIR/4.9
 GNUSTL_LIBS=$GNUSTL_DIR/libs
 
 STLPORT_DIR=$NDK_DIR/$STLPORT_SUBDIR
