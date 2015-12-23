@@ -51,6 +51,7 @@ TARGET_CFLAGS := \
     -finline-functions \
     -ffunction-sections \
     -funwind-tables \
+    -fstack-protector-strong \
     -fmessage-length=0 \
     -Wno-invalid-command-line-argument \
     -Wno-unused-command-line-argument \
