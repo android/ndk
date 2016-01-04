@@ -1,5 +1,5 @@
-Changelog for NDK Build 2490520
-===============================
+Changelog
+=========
 
 We've moved our bug tracker to GitHub: https://github.com/android-ndk/ndk/issues
 
@@ -39,12 +39,6 @@ NDK
    [GitHub].
  * The documentation is no longer included in the NDK. It is instead available
    on the [Android Developer website].
- * The layout of the NDK has changed quite a bit. This was to facilitate
-   splitting the many components into their own packages.
-     * **The current layout might not be final.**
-     * This is likely to cause some disruption during the transition from r10
-       for anyone not using `ndk-build` or `make-standalone-toolchain.sh`, as
-       the compilers have moved.
  * Make ARM standalone toolchains default to arm7.
      * The old behavior can be restored by passing
        `-target armv5te-linux-androideabi`.
@@ -86,6 +80,10 @@ Binutils
  * Good linking time improvement for huge binaries for Gold ARM backend (up to
    50% linking time reduction for debuggable Chrome Browser).
  * New option: `--pic-veneer`.
+ * The 32-bit Windows package no longer contains ld.gold. It is available in
+   the 64-bit package.
+     * Current gold no longer builds when targeting 32-bit Windows (causes
+       internal compiler failures in mingw).
 
 GDB
 ---
@@ -108,7 +106,6 @@ Known Issues
 ------------
 
  * This is not intended to be a comprehensive list of all outstanding bugs.
-
  * x86 ASAN does not currently work. See discussion on
    https://android-review.googlesource.com/#/c/186276/
  * The combination of Clang, x86, `stlport_static`, and optimization levels
@@ -117,7 +114,6 @@ Known Issues
  * Exception handling will often fail when using `c++_shared` on ARM32. The root
    cause is incompatibility between the LLVM unwinder used by libc++abi for
    ARM32 and libgcc. This is not a regression from r10e.
- * Windows packages are missing ld.gold. http://b/22045105
 
 What's Next?
 ------------
