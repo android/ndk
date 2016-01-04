@@ -30,7 +30,19 @@ def get_tool(tool):
     ext = ''
     if sys.platform == 'win32':
         ext = '.exe'
-    return os.path.join(os.environ['NDK'], 'host-tools', 'bin', tool) + ext
+
+    if sys.platform.startswith('linux'):
+        host_tag = 'linux-x86_64'
+    elif sys.platform == 'darwin':
+        host_tag = 'darwin-x86_64'
+    elif sys.platform == 'win32':
+        host_tag = 'windows-x86_64'
+        test_path = os.path.join(os.environ['NDK'], 'prebuilt', host_tag)
+        if not os.path.exists(test_path):
+            host_tag = 'windows'
+
+    prebuilt_path = os.path.join(os.environ['NDK'], 'prebuilt', host_tag)
+    return os.path.join(prebuilt_path, 'bin', tool) + ext
 
 
 def build(build_flags):

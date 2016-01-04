@@ -106,7 +106,7 @@ endif
 # Returns  : The parent path of all toolchains for this host. Note that
 #            HOST_TAG64 == HOST_TAG for 32-bit systems.
 # -----------------------------------------------------------------------------
-host-toolchain-path = $1/toolchains
+host-toolchain-path = $1/prebuilt/$(HOST_TAG64)
 
 # -----------------------------------------------------------------------------
 # Function : get-toolchain-root
@@ -114,7 +114,7 @@ host-toolchain-path = $1/toolchains
 #            2: Toolchain name
 # Returns  : Path to the given prebuilt toolchain.
 # -----------------------------------------------------------------------------
-get-toolchain-root = $(call host-toolchain-path,$1)/$2
+get-toolchain-root = $(call host-toolchain-path,$1/toolchains/$2)
 
 # -----------------------------------------------------------------------------
 # Function : get-binutils-root
