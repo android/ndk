@@ -20,7 +20,7 @@ int main() {
   CHECK_EQ(88, sizeof(struct _Unwind_Control_Block));
   CHECK_EQ(0, offsetof(struct _Unwind_Control_Block, exception_class));
   CHECK_EQ(8, offsetof(struct _Unwind_Control_Block, exception_cleanup));
-#elif defined(__mips__)
+#elif defined(__mips__) && !defined(__mips64)
   CHECK_EQ(24, sizeof(struct _Unwind_Exception));
   CHECK_EQ(0, offsetof(struct _Unwind_Exception, exception_class));
   CHECK_EQ(8, offsetof(struct _Unwind_Exception, exception_cleanup));
@@ -32,7 +32,7 @@ int main() {
   CHECK_EQ(8, offsetof(struct _Unwind_Exception, exception_cleanup));
   CHECK_EQ(12, offsetof(struct _Unwind_Exception, private_1));
   CHECK_EQ(16, offsetof(struct _Unwind_Exception, private_2));
-#elif defined(__aarch64__) || defined(__x86_64__) || defined(__mips64__)
+#elif defined(__aarch64__) || defined(__x86_64__) || defined(__mips64)
   CHECK_EQ(32, sizeof(struct _Unwind_Exception));
   CHECK_EQ(0, offsetof(struct _Unwind_Exception, exception_class));
   CHECK_EQ(8, offsetof(struct _Unwind_Exception, exception_cleanup));
