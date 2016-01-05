@@ -189,6 +189,17 @@ else
   LOCAL_LDFLAGS += $($(my)RELRO_LDFLAGS)
 endif
 
+# We enable shared text relocation warnings by default. These are not allowed in
+# current versions of Android (android-21 for LP64 ABIs, android-23 for LP32
+# ABIs).
+LOCAL_LDFLAGS += -Wl,--warn-shared-textrel
+
+# We enable fatal linker warnings by default.
+# If LOCAL_DISABLE_FATAL_LINKER_WARNINGS is true, we don't enable this check.
+ifneq ($(LOCAL_DISABLE_FATAL_LINKER_WARNINGS),true)
+  LOCAL_LDFLAGS += -Wl,--fatal-warnings
+endif
+
 # By default, we protect against format string vulnerabilities
 # If LOCAL_DISABLE_FORMAT_STRING_CHECKS is true, we disable the protections.
 ifeq ($(LOCAL_DISABLE_FORMAT_STRING_CHECKS),true)
