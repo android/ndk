@@ -821,6 +821,15 @@ if [ "$PACKAGE_DIR" ]; then
         PLATFORM_NAME="android-$PLATFORM"
         make_repo_prop "$DSTDIR/platforms/$PLATFORM_NAME"
 
+        NOTICE="$DSTDIR/platforms/$PLATFORM_NAME/NOTICE"
+        cp "$ANDROID_BUILD_TOP/bionic/libc/NOTICE" $NOTICE
+        echo >> $NOTICE
+        cp "$ANDROID_BUILD_TOP/bionic/libm/NOTICE" $NOTICE
+        echo >> $NOTICE
+        cp "$ANDROID_BUILD_TOP/bionic/libdl/NOTICE" $NOTICE
+        echo >> $NOTICE
+        cp "$ANDROID_BUILD_TOP/bionic/libstdc++/NOTICE" $NOTICE
+
         mkdir -p "$PACKAGE_DIR"
         fail_panic "Could not create package directory: $PACKAGE_DIR"
         ARCHIVE=platform-$PLATFORM.zip
