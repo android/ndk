@@ -170,7 +170,7 @@ def check_packages(path, packages):
 
         if 'NOTICE' not in top_level_files:
             msg = 'Package does not contain a NOTICE: ' + package_path
-            print('Warning: ' + msg)
+            raise RuntimeError(msg)
 
 
 def extract_all(path, packages, out_dir):
