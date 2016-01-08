@@ -329,6 +329,10 @@ def build_gcc_libs(out_dir, args):
                     os.makedirs(dst_dir)
                 shutil.copy2(src, dst)
 
+                shutil.copy2(
+                    os.path.join(gcc_path, 'NOTICE'),
+                    os.path.join(install_dir, 'NOTICE'))
+
                 archive_name = os.path.join(out_dir, 'gcclibs-' + arch)
                 build_support.make_package(archive_name, install_dir, out_dir)
         finally:
