@@ -467,6 +467,10 @@ if [ -n "$PACKAGE_DIR" ] ; then
         make_repo_prop "$NDK_DIR/$STL_DIR/$GNUSTL_DIR"
         FILES="$FILES $GNUSTL_DIR/repo.prop"
 
+        cp "$ANDROID_BUILD_TOP/toolchain/gcc/gcc-4.9/COPYING" \
+           "$NDK_DIR/$STL_DIR/$GNUSTL_DIR/NOTICE"
+        FILES="$FILES $GNUSTL_DIR/NOTICE"
+
         PACKAGE="$PACKAGE_DIR/gnustl-${VERSION}.zip"
         dump "Packaging: $PACKAGE"
         pack_archive "$PACKAGE" "$NDK_DIR/$STL_DIR" "$FILES"

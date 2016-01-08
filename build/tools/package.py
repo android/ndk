@@ -156,14 +156,21 @@ def check_packages(path, packages):
         package_path = os.path.join(path, package + '.zip')
         if not os.path.exists(package_path):
             raise RuntimeError('Missing package: ' + package_path)
+
+        top_level_files = []
         with zipfile.ZipFile(package_path, 'r') as zip_file:
             for f in zip_file.namelist():
-                file_name = os.path.basename(f)
-                if file_name == 'repo.prop':
-                    break
-            else:
-                msg = 'Package does not contain a repo.prop: ' + package_path
-                raise RuntimeError(msg)
+                components = os.path.split(f)
+                if len(components) == 2:
+                    top_level_files.append(components[1])
+
+        if 'repo.prop' not in top_level_files:
+            msg = 'Package does not contain a repo.prop: ' + package_path
+            raise RuntimeError(msg)
+
+        if 'NOTICE' not in top_level_files:
+            msg = 'Package does not contain a NOTICE: ' + package_path
+            raise RuntimeError(msg)
 
 
 def extract_all(path, packages, out_dir):

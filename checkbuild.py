@@ -256,6 +256,10 @@ def build_binutils(out_dir, args):
             for file_name in get_binutils_files(triple, has_gold, is_windows):
                 install_file(file_name, toolchain_path, install_dir)
 
+            license_path = build_support.android_path(
+                'toolchain/binutils/binutils-2.25/COPYING')
+            shutil.copy2(license_path, os.path.join(install_dir, 'NOTICE'))
+
             pack_binutils(arch, host_tag, out_dir, install_dir)
         finally:
             shutil.rmtree(tmpdir)
@@ -325,6 +329,10 @@ def build_gcc_libs(out_dir, args):
                     os.makedirs(dst_dir)
                 shutil.copy2(src, dst)
 
+                shutil.copy2(
+                    os.path.join(gcc_path, 'NOTICE'),
+                    os.path.join(install_dir, 'NOTICE'))
+
                 archive_name = os.path.join(out_dir, 'gcclibs-' + arch)
                 build_support.make_package(archive_name, install_dir, out_dir)
         finally:
@@ -367,6 +375,16 @@ def build_host_tools(out_dir, args):
     package_host_tools(out_dir, args.system)
 
 
+def merge_license_files(output_path, files):
+    licenses = []
+    for license_path in files:
+        with open(license_path) as license_file:
+            licenses.append(license_file.read())
+
+    with open(output_path, 'w') as output_file:
+        output_file.write('\n'.join(licenses))
+
+
 def package_host_tools(out_dir, host):
     packages = [
         'gdb-multiarch-7.10',
@@ -398,6 +416,22 @@ def package_host_tools(out_dir, host):
 
         for f in files:
             shutil.copy2(f, os.path.join(temp_dir, 'host-tools/bin'))
+
+        merge_license_files(os.path.join(temp_dir, 'host-tools/NOTICE'), [
+            build_support.android_path('toolchain/gdb/gdb-7.10/COPYING'),
+            build_support.ndk_path('sources/host-tools/nawk-20071023/NOTICE'),
+            build_support.ndk_path('sources/host-tools/ndk-depends/NOTICE'),
+            build_support.ndk_path('sources/host-tools/make-3.81/COPYING'),
+            build_support.android_path(
+                'toolchain/python/Python-2.7.5/LICENSE'),
+            build_support.ndk_path('sources/host-tools/ndk-stack/NOTICE'),
+            build_support.ndk_path('sources/host-tools/toolbox/NOTICE'),
+            build_support.android_path('toolchain/yasm/COPYING'),
+            build_support.android_path('toolchain/yasm/BSD.txt'),
+            build_support.android_path('toolchain/yasm/Artistic.txt'),
+            build_support.android_path('toolchain/yasm/GNU_GPL-2.0'),
+            build_support.android_path('toolchain/yasm/GNU_LGPL-2.0'),
+        ])
 
         package_name = 'host-tools-' + host_tag
         path = os.path.join(temp_dir, 'host-tools')

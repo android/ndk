@@ -238,8 +238,11 @@ if [ $? != 0 ] ; then
 fi
 
 if [ "$PACKAGE_DIR" ]; then
-    ARCHIVE=gdbserver-$ARCH.zip
     make_repo_prop "$INSTALL_DIR/$GDBSERVER_SUBDIR"
+    cp "$SRC_DIR/../../COPYING" "$DEST/NOTICE"
+    fail_panic "Could not copy license file!"
+
+    ARCHIVE=gdbserver-$ARCH.zip
     dump "Packaging: $ARCHIVE"
     pack_archive "$PACKAGE_DIR/$ARCHIVE" "$INSTALL_DIR" "$GDBSERVER_SUBDIR"
 fi
