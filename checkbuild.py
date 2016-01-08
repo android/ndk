@@ -256,6 +256,10 @@ def build_binutils(out_dir, args):
             for file_name in get_binutils_files(triple, has_gold, is_windows):
                 install_file(file_name, toolchain_path, install_dir)
 
+            license_path = build_support.android_path(
+                'toolchain/binutils/binutils-2.25/COPYING')
+            shutil.copy2(license_path, os.path.join(install_dir, 'NOTICE'))
+
             pack_binutils(arch, host_tag, out_dir, install_dir)
         finally:
             shutil.rmtree(tmpdir)
