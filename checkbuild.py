@@ -375,6 +375,16 @@ def build_host_tools(out_dir, args):
     package_host_tools(out_dir, args.system)
 
 
+def merge_license_files(output_path, files):
+    licenses = []
+    for license_path in files:
+        with open(license_path) as license_file:
+            licenses.append(license_file.read())
+
+    with open(output_path, 'w') as output_file:
+        output_file.write('\n'.join(licenses))
+
+
 def package_host_tools(out_dir, host):
     packages = [
         'gdb-multiarch-7.10',
@@ -406,6 +416,22 @@ def package_host_tools(out_dir, host):
 
         for f in files:
             shutil.copy2(f, os.path.join(temp_dir, 'host-tools/bin'))
+
+        merge_license_files(os.path.join(temp_dir, 'host-tools/NOTICE'), [
+            build_support.android_path('toolchain/gdb/gdb-7.10/COPYING'),
+            build_support.ndk_path('sources/host-tools/nawk-20071023/NOTICE'),
+            build_support.ndk_path('sources/host-tools/ndk-depends/NOTICE'),
+            build_support.ndk_path('sources/host-tools/make-3.81/COPYING'),
+            build_support.android_path(
+                'toolchain/python/Python-2.7.5/LICENSE'),
+            build_support.ndk_path('sources/host-tools/ndk-stack/NOTICE'),
+            build_support.ndk_path('sources/host-tools/toolbox/NOTICE'),
+            build_support.android_path('toolchain/yasm/COPYING'),
+            build_support.android_path('toolchain/yasm/BSD.txt'),
+            build_support.android_path('toolchain/yasm/Artistic.txt'),
+            build_support.android_path('toolchain/yasm/GNU_GPL-2.0'),
+            build_support.android_path('toolchain/yasm/GNU_LGPL-2.0'),
+        ])
 
         package_name = 'host-tools-' + host_tag
         path = os.path.join(temp_dir, 'host-tools')
