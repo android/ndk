@@ -458,7 +458,7 @@ if [ -n "$PACKAGE_DIR" ] ; then
             for LIB in include/bits $MULTILIB libsupc++.a libgnustl_static.a libgnustl_shared.so; do
                 FILES="$FILES $GNUSTL_DIR/libs/$ABI/$LIB"
                 THUMB_FILE="$GNUSTL_DIR/libs/$ABI/thumb/$LIB"
-                if [ -f "$NDK_DIR/$THUMB_FILE" ] ; then
+                if [ -f "$NDK_DIR/sources/cxx-stl/$THUMB_FILE" ]; then
                     FILES="$FILES $THUMB_FILE"
                 fi
             done
