@@ -54,6 +54,18 @@ ALL_ARCHITECTURES = (
 )
 
 
+ALL_ABIS = (
+    'armeabi',
+    'armeabi-v7a',
+    'armeabi-v7a-hard',
+    'arm64-v8a',
+    'mips',
+    'mips64',
+    'x86',
+    'x86_64',
+)
+
+
 def arch_to_toolchain(arch):
     return dict(zip(ALL_ARCHITECTURES, ALL_TOOLCHAINS))[arch]
 
