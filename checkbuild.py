@@ -23,6 +23,7 @@ from __future__ import print_function
 
 import argparse
 import collections
+import datetime
 import inspect
 import os
 import shutil
@@ -30,6 +31,7 @@ import site
 import subprocess
 import sys
 import tempfile
+import textwrap
 
 site.addsitedir(os.path.join(os.path.dirname(__file__), 'build/lib'))
 
@@ -66,12 +68,24 @@ class ArgParser(argparse.ArgumentParser):
             choices=('arm', 'arm64', 'mips', 'mips64', 'x86', 'x86_64'),
             help='Build for the given architecture. Build all by default.')
 
-        self.add_argument(
+        package_group = self.add_mutually_exclusive_group()
+        package_group.add_argument(
             '--package', action='store_true', dest='package', default=True,
             help='Package the NDK when done building (default).')
-        self.add_argument(
+        package_group.add_argument(
             '--no-package', action='store_false', dest='package',
             help='Do not package the NDK when done building.')
+
+        test_group = self.add_mutually_exclusive_group()
+        test_group.add_argument(
+            '--test', action='store_true', dest='test', default=True,
+            help=textwrap.dedent("""\
+            Run host tests when finished. --package is required. Not supported
+            when targeting Windows.
+            """))
+        test_group.add_argument(
+            '--no-test', action='store_false', dest='test',
+            help='Do not run host tests when finished.')
 
         self.add_argument(
             '--release',
@@ -119,6 +133,51 @@ def package_ndk(out_dir, args):
         package_args.append('--arch={}'.format(args.arch))
 
     invoke_build('package.py', package_args)
+
+
+def test_ndk(out_dir, args):
+    # TODO(danalbert): Remove the unpack step.
+    # We're building modules, unpacking them, repacking them, and then
+    # unpacking to test. This is dumb. Unpack to a known location to cut out
+    # half of these steps.
+    unpack_dir = tempfile.mkdtemp()
+    try:
+        host_tag = build_support.host_to_tag(args.system)
+        release = args.release
+        if args.release is None:
+            release = datetime.date.today().strftime('%Y%m%d')
+
+        package_name = 'android-ndk-{}-{}.tar.bz2'.format(release, host_tag)
+        package_path = os.path.join(out_dir, package_name)
+
+        print('Extracting {} to {}'.format(package_path, unpack_dir))
+        subprocess.check_call(['tar', 'xf', package_path, '-C', unpack_dir])
+        test_dir = os.path.join(
+            unpack_dir, 'android-ndk-{}'.format(release))
+
+        test_env = dict(os.environ)
+        test_env['NDK'] = test_dir
+
+        abis = build_support.ALL_ABIS
+        if args.arch is not None:
+            abis = build_support.arch_to_abis(args.arch)
+
+        results = {}
+        for abi in abis:
+            cmd = [
+                'python', build_support.ndk_path('tests/run-all.py'),
+                '--abi', abi, '--suite', 'build'
+            ]
+            print('Running tests: {}'.format(' '.join(cmd)))
+            result = subprocess.call(cmd, env=test_env)
+            results[abi] = result == 0
+
+        print('Results:')
+        for abi, result in results.iteritems():
+            print('{}: {}'.format(abi, 'PASS' if result else 'FAIL'))
+        return all(results.values())
+    finally:
+        shutil.rmtree(unpack_dir)
 
 
 def common_build_args(out_dir, args):
@@ -516,7 +575,32 @@ def build_python_packages(out_dir, _):
 
 
 def main():
-    args = ArgParser().parse_args()
+    parser = ArgParser()
+    args = parser.parse_args()
+
+    if args.module is None:
+        modules = ALL_MODULES
+    else:
+        modules = {args.module}
+
+    if args.host_only:
+        modules = {
+            'clang',
+            'gcc',
+            'host-tools',
+        }
+
+    required_package_modules = ALL_MODULES
+    if args.package and required_package_modules <= modules:
+        do_package = True
+    else:
+        do_package = False
+
+    # TODO(danalbert): wine?
+    # We're building the Windows packages from Linux, so we can't actually run
+    # any of the tests from here.
+    if args.system.startswith('windows') or not do_package:
+        args.test = False
 
     # Disable buffering on stdout so the build output doesn't hide all of our
     # "Building..." messages.
@@ -533,18 +617,6 @@ def main():
     out_dir = os.path.realpath(os.getenv('DIST_DIR', DEFAULT_OUT_DIR))
     if not os.path.isdir(out_dir):
         os.makedirs(out_dir)
-
-    if args.module is None:
-        modules = ALL_MODULES
-    else:
-        modules = {args.module}
-
-    if args.host_only:
-        modules = {
-            'clang',
-            'gcc',
-            'host-tools',
-        }
 
     print('Cleaning up...')
     invoke_build('dev-cleanup.sh')
@@ -572,9 +644,12 @@ def main():
     for module in modules:
         module_builds[module](out_dir, args)
 
-    required_package_modules = ALL_MODULES
-    if args.package and required_package_modules <= modules:
+    if do_package:
         package_ndk(out_dir, args)
+
+    if args.test:
+        result = test_ndk(out_dir, args)
+        sys.exit(0 if result else 1)
 
 
 if __name__ == '__main__':
