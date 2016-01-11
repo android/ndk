@@ -252,7 +252,7 @@ case $(uname -s) in
       ;;
 esac
 
-ARM_READELF=$NDK/toolchains/$ARM_TOOLCHAIN_NAME/bin/${ARM_TOOLCHAIN_PREFIX}-readelf
+ARM_READELF=$NDK/toolchains/$ARM_TOOLCHAIN_NAME/prebuilt/$HOST_TAG/bin/${ARM_TOOLCHAIN_PREFIX}-readelf
 if [ ! -f "$ARM_READELF" ]; then
     echo "ERROR: Missing binary: $ARM_READELF" >&2
     exit 1
@@ -267,7 +267,7 @@ for ABI in $ARMv7_ABIS; do
 
 
     for VERSION in $DEFAULT_GCC_VERSION_LIST; do
-        GNUSTL_LIBS=$NDK/sources/cxx-stl/gnu-libstdc++/libs/$ABI
+        GNUSTL_LIBS=$NDK/sources/cxx-stl/gnu-libstdc++/4.9/libs/$ABI
         check_armv7_elf_binary $GNUSTL_LIBS/libsupc++.a
         check_armv7_elf_binary $GNUSTL_LIBS/libgnustl_shared.so
         check_armv7_elf_binary $GNUSTL_LIBS/libgnustl_static.a
