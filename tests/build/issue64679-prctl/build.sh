@@ -1,3 +1,4 @@
+#!/bin/sh
 # Check if some platform headers can be included alone
 # See b.android.com/64679 for one of them
 #
@@ -16,6 +17,9 @@ for OPT; do
         --jobs=*)
             JOBS=${OPT##--jobs=}
             ;;
+        APP_ABI=*)
+            eval readonly "$OPT"
+            ;;
     esac
 done
 
@@ -26,8 +30,16 @@ INVALID_HEADERS_FOR_64BIT="time64.h sys/user.h"  # ToDo: remove sys/user.h later
 # --std=c++-0x or higher, so skip it here.
 INTERNAL_HEADERS="$INTERNAL_HEADERS uchar.h"
 
-for API_LEVEL in $API_LEVELS; do
-    for ARCH in $DEFAULT_ARCHS; do
+if [ -n "$APP_ABI" ]; then
+    readonly APP_ARCH="$(convert_abi_to_arch "$APP_ABI")"
+    enabled_test_arch () { [ "$APP_ARCH" == "$1" ]; }
+else
+    enabled_test_arch () { true; }
+fi
+
+for ARCH in $DEFAULT_ARCHS; do
+    enabled_test_arch "$ARCH" || continue
+    for API_LEVEL in $API_LEVELS; do
         if [ ! -d $ANDROID_NDK_ROOT/platforms/android-$API_LEVEL/arch-$ARCH ]; then
             continue
         fi
