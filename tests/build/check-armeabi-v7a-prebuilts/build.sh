@@ -216,7 +216,17 @@ check_armv7_elf_binary ()
     fi
 }
 
-. $NDK/build/tools/dev-defaults.sh
+export ANDROID_NDK_ROOT=$NDK
+
+NDK_BUILDTOOLS_PATH=$NDK/build/tools
+. $NDK/build/tools/prebuilt-common.sh
+
+if [ -n "$APP_ABI" ]; then
+    if [ "$(convert_abi_to_arch $APP_ABI)" != "arm" ]; then
+        echo "Skipping ARM only test"
+        exit 0
+    fi
+fi
 
 ARM_TOOLCHAIN_NAME=$(get_default_toolchain_name_for_arch arm)
 ARM_TOOLCHAIN_PREFIX=$(get_default_toolchain_prefix_for_arch arm)
