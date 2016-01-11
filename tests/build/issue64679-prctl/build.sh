@@ -28,8 +28,10 @@ INTERNAL_HEADERS="$INTERNAL_HEADERS uchar.h"
 
 for API_LEVEL in $API_LEVELS; do
     for ARCH in $DEFAULT_ARCHS; do
-        if [ ! -d $ANDROID_NDK_ROOT/platforms/android-$API_LEVEL/arch-$ARCH ]; then
-            continue
+        if [ -n "$APP_ABI" ]; then
+            if [ "$ARCH" != "$(convert_abi_to_arch $APP_ABI)" ]; then
+                continue
+            fi
         fi
         HEADERS=$(cd $ANDROID_NDK_ROOT/platforms/android-$API_LEVEL/arch-$ARCH/usr/include ; ls *.h sys/*.h android/*.h EGL/*.h GLES/*.h GLES2/*.h GLES3/*.h OMXAL/*.h SLES/*.h 2> /dev/null)
         #echo $API_LEVEL $ARCH HEADERS=$HEADERS
