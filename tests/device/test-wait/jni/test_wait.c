@@ -90,21 +90,6 @@ static int check_waitpid(pid_t child_pid) {
   return WEXITSTATUS(status);
 }
 
-// wait3 was removed from POSIX 2004 and is not in Bionic's LP64 ABIs.
-#if !defined(__LP64__)
-// To be called by check_wait_call() to check wait3()
-static int check_wait3(pid_t child_pid) {
-  int status = 0;
-  struct rusage ru;
-  pid_t ret = wait3(&status, 0, &ru);
-  if (ret != child_pid) {
-    fprintf(stderr, "ERROR: wait3() returned %d, expected %d\n", ret, child_pid);
-    return -1;
-  }
-  return WEXITSTATUS(status);
-}
-#endif
-
 // To be called by check_wait_call() to check wait3()
 static int check_wait4(pid_t child_pid) {
   int status = 0;
@@ -124,12 +109,6 @@ int main(int argc, char *argv[]) {
   if (!check_wait_call("waitpid", check_waitpid, CHILD_EXIT_CODE + 1)) {
     return EXIT_FAILURE;
   }
-// wait3 was removed from POSIX 2004 and is not in Bionic's LP64 ABIs.
-#if !defined(__LP64__)
-  if (!check_wait_call("wait3", check_wait3, CHILD_EXIT_CODE + 2)) {
-    return EXIT_FAILURE;
-  }
-#endif
   if (!check_wait_call("wait4", check_wait4, CHILD_EXIT_CODE + 3)) {
     return EXIT_FAILURE;
   }
