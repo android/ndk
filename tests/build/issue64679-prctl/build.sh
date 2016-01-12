@@ -92,7 +92,7 @@ include \$(BUILD_STATIC_LIBRARY)
 
 EOF
             echo "Checking headers for android-$API_LEVEL/$ABI"
-            $ANDROID_NDK_ROOT/ndk-build -C "$PROJECT_DIR" -B -j$JOBS 1>/dev/null 2>&1
+            $ANDROID_NDK_ROOT/ndk-build -C "$PROJECT_DIR" -B -j$JOBS V=1 1>/dev/null 2>&1
             fail_panic "Can't compile header for android-$API_LEVEL/$ABI, to reproduce: $ANDROID_NDK_ROOT/ndk-build -C $PROJECT_DIR"
 
             rm -rf "$PROJECT_DIR"
