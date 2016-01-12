@@ -306,7 +306,7 @@ class ArgParser(argparse.ArgumentParser):
             help='Clobber out directory if it exists.')
         self.add_argument(
             '--package-dir', type=os.path.realpath,
-            default=build_support.get_default_package_dir(),
+            default=build_support.get_dist_dir(build_support.get_out_dir()),
             help='Directory containing NDK modules.')
         self.add_argument(
             '--unpack', action='store_true',
