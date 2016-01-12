@@ -29,7 +29,7 @@ if [ -z "$APP_ABI" -o "$APP_ABI" = "all" -o "$APP_ABI" != "${APP_ABI%%armeabi-v7
     fail_panic "armeabi-v7a doesn't use rev instruction for __swap32()"
 fi
 
-if [ -z "$APP_ABI" -o "$APP_ABI" = "all" -o "$APP_ABI" != "${APP_ABI%%x86*}" ]; then
+if [ -z "$APP_ABI" -o "$APP_ABI" = "all" -o "$APP_ABI" != "${APP_ABI%%x86}" ]; then
     # checking x86
     $NDK/ndk-build -B APP_ABI=x86 APP_CFLAGS=-save-temps NDK_DEBUG=1
     fail_panic "can't compile for x86"
@@ -39,7 +39,7 @@ if [ -z "$APP_ABI" -o "$APP_ABI" = "all" -o "$APP_ABI" != "${APP_ABI%%x86*}" ]; 
     fail_panic "x86 doesn't use bswap instruction for __swap32()"
 fi
 
-if [ -z "$APP_ABI" -o "$APP_ABI" = "all" -o "$APP_ABI" != "${APP_ABI%%mips*}" ]; then
+if [ -z "$APP_ABI" -o "$APP_ABI" = "all" -o "$APP_ABI" != "${APP_ABI%%mips}" ]; then
     # checking mips
     # Note that MD_SWAP in machine/endian.h is only defined for r2.  Add
     # -mips32r2 because default Android toolchain support r1
