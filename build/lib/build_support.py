@@ -135,10 +135,11 @@ def jobs_arg():
     return '-j{}'.format(multiprocessing.cpu_count() * 2)
 
 
-def build(cmd, args):
+def build(cmd, args, intermediate_package=False):
+    package_dir = args.out_dir if intermediate_package else args.dist_dir
     common_args = [
         '--verbose',
-        '--package-dir={}'.format(args.package_dir),
+        '--package-dir={}'.format(package_dir),
     ]
 
     build_env = dict(os.environ)
@@ -147,12 +148,19 @@ def build(cmd, args):
     subprocess.check_call(cmd + common_args, env=build_env)
 
 
-def get_default_package_dir():
-    DEFAULT_OUT_DIR = android_path('out/ndk')
-    out_dir = os.path.realpath(os.getenv('DIST_DIR', DEFAULT_OUT_DIR))
-    if not os.path.isdir(out_dir):
-        os.makedirs(out_dir)
-    return out_dir
+def _get_dir_from_env(default, env_var):
+    path = os.path.realpath(os.getenv(env_var, default))
+    if not os.path.isdir(path):
+        os.makedirs(path)
+    return path
+
+
+def get_out_dir():
+    return _get_dir_from_env(android_path('out'), 'OUT_DIR')
+
+
+def get_dist_dir(out_dir):
+    return _get_dir_from_env(os.path.join(out_dir, 'dist'), 'DIST_DIR')
 
 
 def get_default_host():
@@ -239,9 +247,17 @@ class ArgParser(argparse.ArgumentParser):
             '--host', choices=('darwin', 'linux', 'windows', 'windows64'),
             default=get_default_host(),
             help='Build binaries for given OS (e.g. linux).')
+
         self.add_argument(
-            '--package-dir', help='Directory to place the packaged artifact.',
-            type=os.path.realpath, default=get_default_package_dir())
+            '--out-dir', help='Directory to place temporary build files.',
+            type=os.path.realpath, default=get_out_dir())
+
+        # The default for --dist-dir has to be handled after parsing all
+        # arguments because the default is derived from --out-dir. This is
+        # handled in run().
+        self.add_argument(
+            '--dist-dir', help='Directory to place the packaged artifact.',
+            type=os.path.realpath)
 
 
 def run(main_func, arg_parser=ArgParser):
@@ -250,6 +266,9 @@ def run(main_func, arg_parser=ArgParser):
         os.environ['ANDROID_BUILD_TOP'] = os.path.realpath(top)
 
     args = arg_parser().parse_args()
+
+    if args.dist_dir is None:
+        args.dist_dir = get_dist_dir(args.out_dir)
 
     # We want any paths to be relative to the invoked build script.
     main_filename = os.path.realpath(sys.modules['__main__'].__file__)
