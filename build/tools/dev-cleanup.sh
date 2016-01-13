@@ -47,9 +47,6 @@ rm -rf $DIR/$GCCUNWIND_SUBDIR/libs
 rm -rf $DIR/$LIBCXX_SUBDIR/libs
 rm -rf $DIR/$SUPPORT_SUBDIR/libs
 
-rm -f $DIR/ndk-stack*
-rm -f $DIR/ndk-depends*
-
 clean_dir ()
 {
     if [ -d "$1" ] ; then

@@ -105,7 +105,12 @@ fail_panic "Can't configure $BINUTILS_SRC_DIR"
 run make -j$NUM_JOBS
 fail_panic "Can't build $BINUTILS_SRC_DIR"
 
-OUT=$NDK_DIR/$(get_host_exec_name ndk-stack)
+NAME=$(get_host_exec_name ndk-stack)
+INSTALL_ROOT=$(mktemp -d $NDK_TMPDIR/ndk-stack-XXXXXX)
+INSTALL_SUBDIR=host-tools/bin
+INSTALL_PATH=$INSTALL_ROOT/$INSTALL_SUBDIR
+OUT=$INSTALL_PATH/$NAME
+mkdir $INSTALL_PATH
 
 # GNU Make
 if [ -z "$GNUMAKE" ]; then
@@ -163,9 +168,8 @@ fi
 
 if [ "$PACKAGE_DIR" ]; then
     ARCHIVE=ndk-stack-$HOST_TAG.tar.bz2
-    SUBDIR=$(get_host_exec_name ndk-stack $HOST_TAG)
     dump "Packaging: $ARCHIVE"
-    pack_archive "$PACKAGE_DIR/$ARCHIVE" "$NDK_DIR" "$SUBDIR"
+    pack_archive "$PACKAGE_DIR/$ARCHIVE" "$INSTALL_ROOT" "$INSTALL_SUBDIR"
     fail_panic "Could not create package: $PACKAGE_DIR/$ARCHIVE from $OUT"
 fi
 

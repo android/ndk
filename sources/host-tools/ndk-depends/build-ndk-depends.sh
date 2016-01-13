@@ -79,7 +79,12 @@ else
     EXTRA_CONFIG="-target=arm-linux-androideabi"
 fi
 
-OUT=$NDK_DIR/$(get_host_exec_name ndk-depends)
+NAME=$(get_host_exec_name ndk-depends)
+INSTALL_ROOT=$(mktemp -d $NDK_TMPDIR/ndk-depends-XXXXXX)
+INSTALL_SUBDIR=host-tools/bin
+INSTALL_PATH=$INSTALL_ROOT/$INSTALL_SUBDIR
+OUT=$INSTALL_PATH/$NAME
+mkdir $INSTALL_PATH
 
 # GNU Make
 if [ -z "$GNUMAKE" ]; then
@@ -117,9 +122,8 @@ fi
 
 if [ "$PACKAGE_DIR" ]; then
     ARCHIVE=ndk-depends-$HOST_TAG.tar.bz2
-    SUBDIR=$(get_host_exec_name ndk-depends $HOST_TAG)
     dump "Packaging: $ARCHIVE"
-    pack_archive "$PACKAGE_DIR/$ARCHIVE" "$NDK_DIR" "$SUBDIR"
+    pack_archive "$PACKAGE_DIR/$ARCHIVE" "$INSTALL_ROOT" "$INSTALL_SUBDIR"
     fail_panic "Could not create package: $PACKAGE_DIR/$ARCHIVE from $OUT"
 fi
 
