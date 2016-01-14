@@ -122,9 +122,9 @@ def invoke_external_build(script, args=None):
     _invoke_build(build_support.android_path(script), args)
 
 
-def package_ndk(out_dir, args):
-    package_args = common_build_args(out_dir, args)
-    package_args.append(out_dir)
+def package_ndk(out_dir, dist_dir, args):
+    package_args = common_build_args(out_dir, dist_dir, args)
+    package_args.append(dist_dir)
 
     if args.release is not None:
         package_args.append('--release={}'.format(args.release))
@@ -180,8 +180,9 @@ def test_ndk(out_dir, args):
         shutil.rmtree(unpack_dir)
 
 
-def common_build_args(out_dir, args):
-    build_args = ['--package-dir={}'.format(out_dir)]
+def common_build_args(out_dir, dist_dir, args):
+    build_args = ['--out-dir={}'.format(out_dir)]
+    build_args = ['--dist-dir={}'.format(dist_dir)]
     build_args.append('--host={}'.format(args.system))
     return build_args
 
@@ -285,7 +286,7 @@ def get_prebuilt_gcc(host, arch):
     return os.path.join(system_path, toolchain_dir)
 
 
-def build_binutils(out_dir, args):
+def build_binutils(out_dir, dist_dir, args):
     print('Extracting binutils package from GCC...')
 
     arches = build_support.ALL_ARCHITECTURES
@@ -299,45 +300,44 @@ def build_binutils(out_dir, args):
         toolchain_path = get_prebuilt_gcc(args.system, arch)
 
         triple = fixup_toolchain_triple(toolchain)
-        tmpdir = tempfile.mkdtemp()
-        try:
-            install_dir = os.path.join(tmpdir, 'binutils', triple)
-            os.makedirs(install_dir)
 
-            has_gold = True
-            if host_tag == 'windows':
-                # Note: 64-bit Windows is fine.
-                has_gold = False
-            if arch in ('mips', 'mips64'):
-                has_gold = False
+        install_dir = os.path.join(out_dir, 'binutils', triple)
+        if os.path.exists(install_dir):
+            shutil.rmtree(install_dir)
+        os.makedirs(install_dir)
 
-            is_windows = host_tag.startswith('windows')
-            for file_name in get_binutils_files(triple, has_gold, is_windows):
-                install_file(file_name, toolchain_path, install_dir)
+        has_gold = True
+        if host_tag == 'windows':
+            # Note: 64-bit Windows is fine.
+            has_gold = False
+        if arch in ('mips', 'mips64'):
+            has_gold = False
 
-            license_path = build_support.android_path(
-                'toolchain/binutils/binutils-2.25/COPYING')
-            shutil.copy2(license_path, os.path.join(install_dir, 'NOTICE'))
+        is_windows = host_tag.startswith('windows')
+        for file_name in get_binutils_files(triple, has_gold, is_windows):
+            install_file(file_name, toolchain_path, install_dir)
 
-            pack_binutils(arch, host_tag, out_dir, install_dir)
-        finally:
-            shutil.rmtree(tmpdir)
+        license_path = build_support.android_path(
+            'toolchain/binutils/binutils-2.25/COPYING')
+        shutil.copy2(license_path, os.path.join(install_dir, 'NOTICE'))
+
+        pack_binutils(arch, host_tag, dist_dir, install_dir)
 
 
-def build_clang(out_dir, args):
+def build_clang(out_dir, dist_dir, args):
     print('Building Clang...')
-    invoke_build('build-llvm.py', common_build_args(out_dir, args))
+    invoke_build('build-llvm.py', common_build_args(out_dir, dist_dir, args))
 
 
-def build_gcc(out_dir, args):
+def build_gcc(out_dir, dist_dir, args):
     print('Building GCC...')
-    build_args = common_build_args(out_dir, args)
+    build_args = common_build_args(out_dir, dist_dir, args)
     if args.arch is not None:
         build_args.append('--arch={}'.format(args.arch))
     invoke_build('build-gcc.py', build_args)
 
 
-def build_gcc_libs(out_dir, args):
+def build_gcc_libs(out_dir, dist_dir, args):
     print('Packaging GCC libs...')
 
     arches = build_support.ALL_ARCHITECTURES
@@ -371,35 +371,33 @@ def build_gcc_libs(out_dir, args):
             for subdir, lib in lib_names:
                 libs.append((subdir, os.path.join(lib_dir, lib)))
 
-        tmpdir = tempfile.mkdtemp()
-        try:
-            install_dir = os.path.join(tmpdir, 'gcclibs', triple)
-            os.makedirs(install_dir)
+        install_dir = os.path.join(out_dir, 'gcclibs', triple)
+        if os.path.exists(install_dir):
+            shutil.rmtree(install_dir)
+        os.makedirs(install_dir)
 
-            # These are target libraries, so the OS we use here is not
-            # important. We explicitly use Linux because for whatever reason
-            # the Windows aarch64 toolchain doesn't include libatomic.
-            gcc_path = get_prebuilt_gcc('linux', arch)
-            for gcc_subdir, lib in libs:
-                src = os.path.join(gcc_path, gcc_subdir, lib)
-                dst = os.path.join(install_dir, lib)
-                dst_dir = os.path.dirname(dst)
-                if not os.path.exists(dst_dir):
-                    os.makedirs(dst_dir)
-                shutil.copy2(src, dst)
+        # These are target libraries, so the OS we use here is not
+        # important. We explicitly use Linux because for whatever reason
+        # the Windows aarch64 toolchain doesn't include libatomic.
+        gcc_path = get_prebuilt_gcc('linux', arch)
+        for gcc_subdir, lib in libs:
+            src = os.path.join(gcc_path, gcc_subdir, lib)
+            dst = os.path.join(install_dir, lib)
+            dst_dir = os.path.dirname(dst)
+            if not os.path.exists(dst_dir):
+                os.makedirs(dst_dir)
+            shutil.copy2(src, dst)
 
-                shutil.copy2(
-                    os.path.join(gcc_path, 'NOTICE'),
-                    os.path.join(install_dir, 'NOTICE'))
+            shutil.copy2(
+                os.path.join(gcc_path, 'NOTICE'),
+                os.path.join(install_dir, 'NOTICE'))
 
-                archive_name = os.path.join(out_dir, 'gcclibs-' + arch)
-                build_support.make_package(archive_name, install_dir, out_dir)
-        finally:
-            shutil.rmtree(tmpdir)
+        archive_name = os.path.join('gcclibs-' + arch)
+        build_support.make_package(archive_name, install_dir, dist_dir)
 
 
-def build_host_tools(out_dir, args):
-    build_args = common_build_args(out_dir, args)
+def build_host_tools(out_dir, dist_dir, args):
+    build_args = common_build_args(out_dir, dist_dir, args)
 
     print('Building ndk-stack...')
     invoke_external_build(
@@ -431,7 +429,7 @@ def build_host_tools(out_dir, args):
     print('Building YASM...')
     invoke_external_build('toolchain/yasm/build.py', build_args)
 
-    package_host_tools(out_dir, args.system)
+    package_host_tools(out_dir, dist_dir, args.system)
 
 
 def merge_license_files(output_path, files):
@@ -444,7 +442,7 @@ def merge_license_files(output_path, files):
         output_file.write('\n'.join(licenses))
 
 
-def package_host_tools(out_dir, host):
+def package_host_tools(out_dir, dist_dir, host):
     packages = [
         'gdb-multiarch-7.10',
         'ndk-awk',
@@ -467,109 +465,106 @@ def package_host_tools(out_dir, host):
     host_tag = build_support.host_to_tag(host)
 
     package_names = [p + '-' + host_tag + '.tar.bz2' for p in packages]
-    temp_dir = tempfile.mkdtemp()
-    try:
-        for package_name in package_names:
-            package_path = os.path.join(out_dir, package_name)
-            subprocess.check_call(['tar', 'xf', package_path, '-C', temp_dir])
+    for package_name in package_names:
+        package_path = os.path.join(out_dir, package_name)
+        subprocess.check_call(['tar', 'xf', package_path, '-C', out_dir])
 
-        for f in files:
-            shutil.copy2(f, os.path.join(temp_dir, 'host-tools/bin'))
+    for f in files:
+        shutil.copy2(f, os.path.join(out_dir, 'host-tools/bin'))
 
-        merge_license_files(os.path.join(temp_dir, 'host-tools/NOTICE'), [
-            build_support.android_path('toolchain/gdb/gdb-7.10/COPYING'),
-            build_support.ndk_path('sources/host-tools/nawk-20071023/NOTICE'),
-            build_support.ndk_path('sources/host-tools/ndk-depends/NOTICE'),
-            build_support.ndk_path('sources/host-tools/make-3.81/COPYING'),
-            build_support.android_path(
-                'toolchain/python/Python-2.7.5/LICENSE'),
-            build_support.ndk_path('sources/host-tools/ndk-stack/NOTICE'),
-            build_support.ndk_path('sources/host-tools/toolbox/NOTICE'),
-            build_support.android_path('toolchain/yasm/COPYING'),
-            build_support.android_path('toolchain/yasm/BSD.txt'),
-            build_support.android_path('toolchain/yasm/Artistic.txt'),
-            build_support.android_path('toolchain/yasm/GNU_GPL-2.0'),
-            build_support.android_path('toolchain/yasm/GNU_LGPL-2.0'),
-        ])
+    merge_license_files(os.path.join(out_dir, 'host-tools/NOTICE'), [
+        build_support.android_path('toolchain/gdb/gdb-7.10/COPYING'),
+        build_support.ndk_path('sources/host-tools/nawk-20071023/NOTICE'),
+        build_support.ndk_path('sources/host-tools/ndk-depends/NOTICE'),
+        build_support.ndk_path('sources/host-tools/make-3.81/COPYING'),
+        build_support.android_path(
+            'toolchain/python/Python-2.7.5/LICENSE'),
+        build_support.ndk_path('sources/host-tools/ndk-stack/NOTICE'),
+        build_support.ndk_path('sources/host-tools/toolbox/NOTICE'),
+        build_support.android_path('toolchain/yasm/COPYING'),
+        build_support.android_path('toolchain/yasm/BSD.txt'),
+        build_support.android_path('toolchain/yasm/Artistic.txt'),
+        build_support.android_path('toolchain/yasm/GNU_GPL-2.0'),
+        build_support.android_path('toolchain/yasm/GNU_LGPL-2.0'),
+    ])
 
-        package_name = 'host-tools-' + host_tag
-        path = os.path.join(temp_dir, 'host-tools')
-        build_support.make_package(package_name, path, out_dir)
-    finally:
-        shutil.rmtree(temp_dir)
+    package_name = 'host-tools-' + host_tag
+    path = os.path.join(out_dir, 'host-tools')
+    build_support.make_package(package_name, path, dist_dir)
 
 
-def build_gdbserver(out_dir, args):
+def build_gdbserver(out_dir, dist_dir, args):
     print('Building gdbserver...')
-    build_args = common_build_args(out_dir, args)
+    build_args = common_build_args(out_dir, dist_dir, args)
     if args.arch is not None:
         build_args.append('--arch={}'.format(args.arch))
     invoke_build('build-gdbserver.py', build_args)
 
 
-def _build_stl(out_dir, args, stl):
-    build_args = common_build_args(out_dir, args)
+def _build_stl(out_dir, dist_dir, args, stl):
+    build_args = common_build_args(out_dir, dist_dir, args)
     if args.arch is not None:
         build_args.append('--arch={}'.format(args.arch))
     script = 'ndk/sources/cxx-stl/{}/build.py'.format(stl)
     invoke_external_build(script, build_args)
 
 
-def build_gnustl(out_dir, args):
+def build_gnustl(out_dir, dist_dir, args):
     print('Building gnustl...')
-    _build_stl(out_dir, args, 'gnu-libstdc++')
+    _build_stl(out_dir, dist_dir, args, 'gnu-libstdc++')
 
 
-def build_libcxx(out_dir, args):
+def build_libcxx(out_dir, dist_dir, args):
     print('Building libc++...')
-    _build_stl(out_dir, args, 'llvm-libc++')
+    _build_stl(out_dir, dist_dir, args, 'llvm-libc++')
 
 
-def build_stlport(out_dir, args):
+def build_stlport(out_dir, dist_dir, args):
     print('Building stlport...')
-    _build_stl(out_dir, args, 'stlport')
+    _build_stl(out_dir, dist_dir, args, 'stlport')
 
 
-def build_platforms(out_dir, args):
+def build_platforms(out_dir, dist_dir, args):
     print('Building platforms...')
-    invoke_build('build-platforms.py', common_build_args(out_dir, args))
+    build_args = common_build_args(out_dir, dist_dir, args)
+    invoke_build('build-platforms.py', build_args)
 
 
-def build_cpufeatures(out_dir, _):
+def build_cpufeatures(_, dist_dir, __):
     path = build_support.ndk_path('sources/android/cpufeatures')
-    build_support.make_package('cpufeatures', path, out_dir)
+    build_support.make_package('cpufeatures', path, dist_dir)
 
 
-def build_native_app_glue(out_dir, _):
+def build_native_app_glue(_, dist_dir, __):
     path = build_support.android_path(
         'development/ndk/sources/android/native_app_glue')
-    build_support.make_package('native_app_glue', path, out_dir)
+    build_support.make_package('native_app_glue', path, dist_dir)
 
 
-def build_ndk_helper(out_dir, _):
+def build_ndk_helper(_, dist_dir, __):
     path = build_support.android_path(
         'development/ndk/sources/android/ndk_helper')
-    build_support.make_package('ndk_helper', path, out_dir)
+    build_support.make_package('ndk_helper', path, dist_dir)
 
 
-def build_gtest(out_dir, _):
+def build_gtest(_, dist_dir, __):
     path = build_support.ndk_path('sources/third_party/googletest')
-    build_support.make_package('gtest', path, out_dir)
+    build_support.make_package('gtest', path, dist_dir)
 
 
-def build_build(out_dir, _):
+def build_build(_, dist_dir, __):
     path = build_support.ndk_path('build')
-    build_support.make_package('build', path, out_dir)
+    build_support.make_package('build', path, dist_dir)
 
 
-def build_python_packages(out_dir, _):
+def build_python_packages(_, dist_dir, __):
     # Stage the files in a temporary directory to make things easier.
     temp_dir = tempfile.mkdtemp()
     try:
         path = os.path.join(temp_dir, 'python-packages')
         shutil.copytree(
             build_support.android_path('development/python-packages'), path)
-        build_support.make_package('python-packages', path, out_dir)
+        build_support.make_package('python-packages', path, dist_dir)
     finally:
         shutil.rmtree(temp_dir)
 
@@ -611,12 +606,9 @@ def main():
     # Set ANDROID_BUILD_TOP.
     if 'ANDROID_BUILD_TOP' not in os.environ:
         os.environ['ANDROID_BUILD_TOP'] = os.path.realpath('..')
-    build_top = os.getenv('ANDROID_BUILD_TOP')
 
-    DEFAULT_OUT_DIR = os.path.join(build_top, 'out/ndk')
-    out_dir = os.path.realpath(os.getenv('DIST_DIR', DEFAULT_OUT_DIR))
-    if not os.path.isdir(out_dir):
-        os.makedirs(out_dir)
+    out_dir = build_support.get_out_dir()
+    dist_dir = build_support.get_dist_dir(out_dir)
 
     print('Cleaning up...')
     invoke_build('dev-cleanup.sh')
@@ -642,13 +634,13 @@ def main():
 
     print('Building modules: {}'.format(' '.join(modules)))
     for module in modules:
-        module_builds[module](out_dir, args)
+        module_builds[module](out_dir, dist_dir, args)
 
     if do_package:
-        package_ndk(out_dir, args)
+        package_ndk(out_dir, dist_dir, args)
 
     if args.test:
-        result = test_ndk(out_dir, args)
+        result = test_ndk(dist_dir, args)
         sys.exit(0 if result else 1)
 
 

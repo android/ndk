@@ -38,7 +38,7 @@ def main(args):
     LLVM_VERSION = 'clang-2481030'
 
     host = args.host
-    package_dir = args.package_dir
+    package_dir = args.dist_dir
 
     # TODO(danalbert): Fix 64-bit Windows LLVM.
     # This wrongly packages 32-bit Windows LLVM for 64-bit as well, but the

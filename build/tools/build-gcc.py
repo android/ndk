@@ -65,7 +65,7 @@ def main(args):
 
     host_tag = build_support.host_to_tag(args.host)
     for arch in arches:
-        package_gcc(args.package_dir, host_tag, arch, GCC_VERSION)
+        package_gcc(args.dist_dir, host_tag, arch, GCC_VERSION)
 
 
 if __name__ == '__main__':
