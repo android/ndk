@@ -714,7 +714,6 @@ for ARCH in $ARCHS; do
                     copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib $SYSROOT_DST/lib "mips -mabi=32 -mips32 sysroot libs"
                     copy_src_directory $PLATFORM_SRC/arch-$ARCH/libr2 $SYSROOT_DST/libr2 "mips -mabi=32 -mips32r2 sysroot libs"
                     copy_src_directory $PLATFORM_SRC/arch-$ARCH/libr6 $SYSROOT_DST/libr6 "mips -mabi=32 -mips32r6 sysroot libs"
-                    copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib64r2 $SYSROOT_DST/lib64r2 "mips -mabi=64 -mips64r2 sysroot libs"
                     copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib64 $SYSROOT_DST/lib64 "mips -mabi=64 -mips64r6 sysroot libs"
                     ;;
                 mips)
@@ -746,7 +745,6 @@ for ARCH in $ARCHS; do
                     gen_crt_objects $PLATFORM $ARCH platforms/common/src $PLATFORM_SRC_ARCH $SYSROOT_DST/lib "-mabi=32 -mips32"
                     gen_crt_objects $PLATFORM $ARCH platforms/common/src $PLATFORM_SRC_ARCH $SYSROOT_DST/libr2 "-mabi=32 -mips32r2"
                     gen_crt_objects $PLATFORM $ARCH platforms/common/src $PLATFORM_SRC_ARCH $SYSROOT_DST/libr6 "-mabi=32 -mips32r6"
-                    gen_crt_objects $PLATFORM $ARCH platforms/common/src $PLATFORM_SRC_ARCH $SYSROOT_DST/lib64r2 "-mabi=64 -mips64r2"
                     gen_crt_objects $PLATFORM $ARCH platforms/common/src $PLATFORM_SRC_ARCH $SYSROOT_DST/lib64 "-mabi=64 -mips64r6"
                     ;;
                 mips)
@@ -770,7 +768,6 @@ for ARCH in $ARCHS; do
                     gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $SYSROOT_DST/lib "-mabi=32 -mips32"
                     gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $SYSROOT_DST/libr2 "-mabi=32 -mips32r2"
                     gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $SYSROOT_DST/libr6 "-mabi=32 -mips32r6"
-                    gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $SYSROOT_DST/lib64r2 "-mabi=64 -mips64r2"
                     gen_shared_libraries $ARCH $PLATFORM_SRC/arch-$ARCH/symbols $SYSROOT_DST/lib64 "-mabi=64 -mips64r6"
                     ;;
                 mips)
@@ -794,7 +791,6 @@ for ARCH in $ARCHS; do
                     copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib-bootstrap/lib $SYSROOT_DST/lib "mips -mabi=32 -mips32 sysroot libs (boostrap)"
                     copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib-bootstrap/libr2 $SYSROOT_DST/libr2 "mips -mabi=32 -mips32r2 sysroot libs (boostrap)"
                     copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib-bootstrap/libr6 $SYSROOT_DST/libr6 "mips -mabi=32 -mips32r6 sysroot libs (boostrap)"
-                    copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib-bootstrap/lib64r2 $SYSROOT_DST/lib64r2 "mips -mabi=64 -mips64r2 sysroot libs (boostrap)"
                     copy_src_directory $PLATFORM_SRC/arch-$ARCH/lib-bootstrap/lib64 $SYSROOT_DST/lib64 "mips -mabi=64 -mips64r6 sysroot libs (boostrap)"
                     ;;
                 mips)
