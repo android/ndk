@@ -32,7 +32,8 @@ LLVM_TOOLCHAIN_PREFIX := $(LLVM_TOOLCHAIN_PREBUILT_ROOT)/bin/
 
 TOOLCHAIN_NAME := mipsel-linux-android
 BINUTILS_ROOT := $(call get-binutils-root,$(NDK_ROOT),$(TOOLCHAIN_NAME))
-TOOLCHAIN_PREFIX := $(BINUTILS_ROOT)/bin/$(TOOLCHAIN_NAME)-
+TOOLCHAIN_ROOT := $(call get-toolchain-root,$(NDK_ROOT),$(TOOLCHAIN_NAME)-4.9)
+TOOLCHAIN_PREFIX := $(TOOLCHAIN_ROOT)/bin/$(TOOLCHAIN_NAME)-
 
 TARGET_CC := $(LLVM_TOOLCHAIN_PREFIX)clang$(HOST_EXEEXT)
 TARGET_CXX := $(LLVM_TOOLCHAIN_PREFIX)clang++$(HOST_EXEEXT)
@@ -44,7 +45,7 @@ TARGET_CXX := $(LLVM_TOOLCHAIN_PREFIX)clang++$(HOST_EXEEXT)
 LLVM_TRIPLE := mipsel-none-linux-android
 
 TARGET_CFLAGS := \
-    -B $(call host-path,$(BINUTILS_ROOT))/$(TOOLCHAIN_NAME)/bin \
+    -gcc-toolchain $(call host-path,$(TOOLCHAIN_ROOT)) \
     -target $(LLVM_TRIPLE) \
     -fpic \
     -fno-strict-aliasing \
@@ -58,8 +59,7 @@ TARGET_CFLAGS := \
     -no-canonical-prefixes
 
 TARGET_LDFLAGS += \
-    -B $(call host-path,$(BINUTILS_ROOT))/$(TOOLCHAIN_NAME)/bin \
-    -L $(call get-gcclibs-path,$(NDK_ROOT),$(TOOLCHAIN_NAME)) \
+    -gcc-toolchain $(call host-path,$(TOOLCHAIN_ROOT)) \
     -target $(LLVM_TRIPLE) \
     -no-canonical-prefixes
 
