@@ -32,7 +32,8 @@ LLVM_TOOLCHAIN_PREFIX := $(LLVM_TOOLCHAIN_PREBUILT_ROOT)/bin/
 
 TOOLCHAIN_NAME := arm-linux-androideabi
 BINUTILS_ROOT := $(call get-binutils-root,$(NDK_ROOT),$(TOOLCHAIN_NAME))
-TOOLCHAIN_PREFIX := $(BINUTILS_ROOT)/bin/$(TOOLCHAIN_NAME)-
+TOOLCHAIN_ROOT := $(call get-toolchain-root,$(NDK_ROOT),$(TOOLCHAIN_NAME)-4.9)
+TOOLCHAIN_PREFIX := $(TOOLCHAIN_ROOT)/bin/$(TOOLCHAIN_NAME)-
 
 TARGET_CC := $(LLVM_TOOLCHAIN_PREFIX)clang$(HOST_EXEEXT)
 TARGET_CXX := $(LLVM_TOOLCHAIN_PREFIX)clang++$(HOST_EXEEXT)
@@ -42,7 +43,7 @@ TARGET_CXX := $(LLVM_TOOLCHAIN_PREFIX)clang++$(HOST_EXEEXT)
 #
 
 TARGET_CFLAGS := \
-    -B $(call host-path,$(BINUTILS_ROOT))/$(TOOLCHAIN_NAME)/bin \
+    -gcc-toolchain $(call host-path,$(TOOLCHAIN_ROOT)) \
     -fpic \
     -ffunction-sections \
     -funwind-tables \
@@ -56,7 +57,7 @@ TARGET_CFLAGS += \
     -fno-integrated-as
 
 TARGET_LDFLAGS += \
-    -B $(call host-path,$(BINUTILS_ROOT))/$(TOOLCHAIN_NAME)/bin \
+    -gcc-toolchain $(call host-path,$(TOOLCHAIN_ROOT)) \
     -no-canonical-prefixes
 
 ifneq ($(filter %armeabi-v7a,$(TARGET_ARCH_ABI)),)
@@ -102,8 +103,6 @@ endif
 endif
 
 GCCLIB_ROOT := $(call get-gcclibs-path,$(NDK_ROOT),$(TOOLCHAIN_NAME))
-TARGET_arm_LDFLAGS += -L $(GCCLIB_ROOT)/$(GCCLIB_SUBDIR)
-TARGET_thumb_LDFLAGS += -L $(GCCLIB_ROOT)/$(GCCLIB_SUBDIR)/thumb
 
 TARGET_CFLAGS.neon := -mfpu=neon
 
