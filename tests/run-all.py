@@ -43,6 +43,7 @@ import tempfile
 
 import adb
 import filters
+import ndk
 import printers
 import tests
 
@@ -171,7 +172,8 @@ def can_use_asan(abi, api, toolchain):
 
 def asan_device_setup():
     path = os.path.join(
-        os.environ['NDK'], 'toolchains', 'llvm', 'bin', 'asan_device_setup')
+        os.environ['NDK'], 'toolchains', 'llvm', 'prebuilt',
+        ndk.get_host_tag(), 'bin', 'asan_device_setup')
     subprocess.check_call([path])
 
 
