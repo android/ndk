@@ -58,16 +58,13 @@ class Configuration(libcxx.test.config.Configuration):
         # Configure libc++ library paths.
         self.cxx.link_flags.append('-L' + self.cxx_library_root)
 
-        triple = self.get_lit_conf('target_triple')
-        binutils_dir = os.path.join(
-            self.get_lit_conf('binutils_path'), triple, 'bin')
-        self.cxx.link_flags.append('-B' + binutils_dir)
-
-        gcclibs_dir = os.path.join(
-            os.environ['NDK'], 'gcclibs', triple)
-        self.cxx.link_flags.append('-L' + gcclibs_dir)
+        gcc_toolchain = self.get_lit_conf('gcc_toolchain')
+        self.cxx.link_flags.append('-gcc-toolchain')
+        self.cxx.link_flags.append(gcc_toolchain)
 
         self.cxx.link_flags.append('-lgcc')
+
+        triple = self.get_lit_conf('target_triple')
         if triple.startswith('arm-'):
             self.cxx.link_flags.append('-latomic')
 
