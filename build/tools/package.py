@@ -107,12 +107,10 @@ def get_all_packages(host, arches):
     ]
 
     old_layout = [
-        ('binutils-{arch}-{host}', 'binutils/{triple}'),
         ('build', 'build'),
         ('cpufeatures', 'sources/android/cpufeatures'),
         ('gabixx', 'sources/cxx-stl/gabi++'),
         ('gcc-{arch}-{host}', 'toolchains/{toolchain}-4.9/prebuilt/{host}'),
-        ('gcclibs-{arch}', 'gcclibs/{triple}'),
         ('gdbserver-{arch}', 'prebuilt/android-{arch}/gdbserver'),
         ('gnustl-4.9', 'sources/cxx-stl/gnu-libstdc++/4.9'),
         ('gtest', 'sources/third_party/googletest'),

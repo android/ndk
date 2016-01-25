@@ -39,7 +39,7 @@ ALL_TRIPLES = (
     'aarch64-linux-android',
     'mipsel-linux-android',
     'mips64el-linux-android',
-    'x86-linux-android',
+    'i686-linux-android',
     'x86_64-linux-android',
 )
 

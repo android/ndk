@@ -26,21 +26,25 @@ THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 NDK_ROOT = os.path.realpath(os.path.join(THIS_DIR, '..'))
 
 
-def get_tool(tool):
-    ext = ''
-    if sys.platform == 'win32':
-        ext = '.exe'
-
+def get_host_tag():
     if sys.platform.startswith('linux'):
-        host_tag = 'linux-x86_64'
+        return 'linux-x86_64'
     elif sys.platform == 'darwin':
-        host_tag = 'darwin-x86_64'
+        return 'darwin-x86_64'
     elif sys.platform == 'win32':
         host_tag = 'windows-x86_64'
         test_path = os.path.join(os.environ['NDK'], 'prebuilt', host_tag)
         if not os.path.exists(test_path):
             host_tag = 'windows'
+        return host_tag
 
+
+def get_tool(tool):
+    ext = ''
+    if sys.platform == 'win32':
+        ext = '.exe'
+
+    host_tag = get_host_tag()
     prebuilt_path = os.path.join(os.environ['NDK'], 'prebuilt', host_tag)
     return os.path.join(prebuilt_path, 'bin', tool) + ext
 
