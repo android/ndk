@@ -68,6 +68,9 @@ NDK
  * Removed sed.
  * Removed mclinker.
  * Removed Perl.
+ * Removed symbols which are not exported by the current platform libc/m/dl from
+   all versions of NDK libc/m/dl
+ * libc/m/dl provide versioned symbols starting with v21
 
 Binutils
 --------
