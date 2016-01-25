@@ -305,8 +305,8 @@ class ArgParser(argparse.ArgumentParser):
             '-f', '--force', dest='force', action='store_true',
             help='Clobber out directory if it exists.')
         self.add_argument(
-            '--package-dir', type=os.path.realpath,
-            default=build_support.get_default_package_dir(),
+            '--dist-dir', type=os.path.realpath,
+            default=build_support.get_dist_dir(build_support.get_out_dir()),
             help='Directory containing NDK modules.')
         self.add_argument(
             '--unpack', action='store_true',
@@ -332,15 +332,15 @@ def main():
             sys.exit(args.out_dir + ' already exists. Use -f to overwrite.')
 
     packages = get_all_packages(args.host, arches)
-    check_packages(args.package_dir, packages)
+    check_packages(args.dist_dir, packages)
 
     if args.unpack:
-        extract_all(args.package_dir, packages, args.out_dir)
+        extract_all(args.dist_dir, packages, args.out_dir)
         make_ndk_build_shortcut(args.out_dir, args.host)
     else:
         package_dir = tempfile.mkdtemp()
         try:
-            make_package(args.release, args.package_dir, packages, args.host,
+            make_package(args.release, args.dist_dir, packages, args.host,
                          args.out_dir, package_dir)
         finally:
             shutil.rmtree(package_dir)

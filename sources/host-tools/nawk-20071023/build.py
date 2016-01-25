@@ -22,7 +22,7 @@ import site
 
 site.addsitedir(os.path.join(os.path.dirname(__file__), '../../../build/lib'))
 
-import build_support
+import build_support  # pylint: disable=import-error
 
 
 def main(args):
@@ -36,7 +36,7 @@ def main(args):
     if args.host != 'windows':
         build_cmd.append('--try-64')
 
-    build_support.build(build_cmd, args)
+    build_support.build(build_cmd, args, intermediate_package=True)
 
 if __name__ == '__main__':
     build_support.run(main)
