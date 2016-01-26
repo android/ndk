@@ -85,6 +85,11 @@ llvm_libc++_sources += $(addprefix $(libcxxabi_sources_prefix:%/=%)/,$(libcxxabi
 llvm_libc++_cxxflags += -DLIBCXXABI_USE_LLVM_UNWINDER=0
 endif
 
+libcxx_ldlibs :=
+ifeq ($(TARGET_ARCH_ABI),armeabi)
+  libcxx_ldlibs += -latomic
+endif
+
 llvm_libc++_includes += $(libcxxabi_c_includes)
 llvm_libc++_export_includes += $(libcxxabi_c_includes)
 llvm_libc++_cflags += -D__STDC_FORMAT_MACROS
@@ -158,6 +163,7 @@ LOCAL_CPP_FEATURES := rtti exceptions
 LOCAL_EXPORT_C_INCLUDES := $(llvm_libc++_export_includes)
 LOCAL_EXPORT_CPPFLAGS := $(llvm_libc++_export_cxxflags)
 LOCAL_STATIC_LIBRARIES := android_support
+LOCAL_LDLIBS := $(libcxx_ldlibs)
 include $(BUILD_SHARED_LIBRARY)
 
 endif # LIBCXX_FORCE_REBUILD == true
