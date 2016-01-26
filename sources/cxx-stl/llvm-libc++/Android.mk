@@ -144,16 +144,12 @@ LOCAL_CPPFLAGS := $(llvm_libc++_cxxflags)
 LOCAL_CPP_FEATURES := rtti exceptions
 LOCAL_EXPORT_C_INCLUDES := $(llvm_libc++_export_includes)
 LOCAL_EXPORT_CPPFLAGS := $(llvm_libc++_export_cxxflags)
-LOCAL_STATIC_LIBRARIES := android_support
+LOCAL_STATIC_LIBRARIES := android_support # Needed for export includes.
 include $(BUILD_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := c++_shared
-LOCAL_SRC_FILES := $(llvm_libc++_sources)
-LOCAL_C_INCLUDES := $(android_support_c_includes) $(llvm_libc++_includes)
-LOCAL_CFLAGS := $(llvm_libc++_cflags)
-LOCAL_CPPFLAGS := $(llvm_libc++_cxxflags)
-LOCAL_CPP_FEATURES := rtti exceptions
+LOCAL_WHOLE_STATIC_LIBRARIES := c++_static
 LOCAL_EXPORT_C_INCLUDES := $(llvm_libc++_export_includes)
 LOCAL_EXPORT_CPPFLAGS := $(llvm_libc++_export_cxxflags)
 LOCAL_STATIC_LIBRARIES := android_support
