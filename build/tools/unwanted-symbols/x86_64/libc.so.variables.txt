@@ -1,1 +1,0 @@
-../arm64/libc.so.variables.txt
