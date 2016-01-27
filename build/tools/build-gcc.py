@@ -15,10 +15,14 @@
 # limitations under the License.
 #
 """Packages the platform's GCC for the NDK."""
+from __future__ import print_function
+
 import os
+import shutil
 import site
 import subprocess
 import sys
+import tempfile
 
 site.addsitedir(os.path.join(os.path.dirname(__file__), '../lib'))
 
@@ -34,8 +38,9 @@ class ArgParser(build_support.ArgParser):
             help='Architecture to build. Builds all if not present.')
 
 
-def get_gcc_prebuilt_path(host):
-    rel_prebuilt_path = 'prebuilts/ndk/current/toolchains/{}'.format(host)
+def get_gcc_prebuilt_path(host, toolchain):
+    rel_prebuilt_path = os.path.join(
+        'prebuilts/ndk/current/toolchains', toolchain, 'prebuilt', host)
     prebuilt_path = os.path.join(build_support.android_path(),
                                  rel_prebuilt_path)
     if not os.path.isdir(prebuilt_path):
@@ -45,15 +50,27 @@ def get_gcc_prebuilt_path(host):
 
 def package_gcc(package_dir, host_tag, arch, version):
     toolchain_name = build_support.arch_to_toolchain(arch) + '-' + version
-    prebuilt_path = get_gcc_prebuilt_path(host_tag)
+    prebuilt_path = get_gcc_prebuilt_path(host_tag, toolchain_name)
 
-    package_name = 'gcc-{}-{}.zip'.format(arch, host_tag)
-    package_path = os.path.join(package_dir, package_name)
-    if os.path.exists(package_path):
-        os.unlink(package_path)
-    os.chdir(prebuilt_path)
-    subprocess.check_call(
-        ['zip', '-9qr', package_path, toolchain_name])
+    # Thanks to the strange directory structure of the NDK, the directory for
+    # the toolchain is actually named as the host tag rather than the toolchain
+    # name. We need to create a correctly named directory, copy the toolchain
+    # into it, and then pack it up.
+    temp_dir = tempfile.mkdtemp()
+    try:
+        print('Copying files to temporary directory...')
+        shutil.copytree(prebuilt_path, os.path.join(temp_dir, toolchain_name))
+
+        package_name = 'gcc-{}-{}.zip'.format(arch, host_tag)
+        package_path = os.path.join(package_dir, package_name)
+        if os.path.exists(package_path):
+            os.unlink(package_path)
+        os.chdir(temp_dir)
+        print('Packaging GCC...')
+        subprocess.check_call(
+            ['zip', '-9qr', package_path, toolchain_name])
+    finally:
+        shutil.rmtree(temp_dir)
 
 
 def main(args):

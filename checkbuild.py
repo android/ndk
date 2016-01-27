@@ -279,11 +279,10 @@ def pack_binutils(arch, host_tag, out_dir, binutils_path):
 
 def get_prebuilt_gcc(host, arch):
     tag = build_support.host_to_tag(host)
-    system_subdir = 'prebuilts/ndk/current/toolchains/{}'.format(tag)
-    system_path = build_support.android_path(system_subdir)
-    toolchain = build_support.arch_to_toolchain(arch)
-    toolchain_dir = toolchain + '-4.9'
-    return os.path.join(system_path, toolchain_dir)
+    toolchain = build_support.arch_to_toolchain(arch) + '-4.9'
+    rel_path = os.path.join(
+        'prebuilts/ndk/current/toolchains', toolchain, 'prebuilt', tag)
+    return build_support.android_path(rel_path)
 
 
 def build_binutils(out_dir, dist_dir, args):
