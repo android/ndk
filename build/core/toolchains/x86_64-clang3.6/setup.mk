@@ -27,12 +27,12 @@
 # Override the toolchain prefix
 #
 
-LLVM_TOOLCHAIN_PREBUILT_ROOT := $(call get-toolchain-root,$(NDK_ROOT),llvm)
+LLVM_TOOLCHAIN_PREBUILT_ROOT := $(call get-toolchain-root,llvm)
 LLVM_TOOLCHAIN_PREFIX := $(LLVM_TOOLCHAIN_PREBUILT_ROOT)/bin/
 
 TOOLCHAIN_NAME := x86_64-linux-android
 BINUTILS_ROOT := $(call get-binutils-root,$(NDK_ROOT),$(TOOLCHAIN_NAME))
-TOOLCHAIN_ROOT := $(call get-toolchain-root,$(NDK_ROOT),x86_64-4.9)
+TOOLCHAIN_ROOT := $(call get-toolchain-root,x86_64-4.9)
 TOOLCHAIN_PREFIX := $(TOOLCHAIN_ROOT)/bin/$(TOOLCHAIN_NAME)-
 
 TARGET_CC := $(LLVM_TOOLCHAIN_PREFIX)clang$(HOST_EXEEXT)
