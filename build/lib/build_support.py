@@ -23,6 +23,9 @@ import tempfile
 import zipfile
 
 
+THIS_DIR = os.path.realpath(os.path.dirname(__file__))
+
+
 # TODO: Make the x86 toolchain names just be the triple.
 ALL_TOOLCHAINS = (
     'arm-linux-androideabi',
@@ -102,9 +105,9 @@ def abi_to_arch(arch):
     }[arch]
 
 
-def android_path(path=''):
-    top = os.getenv('ANDROID_BUILD_TOP', '')
-    return os.path.realpath(os.path.join(top, path))
+def android_path(*args):
+    top = os.path.realpath(os.path.join(THIS_DIR, '../../..'))
+    return os.path.realpath(os.path.join(top, *args))
 
 
 def sysroot_path(toolchain):
@@ -113,15 +116,15 @@ def sysroot_path(toolchain):
 
     prebuilt_ndk = 'prebuilts/ndk/current'
     sysroot_subpath = 'platforms/android-{}/arch-{}'.format(version, arch)
-    return android_path(os.path.join(prebuilt_ndk, sysroot_subpath))
+    return android_path(prebuilt_ndk, sysroot_subpath)
 
 
-def ndk_path(path=''):
-    return android_path(os.path.join('ndk', path))
+def ndk_path(*args):
+    return android_path('ndk', *args)
 
 
-def toolchain_path(path=''):
-    return android_path(os.path.join('toolchain', path))
+def toolchain_path(*args):
+    return android_path('toolchain', *args)
 
 
 def default_api_level(arch):
