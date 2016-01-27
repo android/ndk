@@ -69,7 +69,7 @@ ifdef libcxxabi_sources_dir
 else
   libcxxabi_sources_dir := $(strip $(wildcard $(NDK_ROOT)/sources/cxx-stl/llvm-libc++abi))
   ifndef libcxxabi_sources_dir
-    $(error Can't find libcxxabi sources directory!!)
+    $(error Cannot find libcxxabi sources directory!!)
   endif
   libcxxabi_sources_prefix := $(libcxxabi_sources_dir)
 endif
