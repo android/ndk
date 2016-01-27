@@ -136,48 +136,36 @@ def package_ndk(out_dir, dist_dir, args):
 
 
 def test_ndk(out_dir, args):
-    # TODO(danalbert): Remove the unpack step.
-    # We're building modules, unpacking them, repacking them, and then
-    # unpacking to test. This is dumb. Unpack to a known location to cut out
-    # half of these steps.
-    unpack_dir = tempfile.mkdtemp()
-    try:
-        host_tag = build_support.host_to_tag(args.system)
-        release = args.release
-        if args.release is None:
-            release = datetime.date.today().strftime('%Y%m%d')
+    release = args.release
+    if args.release is None:
+        release = datetime.date.today().strftime('%Y%m%d')
 
-        package_name = 'android-ndk-{}-{}.tar.bz2'.format(release, host_tag)
-        package_path = os.path.join(out_dir, package_name)
+    # The packaging step extracts all the modules to a known directory for
+    # packaging. This directory is not cleaned up after packaging, so we can
+    # reuse that for testing.
+    test_dir = os.path.join(out_dir, 'android-ndk-{}'.format(release))
 
-        print('Extracting {} to {}'.format(package_path, unpack_dir))
-        subprocess.check_call(['tar', 'xf', package_path, '-C', unpack_dir])
-        test_dir = os.path.join(
-            unpack_dir, 'android-ndk-{}'.format(release))
+    test_env = dict(os.environ)
+    test_env['NDK'] = test_dir
 
-        test_env = dict(os.environ)
-        test_env['NDK'] = test_dir
+    abis = build_support.ALL_ABIS
+    if args.arch is not None:
+        abis = build_support.arch_to_abis(args.arch)
 
-        abis = build_support.ALL_ABIS
-        if args.arch is not None:
-            abis = build_support.arch_to_abis(args.arch)
+    results = {}
+    for abi in abis:
+        cmd = [
+            'python', build_support.ndk_path('tests/run-all.py'),
+            '--abi', abi, '--suite', 'build'
+        ]
+        print('Running tests: {}'.format(' '.join(cmd)))
+        result = subprocess.call(cmd, env=test_env)
+        results[abi] = result == 0
 
-        results = {}
-        for abi in abis:
-            cmd = [
-                'python', build_support.ndk_path('tests/run-all.py'),
-                '--abi', abi, '--suite', 'build'
-            ]
-            print('Running tests: {}'.format(' '.join(cmd)))
-            result = subprocess.call(cmd, env=test_env)
-            results[abi] = result == 0
-
-        print('Results:')
-        for abi, result in results.iteritems():
-            print('{}: {}'.format(abi, 'PASS' if result else 'FAIL'))
-        return all(results.values())
-    finally:
-        shutil.rmtree(unpack_dir)
+    print('Results:')
+    for abi, result in results.iteritems():
+        print('{}: {}'.format(abi, 'PASS' if result else 'FAIL'))
+    return all(results.values())
 
 
 def common_build_args(out_dir, dist_dir, args):
@@ -640,7 +628,7 @@ def main():
         package_ndk(out_dir, dist_dir, args)
 
     if args.test:
-        result = test_ndk(dist_dir, args)
+        result = test_ndk(out_dir, args)
         sys.exit(0 if result else 1)
 
 
