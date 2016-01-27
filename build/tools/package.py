@@ -249,6 +249,8 @@ def copy_changelog(out_dir):
 def make_package(release, package_dir, packages, host, out_dir, temp_dir):
     release_name = 'android-ndk-{}'.format(release)
     extract_dir = os.path.join(temp_dir, release_name)
+    if os.path.exists(extract_dir):
+        shutil.rmtree(extract_dir)
     extract_all(package_dir, packages, extract_dir)
 
     make_ndk_build_shortcut(extract_dir, host)
@@ -336,12 +338,8 @@ def main():
         extract_all(args.dist_dir, packages, args.out_dir)
         make_ndk_build_shortcut(args.out_dir, args.host)
     else:
-        package_dir = tempfile.mkdtemp()
-        try:
-            make_package(args.release, args.dist_dir, packages, args.host,
-                         args.out_dir, package_dir)
-        finally:
-            shutil.rmtree(package_dir)
+        make_package(args.release, args.dist_dir, packages, args.host,
+                     args.out_dir, build_support.get_out_dir())
 
 
 if __name__ == '__main__':
