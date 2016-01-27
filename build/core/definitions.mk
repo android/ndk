@@ -2065,7 +2065,7 @@ $(call ndk-stl-register,\
 $(call ndk-stl-register,\
     c++_static,\
     cxx-stl/llvm-libc++,\
-    c++_static,\
+    c++_static android_support,\
     ,\
     -ldl\
     )
