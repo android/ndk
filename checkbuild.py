@@ -43,18 +43,22 @@ ALL_MODULES = {
     'build',
     'clang',
     'cpufeatures',
+    'gabi++',
     'gcc',
     'gcclibs',
     'gdbserver',
     'gnustl',
     'gtest',
     'host-tools',
+    'libandroid_support',
     'libc++',
+    'libc++abi',
     'native_app_glue',
     'ndk_helper',
     'platforms',
     'python-packages',
     'stlport',
+    'system-stl',
 }
 
 
@@ -557,6 +561,30 @@ def build_python_packages(_, dist_dir, __):
         shutil.rmtree(temp_dir)
 
 
+def build_gabixx(_out_dir, dist_dir, _args):
+    print('Building gabi++...')
+    path = build_support.ndk_path('sources/cxx-stl/gabi++')
+    build_support.make_package('gabixx', path, dist_dir)
+
+
+def build_system_stl(_out_dir, dist_dir, _args):
+    print('Building system-stl...')
+    path = build_support.ndk_path('sources/cxx-stl/system')
+    build_support.make_package('system-stl', path, dist_dir)
+
+
+def build_libandroid_support(_out_dir, dist_dir, _args):
+    print('Building libandroid_support...')
+    path = build_support.ndk_path('sources/android/support')
+    build_support.make_package('libandroid_support', path, dist_dir)
+
+
+def build_libcxxabi(_out_dir, dist_dir, _args):
+    print('Building libc++abi...')
+    path = build_support.ndk_path('sources/cxx-stl/llvm-libc++abi')
+    build_support.make_package('libcxxabi', path, dist_dir)
+
+
 def main():
     parser = ArgParser()
     args = parser.parse_args()
@@ -606,18 +634,22 @@ def main():
         ('build', build_build),
         ('clang', build_clang),
         ('cpufeatures', build_cpufeatures),
+        ('gabi++', build_gabixx),
         ('gcc', build_gcc),
         ('gcclibs', build_gcc_libs),
         ('gdbserver', build_gdbserver),
         ('gnustl', build_gnustl),
         ('gtest', build_gtest),
         ('host-tools', build_host_tools),
+        ('libandroid_support', build_libandroid_support),
         ('libc++', build_libcxx),
+        ('libc++abi', build_libcxxabi),
         ('native_app_glue', build_native_app_glue),
         ('ndk_helper', build_ndk_helper),
         ('platforms', build_platforms),
         ('python-packages', build_python_packages),
         ('stlport', build_stlport),
+        ('system-stl', build_system_stl),
     ])
 
     print('Building modules: {}'.format(' '.join(modules)))
