@@ -501,8 +501,8 @@ copy_stl_libs () {
             cp -p "$GNUSTL_LIBS/$ABI_SRC_DIR/libgnustl_static.a" "$ABI_STL/lib/$DEST_DIR/libstdc++.a"
             ;;
         libcxx|libc++)
-            copy_file_list "$LIBCXX_LIBS/$ABI_SRC_DIR" "$ABI_STL/lib/$DEST_DIR" "libc++_shared.so"
-            cp -p "$LIBCXX_LIBS/$ABI_SRC_DIR/libc++_static.a" "$ABI_STL/lib/$DEST_DIR/libstdc++.a"
+            copy_file_list "$LIBCXX_LIBS/$ABI_SRC_DIR" "$ABI_STL/lib/$DEST_DIR" "*"
+            cp -p "$LIBCXX_LIBS/$ABI_SRC_DIR/libc++.a" "$ABI_STL/lib/$DEST_DIR/libstdc++.a"
             ;;
         stlport)
             copy_file_list "$STLPORT_LIBS/$ABI_SRC_DIR" "$ABI_STL/lib/$DEST_DIR" "libstlport_shared.so"
@@ -527,15 +527,12 @@ copy_stl_libs_for_abi () {
     case $ABI in
         armeabi)
             copy_stl_libs armeabi          "bits"                "bits"
-            copy_stl_libs armeabi          "thumb/bits"          "bits"       "/thumb"
             ;;
         armeabi-v7a)
             copy_stl_libs armeabi-v7a      "armv7-a/bits"        "bits"       "armv7-a"
-            copy_stl_libs armeabi-v7a      "armv7-a/thumb/bits"  "bits"       "armv7-a/thumb"
             ;;
         armeabi-v7a-hard)
             copy_stl_libs armeabi-v7a-hard ""                    ""           "armv7-a/hard"       "."
-            copy_stl_libs armeabi-v7a-hard ""                    ""           "armv7-a/thumb/hard" "thumb"
             ;;
         x86_64)
             if [ "$STL" = "gnustl" ]; then
