@@ -93,10 +93,12 @@ def main(args):
         static_lib_dir = os.path.join(obj_out, 'local', abi)
         install_dir = os.path.join(lib_out, abi)
 
-        shutil.copy2(os.path.join(static_lib_dir, 'libc++_static.a'),
-                     install_dir)
-        shutil.copy2(os.path.join(static_lib_dir, 'libandroid_support.a'),
-                     install_dir)
+        shutil.copy2(os.path.join(static_lib_dir, 'libc++abi.a'), install_dir)
+        shutil.copy2(os.path.join(static_lib_dir, 'libunwind.a'), install_dir)
+        shutil.copy2(
+            os.path.join(static_lib_dir, 'libandroid_support.a'), install_dir)
+        shutil.copy2(
+            os.path.join(static_lib_dir, 'libc++_static.a'), install_dir)
 
     build_support.make_package('libcxx', libcxx_path, args.dist_dir)
 
