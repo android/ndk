@@ -62,11 +62,12 @@ class Configuration(libcxx.test.config.Configuration):
         self.cxx.link_flags.append('-gcc-toolchain')
         self.cxx.link_flags.append(gcc_toolchain)
 
-        self.cxx.link_flags.append('-lgcc')
-
         triple = self.get_lit_conf('target_triple')
         if triple.startswith('arm-'):
+            self.cxx.link_flags.append('-lunwind')
             self.cxx.link_flags.append('-latomic')
+
+        self.cxx.link_flags.append('-lgcc')
 
         self.cxx.link_flags.append('-lc++_shared')
         self.cxx.link_flags.append('-lc')
