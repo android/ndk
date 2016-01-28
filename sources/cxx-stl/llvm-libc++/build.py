@@ -37,6 +37,11 @@ class ArgParser(build_support.ArgParser):
             help='Architectures to build. Builds all if not present.')
 
 
+def make_linker_script(path, libs):
+    with open(path, 'w') as linker_script:
+        linker_script.write('INPUT({})'.format(' '.join(libs)))
+
+
 def main(args):
     arches = build_support.ALL_ARCHITECTURES
     if args.arch is not None:
@@ -92,6 +97,7 @@ def main(args):
     for abi in abis:
         static_lib_dir = os.path.join(obj_out, 'local', abi)
         install_dir = os.path.join(lib_out, abi)
+        is_arm = abi.startswith('armeabi')
 
         if is_arm:
             shutil.copy2(
@@ -102,6 +108,19 @@ def main(args):
             os.path.join(static_lib_dir, 'libandroid_support.a'), install_dir)
         shutil.copy2(
             os.path.join(static_lib_dir, 'libc++_static.a'), install_dir)
+
+        # Create linker scripts for the libraries we use so that we link things
+        # properly even when we're not using ndk-build. The linker will read
+        # the script in place of the library so that we link the unwinder and
+        # other support libraries appropriately.
+        static_libs = ['-lc++_static', '-lc++abi', '-landroid_support']
+        if is_arm:
+            static_libs.append('-lunwind')
+        make_linker_script(os.path.join(install_dir, 'libc++.a'), static_libs)
+
+        shared_libs = ['-lunwind', '-latomic'] if is_arm else []
+        shared_libs.append('-lc++_shared')
+        make_linker_script(os.path.join(install_dir, 'libc++.so'), shared_libs)
 
     build_support.make_package('libcxx', libcxx_path, args.dist_dir)
 
