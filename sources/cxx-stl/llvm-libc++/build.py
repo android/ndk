@@ -18,15 +18,18 @@
 from __future__ import print_function
 
 import os
+import shutil
 import site
+import subprocess
 
-site.addsitedir(os.path.join(os.path.dirname(__file__), '../../../build/lib'))
+THIS_DIR = os.path.realpath(os.path.dirname(__file__))
+site.addsitedir(os.path.join(THIS_DIR, '../../../build/lib'))
 
-import build_support
+import build_support  # pylint: disable=import-error
 
 
 class ArgParser(build_support.ArgParser):
-    def __init__(self):
+    def __init__(self):  # pylint: disable=super-on-old-class
         super(ArgParser, self).__init__()
 
         self.add_argument(
@@ -43,18 +46,65 @@ def main(args):
     for arch in arches:
         abis.extend(build_support.arch_to_abis(arch))
 
-    print('Building libc++ for ABIs: {}'.format(' '.join(abis)))
+    ndk_build = build_support.ndk_path('build/ndk-build')
+    prebuilt_ndk = build_support.android_path('prebuilts/ndk/current')
+    platforms_root = os.path.join(prebuilt_ndk, 'platforms')
+    toolchains_root = os.path.join(prebuilt_ndk, 'toolchains')
+    libcxx_path = build_support.ndk_path('sources/cxx-stl/llvm-libc++')
+    obj_out = os.path.join(args.out_dir, 'libcxx/obj')
 
-    abis_arg = '--abis={}'.format(','.join(abis))
-    ndk_dir_arg = '--ndk-dir={}'.format(build_support.ndk_path())
-    script = build_support.ndk_path('build/tools/build-cxx-stl.sh')
+    # TODO(danalbert): Stop building to the source directory.
+    # This is historical, and simplifies packaging a bit. We need to pack up
+    # all the source as well as the libraries. If build_support.make_package
+    # were to change to allow a list of directories instead of one directory,
+    # we could make this unnecessary.  Will be a follow up CL.
+    lib_out = os.path.join(libcxx_path, 'libs')
+
     build_cmd = [
-        'bash', script, '--stl=libc++-libc++abi', abis_arg, ndk_dir_arg,
-        build_support.jobs_arg(), build_support.toolchain_path(),
-        '--with-debug-info', '--llvm-version=3.6',
-    ]
+        'bash', ndk_build, '-C', THIS_DIR, build_support.jobs_arg(), 'V=1',
+        'APP_ABI=' + ' '.join(abis),
 
-    build_support.build(build_cmd, args)
+        # Use the prebuilt platforms and toolchains.
+        'NDK_PLATFORMS_ROOT=' + platforms_root,
+        'NDK_TOOLCHAINS_ROOT=' + toolchains_root,
+        'NDK_NEW_TOOLCHAINS_LAYOUT=true',
+
+        # Tell ndk-build where all of our makefiles are and where outputs
+        # should go. The defaults in ndk-build are only valid if we have a
+        # typical ndk-build layout with a jni/{Android,Application}.mk.
+        'NDK_PROJECT_PATH=null',
+        'APP_BUILD_SCRIPT=' + os.path.join(THIS_DIR, 'Android.mk'),
+        'NDK_APPLICATION_MK=' + os.path.join(THIS_DIR, 'Application.mk'),
+        'NDK_OUT=' + obj_out,
+        'NDK_LIBS_OUT=' + lib_out,
+
+        # Make sure we don't pick up a cached copy.
+        'LIBCXX_FORCE_REBUILD=true',
+
+        # Put armeabi-v7a-hard in its own directory.
+        '_NDK_TESTING_ALL_=yes',
+    ]
+    print('Building libc++ for ABIs: {}'.format(', '.join(abis)))
+    subprocess.check_call(build_cmd)
+
+    # The static libraries are installed to NDK_OUT, not NDK_LIB_OUT, so we
+    # need to install them to our package directory.
+    for abi in abis:
+        static_lib_dir = os.path.join(obj_out, 'local', abi)
+        install_dir = os.path.join(lib_out, abi)
+
+        if is_arm:
+            shutil.copy2(
+                os.path.join(static_lib_dir, 'libunwind.a'), install_dir)
+
+        shutil.copy2(os.path.join(static_lib_dir, 'libc++abi.a'), install_dir)
+        shutil.copy2(
+            os.path.join(static_lib_dir, 'libandroid_support.a'), install_dir)
+        shutil.copy2(
+            os.path.join(static_lib_dir, 'libc++_static.a'), install_dir)
+
+    build_support.make_package('libcxx', libcxx_path, args.dist_dir)
+
 
 if __name__ == '__main__':
     build_support.run(main, ArgParser)
