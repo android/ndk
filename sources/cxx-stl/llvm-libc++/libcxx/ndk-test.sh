@@ -52,4 +52,6 @@ sed -e "s:%ABI%:$ABI:g" -e "s:%TRIPLE%:$TRIPLE:g" \
     $LIBCXX_DIR/test/lit.ndk.cfg.in > $LIBCXX_DIR/test/lit.site.cfg
 
 adb push $LIBCXX_DIR/../libs/$ABI/libc++_shared.so /data/local/tmp
+$NDK/build/tools/make-standalone-toolchain.sh --install-dir=/tmp/foo \
+    --stl=libc++ --use-llvm --platform=android-21
 lit -sv $LIT_ARGS $LIBCXX_DIR/test
