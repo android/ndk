@@ -14,12 +14,10 @@ top = os.getenv('ANDROID_BUILD_TOP')
 libcxx_dir = os.path.join(ndk, 'sources/cxx-stl/llvm-libc++')
 libcxx_src_dir = os.path.join(libcxx_dir, 'libcxx')
 
-config.cxx_under_test = os.path.join(
-    ndk, "toolchains/llvm/prebuilt/linux-x86_64/bin/clang++")
+config.cxx_under_test = "/tmp/foo/bin/arm-linux-androideabi-clang++"
 config.std = "c++11"
 config.libcxx_src_root = libcxx_src_dir
 config.libcxx_obj_root = libcxx_src_dir
-config.cxx_library_root = os.path.join(libcxx_dir, 'libs/%ABI%')
 config.enable_exceptions = "True"
 config.enable_rtti = "True"
 config.enable_shared = "False"
@@ -30,9 +28,6 @@ config.cxx_abi = "libcxxabi"
 config.use_sanitizer = ""
 config.configuration_variant = "libcxx.ndk"
 config.target_triple = "%TRIPLE%"
-config.sysroot = os.path.join(ndk, "platforms/android-21/arch-%ARCH%/")
-config.gcc_toolchain = os.path.join(
-    ndk, "toolchains/%TRIPLE%-4.9/prebuilt/linux-x86_64")
 
 # Let the main config do the real work.
 lit_config.load_config(
