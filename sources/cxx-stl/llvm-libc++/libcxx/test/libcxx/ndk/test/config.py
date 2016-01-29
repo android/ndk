@@ -53,26 +53,7 @@ class Configuration(libcxx.test.config.Configuration):
         self.cxx.compile_flags.append('-I' + android_support_headers)
 
     def configure_link_flags(self):
-        self.cxx.link_flags.append('-nodefaultlibs')
-
-        # Configure libc++ library paths.
-        self.cxx.link_flags.append('-L' + self.cxx_library_root)
-
-        gcc_toolchain = self.get_lit_conf('gcc_toolchain')
-        self.cxx.link_flags.append('-gcc-toolchain')
-        self.cxx.link_flags.append(gcc_toolchain)
-
-        triple = self.get_lit_conf('target_triple')
-        if triple.startswith('arm-'):
-            self.cxx.link_flags.append('-lunwind')
-            self.cxx.link_flags.append('-latomic')
-
-        self.cxx.link_flags.append('-lgcc')
-
-        self.cxx.link_flags.append('-lc++_shared')
-        self.cxx.link_flags.append('-lc')
-        self.cxx.link_flags.append('-lm')
-        self.cxx.link_flags.append('-ldl')
+        self.cxx.link_flags.append('-lc++')
         self.cxx.link_flags.append('-pie')
 
     def configure_features(self):
