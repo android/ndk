@@ -198,6 +198,7 @@ read_file(const char*  pathname, char*  buffer, size_t  buffsize)
     return count;
 }
 
+#ifdef __arm__
 /* Extract the content of a the first occurence of a given field in
  * the content of /proc/cpuinfo and return it as a heap-allocated
  * string that must be freed by the caller.
@@ -283,6 +284,7 @@ has_list_item(const char* list, const char* item)
     }
     return 0;
 }
+#endif /* __arm__ */
 
 /* Parse a number starting from 'input', but not going further
  * than 'limit'. Return the value into '*result'.
@@ -327,11 +329,13 @@ parse_decimal(const char* input, const char* limit, int* result)
     return parse_number(input, limit, 10, result);
 }
 
+#ifdef __arm__
 static const char*
 parse_hexadecimal(const char* input, const char* limit, int* result)
 {
     return parse_number(input, limit, 16, result);
 }
+#endif /* __arm__ */
 
 /* This small data type is used to represent a CPU list / mask, as read
  * from sysfs on Linux. See http://www.kernel.org/doc/Documentation/cputopology.txt
