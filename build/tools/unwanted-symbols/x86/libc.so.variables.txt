@@ -1,2 +1,0 @@
-__sdidinit
-__sglue
