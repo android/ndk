@@ -453,8 +453,8 @@ for SYSTEM in $SYSTEMS; do
     rm -rf $DSTDIR/prebuilt/share/pretty-printers/libstdcxx/gcc-4.9-*
 
     # Remove python *.pyc and *.pyo files
-    find $DSTDIR/prebuilt/lib/python* -name "*.pyc" -exec rm -rf {} \;
-    find $DSTDIR/prebuilt/lib/python* -name "*.pyo" -exec rm -rf {} \;
+    find $DSTDIR -name "*.pyc" -exec rm -rf {} \;
+    find $DSTDIR -name "*.pyo" -exec rm -rf {} \;
 
     # Remove .git*
     find $DSTDIR -name ".git*" -exec rm -rf {} \;
