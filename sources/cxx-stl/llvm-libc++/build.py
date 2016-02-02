@@ -92,6 +92,7 @@ def main(args):
     for abi in abis:
         static_lib_dir = os.path.join(obj_out, 'local', abi)
         install_dir = os.path.join(lib_out, abi)
+        is_arm = abi.startswith('armeabi')
 
         if is_arm:
             shutil.copy2(
