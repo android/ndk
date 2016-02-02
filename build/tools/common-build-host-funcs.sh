@@ -805,7 +805,7 @@ bh_do ()
 #  python_ndk_install_dir with nothing.
 python_build_install_dir ()
 {
-    echo "$BH_BUILD_DIR/install/host-tools"
+    echo "$BH_BUILD_DIR/$1/install/host-tools"
 }
 
 # Same as python_build_install_dir, but for the final NDK installation
