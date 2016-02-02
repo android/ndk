@@ -107,7 +107,7 @@ def abi_to_arch(arch):
 
 def android_path(*args):
     top = os.path.realpath(os.path.join(THIS_DIR, '../../..'))
-    return os.path.realpath(os.path.join(top, *args))
+    return os.path.normpath(os.path.join(top, *args))
 
 
 def sysroot_path(toolchain):
