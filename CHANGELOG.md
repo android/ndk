@@ -115,24 +115,5 @@ Known Issues
    cause is incompatibility between the LLVM unwinder used by libc++abi for
    ARM32 and libgcc. This is not a regression from r10e.
 
-What's Next?
-------------
-
-A significant proportion of the changes that went into this release were
-organizational changes to the build and to the package layout. The reason for
-this is that we will soon be integrating the NDK into the Android SDK manager as
-several distinct components. The motivations for this change are:
-
- * No wasted bandwidth or disk space on unneeded pieces. Do you really need 14
-   compilers? With the modular NDK you can download just the one Clang, or a
-   single set of GCCs.
- * Easier updating. Just launch the SDK manager and install the updates rather
-   than downloading an entire new NDK.
- * Quicker updates. In the future we’ll be able to release just a portion of the
-   NDK on a quicker schedule. No more waiting for the next big release for a
-   handful of bug fixes or a compiler update.
-
-The integration with the SDK manager should happen Soon™.
-
 [GitHub]: https://github.com/googlesamples/android-ndk
 [Android Developer website]: http://developer.android.com/ndk/index.html
