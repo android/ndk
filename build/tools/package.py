@@ -241,6 +241,15 @@ def make_ndk_build_sh_helper(out_dir):
     os.chmod(file_path, mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
 
+def make_source_properties(out_dir):
+    path = os.path.join(out_dir, 'source.properties')
+    with open(path, 'w') as source_properties:
+        source_properties.write('\n'.join([
+            'Pkg.Desc = Android NDK',
+            'Pkg.Revision = 11.0.0',
+        ]))
+
+
 def copy_changelog(out_dir):
     changelog_path = build_support.ndk_path('CHANGELOG.md')
     shutil.copy2(changelog_path, out_dir)
@@ -254,6 +263,7 @@ def make_package(release, package_dir, packages, host, out_dir, temp_dir):
     extract_all(package_dir, packages, extract_dir)
 
     make_ndk_build_shortcut(extract_dir, host)
+    make_source_properties(extract_dir)
     copy_changelog(extract_dir)
 
     host_tag = build_support.host_to_tag(host)
