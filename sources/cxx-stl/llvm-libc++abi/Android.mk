@@ -53,18 +53,22 @@ libcxxabi_cflags := -D__STDC_FORMAT_MACROS
 libcxxabi_cppflags := -std=c++11
 
 ifneq (,$(filter armeabi%,$(TARGET_ARCH_ABI)))
+    use_llvm_unwinder := true
     libcxxabi_cppflags += -DLIBCXXABI_USE_LLVM_UNWINDER=1
 else
+    use_llvm_unwinder := false
     libcxxabi_cppflags += -DLIBCXXABI_USE_LLVM_UNWINDER=0
 endif
 
 ifneq ($(LIBCXX_FORCE_REBUILD),true) # Using prebuilt
 
+ifeq ($(use_llvm_unwinder),true)
 include $(CLEAR_VARS)
 LOCAL_MODULE := libunwind
 LOCAL_SRC_FILES := ../llvm-libc++/libs/$(TARGET_ARCH_ABI)/$(LOCAL_MODULE)$(TARGET_LIB_EXTENSION)
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/libcxxabi/include
 include $(PREBUILT_STATIC_LIBRARY)
+endif
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := libc++abi
@@ -95,7 +99,7 @@ LOCAL_STATIC_LIBRARIES := android_support
 # on static libraries and topologically sort them to determine link order.
 # Though there is no link step, without this we may link libunwind before
 # libc++abi, which won't succeed.
-ifneq (,$(filter armeabi%,$(TARGET_ARCH_ABI)))
+ifeq ($(use_llvm_unwinder),true)
     LOCAL_STATIC_LIBRARIES += libunwind
 endif
 include $(BUILD_STATIC_LIBRARY)
