@@ -210,8 +210,8 @@ class ArgParser(argparse.ArgumentParser):
             help=('Run tests against the specified platform version. Defaults '
                   'to the contents of APP_PLATFORM in jni/Application.mk'))
         self.add_argument(
-            '--toolchain', default='4.9', choices=('4.9', 'clang'),
-            help='Toolchain for building tests. Defaults to gcc-4.9.')
+            '--toolchain', default='clang', choices=('4.9', 'clang'),
+            help='Toolchain for building tests. Defaults to clang.')
 
         self.add_argument(
             '--show-commands', action='store_true',
