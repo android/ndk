@@ -227,7 +227,7 @@ def make_package(name, directory, out_dir):
     basename = os.path.basename(directory)
     try:
         subprocess.check_call(
-            ['zip', '-x', '*.pyc', '-x', '*.pyo', '-x', '*.pyd', '-x', '*.swp',
+            ['zip', '-x', '*.pyc', '-x', '*.pyo', '-x', '*.swp',
              '-x', '*.git*', '-9qr', path, basename])
     finally:
         os.chdir(cwd)
