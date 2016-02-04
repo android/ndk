@@ -98,10 +98,6 @@ class TestRunner(object):
         return results
 
 
-def _maybe_color(text, color, do_color):
-    return util.color_string(text, color) if do_color else text
-
-
 class TestResult(object):
     def __init__(self, test_name):
         self.test_name = test_name
@@ -131,7 +127,7 @@ class Failure(TestResult):
         return True
 
     def to_string(self, colored=False):
-        label = _maybe_color('FAIL', 'red', colored)
+        label = util.maybe_color('FAIL', 'red', colored)
         return '{} {}: {}'.format(label, self.test_name, self.message)
 
 
@@ -143,7 +139,7 @@ class Success(TestResult):
         return False
 
     def to_string(self, colored=False):
-        label = _maybe_color('PASS', 'green', colored)
+        label = util.maybe_color('PASS', 'green', colored)
         return '{} {}'.format(label, self.test_name)
 
 
@@ -159,7 +155,7 @@ class Skipped(TestResult):
         return False
 
     def to_string(self, colored=False):
-        label = _maybe_color('SKIP', 'yellow', colored)
+        label = util.maybe_color('SKIP', 'yellow', colored)
         return '{} {}: {}'.format(label, self.test_name, self.reason)
 
 
@@ -176,7 +172,7 @@ class ExpectedFailure(TestResult):
         return False
 
     def to_string(self, colored=False):
-        label = _maybe_color('KNOWN FAIL', 'yellow', colored)
+        label = util.maybe_color('KNOWN FAIL', 'yellow', colored)
         return '{} {}: known failure for {} ({})'.format(
             label, self.test_name, self.config, self.bug)
 
@@ -194,7 +190,7 @@ class UnexpectedSuccess(TestResult):
         return True
 
     def to_string(self, colored=False):
-        label = _maybe_color('SHOULD FAIL', 'red', colored)
+        label = util.maybe_color('SHOULD FAIL', 'red', colored)
         return '{} {}: unexpected success for {} ({})'.format(
             label, self.test_name, self.config, self.bug)
 
