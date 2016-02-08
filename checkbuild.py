@@ -23,7 +23,6 @@ from __future__ import print_function
 
 import argparse
 import collections
-import datetime
 import inspect
 import os
 import shutil
@@ -92,8 +91,12 @@ class ArgParser(argparse.ArgumentParser):
             help='Do not run host tests when finished.')
 
         self.add_argument(
-            '--release',
-            help='Release name. Package will be named android-ndk-RELEASE.')
+            '--build-number', help='Build number for use in version files.')
+        self.add_argument(
+            '--release', help=textwrap.dedent("""\
+            Release name. Package will be named android-ndk-RELEASE. If not
+            present, will fall back to the build number, and finally to "dev".
+            """))
 
         self.add_argument(
             '--system', choices=('darwin', 'linux', 'windows', 'windows64'),
@@ -133,6 +136,9 @@ def package_ndk(out_dir, dist_dir, args):
     if args.release is not None:
         package_args.append('--release={}'.format(args.release))
 
+    if args.build_number is not None:
+        package_args.append('--build-number={}'.format(args.build_number))
+
     if args.arch is not None:
         package_args.append('--arch={}'.format(args.arch))
 
@@ -140,9 +146,11 @@ def package_ndk(out_dir, dist_dir, args):
 
 
 def test_ndk(out_dir, args):
+    # Builds will be named with the release name, the build number, or "dev",
+    # in decreasing order of preference.
     release = args.release
     if args.release is None:
-        release = datetime.date.today().strftime('%Y%m%d')
+        release = 'dev' if args.build_number is None else args.build_number
 
     # The packaging step extracts all the modules to a known directory for
     # packaging. This directory is not cleaned up after packaging, so we can
