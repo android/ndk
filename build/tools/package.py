@@ -18,8 +18,8 @@
 from __future__ import print_function
 
 import argparse
-import datetime
 import os
+import re
 import shutil
 import site
 import stat
@@ -241,12 +241,28 @@ def make_ndk_build_sh_helper(out_dir):
     os.chmod(file_path, mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
 
-def make_source_properties(out_dir):
+def make_source_properties(out_dir, release, build_number):
+    # Actual releases will have the name "r11" or similar, but
+    # source.properties versions can only be numeric. Strip the leading "r" in
+    # that case.
+    #
+    # The nightly builds will end up using the build number here (which can be
+    # identified both because the release number will be absurdly high, and
+    # because the release number and build number will be the same.
+    #
+    # Local builds will just end up using "dev" as the release name and 0 as
+    # the build number. The SDK manager won't allow these packages since the
+    # version number is bogus, but we don't want to be shipping locally built
+    # things so that's a feature.
+    match = re.match(r'r(\d+)', release)
+    if match is not None:
+        release = match.group(1)
+
     path = os.path.join(out_dir, 'source.properties')
     with open(path, 'w') as source_properties:
         source_properties.write('\n'.join([
             'Pkg.Desc = Android NDK',
-            'Pkg.Revision = 11.0.0',
+            'Pkg.Revision = {}.0.{}'.format(release, build_number),
         ]))
 
 
@@ -255,7 +271,8 @@ def copy_changelog(out_dir):
     shutil.copy2(changelog_path, out_dir)
 
 
-def make_package(release, package_dir, packages, host, out_dir, temp_dir):
+def make_package(release, build_number, package_dir, packages, host, out_dir,
+                 temp_dir):
     release_name = 'android-ndk-{}'.format(release)
     extract_dir = os.path.join(temp_dir, release_name)
     if os.path.exists(extract_dir):
@@ -263,7 +280,7 @@ def make_package(release, package_dir, packages, host, out_dir, temp_dir):
     extract_all(package_dir, packages, extract_dir)
 
     make_ndk_build_shortcut(extract_dir, host)
-    make_source_properties(extract_dir)
+    make_source_properties(extract_dir, release, build_number)
     copy_changelog(extract_dir)
 
     host_tag = build_support.host_to_tag(host)
@@ -308,8 +325,8 @@ class ArgParser(argparse.ArgumentParser):
             default=build_support.get_default_host(),
             help='Package binaries for given OS (e.g. linux).')
         self.add_argument(
-            '--release', default=datetime.date.today().strftime('%Y%m%d'),
-            help='Release name for the package.')
+            '--build-number', help='Build number for use in version files.')
+        self.add_argument('--release', help='Release name for the package.')
 
         self.add_argument(
             '-f', '--force', dest='force', action='store_true',
@@ -335,6 +352,22 @@ def main():
     if args.arch is not None:
         arches = [args.arch]
 
+    if args.release is not None is args.build_number is None:
+        sys.exit('--release requires --build-number')
+
+    # The package will end up being named android-ndk-$RELEASE-$HOST_TAG.
+    # In order of preference, $RELEASE will be the --release argument, the
+    # build number, or simply "dev".
+    release = args.release
+    if release is None:
+        release = 'dev' if args.build_number is None else args.build_number
+
+    # We need to put a build number in the source.properties file even if we
+    # aren't built on the build server. Default to 0. We do this here rather
+    # than in the arg parser definition because we want to use "dev" as the
+    # release name if --build-number was not passed.
+    build_number = 0 if args.build_number is None else args.build_number
+
     if os.path.exists(args.out_dir) and args.unpack:
         if args.force:
             shutil.rmtree(args.out_dir)
@@ -348,7 +381,7 @@ def main():
         extract_all(args.dist_dir, packages, args.out_dir)
         make_ndk_build_shortcut(args.out_dir, args.host)
     else:
-        make_package(args.release, args.dist_dir, packages, args.host,
+        make_package(release, build_number, args.dist_dir, packages, args.host,
                      args.out_dir, build_support.get_out_dir())
 
 
