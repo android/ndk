@@ -536,14 +536,12 @@ def build_cpufeatures(_, dist_dir, __):
 
 
 def build_native_app_glue(_, dist_dir, __):
-    path = build_support.android_path(
-        'development/ndk/sources/android/native_app_glue')
+    path = build_support.ndk_path('sources/android/native_app_glue')
     build_support.make_package('native_app_glue', path, dist_dir)
 
 
 def build_ndk_helper(_, dist_dir, __):
-    path = build_support.android_path(
-        'development/ndk/sources/android/ndk_helper')
+    path = build_support.ndk_path('sources/android/ndk_helper')
     build_support.make_package('ndk_helper', path, dist_dir)
 
 
