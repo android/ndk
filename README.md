@@ -5,14 +5,28 @@ The NDK allows Android application developers to include
 native code in their Android application packages, compiled as JNI shared
 libraries.
 
-Discussions related to the Android NDK happen on the
-[android-ndk](http://groups.google.com/group/android-ndk) Google Group.
-
-Building the NDK
-================
+Other Resources
+---------------
 
 **Note:** This document is for developers _of_ the NDK, not developers
 that use the NDK.
+
+This doc gives a high level overview of the NDK's build, packaging, and test
+process. For other use cases, or more in depth documentation, refer to the
+following sources:
+
+ * User documentation is available on the [Android Developer website].
+ * Adding a new NDK API or platform version? Check [Generating Sysroots].
+ * Discussions related to the Android NDK happen on the [android-ndk Google
+   Group].
+ * File bugs against the NDK at https://github.com/android-ndk/ndk/issues.
+
+[Android Developer website]: https://developer.android.com/ndk/index.html
+[android-ndk Google Group]: http://groups.google.com/group/android-ndk
+[Generating Sysroots]: docs/GeneratingSysroots.md
+
+Building the NDK
+================
 
 Both Linux and Windows host binaries are built on Linux machines. Windows host
 binaries are built via MinGW cross compiler. Systems without a working MinGW
