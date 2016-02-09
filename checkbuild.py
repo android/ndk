@@ -136,6 +136,11 @@ def package_ndk(out_dir, dist_dir, args):
     if args.release is not None:
         package_args.append('--release={}'.format(args.release))
 
+        # The build servers haven't been updated to know about --build-number
+        # yet, and is still passing that as --release. Since package.py
+        # requires that --build-number be passed with --release, fake it here.
+        package_args.append('--build-number={}'.format(args.release))
+
     if args.build_number is not None:
         package_args.append('--build-number={}'.format(args.build_number))
 
