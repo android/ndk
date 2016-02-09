@@ -75,14 +75,12 @@ Prerequisites
         ```
 
 * Additional Linux Dependencies (available from apt):
-    * texinfo
-    * gcc-mingw32
-    * wine
     * bison
     * flex
-    * dmake
     * libtool
-    * pbzip2
+    * mingw-w64
+    * pbzip2 (optional, improves packaging times)
+    * texinfo
 * Mac OS X also requires Xcode.
 
 Host/Target prebuilts
