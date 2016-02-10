@@ -7,7 +7,7 @@ Clang
 -----
 
  * **PSA: Everyone should be switching to Clang.**
- * Clang has been updated to 3.8svn (r243773, build 2481030).
+ * Clang has been updated to 3.8svn (r256229, build 2577113).
      * Note that this is now a nearly pure upstream clang.
      * Also note that Clang packaged in the Windows 64 NDK is actually 32-bit.
  * Support for emulated TLS.
