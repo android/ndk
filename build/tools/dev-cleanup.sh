@@ -47,9 +47,6 @@ rm -rf $DIR/$GCCUNWIND_SUBDIR/libs
 rm -rf $DIR/$LIBCXX_SUBDIR/libs
 rm -rf $DIR/$SUPPORT_SUBDIR/libs
 
-# Remove the temp directory.
-rm -rf $TMPDIR
-
 clean_dir ()
 {
     if [ -d "$1" ] ; then
