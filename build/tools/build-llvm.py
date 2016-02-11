@@ -35,7 +35,7 @@ def get_llvm_prebuilt_path(host):
 
 
 def main(args):
-    LLVM_VERSION = 'clang-2577113'
+    LLVM_VERSION = 'clang-2481030'
 
     host = args.host
     package_dir = args.dist_dir
