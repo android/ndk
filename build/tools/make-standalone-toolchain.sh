@@ -242,7 +242,7 @@ LIBGCC_BASE_PATH=${LIBGCC_PATH%/*}         # base path of libgcc.a
 GCC_BASE_VERSION=${LIBGCC_BASE_PATH##*/}   # stuff after the last /
 
 # Create temporary directory
-TMPDIR=$NDK_TMPDIR/standalone/$TOOLCHAIN_NAME
+TMPDIR=`mktemp -d $NDK_TMPDIR/ndk.XXXXXXX`
 
 dump "Copying prebuilt binaries..."
 # Now copy the GCC toolchain prebuilt binaries
