@@ -607,7 +607,8 @@ def main():
     else:
         do_package = False
 
-    os.environ['TMPDIR'] = tempfile.mkdtemp(prefix='ndk-');
+    tempdir = tempfile.mkdtemp(prefix='ndk-')
+    os.environ['TMPDIR'] = tempdir
 
     # TODO(danalbert): wine?
     # We're building the Windows packages from Linux, so we can't actually run
@@ -660,6 +661,9 @@ def main():
 
     if do_package:
         package_ndk(out_dir, dist_dir, args)
+
+    # Clean up the temp directory.
+    shutil.rmtree(tempdir)
 
     if args.test:
         result = test_ndk(out_dir, args)
