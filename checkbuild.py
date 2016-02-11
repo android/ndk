@@ -618,6 +618,8 @@ def main():
     else:
         do_package = False
 
+    os.environ['TMPDIR'] = tempfile.mkdtemp(prefix='ndk-');
+
     # TODO(danalbert): wine?
     # We're building the Windows packages from Linux, so we can't actually run
     # any of the tests from here.
