@@ -549,9 +549,9 @@ def _copy_test_to_device(build_dir, device_dir, abi, test_filters, test_name):
         if test_file in ('gdbserver', 'gdb.setup'):
             continue
 
-        file_is_lib = False
+        file_is_lib = True
         if not test_file.endswith('.so'):
-            file_is_lib = True
+            file_is_lib = False
             case_name = _make_subtest_name(test_name, test_file)
             if not test_filters.filter(case_name):
                 continue
