@@ -1,1 +1,1 @@
-math.c
+#include "math.c"
