@@ -273,7 +273,7 @@ def main():
         os.environ['NDK'] = os.path.dirname(os.getcwd())
 
     args = ArgParser().parse_args()
-    ndk_build_flags = []
+    ndk_build_flags = ['-B']  # Always rebuild everything.
     if args.abi is not None:
         ndk_build_flags.append('APP_ABI={}'.format(args.abi))
     if args.platform is not None:
