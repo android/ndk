@@ -567,7 +567,9 @@ def _copy_test_to_device(build_dir, device_dir, abi, test_filters, test_name):
         # Binaries pushed from Windows may not have execute permissions.
         if not file_is_lib:
             file_path = posixpath.join(device_dir, test_file)
-            adb.shell('chmod +x ' + file_path)
+            # Can't use +x because apparently old versions of Android didn't
+            # support that...
+            adb.shell('chmod 777 ' + file_path)
 
         # TODO(danalbert): Sync data.
         # The libc++ tests contain a DATA file that lists test names and their
