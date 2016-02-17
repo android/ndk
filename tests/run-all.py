@@ -155,6 +155,10 @@ def can_use_asan(abi, api, toolchain):
     if not abi.startswith('armeabi') and not abi == 'x86':
         return False
 
+    # From non-Windows (asan_device_setup is a shell script)...
+    if os.name == 'nt':
+        return False
+
     # On KitKat and newer...
     if api < 19:
         return False
