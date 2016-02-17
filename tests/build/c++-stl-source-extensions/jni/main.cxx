@@ -1,1 +1,1 @@
-main.cc
+#include "main.cc"
