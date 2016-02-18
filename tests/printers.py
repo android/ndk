@@ -30,7 +30,10 @@ def format_stats_str(num_tests, stats, use_color):
 
 
 class Printer(object):
-    def print_results(self, results, stats):
+    def print_result(self, result):
+        raise NotImplementedError
+
+    def print_summary(self, results, stats):
         raise NotImplementedError
 
 
@@ -39,7 +42,10 @@ class StdoutPrinter(Printer):
         self.use_color = use_color
         self.show_all = show_all
 
-    def print_results(self, results, stats):
+    def print_result(self, result):
+        print(result.to_string(colored=self.use_color))
+
+    def print_summary(self, results, stats):
         print()
         formatted = format_stats_str(stats.num_tests,
                                      stats.global_stats, self.use_color)
