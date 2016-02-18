@@ -206,9 +206,8 @@ class ArgParser(argparse.ArgumentParser):
             description=inspect.getdoc(sys.modules[__name__]))
 
         self.add_argument(
-            '--abi', default=None, choices=SUPPORTED_ABIS,
-            help=('Run tests against the specified ABI. Defaults to the '
-                  'contents of APP_ABI in jni/Application.mk'))
+            '--abi', choices=SUPPORTED_ABIS, required=True,
+            help=('Run tests against the specified ABI.'))
         self.add_argument(
             '--platform', default=None, type=android_platform_version,
             help=('Run tests against the specified platform version. Defaults '
