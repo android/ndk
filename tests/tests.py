@@ -51,7 +51,8 @@ def _scan_test_suite(suite_dir, test_class, *args):
 
 
 class TestRunner(object):
-    def __init__(self):
+    def __init__(self, printer):
+        self.printer = printer
         self.tests = {}
 
     def add_suite(self, name, path, test_class, *args):
@@ -76,14 +77,16 @@ class TestRunner(object):
             message = 'test unsupported for {}'.format(config)
             return [Skipped(test.name, message)]
 
-        results = test.run(out_dir, test_filters)
         config, bug = test.check_broken()
-        if config is None:
-            return results
-
-        # We need to check each individual test case for pass/fail and change
-        # it to either an ExpectedFailure or an UnexpectedSuccess as necessary.
-        return [self._fixup_expected_failure(r, config, bug) for r in results]
+        results = []
+        for result in test.run(out_dir, test_filters):
+            if config is not None:
+                # We need to check change each pass/fail to either an
+                # ExpectedFailure or an UnexpectedSuccess as necessary.
+                result = self._fixup_expected_failure(result, config, bug)
+            self.printer.print_result(result)
+            results.append(result)
+        return results
 
     def run(self, out_dir, test_filters):
         results = {suite: [] for suite in self.tests.keys()}
@@ -257,14 +260,12 @@ class AwkTest(Test):
         return None
 
     def run(self, out_dir, test_filters):
-        results = []
         for test_case in glob.glob(os.path.join(self.test_dir, '*.in')):
             golden_path = re.sub(r'\.in$', '.out', test_case)
             result = self.run_case(out_dir, test_case, golden_path,
                                    test_filters)
             if result is not None:
-                results.append(result)
-        return results
+                yield result
 
     def run_case(self, out_dir, test_case, golden_out_path, test_filters):
         case_name = os.path.splitext(os.path.basename(test_case))[0]
@@ -475,7 +476,7 @@ class PythonBuildTest(Test):
 
     def run(self, out_dir, _):
         build_dir = os.path.join(out_dir, self.name)
-        print('Running build test: {}'.format(self.name))
+        print('Building test: {}'.format(self.name))
         _prep_build_dir(self.test_dir, build_dir)
         with util.cd(build_dir):
             module = imp.load_source('test', 'test.py')
@@ -483,9 +484,9 @@ class PythonBuildTest(Test):
                 abi=self.abi, platform=self.platform, toolchain=self.toolchain,
                 build_flags=self.build_flags)
             if success:
-                return [Success(self.name)]
+                yield Success(self.name)
             else:
-                return [Failure(self.name, failure_message)]
+                yield Failure(self.name, failure_message)
 
 
 class ShellBuildTest(Test):
@@ -498,13 +499,14 @@ class ShellBuildTest(Test):
 
     def run(self, out_dir, _):
         build_dir = os.path.join(out_dir, self.name)
-        print('Running build test: {}'.format(self.name))
+        print('Building test: {}'.format(self.name))
         if os.name == 'nt':
             reason = 'build.sh tests are not supported on Windows'
-            return [Skipped(self.name, reason)]
-        return [_run_build_sh_test(self.name, build_dir, self.test_dir,
-                                   self.build_flags, self.abi, self.platform,
-                                   self.toolchain)]
+            yield Skipped(self.name, reason)
+        else:
+            yield _run_build_sh_test(self.name, build_dir, self.test_dir,
+                                     self.build_flags, self.abi, self.platform,
+                                     self.toolchain)
 
 
 class NdkBuildTest(Test):
@@ -517,10 +519,10 @@ class NdkBuildTest(Test):
 
     def run(self, out_dir, _):
         build_dir = os.path.join(out_dir, self.name)
-        print('Running build test: {}'.format(self.name))
-        return [_run_ndk_build_test(self.name, build_dir, self.test_dir,
-                                    self.build_flags, self.abi,
-                                    self.platform, self.toolchain)]
+        print('Building test: {}'.format(self.name))
+        yield _run_ndk_build_test(self.name, build_dir, self.test_dir,
+                                  self.build_flags, self.abi,
+                                  self.platform, self.toolchain)
 
 
 class BuildTest(object):
@@ -561,7 +563,7 @@ def _copy_test_to_device(build_dir, device_dir, abi, test_filters, test_name):
         # This was the case with the old shell based script too. I'm trying not
         # to change too much in the translation.
         lib_path = os.path.join(abi_dir, test_file)
-        print('\tPushing {} to {}...'.format(lib_path, device_dir))
+        print('Pushing {} to {}...'.format(lib_path, device_dir))
         adb.push(lib_path, device_dir)
 
         # Binaries pushed from Windows may not have execute permissions.
@@ -623,13 +625,14 @@ class DeviceTest(Test):
                                              self.toolchain, subtest=name)
 
     def run(self, out_dir, test_filters):
-        print('Running device test: {}'.format(self.name))
+        print('Building device test: {}'.format(self.name))
         build_dir = os.path.join(out_dir, self.name)
         build_result = _run_ndk_build_test(self.name, build_dir, self.test_dir,
                                            self.build_flags, self.abi,
                                            self.platform, self.toolchain)
         if not build_result.passed():
-            return [build_result]
+            yield build_result
+            return
 
         device_dir = posixpath.join('/data/local/tmp/ndk-tests', self.name)
 
@@ -640,7 +643,6 @@ class DeviceTest(Test):
         if result != 0:
             raise RuntimeError('mkdir failed:\n' + '\n'.join(out))
 
-        results = []
         try:
             test_cases = _copy_test_to_device(
                 build_dir, device_dir, self.abi, test_filters, self.name)
@@ -652,26 +654,23 @@ class DeviceTest(Test):
                 config = self.check_subtest_unsupported(case)
                 if config is not None:
                     message = 'test unsupported for {}'.format(config)
-                    results.append(Skipped(case_name, message))
+                    yield Skipped(case_name, message)
                     continue
 
                 cmd = 'cd {} && LD_LIBRARY_PATH={} ./{}'.format(
                     device_dir, device_dir, case)
-                print('\tExecuting {}...'.format(case_name))
                 result, out = adb.shell(cmd)
 
                 config, bug = self.check_subtest_broken(case)
                 if config is None:
                     if result == 0:
-                        results.append(Success(case_name))
+                        yield Success(case_name)
                     else:
-                        results.append(Failure(case_name, '\n'.join(out)))
+                        yield Failure(case_name, '\n'.join(out))
                 else:
                     if result == 0:
-                        results.append(UnexpectedSuccess(case_name, config,
-                                                         bug))
+                        yield UnexpectedSuccess(case_name, config, bug)
                     else:
-                        results.append(ExpectedFailure(case_name, config, bug))
-            return results
+                        yield ExpectedFailure(case_name, config, bug)
         finally:
             adb.shell('rm -r {}'.format(device_dir))

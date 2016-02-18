@@ -221,7 +221,7 @@ def run_all(ndk_path, out_dir, printer, abi, toolchain, build_api_level=None,
         adb.shell('rm -r /data/local/tmp/ndk-tests')
         adb.shell('mkdir /data/local/tmp/ndk-tests')
 
-    runner = tests.TestRunner()
+    runner = tests.TestRunner(printer)
     if 'awk' in suites:
         runner.add_suite('awk', 'awk', AwkTest)
     if 'build' in suites:
@@ -236,5 +236,5 @@ def run_all(ndk_path, out_dir, printer, abi, toolchain, build_api_level=None,
 
     stats = ResultStats(suites, results)
 
-    printer.print_results(results, stats)
+    printer.print_summary(results, stats)
     return stats.global_stats['fail'] == 0
