@@ -41,7 +41,10 @@ def make_standalone_toolchain(arch, platform, toolchain, install_dir):
         name = '{}-{}'.format(toolchain_triple, toolchain)
         cmd.append('--toolchain=' + name)
 
-    subprocess.check_call(cmd)
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT)
+    out, _ = proc.communicate()
+    return proc.returncode == 0, out
 
 
 def test_standalone_toolchain(arch, toolchain, install_dir):
@@ -72,7 +75,10 @@ def run_test(abi=None, platform=None, toolchain=None,
 
     install_dir = tempfile.mkdtemp()
     try:
-        make_standalone_toolchain(arch, platform, toolchain, install_dir)
+        success, out = make_standalone_toolchain(arch, platform, toolchain,
+                                                 install_dir)
+        if not success:
+            return success, out
         return test_standalone_toolchain(arch, toolchain, install_dir)
     finally:
         shutil.rmtree(install_dir)
