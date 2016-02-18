@@ -22,11 +22,6 @@ invocation if an explicit ABI was not given. Currently this will fall down over
 that case. I've written most of the code to handle this, but I decided to
 factor that for-each up several levels because it was going to make the device
 tests rather messy and I haven't finished doing that yet.
-
-TODO: Handle explicit test lists from command line.
-The old test runner allowed specifying an exact list of tests to run with
---tests. That seems like a useful thing to keep around, but I haven't ported it
-yet.
 """
 from __future__ import print_function
 
