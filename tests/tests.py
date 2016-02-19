@@ -26,7 +26,6 @@ import re
 import shutil
 import subprocess
 
-import adb
 import ndk
 import util
 
@@ -541,7 +540,8 @@ class BuildTest(object):
                                 toolchain, build_flags)
 
 
-def _copy_test_to_device(build_dir, device_dir, abi, test_filters, test_name):
+def _copy_test_to_device(device, build_dir, device_dir, abi, test_filters,
+                         test_name):
     abi_dir = os.path.join(build_dir, 'libs', abi)
     if not os.path.isdir(abi_dir):
         raise RuntimeError('No libraries for {}'.format(abi))
@@ -564,14 +564,14 @@ def _copy_test_to_device(build_dir, device_dir, abi, test_filters, test_name):
         # to change too much in the translation.
         lib_path = os.path.join(abi_dir, test_file)
         print('Pushing {} to {}...'.format(lib_path, device_dir))
-        adb.push(lib_path, device_dir)
+        device.push(lib_path, device_dir)
 
         # Binaries pushed from Windows may not have execute permissions.
         if not file_is_lib:
             file_path = posixpath.join(device_dir, test_file)
             # Can't use +x because apparently old versions of Android didn't
             # support that...
-            adb.shell('chmod 777 ' + file_path)
+            device.shell(['chmod', '777', file_path])
 
         # TODO(danalbert): Sync data.
         # The libc++ tests contain a DATA file that lists test names and their
@@ -585,20 +585,21 @@ def _copy_test_to_device(build_dir, device_dir, abi, test_filters, test_name):
 
 
 class DeviceTest(Test):
-    def __init__(self, name, test_dir, abi, platform, device_platform,
+    def __init__(self, name, test_dir, abi, platform, device, device_platform,
                  toolchain, build_flags):
         super(DeviceTest, self).__init__(name, test_dir)
         self.abi = abi
         self.platform = platform
+        self.device = device
         self.device_platform = device_platform
         self.toolchain = toolchain
         self.build_flags = build_flags
 
     @classmethod
-    def from_dir(cls, test_dir, abi, platform, device_platform, toolchain,
-                 build_flags):
+    def from_dir(cls, test_dir, abi, platform, device, device_platform,
+                 toolchain, build_flags):
         test_name = os.path.basename(test_dir)
-        return cls(test_name, test_dir, abi, platform, device_platform,
+        return cls(test_name, test_dir, abi, platform, device, device_platform,
                    toolchain, build_flags)
 
     def get_test_config(self):
@@ -639,13 +640,12 @@ class DeviceTest(Test):
         # We have to use `ls foo || mkdir foo` because Gingerbread was lacking
         # `mkdir -p`, the -d check for directory existence, stat, dirname, and
         # every other thing I could think of to implement this aside from ls.
-        result, out = adb.shell('ls {0} || mkdir {0}'.format(device_dir))
-        if result != 0:
-            raise RuntimeError('mkdir failed:\n' + '\n'.join(out))
+        self.device.shell(['ls {0} || mkdir {0}'.format(device_dir)])
 
         try:
             test_cases = _copy_test_to_device(
-                build_dir, device_dir, self.abi, test_filters, self.name)
+                self.device, build_dir, device_dir, self.abi, test_filters,
+                self.name)
             for case in test_cases:
                 case_name = _make_subtest_name(self.name, case)
                 if not test_filters.filter(case_name):
@@ -657,20 +657,20 @@ class DeviceTest(Test):
                     yield Skipped(case_name, message)
                     continue
 
-                cmd = 'cd {} && LD_LIBRARY_PATH={} ./{}'.format(
+                cmd = 'cd {} && LD_LIBRARY_PATH={} ./{} 2>&1'.format(
                     device_dir, device_dir, case)
-                result, out = adb.shell(cmd)
+                result, out, _ = self.device.shell_nocheck([cmd])
 
                 config, bug = self.check_subtest_broken(case)
                 if config is None:
                     if result == 0:
                         yield Success(case_name)
                     else:
-                        yield Failure(case_name, '\n'.join(out))
+                        yield Failure(case_name, out)
                 else:
                     if result == 0:
                         yield UnexpectedSuccess(case_name, config, bug)
                     else:
                         yield ExpectedFailure(case_name, config, bug)
         finally:
-            adb.shell('rm -r {}'.format(device_dir))
+            self.device.shell_nocheck(['rm', '-r', device_dir])
