@@ -13,13 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import distutils.spawn
 import os
-import re
 import subprocess
 import sys
 
-import adb
+import adb  # pylint: disable=import-error
 import filters
 import ndk
 import tests
@@ -27,46 +25,7 @@ import tests
 from tests import AwkTest, BuildTest, DeviceTest
 
 
-def get_test_device():
-    if distutils.spawn.find_executable('adb') is None:
-        raise RuntimeError('Could not find adb.')
-
-    p = subprocess.Popen(['adb', 'devices'], stdout=subprocess.PIPE)
-    out, _ = p.communicate()
-    if p.returncode != 0:
-        raise RuntimeError('Failed to get list of devices from adb.')
-
-    # The first line of `adb devices` just says "List of attached devices", so
-    # skip that.
-    devices = []
-    for line in out.split('\n')[1:]:
-        if not line.strip():
-            continue
-        if 'offline' in line:
-            continue
-
-        serial, _ = re.split(r'\s+', line, maxsplit=1)
-        devices.append(serial)
-
-    if len(devices) == 0:
-        raise RuntimeError('No devices detected.')
-
-    device = os.getenv('ANDROID_SERIAL')
-    if device is None and len(devices) == 1:
-        device = devices[0]
-
-    if device is not None and device not in devices:
-        raise RuntimeError('Device {} is not available.'.format(device))
-
-    # TODO(danalbert): Handle running against multiple devices in one pass.
-    if len(devices) > 1 and device is None:
-        raise RuntimeError('Multiple devices detected and ANDROID_SERIAL not '
-                           'set. Cannot continue.')
-
-    return device
-
-
-def get_device_abis():
+def get_device_abis(device):
     # 64-bit devices list their ABIs differently than 32-bit devices. Check all
     # the possible places for stashing ABI info and merge them.
     abi_properties = [
@@ -76,7 +35,7 @@ def get_device_abis():
     ]
     abis = set()
     for abi_prop in abi_properties:
-        prop = adb.get_prop(abi_prop)
+        prop = device.get_prop(abi_prop)
         if prop is not None:
             abis.update(prop.split(','))
 
@@ -85,22 +44,16 @@ def get_device_abis():
     return sorted(list(abis))
 
 
-def check_adb_works_or_die(abi):
-    # TODO(danalbert): Check that we can do anything with the device.
-    try:
-        device = get_test_device()
-    except RuntimeError as ex:
-        sys.exit('Error: {}'.format(ex))
-
-    supported_abis = get_device_abis()
+def check_adb_works_or_die(device, abi):
+    supported_abis = get_device_abis(device)
     if abi is not None and abi not in supported_abis:
         msg = ('The test device ({}) does not support the requested ABI '
-               '({}).\nSupported ABIs: {}'.format(device, abi,
+               '({}).\nSupported ABIs: {}'.format(device.serial, abi,
                                                   ', '.join(supported_abis)))
         sys.exit(msg)
 
 
-def can_use_asan(abi, api, toolchain):
+def can_use_asan(device, abi, api, toolchain):
     # ASAN is currently only supported for 32-bit ARM and x86...
     if not abi.startswith('armeabi') and not abi == 'x86':
         return False
@@ -118,7 +71,7 @@ def can_use_asan(abi, api, toolchain):
         return False
 
     # On rooted devices.
-    if int(adb.get_prop('ro.debuggable')) == 0:
+    if int(device.get_prop('ro.debuggable')) == 0:
         return False
 
     return True
@@ -202,8 +155,9 @@ def run_all(ndk_path, out_dir, printer, abi, toolchain, build_api_level=None,
     # Do this early so we find any device issues now rather than after we've
     # run all the build tests.
     if 'device' in suites:
-        check_adb_works_or_die(abi)
-        device_api_level = int(adb.get_prop('ro.build.version.sdk'))
+        device = adb.get_device()
+        check_adb_works_or_die(device, abi)
+        device_api_level = int(device.get_prop('ro.build.version.sdk'))
 
         # PIE is required in L. All of the device tests are written toward the
         # ndk-build defaults, so we need to inform the build that we need PIE
@@ -211,15 +165,15 @@ def run_all(ndk_path, out_dir, printer, abi, toolchain, build_api_level=None,
         if device_api_level >= 21:
             ndk_build_flags.append('APP_PIE=true')
 
-        os.environ['ANDROID_SERIAL'] = get_test_device()
+        os.environ['ANDROID_SERIAL'] = device.serial
 
-        if can_use_asan(abi, device_api_level, toolchain):
+        if can_use_asan(device, abi, device_api_level, toolchain):
             asan_device_setup()
 
         # Do this as part of initialization rather than with a `mkdir -p` later
         # because Gingerbread didn't actually support -p :(
-        adb.shell('rm -r /data/local/tmp/ndk-tests')
-        adb.shell('mkdir /data/local/tmp/ndk-tests')
+        device.shell(['rm -r /data/local/tmp/ndk-tests 2>&1'])
+        device.shell(['mkdir /data/local/tmp/ndk-tests 2>&1'])
 
     runner = tests.TestRunner(printer)
     if 'awk' in suites:
@@ -229,7 +183,7 @@ def run_all(ndk_path, out_dir, printer, abi, toolchain, build_api_level=None,
                          toolchain, ndk_build_flags)
     if 'device' in suites:
         runner.add_suite('device', 'device', DeviceTest, abi, build_api_level,
-                         device_api_level, toolchain, ndk_build_flags)
+                         device, device_api_level, toolchain, ndk_build_flags)
 
     test_filters = filters.TestFilter.from_string(test_filter)
     results = runner.run(out_dir, test_filters)
