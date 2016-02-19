@@ -25,6 +25,7 @@ import shutil
 import site
 import subprocess
 import sys
+import tempfile
 
 
 THIS_DIR = os.path.realpath(os.path.dirname(__file__))
@@ -184,28 +185,6 @@ def find_devices():
     return fleet
 
 
-def run_tests(ndk, device, abi, toolchain, log_dir, extra_args):
-    print('Running {} {} tests for {}... '.format(toolchain, abi, device),
-          end='')
-    sys.stdout.flush()
-
-    env = dict(os.environ)
-    env['ANDROID_SERIAL'] = device.serial
-    env['NDK'] = ndk
-
-    abi_arg = '--abi={}'.format(abi)
-    toolchain_arg = '--toolchain={}'.format(toolchain)
-    toolchain_name = 'gcc' if toolchain == '4.9' else toolchain
-    log_file_name = '{}-{}-{}.log'.format(toolchain_name, abi, device.version)
-    with open(os.path.join(log_dir, log_file_name), 'w') as log_file:
-        args = ['python', 'tests/run-all.py', abi_arg, toolchain_arg]
-        args.extend(extra_args)
-        rc = subprocess.call(args, env=env, stdout=log_file,
-                             stderr=subprocess.STDOUT)
-        print('PASS' if rc == 0 else 'FAIL')
-        return rc == 0
-
-
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -214,11 +193,11 @@ def parse_args():
         '--log-dir', type=os.path.realpath, default='test-logs',
         help='Directory to store test logs.')
 
-    return parser.parse_known_args()
+    return parser.parse_args()
 
 
 def main():
-    args, run_all_args = parse_args()
+    args = parse_args()
 
     os.chdir(THIS_DIR)
 
@@ -243,36 +222,12 @@ def main():
         shutil.rmtree(args.log_dir)
     os.makedirs(args.log_dir)
 
-    # Note that we are duplicating some testing here.
-    #
-    # * The awk tests only need to be run once because they do not vary by
-    #   configuration.
-    # * The build tests only vary per-device by the PIE configuration, so we
-    #   only need to run them twice per ABI/toolchain.
-    # * The build tests are already run as a part of the build process.
-    #
-    # For local testing, it is probably desirable to pass `--suite device` to
-    # speed things up.
-    results = []
-    good = True
-    for version in fleet.get_versions():
-        for abi in fleet.get_abis(version):
-            device = fleet.get_device(version, abi)
-            for toolchain in ('clang', '4.9'):
-                if device is None:
-                    results.append('android-{} {} {}: {}'.format(
-                        version, abi, toolchain, 'SKIP'))
-                    continue
-
-                result = run_tests(
-                    args.ndk, device, abi, toolchain, args.log_dir,
-                    run_all_args)
-                results.append('android-{} {} {}: {}'.format(
-                    version, abi, toolchain, 'PASS' if result else 'FAIL'))
-                if not result:
-                    good = False
-
-    print('\n'.join(results))
+    out_dir = tempfile.mkdtemp()
+    try:
+        import runners
+        good = runners.run_for_fleet(args.ndk, fleet, out_dir, args.log_dir)
+    finally:
+        shutil.rmtree(out_dir)
     sys.exit(not good)
 
 
