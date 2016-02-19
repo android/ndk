@@ -133,6 +133,9 @@ def run_all(ndk_path, out_dir, printer, abi, toolchain, build_api_level=None,
     Returns:
         True if all tests completed successfully, False if there were failures.
     """
+    if suites is None:
+        suites = ('awk', 'build', 'device')
+
     os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
     # Defining _NDK_TESTING_ALL_=yes to put armeabi-v7a-hard in its own
