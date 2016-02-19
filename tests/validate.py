@@ -196,6 +196,34 @@ def parse_args():
     return parser.parse_args()
 
 
+def get_aggregate_results(details):
+    tests = {}
+    for version, abis in details.iteritems():
+        for abi, toolchains in abis.iteritems():
+            for toolchain, results in toolchains.iteritems():
+                for suite, test_results in results.iteritems():
+                    for test in test_results:
+                        if test.failed():
+                            name = '.'.join([suite, test.test_name])
+                            if name not in tests:
+                                tests[name] = []
+                            tests[name].append((version, abi, toolchain, test))
+    return tests
+
+
+def print_aggregate_details(details, use_color):
+    tests = get_aggregate_results(details)
+    for test_name, configs in tests.iteritems():
+        # We might be printing a lot of crap here, so let's be obvious about
+        # where each test starts.
+        print('BEGIN TEST RESULT: ' + test_name)
+        print('=' * 80)
+
+        for version, abi, toolchain, result in configs:
+            print('FAILED {} {} {}:'.format(toolchain, abi, version))
+            print(result.to_string(colored=use_color))
+
+
 def main():
     args = parse_args()
 
@@ -225,9 +253,14 @@ def main():
     out_dir = tempfile.mkdtemp()
     try:
         import runners
-        good = runners.run_for_fleet(args.ndk, fleet, out_dir, args.log_dir)
+        good, details = runners.run_for_fleet(args.ndk, fleet, out_dir,
+                                              args.log_dir)
     finally:
         shutil.rmtree(out_dir)
+
+    use_color = sys.stdin.isatty() and os.name != 'nt'
+    print_aggregate_details(details, use_color)
+
     sys.exit(not good)
 
 

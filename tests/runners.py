@@ -206,7 +206,7 @@ def run_single_configuration(ndk_path, out_dir, printer, abi, toolchain,
     stats = ResultStats(suites, results)
 
     printer.print_summary(results, stats)
-    return stats.global_stats['fail'] == 0
+    return stats.global_stats['fail'] == 0, results
 
 
 def run_tests(ndk_path, device, abi, toolchain, out_dir, log_dir):
@@ -218,11 +218,11 @@ def run_tests(ndk_path, device, abi, toolchain, out_dir, log_dir):
     log_file_name = '{}-{}-{}.log'.format(toolchain_name, abi, device.version)
     with open(os.path.join(log_dir, log_file_name), 'w') as log_file:
         printer = printers.FilePrinter(log_file)
-        good = run_single_configuration(
+        good, details = run_single_configuration(
             ndk_path, out_dir, printer, abi, toolchain,
             device_serial=device.serial)
         print('PASS' if good else 'FAIL')
-        return good
+        return good, details
 
 
 def run_for_fleet(ndk_path, fleet, out_dir, log_dir):
@@ -237,9 +237,12 @@ def run_for_fleet(ndk_path, fleet, out_dir, log_dir):
     # For local testing, it is probably desirable to pass `--suite device` to
     # speed things up.
     results = []
+    details = {}
     good = True
     for version in fleet.get_versions():
+        details[version] = {}
         for abi in fleet.get_abis(version):
+            details[version][abi] = {}
             device = fleet.get_device(version, abi)
             for toolchain in ('clang', '4.9'):
                 if device is None:
@@ -247,12 +250,15 @@ def run_for_fleet(ndk_path, fleet, out_dir, log_dir):
                         version, abi, toolchain, 'SKIP'))
                     continue
 
-                result = run_tests(
+                details[version][abi][toolchain] = None
+
+                result, run_details = run_tests(
                     ndk_path, device, abi, toolchain, out_dir, log_dir)
                 results.append('android-{} {} {}: {}'.format(
                     version, abi, toolchain, 'PASS' if result else 'FAIL'))
+                details[version][abi][toolchain] = run_details
                 if not result:
                     good = False
 
     print('\n'.join(results))
-    return good
+    return good, details
