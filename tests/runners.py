@@ -13,12 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from __future__ import print_function
+
 import os
 import subprocess
 import sys
 
 import adb  # pylint: disable=import-error
 import filters
+import printers
 import ndk
 import tests
 
@@ -34,10 +37,10 @@ def get_device_abis(device):
         'ro.product.cpu.abilist',
     ]
     abis = set()
+    properties = device.get_props()
     for abi_prop in abi_properties:
-        prop = device.get_prop(abi_prop)
-        if prop is not None:
-            abis.update(prop.split(','))
+        if abi_prop in properties:
+            abis.update(properties[abi_prop].split(','))
 
     if 'armeabi-v7a' in abis:
         abis.add('armeabi-v7a-hard')
@@ -81,7 +84,11 @@ def asan_device_setup():
     path = os.path.join(
         os.environ['NDK'], 'toolchains', 'llvm', 'prebuilt',
         ndk.get_host_tag(), 'bin', 'asan_device_setup')
-    subprocess.check_call([path])
+    try:
+        subprocess.check_output([path], stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as ex:
+        print(ex.output)
+        raise ex
 
 
 class ResultStats(object):
@@ -107,8 +114,10 @@ class ResultStats(object):
                     self.global_stats['skip'] += 1
 
 
-def run_all(ndk_path, out_dir, printer, abi, toolchain, build_api_level=None,
-            verbose_ndk_build=False, suites=None, test_filter=None):
+def run_single_configuration(ndk_path, out_dir, printer, abi, toolchain,
+                             build_api_level=None, verbose_ndk_build=False,
+                             suites=None, test_filter=None,
+                             device_serial=None):
     """Runs all the tests for the given configuration.
 
     Sets up the necessary build flags and environment, checks that the device
@@ -129,6 +138,9 @@ def run_all(ndk_path, out_dir, printer, abi, toolchain, build_api_level=None,
             values are 'awk', 'build', and 'device'. If None, will run all
             suites.
         test_filter: Filter string for selecting a subset of tests.
+        device_serial: Serial number of the device to use for device tests. If
+            none, will try to find a device from ANDROID_SERIAL or a unique
+            attached device.
 
     Returns:
         True if all tests completed successfully, False if there were failures.
@@ -158,7 +170,7 @@ def run_all(ndk_path, out_dir, printer, abi, toolchain, build_api_level=None,
     # Do this early so we find any device issues now rather than after we've
     # run all the build tests.
     if 'device' in suites:
-        device = adb.get_device()
+        device = adb.get_device(device_serial)
         check_adb_works_or_die(device, abi)
         device_api_level = int(device.get_prop('ro.build.version.sdk'))
 
@@ -195,3 +207,52 @@ def run_all(ndk_path, out_dir, printer, abi, toolchain, build_api_level=None,
 
     printer.print_summary(results, stats)
     return stats.global_stats['fail'] == 0
+
+
+def run_tests(ndk_path, device, abi, toolchain, out_dir, log_dir):
+    print('Running {} {} tests for {}... '.format(toolchain, abi, device),
+          end='')
+    sys.stdout.flush()
+
+    toolchain_name = 'gcc' if toolchain == '4.9' else toolchain
+    log_file_name = '{}-{}-{}.log'.format(toolchain_name, abi, device.version)
+    with open(os.path.join(log_dir, log_file_name), 'w') as log_file:
+        printer = printers.FilePrinter(log_file)
+        good = run_single_configuration(
+            ndk_path, out_dir, printer, abi, toolchain,
+            device_serial=device.serial)
+        print('PASS' if good else 'FAIL')
+        return good
+
+
+def run_for_fleet(ndk_path, fleet, out_dir, log_dir):
+    # Note that we are duplicating some testing here.
+    #
+    # * The awk tests only need to be run once because they do not vary by
+    #   configuration.
+    # * The build tests only vary per-device by the PIE configuration, so we
+    #   only need to run them twice per ABI/toolchain.
+    # * The build tests are already run as a part of the build process.
+    #
+    # For local testing, it is probably desirable to pass `--suite device` to
+    # speed things up.
+    results = []
+    good = True
+    for version in fleet.get_versions():
+        for abi in fleet.get_abis(version):
+            device = fleet.get_device(version, abi)
+            for toolchain in ('clang', '4.9'):
+                if device is None:
+                    results.append('android-{} {} {}: {}'.format(
+                        version, abi, toolchain, 'SKIP'))
+                    continue
+
+                result = run_tests(
+                    ndk_path, device, abi, toolchain, out_dir, log_dir)
+                results.append('android-{} {} {}: {}'.format(
+                    version, abi, toolchain, 'PASS' if result else 'FAIL'))
+                if not result:
+                    good = False
+
+    print('\n'.join(results))
+    return good

@@ -15,6 +15,8 @@
 #
 from __future__ import print_function
 
+import sys
+
 import util
 
 
@@ -37,25 +39,32 @@ class Printer(object):
         raise NotImplementedError
 
 
-class StdoutPrinter(Printer):
-    def __init__(self, use_color=False, show_all=False):
+class FilePrinter(Printer):
+    def __init__(self, to_file, use_color=False, show_all=False):
+        self.file = to_file
         self.use_color = use_color
         self.show_all = show_all
 
     def print_result(self, result):
-        print(result.to_string(colored=self.use_color))
+        print(result.to_string(colored=self.use_color), file=self.file)
 
     def print_summary(self, results, stats):
-        print()
+        print(file=self.file)
         formatted = format_stats_str(stats.num_tests,
                                      stats.global_stats, self.use_color)
-        print(formatted)
+        print(formatted, file=self.file)
         for suite, test_results in results.items():
             stats_str = format_stats_str(len(test_results),
                                          stats.suite_stats[suite],
                                          self.use_color)
-            print()
-            print('{}: {}'.format(suite, stats_str))
+            print(file=self.file)
+            print('{}: {}'.format(suite, stats_str), file=self.file)
             for result in test_results:
                 if self.show_all or result.failed():
-                    print(result.to_string(colored=self.use_color))
+                    print(result.to_string(colored=self.use_color),
+                          file=self.file)
+
+
+class StdoutPrinter(FilePrinter):
+    def __init__(self, use_color=False, show_all=False):
+        super(StdoutPrinter, self).__init__(sys.stdout, use_color, show_all)
