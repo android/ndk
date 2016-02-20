@@ -255,8 +255,32 @@ class ResultStats(object):
                     self.global_stats['skip'] += 1
 
 
-def main():
-    orig_cwd = os.getcwd()
+def run_all(ndk_path, out_dir, printer, abi, toolchain, build_api_level=None,
+            verbose_ndk_build=False, suites=None, test_filter=None):
+    """Runs all the tests for the given configuration.
+
+    Sets up the necessary build flags and environment, checks that the device
+    under test is in working order and performs device setup (if running device
+    tests), and finally runs the tests for the selected suites.
+
+    Args:
+        ndk_path: Absolute path the the NDK being tested.
+        out_dir: Directory to use when building tests.
+        printer: Instance of printers.Printer that will be used to print test
+            results.
+        abi: ABI to test against.
+        toolchain: Toolchain to build with.
+        build_api_level: API level to build against. If None, will default to
+            the value set in the test's Application.mk, or ndk-build's default.
+        verbose_ndk_build: Show verbose output from ndk-build.
+        suites: Set of strings denoting which test suites to run. Possible
+            values are 'awk', 'build', and 'device'. If None, will run all
+            suites.
+        test_filter: Filter string for selecting a subset of tests.
+
+    Returns:
+        True if all tests completed successfully, False if there were failures.
+    """
     os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
     # Defining _NDK_TESTING_ALL_=yes to put armeabi-v7a-hard in its own
@@ -264,23 +288,67 @@ def main():
     # Some tests are now compiled with both APP_ABI=armeabi-v7a and
     # APP_ABI=armeabi-v7a-hard. Without _NDK_TESTING_ALL_=yes, tests may fail
     # to install due to race condition on the same libs/armeabi-v7a
-    if '_NDK_TESTING_ALL_' not in os.environ:
-        os.environ['_NDK_TESTING_ALL_'] = 'all'
+    os.environ['_NDK_TESTING_ALL_'] = 'all'
 
-    if 'NDK' not in os.environ:
-        os.environ['NDK'] = os.path.dirname(os.getcwd())
+    os.environ['NDK'] = ndk_path
 
-    args = ArgParser().parse_args()
-    ndk_build_flags = []
-    if args.abi is not None:
-        ndk_build_flags.append('APP_ABI={}'.format(args.abi))
-    if args.platform is not None:
-        ndk_build_flags.append('APP_PLATFORM={}'.format(args.platform))
-    if args.show_commands:
+    # For some reason we handle NDK_TOOLCHAIN_VERSION in _run_ndk_build_test...
+    # We also handle APP_ABI there (as well as here). This merits some cleanup.
+    ndk_build_flags = ['APP_ABI={}'.format(abi)]
+    if build_api_level is not None:
+        ndk_build_flags.append('APP_PLATFORM={}'.format(build_api_level))
+    if verbose_ndk_build:
         ndk_build_flags.append('V=1')
 
-    if not os.path.exists(os.path.join('../build/tools/prebuilt-common.sh')):
-        sys.exit('Error: Not run from a valid NDK.')
+    # Do this early so we find any device issues now rather than after we've
+    # run all the build tests.
+    if 'device' in suites:
+        check_adb_works_or_die(abi)
+        device_api_level = int(adb.get_prop('ro.build.version.sdk'))
+
+        # PIE is required in L. All of the device tests are written toward the
+        # ndk-build defaults, so we need to inform the build that we need PIE
+        # if we're running on a newer device.
+        if device_api_level >= 21:
+            ndk_build_flags.append('APP_PIE=true')
+
+        os.environ['ANDROID_SERIAL'] = get_test_device()
+
+        if can_use_asan(abi, device_api_level, toolchain):
+            asan_device_setup()
+
+        # Do this as part of initialization rather than with a `mkdir -p` later
+        # because Gingerbread didn't actually support -p :(
+        adb.shell('rm -r /data/local/tmp/ndk-tests')
+        adb.shell('mkdir /data/local/tmp/ndk-tests')
+
+    runner = tests.TestRunner()
+    if 'awk' in suites:
+        runner.add_suite('awk', 'awk', AwkTest)
+    if 'build' in suites:
+        runner.add_suite('build', 'build', BuildTest, abi, build_api_level,
+                         toolchain, ndk_build_flags)
+    if 'device' in suites:
+        runner.add_suite('device', 'device', DeviceTest, abi, build_api_level,
+                         device_api_level, toolchain, ndk_build_flags)
+
+    test_filters = filters.TestFilter.from_string(test_filter)
+    results = runner.run(out_dir, test_filters)
+
+    stats = ResultStats(suites, results)
+
+    printer.print_results(results, stats)
+    return stats.global_stats['fail'] == 0
+
+
+def main():
+    orig_cwd = os.getcwd()
+
+    if 'NDK' not in os.environ:
+        sys.exit('The environment variable NDK must point to an NDK.')
+    ndk_path = os.environ['NDK']
+
+    args = ArgParser().parse_args()
 
     out_dir = args.out_dir
     if out_dir is not None:
@@ -297,49 +365,13 @@ def main():
     if args.suite:
         suites = [args.suite]
 
-    # Do this early so we find any device issues now rather than after we've
-    # run all the build tests.
-    if 'device' in suites:
-        check_adb_works_or_die(args.abi)
-        api_level = int(adb.get_prop('ro.build.version.sdk'))
-
-        # PIE is required in L. All of the device tests are written toward the
-        # ndk-build defaults, so we need to inform the build that we need PIE
-        # if we're running on a newer device.
-        if api_level >= 21:
-            ndk_build_flags.append('APP_PIE=true')
-
-        os.environ['ANDROID_SERIAL'] = get_test_device()
-
-        if can_use_asan(args.abi, api_level, args.toolchain):
-            asan_device_setup()
-
-        # Do this as part of initialization rather than with a `mkdir -p` later
-        # because Gingerbread didn't actually support -p :(
-        adb.shell('rm -r /data/local/tmp/ndk-tests')
-        adb.shell('mkdir /data/local/tmp/ndk-tests')
-
-    runner = tests.TestRunner()
-    if 'awk' in suites:
-        runner.add_suite('awk', 'awk', AwkTest)
-    if 'build' in suites:
-        runner.add_suite('build', 'build', BuildTest, args.abi, args.platform,
-                         args.toolchain, ndk_build_flags)
-    if 'device' in suites:
-        runner.add_suite('device', 'device', DeviceTest, args.abi,
-                         args.platform, api_level, args.toolchain,
-                         ndk_build_flags)
-
-    test_filters = filters.TestFilter.from_string(args.filter)
-    results = runner.run(out_dir, test_filters)
-
-    stats = ResultStats(suites, results)
-
     use_color = sys.stdin.isatty() and os.name != 'nt'
     printer = printers.StdoutPrinter(use_color=use_color,
                                      show_all=args.show_all)
-    printer.print_results(results, stats)
-    sys.exit(stats.global_stats['fail'] > 0)
+    good = run_all(ndk_path, out_dir, printer, args.abi, args.toolchain,
+                   args.platform, args.show_commands, suites=suites,
+                   test_filter=args.filter)
+    sys.exit(not good)
 
 
 if __name__ == '__main__':
