@@ -31,11 +31,9 @@ import inspect
 import os
 import re
 import shutil
+import site
 import sys
 import tempfile
-
-import printers
-import runners
 
 
 SUPPORTED_ABIS = (
@@ -127,6 +125,15 @@ def main():
     if 'NDK' not in os.environ:
         sys.exit('The environment variable NDK must point to an NDK.')
     ndk_path = os.environ['NDK']
+
+    # We need to do this here rather than at the top because we load the module
+    # from a path that is given on the command line. We load it from the NDK
+    # given on the command line so this script can be run even without a full
+    # platform checkout.
+    site.addsitedir(os.path.join(ndk_path, 'python-packages'))
+
+    import printers
+    import runners
 
     args = ArgParser().parse_args()
 
