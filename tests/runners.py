@@ -24,6 +24,7 @@ import filters
 import printers
 import ndk
 import tests
+import util
 
 from tests import AwkTest, BuildTest, DeviceTest
 
@@ -225,7 +226,7 @@ def run_tests(ndk_path, device, abi, toolchain, out_dir, log_dir):
         return good, details
 
 
-def run_for_fleet(ndk_path, fleet, out_dir, log_dir):
+def run_for_fleet(ndk_path, fleet, out_dir, log_dir, use_color=False):
     # Note that we are duplicating some testing here.
     #
     # * The awk tests only need to be run once because they do not vary by
@@ -254,8 +255,11 @@ def run_for_fleet(ndk_path, fleet, out_dir, log_dir):
 
                 result, run_details = run_tests(
                     ndk_path, device, abi, toolchain, out_dir, log_dir)
+                pass_label = util.maybe_color('PASS', 'green', use_color)
+                fail_label = util.maybe_color('FAIL', 'red', use_color)
                 results.append('android-{} {} {}: {}'.format(
-                    version, abi, toolchain, 'PASS' if result else 'FAIL'))
+                    version, abi, toolchain,
+                    pass_label if result else fail_label))
                 details[version][abi][toolchain] = run_details
                 if not result:
                     good = False

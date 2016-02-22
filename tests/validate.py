@@ -250,15 +250,15 @@ def main():
         shutil.rmtree(args.log_dir)
     os.makedirs(args.log_dir)
 
+    use_color = sys.stdin.isatty() and os.name != 'nt'
     out_dir = tempfile.mkdtemp()
     try:
         import runners
         good, details = runners.run_for_fleet(args.ndk, fleet, out_dir,
-                                              args.log_dir)
+                                              args.log_dir, use_color)
     finally:
         shutil.rmtree(out_dir)
 
-    use_color = sys.stdin.isatty() and os.name != 'nt'
     print_aggregate_details(details, use_color)
 
     sys.exit(not good)
