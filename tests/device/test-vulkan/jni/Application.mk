@@ -1,0 +1,4 @@
+APP_PLATFORM := android-24
+APP_STL := gnustl_shared
+APP_CPPFLAGS += -std=c++11 -DVK_PROTOTYPES
+NDK_TOOLCHAIN_VERSION := 4.9
