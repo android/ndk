@@ -38,6 +38,7 @@ import build_support  # pylint: disable=import-error
 
 
 ALL_MODULES = {
+    'vulkan',
     'binutils',
     'build',
     'clang',
@@ -48,6 +49,7 @@ ALL_MODULES = {
     'gdbserver',
     'gnustl',
     'gtest',
+    'vulkan',
     'host-tools',
     'libandroid_support',
     'libc++',
@@ -554,6 +556,15 @@ def build_gtest(_, dist_dir, __):
     path = build_support.ndk_path('sources/third_party/googletest')
     build_support.make_package('gtest', path, dist_dir)
 
+def build_vulkan(_, dist_dir, __):
+    path = build_support.ndk_path('sources/third_party/vulkan')
+    build_support.make_package('vulkan', path, dist_dir)
+
+
+def build_vulkan(_, dist_dir, __):
+    path = build_support.ndk_path('sources/third_party/vulkan')
+    build_support.make_package('vulkan', path, dist_dir)
+
 
 def build_build(_, dist_dir, __):
     path = build_support.ndk_path('build')
@@ -648,6 +659,7 @@ def main():
     invoke_build('dev-cleanup.sh')
 
     module_builds = collections.OrderedDict([
+        ('vulkan', build_vulkan),
         ('binutils', build_binutils),
         ('build', build_build),
         ('clang', build_clang),
@@ -658,6 +670,7 @@ def main():
         ('gdbserver', build_gdbserver),
         ('gnustl', build_gnustl),
         ('gtest', build_gtest),
+        ('vulkan', build_vulkan),
         ('host-tools', build_host_tools),
         ('libandroid_support', build_libandroid_support),
         ('libc++', build_libcxx),
