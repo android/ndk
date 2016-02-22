@@ -89,6 +89,7 @@ def get_all_packages(host, arches):
         ('shader-tools-{host}', 'shader-tools/{host}'),
         ('gnustl-4.9', 'sources/cxx-stl/gnu-libstdc++/4.9'),
         ('gtest', 'sources/third_party/googletest'),
+        ('vulkan', 'sources/third_party/vulkan'),
         ('host-tools-{host}', 'prebuilt/{host}'),
         ('libandroid_support', 'sources/android/support'),
         ('libcxx', 'sources/cxx-stl/llvm-libc++'),
