@@ -67,6 +67,7 @@ system_libs := \
     GLESv1_CM \
     GLESv2 \
     GLESv3 \
+    vulkan \
     OpenSLES \
     OpenMAXAL \
     mediandk \
