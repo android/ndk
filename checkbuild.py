@@ -52,6 +52,7 @@ ALL_MODULES = {
     'libandroid_support',
     'libc++',
     'libc++abi',
+    'libshaderc',
     'native_app_glue',
     'ndk_helper',
     'platforms',
@@ -534,6 +535,77 @@ def build_platforms(out_dir, dist_dir, args):
     build_args = common_build_args(out_dir, dist_dir, args)
     invoke_build('build-platforms.py', build_args)
 
+def build_libshaderc(_, dist_dir, __):
+    print('Building libshaderc...')
+    temp_dir = tempfile.mkdtemp()
+    shaderc_path = os.path.join(temp_dir, 'shaderc')
+    shaderc_root_dir = build_support.android_path('shaderc')
+
+    copies = [
+            {
+              'source_dir' : shaderc_root_dir,
+              'dest_dir' : 'shaderc',
+              'files' :
+                  [
+                    'Android.mk', 'libshaderc/Android.mk',
+                    'libshaderc_util/Android.mk',
+                    'third_party/Android.mk'
+                  ],
+             'dirs' : [
+                    'libshaderc/include', 'libshaderc/src',
+                    'libshaderc_util/include', 'libshaderc_util/src'
+                  ]
+            },
+            {
+              'source_dir' : build_support.android_path('spirv-tools'),
+              'dest_dir' : 'shaderc/third_party/spirv-tools',
+              'files' : [],
+              'dirs' : ['include', 'source']
+            },
+            {
+              'source_dir' : build_support.android_path('glslang'),
+              'dest_dir' : 'shaderc/third_party/glslang',
+              'files' : ['glslang/OSDependent/osinclude.h'],
+              'dirs' : [
+                      'SPIRV',
+                      'OGLCompilersDLL',
+                      'glslang/GenericCodeGen',
+                      'glslang/Include',
+                      'glslang/MachineIndependent',
+                      'glslang/OSDependent/Unix',
+                      'glslang/Public'
+              ]
+            }
+    ]
+    default_ignore_patterns = shutil.ignore_patterns(
+            "*CMakeLists.txt",
+            "*.py",
+            "*test.h",
+            "*test.cc")
+    try:
+        for properties in copies:
+            source_dir = properties['source_dir']
+            dest_dir = os.path.join(temp_dir, properties['dest_dir'])
+            for d in properties['dirs']:
+                src = os.path.join(source_dir, d)
+                dst = os.path.join(dest_dir, d)
+                shutil.copytree(src, dst,
+                                ignore=default_ignore_patterns)
+            for f in properties['files']:
+                print(source_dir, ':', dest_dir, ":", f)
+                install_file(f, source_dir, dest_dir)
+
+        merge_license_files(os.path.join(shaderc_path, 'NOTICE'), [
+                os.path.join(shaderc_root_dir, 'LICENSE'),
+                os.path.join(shaderc_root_dir,
+                             'third_party',
+                             'LICENSE.spirv-tools'),
+                os.path.join(shaderc_root_dir,
+                             'third_party',
+                             'LICENSE.glslang')])
+        build_support.make_package('shaderc', shaderc_path, dist_dir)
+    finally:
+        shutil.rmtree(temp_dir)
 
 def build_cpufeatures(_, dist_dir, __):
     path = build_support.ndk_path('sources/android/cpufeatures')
@@ -662,6 +734,7 @@ def main():
         ('libandroid_support', build_libandroid_support),
         ('libc++', build_libcxx),
         ('libc++abi', build_libcxxabi),
+        ('libshaderc', build_libshaderc),
         ('native_app_glue', build_native_app_glue),
         ('ndk_helper', build_ndk_helper),
         ('platforms', build_platforms),
