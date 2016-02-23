@@ -100,7 +100,6 @@ endif # APP_PROJECT_PATH == null
 # 1) android-6 and android-7 are the same thing as android-5
 # 2) android-10 and android-11 are the same thing as android-9
 # 3) android-20 is the same thing as android-19
-# 4) android-21 and up are the same thing as android-21
 # ADDITIONAL CASES for remote server where total number of files is limited
 # 5) android-13 is the same thing as android-12
 # 6) android-15 is the same thing as android-14
@@ -114,9 +113,6 @@ ifneq (,$(filter 10 11,$(APP_PLATFORM_LEVEL)))
 endif
 ifneq (,$(filter 20,$(APP_PLATFORM_LEVEL)))
     override APP_PLATFORM := android-19
-endif
-ifneq (,$(call gt,$(APP_PLATFORM_LEVEL),21))
-    override APP_PLATFORM := android-21
 endif
 
 ifneq ($(strip $(subst android-,,$(APP_PLATFORM))),$(APP_PLATFORM_LEVEL))
