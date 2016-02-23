@@ -617,7 +617,7 @@ fix_sysroot ()
         SYSROOT=
         check_sysroot $ANDROID_BUILD_TOP/prebuilts/ndk/current/platforms $SYSROOT_SUFFIX
         check_sysroot $ANDROID_NDK_ROOT/platforms $SYSROOT_SUFFIX
-        check_sysroot `dirname $ANDROID_NDK_ROOT`/development/ndk/platforms $SYSROOT_SUFFIX
+        check_sysroot `dirname $ANDROID_NDK_ROOT`/out/android-ndk-dev/platforms $SYSROOT_SUFFIX
 
         if [ -z "$SYSROOT" ] ; then
             echo "ERROR: Could not find NDK sysroot path for $SYSROOT_SUFFIX."
