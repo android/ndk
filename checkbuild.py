@@ -46,6 +46,7 @@ ALL_MODULES = {
     'gcc',
     'gcclibs',
     'gdbserver',
+    'glslc',
     'gnustl',
     'gtest',
     'host-tools',
@@ -596,6 +597,14 @@ def build_libcxxabi(_out_dir, dist_dir, _args):
     build_support.make_package('libcxxabi', path, dist_dir)
 
 
+def pack_glslc(_out_dir, dist_dir, args):
+    host_tag = build_support.host_to_tag(args.system)
+    archive_name = '-'.join(['glslc', host_tag])
+    # Pack glslc as a prebuilt binary out of platform/prebuilts/ndk.
+    path = os.path.join(build_support.android_path('prebuilts/ndk/glslc'), host_tag)
+    build_support.make_package(archive_name, path, dist_dir)
+
+
 def main():
     parser = ArgParser()
     args = parser.parse_args()
@@ -656,6 +665,7 @@ def main():
         ('gcc', build_gcc),
         ('gcclibs', build_gcc_libs),
         ('gdbserver', build_gdbserver),
+        ('glslc', pack_glslc),
         ('gnustl', build_gnustl),
         ('gtest', build_gtest),
         ('host-tools', build_host_tools),
