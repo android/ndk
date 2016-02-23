@@ -103,6 +103,7 @@ def get_all_packages(host, arches):
         ('native_app_glue', 'sources/android/native_app_glue'),
         ('ndk_helper', 'sources/android/ndk_helper'),
         ('python-packages', 'python-packages'),
+        ('shaderc', 'sources/third_party/shaderc'),
         ('stlport', 'sources/cxx-stl/stlport'),
         ('system-stl', 'sources/cxx-stl/system'),
     ]
@@ -124,6 +125,7 @@ def get_all_packages(host, arches):
         ('native_app_glue', 'sources/android/native_app_glue'),
         ('ndk_helper', 'sources/android/ndk_helper'),
         ('python-packages', 'python-packages'),
+        ('shaderc', 'sources/third_party/shaderc'),
         ('stlport', 'sources/cxx-stl/stlport'),
         ('system-stl', 'sources/cxx-stl/system'),
     ]
