@@ -36,12 +36,6 @@ import build_support  # pylint: disable=import-error
 THIS_DIR = os.path.dirname(__file__)
 ANDROID_TOP = os.path.realpath(os.path.join(THIS_DIR, '../../..'))
 
-# Note that we can't actually support creating both layouts from the same
-# sources because changes are needed in gnustl's Android.mk and in the build
-# system. The various "USE_NEW_LAYOUT" blocks are so we can more easily undo
-# this change when we finalize a new layout.
-USE_NEW_LAYOUT = False
-
 
 def expand_packages(package, host, arches):
     """Expands package definition tuple into list of full package names.
@@ -84,31 +78,7 @@ def expand_packages(package, host, arches):
 
 
 def get_all_packages(host, arches):
-    new_layout = [
-        ('binutils-{arch}-{host}', 'binutils/{triple}'),
-        ('build', 'build'),
-        ('cpufeatures', 'sources/android/cpufeatures'),
-        ('gabixx', 'sources/cxx-stl/gabi++'),
-        ('gcc-{arch}-{host}', 'toolchains/{toolchain}-4.9'),
-        ('gcclibs-{arch}', 'gcclibs/{triple}'),
-        ('gdbserver-{arch}', 'gdbserver/{arch}'),
-        ('shader-tools-{host}', 'shader-tools/{host}'),
-        ('gnustl-4.9', 'sources/cxx-stl/gnu-libstdc++'),
-        ('gtest', 'sources/third_party/googletest'),
-        ('host-tools-{host}', 'host-tools'),
-        ('libandroid_support', 'sources/android/support'),
-        ('libcxx', 'sources/cxx-stl/llvm-libc++'),
-        ('libcxxabi', 'sources/cxx-stl/llvm-libc++abi'),
-        ('llvm-{host}', 'toolchains/llvm'),
-        ('native_app_glue', 'sources/android/native_app_glue'),
-        ('ndk_helper', 'sources/android/ndk_helper'),
-        ('python-packages', 'python-packages'),
-        ('shaderc', 'sources/third_party/shaderc'),
-        ('stlport', 'sources/cxx-stl/stlport'),
-        ('system-stl', 'sources/cxx-stl/system'),
-    ]
-
-    old_layout = [
+    packages = [
         ('build', 'build'),
         ('cpufeatures', 'sources/android/cpufeatures'),
         ('gabixx', 'sources/cxx-stl/gabi++'),
@@ -129,11 +99,6 @@ def get_all_packages(host, arches):
         ('stlport', 'sources/cxx-stl/stlport'),
         ('system-stl', 'sources/cxx-stl/system'),
     ]
-
-    if USE_NEW_LAYOUT:
-        packages = new_layout
-    else:
-        packages = old_layout
 
     platforms_path = 'development/ndk/platforms'
     for platform_dir in os.listdir(build_support.android_path(platforms_path)):
@@ -205,17 +170,16 @@ def extract_all(path, packages, out_dir):
         finally:
             shutil.rmtree(extract_dir)
 
-    if not USE_NEW_LAYOUT:
-        # FIXME(danalbert): OMG HACK
-        # The old package layout had libstdc++'s Android.mk at
-        # sources/cxx-stl/gnu-libstdc++/Android.mk. The gnustl package doesn't
-        # include the version in the path. To mimic the old package layout, we
-        # extract the gnustl package to sources/cxx-stl/gnu-libstdc++/4.9. As
-        # such, the Android.mk ends up in the 4.9 directory. We need to pull it
-        # up a directory.
-        gnustl_path = os.path.join(out_dir, 'sources/cxx-stl/gnu-libstdc++')
-        shutil.move(os.path.join(gnustl_path, '4.9/Android.mk'),
-                    os.path.join(gnustl_path, 'Android.mk'))
+    # FIXME(danalbert): OMG HACK
+    # The old package layout had libstdc++'s Android.mk at
+    # sources/cxx-stl/gnu-libstdc++/Android.mk. The gnustl package doesn't
+    # include the version in the path. To mimic the old package layout, we
+    # extract the gnustl package to sources/cxx-stl/gnu-libstdc++/4.9. As such,
+    # the Android.mk ends up in the 4.9 directory. We need to pull it up a
+    # directory.
+    gnustl_path = os.path.join(out_dir, 'sources/cxx-stl/gnu-libstdc++')
+    shutil.move(os.path.join(gnustl_path, '4.9/Android.mk'),
+                os.path.join(gnustl_path, 'Android.mk'))
 
 
 def make_ndk_build_shortcut(out_dir, host):
