@@ -190,7 +190,7 @@ def run_single_configuration(ndk_path, out_dir, printer, abi, toolchain,
 
         # Do this as part of initialization rather than with a `mkdir -p` later
         # because Gingerbread didn't actually support -p :(
-        device.shell(['rm -r /data/local/tmp/ndk-tests 2>&1'])
+        device.shell_nocheck(['rm -r /data/local/tmp/ndk-tests 2>&1'])
         device.shell(['mkdir /data/local/tmp/ndk-tests 2>&1'])
 
     runner = tests.TestRunner(printer)
