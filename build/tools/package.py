@@ -92,7 +92,7 @@ def get_all_packages(host, arches):
         ('gcc-{arch}-{host}', 'toolchains/{toolchain}-4.9'),
         ('gcclibs-{arch}', 'gcclibs/{triple}'),
         ('gdbserver-{arch}', 'gdbserver/{arch}'),
-        ('glslc-{host}', 'glslc/{host}'),
+        ('shader-tools-{host}', 'shader-tools/{host}'),
         ('gnustl-4.9', 'sources/cxx-stl/gnu-libstdc++'),
         ('gtest', 'sources/third_party/googletest'),
         ('host-tools-{host}', 'host-tools'),
