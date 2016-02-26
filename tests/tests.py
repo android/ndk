@@ -415,7 +415,7 @@ def _run_build_sh_test(test_name, build_dir, test_dir, build_flags, abi,
                        platform, toolchain):
     _prep_build_dir(test_dir, build_dir)
     with util.cd(build_dir):
-        build_cmd = ['sh', 'build.sh', _get_jobs_arg()] + build_flags
+        build_cmd = ['bash', 'build.sh', _get_jobs_arg()] + build_flags
         test_env = dict(os.environ)
         if abi is not None:
             test_env['APP_ABI'] = abi
