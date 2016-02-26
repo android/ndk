@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 NDK_BUILDTOOLS_PATH="$(dirname $0)"
 . "$NDK_BUILDTOOLS_PATH/prebuilt-common.sh"
