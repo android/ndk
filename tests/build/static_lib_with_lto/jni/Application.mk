@@ -1,0 +1,3 @@
+APP_CFLAGS += -flto
+APP_LDFLAGS += -flto
+NDK_TOOLCHAIN_VERSION=clang
