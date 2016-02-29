@@ -150,10 +150,13 @@ TARGET_LDFLAGS :=
 
 # Use *-gcc-ar instead of *-ar for better LTO support, except for
 # gcc4.6 which doesn't have gcc-ar
+# For clang LTO support we should also add the path to the plugin
+TARGET_AR_PLUGIN :=
 ifneq (clang3.6,$(NDK_TOOLCHAIN_VERSION))
 TARGET_AR       = $(TOOLCHAIN_PREFIX)gcc-ar
 else
 TARGET_AR       = $(TOOLCHAIN_PREFIX)ar
+TARGET_AR_PLUGIN = --plugin $(LLVM_TOOLCHAIN_PREBUILT_ROOT)/lib64/LLVMgold.so
 endif
 
 TARGET_ARFLAGS := crsD

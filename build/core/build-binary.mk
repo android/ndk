@@ -563,6 +563,7 @@ ifeq (true,$(thin_archive))
     $(call ndk_log,$(TARGET_ARCH_ABI):Building static library '$(LOCAL_MODULE)' as thin archive)
     ar_flags := $(ar_flags)T
 endif
+ar_flags := $(ar_flags) $(TARGET_AR_PLUGIN)
 
 $(LOCAL_BUILT_MODULE): PRIVATE_ABI := $(TARGET_ARCH_ABI)
 $(LOCAL_BUILT_MODULE): PRIVATE_AR := $(TARGET_AR) $(ar_flags)
