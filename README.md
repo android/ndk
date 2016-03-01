@@ -133,7 +133,7 @@ Running the NDK tests requires a complete NDK package (see previous steps).
 From the NDK source directory (not the extracted package):
 
 ```bash
-$ NDK=/path/to/extracted/ndk python tests/run-all.py --abi $ABI_TO_TEST
+$ python tests/run-all.py --abi $ABI_TO_TEST path/to/ndk
 ```
 
 To run the tests with GCC, use the option `--toolchain 4.9`.
