@@ -88,6 +88,10 @@ class ArgParser(argparse.ArgumentParser):
             description=inspect.getdoc(sys.modules[__name__]))
 
         self.add_argument(
+            'ndk', metavar='NDK', type=os.path.realpath,
+            help='Path to NDK under test.')
+
+        self.add_argument(
             '--abi', choices=SUPPORTED_ABIS, required=True,
             help=('Run tests against the specified ABI.'))
         self.add_argument(
@@ -122,9 +126,8 @@ class ArgParser(argparse.ArgumentParser):
 def main():
     orig_cwd = os.getcwd()
 
-    if 'NDK' not in os.environ:
-        sys.exit('The environment variable NDK must point to an NDK.')
-    ndk_path = os.environ['NDK']
+    args = ArgParser().parse_args()
+    ndk_path = args.ndk
 
     # We need to do this here rather than at the top because we load the module
     # from a path that is given on the command line. We load it from the NDK
@@ -134,8 +137,6 @@ def main():
 
     import printers
     import runners
-
-    args = ArgParser().parse_args()
 
     out_dir = args.out_dir
     if out_dir is not None:
