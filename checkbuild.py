@@ -682,7 +682,8 @@ def pack_shader_tools(_out_dir, dist_dir, args):
     host_tag = build_support.host_to_tag(args.system)
     archive_name = '-'.join(['shader-tools', host_tag])
     # Pack shader-tools as a prebuilt binary out of platform/prebuilts/ndk.
-    path = os.path.join(build_support.android_path('prebuilts/ndk/shader-tools'), host_tag)
+    path = os.path.join(
+        build_support.android_path('prebuilts/ndk/shader-tools'), host_tag)
     build_support.make_package(archive_name, path, dist_dir)
 
 
