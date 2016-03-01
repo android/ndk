@@ -277,11 +277,13 @@ build_gnustl_for_abi ()
         MULTILIB_FLAGS=--disable-multilib
     fi
 
+    INCLUDE_VERSION=`cat $GNUSTL_SRCDIR/../gcc/gcc-$GCC_VERSION/gcc/BASE-VER`
     PROJECT="gnustl_$LIBTYPE gcc-$GCC_VERSION $ABI $THUMB"
     echo "$PROJECT: configuring"
     mkdir -p $BUILDDIR && rm -rf $BUILDDIR/* &&
     cd $BUILDDIR &&
     run $GNUSTL_SRCDIR/configure \
+        --enable-bionic-libs \
         --prefix=$INSTALLDIR \
         --host=$BUILD_HOST \
         $LIBTYPE_FLAGS \
@@ -292,7 +294,7 @@ build_gnustl_for_abi ()
         --disable-sjlj-exceptions \
         --disable-tls \
         --disable-libstdcxx-pch \
-        --with-gxx-include-dir=$INSTALLDIR/include/c++/$GCC_VERSION
+        --with-gxx-include-dir=$INSTALLDIR/include/c++/$INCLUDE_VERSION
 
     fail_panic "Could not configure $PROJECT"
 
