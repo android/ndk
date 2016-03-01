@@ -277,11 +277,13 @@ build_gnustl_for_abi ()
         MULTILIB_FLAGS=--disable-multilib
     fi
 
+    INCLUDE_VERSION=`cat $GNUSTL_SRCDIR/../gcc/BASE-VER`
     PROJECT="gnustl_$LIBTYPE gcc-$GCC_VERSION $ABI $THUMB"
     echo "$PROJECT: configuring"
     mkdir -p $BUILDDIR && rm -rf $BUILDDIR/* &&
     cd $BUILDDIR &&
     run $GNUSTL_SRCDIR/configure \
+        --enable-bionic-libs \
         --prefix=$INSTALLDIR \
         --host=$BUILD_HOST \
         $LIBTYPE_FLAGS \
@@ -292,7 +294,7 @@ build_gnustl_for_abi ()
         --disable-sjlj-exceptions \
         --disable-tls \
         --disable-libstdcxx-pch \
-        --with-gxx-include-dir=$INSTALLDIR/include/c++/$GCC_VERSION
+        --with-gxx-include-dir=$INSTALLDIR/include/c++/$INCLUDE_VERSION
 
     fail_panic "Could not configure $PROJECT"
 
@@ -320,13 +322,16 @@ copy_gnustl_libs ()
     local PREFIX=$(get_default_toolchain_prefix_for_arch $ARCH)
     PREFIX=${PREFIX%%-}
 
+    local GNUSTL_SRCDIR=$SRCDIR/gcc/gcc-$GCC_VERSION/libstdc++-v3
+    local INCLUDE_VERSION=`cat $GNUSTL_SRCDIR/../gcc/BASE-VER`
+
     local SDIR="$BUILDDIR/install-$ABI-$GCC_VERSION"
     local DDIR="$NDK_DIR/$GNUSTL_SUBDIR"
 
     local GCC_VERSION_NO_DOT=$(echo $GCC_VERSION|sed 's/\./_/g')
     # Copy the common headers only once per gcc version
     if [ -z `var_value HAS_COMMON_HEADERS_$GCC_VERSION_NO_DOT` ]; then
-        copy_directory "$SDIR/include/c++/$GCC_VERSION" "$DDIR/include"
+        copy_directory "$SDIR/include/c++/$INCLUDE_VERSION" "$DDIR/include"
         rm -rf "$DDIR/include/$PREFIX"
 	eval HAS_COMMON_HEADERS_$GCC_VERSION_NO_DOT=true
     fi
@@ -335,20 +340,20 @@ copy_gnustl_libs ()
     mkdir -p "$DDIR/libs/$ABI/include"
 
     # Copy the ABI-specific headers
-    copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/bits" "$DDIR/libs/$ABI/include/bits"
+    copy_directory "$SDIR/include/c++/$INCLUDE_VERSION/$PREFIX/bits" "$DDIR/libs/$ABI/include/bits"
     case "$ARCH" in
         x86_64)
-            copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/32/bits" "$DDIR/libs/$ABI/include/32/bits"
-            copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/x32/bits" "$DDIR/libs/$ABI/include/x32/bits"
+            copy_directory "$SDIR/include/c++/$INCLUDE_VERSION/$PREFIX/32/bits" "$DDIR/libs/$ABI/include/32/bits"
+            copy_directory "$SDIR/include/c++/$INCLUDE_VERSION/$PREFIX/x32/bits" "$DDIR/libs/$ABI/include/x32/bits"
             ;;
         mips64)
-            copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/32/mips-r1/bits" "$DDIR/libs/$ABI/include/32/mips-r1/bits"
-            copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/32/mips-r2/bits" "$DDIR/libs/$ABI/include/32/mips-r2/bits"
-            copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/32/mips-r6/bits" "$DDIR/libs/$ABI/include/32/mips-r6/bits"
+            copy_directory "$SDIR/include/c++/$INCLUDE_VERSION/$PREFIX/32/mips-r1/bits" "$DDIR/libs/$ABI/include/32/mips-r1/bits"
+            copy_directory "$SDIR/include/c++/$INCLUDE_VERSION/$PREFIX/32/mips-r2/bits" "$DDIR/libs/$ABI/include/32/mips-r2/bits"
+            copy_directory "$SDIR/include/c++/$INCLUDE_VERSION/$PREFIX/32/mips-r6/bits" "$DDIR/libs/$ABI/include/32/mips-r6/bits"
             ;;
         mips)
-            copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/mips-r2/bits" "$DDIR/libs/$ABI/include/mips-r2/bits"
-            copy_directory "$SDIR/include/c++/$GCC_VERSION/$PREFIX/mips-r6/bits" "$DDIR/libs/$ABI/include/mips-r6/bits"
+            copy_directory "$SDIR/include/c++/$INCLUDE_VERSION/$PREFIX/mips-r2/bits" "$DDIR/libs/$ABI/include/mips-r2/bits"
+            copy_directory "$SDIR/include/c++/$INCLUDE_VERSION/$PREFIX/mips-r6/bits" "$DDIR/libs/$ABI/include/mips-r6/bits"
             ;;
     esac
 
