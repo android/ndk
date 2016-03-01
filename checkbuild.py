@@ -36,6 +36,12 @@ site.addsitedir(os.path.join(os.path.dirname(__file__), 'build/lib'))
 
 import build_support  # pylint: disable=import-error
 
+# Importing tests.runners requires that adb can be imported.
+site.addsitedir(build_support.android_path('development/python-packages'))
+
+import tests.runners
+import tests.printers
+
 
 ALL_MODULES = {
     'binutils',
@@ -171,15 +177,14 @@ def test_ndk(out_dir, args):
     if args.arch is not None:
         abis = build_support.arch_to_abis(args.arch)
 
+    use_color = sys.stdin.isatty() and os.name != 'nt'
     results = {}
     for abi in abis:
-        cmd = [
-            'python', build_support.ndk_path('tests/run-all.py'),
-            '--abi', abi, '--suite', 'build'
-        ]
-        print('Running tests: {}'.format(' '.join(cmd)))
-        result = subprocess.call(cmd, env=test_env)
-        results[abi] = result == 0
+        test_out_dir = os.path.join(out_dir, 'test', abi)
+        results[abi], _ = tests.runners.run_single_configuration(
+            test_dir, test_out_dir,
+            tests.printers.StdoutPrinter(use_color=use_color),
+            abi, 'clang', suites=['build'])
 
     print('Results:')
     for abi, result in results.iteritems():
