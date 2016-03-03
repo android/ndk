@@ -543,7 +543,7 @@ builder_begin_android ()
     if [ -n "$LLVM_VERSION" ]; then
         GCC_TOOLCHAIN=`dirname $BINPREFIX`
         GCC_TOOLCHAIN=`dirname $GCC_TOOLCHAIN`
-        LLVM_BINPREFIX=$(get_llvm_toolchain_binprefix $LLVM_VERSION $TAG)
+        LLVM_BINPREFIX=$(get_llvm_toolchain_binprefix $TAG)
     fi
 
     if [ -z "$PLATFORM" ]; then

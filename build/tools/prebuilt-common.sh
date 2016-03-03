@@ -1326,14 +1326,14 @@ get_toolchain_binprefix_for_arch ()
 }
 
 # Return llvm toolchain binary path prefix for given llvm version
-# $1: llvm version
-# $2: optional, system name, defaults to $HOST_TAG
+# $1: optional, system name, defaults to $HOST_TAG
 get_llvm_toolchain_binprefix ()
 {
     local NAME DIR BINPREFIX
-    local SYSTEM=${2:-$(get_prebuilt_host_tag)}
+    local SYSTEM=${1:-$(get_prebuilt_host_tag)}
+    local VERSION=2629532
     SYSTEM=${SYSTEM%_64} # Trim _64 suffix. We only have one LLVM.
-    BINPREFIX=$ANDROID_BUILD_TOP/prebuilts/clang/$SYSTEM/host/$1/bin
+    BINPREFIX=$ANDROID_BUILD_TOP/prebuilts/clang/host/$SYSTEM/clang-$VERSION/bin
     echo "$BINPREFIX"
 }
 
