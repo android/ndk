@@ -633,7 +633,7 @@ def build_ndk_helper(_, dist_dir, __):
 
 
 def build_gtest(_, dist_dir, __):
-    path = build_support.ndk_path('sources/third_party/googletest')
+    path = build_support.android_path('external/googletest/googletest')
     build_support.make_package('gtest', path, dist_dir)
 
 
