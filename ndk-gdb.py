@@ -231,7 +231,7 @@ def find_project(args):
     manifest_name = "AndroidManifest.xml"
     if args.project is not None:
         log("Using project directory: {}".format(args.project))
-        args.project = os.path.realpath(args.project)
+        args.project = os.path.realpath(os.path.expanduser(args.project))
         if not os.path.exists(os.path.join(args.project, manifest_name)):
             msg = "could not find AndroidManifest.xml in '{}'"
             error(msg.format(args.project))
