@@ -32,8 +32,8 @@ import xml.etree.cElementTree as ElementTree
 import logging
 
 # Shared functions across gdbclient.py and ndk-gdb.py.
-# ndk-gdb is installed to $NDK/host-tools/bin
-NDK_PATH = os.path.normpath(os.path.join(os.path.dirname(__file__), '../..'))
+# ndk-gdb is installed to $NDK/prebuilt/<platform>/bin
+NDK_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..'))
 sys.path.append(os.path.join(NDK_PATH, "python-packages"))
 import gdbrunner
 
@@ -182,11 +182,7 @@ def extract_launchable(xmlroot):
 
 
 def ndk_bin_path():
-    path = os.path.join(NDK_PATH, "host-tools", "bin")
-    if not os.path.exists(path):
-        error("Failed to find ndk binary path, should be at '{}'".format(path))
-
-    return path
+    return os.path.dirname(os.path.realpath(__file__))
 
 
 def handle_args():
@@ -235,7 +231,7 @@ def find_project(args):
     manifest_name = "AndroidManifest.xml"
     if args.project is not None:
         log("Using project directory: {}".format(args.project))
-        args.project = os.path.realpath(args.project)
+        args.project = os.path.realpath(os.path.expanduser(args.project))
         if not os.path.exists(os.path.join(args.project, manifest_name)):
             msg = "could not find AndroidManifest.xml in '{}'"
             error(msg.format(args.project))
