@@ -176,7 +176,13 @@ TOOLCHAIN_PATH="$NDK_DIR/toolchains/$TOOLCHAIN_NAME/prebuilt/$SYSTEM"
 if [ ! -d "$TOOLCHAIN_PATH" ] ; then
     echo "Could not find toolchain: $TOOLCHAIN_PATH"
     echo "Please use --toolchain=<name> with the name of a toolchain supported by the source NDK."
-    echo "Try one of: " `(cd "$NDK_DIR/toolchains" && ls)`
+    echo "Try one of: "
+    for tc in $(cd "$NDK_DIR/toolchains" && ls); do
+        if [ "$tc" != "llvm" ]; then
+            echo $tc
+            echo $tc | sed 's/-4.9$/-clang/'
+        fi
+    done
     exit 1
 fi
 
