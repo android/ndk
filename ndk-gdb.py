@@ -451,7 +451,7 @@ def pull_binaries(device, out_dir, is64bit):
         required_files = ["/system/bin/app_process64", "/system/bin/linker64"]
         library_path = "/system/lib64"
     else:
-        required_files = ["/system/bin/app_process", "/system/bin/linker"]
+        required_files = ["/system/bin/linker"]
         library_path = "/system/lib"
 
     for library in libraries:
@@ -466,6 +466,15 @@ def pull_binaries(device, out_dir, is64bit):
         log("Pulling '{}' to '{}'".format(required_file, local_path))
         device.pull(required_file, local_path)
 
+    # /system/bin/app_process is 32-bit on 32-bit devices, but a symlink to
+    # app_process64 on 64-bit. If we need the 32-bit version, try to pull
+    # app_process32, and if that fails, pull app_process.
+    if not is64bit:
+        destination = os.path.realpath(out_dir + "/system/bin/app_process")
+        try:
+            device.pull("/system/bin/app_process32", destination)
+        except:
+            device.pull("/system/bin/app_process", destination)
 
 def generate_gdb_script(args, sysroot, binary_path, is64bit, connect_timeout=5):
     gdb_commands = "file '{}'\n".format(binary_path)
