@@ -1,2 +1,2 @@
 #!/bin/sh
-$(dirname $(readlink -f $0))/ndk-gdb.py $@
+$(dirname $0)/ndk-gdb.py $@
