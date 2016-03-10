@@ -656,6 +656,9 @@ def main():
         def start_jdb():
             log("Starting jdb to unblock application.")
 
+            # Give gdbserver some time to attach.
+            time.sleep(0.5)
+
             # Do setup stuff to keep ^C in the parent from killing us.
             signal.signal(signal.SIGINT, signal.SIG_IGN)
             windows = sys.platform.startswith("win")
