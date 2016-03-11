@@ -308,13 +308,6 @@ ifeq ($(LOCAL_ARM_MODE),arm)
         $(call tag-src-files,$(LOCAL_PCH),arm)
     endif
 else
-# For arm, all sources are compiled in thumb mode by default in release mode.
-# Linker should behave similarly
-ifneq ($(filter armeabi%, $(TARGET_ARCH_ABI)),)
-ifneq ($(APP_OPTIM),debug)
-    LOCAL_LDFLAGS += -mthumb
-endif
-endif
 endif
 ifeq ($(LOCAL_ARM_MODE),thumb)
     arm_sources := $(empty)
