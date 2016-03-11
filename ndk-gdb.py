@@ -116,7 +116,7 @@ class ArgumentParser(gdbrunner.ArgumentParser):
             "--stdcxx-py-pr", dest="stdcxxpypr",
             help="Use C++ library pretty-printer",
             choices=["auto", "none", "gnustl", "stlport"],
-            default="none")
+            default="auto")
 
 
 def extract_package_name(xmlroot):
