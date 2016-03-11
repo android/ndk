@@ -3,6 +3,15 @@ Changelog
 
 We've moved our bug tracker to GitHub: https://github.com/android-ndk/ndk/issues
 
+Hotfix r11b
+-----------
+
+ * `ndk-gdb.py` actually works now. Had regressed entirely:
+   https://github.com/android-ndk/ndk/issues/3
+ * `ndk-gdb` works on Mac again: https://github.com/android-ndk/ndk/issues/2
+ * Note that `__thread` doesn't actually work as r11 had claimed. The version of
+   Clang we currently ship is missing a bugfix for emulated TLS support.
+
 Clang
 -----
 
@@ -10,14 +19,14 @@ Clang
  * Clang has been updated to 3.8svn (r243773, build 2481030).
      * Note that this is now a nearly pure upstream clang.
      * Also note that Clang packaged in the Windows 64 NDK is actually 32-bit.
- * Support for emulated TLS.
-     * `__thread` is now supported by the compiler by emulating ELF TLS with
-       pthread thread-specific data.
-     * C++11 `thread_local` will work in some cases, but will not work for data
-       with non-trivial destructors except when running on Marshmallow
-       (android-23) or newer because those cases require support from libc.
-     * Does not yet work with Aarch64 when TLS variables are accessed from a
-       shared library.
+ * ~~Support for emulated TLS.~~
+     * ~~`__thread` is now supported by the compiler by emulating ELF TLS with
+       pthread thread-specific data.~~
+     * ~~C++11 `thread_local` will work in some cases, but will not work for
+       data with non-trivial destructors except when running on Marshmallow
+       (android-23) or newer because those cases require support from libc.~~
+     * ~~Does not yet work with Aarch64 when TLS variables are accessed from a
+       shared library.~~
 
 GCC
 ---
@@ -118,6 +127,8 @@ Known Issues
  * Exception handling will often fail when using `c++_shared` on ARM32. The root
    cause is incompatibility between the LLVM unwinder used by libc++abi for
    ARM32 and libgcc. This is not a regression from r10e.
+ * The version of Clang we're shipping is missing a bugfix for emulated TLS.
+   This is already fixed for r12.
 
 [GitHub]: https://github.com/googlesamples/android-ndk
 [Android Developer website]: http://developer.android.com/ndk/index.html
