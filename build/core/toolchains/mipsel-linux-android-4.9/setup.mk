@@ -24,32 +24,30 @@
 #
 
 TARGET_CFLAGS := \
-        -fpic \
-        -fno-strict-aliasing \
-        -finline-functions \
-        -ffunction-sections \
-        -funwind-tables \
-        -fstack-protector-strong \
-        -fmessage-length=0 \
-        -fno-inline-functions-called-once \
-        -fgcse-after-reload \
-        -frerun-cse-after-loop \
-        -frename-registers \
-        -no-canonical-prefixes
+    -fpic \
+    -finline-functions \
+    -ffunction-sections \
+    -funwind-tables \
+    -fstack-protector-strong \
+    -fmessage-length=0 \
+    -fno-inline-functions-called-once \
+    -fgcse-after-reload \
+    -frerun-cse-after-loop \
+    -frename-registers \
+    -no-canonical-prefixes \
+
+# Always enable debug info. We strip binaries when needed.
+TARGET_CFLAGS += -g
 
 TARGET_LDFLAGS := -no-canonical-prefixes
 
-TARGET_mips_release_CFLAGS := -O2 \
-                              -g \
-                              -DNDEBUG \
-                              -fomit-frame-pointer \
-                              -funswitch-loops     \
-                              -finline-limit=300
+TARGET_mips_release_CFLAGS := \
+    -O2 \
+    -DNDEBUG \
 
-TARGET_mips_debug_CFLAGS := -O0 \
-                            -g \
-                            -fno-omit-frame-pointer
-
+TARGET_mips_debug_CFLAGS := \
+    -O0 \
+    -UNDEBUG \
 
 # This function will be called to determine the target CFLAGS used to build
 # a C or Assembler source file, based on its tags.

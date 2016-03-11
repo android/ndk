@@ -31,23 +31,20 @@ TARGET_CFLAGS := \
     -ffunction-sections \
     -funwind-tables \
     -fstack-protector-strong \
-    -no-canonical-prefixes
+    -no-canonical-prefixes \
+
+# Always enable debug info. We strip binaries when needed.
+TARGET_CFLAGS += -g
 
 TARGET_LDFLAGS := -no-canonical-prefixes
 
-TARGET_arm64_release_CFLAGS := -O2 \
-                               -g \
-                               -DNDEBUG \
-                               -fomit-frame-pointer \
-                               -fstrict-aliasing    \
-                               -funswitch-loops     \
-                               -finline-limit=300
+TARGET_arm64_release_CFLAGS := \
+    -O2 \
+    -DNDEBUG \
 
-TARGET_arm64_debug_CFLAGS := $(TARGET_arm64_release_CFLAGS) \
-                             -O0 \
-                             -UNDEBUG \
-                             -fno-omit-frame-pointer \
-                             -fno-strict-aliasing
+TARGET_arm64_debug_CFLAGS := \
+    -O0 \
+    -UNDEBUG \
 
 # This function will be called to determine the target CFLAGS used to build
 # a C or Assembler source file, based on its tags.
