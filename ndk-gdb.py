@@ -565,7 +565,7 @@ def find_pretty_printer(pretty_printer):
         path = os.path.join("stlport", "stlport")
         function = "register_stlport_printers"
     pp_path = os.path.join(
-        NDK_PATH, "host-tools", "share", "pretty-printers", path)
+        ndk_bin_path(), "..", "share", "pretty-printers", path)
     return pp_path, function
 
 
