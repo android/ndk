@@ -66,6 +66,7 @@ TARGET_x86_64_release_CFLAGS := \
 TARGET_x86_64_debug_CFLAGS := \
     -O0 \
     -UNDEBUG \
+    -fno-limit-debug-info \
 
 # This function will be called to determine the target CFLAGS used to build
 # a C or Assembler source file, based on its tags.

@@ -122,11 +122,13 @@ TARGET_arm_debug_CFLAGS := \
     -marm \
     -O0 \
     -UNDEBUG \
+    -fno-limit-debug-info \
 
 TARGET_thumb_debug_CFLAGS := \
     -mthumb \
     -O0 \
     -UNDEBUG \
+    -fno-limit-debug-info \
 
 # This function will be called to determine the target CFLAGS used to build
 # a C or Assembler source file, based on its tags.
