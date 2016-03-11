@@ -116,7 +116,7 @@ class ArgumentParser(gdbrunner.ArgumentParser):
             "--stdcxx-py-pr", dest="stdcxxpypr",
             help="Use C++ library pretty-printer",
             choices=["auto", "none", "gnustl", "stlport"],
-            default="none")
+            default="auto")
 
 
 def extract_package_name(xmlroot):
@@ -417,7 +417,7 @@ def get_gdbserver_path(args, package_name, app_data_dir, arch):
 
     # We need to upload our gdbserver
     log("App gdbserver not found at {}, uploading.".format(app_gdbserver_path))
-    local_path = "{}/gdbserver/{}/gdbserver"
+    local_path = "{}/prebuilt/android-{}/gdbserver/gdbserver"
     local_path = local_path.format(NDK_PATH, arch)
     remote_path = "/data/local/tmp/{}-gdbserver".format(arch)
     args.device.push(local_path, remote_path)
@@ -443,15 +443,15 @@ def get_gdbserver_path(args, package_name, app_data_dir, arch):
     return remote_path
 
 
-def pull_binaries(device, out_dir, is64bit):
+def pull_binaries(device, out_dir, app_64bit):
     required_files = []
     libraries = ["libc.so", "libm.so", "libdl.so"]
 
-    if is64bit:
+    if app_64bit:
         required_files = ["/system/bin/app_process64", "/system/bin/linker64"]
         library_path = "/system/lib64"
     else:
-        required_files = ["/system/bin/app_process", "/system/bin/linker"]
+        required_files = ["/system/bin/linker"]
         library_path = "/system/lib"
 
     for library in libraries:
@@ -466,12 +466,21 @@ def pull_binaries(device, out_dir, is64bit):
         log("Pulling '{}' to '{}'".format(required_file, local_path))
         device.pull(required_file, local_path)
 
+    # /system/bin/app_process is 32-bit on 32-bit devices, but a symlink to
+    # app_process64 on 64-bit. If we need the 32-bit version, try to pull
+    # app_process32, and if that fails, pull app_process.
+    if not app_64bit:
+        destination = os.path.realpath(out_dir + "/system/bin/app_process")
+        try:
+            device.pull("/system/bin/app_process32", destination)
+        except:
+            device.pull("/system/bin/app_process", destination)
 
-def generate_gdb_script(args, sysroot, binary_path, is64bit, connect_timeout=5):
+def generate_gdb_script(args, sysroot, binary_path, app_64bit, connect_timeout=5):
     gdb_commands = "file '{}'\n".format(binary_path)
 
     solib_search_path = [sysroot, "{}/system/bin".format(sysroot)]
-    if is64bit:
+    if app_64bit:
         solib_search_path.append("{}/system/lib64".format(sysroot))
     else:
         solib_search_path.append("{}/system/lib".format(sysroot))
@@ -556,7 +565,7 @@ def find_pretty_printer(pretty_printer):
         path = os.path.join("stlport", "stlport")
         function = "register_stlport_printers"
     pp_path = os.path.join(
-        NDK_PATH, "host-tools", "share", "pretty-printers", path)
+        ndk_bin_path(), "..", "share", "pretty-printers", path)
     return pp_path, function
 
 
@@ -632,9 +641,9 @@ def main():
     pid = pids[0]
 
     # Pull the linker, zygote, and notable system libraries
-    is64bit = "64" in abi
-    pull_binaries(device, out_dir, is64bit)
-    if is64bit:
+    app_64bit = "64" in abi
+    pull_binaries(device, out_dir, app_64bit)
+    if app_64bit:
         zygote_path = os.path.join(out_dir, "system", "bin", "app_process64")
     else:
         zygote_path = os.path.join(out_dir, "system", "bin", "app_process")
@@ -685,7 +694,7 @@ def main():
 
 
     # Start gdb.
-    gdb_commands = generate_gdb_script(args, out_dir, zygote_path, is64bit)
+    gdb_commands = generate_gdb_script(args, out_dir, zygote_path, app_64bit)
     gdb_flags = []
     if args.tui:
         gdb_flags.append("--tui")
