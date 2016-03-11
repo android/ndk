@@ -32,6 +32,8 @@ import sys
 import tempfile
 import textwrap
 
+import config
+
 site.addsitedir(os.path.join(os.path.dirname(__file__), 'build/lib'))
 
 import build_support  # pylint: disable=import-error
@@ -101,10 +103,7 @@ class ArgParser(argparse.ArgumentParser):
         self.add_argument(
             '--build-number', help='Build number for use in version files.')
         self.add_argument(
-            '--release', help=textwrap.dedent("""\
-            Release name. Package will be named android-ndk-RELEASE. If not
-            present, will fall back to the build number, and finally to "dev".
-            """))
+            '--release', help='Ignored. Temporarily compatibility.')
 
         self.add_argument(
             '--system', choices=('darwin', 'linux', 'windows', 'windows64'),
@@ -141,14 +140,6 @@ def package_ndk(out_dir, dist_dir, args):
     package_args = common_build_args(out_dir, dist_dir, args)
     package_args.append(dist_dir)
 
-    if args.release is not None:
-        package_args.append('--release={}'.format(args.release))
-
-        # The build servers haven't been updated to know about --build-number
-        # yet, and is still passing that as --release. Since package.py
-        # requires that --build-number be passed with --release, fake it here.
-        package_args.append('--build-number={}'.format(args.release))
-
     if args.build_number is not None:
         package_args.append('--build-number={}'.format(args.build_number))
 
@@ -159,16 +150,10 @@ def package_ndk(out_dir, dist_dir, args):
 
 
 def test_ndk(out_dir, args):
-    # Builds will be named with the release name, the build number, or "dev",
-    # in decreasing order of preference.
-    release = args.release
-    if args.release is None:
-        release = 'dev' if args.build_number is None else args.build_number
-
     # The packaging step extracts all the modules to a known directory for
     # packaging. This directory is not cleaned up after packaging, so we can
     # reuse that for testing.
-    test_dir = os.path.join(out_dir, 'android-ndk-{}'.format(release))
+    test_dir = os.path.join(out_dir, 'android-ndk-{}'.format(config.release))
 
     test_env = dict(os.environ)
     test_env['NDK'] = test_dir
