@@ -162,6 +162,8 @@ ifeq ($(LOCAL_CPP_EXTENSION),)
 endif
 LOCAL_RS_EXTENSION := $(default-rs-extensions)
 
+LOCAL_LDFLAGS += -Wl,--build-id
+
 #
 # If LOCAL_ALLOW_UNDEFINED_SYMBOLS is not true, the linker will allow the generation
 # of a binary that uses undefined symbols.
