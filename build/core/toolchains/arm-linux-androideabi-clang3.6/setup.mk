@@ -119,16 +119,14 @@ TARGET_thumb_release_CFLAGS := \
     -DNDEBUG \
 
 TARGET_arm_debug_CFLAGS := \
-    $(TARGET_arm_release_CFLAGS) \
+    -marm \
     -O0 \
     -UNDEBUG \
-    -marm \
 
 TARGET_thumb_debug_CFLAGS := \
-    $(TARGET_thumb_release_CFLAGS) \
+    -mthumb \
     -O0 \
     -UNDEBUG \
-    -mthumb \
 
 # This function will be called to determine the target CFLAGS used to build
 # a C or Assembler source file, based on its tags.

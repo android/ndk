@@ -66,7 +66,6 @@ TARGET_arm64_release_CFLAGS := \
 TARGET_arm64_debug_CFLAGS := \
     -O0 \
     -UNDEBUG \
-    -fno-omit-frame-pointer \
 
 # This function will be called to determine the target CFLAGS used to build
 # a C or Assembler source file, based on its tags.

@@ -64,7 +64,6 @@ TARGET_x86_64_release_CFLAGS := \
     -DNDEBUG \
 
 TARGET_x86_64_debug_CFLAGS := \
-    $(TARGET_x86_64_release_CFLAGS) \
     -O0 \
     -UNDEBUG \
 
