@@ -51,24 +51,24 @@ TARGET_CFLAGS := \
     -Wno-unused-command-line-argument \
     -no-canonical-prefixes
 
+# Always enable debug info. We strip binaries when needed.
+TARGET_CFLAGS += -g
+
 # Add and LDFLAGS for the target here
 TARGET_LDFLAGS += \
     -gcc-toolchain $(call host-path,$(TOOLCHAIN_ROOT)) \
     -target $(LLVM_TRIPLE) \
     -no-canonical-prefixes
 
-TARGET_x86_release_CFLAGS := -O2 \
-                             -g \
-                             -DNDEBUG \
-                             -fomit-frame-pointer \
-                             -fstrict-aliasing
+TARGET_x86_release_CFLAGS := \
+    -O2 \
+    -DNDEBUG \
 
 # When building for debug, compile everything as x86.
-TARGET_x86_debug_CFLAGS := $(TARGET_x86_release_CFLAGS) \
-                           -O0 \
-                           -UNDEBUG \
-                           -fno-omit-frame-pointer \
-                           -fno-strict-aliasing
+TARGET_x86_debug_CFLAGS := \
+    -O0 \
+    -UNDEBUG \
+    -fno-limit-debug-info \
 
 # This function will be called to determine the target CFLAGS used to build
 # a C or Assembler source file, based on its tags.

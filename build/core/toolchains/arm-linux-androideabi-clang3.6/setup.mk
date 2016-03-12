@@ -53,8 +53,10 @@ TARGET_CFLAGS := \
     -no-canonical-prefixes
 
 # Disable integrated-as for better compatibility
-TARGET_CFLAGS += \
-    -fno-integrated-as
+TARGET_CFLAGS += -fno-integrated-as
+
+# Always enable debug info. We strip binaries when needed.
+TARGET_CFLAGS += -g
 
 TARGET_LDFLAGS += \
     -gcc-toolchain $(call host-path,$(TOOLCHAIN_ROOT)) \
@@ -106,31 +108,27 @@ GCCLIB_ROOT := $(call get-gcclibs-path,$(NDK_ROOT),$(TOOLCHAIN_NAME))
 
 TARGET_CFLAGS.neon := -mfpu=neon
 
-TARGET_arm_release_CFLAGS :=  -O2 \
-                              -g \
-                              -DNDEBUG \
-                              -fomit-frame-pointer \
-                              -fstrict-aliasing
+TARGET_arm_release_CFLAGS := \
+    -marm \
+    -O2 \
+    -DNDEBUG \
 
-TARGET_thumb_release_CFLAGS := -mthumb \
-                               -Os \
-                               -g \
-                               -DNDEBUG \
-                               -fomit-frame-pointer \
-                               -fno-strict-aliasing
+TARGET_thumb_release_CFLAGS := \
+    -mthumb \
+    -Os \
+    -DNDEBUG \
 
-# When building for debug, compile everything as arm.
-TARGET_arm_debug_CFLAGS := $(TARGET_arm_release_CFLAGS) \
-                           -O0 \
-                           -UNDEBUG \
-                           -fno-omit-frame-pointer \
-                           -fno-strict-aliasing
+TARGET_arm_debug_CFLAGS := \
+    -marm \
+    -O0 \
+    -UNDEBUG \
+    -fno-limit-debug-info \
 
-TARGET_thumb_debug_CFLAGS := $(TARGET_thumb_release_CFLAGS) \
-                             -O0 \
-                             -UNDEBUG \
-                             -marm \
-                             -fno-omit-frame-pointer
+TARGET_thumb_debug_CFLAGS := \
+    -mthumb \
+    -O0 \
+    -UNDEBUG \
+    -fno-limit-debug-info \
 
 # This function will be called to determine the target CFLAGS used to build
 # a C or Assembler source file, based on its tags.
