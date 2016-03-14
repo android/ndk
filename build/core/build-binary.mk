@@ -438,13 +438,22 @@ ifneq (,$(LOCAL_PCH))
     # Build PCH
     $(call compile-cpp-source,$(LOCAL_PCH),$(LOCAL_BUILT_PCH).gch)
 
-    # All obj files are dependent on the PCH
-    $(foreach src,$(filter $(all_cpp_patterns),$(LOCAL_SRC_FILES)),\
+    # Filter obj files that are dependent on the PCH (only those without tags)
+    ifeq (true,$(LOCAL_ARM_NEON))
+        TAGS_TO_FILTER=arm
+    else
+        TAGS_TO_FILTER=arm neon
+    endif
+
+    allowed_src := $(foreach src,$(filter $(all_cpp_patterns),$(LOCAL_SRC_FILES)),\
+        $(if $(filter $(TAGS_TO_FILTER),$(LOCAL_SRC_FILES_TAGS.$(src))),,$(src))\
+    )
+    # All files without tags depend on PCH
+    $(foreach src,$(allowed_src),\
         $(eval $(LOCAL_OBJS_DIR)/$(call get-object-name,$(src)) : $(LOCAL_OBJS_DIR)/$(LOCAL_BUILT_PCH).gch)\
     )
-
-    # Files from now on build with PCH
-    LOCAL_CPPFLAGS += -Winvalid-pch -include $(LOCAL_OBJS_DIR)/$(LOCAL_BUILT_PCH)
+    # Make sure those files are built with PCH
+    $(call add-src-files-target-cflags,$(allowed_src),-Winvalid-pch -include $(LOCAL_OBJS_DIR)/$(LOCAL_BUILT_PCH))
 
     # Insert PCH dir at beginning of include search path
     LOCAL_C_INCLUDES := \
