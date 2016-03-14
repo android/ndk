@@ -431,6 +431,10 @@ ifneq (,$(LOCAL_PCH))
     # Build PCH into obj directory
     LOCAL_BUILT_PCH := $(call get-pch-name,$(LOCAL_PCH))
 
+    # Clang whines about a "c-header" (.h rather than .hpp) being used in C++
+    # mode (note that we use compile-cpp-source to build the header).
+    LOCAL_SRC_FILES_TARGET_CFLAGS.$(LOCAL_PCH) += -x c++-header
+
     # Build PCH
     $(call compile-cpp-source,$(LOCAL_PCH),$(LOCAL_BUILT_PCH).gch)
 
