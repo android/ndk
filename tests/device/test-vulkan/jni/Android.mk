@@ -4,9 +4,8 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := vulkan
 LOCAL_CPP_EXTENSION := .cpp
 LOCAL_SRC_FILES := instance.cpp
-LOCAL_CFLAGS := -std=c++11
+LOCAL_CFLAGS := -std=c++11 -DVK_PROTOTYPES
 LOCAL_LDLIBS := -lvulkan
-LOCAL_LDFLAGS := -v
 LOCAL_SHARED_LIBRARIES := VkLayer_device_limits
 LOCAL_SHARED_LIBRARIES += VkLayer_draw_state
 LOCAL_SHARED_LIBRARIES += VkLayer_image
