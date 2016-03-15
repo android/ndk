@@ -30,7 +30,7 @@ TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
 TARGET-get-linker-objects-and-libraries = \
     $(call host-path, $1) \
     $(call link-whole-archives,$3) \
-    $(call host-path, $2 $(PRIVATE_LIBGCC) $4) \
+    $(call host-path, $2) $(PRIVATE_LIBGCC) $(call host-path, $4) \
 
 
 # These flags are used to enforce the NX (no execute) security feature in the
