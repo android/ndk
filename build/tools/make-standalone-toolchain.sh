@@ -462,7 +462,7 @@ copy_stl_common_headers () {
                 copy_abi_headers gabi++ cxxabi.h unwind.h unwind-arm.h unwind-itanium.h gabixx_config.h
             elif [ "$LIBCXX_SUPPORT_LIB" = "libc++abi" ]; then
                 copy_directory "$LIBCXX_DIR/../llvm-libc++abi/libcxxabi/include" "$ABI_STL_INCLUDE/../../llvm-libc++abi/include"
-                copy_abi_headers llvm-libc++abi cxxabi.h libunwind.h unwind.h
+                copy_abi_headers llvm-libc++abi cxxabi.h __cxxabi_config.h libunwind.h unwind.h
             else
                 dump "ERROR: Unknown libc++ support lib: $LIBCXX_SUPPORT_LIB"
                 exit 1
