@@ -18,6 +18,7 @@
 from __future__ import print_function
 
 import argparse
+import ntpath
 import os
 import shutil
 import site
@@ -183,31 +184,46 @@ def extract_all(path, packages, out_dir):
                 os.path.join(gnustl_path, 'Android.mk'))
 
 
-def make_ndk_build_shortcut(out_dir, host):
+def make_shortcuts(out_dir, host):
+    host_tag = build_support.host_to_tag(host)
+    host_tools = os.path.join('prebuilt', host_tag, 'bin')
+    make_shortcut(out_dir, host, host_tools, 'ndk-gdb', windows_ext='cmd')
+    make_shortcut(out_dir, host, host_tools, 'ndk-which')
+    make_shortcut(out_dir, host, host_tools, 'ndk-depends', windows_ext='exe')
+    make_shortcut(out_dir, host, host_tools, 'ndk-stack', windows_ext='exe')
+    make_shortcut(out_dir, host, 'build', 'ndk-build', windows_ext='cmd')
+
+
+def make_shortcut(out_dir, host, path, basename, windows_ext=None):
     if host.startswith('windows'):
-        make_ndk_build_cmd_helper(out_dir)
+        make_cmd_helper(out_dir, path, basename, windows_ext)
     else:
-        make_ndk_build_sh_helper(out_dir)
+        make_sh_helper(out_dir, path, basename)
 
 
-def make_ndk_build_cmd_helper(out_dir):
-    with open(os.path.join(out_dir, 'ndk-build.cmd'), 'w') as helper:
+def make_cmd_helper(out_dir, path, basename, windows_ext):
+    if windows_ext is not None:
+        basename += '.' + windows_ext
+
+    full_path = ntpath.join('%~dp0', ntpath.normpath(path), basename)
+    with open(os.path.join(out_dir, basename), 'w') as helper:
         helper.writelines([
             '@echo off\n',
-            r'%~dp0\build\ndk-build.cmd %*',
+            full_path + ' %*\n',
         ])
 
 
-def make_ndk_build_sh_helper(out_dir):
-    file_path = os.path.join(out_dir, 'ndk-build')
-    with open(file_path, 'w') as helper:
+def make_sh_helper(out_dir, path, basename):
+    helper_path = os.path.join(out_dir, basename)
+    full_path = os.path.join('$DIR', path, basename)
+    with open(helper_path, 'w') as helper:
         helper.writelines([
             '#!/bin/sh\n',
             'DIR="$(cd "$(dirname "$0")" && pwd)"\n',
-            '$DIR/build/ndk-build "$@"',
+            full_path + ' "$@"',
         ])
-    mode = os.stat(file_path).st_mode
-    os.chmod(file_path, mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+    mode = os.stat(helper_path).st_mode
+    os.chmod(helper_path, mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
 
 def make_source_properties(out_dir, build_number):
@@ -231,8 +247,7 @@ def make_package(build_number, package_dir, packages, host, out_dir, temp_dir):
     if os.path.exists(extract_dir):
         shutil.rmtree(extract_dir)
     extract_all(package_dir, packages, extract_dir)
-
-    make_ndk_build_shortcut(extract_dir, host)
+    make_shortcuts(extract_dir, host)
     make_source_properties(extract_dir, build_number)
     copy_changelog(extract_dir)
 
@@ -318,7 +333,7 @@ def main():
 
     if args.unpack:
         extract_all(args.dist_dir, packages, args.out_dir)
-        make_ndk_build_shortcut(args.out_dir, args.host)
+        make_shortcuts(args.out_dir, args.host)
     else:
         make_package(args.build_number, args.dist_dir, packages, args.host,
                      args.out_dir, build_support.get_out_dir())
