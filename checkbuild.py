@@ -454,6 +454,7 @@ def package_host_tools(out_dir, dist_dir, host):
         'ndk-gdb',
         'ndk-gdb.cmd',
         'ndk-gdb.py',
+        'ndk-which',
     ]
 
     if host in ('windows', 'windows64'):
