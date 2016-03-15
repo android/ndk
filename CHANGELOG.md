@@ -7,8 +7,16 @@ Hotfix r11b
 -----------
 
  * `ndk-gdb.py` actually works now. Had regressed entirely:
-   https://github.com/android-ndk/ndk/issues/3
- * `ndk-gdb` works on Mac again: https://github.com/android-ndk/ndk/issues/2
+   https://github.com/android-ndk/ndk/issues/3.
+ * `ndk-gdb` works on Mac again: https://github.com/android-ndk/ndk/issues/2.
+ * Added more top level shortcuts for command line tools:
+     * `ndk-depends`
+     * `ndk-gdb`
+     * `ndk-stack`
+     * `ndk-which` (was previously missing entirely)
+ * Fixed standalone toolchains for libc++, which were missing
+   `__cxxabi_config.h`.
+ * Fixed help documenation for `--toolchain` in `make-standalone-toolchain.sh`.
  * Note that `__thread` doesn't actually work as r11 had claimed. The version of
    Clang we currently ship is missing a bugfix for emulated TLS support.
 
