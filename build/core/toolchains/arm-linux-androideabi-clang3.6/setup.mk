@@ -138,31 +138,20 @@ $(eval __arm_sources := $(call get-src-files-with-tag,arm)) \
 $(eval __thumb_sources := $(call get-src-files-without-tag,arm)) \
 $(eval __debug_sources := $(call get-src-files-with-tag,debug)) \
 $(eval __release_sources := $(call get-src-files-without-tag,debug)) \
-
-# ARM debug
 $(call set-src-files-target-cflags, \
     $(call set_intersection,$(__arm_sources),$(__debug_sources)), \
     $(TARGET_arm_debug_CFLAGS)) \
-
-# ARM release
 $(call set-src-files-target-cflags,\
     $(call set_intersection,$(__arm_sources),$(__release_sources)),\
     $(TARGET_arm_release_CFLAGS)) \
-
-# Thumb debug
 $(call set-src-files-target-cflags,\
     $(call set_intersection,$(__thumb_sources),$(__debug_sources)),\
     $(TARGET_thumb_debug_CFLAGS)) \
-
-# Thumb release
 $(call set-src-files-target-cflags,\
     $(call set_intersection,$(__thumb_sources),$(__release_sources)),\
     $(TARGET_thumb_release_CFLAGS)) \
-
-# Neon
 $(call add-src-files-target-cflags,\
     $(call get-src-files-with-tag,neon),\
     $(TARGET_CFLAGS.neon)) \
-
 $(call set-src-files-text,$(__arm_sources),arm) \
 $(call set-src-files-text,$(__thumb_sources),thumb)
