@@ -74,6 +74,9 @@ def main(args):
         os.makedirs(package_out)
     except: pass
 
+    # Remove symbols folder to start fresh
+    shutil.rmtree(symbols_out, ignore_errors=True)
+
     compiler = 'clang'
     stl = 'gnustl_static'
     obj_out = os.path.join(args.out_dir, 'vulkan',stl,'obj')
