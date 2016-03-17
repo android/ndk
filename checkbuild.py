@@ -646,7 +646,7 @@ def build_vulkan(out_dir, dist_dir, args):
               'vk.xml'
             ],
             'dirs': [
-                'buildAndroid', 'layers', 'include'
+                'layers', 'include'
             ],
         },
         {
@@ -679,11 +679,18 @@ def build_vulkan(out_dir, dist_dir, args):
         for f in properties['files']:
             install_file(f, source_dir, dest_dir)
 
+    # Copy Android build components
+    src = os.path.join(vulkan_root_dir, 'buildAndroid')
+    dst = os.path.join(out_dir, 'vulkan/build-android')
+    shutil.rmtree(dst, 'true')
+    shutil.copytree(src, dst,
+                  ignore=default_ignore_patterns)
+
     merge_license_files(os.path.join(vulkan_path, 'NOTICE'), [
         os.path.join(vulkan_root_dir, 'LICENSE.txt')])
 
     build_cmd = [
-        'bash', vulkan_path + '/buildAndroid/android-generate.sh'
+        'bash', vulkan_path + '/build-android/android-generate.sh'
     ]
     print('Generating generated layers...')
     subprocess.check_call(build_cmd)

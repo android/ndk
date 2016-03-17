@@ -64,7 +64,7 @@ def main(args):
     platforms_root = os.path.join(prebuilt_ndk, 'platforms')
     toolchains_root = os.path.join(prebuilt_ndk, 'toolchains')
     vulkan_dir = os.path.join(args.out_dir, 'vulkan')
-    build_dir = os.path.join(vulkan_dir, 'buildAndroid')
+    build_dir = os.path.join(vulkan_dir, 'build-android')
     package_out = os.path.join(vulkan_dir, 'vulkan')
     includes_out = os.path.join(vulkan_dir, 'include')
     lib_out = os.path.join(package_out, 'libs')
