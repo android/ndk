@@ -242,6 +242,16 @@ def make_package(name, directory, out_dir):
             shutil.rmtree(tmpdir)
 
 
+def merge_license_files(output_path, files):
+    licenses = []
+    for license_path in files:
+        with open(license_path) as license_file:
+            licenses.append(license_file.read())
+
+    with open(output_path, 'w') as output_file:
+        output_file.write('\n'.join(licenses))
+
+
 class ArgParser(argparse.ArgumentParser):
     def __init__(self):
         super(ArgParser, self).__init__()

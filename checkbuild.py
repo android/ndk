@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python#
 #
 # Copyright (C) 2015 The Android Open Source Project
 #
@@ -54,7 +54,6 @@ ALL_MODULES = {
     'gcc',
     'gcclibs',
     'gdbserver',
-    'shader-tools',
     'gnustl',
     'gtest',
     'host-tools',
@@ -66,6 +65,7 @@ ALL_MODULES = {
     'ndk_helper',
     'platforms',
     'python-packages',
+    'shader_tools',
     'stlport',
     'system-stl',
 }
@@ -395,6 +395,12 @@ def build_gcc_libs(out_dir, dist_dir, args):
         archive_name = os.path.join('gcclibs-' + arch)
         build_support.make_package(archive_name, install_dir, dist_dir)
 
+def build_shader_tools(out_dir, dist_dir, args):
+    print('Building shader tools...')
+    build_args = common_build_args(out_dir, dist_dir, args)
+    if args.arch is not None:
+        build_args.append('--arch={}'.format(args.arch))
+    invoke_build('build-shader-tools.py', build_args)
 
 def build_host_tools(out_dir, dist_dir, args):
     build_args = common_build_args(out_dir, dist_dir, args)
@@ -432,16 +438,6 @@ def build_host_tools(out_dir, dist_dir, args):
     package_host_tools(out_dir, dist_dir, args.system)
 
 
-def merge_license_files(output_path, files):
-    licenses = []
-    for license_path in files:
-        with open(license_path) as license_file:
-            licenses.append(license_file.read())
-
-    with open(output_path, 'w') as output_file:
-        output_file.write('\n'.join(licenses))
-
-
 def package_host_tools(out_dir, dist_dir, host):
     packages = [
         'gdb-multiarch-7.10',
@@ -473,7 +469,8 @@ def package_host_tools(out_dir, dist_dir, host):
     for f in files:
         shutil.copy2(f, os.path.join(out_dir, 'host-tools/bin'))
 
-    merge_license_files(os.path.join(out_dir, 'host-tools/NOTICE'), [
+    build_support.merge_license_files(
+        os.path.join(out_dir, 'host-tools/NOTICE'), [
         build_support.android_path('toolchain/gdb/gdb-7.10/COPYING'),
         build_support.ndk_path('sources/host-tools/nawk-20071023/NOTICE'),
         build_support.ndk_path('sources/host-tools/ndk-depends/NOTICE'),
@@ -593,14 +590,15 @@ def build_libshaderc(_, dist_dir, __):
                 install_file(f, source_dir, dest_dir)
 
         shaderc_shaderc_dir = os.path.join(shaderc_root_dir, 'shaderc')
-        merge_license_files(os.path.join(shaderc_path, 'NOTICE'), [
-            os.path.join(shaderc_shaderc_dir, 'LICENSE'),
-            os.path.join(shaderc_shaderc_dir,
-                         'third_party',
-                         'LICENSE.spirv-tools'),
-            os.path.join(shaderc_shaderc_dir,
-                         'third_party',
-                         'LICENSE.glslang')])
+        build_support.merge_license_files(
+            os.path.join(shaderc_path, 'NOTICE'), [
+                os.path.join(shaderc_shaderc_dir, 'LICENSE'),
+                os.path.join(shaderc_shaderc_dir,
+                             'third_party',
+                             'LICENSE.spirv-tools'),
+                os.path.join(shaderc_shaderc_dir,
+                             'third_party',
+                             'LICENSE.glslang')])
         build_support.make_package('shaderc', shaderc_path, dist_dir)
     finally:
         shutil.rmtree(temp_dir)
@@ -667,15 +665,6 @@ def build_libcxxabi(_out_dir, dist_dir, _args):
     build_support.make_package('libcxxabi', path, dist_dir)
 
 
-def pack_shader_tools(_out_dir, dist_dir, args):
-    host_tag = build_support.host_to_tag(args.system)
-    archive_name = '-'.join(['shader-tools', host_tag])
-    # Pack shader-tools as a prebuilt binary out of platform/prebuilts/ndk.
-    path = os.path.join(
-        build_support.android_path('prebuilts/ndk/shader-tools'), host_tag)
-    build_support.make_package(archive_name, path, dist_dir)
-
-
 def main():
     parser = ArgParser()
     args = parser.parse_args()
@@ -736,7 +725,6 @@ def main():
         ('gcc', build_gcc),
         ('gcclibs', build_gcc_libs),
         ('gdbserver', build_gdbserver),
-        ('shader-tools', pack_shader_tools),
         ('gnustl', build_gnustl),
         ('gtest', build_gtest),
         ('host-tools', build_host_tools),
@@ -748,6 +736,7 @@ def main():
         ('ndk_helper', build_ndk_helper),
         ('platforms', build_platforms),
         ('python-packages', build_python_packages),
+        ('shader_tools', build_shader_tools),
         ('stlport', build_stlport),
         ('system-stl', build_system_stl),
     ])
