@@ -88,6 +88,9 @@ class ArgParser(argparse.ArgumentParser):
         package_group.add_argument(
             '--no-package', action='store_false', dest='package',
             help='Do not package the NDK when done building.')
+        package_group.add_argument(
+            '--force-package', action='store_true', dest='force_package',
+            help='Force a package even if only building a subset of modules.')
 
         test_group = self.add_mutually_exclusive_group()
         test_group.add_argument(
@@ -690,7 +693,8 @@ def main():
         }
 
     required_package_modules = ALL_MODULES
-    if args.package and required_package_modules <= modules:
+    have_required_modules = required_package_modules <= modules
+    if (args.package and have_required_modules) or args.force_package:
         do_package = True
     else:
         do_package = False
