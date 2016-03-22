@@ -54,7 +54,7 @@ ALL_MODULES = {
     'gcc',
     'gcclibs',
     'gdbserver',
-    'shader-tools',
+    'glslc',
     'gnustl',
     'gtest',
     'host-tools',
@@ -395,6 +395,12 @@ def build_gcc_libs(out_dir, dist_dir, args):
         archive_name = os.path.join('gcclibs-' + arch)
         build_support.make_package(archive_name, install_dir, dist_dir)
 
+def build_glslc(out_dir, dist_dir, args):
+    print('Building glslc...')
+    build_args = common_build_args(out_dir, dist_dir, args)
+    if args.arch is not None:
+        build_args.append('--arch={}'.format(args.arch))
+    invoke_build('build-glslc.py', build_args)
 
 def build_host_tools(out_dir, dist_dir, args):
     build_args = common_build_args(out_dir, dist_dir, args)
@@ -736,7 +742,7 @@ def main():
         ('gcc', build_gcc),
         ('gcclibs', build_gcc_libs),
         ('gdbserver', build_gdbserver),
-        ('shader-tools', pack_shader_tools),
+        ('glslc', build_glslc),
         ('gnustl', build_gnustl),
         ('gtest', build_gtest),
         ('host-tools', build_host_tools),
