@@ -54,7 +54,7 @@ ALL_MODULES = {
     'gcc',
     'gcclibs',
     'gdbserver',
-    'shader-tools',
+    'shader_tools',
     'gnustl',
     'gtest',
     'host-tools',
@@ -395,6 +395,12 @@ def build_gcc_libs(out_dir, dist_dir, args):
         archive_name = os.path.join('gcclibs-' + arch)
         build_support.make_package(archive_name, install_dir, dist_dir)
 
+def build_shader_tools(out_dir, dist_dir, args):
+    print('Building shader tools...')
+    build_args = common_build_args(out_dir, dist_dir, args)
+    if args.arch is not None:
+        build_args.append('--arch={}'.format(args.arch))
+    invoke_build('build-shader-tools.py', build_args)
 
 def build_host_tools(out_dir, dist_dir, args):
     build_args = common_build_args(out_dir, dist_dir, args)
@@ -667,15 +673,6 @@ def build_libcxxabi(_out_dir, dist_dir, _args):
     build_support.make_package('libcxxabi', path, dist_dir)
 
 
-def pack_shader_tools(_out_dir, dist_dir, args):
-    host_tag = build_support.host_to_tag(args.system)
-    archive_name = '-'.join(['shader-tools', host_tag])
-    # Pack shader-tools as a prebuilt binary out of platform/prebuilts/ndk.
-    path = os.path.join(
-        build_support.android_path('prebuilts/ndk/shader-tools'), host_tag)
-    build_support.make_package(archive_name, path, dist_dir)
-
-
 def main():
     parser = ArgParser()
     args = parser.parse_args()
@@ -736,7 +733,7 @@ def main():
         ('gcc', build_gcc),
         ('gcclibs', build_gcc_libs),
         ('gdbserver', build_gdbserver),
-        ('shader-tools', pack_shader_tools),
+        ('shader_tools', build_shader_tools),
         ('gnustl', build_gnustl),
         ('gtest', build_gtest),
         ('host-tools', build_host_tools),
