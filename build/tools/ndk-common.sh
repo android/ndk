@@ -338,6 +338,9 @@ compute_host_tag ()
         windows-x86|cygwin-x86)
             HOST_TAG="windows"
             ;;
+        cygwin-x86_64)
+            HOST_TAG="windows-x86_64"
+            ;;
     esac
     log "HOST_TAG=$HOST_TAG"
 }
