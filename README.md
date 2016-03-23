@@ -94,7 +94,8 @@ Prerequisites
     * mingw-w64
     * pbzip2 (optional, improves packaging times)
     * texinfo
-    * python-lxml (used for Vulkan validation layers)
+    * python3 (used for Vulkan validation layer generation)
+    * python-lxml (used for Vulkan validation layer generation)
 * Mac OS X also requires Xcode.
 
 Host/Target prebuilts
