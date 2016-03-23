@@ -398,8 +398,6 @@ def build_gcc_libs(out_dir, dist_dir, args):
 def build_shader_tools(out_dir, dist_dir, args):
     print('Building shader tools...')
     build_args = common_build_args(out_dir, dist_dir, args)
-    if args.arch is not None:
-        build_args.append('--arch={}'.format(args.arch))
     invoke_build('build-shader-tools.py', build_args)
 
 def build_host_tools(out_dir, dist_dir, args):
