@@ -291,6 +291,12 @@ ifdef neon_sources
     $(call __ndk_error,Aborting)
   endif
   $(call tag-src-files,$(neon_sources:%.arm=%),neon)
+  ifneq ($(filter x86 x86_64, $(TARGET_ARCH_ABI)),)
+    ifneq (,$(findstring clang,$(TARGET_TOOLCHAIN)))
+      # Clang has no header that supports the usage of NEON intrinsics on x86/x86_64, so we need the header from GCC.
+      LOCAL_CFLAGS += -include $(call host-path,$(TOOLCHAIN_ROOT))/lib/gcc/$(TOOLCHAIN_NAME)/4.9/include/arm_neon.h
+    endif
+  endif
 endif
 
 LOCAL_SRC_FILES := $(LOCAL_SRC_FILES:%.neon=%)
