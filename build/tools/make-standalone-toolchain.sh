@@ -58,7 +58,7 @@ INSTALL_DIR=
 register_var_option "--install-dir=<path>" INSTALL_DIR "Don't create package, install files to <path> instead."
 
 PLATFORM=
-register_option "--platform=<name>" do_platform "Specify target Android platform/API level." "android-3"
+register_option "--platform=<name>" do_platform "Specify target Android platform/API level." "android-9"
 do_platform () {
     PLATFORM=$1;
     if [ "$PLATFORM" = "android-L" ]; then
@@ -145,9 +145,7 @@ fi
 # Check PLATFORM
 if [ -z "$PLATFORM" ] ; then
     case $ARCH in
-        arm) PLATFORM=android-3
-            ;;
-        x86|mips)
+        arm|x86|mips)
             PLATFORM=android-9
             ;;
         arm64|x86_64|mips64)
