@@ -676,9 +676,14 @@ def main():
 
     if args.host_only:
         modules = {
+            'binutils',
+            'build',
             'clang',
             'gcc',
+            'gcclibs'
             'host-tools',
+            'python-packages',
+            'shader_tools',
         }
 
     required_package_modules = ALL_MODULES
