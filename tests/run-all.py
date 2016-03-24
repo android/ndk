@@ -113,8 +113,6 @@ class ArgParser(argparse.ArgumentParser):
         self.add_argument(
             '--filter', help='Only run tests that match the given patterns.')
         self.add_argument(
-            '--quick', action='store_true', help='Skip long running tests.')
-        self.add_argument(
             '--show-all', action='store_true',
             help='Show all test results, not just failures.')
 
