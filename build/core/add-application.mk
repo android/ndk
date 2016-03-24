@@ -171,8 +171,7 @@ endif # APP_PROJECT_PATH == null
 #
 APP_ABI := $(subst $(comma),$(space),$(strip $(APP_ABI)))
 ifndef APP_ABI
-    # Default to building all ABIs.
-    APP_ABI := all
+    APP_ABI := $(NDK_DEFAULT_ABIS)
 endif
 ifneq ($(APP_ABI),all)
     _bad_abis := $(strip $(filter-out $(NDK_ALL_ABIS),$(APP_ABIS)))

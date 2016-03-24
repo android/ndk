@@ -46,12 +46,10 @@ $(call __ndk_warning,WARNING: android-L is renamed as android-21)
 TARGET_PLATFORM := android-21
 endif
 
-
 # The ABI(s) to use
 NDK_APP_ABI := $(subst $(comma),$(space),$(strip $(NDK_APP_ABI)))
 ifndef NDK_APP_ABI
-    # the default ABI for now is armeabi
-    NDK_APP_ABI := armeabi
+    NDK_APP_ABI := $(NDK_DEFAULT_ABIS)
 endif
 
 NDK_ABI_FILTER := $(strip $(NDK_ABI_FILTER))
