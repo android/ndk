@@ -395,10 +395,12 @@ def build_gcc_libs(out_dir, dist_dir, args):
         archive_name = os.path.join('gcclibs-' + arch)
         build_support.make_package(archive_name, install_dir, dist_dir)
 
+
 def build_shader_tools(out_dir, dist_dir, args):
     print('Building shader tools...')
     build_args = common_build_args(out_dir, dist_dir, args)
     invoke_build('build-shader-tools.py', build_args)
+
 
 def build_host_tools(out_dir, dist_dir, args):
     build_args = common_build_args(out_dir, dist_dir, args)
@@ -469,20 +471,20 @@ def package_host_tools(out_dir, dist_dir, host):
 
     build_support.merge_license_files(
         os.path.join(out_dir, 'host-tools/NOTICE'), [
-        build_support.android_path('toolchain/gdb/gdb-7.10/COPYING'),
-        build_support.ndk_path('sources/host-tools/nawk-20071023/NOTICE'),
-        build_support.ndk_path('sources/host-tools/ndk-depends/NOTICE'),
-        build_support.ndk_path('sources/host-tools/make-3.81/COPYING'),
-        build_support.android_path(
-            'toolchain/python/Python-2.7.5/LICENSE'),
-        build_support.ndk_path('sources/host-tools/ndk-stack/NOTICE'),
-        build_support.ndk_path('sources/host-tools/toolbox/NOTICE'),
-        build_support.android_path('toolchain/yasm/COPYING'),
-        build_support.android_path('toolchain/yasm/BSD.txt'),
-        build_support.android_path('toolchain/yasm/Artistic.txt'),
-        build_support.android_path('toolchain/yasm/GNU_GPL-2.0'),
-        build_support.android_path('toolchain/yasm/GNU_LGPL-2.0'),
-    ])
+            build_support.android_path('toolchain/gdb/gdb-7.10/COPYING'),
+            build_support.ndk_path('sources/host-tools/nawk-20071023/NOTICE'),
+            build_support.ndk_path('sources/host-tools/ndk-depends/NOTICE'),
+            build_support.ndk_path('sources/host-tools/make-3.81/COPYING'),
+            build_support.android_path(
+                'toolchain/python/Python-2.7.5/LICENSE'),
+            build_support.ndk_path('sources/host-tools/ndk-stack/NOTICE'),
+            build_support.ndk_path('sources/host-tools/toolbox/NOTICE'),
+            build_support.android_path('toolchain/yasm/COPYING'),
+            build_support.android_path('toolchain/yasm/BSD.txt'),
+            build_support.android_path('toolchain/yasm/Artistic.txt'),
+            build_support.android_path('toolchain/yasm/GNU_GPL-2.0'),
+            build_support.android_path('toolchain/yasm/GNU_LGPL-2.0'),
+        ])
 
     package_name = 'host-tools-' + host_tag
     path = os.path.join(out_dir, 'host-tools')
@@ -674,9 +676,14 @@ def main():
 
     if args.host_only:
         modules = {
+            'binutils',
+            'build',
             'clang',
             'gcc',
+            'gcclibs',
             'host-tools',
+            'python-packages',
+            'shader_tools',
         }
 
     required_package_modules = ALL_MODULES
