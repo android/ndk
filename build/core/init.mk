@@ -299,8 +299,15 @@ ifeq ($(HOST_TAG),windows-x86)
             $(call __ndk_error,Aborting.)
         endif
     endif
+
     # special-case the host-tag
     HOST_TAG := windows
+
+    # For 32-bit systems, HOST_TAG == HOST_TAG64. Make sure that remains true
+    # here.
+    ifeq ($(HOST_TAG64),x86)
+        HOST_TAG64 = $(HOST_TAG)
+    endif
 endif
 
 $(call ndk_log,HOST_TAG set to $(HOST_TAG))
