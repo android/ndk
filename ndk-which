@@ -27,7 +27,7 @@ if [ "$WHICH" == "" ]; then
   exit 1
 fi
 
-MYNDKDIR=`dirname $0`
+MYNDKDIR=`dirname $0`/../../..
 
 # create a temporary skeleton project so that we can leverage build-local.mk
 TMPDIR=/tmp/ndk-which-$$
