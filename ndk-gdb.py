@@ -477,7 +477,13 @@ def pull_binaries(device, out_dir, app_64bit):
             device.pull("/system/bin/app_process", destination)
 
 def generate_gdb_script(args, sysroot, binary_path, app_64bit, connect_timeout=5):
-    gdb_commands = "file '{}'\n".format(binary_path)
+    if sys.platform.startswith("win"):
+        # GDB expects paths to use forward slashes.
+        sysroot = sysroot.replace("\\", "/")
+        binary_path = binary_path.replace("\\", "/")
+
+    gdb_commands = "set osabi GNU/Linux\n"
+    gdb_commands += "file '{}'\n".format(binary_path)
 
     solib_search_path = [sysroot, "{}/system/bin".format(sysroot)]
     if app_64bit:
