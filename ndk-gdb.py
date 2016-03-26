@@ -655,7 +655,7 @@ def main():
         zygote_path = os.path.join(out_dir, "system", "bin", "app_process")
 
     # Start gdbserver.
-    debug_socket = os.path.join(app_data_dir, "debug_socket")
+    debug_socket = posixpath.join(app_data_dir, "debug_socket")
     log("Starting gdbserver...")
     gdbrunner.start_gdbserver(
         device, None, gdbserver_path,
