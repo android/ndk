@@ -55,7 +55,6 @@ class DeviceFleet(object):
                 'armeabi': None,
                 'armeabi-v7a': None,
                 'armeabi-v7a-hard': None,
-                'mips': None,
                 'x86': None,
             },
             23: {
@@ -63,8 +62,6 @@ class DeviceFleet(object):
                 'armeabi-v7a': None,
                 'armeabi-v7a-hard': None,
                 'arm64-v8a': None,
-                'mips': None,
-                'mips64': None,
                 'x86': None,
                 'x86_64': None,
             },
