@@ -506,7 +506,7 @@ import sys
 sys.path.append("{pypr_dir}")
 from printers import {pypr_fn}
 {pypr_fn}(None)
-end""".format(pypr_dir=args.pypr_dir, pypr_fn=args.pypr_fn)
+end""".format(pypr_dir=args.pypr_dir.replace("\\", "/"), pypr_fn=args.pypr_fn)
 
     if args.exec_file is not None:
         try:
