@@ -554,6 +554,34 @@ def find_pretty_printer(pretty_printer):
     return pp_path, function
 
 
+def start_jdb(args, pid):
+    log("Starting jdb to unblock application.")
+
+    # Give gdbserver some time to attach.
+    time.sleep(0.5)
+
+    # Do setup stuff to keep ^C in the parent from killing us.
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    windows = sys.platform.startswith("win")
+    if not windows:
+        os.setpgrp()
+
+    jdb_port = 65534
+    args.device.forward("tcp:{}".format(jdb_port), "jdwp:{}".format(pid))
+    jdb_cmd = [args.jdb_cmd, "-connect",
+               "com.sun.jdi.SocketAttach:hostname=localhost,port={}".format(jdb_port)]
+
+    flags = subprocess.CREATE_NEW_PROCESS_GROUP if windows else 0
+    jdb = subprocess.Popen(jdb_cmd,
+                           stdin=subprocess.PIPE,
+                           stdout=subprocess.PIPE,
+                           stderr=subprocess.STDOUT,
+                           creationflags=flags)
+    jdb.stdin.write("exit\n")
+    jdb.wait()
+    log("JDB finished unblocking application.")
+
+
 def main():
     args = handle_args()
     device = args.device
@@ -647,36 +675,8 @@ def main():
     if args.launch and not args.nowait:
         # Do this in a separate process before starting gdb, since jdb won't
         # connect until gdb connects and continues.
-        def start_jdb():
-            log("Starting jdb to unblock application.")
-
-            # Give gdbserver some time to attach.
-            time.sleep(0.5)
-
-            # Do setup stuff to keep ^C in the parent from killing us.
-            signal.signal(signal.SIGINT, signal.SIG_IGN)
-            windows = sys.platform.startswith("win")
-            if not windows:
-                os.setpgrp()
-
-            jdb_port = 65534
-            device.forward("tcp:{}".format(jdb_port), "jdwp:{}".format(pid))
-            jdb_cmd = [args.jdb_cmd, "-connect",
-                       "com.sun.jdi.SocketAttach:hostname=localhost,port={}".format(jdb_port)]
-
-            flags = subprocess.CREATE_NEW_PROCESS_GROUP if windows else 0
-            jdb = subprocess.Popen(jdb_cmd,
-                                   stdin=subprocess.PIPE,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.STDOUT,
-                                   creationflags=flags)
-            jdb.stdin.write("exit\n")
-            jdb.wait()
-            log("JDB finished unblocking application.")
-
-        jdb_process = multiprocessing.Process(target=start_jdb)
+        jdb_process = multiprocessing.Process(target=start_jdb, args=(args, pid))
         jdb_process.start()
-
 
     # Start gdb.
     gdb_commands = generate_gdb_script(args, out_dir, zygote_path, app_64bit)
