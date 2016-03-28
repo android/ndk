@@ -52,24 +52,24 @@ class ArgumentParser(gdbrunner.ArgumentParser):
         super(ArgumentParser, self).__init__()
         self.add_argument(
             "--verbose", "-v", action="store_true",
-            help="Enable verbose mode")
+            help="enable verbose mode")
 
         self.add_argument(
             "--force", "-f", action="store_true",
-            help="Kill existing debug session if it exists")
+            help="kill existing debug session if it exists")
 
         self.add_argument(
             "--port", type=int, nargs="?", default="5039",
             help="override the port used on the host")
 
         self.add_argument(
-            "--delay", type=float, default=0.0,
-            help="Delay in seconds to wait after starting activity.\n"
-                 "This may be necessary on slower devices.")
+            "--delay", type=float, default=0.25,
+            help="delay in seconds to wait after starting activity.\n"
+                 "defaults to 0.25, higher values may be needed on slower devices.")
 
         self.add_argument(
             "-p", "--project", dest="project",
-            help="Specify application project path")
+            help="specify application project path")
 
         app_group = self.add_argument_group("target selection")
         start_group = app_group.add_mutually_exclusive_group()
@@ -82,39 +82,39 @@ class ArgumentParser(gdbrunner.ArgumentParser):
         # False in launch if --launch isn't specified.
         start_group.add_argument(
             "--attach", action=NoopAction, nargs=0,
-            help="Attach to application [default]")
+            help="attach to application [default]")
 
         start_group.add_argument(
             "--launch", action="store_true", dest="launch",
-            help="Launch application activity (defaults to main activity, "
+            help="launch application activity (defaults to main activity, "
                  "configurable with --launch-activity)")
 
         start_group.add_argument(
             "--launch-list", action="store_true",
-            help="List all launchable activity names from manifest")
+            help="list all launchable activity names from manifest")
 
         app_group.add_argument(
             "--launch-activity", action="store", metavar="ACTIVITY",
-            dest="launch_target", help="Launch specified application activity")
+            dest="launch_target", help="launch specified application activity")
 
 
         debug_group = self.add_argument_group("debugging options")
         debug_group.add_argument(
             "-x", "--exec", dest="exec_file",
-            help="Execute gdb commands in EXEC_FILE after connection")
+            help="execute gdb commands in EXEC_FILE after connection")
 
         debug_group.add_argument(
             "--nowait", action="store_true",
-            help="Do not wait for debugger to attach (may miss early JNI "
+            help="do not wait for debugger to attach (may miss early JNI "
                  "breakpoints)")
 
         debug_group.add_argument(
             "-t", "--tui", action="store_true", dest="tui",
-            help="Use GDB's tui mode")
+            help="use GDB's tui mode")
 
         debug_group.add_argument(
             "--stdcxx-py-pr", dest="stdcxxpypr",
-            help="Use C++ library pretty-printer",
+            help="use C++ library pretty-printer",
             choices=["auto", "none", "gnustl", "stlport"],
             default="auto")
 
@@ -126,23 +126,6 @@ def extract_package_name(xmlroot):
 
 
 ANDROID_XMLNS = "{http://schemas.android.com/apk/res/android}"
-def is_debuggable(xmlroot):
-    applications = xmlroot.findall("application")
-    if len(applications) > 1:
-        error("Multiple application tags found in AndroidManifest.xml")
-    debuggable_attrib = "{}debuggable".format(ANDROID_XMLNS)
-    if debuggable_attrib in applications[0].attrib:
-        debuggable = applications[0].attrib[debuggable_attrib]
-        if debuggable == "true":
-            return True
-        elif debuggable == "false":
-            return False
-        else:
-            msg = "Unexpected android:debuggable value: '{}'"
-            error(msg.format(debuggable))
-    return False
-
-
 def extract_launchable(xmlroot):
     '''
     A given application can have several activities, and each activity
@@ -263,10 +246,6 @@ def parse_manifest(args):
     manifest_root = manifest.getroot()
     package_name = extract_package_name(manifest_root)
     log("Found package name: {}".format(package_name))
-
-    debuggable = is_debuggable(manifest_root)
-    if not debuggable:
-        error("Application is not marked as debuggable in its manifest.")
 
     activities = extract_launchable(manifest_root)
     activities = [canonicalize_activity(package_name, a) for a in activities]
@@ -575,6 +554,34 @@ def find_pretty_printer(pretty_printer):
     return pp_path, function
 
 
+def start_jdb(args, pid):
+    log("Starting jdb to unblock application.")
+
+    # Give gdbserver some time to attach.
+    time.sleep(0.5)
+
+    # Do setup stuff to keep ^C in the parent from killing us.
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    windows = sys.platform.startswith("win")
+    if not windows:
+        os.setpgrp()
+
+    jdb_port = 65534
+    args.device.forward("tcp:{}".format(jdb_port), "jdwp:{}".format(pid))
+    jdb_cmd = [args.jdb_cmd, "-connect",
+               "com.sun.jdi.SocketAttach:hostname=localhost,port={}".format(jdb_port)]
+
+    flags = subprocess.CREATE_NEW_PROCESS_GROUP if windows else 0
+    jdb = subprocess.Popen(jdb_cmd,
+                           stdin=subprocess.PIPE,
+                           stdout=subprocess.PIPE,
+                           stderr=subprocess.STDOUT,
+                           creationflags=flags)
+    jdb.stdin.write("exit\n")
+    jdb.wait()
+    log("JDB finished unblocking application.")
+
+
 def main():
     args = handle_args()
     device = args.device
@@ -668,36 +675,8 @@ def main():
     if args.launch and not args.nowait:
         # Do this in a separate process before starting gdb, since jdb won't
         # connect until gdb connects and continues.
-        def start_jdb():
-            log("Starting jdb to unblock application.")
-
-            # Give gdbserver some time to attach.
-            time.sleep(0.5)
-
-            # Do setup stuff to keep ^C in the parent from killing us.
-            signal.signal(signal.SIGINT, signal.SIG_IGN)
-            windows = sys.platform.startswith("win")
-            if not windows:
-                os.setpgrp()
-
-            jdb_port = 65534
-            device.forward("tcp:{}".format(jdb_port), "jdwp:{}".format(pid))
-            jdb_cmd = [args.jdb_cmd, "-connect",
-                       "com.sun.jdi.SocketAttach:hostname=localhost,port={}".format(jdb_port)]
-
-            flags = subprocess.CREATE_NEW_PROCESS_GROUP if windows else 0
-            jdb = subprocess.Popen(jdb_cmd,
-                                   stdin=subprocess.PIPE,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.STDOUT,
-                                   creationflags=flags)
-            jdb.stdin.write("exit\n")
-            jdb.wait()
-            log("JDB finished unblocking application.")
-
-        jdb_process = multiprocessing.Process(target=start_jdb)
+        jdb_process = multiprocessing.Process(target=start_jdb, args=(args, pid))
         jdb_process.start()
-
 
     # Start gdb.
     gdb_commands = generate_gdb_script(args, out_dir, zygote_path, app_64bit)
