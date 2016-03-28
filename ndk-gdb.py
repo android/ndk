@@ -63,9 +63,9 @@ class ArgumentParser(gdbrunner.ArgumentParser):
             help="override the port used on the host")
 
         self.add_argument(
-            "--delay", type=float, default=0.0,
-            help="Delay in seconds to wait after starting activity.\n"
-                 "This may be necessary on slower devices.")
+            "--delay", type=float, default=0.25,
+            help="delay in seconds to wait after starting activity.\n"
+                 "defaults to 0.25, higher values may be needed on slower devices.")
 
         self.add_argument(
             "-p", "--project", dest="project",
