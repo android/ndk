@@ -2,5 +2,5 @@
 setlocal
 set PREBUILT_BIN=%~dp0
 set SHELL=cmd
-"%PREBUILT_BIN%/python.exe" -u "%~dp0ndk-gdb" %*
+"%PREBUILT_BIN%/python.exe" -u "%~dp0ndk-gdb.py" %*
 endlocal
