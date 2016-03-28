@@ -28,6 +28,10 @@ def color_string(string, color):
     return colors[color] + string + end_color
 
 
+def maybe_color(text, color, do_color):
+    return color_string(text, color) if do_color else text
+
+
 @contextlib.contextmanager
 def cd(path):
     curdir = os.getcwd()

@@ -26,7 +26,6 @@ import re
 import shutil
 import subprocess
 
-import adb
 import ndk
 import util
 
@@ -51,7 +50,8 @@ def _scan_test_suite(suite_dir, test_class, *args):
 
 
 class TestRunner(object):
-    def __init__(self):
+    def __init__(self, printer):
+        self.printer = printer
         self.tests = {}
 
     def add_suite(self, name, path, test_class, *args):
@@ -76,14 +76,16 @@ class TestRunner(object):
             message = 'test unsupported for {}'.format(config)
             return [Skipped(test.name, message)]
 
-        results = test.run(out_dir, test_filters)
         config, bug = test.check_broken()
-        if config is None:
-            return results
-
-        # We need to check each individual test case for pass/fail and change
-        # it to either an ExpectedFailure or an UnexpectedSuccess as necessary.
-        return [self._fixup_expected_failure(r, config, bug) for r in results]
+        results = []
+        for result in test.run(out_dir, test_filters):
+            if config is not None:
+                # We need to check change each pass/fail to either an
+                # ExpectedFailure or an UnexpectedSuccess as necessary.
+                result = self._fixup_expected_failure(result, config, bug)
+            self.printer.print_result(result)
+            results.append(result)
+        return results
 
     def run(self, out_dir, test_filters):
         results = {suite: [] for suite in self.tests.keys()}
@@ -94,10 +96,6 @@ class TestRunner(object):
                                                    test_filters))
             results[suite] = test_results
         return results
-
-
-def _maybe_color(text, color, do_color):
-    return util.color_string(text, color) if do_color else text
 
 
 class TestResult(object):
@@ -129,7 +127,7 @@ class Failure(TestResult):
         return True
 
     def to_string(self, colored=False):
-        label = _maybe_color('FAIL', 'red', colored)
+        label = util.maybe_color('FAIL', 'red', colored)
         return '{} {}: {}'.format(label, self.test_name, self.message)
 
 
@@ -141,7 +139,7 @@ class Success(TestResult):
         return False
 
     def to_string(self, colored=False):
-        label = _maybe_color('PASS', 'green', colored)
+        label = util.maybe_color('PASS', 'green', colored)
         return '{} {}'.format(label, self.test_name)
 
 
@@ -157,7 +155,7 @@ class Skipped(TestResult):
         return False
 
     def to_string(self, colored=False):
-        label = _maybe_color('SKIP', 'yellow', colored)
+        label = util.maybe_color('SKIP', 'yellow', colored)
         return '{} {}: {}'.format(label, self.test_name, self.reason)
 
 
@@ -174,7 +172,7 @@ class ExpectedFailure(TestResult):
         return False
 
     def to_string(self, colored=False):
-        label = _maybe_color('KNOWN FAIL', 'yellow', colored)
+        label = util.maybe_color('KNOWN FAIL', 'yellow', colored)
         return '{} {}: known failure for {} ({})'.format(
             label, self.test_name, self.config, self.bug)
 
@@ -192,7 +190,7 @@ class UnexpectedSuccess(TestResult):
         return True
 
     def to_string(self, colored=False):
-        label = _maybe_color('SHOULD FAIL', 'red', colored)
+        label = util.maybe_color('SHOULD FAIL', 'red', colored)
         return '{} {}: unexpected success for {} ({})'.format(
             label, self.test_name, self.config, self.bug)
 
@@ -257,14 +255,12 @@ class AwkTest(Test):
         return None
 
     def run(self, out_dir, test_filters):
-        results = []
         for test_case in glob.glob(os.path.join(self.test_dir, '*.in')):
             golden_path = re.sub(r'\.in$', '.out', test_case)
             result = self.run_case(out_dir, test_case, golden_path,
                                    test_filters)
             if result is not None:
-                results.append(result)
-        return results
+                yield result
 
     def run_case(self, out_dir, test_case, golden_out_path, test_filters):
         case_name = os.path.splitext(os.path.basename(test_case))[0]
@@ -475,7 +471,7 @@ class PythonBuildTest(Test):
 
     def run(self, out_dir, _):
         build_dir = os.path.join(out_dir, self.name)
-        print('Running build test: {}'.format(self.name))
+        print('Building test: {}'.format(self.name))
         _prep_build_dir(self.test_dir, build_dir)
         with util.cd(build_dir):
             module = imp.load_source('test', 'test.py')
@@ -483,9 +479,9 @@ class PythonBuildTest(Test):
                 abi=self.abi, platform=self.platform, toolchain=self.toolchain,
                 build_flags=self.build_flags)
             if success:
-                return [Success(self.name)]
+                yield Success(self.name)
             else:
-                return [Failure(self.name, failure_message)]
+                yield Failure(self.name, failure_message)
 
 
 class ShellBuildTest(Test):
@@ -498,13 +494,14 @@ class ShellBuildTest(Test):
 
     def run(self, out_dir, _):
         build_dir = os.path.join(out_dir, self.name)
-        print('Running build test: {}'.format(self.name))
+        print('Building test: {}'.format(self.name))
         if os.name == 'nt':
             reason = 'build.sh tests are not supported on Windows'
-            return [Skipped(self.name, reason)]
-        return [_run_build_sh_test(self.name, build_dir, self.test_dir,
-                                   self.build_flags, self.abi, self.platform,
-                                   self.toolchain)]
+            yield Skipped(self.name, reason)
+        else:
+            yield _run_build_sh_test(self.name, build_dir, self.test_dir,
+                                     self.build_flags, self.abi, self.platform,
+                                     self.toolchain)
 
 
 class NdkBuildTest(Test):
@@ -517,10 +514,10 @@ class NdkBuildTest(Test):
 
     def run(self, out_dir, _):
         build_dir = os.path.join(out_dir, self.name)
-        print('Running build test: {}'.format(self.name))
-        return [_run_ndk_build_test(self.name, build_dir, self.test_dir,
-                                    self.build_flags, self.abi,
-                                    self.platform, self.toolchain)]
+        print('Building test: {}'.format(self.name))
+        yield _run_ndk_build_test(self.name, build_dir, self.test_dir,
+                                  self.build_flags, self.abi,
+                                  self.platform, self.toolchain)
 
 
 class BuildTest(object):
@@ -539,7 +536,8 @@ class BuildTest(object):
                                 toolchain, build_flags)
 
 
-def _copy_test_to_device(build_dir, device_dir, abi, test_filters, test_name):
+def _copy_test_to_device(device, build_dir, device_dir, abi, test_filters,
+                         test_name):
     abi_dir = os.path.join(build_dir, 'libs', abi)
     if not os.path.isdir(abi_dir):
         raise RuntimeError('No libraries for {}'.format(abi))
@@ -561,15 +559,15 @@ def _copy_test_to_device(build_dir, device_dir, abi, test_filters, test_name):
         # This was the case with the old shell based script too. I'm trying not
         # to change too much in the translation.
         lib_path = os.path.join(abi_dir, test_file)
-        print('\tPushing {} to {}...'.format(lib_path, device_dir))
-        adb.push(lib_path, device_dir)
+        print('Pushing {} to {}...'.format(lib_path, device_dir))
+        device.push(lib_path, device_dir)
 
         # Binaries pushed from Windows may not have execute permissions.
         if not file_is_lib:
             file_path = posixpath.join(device_dir, test_file)
             # Can't use +x because apparently old versions of Android didn't
             # support that...
-            adb.shell('chmod 777 ' + file_path)
+            device.shell(['chmod', '777', file_path])
 
         # TODO(danalbert): Sync data.
         # The libc++ tests contain a DATA file that lists test names and their
@@ -583,20 +581,21 @@ def _copy_test_to_device(build_dir, device_dir, abi, test_filters, test_name):
 
 
 class DeviceTest(Test):
-    def __init__(self, name, test_dir, abi, platform, device_platform,
+    def __init__(self, name, test_dir, abi, platform, device, device_platform,
                  toolchain, build_flags):
         super(DeviceTest, self).__init__(name, test_dir)
         self.abi = abi
         self.platform = platform
+        self.device = device
         self.device_platform = device_platform
         self.toolchain = toolchain
         self.build_flags = build_flags
 
     @classmethod
-    def from_dir(cls, test_dir, abi, platform, device_platform, toolchain,
-                 build_flags):
+    def from_dir(cls, test_dir, abi, platform, device, device_platform,
+                 toolchain, build_flags):
         test_name = os.path.basename(test_dir)
-        return cls(test_name, test_dir, abi, platform, device_platform,
+        return cls(test_name, test_dir, abi, platform, device, device_platform,
                    toolchain, build_flags)
 
     def get_test_config(self):
@@ -623,27 +622,26 @@ class DeviceTest(Test):
                                              self.toolchain, subtest=name)
 
     def run(self, out_dir, test_filters):
-        print('Running device test: {}'.format(self.name))
+        print('Building device test: {}'.format(self.name))
         build_dir = os.path.join(out_dir, self.name)
         build_result = _run_ndk_build_test(self.name, build_dir, self.test_dir,
                                            self.build_flags, self.abi,
                                            self.platform, self.toolchain)
         if not build_result.passed():
-            return [build_result]
+            yield build_result
+            return
 
         device_dir = posixpath.join('/data/local/tmp/ndk-tests', self.name)
 
         # We have to use `ls foo || mkdir foo` because Gingerbread was lacking
         # `mkdir -p`, the -d check for directory existence, stat, dirname, and
         # every other thing I could think of to implement this aside from ls.
-        result, out = adb.shell('ls {0} || mkdir {0}'.format(device_dir))
-        if result != 0:
-            raise RuntimeError('mkdir failed:\n' + '\n'.join(out))
+        self.device.shell(['ls {0} || mkdir {0}'.format(device_dir)])
 
-        results = []
         try:
             test_cases = _copy_test_to_device(
-                build_dir, device_dir, self.abi, test_filters, self.name)
+                self.device, build_dir, device_dir, self.abi, test_filters,
+                self.name)
             for case in test_cases:
                 case_name = _make_subtest_name(self.name, case)
                 if not test_filters.filter(case_name):
@@ -652,26 +650,23 @@ class DeviceTest(Test):
                 config = self.check_subtest_unsupported(case)
                 if config is not None:
                     message = 'test unsupported for {}'.format(config)
-                    results.append(Skipped(case_name, message))
+                    yield Skipped(case_name, message)
                     continue
 
-                cmd = 'cd {} && LD_LIBRARY_PATH={} ./{}'.format(
+                cmd = 'cd {} && LD_LIBRARY_PATH={} ./{} 2>&1'.format(
                     device_dir, device_dir, case)
-                print('\tExecuting {}...'.format(case_name))
-                result, out = adb.shell(cmd)
+                result, out, _ = self.device.shell_nocheck([cmd])
 
                 config, bug = self.check_subtest_broken(case)
                 if config is None:
                     if result == 0:
-                        results.append(Success(case_name))
+                        yield Success(case_name)
                     else:
-                        results.append(Failure(case_name, '\n'.join(out)))
+                        yield Failure(case_name, out)
                 else:
                     if result == 0:
-                        results.append(UnexpectedSuccess(case_name, config,
-                                                         bug))
+                        yield UnexpectedSuccess(case_name, config, bug)
                     else:
-                        results.append(ExpectedFailure(case_name, config, bug))
-            return results
+                        yield ExpectedFailure(case_name, config, bug)
         finally:
-            adb.shell('rm -r {}'.format(device_dir))
+            self.device.shell_nocheck(['rm', '-r', device_dir])
