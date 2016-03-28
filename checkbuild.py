@@ -450,14 +450,15 @@ def package_host_tools(out_dir, dist_dir, host):
     ]
 
     files = [
-        'ndk-gdb',
-        'ndk-gdb.cmd',
         'ndk-gdb.py',
         'ndk-which',
     ]
 
     if host in ('windows', 'windows64'):
         packages.append('toolbox')
+        files.append('ndk-gdb.cmd')
+    else:
+        files.append('ndk-gdb')
 
     host_tag = build_support.host_to_tag(host)
 
