@@ -52,11 +52,11 @@ class ArgumentParser(gdbrunner.ArgumentParser):
         super(ArgumentParser, self).__init__()
         self.add_argument(
             "--verbose", "-v", action="store_true",
-            help="Enable verbose mode")
+            help="enable verbose mode")
 
         self.add_argument(
             "--force", "-f", action="store_true",
-            help="Kill existing debug session if it exists")
+            help="kill existing debug session if it exists")
 
         self.add_argument(
             "--port", type=int, nargs="?", default="5039",
@@ -69,7 +69,7 @@ class ArgumentParser(gdbrunner.ArgumentParser):
 
         self.add_argument(
             "-p", "--project", dest="project",
-            help="Specify application project path")
+            help="specify application project path")
 
         app_group = self.add_argument_group("target selection")
         start_group = app_group.add_mutually_exclusive_group()
@@ -82,39 +82,39 @@ class ArgumentParser(gdbrunner.ArgumentParser):
         # False in launch if --launch isn't specified.
         start_group.add_argument(
             "--attach", action=NoopAction, nargs=0,
-            help="Attach to application [default]")
+            help="attach to application [default]")
 
         start_group.add_argument(
             "--launch", action="store_true", dest="launch",
-            help="Launch application activity (defaults to main activity, "
+            help="launch application activity (defaults to main activity, "
                  "configurable with --launch-activity)")
 
         start_group.add_argument(
             "--launch-list", action="store_true",
-            help="List all launchable activity names from manifest")
+            help="list all launchable activity names from manifest")
 
         app_group.add_argument(
             "--launch-activity", action="store", metavar="ACTIVITY",
-            dest="launch_target", help="Launch specified application activity")
+            dest="launch_target", help="launch specified application activity")
 
 
         debug_group = self.add_argument_group("debugging options")
         debug_group.add_argument(
             "-x", "--exec", dest="exec_file",
-            help="Execute gdb commands in EXEC_FILE after connection")
+            help="execute gdb commands in EXEC_FILE after connection")
 
         debug_group.add_argument(
             "--nowait", action="store_true",
-            help="Do not wait for debugger to attach (may miss early JNI "
+            help="do not wait for debugger to attach (may miss early JNI "
                  "breakpoints)")
 
         debug_group.add_argument(
             "-t", "--tui", action="store_true", dest="tui",
-            help="Use GDB's tui mode")
+            help="use GDB's tui mode")
 
         debug_group.add_argument(
             "--stdcxx-py-pr", dest="stdcxxpypr",
-            help="Use C++ library pretty-printer",
+            help="use C++ library pretty-printer",
             choices=["auto", "none", "gnustl", "stlport"],
             default="auto")
 
