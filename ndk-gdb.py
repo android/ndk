@@ -126,23 +126,6 @@ def extract_package_name(xmlroot):
 
 
 ANDROID_XMLNS = "{http://schemas.android.com/apk/res/android}"
-def is_debuggable(xmlroot):
-    applications = xmlroot.findall("application")
-    if len(applications) > 1:
-        error("Multiple application tags found in AndroidManifest.xml")
-    debuggable_attrib = "{}debuggable".format(ANDROID_XMLNS)
-    if debuggable_attrib in applications[0].attrib:
-        debuggable = applications[0].attrib[debuggable_attrib]
-        if debuggable == "true":
-            return True
-        elif debuggable == "false":
-            return False
-        else:
-            msg = "Unexpected android:debuggable value: '{}'"
-            error(msg.format(debuggable))
-    return False
-
-
 def extract_launchable(xmlroot):
     '''
     A given application can have several activities, and each activity
@@ -263,10 +246,6 @@ def parse_manifest(args):
     manifest_root = manifest.getroot()
     package_name = extract_package_name(manifest_root)
     log("Found package name: {}".format(package_name))
-
-    debuggable = is_debuggable(manifest_root)
-    if not debuggable:
-        error("Application is not marked as debuggable in its manifest.")
 
     activities = extract_launchable(manifest_root)
     activities = [canonicalize_activity(package_name, a) for a in activities]
@@ -477,7 +456,13 @@ def pull_binaries(device, out_dir, app_64bit):
             device.pull("/system/bin/app_process", destination)
 
 def generate_gdb_script(args, sysroot, binary_path, app_64bit, connect_timeout=5):
-    gdb_commands = "file '{}'\n".format(binary_path)
+    if sys.platform.startswith("win"):
+        # GDB expects paths to use forward slashes.
+        sysroot = sysroot.replace("\\", "/")
+        binary_path = binary_path.replace("\\", "/")
+
+    gdb_commands = "set osabi GNU/Linux\n"
+    gdb_commands += "file '{}'\n".format(binary_path)
 
     solib_search_path = [sysroot, "{}/system/bin".format(sysroot)]
     if app_64bit:
@@ -569,6 +554,34 @@ def find_pretty_printer(pretty_printer):
     return pp_path, function
 
 
+def start_jdb(args, pid):
+    log("Starting jdb to unblock application.")
+
+    # Give gdbserver some time to attach.
+    time.sleep(0.5)
+
+    # Do setup stuff to keep ^C in the parent from killing us.
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    windows = sys.platform.startswith("win")
+    if not windows:
+        os.setpgrp()
+
+    jdb_port = 65534
+    args.device.forward("tcp:{}".format(jdb_port), "jdwp:{}".format(pid))
+    jdb_cmd = [args.jdb_cmd, "-connect",
+               "com.sun.jdi.SocketAttach:hostname=localhost,port={}".format(jdb_port)]
+
+    flags = subprocess.CREATE_NEW_PROCESS_GROUP if windows else 0
+    jdb = subprocess.Popen(jdb_cmd,
+                           stdin=subprocess.PIPE,
+                           stdout=subprocess.PIPE,
+                           stderr=subprocess.STDOUT,
+                           creationflags=flags)
+    jdb.stdin.write("exit\n")
+    jdb.wait()
+    log("JDB finished unblocking application.")
+
+
 def main():
     args = handle_args()
     device = args.device
@@ -649,7 +662,7 @@ def main():
         zygote_path = os.path.join(out_dir, "system", "bin", "app_process")
 
     # Start gdbserver.
-    debug_socket = os.path.join(app_data_dir, "debug_socket")
+    debug_socket = posixpath.join(app_data_dir, "debug_socket")
     log("Starting gdbserver...")
     gdbrunner.start_gdbserver(
         device, None, gdbserver_path,
@@ -662,36 +675,8 @@ def main():
     if args.launch and not args.nowait:
         # Do this in a separate process before starting gdb, since jdb won't
         # connect until gdb connects and continues.
-        def start_jdb():
-            log("Starting jdb to unblock application.")
-
-            # Give gdbserver some time to attach.
-            time.sleep(0.5)
-
-            # Do setup stuff to keep ^C in the parent from killing us.
-            signal.signal(signal.SIGINT, signal.SIG_IGN)
-            windows = sys.platform.startswith("win")
-            if not windows:
-                os.setpgrp()
-
-            jdb_port = 65534
-            device.forward("tcp:{}".format(jdb_port), "jdwp:{}".format(pid))
-            jdb_cmd = [args.jdb_cmd, "-connect",
-                       "com.sun.jdi.SocketAttach:hostname=localhost,port={}".format(jdb_port)]
-
-            flags = subprocess.CREATE_NEW_PROCESS_GROUP if windows else 0
-            jdb = subprocess.Popen(jdb_cmd,
-                                   stdin=subprocess.PIPE,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.STDOUT,
-                                   creationflags=flags)
-            jdb.stdin.write("exit\n")
-            jdb.wait()
-            log("JDB finished unblocking application.")
-
-        jdb_process = multiprocessing.Process(target=start_jdb)
+        jdb_process = multiprocessing.Process(target=start_jdb, args=(args, pid))
         jdb_process.start()
-
 
     # Start gdb.
     gdb_commands = generate_gdb_script(args, out_dir, zygote_path, app_64bit)
