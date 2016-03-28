@@ -126,23 +126,6 @@ def extract_package_name(xmlroot):
 
 
 ANDROID_XMLNS = "{http://schemas.android.com/apk/res/android}"
-def is_debuggable(xmlroot):
-    applications = xmlroot.findall("application")
-    if len(applications) > 1:
-        error("Multiple application tags found in AndroidManifest.xml")
-    debuggable_attrib = "{}debuggable".format(ANDROID_XMLNS)
-    if debuggable_attrib in applications[0].attrib:
-        debuggable = applications[0].attrib[debuggable_attrib]
-        if debuggable == "true":
-            return True
-        elif debuggable == "false":
-            return False
-        else:
-            msg = "Unexpected android:debuggable value: '{}'"
-            error(msg.format(debuggable))
-    return False
-
-
 def extract_launchable(xmlroot):
     '''
     A given application can have several activities, and each activity
@@ -263,10 +246,6 @@ def parse_manifest(args):
     manifest_root = manifest.getroot()
     package_name = extract_package_name(manifest_root)
     log("Found package name: {}".format(package_name))
-
-    debuggable = is_debuggable(manifest_root)
-    if not debuggable:
-        error("Application is not marked as debuggable in its manifest.")
 
     activities = extract_launchable(manifest_root)
     activities = [canonicalize_activity(package_name, a) for a in activities]
