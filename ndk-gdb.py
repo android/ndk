@@ -74,15 +74,9 @@ class ArgumentParser(gdbrunner.ArgumentParser):
         app_group = self.add_argument_group("target selection")
         start_group = app_group.add_mutually_exclusive_group()
 
-        class NoopAction(argparse.Action):
-            def __call__(self, *args, **kwargs):
-                pass
-
-        # Action for --attach is a noop, because --launch's action will store a
-        # False in launch if --launch isn't specified.
         start_group.add_argument(
-            "--attach", action=NoopAction, nargs=0,
-            help="attach to application [default]")
+            "--attach", nargs='?', dest="package_name", metavar="PKG_NAME",
+            help="attach to application. PKG_NAME to attach to can optionally be specified.")
 
         start_group.add_argument(
             "--launch", action="store_true", dest="launch",
@@ -596,7 +590,11 @@ def main():
     args.props = device.get_props()
 
     project = find_project(args)
-    parse_manifest(args)
+    if args.package_name:
+        log("Attaching to specified package: {}".format(args.package_name))
+    else:
+        parse_manifest(args)
+
     pkg_name = args.package_name
 
     if args.launch is False:
