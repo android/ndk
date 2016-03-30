@@ -284,11 +284,9 @@ ifeq ($(HOST_OS),windows)
   HOST_EXEEXT := .exe
 endif
 
-# If we are on Windows, we need to check that we are not running
-# Cygwin 1.5, which is deprecated and won't run our toolchain
-# binaries properly.
-#
 ifeq ($(HOST_TAG),windows-x86)
+    # If we are on Windows, we need to check that we are not running Cygwin 1.5,
+    # which is deprecated and won't run our toolchain binaries properly.
     ifeq ($(HOST_OS),cygwin)
         # On cygwin, 'uname -r' returns something like 1.5.23(0.225/5/3)
         # We recognize 1.5. as the prefix to look for then.
@@ -303,9 +301,9 @@ ifeq ($(HOST_TAG),windows-x86)
     # special-case the host-tag
     HOST_TAG := windows
 
-    # For 32-bit systems, HOST_TAG == HOST_TAG64. Make sure that remains true
-    # here.
-    ifeq ($(HOST_TAG64),x86)
+    # For 32-bit systems, HOST_TAG64 should be HOST_TAG, but we just updated
+    # HOST_TAG, so update HOST_TAG64 to match.
+    ifeq ($(HOST_ARCH64),x86)
         HOST_TAG64 = $(HOST_TAG)
     endif
 endif
