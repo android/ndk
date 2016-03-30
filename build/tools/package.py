@@ -100,6 +100,7 @@ def get_all_packages(host, arches):
         ('shaderc', 'sources/third_party/shaderc'),
         ('stlport', 'sources/cxx-stl/stlport'),
         ('system-stl', 'sources/cxx-stl/system'),
+        ('vulkan', 'sources/third_party/vulkan'),
     ]
 
     platforms_path = 'development/ndk/platforms'
