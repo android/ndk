@@ -305,7 +305,7 @@ ifeq ($(HOST_TAG),windows-x86)
 
     # For 32-bit systems, HOST_TAG == HOST_TAG64. Make sure that remains true
     # here.
-    ifeq ($(HOST_TAG64),x86)
+    ifeq ($(HOST_ARCH64),x86)
         HOST_TAG64 = $(HOST_TAG)
     endif
 endif
