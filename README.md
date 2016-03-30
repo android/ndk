@@ -17,6 +17,7 @@ following sources:
 
  * User documentation is available on the [Android Developer website].
  * Adding a new NDK API or platform version? Check [Generating Sysroots].
+ * Working on Clang or GCC? See [Toolchains.md].
  * Discussions related to the Android NDK happen on the [android-ndk Google
    Group].
  * File bugs against the NDK at https://github.com/android-ndk/ndk/issues.
@@ -24,6 +25,7 @@ following sources:
 [Android Developer website]: https://developer.android.com/ndk/index.html
 [android-ndk Google Group]: http://groups.google.com/group/android-ndk
 [Generating Sysroots]: docs/GeneratingSysroots.md
+[Toolchains.md]: docs/Toolchains.md
 
 Building the NDK
 ================
