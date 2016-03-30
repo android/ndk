@@ -7,11 +7,13 @@ Hotfix r11c
 -----------
 
  * `ndk-gdb.py` *actually* works now. http://i.imgur.com/gHcGr.jpg
+ * Added an optional package name argument to `ndk-gdb`'s `--attach` flag:
+   https://github.com/android-ndk/ndk/issues/13.
  * Fixed invalid toolchain paths for 32-bit Windows:
-   https://github.com/android-ndk/ndk/issues/45
+   https://github.com/android-ndk/ndk/issues/45.
  * Fixed the relative path in `ndk-which`:
-   https://github.com/android-ndk/ndk/issues/29
- * Fixed use of cygpath for libgcc: http://b.android.com/195486
+   https://github.com/android-ndk/ndk/issues/29.
+ * Fixed use of cygpath for libgcc: http://b.android.com/195486.
 
 Hotfix r11b
 -----------
