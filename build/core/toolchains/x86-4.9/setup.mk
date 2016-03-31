@@ -44,7 +44,7 @@ TARGET_x86_release_CFLAGS := \
     -DNDEBUG \
 
 TARGET_x86_debug_CFLAGS := \
-r   -O0 \
+    -O0 \
     -UNDEBUG \
 
 # This function will be called to determine the target CFLAGS used to build
