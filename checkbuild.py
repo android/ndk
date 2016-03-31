@@ -441,7 +441,7 @@ def build_host_tools(out_dir, dist_dir, args):
 
 def package_host_tools(out_dir, dist_dir, host):
     packages = [
-        'gdb-multiarch-7.10',
+        'gdb-multiarch-7.11',
         'ndk-awk',
         'ndk-depends',
         'ndk-make',
@@ -472,7 +472,7 @@ def package_host_tools(out_dir, dist_dir, host):
 
     build_support.merge_license_files(
         os.path.join(out_dir, 'host-tools/NOTICE'), [
-            build_support.android_path('toolchain/gdb/gdb-7.10/COPYING'),
+            build_support.android_path('toolchain/gdb/gdb-7.11/COPYING'),
             build_support.ndk_path('sources/host-tools/nawk-20071023/NOTICE'),
             build_support.ndk_path('sources/host-tools/ndk-depends/NOTICE'),
             build_support.ndk_path('sources/host-tools/make-3.81/COPYING'),
