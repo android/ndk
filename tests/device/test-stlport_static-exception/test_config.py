@@ -19,8 +19,7 @@ def match_broken(abi, platform, device_platform, toolchain, subtest=None):
     if subtest == 'dyncast1' and toolchain == 'clang' and abi == 'x86_64':
         return '{} {}'.format(toolchain, abi), 'http://b/26085687'
 
-    if (subtest == 'dyncast2_1' and toolchain == 'clang' and
-        abi.startswith('x86')):
+    if subtest == 'dyncast2_1' and toolchain == 'clang' and abi == 'x86_64':
         return '{} {}'.format(toolchain, abi), 'http://b/26085687'
 
     return None, None
