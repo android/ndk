@@ -686,7 +686,7 @@ def build_vulkan(out_dir, dist_dir, args):
             install_file(f, source_dir, dest_dir)
 
     # Copy Android build components
-    src = os.path.join(vulkan_root_dir, 'buildAndroid')
+    src = os.path.join(vulkan_root_dir, 'build-android')
     dst = os.path.join(vulkan_path, 'build-android')
     shutil.rmtree(dst, 'true')
     shutil.copytree(src, dst,
