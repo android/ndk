@@ -63,6 +63,14 @@ endif
 libcxx_cxxflags := $(libcxx_export_cxxflags)
 libcxx_cflags := -D__STDC_FORMAT_MACROS
 
+libcxx_ldflags :=
+libcxx_export_ldflags :=
+# Need to make sure the unwinder is always linked with hidden visibility.
+ifneq (,$(filter armeabi%,$(TARGET_ARCH_ABI)))
+    libcxx_ldflags += -Wl,--exclude-libs,libunwind.a
+    libcxx_export_ldflags += -Wl,--exclude-libs,libunwind.a
+endif
+
 ifneq ($(LIBCXX_FORCE_REBUILD),true)
 
 $(call ndk_log,Using prebuilt libc++ libraries)
@@ -74,6 +82,7 @@ LOCAL_MODULE := c++_static
 LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE)$(TARGET_LIB_EXTENSION)
 LOCAL_EXPORT_C_INCLUDES := $(libcxx_export_includes) $(android_support_c_includes)
 LOCAL_EXPORT_CPPFLAGS := $(libcxx_export_cxxflags)
+LOCAL_EXPORT_LDFLAGS := $(libcxx_export_ldflags)
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
@@ -81,6 +90,7 @@ LOCAL_MODULE := c++_shared
 LOCAL_SRC_FILES := libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE)$(TARGET_SONAME_EXTENSION)
 LOCAL_EXPORT_C_INCLUDES := $(libcxx_export_includes) $(android_support_c_includes)
 LOCAL_EXPORT_CPPFLAGS := $(libcxx_export_cxxflags)
+LOCAL_EXPORT_LDFLAGS := $(libcxx_export_ldflags)
 include $(PREBUILT_SHARED_LIBRARY)
 
 else
@@ -97,6 +107,7 @@ LOCAL_CPPFLAGS := $(libcxx_cxxflags)
 LOCAL_CPP_FEATURES := rtti exceptions
 LOCAL_EXPORT_C_INCLUDES := $(libcxx_export_includes)
 LOCAL_EXPORT_CPPFLAGS := $(libcxx_export_cxxflags)
+LOCAL_EXPORT_LDFLAGS := $(libcxx_export_ldflags)
 LOCAL_STATIC_LIBRARIES := libc++abi android_support
 include $(BUILD_STATIC_LIBRARY)
 
@@ -105,7 +116,9 @@ LOCAL_MODULE := c++_shared
 LOCAL_WHOLE_STATIC_LIBRARIES := c++_static
 LOCAL_EXPORT_C_INCLUDES := $(libcxx_export_includes)
 LOCAL_EXPORT_CPPFLAGS := $(libcxx_export_cxxflags)
+LOCAL_EXPORT_LDFLAGS := $(libcxx_export_ldflags)
 LOCAL_STATIC_LIBRARIES := libc++abi android_support
+LOCAL_LDFLAGS := $(libcxx_ldflags)
 
 # We use the LLVM unwinder for all the 32-bit ARM targets.
 ifneq (,$(filter armeabi%,$(TARGET_ARCH_ABI)))

@@ -82,7 +82,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := libunwind
 LOCAL_SRC_FILES := $(libunwind_src_files)
 LOCAL_C_INCLUDES := $(libcxxabi_includes)
-LOCAL_CFLAGS := $(libcxxabi_cflags) -fvisibility=hidden
+LOCAL_CFLAGS := $(libcxxabi_cflags)
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/libcxxabi/include
 include $(BUILD_STATIC_LIBRARY)
 
