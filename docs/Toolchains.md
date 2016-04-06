@@ -1,6 +1,9 @@
 Working with the NDK Toolchains
 ===============================
 
+The latest version of this document is available at
+https://android.googlesource.com/platform/ndk/+/master/docs/Testing.md.
+
 The toolchains shipped in the NDK are not built as a part of the NDK build
 process. Instead they are built separately and checked into git as prebuilts
 that are repackaged when shipped in the NDK. This applies to both Clang and GCC.

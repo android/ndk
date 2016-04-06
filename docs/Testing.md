@@ -1,6 +1,9 @@
 Testing the NDK
 ===============
 
+The latest version of this document is available at
+https://android.googlesource.com/platform/ndk/+/master/docs/Testing.md.
+
 Testing Tools
 -------------
 
