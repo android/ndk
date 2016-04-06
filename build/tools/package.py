@@ -108,6 +108,11 @@ def get_all_packages(host, arches):
         if not platform_dir.startswith('android-'):
             continue
         _, platform_str = platform_dir.split('-')
+
+        # Anything before Ginger Bread is unsupported, so don't ship them.
+        if int(platform_str) < 9:
+            continue
+
         package_name = 'platform-' + platform_str
         install_path = 'platforms/android-' + platform_str
         packages.append((package_name, install_path))
