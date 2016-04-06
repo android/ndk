@@ -1,6 +1,9 @@
 Android Native Development Kit (NDK)
 ====================================
 
+The latest version of this document is available at
+https://android.googlesource.com/platform/ndk/+/master/README.md.
+
 **Note:** This document is for developers _of_ the NDK, not developers
 that use the NDK.
 
