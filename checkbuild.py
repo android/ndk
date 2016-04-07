@@ -46,13 +46,11 @@ import tests.printers
 
 
 ALL_MODULES = {
-    'binutils',
     'build',
     'clang',
     'cpufeatures',
     'gabi++',
     'gcc',
-    'gcclibs',
     'gdbserver',
     'gnustl',
     'gtest',
@@ -188,55 +186,6 @@ def common_build_args(out_dir, dist_dir, args):
     return build_args
 
 
-def fixup_toolchain_triple(toolchain):
-    """Maps toolchain names to their proper triple.
-
-    The x86 toolchains are named stupidly and aren't a proper triple.
-    """
-    return {
-        'x86': 'i686-linux-android',
-        'x86_64': 'x86_64-linux-android',
-    }.get(toolchain, toolchain)
-
-
-def get_binutils_files(triple, has_gold, is_windows):
-    files = [
-        'ld.bfd',
-        'nm',
-        'as',
-        'objcopy',
-        'strip',
-        'objdump',
-        'ld',
-        'ar',
-        'ranlib',
-    ]
-
-    if has_gold:
-        files.append('ld.gold')
-
-    if is_windows:
-        files = [f + '.exe' for f in files]
-
-    # binutils programs get installed to two locations:
-    # 1: $INSTALL_DIR/bin/$TRIPLE-$PROGRAM
-    # 2: $INSTALL_DIR/$TRIPLE/bin/$PROGRAM
-    #
-    # We need to copy both.
-
-    prefixed_files = []
-    for file_name in files:
-        prefixed_name = '-'.join([triple, file_name])
-        prefixed_files.append(os.path.join('bin', prefixed_name))
-
-    dir_prefixed_files = []
-    for file_name in files:
-        dir_prefixed_files.append(os.path.join(triple, 'bin', file_name))
-
-    ldscripts_dir = os.path.join(triple, 'lib/ldscripts')
-    return prefixed_files + dir_prefixed_files + [ldscripts_dir]
-
-
 def install_file(file_name, src_dir, dst_dir):
     src_file = os.path.join(src_dir, file_name)
     dst_file = os.path.join(dst_dir, file_name)
@@ -273,58 +222,6 @@ def _install_file(src_file, dst_file):
     shutil.copy2(src_file, dst_file)
 
 
-def pack_binutils(arch, host_tag, out_dir, binutils_path):
-    archive_name = '-'.join(['binutils', arch, host_tag])
-    build_support.make_package(archive_name, binutils_path, out_dir)
-
-
-def get_prebuilt_gcc(host, arch):
-    tag = build_support.host_to_tag(host)
-    system_subdir = 'prebuilts/ndk/current/toolchains/{}'.format(tag)
-    system_path = build_support.android_path(system_subdir)
-    toolchain = build_support.arch_to_toolchain(arch)
-    toolchain_dir = toolchain + '-4.9'
-    return os.path.join(system_path, toolchain_dir)
-
-
-def build_binutils(out_dir, dist_dir, args):
-    print('Extracting binutils package from GCC...')
-
-    arches = build_support.ALL_ARCHITECTURES
-    if args.arch is not None:
-        arches = [args.arch]
-
-    host_tag = build_support.host_to_tag(args.system)
-
-    for arch in arches:
-        toolchain = build_support.arch_to_toolchain(arch)
-        toolchain_path = get_prebuilt_gcc(args.system, arch)
-
-        triple = fixup_toolchain_triple(toolchain)
-
-        install_dir = os.path.join(out_dir, 'binutils', triple)
-        if os.path.exists(install_dir):
-            shutil.rmtree(install_dir)
-        os.makedirs(install_dir)
-
-        has_gold = True
-        if host_tag == 'windows':
-            # Note: 64-bit Windows is fine.
-            has_gold = False
-        if arch in ('mips', 'mips64'):
-            has_gold = False
-
-        is_windows = host_tag.startswith('windows')
-        for file_name in get_binutils_files(triple, has_gold, is_windows):
-            install_file(file_name, toolchain_path, install_dir)
-
-        license_path = build_support.android_path(
-            'toolchain/binutils/binutils-2.25/COPYING')
-        shutil.copy2(license_path, os.path.join(install_dir, 'NOTICE'))
-
-        pack_binutils(arch, host_tag, dist_dir, install_dir)
-
-
 def build_clang(out_dir, dist_dir, args):
     print('Building Clang...')
     invoke_build('build-llvm.py', common_build_args(out_dir, dist_dir, args))
@@ -336,65 +233,6 @@ def build_gcc(out_dir, dist_dir, args):
     if args.arch is not None:
         build_args.append('--arch={}'.format(args.arch))
     invoke_build('build-gcc.py', build_args)
-
-
-def build_gcc_libs(out_dir, dist_dir, args):
-    print('Packaging GCC libs...')
-
-    arches = build_support.ALL_ARCHITECTURES
-    if args.arch is not None:
-        arches = [args.arch]
-
-    for arch in arches:
-        toolchain = build_support.arch_to_toolchain(arch)
-        triple = fixup_toolchain_triple(toolchain)
-        libgcc_subdir = 'lib/gcc/{}/4.9'.format(triple)
-        is64 = arch.endswith('64')
-        libatomic_subdir = '{}/lib{}'.format(triple, '64' if is64 else '')
-
-        lib_names = [
-            (libatomic_subdir, 'libatomic.a'),
-            (libgcc_subdir, 'libgcc.a'),
-        ]
-
-        lib_dirs = ['']
-        if arch == 'arm':
-            lib_dirs += [
-                'armv7-a',
-                'armv7-a/hard',
-                'armv7-a/thumb',
-                'armv7-a/thumb/hard',
-                'thumb',
-            ]
-
-        libs = []
-        for lib_dir in lib_dirs:
-            for subdir, lib in lib_names:
-                libs.append((subdir, os.path.join(lib_dir, lib)))
-
-        install_dir = os.path.join(out_dir, 'gcclibs', triple)
-        if os.path.exists(install_dir):
-            shutil.rmtree(install_dir)
-        os.makedirs(install_dir)
-
-        # These are target libraries, so the OS we use here is not
-        # important. We explicitly use Linux because for whatever reason
-        # the Windows aarch64 toolchain doesn't include libatomic.
-        gcc_path = get_prebuilt_gcc('linux', arch)
-        for gcc_subdir, lib in libs:
-            src = os.path.join(gcc_path, gcc_subdir, lib)
-            dst = os.path.join(install_dir, lib)
-            dst_dir = os.path.dirname(dst)
-            if not os.path.exists(dst_dir):
-                os.makedirs(dst_dir)
-            shutil.copy2(src, dst)
-
-            shutil.copy2(
-                os.path.join(gcc_path, 'NOTICE'),
-                os.path.join(install_dir, 'NOTICE'))
-
-        archive_name = os.path.join('gcclibs-' + arch)
-        build_support.make_package(archive_name, install_dir, dist_dir)
 
 
 def build_shader_tools(out_dir, dist_dir, args):
@@ -767,11 +605,9 @@ def main():
 
     if args.host_only:
         modules = {
-            'binutils',
             'build',
             'clang',
             'gcc',
-            'gcclibs',
             'host-tools',
             'python-packages',
             'shader_tools',
@@ -813,13 +649,11 @@ def main():
     invoke_build('dev-cleanup.sh')
 
     module_builds = collections.OrderedDict([
-        ('binutils', build_binutils),
         ('build', build_build),
         ('clang', build_clang),
         ('cpufeatures', build_cpufeatures),
         ('gabi++', build_gabixx),
         ('gcc', build_gcc),
-        ('gcclibs', build_gcc_libs),
         ('gdbserver', build_gdbserver),
         ('gnustl', build_gnustl),
         ('gtest', build_gtest),
