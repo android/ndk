@@ -111,7 +111,7 @@ class ArgParser(argparse.ArgumentParser):
             help=('Run only the chosen test suite.'))
 
         self.add_argument(
-            '--filter', help='Only run tests that match the given patterns.')
+            '--filter', help='Only run tests that match the given pattern.')
         self.add_argument(
             '--show-all', action='store_true',
             help='Show all test results, not just failures.')

@@ -187,6 +187,8 @@ def parse_args():
     parser.add_argument(
         'ndk', metavar='NDK', type=os.path.realpath, help='NDK to validate.')
     parser.add_argument(
+        '--filter', help='Only run tests that match the given pattern.')
+    parser.add_argument(
         '--log-dir', type=os.path.realpath, default='test-logs',
         help='Directory to store test logs.')
 
@@ -250,9 +252,9 @@ def main():
     use_color = sys.stdin.isatty() and os.name != 'nt'
     out_dir = tempfile.mkdtemp()
     try:
-        import runners
-        good, details = runners.run_for_fleet(args.ndk, fleet, out_dir,
-                                              args.log_dir, use_color)
+        import runners  # pylint: disable=relative-import
+        good, details = runners.run_for_fleet(
+            args.ndk, fleet, out_dir, args.log_dir, args.filter, use_color)
     finally:
         shutil.rmtree(out_dir)
 
