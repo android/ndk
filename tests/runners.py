@@ -20,6 +20,9 @@ import subprocess
 import sys
 
 import adb  # pylint: disable=import-error
+
+# TODO(danalbert): Clean up our imports.
+# pylint: disable=relative-import
 import filters
 import printers
 import ndk
@@ -27,6 +30,7 @@ import tests
 import util
 
 from tests import AwkTest, BuildTest, DeviceTest
+# pylint: enable=relative-import
 
 
 def get_device_abis(device):
@@ -212,7 +216,7 @@ def run_single_configuration(ndk_path, out_dir, printer, abi, toolchain,
     return stats.global_stats['fail'] == 0, results
 
 
-def run_tests(ndk_path, device, abi, toolchain, out_dir, log_dir):
+def run_tests(ndk_path, device, abi, toolchain, out_dir, log_dir, test_filter):
     print('Running {} {} tests for {}... '.format(toolchain, abi, device),
           end='')
     sys.stdout.flush()
@@ -223,12 +227,13 @@ def run_tests(ndk_path, device, abi, toolchain, out_dir, log_dir):
         printer = printers.FilePrinter(log_file)
         good, details = run_single_configuration(
             ndk_path, out_dir, printer, abi, toolchain,
-            device_serial=device.serial)
+            device_serial=device.serial, test_filter=test_filter)
         print('PASS' if good else 'FAIL')
         return good, details
 
 
-def run_for_fleet(ndk_path, fleet, out_dir, log_dir, use_color=False):
+def run_for_fleet(ndk_path, fleet, out_dir, log_dir, test_filter,
+                  use_color=False):
     # Note that we are duplicating some testing here.
     #
     # * The awk tests only need to be run once because they do not vary by
@@ -253,7 +258,8 @@ def run_for_fleet(ndk_path, fleet, out_dir, log_dir, use_color=False):
                 details[version][abi][toolchain] = None
 
                 result, run_details = run_tests(
-                    ndk_path, device, abi, toolchain, out_dir, log_dir)
+                    ndk_path, device, abi, toolchain, out_dir, log_dir,
+                    test_filter)
                 pass_label = util.maybe_color('PASS', 'green', use_color)
                 fail_label = util.maybe_color('FAIL', 'red', use_color)
                 results.append('android-{} {} {}: {}'.format(
