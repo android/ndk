@@ -30,8 +30,11 @@ building instructions).
 From the NDK source directory (not the extracted package):
 
 ```bash
-$ python tests/run-all.py --abi $ABI_TO_TEST path/to/ndk
+$ python tests/run-all.py --abi $ABI_TO_TEST path/to/built/ndk
 ```
+
+In the case of a local build, the path to the built NDK will be
+`out/android-ndk-$RELEASE` unless you've overridden `OUT_DIR`.
 
 The default toolchain for testing is Clang. To run the tests with GCC, use the
 option `--toolchain 4.9`.
@@ -57,8 +60,11 @@ To use this script, connect any devices and launch any emulators you need for
 testing (make sure ADB has authorization to control them), then run:
 
 ```bash
-$ python tests/validate.py path/to/ndk
+$ python tests/validate.py path/to/built/ndk
 ```
+
+In the case of a local build, the path to the built NDK will be
+`out/android-ndk-$RELEASE` unless you've overridden `OUT_DIR`.
 
 By default, test logs will be placed in $PWD/test-logs. This can be controlled
 with the `--log-dir` flag.
