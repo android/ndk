@@ -16,10 +16,4 @@ def match_broken(abi, platform, device_platform, toolchain, subtest=None):
     if subtest == 'filter1' and device_platform >= 21 and toolchain == '4.9':
         return '{} {}'.format(device_platform, toolchain), 'http://b/24403847'
 
-    if subtest == 'dyncast1' and toolchain == 'clang' and abi == 'x86_64':
-        return '{} {}'.format(toolchain, abi), 'http://b/26085687'
-
-    if subtest == 'dyncast2_1' and toolchain == 'clang' and abi == 'x86_64':
-        return '{} {}'.format(toolchain, abi), 'http://b/26085687'
-
     return None, None
