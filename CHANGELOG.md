@@ -1,123 +1,79 @@
 Changelog
 =========
 
-We've moved our bug tracker to GitHub: https://github.com/android-ndk/ndk/issues
+Report issues to [GitHub].
+
+[GitHub]: https://github.com/android-ndk/ndk/issues
+
+NDK
+---
+ * Exception handling when using `c++_shared` on ARM32 now mostly works (see
+   [Known Issues](#known-issues)). The unwinder will now be linked into each
+   linked object rather than into libc++ itself.
+ * Default compiler flags have been pruned:
+   https://github.com/android-ndk/ndk/issues/27.
+     * Full changes here: https://android-review.googlesource.com/#/c/207721/5.
+ * `-fno-limit-debug-info` has been enabled by default for Clang debug builds.
+   This should improve debugability with LLDB.
+ * `--build-id` is now enabled by default.
+     * This will be shown in native crash reports so you can easily identify
+       which version of your code was running.
+ * `NDK_USE_CYGPATH` should no longer cause problems with libgcc:
+   http://b.android.com/195486.
+ * `-Wl,--warn-shared-textrel` and`-Wl,--fatal-warnings` are now enabled by
+   default. If you have shared text relocations, your app will not load on
+   Marshmallow or later (and have never been allowed for 64-bit apps).
+ * Precompiled headers should work better:
+   https://github.com/android-ndk/ndk/issues/14 and
+   https://github.com/android-ndk/ndk/issues/16.
 
 Clang
 -----
 
- * **PSA: Everyone should be switching to Clang.**
- * Clang has been updated to 3.8svn (r243773, build 2481030).
-     * Note that this is now a nearly pure upstream clang.
-     * Also note that Clang packaged in the Windows 64 NDK is actually 32-bit.
- * Support for emulated TLS.
-     * `__thread` is now supported by the compiler by emulating ELF TLS with
-       pthread thread-specific data.
-     * C++11 `thread_local` will work in some cases, but will not work for data
-       with non-trivial destructors except when running on Marshmallow
-       (android-23) or newer because those cases require support from libc.
-     * Does not yet work with Aarch64 when TLS variables are accessed from a
-       shared library.
+ * Clang has been updated to 3.8svn (r256229, build 2690385).
+     * Note that Clang packaged in the Windows 64 NDK is actually 32-bit.
+ * `__thread` should work for real this time.
 
 GCC
 ---
 
- * **GCC in the NDK is now deprecated.**
-     * Time to start using Clang if you haven’t already. If you have problems
-       with Clang, please file bugs!
-     * The NDK will not be upgrading to 5.x, nor will we be accepting
-       non-critical backports.
-     * Maintenance for miscompiles and internal compiler errors in 4.9 will be
-       handled on a case by case basis.
- * GCC 4.8 has been removed. All targets now use GCC 4.9.
- * Synchronized with `google/gcc-4_9` to r224707 (from r214835).
-
-NDK
----
-
- * The samples are no longer included in the NDK. They are instead available on
-   [GitHub].
- * The documentation is no longer included in the NDK. It is instead available
-   on the [Android Developer website].
- * Make ARM standalone toolchains default to arm7.
-     * The old behavior can be restored by passing
-       `-target armv5te-linux-androideabi`.
- * Use `-isystem` for platform includes.
-     * Warnings caused by bionic will no longer break app builds.
- * Fixed segfault when throwing exceptions via gabi++ (see
-   http://b.android.com/179410).
- * Change libc++’s inline namespace to `std::__ndk1` to prevent ODR issues with
-   platform libc++.
- * Support for mips64r2 has been partially dropped. The rest will be dropped in
-   the future.
- * All libc++ libraries are now built with libc++abi.
- * Bump default `APP_PLATFORM` to Gingerbread.
-     * Expect support for Froyo and older to be dropped in a future release.
- * Updated gabi++ `_Unwind_Exception` struct for 64 bits.
- * cpufeatures: Detect SSE4.1 and SSE4.2 as well.
- * cpufeatures: Detect cpu features on x86\_64 as well.
- * Update libc++abi to upstream r231075.
- * Added native tracing API to android-23.
- * Added native multinetwork API to android-23.
- * `byteswap.h`, `endian.h`, `sys/procfs.h`, `sys/ucontext.h`, `sys/user.h`, and
-   `uchar.h` have all been updated from ToT Bionic.
- * `sys/cdefs.h` has been synchronized across all API levels.
- * Support for `_WCHAR_IS_8BIT` has been removed.
- * Fixed `fegetenv` and `fesetenv` for arm
- * Fix end pointer size/alignment of `crtend_*` for mips64 and x86\_64
- * Removed sed.
- * Removed mclinker.
- * Removed Perl.
- * Removed symbols which are not exported by the current platform libc/m/dl from
-   all versions of NDK libc/m/dl
- * libc/m/dl provide versioned symbols starting with v21
- * Added Vulkan headers and library to API level 24.
+ * Synchronized with the ChromeOS GCC @ `google/gcc-4_9` r227810.
+ * Backported coverage sanitizer patch from ToT (r231296).
+ * Fixed libatomic to not use ifuncs:
+   https://github.com/android-ndk/ndk/issues/31.
 
 Binutils
 --------
 
- * Unified binutils source between Android and ChromiumOS.
- * For full details see https://android-review.googlesource.com/#/c/182865/.
- * Gold for aarch64 should now be much more reliable. Use `-fuse-ld=gold` at
-   link time to use gold instead of bfd. The default will likely switch in the
-   next release.
- * Good linking time improvement for huge binaries for Gold ARM backend (up to
-   50% linking time reduction for debuggable Chrome Browser).
- * New option: `--pic-veneer`.
- * The 32-bit Windows package no longer contains ld.gold. It is available in
-   the 64-bit package.
-     * Current gold no longer builds when targeting 32-bit Windows (causes
-       internal compiler failures in mingw).
+ * "Erratum 843419 found and fixed" info messages are silenced.
+ * Introduced option '--long-plt' to fix internal linker error when linking huge
+   arm32 binaries.
+ * Fixed wrong run time stubs for AArch64. This was causing jump addresses to be
+   calculated incorrectly for very large DSOs.
+ * Introduced default option '--no-apply-dynamic' to work around a dynamic
+   linker bug for earlier Android releases.
+ * NDK r11 KI for `dynamic_cast` not working with Clang, x86, `stlport_static`
+   and optimization has been fixed.
 
 GDB
 ---
 
- * gdb has been updated to version 7.10.
- * ndk-gdb has been removed in favor of ndk-gdb.py.
- * ndk-gdb.py has been significantly rewritten.
-   * Performance should be somewhat better.
-   * Error messages have been significantly improved.
-   * Relative project paths should always work now.
-   * Ctrl-C no longer kills the backgrounded gdbserver.
-   * Improve Windows support.
-
-Yasm
-----
-
- * Yasm has been updated to version 1.3.0.
+ * Updated to GDB 7.11: https://www.gnu.org/software/gdb/news/.
 
 Known Issues
 ------------
 
  * This is not intended to be a comprehensive list of all outstanding bugs.
- * x86 ASAN does not currently work. See discussion on
+ * x86 ASAN still does work. See discussion on
    https://android-review.googlesource.com/#/c/186276/
- * The combination of Clang, x86, `stlport_static`, and optimization levels
-   higher than `-O0` causes test failures with `dynamic_cast`. See
-   https://android-review.googlesource.com/#/c/185920
- * Exception handling will often fail when using `c++_shared` on ARM32. The root
-   cause is incompatibility between the LLVM unwinder used by libc++abi for
-   ARM32 and libgcc. This is not a regression from r10e.
-
-[GitHub]: https://github.com/googlesamples/android-ndk
-[Android Developer website]: http://developer.android.com/ndk/index.html
+ * Exception unwinding with `c++_shared` still does not work for ARM on
+   Gingerbread or Ice Cream Sandwich.
+ * Bionic headers and libraries for Marshmallow and N are not yet exposed
+   despite the presence of android-24. Those platforms are still the Lollipop
+   headers and libraries (not a regression from r11).
+ * RenderScript tools are not present (not a regression from r11):
+   https://github.com/android-ndk/ndk/issues/7.
+ * r12 will most likely not work with Android Studio/Gradle right away. The
+   Gradle plugin will need to be updated to match the build changes we made in
+   `ndk-build`.
+ * We've regressed on http://b.android.com/41770.
