@@ -236,6 +236,8 @@ def make_source_properties(out_dir, build_number):
     path = os.path.join(out_dir, 'source.properties')
     with open(path, 'w') as source_properties:
         version = '{}.{}.{}'.format(config.major, config.hotfix, build_number)
+        if config.beta > 0:
+            version += ' beta {}'.format(config.beta)
         source_properties.writelines([
             'Pkg.Desc = Android NDK\n',
             'Pkg.Revision = {}\n'.format(version)
