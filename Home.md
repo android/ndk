@@ -18,9 +18,40 @@ Release: June 2016
 Downloads
 ---------
 
-Current downloads are available here: http://developer.android.com/ndk/downloads/index.html
+### Current Stable Release
 
-Legacy downloads are still hosted but the URLs are not exposed anywhere on the official web site.
+<table>
+  <tr>
+    <th>Platform</th>
+    <th>Package</th>
+    <th>Size (bytes)</th>
+    <th>SHA1 Checksum</th>
+  </tr>
+  <tr>
+    <td>Linux</td>
+    <td><a href="http://dl.google.com/android/repository/android-ndk-r11c-linux-x86_64.zip">android-ndk-r11c-linux-x86_64.zip</a></td>
+    <td>794135138</td>
+    <td>de5ce9bddeee16fb6af2b9117e9566352aa7e279</td>
+  </tr>
+  <tr>
+    <td>Mac OS X</td>
+    <td><a href="http://dl.google.com/android/repository/android-ndk-r11c-darwin-x86_64.zip">android-ndk-r11c-darwin-x86_64.zip</a></td>
+    <td>772428792</td>
+    <td>4ce8e7ed8dfe08c5fe58aedf7f46be2a97564696</td>
+  </tr>
+  <tr>
+    <td>Windows 32-bit</td>
+    <td><a href="http://dl.google.com/android/repository/android-ndk-r11c-windows-x86.zip">android-ndk-r11c-windows-x86.zip</a></td>
+    <td>728899082</td>
+    <td>ff939bde6cd374eecbd2c3b2ad218697f9a5038c</td>
+  </tr>
+  <tr>
+    <td>Windows 64-bit</td>
+    <td><a href="http://dl.google.com/android/repository/android-ndk-r11c-windows-x86_64.zip">android-ndk-r11c-windows-x86_64.zip</a></td>
+    <td>771407642</td>
+    <td>3d89deb97b3191c7e5555f1313ad35059479f071</td>
+  </tr>
+</table>
 
 ### r10e
 
