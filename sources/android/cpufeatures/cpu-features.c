@@ -1022,6 +1022,25 @@ android_cpuInit(void)
     if (vendorIsIntel && (regs[2] & (1 << 22)) != 0) {
         g_cpuFeatures |= ANDROID_CPU_X86_FEATURE_MOVBE;
     }
+    if ((regs[2] & (1 << 25)) != 0) {
+        g_cpuFeatures |= ANDROID_CPU_X86_FEATURE_AES_NI;
+    }
+    if ((regs[2] & (1 << 28)) != 0) {
+        g_cpuFeatures |= ANDROID_CPU_X86_FEATURE_AVX;
+    }
+    if ((regs[2] & (1 << 30)) != 0) {
+        g_cpuFeatures |= ANDROID_CPU_X86_FEATURE_RDRAND;
+    }
+
+    x86_cpuid(7, regs);
+    if ((regs[1] & (1 << 5)) != 0) {
+        g_cpuFeatures |= ANDROID_CPU_X86_FEATURE_AVX2;
+    }
+    if ((regs[1] & (1 << 29)) != 0) {
+        g_cpuFeatures |= ANDROID_CPU_X86_FEATURE_SHA_NI;
+    }
+
+
 #endif
 #if defined( __mips__)
     {   /* MIPS and MIPS64 */
