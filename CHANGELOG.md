@@ -7,6 +7,8 @@ Report issues to [GitHub].
 
 NDK
 ---
+ * Removed all sysroots for pre-GB platform levels. We dropped support for them
+   in r11, but neglected to actually remove them.
  * Exception handling when using `c++_shared` on ARM32 now mostly works (see
    [Known Issues](#known-issues)). The unwinder will now be linked into each
    linked object rather than into libc++ itself.
