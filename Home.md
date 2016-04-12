@@ -18,7 +18,7 @@ Release: June 2016
 Downloads
 ---------
 
-### Current Stable Release
+### Current Stable Release: r11c
 
 <table>
   <tr>
