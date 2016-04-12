@@ -20,7 +20,7 @@ Downloads
 
 ### Current Stable Release
 
-[Changelog for r11c](Changelogs/Changelog-r11c.md)
+[[Changelog|Changelog-r11.md]]
 
 <table>
   <tr>
