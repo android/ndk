@@ -11,7 +11,6 @@ The betas should not be used for production.
 
 ### NDK r12
 
-Beta 1: 13 April 2016 (tentative)  
 Beta 2: May 2016  
 Release: June 2016
 
