@@ -55,6 +55,43 @@ Downloads
   </tr>
 </table>
 
+### Current Beta Release
+
+[[Changelog|Changelog-r12-beta1]]
+
+<table>
+  <tr>
+    <th>Platform</th>
+    <th>Package</th>
+    <th>Size (bytes)</th>
+    <th>SHA1 Checksum</th>
+  </tr>
+  <tr>
+    <td>Linux</td>
+    <td><a href="http://dl.google.com/android/repository/android-ndk-r12-beta1-linux-x86_64.zip">android-ndk-r12-beta1-linux-x86_64.zip</a></td>
+    <td>765645248</td>
+    <td>0939eb3394c557dea296257b6bd15341c6395948</td>
+  </tr>
+  <tr>
+    <td>Mac OS X</td>
+    <td><a href="http://dl.google.com/android/repository/android-ndk-r12-beta1-darwin-x86_64.zip">android-ndk-r12-beta1-darwin-x86_64.zip</a></td>
+    <td>743931695</td>
+    <td>798eb40e45e62648540297de16998c7f7f1c37ac</td>
+  </tr>
+  <tr>
+    <td>Windows 32-bit</td>
+    <td><a href="http://dl.google.com/android/repository/android-ndk-r12-beta1-windows-x86.zip">android-ndk-r12-beta1-windows-x86.zip</a></td>
+    <td>698416170</td>
+    <td>6864c3097c3f81d43067649fad88601c4b555f21</td>
+  </tr>
+  <tr>
+    <td>Windows 64-bit</td>
+    <td><a href="http://dl.google.com/android/repository/android-ndk-r12-beta1-windows-x86_64.zip">android-ndk-r12-beta1-windows-x86_64.zip</a></td>
+    <td>741437610</td>
+    <td>e272fa956d7df3447f77a2edc165e25793582273</td>
+  </tr>
+</table>
+
 ### r10e
 
 * Darwin: http://dl.google.com/android/repository/android-ndk-r10e-darwin-x86_64.zip
