@@ -582,7 +582,7 @@ def _copy_test_to_device(device, build_dir, device_dir, abi, test_filters,
 
 class DeviceTest(Test):
     def __init__(self, name, test_dir, abi, platform, device, device_platform,
-                 toolchain, build_flags):
+                 toolchain, build_flags, skip_run):
         super(DeviceTest, self).__init__(name, test_dir)
         self.abi = abi
         self.platform = platform
@@ -590,13 +590,14 @@ class DeviceTest(Test):
         self.device_platform = device_platform
         self.toolchain = toolchain
         self.build_flags = build_flags
+        self.skip_run = skip_run
 
     @classmethod
     def from_dir(cls, test_dir, abi, platform, device, device_platform,
-                 toolchain, build_flags):
+                 toolchain, build_flags, skip_run):
         test_name = os.path.basename(test_dir)
         return cls(test_name, test_dir, abi, platform, device, device_platform,
-                   toolchain, build_flags)
+                   toolchain, build_flags, skip_run)
 
     def get_test_config(self):
         return DeviceTestConfig.from_test_dir(self.test_dir)
@@ -628,6 +629,10 @@ class DeviceTest(Test):
                                            self.build_flags, self.abi,
                                            self.platform, self.toolchain)
         if not build_result.passed():
+            yield build_result
+            return
+
+        if self.skip_run:
             yield build_result
             return
 
