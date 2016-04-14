@@ -42,7 +42,7 @@ def main():
 
     # The user may have pasted the following header line:
     # SHA1                                              size  file
-    if lines[0].startswith('SHA1'):
+    if lines[0].startswith('SHA1') or lines[0].lstrip().startswith('Link'):
         lines = lines[1:]
 
     artifacts = []
@@ -53,9 +53,10 @@ def main():
         if line.endswith('.xml'):
             continue
 
-        # Real entries look like this:
-        # <sha>   123,456,789  path/to/android-ndk-r11c-linux-x86_64.zip
-        match = re.match(r'^(\w+)\s+([0-9,]+)\s+(.+)$', line)
+        # Real entries look like this (the leading hex number is optional):
+        # 0x1234 <sha>   123,456,789  path/to/android-ndk-r11c-linux-x86_64.zip
+        match = re.match(
+            r'^(?:0x[0-9a-f]+\s+)?(\w+)\s+([0-9,]+)\s+(.+)$', line)
         if match is None:
             logging.error('Skipping unrecognized line: %s', line)
             continue
