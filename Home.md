@@ -68,26 +68,26 @@ Downloads
   <tr>
     <td>Linux</td>
     <td><a href="http://dl.google.com/android/repository/android-ndk-r12-beta1-linux-x86_64.zip">android-ndk-r12-beta1-linux-x86_64.zip</a></td>
-    <td>765645248</td>
-    <td>0939eb3394c557dea296257b6bd15341c6395948</td>
+    <td>765647319</td>
+    <td>6d61d15ce602751b96e75c6fd5f39eb3ec613a3c</td>
   </tr>
   <tr>
     <td>Mac OS X</td>
     <td><a href="http://dl.google.com/android/repository/android-ndk-r12-beta1-darwin-x86_64.zip">android-ndk-r12-beta1-darwin-x86_64.zip</a></td>
-    <td>743931695</td>
-    <td>798eb40e45e62648540297de16998c7f7f1c37ac</td>
+    <td>743934465</td>
+    <td>e32cab813bfa2f08e362a4ffea712b61e47978ba</td>
   </tr>
   <tr>
     <td>Windows 32-bit</td>
     <td><a href="http://dl.google.com/android/repository/android-ndk-r12-beta1-windows-x86.zip">android-ndk-r12-beta1-windows-x86.zip</a></td>
-    <td>698416170</td>
-    <td>6864c3097c3f81d43067649fad88601c4b555f21</td>
+    <td>698425840</td>
+    <td>840d2f3929ad91898b4b44e94657406bec39a410</td>
   </tr>
   <tr>
     <td>Windows 64-bit</td>
     <td><a href="http://dl.google.com/android/repository/android-ndk-r12-beta1-windows-x86_64.zip">android-ndk-r12-beta1-windows-x86_64.zip</a></td>
-    <td>741437610</td>
-    <td>e272fa956d7df3447f77a2edc165e25793582273</td>
+    <td>741437055</td>
+    <td>247e48b9903f3ea1b9fc4b0cadef7821e7f312f1</td>
   </tr>
 </table>
 
