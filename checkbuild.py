@@ -165,13 +165,14 @@ def test_ndk(out_dir, args):
         abis = build_support.arch_to_abis(args.arch)
 
     use_color = sys.stdin.isatty() and os.name != 'nt'
-    results = {}
+    results = collections.OrderedDict()
+
     for abi in abis:
         test_out_dir = os.path.join(out_dir, 'test', abi)
         results[abi], _ = tests.runners.run_single_configuration(
             test_dir, test_out_dir,
             tests.printers.StdoutPrinter(use_color=use_color),
-            abi, 'clang', suites=['build'])
+            abi, 'clang', skip_run=True)
 
     print('Results:')
     for abi, result in results.iteritems():

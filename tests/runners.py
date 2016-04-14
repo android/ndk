@@ -124,7 +124,7 @@ class ResultStats(object):
 def run_single_configuration(ndk_path, out_dir, printer, abi, toolchain,
                              build_api_level=None, verbose_ndk_build=False,
                              suites=None, test_filter=None,
-                             device_serial=None):
+                             device_serial=None, skip_run=False):
     """Runs all the tests for the given configuration.
 
     Sets up the necessary build flags and environment, checks that the device
@@ -148,6 +148,8 @@ def run_single_configuration(ndk_path, out_dir, printer, abi, toolchain,
         device_serial: Serial number of the device to use for device tests. If
             none, will try to find a device from ANDROID_SERIAL or a unique
             attached device.
+        skip_run: Skip running the tests; just build. Useful for post-build
+            steps if CI doesn't have the device available.
 
     Returns:
         True if all tests completed successfully, False if there were failures.
@@ -176,7 +178,7 @@ def run_single_configuration(ndk_path, out_dir, printer, abi, toolchain,
 
     # Do this early so we find any device issues now rather than after we've
     # run all the build tests.
-    if 'device' in suites:
+    if 'device' in suites and not skip_run:
         device = adb.get_device(device_serial)
         check_adb_works_or_die(device, abi)
         device_api_level = int(device.get_prop('ro.build.version.sdk'))
@@ -196,6 +198,16 @@ def run_single_configuration(ndk_path, out_dir, printer, abi, toolchain,
         # because Gingerbread didn't actually support -p :(
         device.shell_nocheck(['rm -r /data/local/tmp/ndk-tests 2>&1'])
         device.shell(['mkdir /data/local/tmp/ndk-tests 2>&1'])
+    elif skip_run:
+        # We need to fake these if we're skipping running the tests. Set device
+        # to None so any attempt to interact with it will raise an error, and
+        # set the API level to the minimum supported by the ABI so
+        # test_config.py checks still behave as expected.
+        device = None
+        if abi in ('arm64-v8a', 'mips64', 'x86_64'):
+            device_api_level = 21
+        else:
+            device_api_level = 9
 
     runner = tests.TestRunner(printer)
     if 'awk' in suites:
@@ -205,7 +217,8 @@ def run_single_configuration(ndk_path, out_dir, printer, abi, toolchain,
                          toolchain, ndk_build_flags)
     if 'device' in suites:
         runner.add_suite('device', 'device', DeviceTest, abi, build_api_level,
-                         device, device_api_level, toolchain, ndk_build_flags)
+                         device, device_api_level, toolchain, ndk_build_flags,
+                         skip_run)
 
     test_filters = filters.TestFilter.from_string(test_filter)
     results = runner.run(out_dir, test_filters)

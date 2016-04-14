@@ -106,6 +106,9 @@ class ArgParser(argparse.ArgumentParser):
             '--show-commands', action='store_true',
             help='Show build commands for each test.')
         self.add_argument(
+            '--skip-run', action='store_true',
+            help='Do not run device tests; just build them.')
+        self.add_argument(
             '--suite', default=None,
             choices=('awk', 'build', 'device'),
             help=('Run only the chosen test suite.'))
@@ -156,7 +159,8 @@ def main():
                                      show_all=args.show_all)
     good, _ = runners.run_single_configuration(
         ndk_path, out_dir, printer, args.abi, args.toolchain, args.platform,
-        args.show_commands, suites=suites, test_filter=args.filter)
+        args.show_commands, suites=suites, test_filter=args.filter,
+        skip_run=args.skip_run)
     sys.exit(not good)
 
 
