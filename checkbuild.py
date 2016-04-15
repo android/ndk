@@ -22,15 +22,19 @@ build goals, and invokes the build scripts.
 from __future__ import print_function
 
 import argparse
+import atexit
 import collections
 import inspect
+import multiprocessing
 import os
 import shutil
+import signal
 import site
 import subprocess
 import sys
 import tempfile
 import textwrap
+import traceback
 
 import config
 
@@ -126,7 +130,8 @@ class ArgParser(argparse.ArgumentParser):
 def _invoke_build(script, args):
     if args is None:
         args = []
-    subprocess.check_call([build_support.android_path(script)] + args)
+    subprocess.check_call([build_support.android_path(script)] + args,
+                          stdout=sys.stdout, stderr=sys.stderr)
 
 
 def invoke_build(script, args=None):
@@ -541,7 +546,7 @@ def build_vulkan(out_dir, dist_dir, args):
         'bash', vulkan_path + '/build-android/android-generate.sh'
     ]
     print('Generating generated layers...')
-    subprocess.check_call(build_cmd)
+    subprocess.check_call(build_cmd, stdout=sys.stdout, stderr=sys.stderr)
     print('Generation finished')
 
     build_args = common_build_args(out_dir, dist_dir, args)
@@ -597,7 +602,26 @@ def build_libcxxabi(_out_dir, dist_dir, _args):
     build_support.make_package('libcxxabi', path, dist_dir)
 
 
+def launch_build(build_name, build_func, out_dir, dist_dir, args):
+    log_dir = os.path.join(out_dir, 'logs')
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+
+    log_path = os.path.join(log_dir, build_name)
+    with open(log_path, 'w') as log_file:
+        sys.stdout = log_file
+        sys.stderr = log_file
+        try:
+            build_func(out_dir, dist_dir, args)
+            return build_name, True, log_file.name
+        except Exception:  # pylint: disable=bare-except
+            traceback.print_exc()
+            return build_name, False, log_file.name
+
+
 def main():
+    os.setpgrp()
+
     parser = ArgParser()
     args = parser.parse_args()
 
@@ -676,8 +700,35 @@ def main():
     ])
 
     print('Building modules: {}'.format(' '.join(modules)))
-    for module in modules:
-        module_builds[module](out_dir, dist_dir, args)
+    pool = multiprocessing.Pool()
+
+    def kill_all_children():
+        pool.terminate()
+        pool.join()
+
+        # Subprocesses of the pool workers will not be killed by terminate.
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
+        os.kill(0, signal.SIGINT)
+
+    atexit.register(kill_all_children)
+    jobs = []
+    for name, build_func in module_builds.iteritems():
+        if name in modules:
+            jobs.append(pool.apply_async(
+                launch_build, (name, build_func, out_dir, dist_dir, args)))
+
+    while len(jobs) > 0:
+        for i, job in enumerate(jobs):
+            if job.ready():
+                build_name, result, log_path = job.get()
+                if result:
+                    print('BUILD SUCCESSFUL: ' + build_name)
+                else:
+                    print('BUILD FAILED: ' + build_name)
+                    with open(log_path, 'r') as log_file:
+                        print(log_file.read())
+                    sys.exit(1)
+                del jobs[i]
 
     if do_package:
         package_ndk(out_dir, dist_dir, args)
