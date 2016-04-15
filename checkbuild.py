@@ -463,24 +463,26 @@ def build_gtest(_, dist_dir, __):
     path = build_support.ndk_path('sources/third_party/googletest')
     build_support.make_package('gtest', path, dist_dir)
 
+
 def build_vulkan(out_dir, dist_dir, args):
     print('Constructing Vulkan validation layer source...')
-    vulkan_root_dir = build_support.android_path('external/vulkan-validation-layers')
+    vulkan_root_dir = build_support.android_path(
+        'external/vulkan-validation-layers')
 
     copies = [
         {
             'source_dir': vulkan_root_dir,
             'dest_dir': 'vulkan/src',
             'files': [
-              'vk-generate.py',
-              'vk_helper.py',
-              'vk-layer-generate.py',
-              'generator.py',
-              'genvk.py',
-              'reg.py',
-              'source_line_info.py',
-              'vulkan.py',
-              'vk.xml'
+                'vk-generate.py',
+                'vk_helper.py',
+                'vk-layer-generate.py',
+                'generator.py',
+                'genvk.py',
+                'reg.py',
+                'source_line_info.py',
+                'vulkan.py',
+                'vk.xml'
             ],
             'dirs': [
                 'layers', 'include'
@@ -490,12 +492,13 @@ def build_vulkan(out_dir, dist_dir, args):
             'source_dir': vulkan_root_dir + '/loader',
             'dest_dir': 'vulkan/src/loader',
             'files': [
-              'vk_loader_platform.h'
+                'vk_loader_platform.h'
             ],
             'dirs': [],
         },
         {
-            'source_dir': build_support.android_path('external/shaderc/glslang'),
+            'source_dir': build_support.android_path(
+                'external/shaderc/glslang'),
             'dest_dir': 'vulkan/glslang',
             'files': [],
             'dirs': [
@@ -528,12 +531,11 @@ def build_vulkan(out_dir, dist_dir, args):
     src = os.path.join(vulkan_root_dir, 'build-android')
     dst = os.path.join(vulkan_path, 'build-android')
     shutil.rmtree(dst, 'true')
-    shutil.copytree(src, dst,
-                  ignore=default_ignore_patterns)
+    shutil.copytree(src, dst, ignore=default_ignore_patterns)
 
     build_support.merge_license_files(
-        os.path.join(vulkan_path, 'NOTICE'), [
-        os.path.join(vulkan_root_dir, 'LICENSE.txt')])
+        os.path.join(vulkan_path, 'NOTICE'),
+        [os.path.join(vulkan_root_dir, 'LICENSE.txt')])
 
     build_cmd = [
         'bash', vulkan_path + '/build-android/android-generate.sh'
