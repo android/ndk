@@ -37,8 +37,9 @@ def main(args):
 
     # TODO(danalbert): use ndk/sources/third_party/googletest/googletest
     # after it has been updated to a version with CMakeLists
-    gtest_dir = os.path.join(build_support.android_path(), 'external',
-                             'googletest')
+    gtest_cmd = ('-DSHADERC_GOOGLE_TEST_DIR=' +
+                 os.path.join(build_support.android_path(),
+                              'external', 'googletest'))
 
     obj_out = os.path.join(args.out_dir, 'shader_tools/obj')
     install_dir = os.path.join(args.out_dir, 'shader_tools/install')
@@ -62,6 +63,7 @@ def main(args):
 
     additional_args = []
     if args.host.startswith("windows"):
+        gtest_cmd = ''
         mingw_root = os.path.join(build_support.android_path(),
                                   'prebuilts', 'gcc', build_host_tag, 'host',
                                   'x86_64-w64-mingw32-4.8')
@@ -70,7 +72,8 @@ def main(args):
                                        'cmake', 'linux-mingw-toolchain.cmake')
         additional_args = ['-DCMAKE_TOOLCHAIN_FILE=' + mingw_toolchain,
                            '-DMINGW_SYSROOT=' + mingw_root,
-                           '-DMINGW_COMPILER_PREFIX=' + mingw_compilers]
+                           '-DMINGW_COMPILER_PREFIX=' + mingw_compilers,
+                           '-DSHADERC_SKIP_TESTS=ON']
         file_extension = '.exe'
         if args.host == "windows64":
             additional_args.extend(
@@ -99,7 +102,7 @@ def main(args):
                      '-DCMAKE_BUILD_TYPE=Release',
                      '-DCMAKE_INSTALL_PREFIX=' + install_dir,
                      '-DSHADERC_THIRD_PARTY_ROOT_DIR=' + source_root,
-                     '-DSHADERC_GOOGLE_TEST_DIR=' + gtest_dir,
+                     gtest_cmd,
                      shaderc_shaderc_dir]
 
     cmake_command.extend(additional_args)

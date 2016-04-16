@@ -389,7 +389,7 @@ def build_libshaderc(_, dist_dir, __):
         {
             'source_dir': os.path.join(shaderc_root_dir, 'spirv-tools'),
             'dest_dir': 'shaderc/third_party/spirv-tools',
-            'files': [],
+            'files': ['utils/generate_grammar_tables.py'],
             'dirs': ['include', 'source'],
         },
         {
@@ -400,6 +400,7 @@ def build_libshaderc(_, dist_dir, __):
                 'SPIRV',
                 'OGLCompilersDLL',
                 'glslang/GenericCodeGen',
+                'hlsl',
                 'glslang/Include',
                 'glslang/MachineIndependent',
                 'glslang/OSDependent/Unix',
