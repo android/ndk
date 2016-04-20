@@ -30,25 +30,25 @@ Downloads
   </tr>
   <tr>
     <td>Linux</td>
-    <td><a href="http://dl.google.com/android/repository/android-ndk-r11c-linux-x86_64.zip">android-ndk-r11c-linux-x86_64.zip</a></td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r11c-linux-x86_64.zip">android-ndk-r11c-linux-x86_64.zip</a></td>
     <td>794135138</td>
     <td>de5ce9bddeee16fb6af2b9117e9566352aa7e279</td>
   </tr>
   <tr>
     <td>Mac OS X</td>
-    <td><a href="http://dl.google.com/android/repository/android-ndk-r11c-darwin-x86_64.zip">android-ndk-r11c-darwin-x86_64.zip</a></td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r11c-darwin-x86_64.zip">android-ndk-r11c-darwin-x86_64.zip</a></td>
     <td>772428792</td>
     <td>4ce8e7ed8dfe08c5fe58aedf7f46be2a97564696</td>
   </tr>
   <tr>
     <td>Windows 32-bit</td>
-    <td><a href="http://dl.google.com/android/repository/android-ndk-r11c-windows-x86.zip">android-ndk-r11c-windows-x86.zip</a></td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r11c-windows-x86.zip">android-ndk-r11c-windows-x86.zip</a></td>
     <td>728899082</td>
     <td>ff939bde6cd374eecbd2c3b2ad218697f9a5038c</td>
   </tr>
   <tr>
     <td>Windows 64-bit</td>
-    <td><a href="http://dl.google.com/android/repository/android-ndk-r11c-windows-x86_64.zip">android-ndk-r11c-windows-x86_64.zip</a></td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r11c-windows-x86_64.zip">android-ndk-r11c-windows-x86_64.zip</a></td>
     <td>771407642</td>
     <td>3d89deb97b3191c7e5555f1313ad35059479f071</td>
   </tr>
@@ -67,25 +67,25 @@ Downloads
   </tr>
   <tr>
     <td>Linux</td>
-    <td><a href="http://dl.google.com/android/repository/android-ndk-r12-beta1-linux-x86_64.zip">android-ndk-r12-beta1-linux-x86_64.zip</a></td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r12-beta1-linux-x86_64.zip">android-ndk-r12-beta1-linux-x86_64.zip</a></td>
     <td>765647319</td>
     <td>6d61d15ce602751b96e75c6fd5f39eb3ec613a3c</td>
   </tr>
   <tr>
     <td>Mac OS X</td>
-    <td><a href="http://dl.google.com/android/repository/android-ndk-r12-beta1-darwin-x86_64.zip">android-ndk-r12-beta1-darwin-x86_64.zip</a></td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r12-beta1-darwin-x86_64.zip">android-ndk-r12-beta1-darwin-x86_64.zip</a></td>
     <td>743934465</td>
     <td>e32cab813bfa2f08e362a4ffea712b61e47978ba</td>
   </tr>
   <tr>
     <td>Windows 32-bit</td>
-    <td><a href="http://dl.google.com/android/repository/android-ndk-r12-beta1-windows-x86.zip">android-ndk-r12-beta1-windows-x86.zip</a></td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r12-beta1-windows-x86.zip">android-ndk-r12-beta1-windows-x86.zip</a></td>
     <td>698425840</td>
     <td>840d2f3929ad91898b4b44e94657406bec39a410</td>
   </tr>
   <tr>
     <td>Windows 64-bit</td>
-    <td><a href="http://dl.google.com/android/repository/android-ndk-r12-beta1-windows-x86_64.zip">android-ndk-r12-beta1-windows-x86_64.zip</a></td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r12-beta1-windows-x86_64.zip">android-ndk-r12-beta1-windows-x86_64.zip</a></td>
     <td>741437055</td>
     <td>247e48b9903f3ea1b9fc4b0cadef7821e7f312f1</td>
   </tr>
@@ -93,9 +93,9 @@ Downloads
 
 ### r10e
 
-* Darwin: http://dl.google.com/android/repository/android-ndk-r10e-darwin-x86_64.zip
-* Linux: http://dl.google.com/android/repository/android-ndk-r10e-linux-x86_64.zip
-* Windows: http://dl.google.com/android/repository/android-ndk-r10e-windows-x86_64.zip
+* Darwin: https://dl.google.com/android/repository/android-ndk-r10e-darwin-x86_64.zip
+* Linux: https://dl.google.com/android/repository/android-ndk-r10e-linux-x86_64.zip
+* Windows: https://dl.google.com/android/repository/android-ndk-r10e-windows-x86_64.zip
 
 ### r9d
 
