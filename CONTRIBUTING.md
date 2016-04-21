@@ -34,4 +34,9 @@ on Windows; only Linux and Darwin hosts are supported.
 
 Check the [OWNERS file](OWNERS) for reviewers.
 
+The NDK uses TreeHugger as a presubmit service (think of it as Travis for
+Gerrit). If you're a Googler, TreeHugger will check your change automatically
+when you upload it. If you're not a Googler, you'll need to get a Googler to
+approve the change for you before TreeHugger will run it.
+
 [README.md]: README.md
