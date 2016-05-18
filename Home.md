@@ -18,7 +18,7 @@ Downloads
 
 ### Current Stable Release
 
-[[Changelog|Changelog-r11]]
+[[r11c Changelog|Changelog-r11]]
 
 <table>
   <tr>
@@ -55,7 +55,7 @@ Downloads
 
 ### Current Beta Release
 
-[[Changelog|Changelog-r12-beta2]]
+[[r12 Beta 2 Changelog|Changelog-r12-beta2]]
 
 <table>
   <tr>
