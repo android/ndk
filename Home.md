@@ -11,7 +11,6 @@ The betas should not be used for production.
 
 ### NDK r12
 
-Beta 2: 18 May 2016 (Google I/O)  
 Release: June 2016
 
 Downloads
@@ -56,7 +55,7 @@ Downloads
 
 ### Current Beta Release
 
-[[Changelog|Changelog-r12-beta1]]
+[[Changelog|Changelog-r12-beta2]]
 
 <table>
   <tr>
@@ -67,27 +66,27 @@ Downloads
   </tr>
   <tr>
     <td>Linux</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r12-beta1-linux-x86_64.zip">android-ndk-r12-beta1-linux-x86_64.zip</a></td>
-    <td>765647319</td>
-    <td>6d61d15ce602751b96e75c6fd5f39eb3ec613a3c</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r12-beta2-linux-x86_64.zip">android-ndk-r12-beta2-linux-x86_64.zip</a></td>
+    <td>687658267</td>
+    <td>c784e9710fc0c3ac0fa82bfe1e669976a2eec56a</td>
   </tr>
   <tr>
     <td>Mac OS X</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r12-beta1-darwin-x86_64.zip">android-ndk-r12-beta1-darwin-x86_64.zip</a></td>
-    <td>743934465</td>
-    <td>e32cab813bfa2f08e362a4ffea712b61e47978ba</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r12-beta2-darwin-x86_64.zip">android-ndk-r12-beta2-darwin-x86_64.zip</a></td>
+    <td>666281825</td>
+    <td>5cb2ae208c3f01b4e6b9a04f843a57500b8710f0</td>
   </tr>
   <tr>
     <td>Windows 32-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r12-beta1-windows-x86.zip">android-ndk-r12-beta1-windows-x86.zip</a></td>
-    <td>698425840</td>
-    <td>840d2f3929ad91898b4b44e94657406bec39a410</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r12-beta2-windows-x86.zip">android-ndk-r12-beta2-windows-x86.zip</a></td>
+    <td>638276722</td>
+    <td>931d3a57134b241600f4aeef7f978b4d0d5b64cc</td>
   </tr>
   <tr>
     <td>Windows 64-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r12-beta1-windows-x86_64.zip">android-ndk-r12-beta1-windows-x86_64.zip</a></td>
-    <td>741437055</td>
-    <td>247e48b9903f3ea1b9fc4b0cadef7821e7f312f1</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r12-beta2-windows-x86_64.zip">android-ndk-r12-beta2-windows-x86_64.zip</a></td>
+    <td>681336140</td>
+    <td>d961d1ae03ed5de13df7d9a7d8da027d67c56bfd</td>
   </tr>
 </table>
 
