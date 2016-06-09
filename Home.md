@@ -11,7 +11,7 @@ The betas should not be used for production.
 
 ### NDK r12
 
-Release: Soon<sup>TM</sup>.
+Release: 13:00 PST (fingers crossed)
 
 Downloads
 ---------
