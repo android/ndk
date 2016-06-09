@@ -9,14 +9,59 @@ The betas serve two purposes: you can let us know early if we've broken your app
 
 The betas should not be used for production.
 
-### NDK r12
+### NDK r13
 
-Release: 13:00 PST (fingers crossed)
+Beta 1: July 2016
+Beta 2: August 2016
+Release: September 2016
 
 Downloads
 ---------
 
 ### Current Stable Release
+
+[[r12 Changelog|Changelog-r12]]
+
+**Important:** These links will not be live until 09:00 PST.
+
+<table>
+  <tr>
+    <th>Platform</th>
+    <th>Package</th>
+    <th>Size (bytes)</th>
+    <th>SHA1 Checksum</th>
+  </tr>
+  <tr>
+    <td>Linux</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r12-linux-x86_64.zip">android-ndk-r12-linux-x86_64.zip</a></td>
+    <td>755431993</td>
+    <td>b7e02dc733692447366a2002ad17e87714528b39</td>
+  </tr>
+  <tr>
+    <td>Mac OS X</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r12-darwin-x86_64.zip">android-ndk-r12-darwin-x86_64.zip</a></td>
+    <td>734014148</td>
+    <td>708d4025142924f7097a9f44edf0a35965706737</td>
+  </tr>
+  <tr>
+    <td>Windows 32-bit</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r12-windows-x86.zip">android-ndk-r12-windows-x86.zip</a></td>
+    <td>706332762</td>
+    <td>37fcd7acf6012d0068a57c1524edf24b0fef69c9</td>
+  </tr>
+  <tr>
+    <td>Windows 64-bit</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r12-windows-x86_64.zip">android-ndk-r12-windows-x86_64.zip</a></td>
+    <td>749444245</td>
+    <td>80d64a77aab52df867ac55cec1e976663dd3326f</td>
+  </tr>
+</table>
+
+### Current Beta Release
+
+NDK r12 is now stable. NDK r13 beta 1 will be available in July.
+
+### r11c
 
 [[r11c Changelog|Changelog-r11]]
 
@@ -50,43 +95,6 @@ Downloads
     <td><a href="https://dl.google.com/android/repository/android-ndk-r11c-windows-x86_64.zip">android-ndk-r11c-windows-x86_64.zip</a></td>
     <td>771407642</td>
     <td>3d89deb97b3191c7e5555f1313ad35059479f071</td>
-  </tr>
-</table>
-
-### Current Beta Release
-
-[[r12 Beta 2 Changelog|Changelog-r12-beta2]]
-
-<table>
-  <tr>
-    <th>Platform</th>
-    <th>Package</th>
-    <th>Size (bytes)</th>
-    <th>SHA1 Checksum</th>
-  </tr>
-  <tr>
-    <td>Linux</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r12-beta2-linux-x86_64.zip">android-ndk-r12-beta2-linux-x86_64.zip</a></td>
-    <td>687658267</td>
-    <td>c784e9710fc0c3ac0fa82bfe1e669976a2eec56a</td>
-  </tr>
-  <tr>
-    <td>Mac OS X</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r12-beta2-darwin-x86_64.zip">android-ndk-r12-beta2-darwin-x86_64.zip</a></td>
-    <td>666281825</td>
-    <td>5cb2ae208c3f01b4e6b9a04f843a57500b8710f0</td>
-  </tr>
-  <tr>
-    <td>Windows 32-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r12-beta2-windows-x86.zip">android-ndk-r12-beta2-windows-x86.zip</a></td>
-    <td>638276722</td>
-    <td>931d3a57134b241600f4aeef7f978b4d0d5b64cc</td>
-  </tr>
-  <tr>
-    <td>Windows 64-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r12-beta2-windows-x86_64.zip">android-ndk-r12-beta2-windows-x86_64.zip</a></td>
-    <td>681336140</td>
-    <td>d961d1ae03ed5de13df7d9a7d8da027d67c56bfd</td>
   </tr>
 </table>
 
