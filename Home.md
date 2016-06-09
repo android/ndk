@@ -11,8 +11,8 @@ The betas should not be used for production.
 
 ### NDK r13
 
-Beta 1: July 2016
-Beta 2: August 2016
+Beta 1: July 2016  
+Beta 2: August 2016  
 Release: September 2016
 
 Downloads
