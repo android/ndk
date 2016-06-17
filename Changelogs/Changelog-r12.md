@@ -13,6 +13,17 @@ Announcements
  * `make-standalone-toolchain.sh` will be removed in r13. Make sure
    `make_standalone_toolchain.py` suits your needs.
 
+r12b
+----
+
+ * `ndk-gdb.py` has been fixed: https://github.com/android-ndk/ndk/issues/118
+ * NdkCameraMetadataTags.h has been updated to no longer contain the invalid
+   enum value.
+ * A bug in `ndk-build` that resulting in spurious warnings for static libraries
+   using libc++ has been fixed:
+   https://android-review.googlesource.com/#/c/238146/
+ * The OpenSLES headers have been updated for android-24.
+
 NDK
 ---
  * Removed support for the armeabi-v7a-hard ABI. See the explanation in the
@@ -98,7 +109,3 @@ Known Issues
    headers and libraries (not a regression from r11).
  * RenderScript tools are not present (not a regression from r11):
    https://github.com/android-ndk/ndk/issues/7.
- * In NdkCameraMetadataTags.h, the camera metadata tag enum value
-   `ACAMERA_STATISTICS_LENS_SHADING_CORRECTION_MAP` was listed by accident and
-   will be removed in next release. Use `ACAMERA_STATISTICS_LENS_SHADING_MAP`
-   instead.

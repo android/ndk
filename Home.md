@@ -20,9 +20,7 @@ Downloads
 
 ### Current Stable Release
 
-[[r12 Changelog|Changelog-r12]]
-
-**Important:** These links will not be live until 09:00 PST.
+[[r12b Changelog|Changelog-r12]]
 
 <table>
   <tr>
@@ -33,27 +31,31 @@ Downloads
   </tr>
   <tr>
     <td>Linux</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r12-linux-x86_64.zip">android-ndk-r12-linux-x86_64.zip</a></td>
-    <td>755431993</td>
-    <td>b7e02dc733692447366a2002ad17e87714528b39</td>
+    <td><a
+href="https://dl.google.com/android/repository/android-ndk-r12b-linux-x86_64.zip">android-ndk-r12b-linux-x86_64.zip</a></td>
+    <td>755551010</td>
+    <td>170a119bfa0f0ce5dc932405eaa3a7cc61b27694</td>
   </tr>
   <tr>
     <td>Mac OS X</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r12-darwin-x86_64.zip">android-ndk-r12-darwin-x86_64.zip</a></td>
-    <td>734014148</td>
-    <td>708d4025142924f7097a9f44edf0a35965706737</td>
+    <td><a
+href="https://dl.google.com/android/repository/android-ndk-r12b-darwin-x86_64.zip">android-ndk-r12b-darwin-x86_64.zip</a></td>
+    <td>734135279</td>
+    <td>e257fe12f8947be9f79c10c3fffe87fb9406118a</td>
   </tr>
   <tr>
     <td>Windows 32-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r12-windows-x86.zip">android-ndk-r12-windows-x86.zip</a></td>
-    <td>706332762</td>
-    <td>37fcd7acf6012d0068a57c1524edf24b0fef69c9</td>
+    <td><a
+href="https://dl.google.com/android/repository/android-ndk-r12b-windows-x86.zip">android-ndk-r12b-windows-x86.zip</a></td>
+    <td>706453972</td>
+    <td>8e6eef0091dac2f3c7a1ecbb7070d4fa22212c04</td>
   </tr>
   <tr>
     <td>Windows 64-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r12-windows-x86_64.zip">android-ndk-r12-windows-x86_64.zip</a></td>
-    <td>749444245</td>
-    <td>80d64a77aab52df867ac55cec1e976663dd3326f</td>
+    <td><a
+href="https://dl.google.com/android/repository/android-ndk-r12b-windows-x86_64.zip">android-ndk-r12b-windows-x86_64.zip</a></td>
+    <td>749567353</td>
+    <td>337746d8579a1c65e8a69bf9cbdc9849bcacf7f5</td>
   </tr>
 </table>
 
