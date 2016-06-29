@@ -66,7 +66,6 @@ Clang
 -----
 
  * Clang has been updated to 3.8svn (r256229, build 2812033).
-     * Note that Clang packaged in the Windows 64-bit NDK is actually 32-bit.
  * `__thread` should work for real this time.
 
 GCC
@@ -109,3 +108,5 @@ Known Issues
    headers and libraries (not a regression from r11).
  * RenderScript tools are not present (not a regression from r11):
    https://github.com/android-ndk/ndk/issues/7.
+ * The `clang.exe` and `clang++.exe` in the 32-bit Windows package are actually
+   64-bit. The 32-bit executable is named `clang_32.exe`.
