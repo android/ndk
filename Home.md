@@ -11,7 +11,7 @@ The betas should not be used for production.
 
 ### NDK r13
 
-Beta 1: July 2016  
+Beta 1: Released!  
 Beta 2: August 2016  
 Release: September 2016
 
@@ -61,7 +61,44 @@ href="https://dl.google.com/android/repository/android-ndk-r12b-windows-x86_64.z
 
 ### Current Beta Release
 
-NDK r12 is now stable. NDK r13 beta 1 will be available in July.
+[[r13 Beta 1 Changelog|Changelog-r13-beta1]]
+
+<table>
+  <tr>
+    <th>Platform</th>
+    <th>Package</th>
+    <th>Size (bytes)</th>
+    <th>SHA1 Checksum</th>
+  </tr>
+  <tr>
+    <td>Linux</td>
+    <td><a
+href="https://dl.google.com/android/repository/android-ndk-r13-beta1-linux-x86_64.zip">android-ndk-r13-beta1-linux-x86_64.zip</a></td>
+    <td>681297447</td>
+    <td>f17ce82e3e172fe878fd666df250ca1d225a07c7</td>
+  </tr>
+  <tr>
+    <td>Mac OS X</td>
+    <td><a
+href="https://dl.google.com/android/repository/android-ndk-r13-beta1-darwin-x86_64.zip">android-ndk-r13-beta1-darwin-x86_64.zip</a></td>
+    <td>659871515</td>
+    <td>ae84d683b20378d097e6610eea370db55bc6e2c0</td>
+  </tr>
+  <tr>
+    <td>Windows 32-bit</td>
+    <td><a
+href="https://dl.google.com/android/repository/android-ndk-r13-beta1-windows-x86.zip">android-ndk-r13-beta1-windows-x86.zip</a></td>
+    <td>614440315</td>
+    <td>12dbdfb65358efc962803cc72f0307d657fbbb24</td>
+  </tr>
+  <tr>
+    <td>Windows 64-bit</td>
+    <td><a
+href="https://dl.google.com/android/repository/android-ndk-r13-beta1-windows-x86_64.zip">android-ndk-r13-beta1-windows-x86_64.zip</a></td>
+    <td>675299552</td>
+    <td>eb40847d9f761fc3d932625c93e90424d15bc4a4</td>
+  </tr>
+</table>
 
 ### r11c
 
