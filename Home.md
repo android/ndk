@@ -12,8 +12,8 @@ The betas should not be used for production.
 ### NDK r13
 
 Beta 1: Released!  
-Beta 2: August 2016  
-Release: September 2016
+Beta 2: Delayed, September 2016 (should be any day now)  
+Release: Late September/Early October 2016
 
 Downloads
 ---------
