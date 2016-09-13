@@ -12,7 +12,7 @@ The betas should not be used for production.
 ### NDK r13
 
 Beta 1: Released!  
-Beta 2: Delayed, September 2016 (should be any day now)  
+Beta 2: Released!  
 Release: Late September/Early October 2016
 
 Downloads
@@ -61,7 +61,7 @@ href="https://dl.google.com/android/repository/android-ndk-r12b-windows-x86_64.z
 
 ### Current Beta Release
 
-[[r13 Beta 1 Changelog|Changelog-r13-beta1]]
+[[r13 Beta 2 Changelog|Changelog-r13-beta2]]
 
 <table>
   <tr>
@@ -72,31 +72,27 @@ href="https://dl.google.com/android/repository/android-ndk-r12b-windows-x86_64.z
   </tr>
   <tr>
     <td>Linux</td>
-    <td><a
-href="https://dl.google.com/android/repository/android-ndk-r13-beta1-linux-x86_64.zip">android-ndk-r13-beta1-linux-x86_64.zip</a></td>
-    <td>681297447</td>
-    <td>f17ce82e3e172fe878fd666df250ca1d225a07c7</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r13-beta2-linux-x86_64.zip">android-ndk-r13-beta2-linux-x86_64.zip</a></td>
+    <td>686843165</td>
+    <td>ea1a76d9ebdc82fe742d32798aaee7c980afd2f6</td>
   </tr>
   <tr>
     <td>Mac OS X</td>
-    <td><a
-href="https://dl.google.com/android/repository/android-ndk-r13-beta1-darwin-x86_64.zip">android-ndk-r13-beta1-darwin-x86_64.zip</a></td>
-    <td>659871515</td>
-    <td>ae84d683b20378d097e6610eea370db55bc6e2c0</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r13-beta2-darwin-x86_64.zip">android-ndk-r13-beta2-darwin-x86_64.zip</a></td>
+    <td>665405792</td>
+    <td>0cbdb271b103a7e4237b34b73f0e56381e4632aa</td>
   </tr>
   <tr>
     <td>Windows 32-bit</td>
-    <td><a
-href="https://dl.google.com/android/repository/android-ndk-r13-beta1-windows-x86.zip">android-ndk-r13-beta1-windows-x86.zip</a></td>
-    <td>614440315</td>
-    <td>12dbdfb65358efc962803cc72f0307d657fbbb24</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r13-beta2-windows-x86.zip">android-ndk-r13-beta2-windows-x86.zip</a></td>
+    <td>619981813</td>
+    <td>a5f6edceb3afa4ecd47071822ea32ba6bd6ac002</td>
   </tr>
   <tr>
     <td>Windows 64-bit</td>
-    <td><a
-href="https://dl.google.com/android/repository/android-ndk-r13-beta1-windows-x86_64.zip">android-ndk-r13-beta1-windows-x86_64.zip</a></td>
-    <td>675299552</td>
-    <td>eb40847d9f761fc3d932625c93e90424d15bc4a4</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r13-beta2-windows-x86_64.zip">android-ndk-r13-beta2-windows-x86_64.zip</a></td>
+    <td>680836961</td>
+    <td>a0b6a0ed271b0a99cdca28ce8fd405f89defc539</td>
   </tr>
 </table>
 
