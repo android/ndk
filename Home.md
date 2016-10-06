@@ -9,16 +9,57 @@ The betas serve two purposes: you can let us know early if we've broken your app
 
 The betas should not be used for production.
 
-### NDK r13
+### NDK r14
 
-Beta 1: Released!  
-Beta 2: Released!  
-Release: Late September/Early October 2016
+Beta 1: October 2016
+Beta 2: November 2016
+Release: December 2016
 
 Downloads
 ---------
 
 ### Current Stable Release
+
+[[r13 Changelog|Changelog-r13]]
+
+<table>
+  <tr>
+    <th>Platform</th>
+    <th>Package</th>
+    <th>Size (bytes)</th>
+    <th>SHA1 Checksum</th>
+  </tr>
+  <tr>
+    <td>Linux</td>
+    <td><a
+href="https://dl.google.com/android/repository/android-ndk-r13-linux-x86_64.zip">android-ndk-r13-linux-x86_64.zip</a></td>
+    <td>687179374</td>
+    <td>a22bfcbe467103e21acc953b0c11158941ab49ee</td>
+  </tr>
+  <tr>
+    <td>Mac OS X</td>
+    <td><a
+href="https://dl.google.com/android/repository/android-ndk-r13-darwin-x86_64.zip">android-ndk-r13-darwin-x86_64.zip</a></td>
+    <td>665841170</td>
+    <td>fd7ec2b511b66c479487138be5413400521edd0e</td>
+  </tr>
+  <tr>
+    <td>Windows 32-bit</td>
+    <td><a
+href="https://dl.google.com/android/repository/android-ndk-r13-windows-x86.zip">android-ndk-r13-windows-x86.zip</a></td>
+    <td>620325945</td>
+    <td>cc498ef01d7fe919dcc8aeb4d709f4ff793dee46</td>
+  </tr>
+  <tr>
+    <td>Windows 64-bit</td>
+    <td><a
+href="https://dl.google.com/android/repository/android-ndk-r13-windows-x86_64.zip">android-ndk-r13-windows-x86_64.zip</a></td>
+    <td>681188845</td>
+    <td>39b78dda640f7f2647075d44b0ec1a8ac6ce5eef</td>
+  </tr>
+</table>
+
+### r12b
 
 [[r12b Changelog|Changelog-r12]]
 
@@ -56,43 +97,6 @@ href="https://dl.google.com/android/repository/android-ndk-r12b-windows-x86.zip"
 href="https://dl.google.com/android/repository/android-ndk-r12b-windows-x86_64.zip">android-ndk-r12b-windows-x86_64.zip</a></td>
     <td>749567353</td>
     <td>337746d8579a1c65e8a69bf9cbdc9849bcacf7f5</td>
-  </tr>
-</table>
-
-### Current Beta Release
-
-[[r13 Beta 2 Changelog|Changelog-r13-beta2]]
-
-<table>
-  <tr>
-    <th>Platform</th>
-    <th>Package</th>
-    <th>Size (bytes)</th>
-    <th>SHA1 Checksum</th>
-  </tr>
-  <tr>
-    <td>Linux</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r13-beta2-linux-x86_64.zip">android-ndk-r13-beta2-linux-x86_64.zip</a></td>
-    <td>686843165</td>
-    <td>ea1a76d9ebdc82fe742d32798aaee7c980afd2f6</td>
-  </tr>
-  <tr>
-    <td>Mac OS X</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r13-beta2-darwin-x86_64.zip">android-ndk-r13-beta2-darwin-x86_64.zip</a></td>
-    <td>665405792</td>
-    <td>0cbdb271b103a7e4237b34b73f0e56381e4632aa</td>
-  </tr>
-  <tr>
-    <td>Windows 32-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r13-beta2-windows-x86.zip">android-ndk-r13-beta2-windows-x86.zip</a></td>
-    <td>619981813</td>
-    <td>a5f6edceb3afa4ecd47071822ea32ba6bd6ac002</td>
-  </tr>
-  <tr>
-    <td>Windows 64-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r13-beta2-windows-x86_64.zip">android-ndk-r13-beta2-windows-x86_64.zip</a></td>
-    <td>680836961</td>
-    <td>a0b6a0ed271b0a99cdca28ce8fd405f89defc539</td>
   </tr>
 </table>
 
