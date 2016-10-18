@@ -15,6 +15,8 @@ Announcements
   is no longer receiving backports. It cannot be removed until after libc++ has
   become stable enough to be the default, as some parts of gnustl are still
   incompatible with Clang. It will likely be removed after that point.
+* Added simpleperf, a CPU profiler for Android:
+  https://android.googlesource.com/platform/system/extras/+/master/simpleperf/README.md
 
 NDK
 ---
