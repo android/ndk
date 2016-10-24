@@ -18,6 +18,12 @@ Announcements
 * Added simpleperf, a CPU profiler for Android:
   https://android.googlesource.com/platform/system/extras/+/master/simpleperf/README.md
 
+r13b
+----
+
+ * Additional fixes for missing `__cxa_bad_cast`:
+   https://android-review.googlesource.com/q/topic:cxa_bad_cast-ndk-r13-release
+
 NDK
 ---
 

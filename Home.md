@@ -31,31 +31,27 @@ Downloads
   </tr>
   <tr>
     <td>Linux</td>
-    <td><a
-href="https://dl.google.com/android/repository/android-ndk-r13-linux-x86_64.zip">android-ndk-r13-linux-x86_64.zip</a></td>
-    <td>687179374</td>
-    <td>a22bfcbe467103e21acc953b0c11158941ab49ee</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r13b-linux-x86_64.zip">android-ndk-r13b-linux-x86_64.zip</a></td>
+    <td>687311866</td>
+    <td>0600157c4ddf50ec15b8a037cfc474143f718fd0</td>
   </tr>
   <tr>
     <td>Mac OS X</td>
-    <td><a
-href="https://dl.google.com/android/repository/android-ndk-r13-darwin-x86_64.zip">android-ndk-r13-darwin-x86_64.zip</a></td>
-    <td>665841170</td>
-    <td>fd7ec2b511b66c479487138be5413400521edd0e</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r13b-darwin-x86_64.zip">android-ndk-r13b-darwin-x86_64.zip</a></td>
+    <td>665967997</td>
+    <td>71fe653a7bf5db08c3af154735b6ccbc12f0add5</td>
   </tr>
   <tr>
     <td>Windows 32-bit</td>
-    <td><a
-href="https://dl.google.com/android/repository/android-ndk-r13-windows-x86.zip">android-ndk-r13-windows-x86.zip</a></td>
-    <td>620325945</td>
-    <td>cc498ef01d7fe919dcc8aeb4d709f4ff793dee46</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r13b-windows-x86.zip">android-ndk-r13b-windows-x86.zip</a></td>
+    <td>620461544</td>
+    <td>4eb1288b1d4134a9d6474eb247f0448808d52408</td>
   </tr>
   <tr>
     <td>Windows 64-bit</td>
-    <td><a
-href="https://dl.google.com/android/repository/android-ndk-r13-windows-x86_64.zip">android-ndk-r13-windows-x86_64.zip</a></td>
-    <td>681188845</td>
-    <td>39b78dda640f7f2647075d44b0ec1a8ac6ce5eef</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r13b-windows-x86_64.zip">android-ndk-r13b-windows-x86_64.zip</a></td>
+    <td>681320123</td>
+    <td>649d306559435c244cec5881b880318bb3dee53a</td>
   </tr>
 </table>
 
