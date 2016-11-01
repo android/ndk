@@ -51,8 +51,6 @@ Known Issues
    https://android-review.googlesource.com/#/c/247498
  * x86 ASAN still doesn't work. See discussion on
    https://android-review.googlesource.com/#/c/186276/
- * Exception unwinding with `c++_shared` still does not work for ARM on
-   Gingerbread or Ice Cream Sandwich.
  * Bionic headers and libraries for Marshmallow and N are not yet exposed
    despite the presence of android-24. Those platforms are still the Lollipop
    headers and libraries (not a regression from r11).
