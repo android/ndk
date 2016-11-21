@@ -11,11 +11,9 @@ The betas should not be used for production.
 
 ### NDK r14
 
-Beta 1: Late November 2016 (currently aiming for the 21st)  
+Beta 1: 28 November 2016  
 Beta 2: January 2017  
 Release: Late January/Early February 2017
-
-r14's schedule is going to be a little odd because of the holidays. It generally takes more than a couple weeks to have enough beta 1 feedback to know how to proceed with beta 2, but there's a small chance of beta 2 being released in early December if that's not the case this time.
 
 Downloads
 ---------
