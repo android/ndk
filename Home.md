@@ -11,7 +11,7 @@ The betas should not be used for production.
 
 ### NDK r14
 
-Beta 1: Week of 5 December 2016  
+Beta 1: 13 December 2016  
 Beta 2: January 2017  
 Release: Late January/Early February 2017
 
