@@ -39,7 +39,7 @@ ndk-build
 ---------
 
  * Module builds will now fail if they have any missing dependencies. To revert
-   to the old behavior, set `APP_ALLOW_MISSING_DEPS=false`. See
+   to the old behavior, set `APP_ALLOW_MISSING_DEPS=true`. See
    https://github.com/android-ndk/ndk/issues/208.
 
 CMake
