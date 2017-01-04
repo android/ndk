@@ -1,3 +1,9 @@
+Documentation
+-------------
+
+User Documentation: https://developer.android.com/ndk/index.html  
+Samples: http://github.com/googlesamples/android-ndk
+
 Release Schedule
 ----------------
 
