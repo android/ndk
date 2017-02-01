@@ -33,7 +33,7 @@ Announcements
    become stable enough to be the default, as some parts of gnustl are still
    incompatible with Clang. It will likely be removed after that point.
 
-[Unified Headers]: docs/UnifiedHeaders.md
+[Unified Headers]: https://android.googlesource.com/platform/ndk/+/master/docs/UnifiedHeaders.md
 
 ndk-build
 ---------
