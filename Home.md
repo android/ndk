@@ -63,7 +63,7 @@ Downloads
 
 ### Current Beta Release
 
-[[r14 Beta 1 Changelog|Changelog-r14-beta1]]
+[[r14 Beta 2 Changelog|Changelog-r14-beta2]]
 
 <table>
   <tr>
@@ -74,27 +74,27 @@ Downloads
   </tr>
   <tr>
     <td>Linux</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r14-beta1-linux-x86_64.zip">android-ndk-r14-beta1-linux-x86_64.zip</a></td>
-    <td>726992578</td>
-    <td>82abcb3bb44961681763dd11d0d29f86fa5c2ec3</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r14-beta2-linux-x86_64.zip">android-ndk-r14-beta2-linux-x86_64.zip</a></td>
+    <td>841384161</td>
+    <td>d4a4ab48b2b161e2caf6149c85f8bf6d45b72dea</td>
   </tr>
   <tr>
     <td>Mac OS X</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r14-beta1-darwin-x86_64.zip">android-ndk-r14-beta1-darwin-x86_64.zip</a></td>
-    <td>699843170</td>
-    <td>51895e2f1717e477fad2a1e463fd823e51021c41</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r14-beta2-darwin-x86_64.zip">android-ndk-r14-beta2-darwin-x86_64.zip</a></td>
+    <td>825461772</td>
+    <td>ed10c3d488a8065f46ef86d49102216f7dae4da1</td>
   </tr>
   <tr>
     <td>Windows 32-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r14-beta1-windows-x86.zip">android-ndk-r14-beta1-windows-x86.zip</a></td>
-    <td>659919772</td>
-    <td>9e4a903aff2dd7176e2d88e6196b5715ebe3d065</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r14-beta2-windows-x86.zip">android-ndk-r14-beta2-windows-x86.zip</a></td>
+    <td>708291527</td>
+    <td>7d897e9d75c1175fdec7133c97e277e98d37e1a0</td>
   </tr>
   <tr>
     <td>Windows 64-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r14-beta1-windows-x86_64.zip">android-ndk-r14-beta1-windows-x86_64.zip</a></td>
-    <td>721533854</td>
-    <td>83232f93fa18d630fc4fa3131bd95028d1827887</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r14-beta2-windows-x86_64.zip">android-ndk-r14-beta2-windows-x86_64.zip</a></td>
+    <td>769907625</td>
+    <td>83058bc1583dd47cb619e0b09af5d328f992fe45</td>
   </tr>
 </table>
 
