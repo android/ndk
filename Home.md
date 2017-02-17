@@ -13,7 +13,7 @@ The betas should not be used for production.
 
 Beta 1: 13 December 2016  
 Beta 2: 31 January 2017  
-Release: Late February/Early March 2017
+Release: 3 March 2017
 
 Downloads
 ---------
