@@ -9,16 +9,57 @@ The betas serve two purposes: you can let us know early if we've broken your app
 
 The betas should not be used for production.
 
-### NDK r14
+### NDK r15
 
-Beta 1: 13 December 2016  
-Beta 2: 31 January 2017  
-Release: 3 March 2017
+Beta 1: 21 March 2017  
+Beta 2: Late April 2017  
+Release: Late May/Early June 2017
 
 Downloads
 ---------
 
 ### Current Stable Release
+
+[[r14 Changelog|Changelog-r14]]
+
+<table>
+  <tr>
+    <th>Platform</th>
+    <th>Package</th>
+    <th>Size (bytes)</th>
+    <th>SHA1 Checksum</th>
+  </tr>
+  <tr>
+    <td>Linux</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r14-linux-x86_64.zip">android-ndk-r14-linux-x86_64.zip</a></td>
+    <td>840507097</td>
+    <td>eac8b293054671555cb636e350f1a9bc475c8f0c</td>
+  </tr>
+  <tr>
+    <td>Mac OS X</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r14-darwin-x86_64.zip">android-ndk-r14-darwin-x86_64.zip</a></td>
+    <td>824579088</td>
+    <td>d121c9e4f359ff65fb4d003bdd7dbe5dd9cf7295</td>
+  </tr>
+  <tr>
+    <td>Windows 32-bit</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r14-windows-x86.zip">android-ndk-r14-windows-x86.zip</a></td>
+    <td>707413080</td>
+    <td>43d840b80f6bad630f766904172d305cdaf927c8</td>
+  </tr>
+  <tr>
+    <td>Windows 64-bit</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r14-windows-x86_64.zip">android-ndk-r14-windows-x86_64.zip</a></td>
+    <td>769028642</td>
+    <td>ce688def0d64703e9fe4f2d93f879154c5070bf9</td>
+  </tr>
+</table>
+
+### Current Beta Release
+
+None right now. Check back later this month!
+
+### r13b
 
 [[r13 Changelog|Changelog-r13]]
 
@@ -52,43 +93,6 @@ Downloads
     <td><a href="https://dl.google.com/android/repository/android-ndk-r13b-windows-x86_64.zip">android-ndk-r13b-windows-x86_64.zip</a></td>
     <td>681320123</td>
     <td>649d306559435c244cec5881b880318bb3dee53a</td>
-  </tr>
-</table>
-
-### Current Beta Release
-
-[[r14 Beta 2 Changelog|Changelog-r14-beta2]]
-
-<table>
-  <tr>
-    <th>Platform</th>
-    <th>Package</th>
-    <th>Size (bytes)</th>
-    <th>SHA1 Checksum</th>
-  </tr>
-  <tr>
-    <td>Linux</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r14-beta2-linux-x86_64.zip">android-ndk-r14-beta2-linux-x86_64.zip</a></td>
-    <td>841384161</td>
-    <td>d4a4ab48b2b161e2caf6149c85f8bf6d45b72dea</td>
-  </tr>
-  <tr>
-    <td>Mac OS X</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r14-beta2-darwin-x86_64.zip">android-ndk-r14-beta2-darwin-x86_64.zip</a></td>
-    <td>825461772</td>
-    <td>ed10c3d488a8065f46ef86d49102216f7dae4da1</td>
-  </tr>
-  <tr>
-    <td>Windows 32-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r14-beta2-windows-x86.zip">android-ndk-r14-beta2-windows-x86.zip</a></td>
-    <td>708291527</td>
-    <td>7d897e9d75c1175fdec7133c97e277e98d37e1a0</td>
-  </tr>
-  <tr>
-    <td>Windows 64-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r14-beta2-windows-x86_64.zip">android-ndk-r14-beta2-windows-x86_64.zip</a></td>
-    <td>769907625</td>
-    <td>83058bc1583dd47cb619e0b09af5d328f992fe45</td>
   </tr>
 </table>
 
