@@ -20,7 +20,7 @@ Downloads
 
 ### Current Stable Release
 
-[[r14 Changelog|Changelog-r14]]
+[[r14b Changelog|Changelog-r14]]
 
 <table>
   <tr>
@@ -31,27 +31,27 @@ Downloads
   </tr>
   <tr>
     <td>Linux</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r14-linux-x86_64.zip">android-ndk-r14-linux-x86_64.zip</a></td>
-    <td>840507097</td>
-    <td>eac8b293054671555cb636e350f1a9bc475c8f0c</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r14b-linux-x86_64.zip">android-ndk-r14b-linux-x86_64.zip</a></td>
+    <td>840626594</td>
+    <td>becd161da6ed9a823e25be5c02955d9cbca1dbeb</td>
   </tr>
   <tr>
     <td>Mac OS X</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r14-darwin-x86_64.zip">android-ndk-r14-darwin-x86_64.zip</a></td>
-    <td>824579088</td>
-    <td>d121c9e4f359ff65fb4d003bdd7dbe5dd9cf7295</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r14b-darwin-x86_64.zip">android-ndk-r14b-darwin-x86_64.zip</a></td>
+    <td>824705073</td>
+    <td>2bf582c43f6da16416e66203d158a6dfaba4277c</td>
   </tr>
   <tr>
     <td>Windows 32-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r14-windows-x86.zip">android-ndk-r14-windows-x86.zip</a></td>
-    <td>707413080</td>
-    <td>43d840b80f6bad630f766904172d305cdaf927c8</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r14b-windows-x86.zip">android-ndk-r14b-windows-x86.zip</a></td>
+    <td>707533928</td>
+    <td>070443eaa7fa37ed337f91c655e02ca708d37c92</td>
   </tr>
   <tr>
     <td>Windows 64-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r14-windows-x86_64.zip">android-ndk-r14-windows-x86_64.zip</a></td>
-    <td>769028642</td>
-    <td>ce688def0d64703e9fe4f2d93f879154c5070bf9</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r14b-windows-x86_64.zip">android-ndk-r14b-windows-x86_64.zip</a></td>
+    <td>769151176</td>
+    <td>a625e8c599bccdb9061b61dcf3d1f1a01071613f</td>
   </tr>
 </table>
 
