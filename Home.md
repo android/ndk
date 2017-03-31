@@ -11,7 +11,7 @@ The betas should not be used for production.
 
 ### NDK r15
 
-Beta 1: Late March 2017  
+Beta 1: 3 April 2017  
 Beta 2: Late April 2017  
 Release: Late May/Early June 2017
 
