@@ -11,7 +11,7 @@ For Android Studio issues, follow the docs on the [Android Studio site].
 Announcements
 -------------
 
- * [Unified Headers] are now enabled by default.
+ * [Unified Headers][https://github.com/android-ndk/ndk/wiki/docs/UnifiedHeaders.md] are now enabled by default.
 
    **Note**: The deprecated headers will be removed in a future release, most
    likely r16. If they do not work for you, file bugs now.
