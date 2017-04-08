@@ -1,4 +1,4 @@
-``Changelog
+Changelog
 =========
 
 Report issues to [GitHub].
