@@ -11,7 +11,7 @@ The betas should not be used for production.
 
 ### NDK r15
 
-Beta 1: Week of 3 April 2017  
+Beta 1: 7 April 2017 (available now!)
 Beta 2: Late April 2017  
 Release: Late May/Early June 2017
 
@@ -57,7 +57,40 @@ Downloads
 
 ### Current Beta Release
 
-None right now. Check back later this month!
+[[r15 beta1 Changelog|Changelog-r15-beta1]]
+
+<table>
+  <tr>
+    <th>Platform</th>
+    <th>Package</th>
+    <th>Size (bytes)</th>
+    <th>SHA1 Checksum</th>
+  </tr>
+  <tr>
+    <td>Linux</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r15-beta1-linux-x86_64.zip">android-ndk-r15-beta1-linux-x86_64.zip</a></td>
+    <td>876,682,431</td>
+    <td>8db2bf3e5cc6a09c13c51a594c0018a66076464f</td>
+  </tr>
+  <tr>
+    <td>Mac OS X</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r15-beta1-darwin-x86_64.zip">android-ndk-r15-beta1-darwin-x86_64.zip</a></td>
+    <td>860,705,688</td>
+    <td>6640560507bd70abd268939db7aa4bf2fabe93f2</td>
+  </tr>
+  <tr>
+    <td>Windows 32-bit</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r15-beta1-windows-x86.zip">android-ndk-r15-beta1-windows-x86.zip</a></td>
+    <td>743,841,310</td>
+    <td>4ba01e6f7c998daa2072e2e0cfd2eb16552a941f</td>
+  </tr>
+  <tr>
+    <td>Windows 64-bit</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r15-beta1-windows-x86_64.zip">android-ndk-r15-beta1-windows-x86_64.zip</a></td>
+    <td>805,442,962</td>
+    <td>c58e0434cc6c6b5b4c346b440da0f972bc6b2be7</td>
+  </tr>
+</table>
 
 ### r13b
 
