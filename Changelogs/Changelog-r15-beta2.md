@@ -31,7 +31,7 @@ Announcements
    As such, the `libandroid_support` work will be coming in a later beta
    (hopefully beta 2). We'll be doing at least 3 beta releases this cycle.
 
-[Unified Headers]: docs/UnifiedHeaders.md
+[Unified Headers]: https://android.googlesource.com/platform/ndk/+/ndk-r15-release/docs/UnifiedHeaders.md
 
 APIs
 ====
