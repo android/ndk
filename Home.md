@@ -57,7 +57,7 @@ Downloads
 
 ### Current Beta Release
 
-[[r15 beta1 Changelog|Changelog-r15-beta1]]
+[[r15 beta 2 Changelog|Changelog-r15-beta2]]
 
 <table>
   <tr>
@@ -68,27 +68,27 @@ Downloads
   </tr>
   <tr>
     <td>Linux</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r15-beta1-linux-x86_64.zip">android-ndk-r15-beta1-linux-x86_64.zip</a></td>
-    <td>876,682,431</td>
-    <td>8db2bf3e5cc6a09c13c51a594c0018a66076464f</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r15-beta2-linux-x86_64.zip">android-ndk-r15-beta2-linux-x86_64.zip</a></td>
+    <td>974820298</td>
+    <td>408f9a84ee3780d519abe4b37358ede49d93afd0</td>
   </tr>
   <tr>
     <td>Mac OS X</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r15-beta1-darwin-x86_64.zip">android-ndk-r15-beta1-darwin-x86_64.zip</a></td>
-    <td>860,705,688</td>
-    <td>6640560507bd70abd268939db7aa4bf2fabe93f2</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r15-beta2-darwin-x86_64.zip">android-ndk-r15-beta2-darwin-x86_64.zip</a></td>
+    <td>960119357</td>
+    <td>072507f69edd2f2c2ca98c3b19f2ce7cc20170f9</td>
   </tr>
   <tr>
     <td>Windows 32-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r15-beta1-windows-x86.zip">android-ndk-r15-beta1-windows-x86.zip</a></td>
-    <td>743,841,310</td>
-    <td>4ba01e6f7c998daa2072e2e0cfd2eb16552a941f</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r15-beta2-windows-x86.zip">android-ndk-r15-beta2-windows-x86.zip</a></td>
+    <td>784608118</td>
+    <td>c5f2461e9a54db4944122e32cddb171649030850</td>
   </tr>
   <tr>
     <td>Windows 64-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r15-beta1-windows-x86_64.zip">android-ndk-r15-beta1-windows-x86_64.zip</a></td>
-    <td>805,442,962</td>
-    <td>c58e0434cc6c6b5b4c346b440da0f972bc6b2be7</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r15-beta2-windows-x86_64.zip">android-ndk-r15-beta2-windows-x86_64.zip</a></td>
+    <td>849562533</td>
+    <td>fcd813ee7535251170d5417b33c810b135c1066a</td>
   </tr>
 </table>
 
