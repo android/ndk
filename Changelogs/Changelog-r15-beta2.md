@@ -36,16 +36,16 @@ Announcements
 APIs
 ====
 
- * Added native APIs for Android O Developer Preview. To learn more about
-   these APIs, see the [Native APIs overview].
-    * [`<aaudio/AAudio.h`>]
-    * [`<android/hardware_buffer.h>`]
-    * [`<android/sharedmem.h>`]
+ * Added native APIs for Android O Beta 1. To learn more about these APIs, see
+   the [Native APIs overview].
+    * [AAudio API]
+    * [Hardware Buffer API]
+    * [Shared Memory API]
 
 [Native APIs overview]: https://developer.android.com/ndk/guides/stable_apis.html#a26
-[`<aaudio/AAudio.h`>]: https://developer.android.com/ndk/reference/a_audio_8h.html
-[`<android/hardware_buffer.h>`]: https://developer.android.com/ndk/reference/hardware__buffer_8h.html
-[`<android/sharedmem.h>`]: https://developer.android.com/ndk/reference/sharedmem_8h.html
+[AAudio API]: https://developer.android.com/ndk/reference/a_audio_8h.html
+[Hardware Buffer API]: https://developer.android.com/ndk/reference/hardware__buffer_8h.html
+[Shared Memory API]: https://developer.android.com/ndk/reference/sharedmem_8h.html
 
 NDK
 ===
@@ -72,3 +72,7 @@ Known Issues
  * This is not intended to be a comprehensive list of all outstanding bugs.
  * gabi++ (and therefore stlport) binaries can segfault when built for armeabi:
    https://github.com/android-ndk/ndk/issues/374.
+ * MIPS64 must use the integrated assembler. Clang defaults to using binutils
+   rather than the integrated assmebler for this target. ndk-build and cmake
+   handle this for you, but make sure to use `-fintegrated-as` for MIPS64 for
+   custom build systems. See https://github.com/android-ndk/ndk/issues/399.
