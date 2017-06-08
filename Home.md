@@ -1,19 +1,17 @@
 Release Schedule
 ----------------
 
-Note: This is all new, so this might be a little rocky for the near future.
-
 The NDK has stable releases on a roughly quarterly basis, with a beta release every month.
 
 The betas serve two purposes: you can let us know early if we've broken your app so we can address the issue before release, and you can verify that the fix for a bug really does solve your problem.
 
 The betas should not be used for production.
 
-### NDK r15
+### NDK r16
 
-Beta 1: 7 April 2017 (available now!)  
-Beta 2: 17 May 2017 (available now!)  
-Release: 8 June June 2017
+Beta 1: July 2017  
+Beta 2: August 2017  
+Release: September 2017
 
 Downloads
 ---------
