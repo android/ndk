@@ -20,6 +20,47 @@ Downloads
 
 ### Current Stable Release
 
+[[r15 Changelog|Changelog-r15]]
+
+<table>
+  <tr>
+    <th>Platform</th>
+    <th>Package</th>
+    <th>Size (bytes)</th>
+    <th>SHA1 Checksum</th>
+  </tr>
+  <tr>
+    <td>Linux</td>
+    <td><a
+href="https://dl.google.com/android/repository/android-ndk-r15-linux-x86_64.zip">android-ndk-r15-linux-x86_64.zip</a></td>
+    <td>973898016</td>
+    <td>32b3115357ed798a8a48d7d589ffcb901693c745</td>
+  </tr>
+  <tr>
+    <td>Mac OS X</td>
+    <td><a
+href="https://dl.google.com/android/repository/android-ndk-r15-darwin-x86_64.zip">android-ndk-r15-darwin-x86_64.zip</a></td>
+    <td>959176682</td>
+    <td>9dd0ff18d177ec75797b021a3ebd294362e8a41e</td>
+  </tr>
+  <tr>
+    <td>Windows 32-bit</td>
+    <td><a
+href="https://dl.google.com/android/repository/android-ndk-r15-windows-x86.zip">android-ndk-r15-windows-x86.zip</a></td>
+    <td>783705009</td>
+    <td>bf869b624f6d4778065d5d4703815b0c689069e1</td>
+  </tr>
+  <tr>
+    <td>Windows 64-bit</td>
+    <td><a
+href="https://dl.google.com/android/repository/android-ndk-r15-windows-x86_64.zip">android-ndk-r15-windows-x86_64.zip</a></td>
+    <td>848657615</td>
+    <td>45d310443ceb5ff19a0dde139ee9b3404908c178</td>
+  </tr>
+</table>
+
+### r14b
+
 [[r14b Changelog|Changelog-r14]]
 
 <table>
@@ -52,43 +93,6 @@ Downloads
     <td><a href="https://dl.google.com/android/repository/android-ndk-r14b-windows-x86_64.zip">android-ndk-r14b-windows-x86_64.zip</a></td>
     <td>769151176</td>
     <td>a625e8c599bccdb9061b61dcf3d1f1a01071613f</td>
-  </tr>
-</table>
-
-### Current Beta Release
-
-[[r15 beta 2 Changelog|Changelog-r15-beta2]]
-
-<table>
-  <tr>
-    <th>Platform</th>
-    <th>Package</th>
-    <th>Size (bytes)</th>
-    <th>SHA1 Checksum</th>
-  </tr>
-  <tr>
-    <td>Linux</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r15-beta2-linux-x86_64.zip">android-ndk-r15-beta2-linux-x86_64.zip</a></td>
-    <td>974820298</td>
-    <td>408f9a84ee3780d519abe4b37358ede49d93afd0</td>
-  </tr>
-  <tr>
-    <td>Mac OS X</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r15-beta2-darwin-x86_64.zip">android-ndk-r15-beta2-darwin-x86_64.zip</a></td>
-    <td>960119357</td>
-    <td>072507f69edd2f2c2ca98c3b19f2ce7cc20170f9</td>
-  </tr>
-  <tr>
-    <td>Windows 32-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r15-beta2-windows-x86.zip">android-ndk-r15-beta2-windows-x86.zip</a></td>
-    <td>784608118</td>
-    <td>c5f2461e9a54db4944122e32cddb171649030850</td>
-  </tr>
-  <tr>
-    <td>Windows 64-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r15-beta2-windows-x86_64.zip">android-ndk-r15-beta2-windows-x86_64.zip</a></td>
-    <td>849562533</td>
-    <td>fcd813ee7535251170d5417b33c810b135c1066a</td>
   </tr>
 </table>
 
