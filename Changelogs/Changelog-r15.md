@@ -32,7 +32,7 @@ Announcements
 
 [Unified Headers]: https://android.googlesource.com/platform/ndk/+/ndk-r15-release/docs/UnifiedHeaders.md
 [Unified Headers Migration Notes]: https://android.googlesource.com/platform/ndk/+/ndk-r15-release/docs/UnifiedHeadersMigration.md
-[YASM in CMake]: https://android-dot-devsite.googleplex.com/ndk/guides/cmake.html#yasm-cmake
+[YASM in CMake]: https://developer.android.com/ndk/guides/cmake.html#yasm-cmake
 
 APIs
 ====
