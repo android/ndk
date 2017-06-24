@@ -34,6 +34,14 @@ Announcements
 [Unified Headers Migration Notes]: https://android.googlesource.com/platform/ndk/+/ndk-r15-release/docs/UnifiedHeadersMigration.md
 [YASM in CMake]: https://developer.android.com/ndk/guides/cmake.html#yasm-cmake
 
+r15b
+====
+
+ * Fix libsync header/library mismatch:
+   https://issuetracker.google.com/62229958.
+ * Several libc header updates to improve compatibility with code written for
+   other systems.
+
 APIs
 ====
 
