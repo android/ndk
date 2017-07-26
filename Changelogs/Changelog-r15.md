@@ -34,8 +34,22 @@ Announcements
 [Unified Headers Migration Notes]: https://android.googlesource.com/platform/ndk/+/ndk-r15-release/docs/UnifiedHeadersMigration.md
 [YASM in CMake]: https://developer.android.com/ndk/guides/cmake.html#yasm-cmake
 
+r15c
+----
+
+ * Fixes for `_FILE_OFFSET_BITS=64` APIs. See
+   https://github.com/android-ndk/ndk/issues/459 and
+   https://github.com/android-ndk/ndk/issues/442.
+ * Fix termios.h APIs for old target APIs. See
+   https://github.com/android-ndk/ndk/issues/441.
+ * Added an inline for `ffs` to maintain compatibility with the deprecated
+   headers. See https://github.com/android-ndk/ndk/issues/439.
+ * Added legacy pthread API declarations for compatibility with old releases.
+   See https://github.com/android-ndk/ndk/issues/420 and
+   https://github.com/android-ndk/ndk/issues/423.
+
 r15b
-====
+----
 
  * Fix libsync header/library mismatch:
    https://issuetracker.google.com/62229958.
@@ -43,7 +57,7 @@ r15b
    other systems.
 
 APIs
-====
+----
 
  * Added native APIs for Android O. To learn more about these APIs, see the
    [Native APIs overview].
@@ -57,12 +71,12 @@ APIs
 [Shared Memory API]: https://developer.android.com/ndk/reference/sharedmem_8h.html
 
 NDK
-===
+---
 
  * `awk` is no longer in the NDK. We've replaced all uses of awk with Python.
 
 Clang
-=====
+-----
 
  * Clang has been updated to build 4053586. This is built from Clang 5.0 SVN at
    r300080.
@@ -70,7 +84,7 @@ Clang
    https://github.com/android-ndk/ndk/issues/9.
 
 libc++
-======
+------
 
  * We've begun slimming down and improving `libandroid_support` to fix libc++
    reliability issues. https://github.com/android-ndk/ndk/issues/300.

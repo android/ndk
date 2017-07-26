@@ -18,7 +18,7 @@ Downloads
 
 ### Current Stable Release
 
-[[r15b Changelog|Changelog-r15]]
+[[r15c Changelog|Changelog-r15]]
 
 <table>
   <tr>
@@ -29,27 +29,27 @@ Downloads
   </tr>
   <tr>
     <td>Linux</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r15b-linux-x86_64.zip">android-ndk-r15b-linux-x86_64.zip</a></td>
-    <td>974035125</td>
-    <td>2690d416e54f88f7fa52d0dcb5f539056a357b3b</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r15c-linux-x86_64.zip">android-ndk-r15c-linux-x86_64.zip</a></td>
+    <td>974976754</td>
+    <td>0bf02d4e8b85fd770fd7b9b2cdec57f9441f27a2</td>
   </tr>
   <tr>
     <td>Mac OS X</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r15b-darwin-x86_64.zip">android-ndk-r15b-darwin-x86_64.zip</a></td>
-    <td>959321525</td>
-    <td>05e3eec7e9ce1d09bb5401b41cf778a2ec19c819</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r15c-darwin-x86_64.zip">android-ndk-r15c-darwin-x86_64.zip</a></td>
+    <td>960251267</td>
+    <td>ea4b5d76475db84745aa8828000d009625fc1f98</td>
   </tr>
   <tr>
     <td>Windows 32-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r15b-windows-x86.zip">android-ndk-r15b-windows-x86.zip</a></td>
-    <td>783838327</td>
-    <td>74e45891d0cc99b077b3951aeba87d9c91df20a8</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r15c-windows-x86.zip">android-ndk-r15c-windows-x86.zip</a></td>
+    <td>784778144</td>
+    <td>f2e47121feb73ec34ced5e947cbf1adc6b56246e</td>
   </tr>
   <tr>
     <td>Windows 64-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r15b-windows-x86_64.zip">android-ndk-r15b-windows-x86_64.zip</a></td>
-    <td>848796389</td>
-    <td>126a1cd8985132c0383ab96579feed09ba402e22</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r15c-windows-x86_64.zip">android-ndk-r15c-windows-x86_64.zip</a></td>
+    <td>849733996</td>
+    <td>970bb2496de0eada74674bb1b06d79165f725696</td>
   </tr>
 </table>
 
