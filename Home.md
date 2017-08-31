@@ -9,7 +9,7 @@ The betas should not be used for production.
 
 ### NDK r16
 
-Beta 1: August 2017  
+Beta 1: Released!
 Beta 2: September 2017  
 Release: Late September 2017
 
