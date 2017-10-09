@@ -14,7 +14,21 @@ Delete everything above this line before submitting.
 
 #### Description
 
-Bug description goes here.
+Bug description goes here. Include a test case. It's unlikely that anything can
+be done without a test case.
+
+Bug reports with better test cases will be resolved sooner than those with bad
+test cases. A good test case:
+
+ * Is as small as possible while still exposing the bug.
+ * Does not require Android Studio or Gradle (if your bug cannot be reproduced
+   without either of those, it's a bug in Studio or Gradle, and should be
+   reported to Android Studio).
+ * Is complete. Snippets that would not compile even in the absence of the bug
+   you are reporting slow down the process.
+
+Here's an example of a good test case:
+https://github.com/DanAlbert/dynamic-cast-repro
 
 #### Environment Details
 
