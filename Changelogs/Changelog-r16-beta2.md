@@ -33,8 +33,8 @@ Announcements
 
    Both CMake and ndk-build will issue a warning if you target this ABI.
 
-[Unified Headers]: docs/UnifiedHeaders.md
-[Unified Headers Migration Notes]: docs/UnifiedHeadersMigration.md
+[Unified Headers]: https://android.googlesource.com/platform/ndk/+/ndk-release-r16/docs/UnifiedHeaders.md
+[Unified Headers Migration Notes]: https://android.googlesource.com/platform/ndk/+/ndk-release-r16/docs/UnifiedHeadersMigration.md
 [this blog post]: https://android-developers.googleblog.com/2017/09/introducing-android-native-development.html
 
 NDK
