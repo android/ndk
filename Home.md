@@ -9,9 +9,11 @@ The betas should not be used for production.
 
 ### NDK r16
 
-Beta 1: Released!
-Beta 2: ASAP  
-Release: Mid November
+Release | Expected Release Date
+------- | ---------------------
+Beta 1  | Released!  
+Beta 2  | ASAP  
+Release | Mid November
 
 Downloads
 ---------
