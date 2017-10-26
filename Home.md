@@ -12,7 +12,7 @@ The betas should not be used for production.
 Release | Expected Release Date
 ------- | ---------------------
 Beta 1  | Released!  
-Beta 2  | ASAP  
+Beta 2  | Released!
 Release | Mid November
 
 Downloads
@@ -57,7 +57,7 @@ Downloads
 
 ### Current Beta Release
 
-[[r16 Beta 1 Changelog|Changelog-r16-beta1]]
+[[r16 Beta 2 Changelog|Changelog-r16-beta2]]
 
 <table>
   <tr>
@@ -68,27 +68,27 @@ Downloads
   </tr>
   <tr>
     <td>Linux</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r16-beta1-linux-x86_64.zip">android-ndk-r16-beta1-linux-x86_64.zip</a></td>
-    <td>851503303</td>
-    <td>20affa8bb6c6ce6128894b0c0ceed370cea2e0c2</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r16-beta2-linux-x86_64.zip">android-ndk-r16-beta2-linux-x86_64.zip</a></td>
+    <td>852668017</td>
+    <td>de74f3e73dc48bd18fe29454d08b19bd2e067241</td>
   </tr>
   <tr>
     <td>Mac OS X</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r16-beta1-darwin-x86_64.zip">android-ndk-r16-beta1-darwin-x86_64.zip</a></td>
-    <td>836940391</td>
-    <td>5ff37ebf724bef40ff9e1fbdaab265e0b9754364</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r16-beta2-darwin-x86_64.zip">android-ndk-r16-beta2-darwin-x86_64.zip</a></td>
+    <td>840162946</td>
+    <td>e0691ed9f4d062e2c5e287ac3e6d57b4c5be865e</td>
   </tr>
   <tr>
     <td>Windows 32-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r16-beta1-windows-x86.zip">android-ndk-r16-beta1-windows-x86.zip</a></td>
-    <td>658103256</td>
-    <td>2aacf65266f22233038ac842bc716ca6b5eea4ea</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r16-beta2-windows-x86.zip">android-ndk-r16-beta2-windows-x86.zip</a></td>
+    <td>657237189</td>
+    <td>4cecd0d3420b3497077e8144b54d0a5cc053ea03</td>
   </tr>
   <tr>
     <td>Windows 64-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r16-beta1-windows-x86_64.zip">android-ndk-r16-beta1-windows-x86_64.zip</a></td>
-    <td>723055130</td>
-    <td>e10991652b416f0e97881d68f1c62f81d853f916</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r16-beta2-windows-x86_64.zip">android-ndk-r16-beta2-windows-x86_64.zip</a></td>
+    <td>723823158</td>
+    <td>9045c528037cb0164bf9e8b668e39b11fc83e9d5</td>
   </tr>
 </table>
 
