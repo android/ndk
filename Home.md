@@ -7,18 +7,59 @@ The betas serve two purposes: you can let us know early if we've broken your app
 
 The betas should not be used for production.
 
-### NDK r16
+### NDK r17
 
 Release | Expected Release Date
 ------- | ---------------------
-Beta 1  | Released!  
-Beta 2  | Released!
-Release | Mid November
+Beta 1  | December 2017
+Beta 2  | Late January 2018
+Release | February 2018
 
 Downloads
 ---------
 
 ### Current Stable Release
+
+[[r16 Changelog|Changelog-r16]]
+
+<table>
+  <tr>
+    <th>Platform</th>
+    <th>Package</th>
+    <th>Size (bytes)</th>
+    <th>SHA1 Checksum</th>
+  </tr>
+  <tr>
+    <td>Linux</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r16-linux-x86_64.zip">android-ndk-r16-linux-x86_64.zip</a></td>
+    <td>852190054</td>
+    <td>b7dcb08fa9fa403e3c0bc3f741a445d7f0399e93</td>
+  </tr>
+  <tr>
+    <td>Mac OS X</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r16-darwin-x86_64.zip">android-ndk-r16-darwin-x86_64.zip</a></td>
+    <td>839297758</td>
+    <td>8c24cabc65634701e92ec1422cc658605f51bd33</td>
+  </tr>
+  <tr>
+    <td>Windows 32-bit</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r16-windows-x86.zip">android-ndk-r16-windows-x86.zip</a></td>
+    <td>656389892</td>
+    <td>dc1f53607df74917d1c8528029d265b7dbed5d61</td>
+  </tr>
+  <tr>
+    <td>Windows 64-bit</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r16-windows-x86_64.zip">android-ndk-r16-windows-x86_64.zip</a></td>
+    <td>722970621</td>
+    <td>0aaa1f772a0998ba78d516f877f256c84fc5e56b</td>
+  </tr>
+</table>
+
+### Current Beta Release
+
+None right now. See the release schedule estimates above.
+
+### r15c
 
 [[r15c Changelog|Changelog-r15]]
 
@@ -52,43 +93,6 @@ Downloads
     <td><a href="https://dl.google.com/android/repository/android-ndk-r15c-windows-x86_64.zip">android-ndk-r15c-windows-x86_64.zip</a></td>
     <td>849733996</td>
     <td>970bb2496de0eada74674bb1b06d79165f725696</td>
-  </tr>
-</table>
-
-### Current Beta Release
-
-[[r16 Beta 2 Changelog|Changelog-r16-beta2]]
-
-<table>
-  <tr>
-    <th>Platform</th>
-    <th>Package</th>
-    <th>Size (bytes)</th>
-    <th>SHA1 Checksum</th>
-  </tr>
-  <tr>
-    <td>Linux</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r16-beta2-linux-x86_64.zip">android-ndk-r16-beta2-linux-x86_64.zip</a></td>
-    <td>852668017</td>
-    <td>de74f3e73dc48bd18fe29454d08b19bd2e067241</td>
-  </tr>
-  <tr>
-    <td>Mac OS X</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r16-beta2-darwin-x86_64.zip">android-ndk-r16-beta2-darwin-x86_64.zip</a></td>
-    <td>840162946</td>
-    <td>e0691ed9f4d062e2c5e287ac3e6d57b4c5be865e</td>
-  </tr>
-  <tr>
-    <td>Windows 32-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r16-beta2-windows-x86.zip">android-ndk-r16-beta2-windows-x86.zip</a></td>
-    <td>657237189</td>
-    <td>4cecd0d3420b3497077e8144b54d0a5cc053ea03</td>
-  </tr>
-  <tr>
-    <td>Windows 64-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r16-beta2-windows-x86_64.zip">android-ndk-r16-beta2-windows-x86_64.zip</a></td>
-    <td>723823158</td>
-    <td>9045c528037cb0164bf9e8b668e39b11fc83e9d5</td>
   </tr>
 </table>
 
