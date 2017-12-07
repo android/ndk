@@ -39,6 +39,11 @@ Announcements
 [Unified Headers Migration Notes]: https://android.googlesource.com/platform/ndk/+/ndk-release-r16/docs/UnifiedHeadersMigration.md
 [this blog post]: https://android-developers.googleblog.com/2017/09/introducing-android-native-development.html
 
+r16b
+----
+
+ * [Issue 573]: Revert the switch to `-Oz` by default.
+
 NDK
 ---
 
@@ -88,7 +93,9 @@ Known Issues
    using binutils rather than the integrated assembler for this target.
    ndk-build and cmake handle this for you, but make sure to use
    `-fintegrated-as` for MIPS64 for custom build systems.
+ * [Issue 573]: Clang miscompile when using `-Oz` and `-fexceptions`.
 
 [Issue 360]: https://github.com/android-ndk/ndk/issues/360
 [Issue 374]: https://github.com/android-ndk/ndk/issues/374
 [Issue 399]: https://github.com/android-ndk/ndk/issues/399
+[Issue 573]: https://github.com/android-ndk/ndk/issues/573

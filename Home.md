@@ -20,7 +20,7 @@ Downloads
 
 ### Current Stable Release
 
-[[r16 Changelog|Changelog-r16]]
+[[r16b Changelog|Changelog-r16]]
 
 <table>
   <tr>
@@ -31,27 +31,27 @@ Downloads
   </tr>
   <tr>
     <td>Linux</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r16-linux-x86_64.zip">android-ndk-r16-linux-x86_64.zip</a></td>
-    <td>852190054</td>
-    <td>b7dcb08fa9fa403e3c0bc3f741a445d7f0399e93</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r16b-linux-x86_64.zip">android-ndk-r16b-linux-x86_64.zip</a></td>
+    <td>852525873</td>
+    <td>42aa43aae89a50d1c66c3f9fdecd676936da6128</td>
   </tr>
   <tr>
     <td>Mac OS X</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r16-darwin-x86_64.zip">android-ndk-r16-darwin-x86_64.zip</a></td>
-    <td>839297758</td>
-    <td>8c24cabc65634701e92ec1422cc658605f51bd33</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r16b-darwin-x86_64.zip">android-ndk-r16b-darwin-x86_64.zip</a></td>
+    <td>839630771</td>
+    <td>e51e615449b98c716cf912057e2682e75d55e2de</td>
   </tr>
   <tr>
     <td>Windows 32-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r16-windows-x86.zip">android-ndk-r16-windows-x86.zip</a></td>
-    <td>656389892</td>
-    <td>dc1f53607df74917d1c8528029d265b7dbed5d61</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r16b-windows-x86.zip">android-ndk-r16b-windows-x86.zip</a></td>
+    <td>656720029</td>
+    <td>becaf3d445a4877ca1a9300a62f0934a4838c7fa</td>
   </tr>
   <tr>
     <td>Windows 64-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r16-windows-x86_64.zip">android-ndk-r16-windows-x86_64.zip</a></td>
-    <td>722970621</td>
-    <td>0aaa1f772a0998ba78d516f877f256c84fc5e56b</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r16b-windows-x86_64.zip">android-ndk-r16b-windows-x86_64.zip</a></td>
+    <td>723301086</td>
+    <td>f3f1909ed1052e98dda2c79d11c22f3da28daf25</td>
   </tr>
 </table>
 
