@@ -18,13 +18,12 @@ Announcements
    `libc++`. Note that ndk-build still defaults to no STL. For more details, see
    [this blog post](https://android-developers.googleblog.com/2017/09/introducing-android-native-development.html).
 
- * gnustl, gabi++, and stlport have been removed.
+ * gnustl and stlport are deprecated and will be removed in NDK r18.
 
  * Support for ARMv5 (armeabi), MIPS, and MIPS64 has been removed. Attempting to
    build any of these ABIs will result in an error.
 
- * Support for ICS (android-14 and android-15) has been removed. Apps using
-   executables no longer need to provide both a PIE and non-PIE executable.
+ * Support for ICS (android-14 and android-15) will be removed from r18.
 
  * The Play Store will require 64-bit support when uploading an APK beginning in
    August 2019. Start porting now to avoid surprises when the time comes. For
@@ -79,21 +78,9 @@ Changes
  * [Issue 614]: ndk-build and CMake no longer pass `-fno-integrated-as` for
    arm32 by default.  If your project contains hand written assembly, you may
    need to pass this flag.
- * Added support for clang-tidy to ndk-build.
-       * Enable application-wide with `APP_CLANG_TIDY := true`, or per-module
-         with `LOCAL_CLANG_TIDY := true`.
-       * Pass specific clang-tidy flags such as `-checks` with
-         `APP_CLANG_TIDY_FLAGS` or `LOCAL_CLANG_TIDY_FLAGS`.
-       * As usual, module settings override application settings.
-       * By default no flags are passed to clang-tidy, so only the checks
-         enabled by default in clang-tidy will be enabled. View the default list
-         with `clang-tidy -list-checks`.
-       * By default clang-tidy warnings are not errors. This behavior can be
-         changed with `-warnings-as-errors=*`.
 
 [Undefined Behavior Sanitizer]: https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
 [wrap.sh]: https://developer.android.com/ndk/guides/wrap-script.html
-[clang-tidy]: http://clang.llvm.org/extra/clang-tidy/
 [Issue 313]: https://github.com/android-ndk/ndk/issues/313
 [Issue 527]: https://github.com/android-ndk/ndk/issues/527
 [Issue 540]: https://github.com/android-ndk/ndk/issues/540
