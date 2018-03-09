@@ -11,7 +11,7 @@ The betas should not be used for production.
 
 Release | Expected Release Date
 ------- | ---------------------
-Beta 1  | March 2018
+Beta 1  | Released
 Beta 2  | April 2018
 Release | May 2018
 
@@ -57,7 +57,44 @@ Downloads
 
 ### Current Beta Release
 
-None right now. See the release schedule estimates above.
+[[r17 Beta 1 Changelog|Changelog-r17-beta1]]
+
+<table>
+  <tr>
+    <th>Platform</th>
+    <th>Package</th>
+    <th>Size (bytes)</th>
+    <th>SHA1 Checksum</th>
+  </tr>
+  <tr>
+    <td>Linux</td>
+    <td><a
+href="https://dl.google.com/android/repository/android-ndk-r17-beta1-linux-x86_64.zip">android-ndk-r17-beta1-linux-x86_64.zip</a></td>
+    <td>715889701</td>
+    <td>a33bcaff39821fe6d6270387e63d87f27bb4e56c</td>
+  </tr>
+  <tr>
+    <td>Mac OS X</td>
+    <td><a
+href="https://dl.google.com/android/repository/android-ndk-r17-beta1-darwin-x86_64.zip">android-ndk-r17-beta1-darwin-x86_64.zip</a></td>
+    <td>679061122</td>
+    <td>883d7d1be3007637de7f2f2cb1f1bb66193d89e0</td>
+  </tr>
+  <tr>
+    <td>Windows 32-bit</td>
+    <td><a
+href="https://dl.google.com/android/repository/android-ndk-r17-beta1-windows-x86.zip">android-ndk-r17-beta1-windows-x86.zip</a></td>
+    <td>602792381</td>
+    <td>aefad1083f3171980694513902de99099371d1ab</td>
+  </tr>
+  <tr>
+    <td>Windows 64-bit</td>
+    <td><a
+href="https://dl.google.com/android/repository/android-ndk-r17-beta1-windows-x86_64.zip">android-ndk-r17-beta1-windows-x86_64.zip</a></td>
+    <td>645025891</td>
+    <td>a511166709995304059a4c804af62b237cb0f19d</td>
+  </tr>
+</table>
 
 ### r15c
 
