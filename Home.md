@@ -57,7 +57,7 @@ Downloads
 
 ### Current Beta Release
 
-[[r17 Beta 1 Changelog|Changelog-r17-beta1]]
+[[r17 Beta 2 Changelog|Changelog-r17-beta2]]
 
 <table>
   <tr>
@@ -68,31 +68,27 @@ Downloads
   </tr>
   <tr>
     <td>Linux</td>
-    <td><a
-href="https://dl.google.com/android/repository/android-ndk-r17-beta1-linux-x86_64.zip">android-ndk-r17-beta1-linux-x86_64.zip</a></td>
-    <td>715889701</td>
-    <td>a33bcaff39821fe6d6270387e63d87f27bb4e56c</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r17-beta2-linux-x86_64.zip">android-ndk-r17-beta2-linux-x86_64.zip</a></td>
+    <td>703552974</td>
+    <td>e1eebae781abcf3a0382f58142566dd71206840e</td>
   </tr>
   <tr>
     <td>Mac OS X</td>
-    <td><a
-href="https://dl.google.com/android/repository/android-ndk-r17-beta1-darwin-x86_64.zip">android-ndk-r17-beta1-darwin-x86_64.zip</a></td>
-    <td>679061122</td>
-    <td>883d7d1be3007637de7f2f2cb1f1bb66193d89e0</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r17-beta2-darwin-x86_64.zip">android-ndk-r17-beta2-darwin-x86_64.zip</a></td>
+    <td>669857652</td>
+    <td>951c977a4e3d3dd6cc9f1ddc7e03f9d73efc3aea</td>
   </tr>
   <tr>
     <td>Windows 32-bit</td>
-    <td><a
-href="https://dl.google.com/android/repository/android-ndk-r17-beta1-windows-x86.zip">android-ndk-r17-beta1-windows-x86.zip</a></td>
-    <td>602792381</td>
-    <td>aefad1083f3171980694513902de99099371d1ab</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r17-beta2-windows-x86.zip">android-ndk-r17-beta2-windows-x86.zip</a></td>
+    <td>602826806</td>
+    <td>5df2e18be97ae408e88e8d7f19fd8de0ba2bbf1f</td>
   </tr>
   <tr>
     <td>Windows 64-bit</td>
-    <td><a
-href="https://dl.google.com/android/repository/android-ndk-r17-beta1-windows-x86_64.zip">android-ndk-r17-beta1-windows-x86_64.zip</a></td>
-    <td>645025891</td>
-    <td>a511166709995304059a4c804af62b237cb0f19d</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r17-beta2-windows-x86_64.zip">android-ndk-r17-beta2-windows-x86_64.zip</a></td>
+    <td>645041402</td>
+    <td>2a22d91e06a8e77a525779e18993d7d1d3fb7b60</td>
   </tr>
 </table>
 
