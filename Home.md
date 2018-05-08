@@ -20,6 +20,43 @@ Downloads
 
 ### Current Stable Release
 
+[[r17 Changelog|Changelog-r17]]
+
+<table>
+  <tr>
+    <th>Platform</th>
+    <th>Package</th>
+    <th>Size (bytes)</th>
+    <th>SHA1 Checksum</th>
+  </tr>
+  <tr>
+    <td>Linux</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r17-linux-x86_64.zip">android-ndk-r17-linux-x86_64.zip</a></td>
+    <td>706134114</td>
+    <td>1d886a64483adf3f3a3e3aaf7ac5084184006ac7</td>
+  </tr>
+  <tr>
+    <td>Mac OS X</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r17-darwin-x86_64.zip">android-ndk-r17-darwin-x86_64.zip</a></td>
+    <td>672193611</td>
+    <td>08015290bf88ba8fb348d7f5380929c2106524b3</td>
+  </tr>
+  <tr>
+    <td>Windows 32-bit</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r17-windows-x86.zip">android-ndk-r17-windows-x86.zip</a></td>
+    <td>605250211</td>
+    <td>22018a545e3e1f4236f65a2074ab2d66ef3f9a92</td>
+  </tr>
+  <tr>
+    <td>Windows 64-bit</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r17-windows-x86_64.zip">android-ndk-r17-windows-x86_64.zip</a></td>
+    <td>647471060</td>
+    <td>7856db171bd58a99d77158b9828c6c43453ae12d</td>
+  </tr>
+</table>
+
+### r16b
+
 [[r16b Changelog|Changelog-r16]]
 
 <table>
@@ -52,43 +89,6 @@ Downloads
     <td><a href="https://dl.google.com/android/repository/android-ndk-r16b-windows-x86_64.zip">android-ndk-r16b-windows-x86_64.zip</a></td>
     <td>723301086</td>
     <td>f3f1909ed1052e98dda2c79d11c22f3da28daf25</td>
-  </tr>
-</table>
-
-### Current Beta Release
-
-[[r17 Beta 2 Changelog|Changelog-r17-beta2]]
-
-<table>
-  <tr>
-    <th>Platform</th>
-    <th>Package</th>
-    <th>Size (bytes)</th>
-    <th>SHA1 Checksum</th>
-  </tr>
-  <tr>
-    <td>Linux</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r17-beta2-linux-x86_64.zip">android-ndk-r17-beta2-linux-x86_64.zip</a></td>
-    <td>703552974</td>
-    <td>e1eebae781abcf3a0382f58142566dd71206840e</td>
-  </tr>
-  <tr>
-    <td>Mac OS X</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r17-beta2-darwin-x86_64.zip">android-ndk-r17-beta2-darwin-x86_64.zip</a></td>
-    <td>669857652</td>
-    <td>951c977a4e3d3dd6cc9f1ddc7e03f9d73efc3aea</td>
-  </tr>
-  <tr>
-    <td>Windows 32-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r17-beta2-windows-x86.zip">android-ndk-r17-beta2-windows-x86.zip</a></td>
-    <td>602826806</td>
-    <td>5df2e18be97ae408e88e8d7f19fd8de0ba2bbf1f</td>
-  </tr>
-  <tr>
-    <td>Windows 64-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r17-beta2-windows-x86_64.zip">android-ndk-r17-beta2-windows-x86_64.zip</a></td>
-    <td>645041402</td>
-    <td>2a22d91e06a8e77a525779e18993d7d1d3fb7b60</td>
   </tr>
 </table>
 
