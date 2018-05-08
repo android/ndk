@@ -7,13 +7,13 @@ The betas serve two purposes: you can let us know early if we've broken your app
 
 The betas should not be used for production.
 
-### NDK r17
+### NDK r18
 
 Release | Expected Release Date
 ------- | ---------------------
-Beta 1  | Released
-Beta 2  | April 2018
-Release | May 2018
+Beta 1  | June 2018
+Beta 2  | July 2018
+Release | August 2018
 
 Downloads
 ---------
