@@ -29,6 +29,24 @@ Announcements
    August 2019. Start porting now to avoid surprises when the time comes. For
    more information, see [this blog post](https://android-developers.googleblog.com/2017/12/improving-app-security-and-performance.html).
 
+r17b
+----
+
+ * [Issue 480]: Fixed libc++ header issues with `_FILE_OFFSET_BITS=64`.
+ * [Issue 692]: Fixed ASAN for standalone toolchains with static STLs.
+ * [Issue 697]: Pulled documentation updates for simpleperf.
+ * [Issue 702]: Updated sysroot to fix missing libc symbols.
+ * [Issue 704]: Updated shaderc/vulkan-validation-layers sources.
+ * [Issue 708]: Fixed introduced API tag for
+   `pthread_cond_timedwait_monotonic_nmp` to make it available on ICS.
+
+[Issue 480]: https://github.com/android-ndk/ndk/issues/480
+[Issue 692]: https://github.com/android-ndk/ndk/issues/692
+[Issue 697]: https://github.com/android-ndk/ndk/issues/697
+[Issue 702]: https://github.com/android-ndk/ndk/issues/702
+[Issue 704]: https://github.com/android-ndk/ndk/issues/704
+[Issue 708]: https://github.com/android-ndk/ndk/issues/708
+
 Changes
 -------
 
