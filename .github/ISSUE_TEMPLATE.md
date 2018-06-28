@@ -37,7 +37,7 @@ information as you can.
 
 * NDK Version: Value from Pkg.Revision in ndk-bundle/source.properties. If not
   the latest version, check there before filing.
-* Build sytem: ndk-build? cmake? standalone toolchain? custom? (if gradle, file
+* Build system: ndk-build? cmake? standalone toolchain? custom? (if gradle, file
   a bug against studio as specified above)
 * Host OS: Windows, Mac, or Linux? Which Linux?
 * Compiler: If GCC, check Clang before filing. GCC is no longer supported.
