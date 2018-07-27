@@ -55,6 +55,43 @@ Downloads
   </tr>
 </table>
 
+### Current Beta Release
+
+[[r18 Beta 1 Changelog|Changelog-r18-beta1]]
+
+<table>
+  <tr>
+    <th>Platform</th>
+    <th>Package</th>
+    <th>Size (bytes)</th>
+    <th>SHA1 Checksum</th>
+  </tr>
+  <tr>
+    <td>Linux</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r18-beta1-linux-x86_64.zip">android-ndk-r18-beta1-linux-x86_64.zip</a></td>
+    <td>551215557</td>
+    <td>fe48720342a065b3c42a5f4a660c109ff0991b00</td>
+  </tr>
+  <tr>
+    <td>Mac OS X</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r18-beta1-darwin-x86_64.zip">android-ndk-r18-beta1-darwin-x86_64.zip</a></td>
+    <td>537204720</td>
+    <td>5f2583496b38aa0a2d0ee950c3aaf1f67fe57828</td>
+  </tr>
+  <tr>
+    <td>Windows 32-bit</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r18-beta1-windows-x86.zip">android-ndk-r18-beta1-windows-x86.zip</a></td>
+    <td>498973636</td>
+    <td>dfcaee519bbf6a028f5a5e20aeb003940afa5333</td>
+  </tr>
+  <tr>
+    <td>Windows 64-bit</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r18-beta1-windows-x86_64.zip">android-ndk-r18-beta1-windows-x86_64.zip</a></td>
+    <td>516849818</td>
+    <td>9a8dddd46b4fc7b46cf647117cbc9ac0e7aea171</td>
+  </tr>
+</table>
+
 ### r16b
 
 [[r16b Changelog|Changelog-r16]]
