@@ -11,7 +11,7 @@ The betas should not be used for production.
 
 Release | Expected Release Date
 ------- | ---------------------
-Beta 1  | Released
+Beta 1  | Released (https://developer.android.com/ndk/downloads/)
 Beta 2  | August 2018
 Release | September 2018
 
