@@ -12,7 +12,7 @@ The betas should not be used for production.
 Release | Expected Release Date
 ------- | ---------------------
 Beta 1  | Released (https://developer.android.com/ndk/downloads/)
-Beta 2  | August 2018
+Beta 2  | Released (https://developer.android.com/ndk/downloads/)
 Release | September 2018
 
 Downloads
@@ -57,7 +57,7 @@ Downloads
 
 ### Current Beta Release
 
-[[r18 Beta 1 Changelog|Changelog-r18-beta1]]
+[[r18 Beta 2 Changelog|Changelog-r18-beta2]]
 
 <table>
   <tr>
@@ -68,27 +68,27 @@ Downloads
   </tr>
   <tr>
     <td>Linux</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r18-beta1-linux-x86_64.zip">android-ndk-r18-beta1-linux-x86_64.zip</a></td>
-    <td>551215557</td>
-    <td>fe48720342a065b3c42a5f4a660c109ff0991b00</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r18-beta2-linux-x86_64.zip">android-ndk-r18-beta2-linux-x86_64.zip</a></td>
+    <td>557098556</td>
+    <td>0bc218b4212ed30a31904dc75ffead6ecc9bbd30</td>
   </tr>
   <tr>
     <td>Mac OS X</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r18-beta1-darwin-x86_64.zip">android-ndk-r18-beta1-darwin-x86_64.zip</a></td>
-    <td>537204720</td>
-    <td>5f2583496b38aa0a2d0ee950c3aaf1f67fe57828</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r18-beta2-darwin-x86_64.zip">android-ndk-r18-beta2-darwin-x86_64.zip</a></td>
+    <td>542964057</td>
+    <td>56e2e0a6882d7eecaff1979f577313b6e1922921</td>
   </tr>
   <tr>
     <td>Windows 32-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r18-beta1-windows-x86.zip">android-ndk-r18-beta1-windows-x86.zip</a></td>
-    <td>498973636</td>
-    <td>dfcaee519bbf6a028f5a5e20aeb003940afa5333</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r18-beta2-windows-x86.zip">android-ndk-r18-beta2-windows-x86.zip</a></td>
+    <td>504659468</td>
+    <td>872df6fb9fc7d38315e1281439c8637a6ee3091d</td>
   </tr>
   <tr>
     <td>Windows 64-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r18-beta1-windows-x86_64.zip">android-ndk-r18-beta1-windows-x86_64.zip</a></td>
-    <td>516849818</td>
-    <td>9a8dddd46b4fc7b46cf647117cbc9ac0e7aea171</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r18-beta2-windows-x86_64.zip">android-ndk-r18-beta2-windows-x86_64.zip</a></td>
+    <td>522543006</td>
+    <td>64e1f243e5941c30799868fd0476c143d0ec585b</td>
   </tr>
 </table>
 
