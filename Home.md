@@ -20,7 +20,7 @@ Downloads
 
 ### Current Stable Release
 
-[[r17b Changelog|Changelog-r17]]
+[[r17c Changelog|Changelog-r17]]
 
 <table>
   <tr>
@@ -31,27 +31,27 @@ Downloads
   </tr>
   <tr>
     <td>Linux</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r17b-linux-x86_64.zip">android-ndk-r17b-linux-x86_64.zip</a></td>
-    <td>709381607</td>
-    <td>dd5762ee7ef4995ad04fe0c45a608c344d99ca9f</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r17c-linux-x86_64.zip">android-ndk-r17c-linux-x86_64.zip</a></td>
+    <td>709387703</td>
+    <td>12cacc70c3fd2f40574015631c00f41fb8a39048</td>
   </tr>
   <tr>
     <td>Mac OS X</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r17b-darwin-x86_64.zip">android-ndk-r17b-darwin-x86_64.zip</a></td>
-    <td>675091244</td>
-    <td>f990aafaffec0b583d2c5420bfa622e52ac14248</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r17c-darwin-x86_64.zip">android-ndk-r17c-darwin-x86_64.zip</a></td>
+    <td>675091485</td>
+    <td>f97e3d7711497e3b4faf9e7b3fa0f0da90bb649c</td>
   </tr>
   <tr>
     <td>Windows 32-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r17b-windows-x86.zip">android-ndk-r17b-windows-x86.zip</a></td>
-    <td>608351759</td>
-    <td>41e4720fc10a993a336c7b416474bc3e1f8fb1e9</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r17c-windows-x86.zip">android-ndk-r17c-windows-x86.zip</a></td>
+    <td>608358310</td>
+    <td>5bb25bf13fa494ee6c3433474c7aa90009f9f6a9</td>
   </tr>
   <tr>
     <td>Windows 64-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r17b-windows-x86_64.zip">android-ndk-r17b-windows-x86_64.zip</a></td>
-    <td>650619341</td>
-    <td>71d2ba2f1618a27a629ce019fc8e46f28ffdd49f</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r17c-windows-x86_64.zip">android-ndk-r17c-windows-x86_64.zip</a></td>
+    <td>650626501</td>
+    <td>3e3b8d1650f9d297d130be2b342db956003f5992</td>
   </tr>
 </table>
 

@@ -29,6 +29,13 @@ Announcements
    August 2019. Start porting now to avoid surprises when the time comes. For
    more information, see [this blog post](https://android-developers.googleblog.com/2017/12/improving-app-security-and-performance.html).
 
+r17c
+----
+
+ * [Issue 112611166]: Fixed "min" value in meta/platforms.json.
+
+[Issue 112611166]: https://issuetracker.google.com/112611166
+
 r17b
 ----
 
