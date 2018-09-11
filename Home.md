@@ -13,7 +13,7 @@ Release | Expected Release Date
 ------- | ---------------------
 Beta 1  | Released (https://developer.android.com/ndk/downloads/)
 Beta 2  | Released (https://developer.android.com/ndk/downloads/)
-Release | September 2018
+Release | Aiming for 2018-09-18
 
 Downloads
 ---------
