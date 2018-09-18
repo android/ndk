@@ -13,12 +13,49 @@ Release | Expected Release Date
 ------- | ---------------------
 Beta 1  | Released (https://developer.android.com/ndk/downloads/)
 Beta 2  | Released (https://developer.android.com/ndk/downloads/)
-Release | Aiming for 2018-09-18
+Release | Released!
 
 Downloads
 ---------
 
 ### Current Stable Release
+
+[[r18 Changelog|Changelog-r18]]
+
+<table>
+  <tr>
+    <th>Platform</th>
+    <th>Package</th>
+    <th>Size (bytes)</th>
+    <th>SHA1 Checksum</th>
+  </tr>
+  <tr>
+    <td>Linux</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r18-linux-x86_64.zip">android-ndk-r18-linux-x86_64.zip</a></td>
+    <td>556932539</td>
+    <td>2ac2e8e1ef73ed551cac3a1479bb28bd49369212</td>
+  </tr>
+  <tr>
+    <td>Mac OS X</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r18-darwin-x86_64.zip">android-ndk-r18-darwin-x86_64.zip</a></td>
+    <td>542799219</td>
+    <td>2070c9a5799671e34b88d383a93af255a5ea260d</td>
+  </tr>
+  <tr>
+    <td>Windows 32-bit</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r18-windows-x86.zip">android-ndk-r18-windows-x86.zip</a></td>
+    <td>504497528</td>
+    <td>c3422e060b3ea955516e86737bf4237b8482d59a</td>
+  </tr>
+  <tr>
+    <td>Windows 64-bit</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r18-windows-x86_64.zip">android-ndk-r18-windows-x86_64.zip</a></td>
+    <td>522376608</td>
+    <td>7fc0e0f94d86ea389bd18761abdc1bae2c005587</td>
+  </tr>
+</table>
+
+### r17c
 
 [[r17c Changelog|Changelog-r17]]
 
@@ -52,43 +89,6 @@ Downloads
     <td><a href="https://dl.google.com/android/repository/android-ndk-r17c-windows-x86_64.zip">android-ndk-r17c-windows-x86_64.zip</a></td>
     <td>650626501</td>
     <td>3e3b8d1650f9d297d130be2b342db956003f5992</td>
-  </tr>
-</table>
-
-### Current Beta Release
-
-[[r18 Beta 2 Changelog|Changelog-r18-beta2]]
-
-<table>
-  <tr>
-    <th>Platform</th>
-    <th>Package</th>
-    <th>Size (bytes)</th>
-    <th>SHA1 Checksum</th>
-  </tr>
-  <tr>
-    <td>Linux</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r18-beta2-linux-x86_64.zip">android-ndk-r18-beta2-linux-x86_64.zip</a></td>
-    <td>557098556</td>
-    <td>0bc218b4212ed30a31904dc75ffead6ecc9bbd30</td>
-  </tr>
-  <tr>
-    <td>Mac OS X</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r18-beta2-darwin-x86_64.zip">android-ndk-r18-beta2-darwin-x86_64.zip</a></td>
-    <td>542964057</td>
-    <td>56e2e0a6882d7eecaff1979f577313b6e1922921</td>
-  </tr>
-  <tr>
-    <td>Windows 32-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r18-beta2-windows-x86.zip">android-ndk-r18-beta2-windows-x86.zip</a></td>
-    <td>504659468</td>
-    <td>872df6fb9fc7d38315e1281439c8637a6ee3091d</td>
-  </tr>
-  <tr>
-    <td>Windows 64-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r18-beta2-windows-x86_64.zip">android-ndk-r18-beta2-windows-x86_64.zip</a></td>
-    <td>522543006</td>
-    <td>64e1f243e5941c30799868fd0476c143d0ec585b</td>
   </tr>
 </table>
 
