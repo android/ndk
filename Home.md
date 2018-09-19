@@ -7,13 +7,13 @@ The betas serve two purposes: you can let us know early if we've broken your app
 
 The betas should not be used for production.
 
-### NDK r18
+### NDK r19
 
 Release | Expected Release Date
 ------- | ---------------------
-Beta 1  | Released (https://developer.android.com/ndk/downloads/)
-Beta 2  | Released (https://developer.android.com/ndk/downloads/)
-Release | Released!
+Beta 1  | October 2018
+Beta 2  | November 2018
+Release | December 2018
 
 Downloads
 ---------
