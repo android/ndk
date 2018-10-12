@@ -27,6 +27,21 @@ Announcements
    August 2019. Start porting now to avoid surprises when the time comes. For
    more information, see [this blog post](https://android-developers.googleblog.com/2017/12/improving-app-security-and-performance.html).
 
+r18b
+----
+
+ * [Issue 799]: Fixed build performance regression in ndk-build caused by
+   compile_commands.json logic.
+ * [Issue 803]: The "GCC" scripts in standalone toolchains now point to the
+   correct Clang.
+ * [Issue 805]: The "GCC" wrappers for Clang now use `-gcc-toolchain`.
+ * [Issue 815]: ndk-build now builds with `-fstack-protector-strong` again.
+
+[Issue 799]: https://github.com/android-ndk/ndk/issues/799
+[Issue 803]: https://github.com/android-ndk/ndk/issues/803
+[Issue 805]: https://github.com/android-ndk/ndk/issues/805
+[Issue 815]: https://github.com/android-ndk/ndk/issues/805
+
 Changes
 -------
 
