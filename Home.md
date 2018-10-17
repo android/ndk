@@ -13,7 +13,7 @@ Release | Expected Release Date
 ------- | ---------------------
 Beta 1  | 23 October 2018 (tentative)
 Beta 2  | 20 November 2018 (tentative)
-Release | December 2018
+Release | 18 December 2018 (tentative)
 
 Downloads
 ---------
