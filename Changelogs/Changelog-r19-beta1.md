@@ -11,11 +11,10 @@ For Android Studio issues, follow the docs on the [Android Studio site].
 Announcements
 -------------
 
- * Developers should begin testing their apps with [LLD](https://lld.llvm.org/).
-   AOSP has switched to using LLD by default and the NDK will use it by default
-   in the next release. BFD and Gold will be removed once LLD has been through a
-   release cycle with no major unresolved issues (estimated r21). Test LLD in
-   your app by passing `-fuse-ld=lld` when linking.
+ * [LLD](https://lld.llvm.org/) is now available for testing. AOSP is in the
+   process of switching to using LLD by default and the NDK will follow
+   (timeline unknown). Test LLD in your app by passing `-fuse-ld=lld` when
+   linking.
 
  * The Play Store will require 64-bit support when uploading an APK beginning in
    August 2019. Start porting now to avoid surprises when the time comes. For
