@@ -12,8 +12,8 @@ The betas should not be used for production.
 Release | Expected Release Date
 ------- | ---------------------
 Beta 1  | Released
-Beta 2  | 20 November 2018 (tentative)
-Release | 18 December 2018 (tentative)
+Beta 2  | 11 December 2018 (tentative)
+Release | 15 January 2019 (tentative)
 
 Downloads
 ---------
