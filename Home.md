@@ -12,7 +12,7 @@ The betas should not be used for production.
 Release | Expected Release Date
 ------- | ---------------------
 Beta 1  | Released
-Beta 2  | 11 December 2018 (tentative)
+Beta 2  | Released
 Release | 15 January 2019 (tentative)
 
 Downloads
@@ -57,7 +57,7 @@ Downloads
 
 ### Current Beta Release
 
-[[r19 Beta 1 Changelog|Changelog-r19-beta1]]
+[[r19 Beta 2 Changelog|Changelog-r19-beta2]]
 
 <table>
   <tr>
@@ -68,27 +68,27 @@ Downloads
   </tr>
   <tr>
     <td>Linux</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r19-beta1-linux-x86_64.zip">android-ndk-r19-beta1-linux-x86_64.zip</a></td>
-    <td>835069622</td>
-    <td>73e750310ad695ac937e2fd3026ce60338a2ff94</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r19-beta2-linux-x86_64.zip">android-ndk-r19-beta2-linux-x86_64.zip</a></td>
+    <td>823418867</td>
+    <td>1a5dcf4e78956656de205172a49ae88d52d273ee</td>
   </tr>
   <tr>
     <td>Mac OS X</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r19-beta1-darwin-x86_64.zip">android-ndk-r19-beta1-darwin-x86_64.zip</a></td>
-    <td>843747434</td>
-    <td>1d87704cc57627a76645db3b7f951510ca8809f6</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r19-beta2-darwin-x86_64.zip">android-ndk-r19-beta2-darwin-x86_64.zip</a></td>
+    <td>807739879</td>
+    <td>eee9064b39551d13bbd5a8d7975f9112f1bf7ae0</td>
   </tr>
   <tr>
     <td>Windows 32-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r19-beta1-windows-x86.zip">android-ndk-r19-beta1-windows-x86.zip</a></td>
-    <td>772700612</td>
-    <td>d57eeafae6083ef5db5e1e30ce89dcef069d74cc</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r19-beta2-windows-x86.zip">android-ndk-r19-beta2-windows-x86.zip</a></td>
+    <td>778322307</td>
+    <td>56246ecc34dee98a8afb44a74b631b81e931d476</td>
   </tr>
   <tr>
     <td>Windows 64-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r19-beta1-windows-x86_64.zip">android-ndk-r19-beta1-windows-x86_64.zip</a></td>
-    <td>801200809</td>
-    <td>13a97040b9e2e1f117eb4b7b3be7fe8f962cb7d7</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r19-beta2-windows-x86_64.zip">android-ndk-r19-beta2-windows-x86_64.zip</a></td>
+    <td>795761090</td>
+    <td>bac146e86f1c49b39c3774b7eb3f7a027e45b140</td>
   </tr>
 </table>
 
