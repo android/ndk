@@ -1,3 +1,13 @@
+---
+name: Bug report
+about: Bugs related to the NDK itself. ndk-build, compiler, CMake toolchain file,
+  sysroot, etc.
+title: "[BUG]"
+labels: bug
+assignees: ''
+
+---
+
 **Note**: Bugs against Android Studio or Gradle should be filed at
 http://b.android.com, not here.
 
