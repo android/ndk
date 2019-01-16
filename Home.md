@@ -7,18 +7,55 @@ The betas serve two purposes: you can let us know early if we've broken your app
 
 The betas should not be used for production.
 
-### NDK r19
+### NDK r20
 
 Release | Expected Release Date
 ------- | ---------------------
-Beta 1  | Released
-Beta 2  | Released
-Release | 15 January 2019 (tentative)
+Beta 1  | February 2019
+Beta 2  | March 2019
+Release | April 2019
 
 Downloads
 ---------
 
 ### Current Stable Release
+
+[[r19 Changelog|Changelog-r19]]
+
+<table>
+  <tr>
+    <th>Platform</th>
+    <th>Package</th>
+    <th>Size (bytes)</th>
+    <th>SHA1 Checksum</th>
+  </tr>
+  <tr>
+    <td>Linux</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r19-linux-x86_64.zip">android-ndk-r19-linux-x86_64.zip</a></td>
+    <td>823337344</td>
+    <td>f02ad84cb5b6e1ff3eea9e6168037c823408c8ac</td>
+  </tr>
+  <tr>
+    <td>Mac OS X</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r19-darwin-x86_64.zip">android-ndk-r19-darwin-x86_64.zip</a></td>
+    <td>807592927</td>
+    <td>86c1a962601b23b8a6d3d535c93b4b0bc4f29249</td>
+  </tr>
+  <tr>
+    <td>Windows 32-bit</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r19-windows-x86.zip">android-ndk-r19-windows-x86.zip</a></td>
+    <td>778544468</td>
+    <td>281175a42b312d630f864a02a31c5806ada5663b</td>
+  </tr>
+  <tr>
+    <td>Windows 64-bit</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r19-windows-x86_64.zip">android-ndk-r19-windows-x86_64.zip</a></td>
+    <td>795986424</td>
+    <td>37906e8e79a9dddf6805325f706a072055e4136c</td>
+  </tr>
+</table>
+
+### r18b
 
 [[r18 Changelog|Changelog-r18]]
 
@@ -52,43 +89,6 @@ Downloads
     <td><a href="https://dl.google.com/android/repository/android-ndk-r18b-windows-x86_64.zip">android-ndk-r18b-windows-x86_64.zip</a></td>
     <td>522489470</td>
     <td>6b6d4138aaaad7166679fdfa4780e177f95cee6f</td>
-  </tr>
-</table>
-
-### Current Beta Release
-
-[[r19 Beta 2 Changelog|Changelog-r19-beta2]]
-
-<table>
-  <tr>
-    <th>Platform</th>
-    <th>Package</th>
-    <th>Size (bytes)</th>
-    <th>SHA1 Checksum</th>
-  </tr>
-  <tr>
-    <td>Linux</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r19-beta2-linux-x86_64.zip">android-ndk-r19-beta2-linux-x86_64.zip</a></td>
-    <td>823418867</td>
-    <td>1a5dcf4e78956656de205172a49ae88d52d273ee</td>
-  </tr>
-  <tr>
-    <td>Mac OS X</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r19-beta2-darwin-x86_64.zip">android-ndk-r19-beta2-darwin-x86_64.zip</a></td>
-    <td>807739879</td>
-    <td>eee9064b39551d13bbd5a8d7975f9112f1bf7ae0</td>
-  </tr>
-  <tr>
-    <td>Windows 32-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r19-beta2-windows-x86.zip">android-ndk-r19-beta2-windows-x86.zip</a></td>
-    <td>778322307</td>
-    <td>56246ecc34dee98a8afb44a74b631b81e931d476</td>
-  </tr>
-  <tr>
-    <td>Windows 64-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r19-beta2-windows-x86_64.zip">android-ndk-r19-beta2-windows-x86_64.zip</a></td>
-    <td>795761090</td>
-    <td>bac146e86f1c49b39c3774b7eb3f7a027e45b140</td>
   </tr>
 </table>
 
