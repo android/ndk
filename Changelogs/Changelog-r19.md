@@ -17,6 +17,8 @@ Announcements
    release cycle with no major unresolved issues (estimated r21). Test LLD in
    your app by passing `-fuse-ld=lld` when linking.
 
+   Note: lld does not currently work on Windows. See [Issue 888].
+
  * The Play Store will require 64-bit support when uploading an APK beginning in
    August 2019. Start porting now to avoid surprises when the time comes. For
    more information, see [this blog post](https://android-developers.googleblog.com/2017/12/improving-app-security-and-performance.html).
@@ -53,6 +55,12 @@ Announcements
 [Issue 862]: https://github.com/android-ndk/ndk/issues/862
 [ReLinker]: https://github.com/KeepSafe/ReLinker
 [Standalone toolchains]: https://developer.android.com/ndk/guides/standalone_toolchain
+
+r19b
+----
+
+ * Fixed unused command line argument warning when using standalone toolchains
+   to compile C code.
 
 Changes
 -------
@@ -98,6 +106,7 @@ Known Issues
 ------------
 
  * This is not intended to be a comprehensive list of all outstanding bugs.
+ * [Issue 888]: lld does not work on Windows.
  * [Issue 360]: `thread_local` variables with non-trivial destructors will cause
    segfaults if the containing library is `dlclose`ed on devices running M or
    newer, or devices before M when using a static STL. The simple workaround is
@@ -116,4 +125,5 @@ Known Issues
 [Issue 360]: https://github.com/android-ndk/ndk/issues/360
 [Issue 70838247]: https://issuetracker.google.com/70838247
 [Issue 884]: https://github.com/android-ndk/ndk/issues/884
+[Issue 888]: https://github.com/android-ndk/ndk/issues/888
 [use plugin version 3.1 or newer]: https://developer.android.com/studio/releases/gradle-plugin#updating-plugin
