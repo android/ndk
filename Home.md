@@ -11,9 +11,9 @@ The betas should not be used for production.
 
 Release | Expected Release Date
 ------- | ---------------------
-Beta 1  | February 2019
-Beta 2  | March 2019
-Release | April 2019
+Beta 1  | March 2019
+Beta 2  | April 2019
+Release | May 2019
 
 Downloads
 ---------
