@@ -20,7 +20,7 @@ Downloads
 
 ### Current Stable Release
 
-[[r19 Changelog|Changelog-r19]]
+[[r19b Changelog|Changelog-r19]]
 
 <table>
   <tr>
@@ -31,27 +31,27 @@ Downloads
   </tr>
   <tr>
     <td>Linux</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r19-linux-x86_64.zip">android-ndk-r19-linux-x86_64.zip</a></td>
-    <td>823337344</td>
-    <td>f02ad84cb5b6e1ff3eea9e6168037c823408c8ac</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r19b-linux-x86_64.zip">android-ndk-r19b-linux-x86_64.zip</a></td>
+    <td>823368760</td>
+    <td>16f62346ab47f7125a0e977dcc08f54881f8a3d7</td>
   </tr>
   <tr>
     <td>Mac OS X</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r19-darwin-x86_64.zip">android-ndk-r19-darwin-x86_64.zip</a></td>
-    <td>807592927</td>
-    <td>86c1a962601b23b8a6d3d535c93b4b0bc4f29249</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r19b-darwin-x86_64.zip">android-ndk-r19b-darwin-x86_64.zip</a></td>
+    <td>807631105</td>
+    <td>02a74f9b211f22bea223e91acc6f40853db818e4</td>
   </tr>
   <tr>
     <td>Windows 32-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r19-windows-x86.zip">android-ndk-r19-windows-x86.zip</a></td>
-    <td>778544468</td>
-    <td>281175a42b312d630f864a02a31c5806ada5663b</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r19b-windows-x86.zip">android-ndk-r19b-windows-x86.zip</a></td>
+    <td>778577432</td>
+    <td>805e95ba96e5cc46060f5585594c6e2aef8c0304</td>
   </tr>
   <tr>
     <td>Windows 64-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r19-windows-x86_64.zip">android-ndk-r19-windows-x86_64.zip</a></td>
-    <td>795986424</td>
-    <td>37906e8e79a9dddf6805325f706a072055e4136c</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r19b-windows-x86_64.zip">android-ndk-r19b-windows-x86_64.zip</a></td>
+    <td>796039499</td>
+    <td>1aaedfa02ae3b2cb09ef1ca262ceaf2aca436f96</td>
   </tr>
 </table>
 
