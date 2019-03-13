@@ -11,7 +11,7 @@ The betas should not be used for production.
 
 Release | Expected Release Date
 ------- | ---------------------
-Beta 1  | March 2019
+Beta 1  | Released!
 Beta 2  | April 2019
 Release | May 2019
 
@@ -52,6 +52,43 @@ Downloads
     <td><a href="https://dl.google.com/android/repository/android-ndk-r19b-windows-x86_64.zip">android-ndk-r19b-windows-x86_64.zip</a></td>
     <td>796039499</td>
     <td>1aaedfa02ae3b2cb09ef1ca262ceaf2aca436f96</td>
+  </tr>
+</table>
+
+### Current Beta Release
+
+[[r20 Beta 1 Changelog|Changelog-r20-beta1]]
+
+<table>
+  <tr>
+    <th>Platform</th>
+    <th>Package</th>
+    <th>Size (bytes)</th>
+    <th>SHA1 Checksum</th>
+  </tr>
+  <tr>
+    <td>Linux</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-beta1-linux-x86_64.zip">android-ndk-r20-beta1-linux-x86_64.zip</a></td>
+    <td>857289311</td>
+    <td>8aff5c9079bff4f7cf77c34d3795cf498aced8cb</td>
+  </tr>
+  <tr>
+    <td>Mac OS X</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-beta1-darwin-x86_64.zip">android-ndk-r20-beta1-darwin-x86_64.zip</a></td>
+    <td>840717230</td>
+    <td>81128edb666af06cd0668d40a0be731bb4ba85a8</td>
+  </tr>
+  <tr>
+    <td>Windows 32-bit</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-beta1-windows-x86.zip">android-ndk-r20-beta1-windows-x86.zip</a></td>
+    <td>811968945</td>
+    <td>38c295e53e24200ce042ed8f715fd1ec85faa4d1</td>
+  </tr>
+  <tr>
+    <td>Windows 64-bit</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-beta1-windows-x86_64.zip">android-ndk-r20-beta1-windows-x86_64.zip</a></td>
+    <td>829982091</td>
+    <td>8be070e0539c6e251164edc0912dd5fb293a73c7</td>
   </tr>
 </table>
 
