@@ -20,7 +20,7 @@ Downloads
 
 ### Current Stable Release
 
-[[r19b Changelog|Changelog-r19]]
+[[r19c Changelog|Changelog-r19]]
 
 <table>
   <tr>
@@ -31,27 +31,27 @@ Downloads
   </tr>
   <tr>
     <td>Linux</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r19b-linux-x86_64.zip">android-ndk-r19b-linux-x86_64.zip</a></td>
-    <td>823368760</td>
-    <td>16f62346ab47f7125a0e977dcc08f54881f8a3d7</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r19c-linux-x86_64.zip">android-ndk-r19c-linux-x86_64.zip</a></td>
+    <td>823376982</td>
+    <td>fd94d0be6017c6acbd193eb95e09cf4b6f61b834</td>
   </tr>
   <tr>
     <td>Mac OS X</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r19b-darwin-x86_64.zip">android-ndk-r19b-darwin-x86_64.zip</a></td>
-    <td>807631105</td>
-    <td>02a74f9b211f22bea223e91acc6f40853db818e4</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r19c-darwin-x86_64.zip">android-ndk-r19c-darwin-x86_64.zip</a></td>
+    <td>807630656</td>
+    <td>f46b8193109bba8a58e0461c1a48f4534051fb25</td>
   </tr>
   <tr>
     <td>Windows 32-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r19b-windows-x86.zip">android-ndk-r19b-windows-x86.zip</a></td>
-    <td>778577432</td>
-    <td>805e95ba96e5cc46060f5585594c6e2aef8c0304</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r19c-windows-x86.zip">android-ndk-r19c-windows-x86.zip</a></td>
+    <td>778598286</td>
+    <td>132cc0c9e31b9e58ad6505b0816ff9e524422ed2</td>
   </tr>
   <tr>
     <td>Windows 64-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r19b-windows-x86_64.zip">android-ndk-r19b-windows-x86_64.zip</a></td>
-    <td>796039499</td>
-    <td>1aaedfa02ae3b2cb09ef1ca262ceaf2aca436f96</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r19c-windows-x86_64.zip">android-ndk-r19c-windows-x86_64.zip</a></td>
+    <td>796051997</td>
+    <td>c4cd8c0b6e7618ca0a871a5f24102e40c239f6a3</td>
   </tr>
 </table>
 
