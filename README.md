@@ -5,7 +5,7 @@ The NDK allows Android application developers to include
 native code in their Android application packages, compiled as JNI shared
 libraries.
 
- * User documentation is available on the [Android Developer website](https://developer.android.com/ndk/):
+ * Tutorial and API reference documentation is available on the [Android Developer website](https://developer.android.com/ndk/):
    * The [NDK Guides](https://developer.android.com/ndk/guides/) help you get started with the NDK.
      * Information about [building](https://developer.android.com/ndk/guides/build)
        or [debugging and profiling](https://developer.android.com/ndk/guides/debug).
