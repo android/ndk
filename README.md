@@ -8,7 +8,7 @@ libraries.
  * User documentation is available on the [Android Developer website](https://developer.android.com/ndk/):
    * The [NDK Guides](https://developer.android.com/ndk/guides/) help you get started with the NDK.
      * Information about [building](https://developer.android.com/ndk/guides/build)
-       and [debugging and profiling](https://developer.android.com/ndk/guides/debug).
+       or [debugging and profiling](https://developer.android.com/ndk/guides/debug).
      * Tutorial information for
        [High-Performance Audio](https://developer.android.com/ndk/guides/audio),
        [Vulkan](https://developer.android.com/ndk/guides/graphics), and
@@ -20,11 +20,14 @@ libraries.
    * [Android changes for NDK developers](https://android.googlesource.com/platform/bionic/+/master/android-changes-for-ndk-developers.md)
      details important dynamic linker changes in various Android releases. Invaluable if
      you're having trouble loading your .so files.
+   * [32-bit ABI bugs](https://android.googlesource.com/platform/bionic/+/master/docs/32-bit-abi.md)
+     documents issues for 32-bit code.
  * Discussions related to the Android NDK happen on the [android-ndk Google
    Group](http://groups.google.com/group/android-ndk).
  * File bugs against the NDK at https://github.com/android-ndk/ndk/issues.
  * See our [calendar for upcoming releases](https://github.com/android-ndk/ndk/wiki).
-
+ * The NDK and Android Studio support ndk-build and CMake out of the box, but we also have a
+   [Build System Maintainers Guide](https://android.googlesource.com/platform/ndk/+/master/docs/BuildSystemMaintainers.md).
 
 If you want to work _on_ the NDK itself rather than just use it, see the NDK team's
 [internal documentation](https://android.googlesource.com/platform/ndk/+/master/README.md).
