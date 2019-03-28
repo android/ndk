@@ -32,7 +32,7 @@ Instructions for building the NDK and running our tests are documented in
 [README.md] and [Testing.md](docs/Testing.md). Note that the NDK cannot be built
 on Windows; only Linux and Darwin hosts are supported.
 
-Check the [OWNERS file](OWNERS) for reviewers.
+Use the the \[FIND OWNERS\] button in the Gerrit UI to find reviewers.
 
 The NDK uses TreeHugger as a presubmit service (think of it as Travis for
 Gerrit). If you're a Googler, TreeHugger will check your change automatically
