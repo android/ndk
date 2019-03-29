@@ -13,7 +13,8 @@ Release | Expected Release Date
 ------- | ---------------------
 Beta 1  | Released!
 Beta 2  | April 2019
-Release | May 2019
+Beta 3  | May 2019
+Release | June 2019
 
 Downloads
 ---------
