@@ -30,7 +30,7 @@ The documentation for Android's C library ("bionic") may be useful:
 ## Understanding crashes/tombstones
 
 The documentation for Android OS developers has:
-   * An overview of [crash dumps/tombstones](https://source.android.com/devices/tech/debug)
+   * An overview of [crash dumps/tombstones](https://source.android.com/devices/tech/debug).
    * A detailed reference to understanding [common crashes](https://source.android.com/devices/tech/debug/native-crash).
 
 ## Other resources
