@@ -22,6 +22,9 @@ libraries.
      you're having trouble loading your .so files.
    * [32-bit ABI bugs](https://android.googlesource.com/platform/bionic/+/master/docs/32-bit-abi.md)
      documents issues for 32-bit code.
+ * The documentation for Android OS developers has:
+   * An overview of [crash dumps/tombstones](https://source.android.com/devices/tech/debug)
+   * A detailed reference to understanding [common crashes](https://source.android.com/devices/tech/debug/native-crash).
  * Discussions related to the Android NDK happen on the [android-ndk Google
    Group](http://groups.google.com/group/android-ndk).
  * File bugs against the NDK at https://github.com/android-ndk/ndk/issues.
