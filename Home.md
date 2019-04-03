@@ -58,7 +58,7 @@ Downloads
 
 ### Current Beta Release
 
-[[r20 Beta 1 Changelog|Changelog-r20-beta1]]
+[[r20 Beta 2 Changelog|Changelog-r20-beta2]]
 
 <table>
   <tr>
@@ -69,27 +69,27 @@ Downloads
   </tr>
   <tr>
     <td>Linux</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-beta1-linux-x86_64.zip">android-ndk-r20-beta1-linux-x86_64.zip</a></td>
-    <td>857289311</td>
-    <td>8aff5c9079bff4f7cf77c34d3795cf498aced8cb</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-beta2-linux-x86_64.zip">android-ndk-r20-beta2-linux-x86_64.zip</a></td>
+    <td>857406412</td>
+    <td>8285ae2e24a7232fd0cbfb55e955c8586ef2ee02</td>
   </tr>
   <tr>
     <td>Mac OS X</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-beta1-darwin-x86_64.zip">android-ndk-r20-beta1-darwin-x86_64.zip</a></td>
-    <td>840717230</td>
-    <td>81128edb666af06cd0668d40a0be731bb4ba85a8</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-beta2-darwin-x86_64.zip">android-ndk-r20-beta2-darwin-x86_64.zip</a></td>
+    <td>840834121</td>
+    <td>cd94191ace6b31ec9af1cc370173e16934e1cb8b</td>
   </tr>
   <tr>
     <td>Windows 32-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-beta1-windows-x86.zip">android-ndk-r20-beta1-windows-x86.zip</a></td>
-    <td>811968945</td>
-    <td>38c295e53e24200ce042ed8f715fd1ec85faa4d1</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-beta2-windows-x86.zip">android-ndk-r20-beta2-windows-x86.zip</a></td>
+    <td>812086484</td>
+    <td>15a8085b8ce5ecf0705ded2335513055693bddaa</td>
   </tr>
   <tr>
     <td>Windows 64-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-beta1-windows-x86_64.zip">android-ndk-r20-beta1-windows-x86_64.zip</a></td>
-    <td>829982091</td>
-    <td>8be070e0539c6e251164edc0912dd5fb293a73c7</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-beta2-windows-x86_64.zip">android-ndk-r20-beta2-windows-x86_64.zip</a></td>
+    <td>830099430</td>
+    <td>c89022bd9a2c32b42a1b94e98bbd88ab4c4e350e</td>
   </tr>
 </table>
 
