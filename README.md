@@ -4,6 +4,14 @@ The NDK allows Android application developers to include
 native code in their Android application packages, compiled as JNI shared
 libraries.
 
+## RFC
+
+This section lists any in-progress features with open discussion bugs. We're
+still working on these and want to hear from you, so please read the thread and
+join the discussion if you have anything to add!
+
+ * NDK package management: https://github.com/android-ndk/ndk/issues/916
+
 ## NDK documentation
 
 Tutorial and API reference documentation is available on the [Android Developer website](https://developer.android.com/ndk/):
