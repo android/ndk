@@ -13,7 +13,7 @@ Release | Expected Release Date
 ------- | ---------------------
 Beta 1  | Released!
 Beta 2  | Released!
-Beta 3  | May 2019
+Beta 3  | Released!
 Release | June 2019
 
 Downloads
@@ -58,7 +58,7 @@ Downloads
 
 ### Current Beta Release
 
-[[r20 Beta 2 Changelog|Changelog-r20-beta2]]
+[[r20 Beta 3 Changelog|Changelog-r20-beta3]]
 
 <table>
   <tr>
@@ -69,27 +69,27 @@ Downloads
   </tr>
   <tr>
     <td>Linux</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-beta2-linux-x86_64.zip">android-ndk-r20-beta2-linux-x86_64.zip</a></td>
-    <td>857406412</td>
-    <td>8285ae2e24a7232fd0cbfb55e955c8586ef2ee02</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-beta3-linux-x86_64.zip">android-ndk-r20-beta3-linux-x86_64.zip</a></td>
+    <td>860198768</td>
+    <td>674d8fb0e0df8e8be1c31fa321eb176548a19ba3</td>
   </tr>
   <tr>
     <td>Mac OS X</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-beta2-darwin-x86_64.zip">android-ndk-r20-beta2-darwin-x86_64.zip</a></td>
-    <td>840834121</td>
-    <td>cd94191ace6b31ec9af1cc370173e16934e1cb8b</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-beta3-darwin-x86_64.zip">android-ndk-r20-beta3-darwin-x86_64.zip</a></td>
+    <td>843617071</td>
+    <td>665a035cadb0dd03e6502ba25c18643f6e4ede24</td>
   </tr>
   <tr>
     <td>Windows 32-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-beta2-windows-x86.zip">android-ndk-r20-beta2-windows-x86.zip</a></td>
-    <td>812086484</td>
-    <td>15a8085b8ce5ecf0705ded2335513055693bddaa</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-beta3-windows-x86.zip">android-ndk-r20-beta3-windows-x86.zip</a></td>
+    <td>814872365</td>
+    <td>f9d1c5366ee5bf4927ac1c18f06143550b492e92</td>
   </tr>
   <tr>
     <td>Windows 64-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-beta2-windows-x86_64.zip">android-ndk-r20-beta2-windows-x86_64.zip</a></td>
-    <td>830099430</td>
-    <td>c89022bd9a2c32b42a1b94e98bbd88ab4c4e350e</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-beta3-windows-x86_64.zip">android-ndk-r20-beta3-windows-x86_64.zip</a></td>
+    <td>832889871</td>
+    <td>9375dc82cf576f4a255bf908dfc628d8ddee0d89</td>
   </tr>
 </table>
 
