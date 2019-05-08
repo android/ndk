@@ -1,7 +1,7 @@
 ---
 name: Questions
 about: Questions that aren't bugs.
-title: [question]
+title: "[question]"
 labels: question
 assignees: ''
 
