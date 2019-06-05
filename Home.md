@@ -7,19 +7,55 @@ The betas serve two purposes: you can let us know early if we've broken your app
 
 The betas should not be used for production.
 
-### NDK r20
+### NDK r21
 
 Release | Expected Release Date
 ------- | ---------------------
-Beta 1  | Released!
-Beta 2  | Released!
-Beta 3  | Released!
-Release | June 2019
+Beta 1  | July 2019
+Beta 2  | August 2019
+Release | September 2019
 
 Downloads
 ---------
 
 ### Current Stable Release
+
+[[r20 Changelog|Changelog-r20]]
+
+<table>
+  <tr>
+    <th>Platform</th>
+    <th>Package</th>
+    <th>Size (bytes)</th>
+    <th>SHA1 Checksum</th>
+  </tr>
+  <tr>
+    <td>Linux</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-linux-x86_64.zip">android-ndk-r20-linux-x86_64.zip</a></td>
+    <td>859737910</td>
+    <td>8665fc84a1b1f0d6ab3b5fdd1e30200cc7b9adff</td>
+  </tr>
+  <tr>
+    <td>Mac OS X</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-darwin-x86_64.zip">android-ndk-r20-darwin-x86_64.zip</a></td>
+    <td>843152912</td>
+    <td>96d5f1c50452596912d1982439c514194b5751e6</td>
+  </tr>
+  <tr>
+    <td>Windows 32-bit</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-windows-x86.zip">android-ndk-r20-windows-x86.zip</a></td>
+    <td>814417431</td>
+    <td>b605f7e2e7585af2fc9d59fe9ddad86b64b2bf03</td>
+  </tr>
+  <tr>
+    <td>Windows 64-bit</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-windows-x86_64.zip">android-ndk-r20-windows-x86_64.zip</a></td>
+    <td>832429986</td>
+    <td>36e1dc77fad08ad2498fb94b13ad8caf26bbd9df</td>
+  </tr>
+</table>
+
+### r19c
 
 [[r19c Changelog|Changelog-r19]]
 
@@ -53,43 +89,6 @@ Downloads
     <td><a href="https://dl.google.com/android/repository/android-ndk-r19c-windows-x86_64.zip">android-ndk-r19c-windows-x86_64.zip</a></td>
     <td>796051997</td>
     <td>c4cd8c0b6e7618ca0a871a5f24102e40c239f6a3</td>
-  </tr>
-</table>
-
-### Current Beta Release
-
-[[r20 Beta 3 Changelog|Changelog-r20-beta3]]
-
-<table>
-  <tr>
-    <th>Platform</th>
-    <th>Package</th>
-    <th>Size (bytes)</th>
-    <th>SHA1 Checksum</th>
-  </tr>
-  <tr>
-    <td>Linux</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-beta3-linux-x86_64.zip">android-ndk-r20-beta3-linux-x86_64.zip</a></td>
-    <td>860198768</td>
-    <td>674d8fb0e0df8e8be1c31fa321eb176548a19ba3</td>
-  </tr>
-  <tr>
-    <td>Mac OS X</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-beta3-darwin-x86_64.zip">android-ndk-r20-beta3-darwin-x86_64.zip</a></td>
-    <td>843617071</td>
-    <td>665a035cadb0dd03e6502ba25c18643f6e4ede24</td>
-  </tr>
-  <tr>
-    <td>Windows 32-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-beta3-windows-x86.zip">android-ndk-r20-beta3-windows-x86.zip</a></td>
-    <td>814872365</td>
-    <td>f9d1c5366ee5bf4927ac1c18f06143550b492e92</td>
-  </tr>
-  <tr>
-    <td>Windows 64-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-beta3-windows-x86_64.zip">android-ndk-r20-beta3-windows-x86_64.zip</a></td>
-    <td>832889871</td>
-    <td>9375dc82cf576f4a255bf908dfc628d8ddee0d89</td>
   </tr>
 </table>
 
