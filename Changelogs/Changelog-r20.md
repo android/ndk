@@ -39,6 +39,23 @@ For Android Studio issues, follow the docs on the [Android Studio site].
    to not call `dlclose`.
  * [Issue 70838247]: Gold emits broken debug information for AArch64. AArch64
    still uses BFD by default.
+ * [Issue 855]: LLD may hang on Windows when using multithreaded linking.
+   ndk-build will automatically disable multithreaded linking in this situation,
+   but CMake users and custom build systems should pass `-Wl,--no-threads` when
+   using LLD on Windows. The other linkers and operating systems are unaffected.
+ * [Issue 884]: Third-party build systems must pass `-fno-addrsig` to Clang for
+   compatibility with binutils. ndk-build, CMake, and standalone toolchains
+   handle this automatically.
+ * [Issue 888]: lld does not support compressed symbols on Windows. Clang also
+   cannot generate compressed symbols on Windows, but this can be a problem when
+   using artifacts built from Darwin or Linux.
+ * [Issue 906]: Clang does not pass `-march=armv7-a` to the assembler when using
+   `-fno-integrated-as`. This results in the assembler generating ARMv5
+   instructions. Note that by default Clang uses the integrated assembler which
+   does not have this problem. To workaround this issue, explicitly use
+   `-march=armv7-a` when building for 32-bit ARM with the non-integrated
+   assembler, or use the integrated assembler. ndk-build and CMake already
+   contain these workarounds.
  * This version of the NDK is incompatible with the Android Gradle plugin
    version 3.0 or older. If you see an error like
    `No toolchains found in the NDK toolchains folder for ABI with prefix: mips64el-linux-android`,
@@ -47,4 +64,8 @@ For Android Studio issues, follow the docs on the [Android Studio site].
 
 [Issue 360]: https://github.com/android-ndk/ndk/issues/360
 [Issue 70838247]: https://issuetracker.google.com/70838247
+[Issue 855]: https://github.com/android-ndk/ndk/issues/855
+[Issue 884]: https://github.com/android-ndk/ndk/issues/884
+[Issue 888]: https://github.com/android-ndk/ndk/issues/888
+[Issue 906]: https://github.com/android-ndk/ndk/issues/906
 [use plugin version 3.1 or newer]: https://developer.android.com/studio/releases/gradle-plugin#updating-plugin
