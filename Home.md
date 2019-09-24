@@ -1,22 +1,18 @@
-Release Schedule
-----------------
+## Release Schedule
 
-The NDK has stable releases on a roughly quarterly basis, with a beta release every month.
+The NDK releases on a roughly quarterly basis. One release a year is designated as a Long Term Support (LTS) release that will receive backports until the next LTS is released. Each version is first released as a beta and then a release candidate before being shipped to stable. Multiple betas and release candidates are a possibility if the first beta does not meet our promotion criteria, but there will always be at least one of each. For details, see [[NDK Release Process|NDK Release Process]].
 
-The betas serve two purposes: you can let us know early if we've broken your app so we can address the issue before release, and you can verify that the fix for a bug really does solve your problem.
+Canaries, betas, and release candidates should not be used for production.
 
-The betas should not be used for production.
-
-### NDK r21
+### NDK r21 (LTS)
 
 Release | Expected Release Date
 ------- | ---------------------
-Beta 1  | September 2019
-Beta 2  | October 2019
-Release | November 2019
+Beta 1  | October 2019
+RC 1    | TBD
+Release | TBD
 
-Downloads
----------
+## Downloads
 
 ### Current Stable Release
 
