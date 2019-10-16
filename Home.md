@@ -8,7 +8,7 @@ Canaries, betas, and release candidates should not be used for production.
 
 Release | Expected Release Date
 ------- | ---------------------
-Beta 1  | October 2019
+Beta 1  | 17 October 2019
 RC 1    | TBD
 Release | TBD
 
