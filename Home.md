@@ -1,6 +1,12 @@
 ## Release Schedule
 
-The NDK releases on a roughly quarterly basis. One release a year is designated as a Long Term Support (LTS) release that will receive backports until the next LTS is released. Each version is first released as a beta and then a release candidate before being shipped to stable. Multiple betas and release candidates are a possibility if the first beta does not meet our promotion criteria, but there will always be at least one of each. For details, see [[NDK Release Process|NDK Release Process]].
+The NDK releases on a roughly quarterly basis. One release a year is designated
+as a Long Term Support (LTS) release that will receive backports until the next
+LTS is released. Each version is first released as a beta and then a release
+candidate before being shipped to stable. Multiple betas and release candidates
+are a possibility if the first beta does not meet our promotion criteria, but
+there will always be at least one of each. For details, see [[NDK Release
+Process|NDK Release Process]].
 
 Canaries, betas, and release candidates should not be used for production.
 
@@ -8,11 +14,42 @@ Canaries, betas, and release candidates should not be used for production.
 
 Release | Expected Release Date
 ------- | ---------------------
-Beta 1  | 17 October 2019
+Beta 1  | Released!
 RC 1    | TBD
 Release | TBD
 
 ## Downloads
+
+### Current Beta Release
+
+[[r21 Changelog|Changelog-r21]]
+
+<table>
+  <tr>
+    <th>Platform</th>
+    <th>Package</th>
+    <th>Size (bytes)</th>
+    <th>SHA1 Checksum</th>
+  </tr>
+  <tr>
+    <td>Linux</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r21-linux-x86_64.zip">android-ndk-r21-linux-x86_64.zip</a></td>
+    <td>1090223430</td>
+    <td>9c20b1095124f15a8ed3f7349f1ccb69ec66e891</td>
+  </tr>
+  <tr>
+    <td>Mac OS X</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r21-darwin-x86_64.zip">android-ndk-r21-darwin-x86_64.zip</a></td>
+    <td>1002920052</td>
+    <td>14b45877e6e09d1c88c75709b3dcaf8055f16efd</td>
+  </tr>
+  <tr>
+    <td>Windows</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r21-windows-x86_64.zip">android-ndk-r21-windows-x86_64.zip</a></td>
+    <td>1057163708</td>
+    <td>b06620b1fbc5c9be93ab6d34e2051cf72c08b56d</td>
+  </tr>
+</table>
 
 ### Current Stable Release
 
