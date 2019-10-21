@@ -29,7 +29,8 @@ The "HelloJni" sample in Android Studio shows the basics of calling C/C++ from J
 ```c++
 #include <jni.h>
 
-extern "C" JNIEXPORT void JNICALL Java_com_example_app_Main_foo(JNIEnv* env, jobject o) {
+extern "C" JNIEXPORT void JNICALL Java_com_example_app_Main_foo(JNIEnv* env,
+                                                                jobject o) {
   // Do stuff here!
 }
 ```
@@ -673,7 +674,8 @@ extern "C" JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     {"nativeFoo", "()V", reinterpret_cast<void*>(nativeFoo)},
     {"nativeBar", "(Ljava/lang/String;I)Z", reinterpret_cast<void*>(nativeBar)},
   };
-  int rc = env->RegisterNatives(c, methods, sizeof(methods)/sizeof(JNINativeMethod));
+  int rc = env->RegisterNatives(c, methods,
+                                sizeof(methods)/sizeof(JNINativeMethod));
   if (rc != JNI_OK) return rc;
 
   return JNI_VERSION_1_6;
