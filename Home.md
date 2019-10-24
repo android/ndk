@@ -1,3 +1,15 @@
+## Betas, release candidates, canary releases, and stable releases
+
+Stable releases along with any current betas and release candidates are available from this page.
+
+Canary releases are available on [ci.android.com](https://ci.android.com/builds/branches/aosp-master-ndk/grid?) for all supported operating systems.
+
+Note: canaries, betas, and release candidates should not be used for production, but are a great way for you to find and report bugs early, before they make it to a stable release.
+
+## Announcements
+
+Subscribe to the [android-ndk-announce@googlegroups.com](mailto:android-ndk-announce@googlegroups.com) mailing list if you'd like to be notified whenever we publish a new NDK release.
+
 ## Release Schedule
 
 The NDK releases on a roughly quarterly basis. One release a year is designated
@@ -7,8 +19,6 @@ candidate before being shipped to stable. Multiple betas and release candidates
 are a possibility if the first beta does not meet our promotion criteria, but
 there will always be at least one of each. For details, see [NDK Release
 Process](/android/ndk/wiki/NDK-Release-Process).
-
-Canaries, betas, and release candidates should not be used for production.
 
 ### NDK r21 (LTS)
 
