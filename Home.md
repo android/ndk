@@ -8,7 +8,7 @@ Note: canaries, betas, and release candidates should not be used for production,
 
 ## Announcements
 
-Subscribe to the [android-ndk-announce@googlegroups.com](https://groups.google.com/g/android-ndk-announce) mailing list if you'd like to be notified whenever we publish a new NDK release.
+Subscribe to the [android-ndk-announce@googlegroups.com](https://groups.google.com/g/android-ndk-announce) mailing list if you'd like to be notified whenever we publish a new NDK release (beta or stable).
 
 ## Release Schedule
 
