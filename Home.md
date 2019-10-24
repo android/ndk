@@ -5,8 +5,8 @@ as a Long Term Support (LTS) release that will receive backports until the next
 LTS is released. Each version is first released as a beta and then a release
 candidate before being shipped to stable. Multiple betas and release candidates
 are a possibility if the first beta does not meet our promotion criteria, but
-there will always be at least one of each. For details, see [[NDK Release
-Process|NDK Release Process]].
+there will always be at least one of each. For details, see [NDK Release
+Process](/android/ndk/wiki/NDK-Release-Process).
 
 Canaries, betas, and release candidates should not be used for production.
 
