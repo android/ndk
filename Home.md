@@ -48,7 +48,7 @@ Release | TBD
     <td>9c20b1095124f15a8ed3f7349f1ccb69ec66e891</td>
   </tr>
   <tr>
-    <td>Mac OS X</td>
+    <td>Mac</td>
     <td><a href="https://dl.google.com/android/repository/android-ndk-r21-darwin-x86_64.zip">android-ndk-r21-darwin-x86_64.zip</a></td>
     <td>1002920052</td>
     <td>14b45877e6e09d1c88c75709b3dcaf8055f16efd</td>
@@ -79,7 +79,7 @@ Release | TBD
     <td>8665fc84a1b1f0d6ab3b5fdd1e30200cc7b9adff</td>
   </tr>
   <tr>
-    <td>Mac OS X</td>
+    <td>Mac</td>
     <td><a href="https://dl.google.com/android/repository/android-ndk-r20-darwin-x86_64.zip">android-ndk-r20-darwin-x86_64.zip</a></td>
     <td>843152912</td>
     <td>96d5f1c50452596912d1982439c514194b5751e6</td>
@@ -116,7 +116,7 @@ Release | TBD
     <td>fd94d0be6017c6acbd193eb95e09cf4b6f61b834</td>
   </tr>
   <tr>
-    <td>Mac OS X</td>
+    <td>Mac</td>
     <td><a href="https://dl.google.com/android/repository/android-ndk-r19c-darwin-x86_64.zip">android-ndk-r19c-darwin-x86_64.zip</a></td>
     <td>807630656</td>
     <td>f46b8193109bba8a58e0461c1a48f4534051fb25</td>
@@ -153,7 +153,7 @@ Release | TBD
     <td>500679655da3a86aecf67007e8ab230ea9b4dd7b</td>
   </tr>
   <tr>
-    <td>Mac OS X</td>
+    <td>Mac</td>
     <td><a href="https://dl.google.com/android/repository/android-ndk-r18b-darwin-x86_64.zip">android-ndk-r18b-darwin-x86_64.zip</a></td>
     <td>542911996</td>
     <td>98cb9909aa8c2dab32db188bbdc3ac6207e09440</td>
@@ -190,7 +190,7 @@ Release | TBD
     <td>12cacc70c3fd2f40574015631c00f41fb8a39048</td>
   </tr>
   <tr>
-    <td>Mac OS X</td>
+    <td>Mac</td>
     <td><a href="https://dl.google.com/android/repository/android-ndk-r17c-darwin-x86_64.zip">android-ndk-r17c-darwin-x86_64.zip</a></td>
     <td>675091485</td>
     <td>f97e3d7711497e3b4faf9e7b3fa0f0da90bb649c</td>
@@ -227,7 +227,7 @@ Release | TBD
     <td>42aa43aae89a50d1c66c3f9fdecd676936da6128</td>
   </tr>
   <tr>
-    <td>Mac OS X</td>
+    <td>Mac</td>
     <td><a href="https://dl.google.com/android/repository/android-ndk-r16b-darwin-x86_64.zip">android-ndk-r16b-darwin-x86_64.zip</a></td>
     <td>839630771</td>
     <td>e51e615449b98c716cf912057e2682e75d55e2de</td>
@@ -264,7 +264,7 @@ Release | TBD
     <td>0bf02d4e8b85fd770fd7b9b2cdec57f9441f27a2</td>
   </tr>
   <tr>
-    <td>Mac OS X</td>
+    <td>Mac</td>
     <td><a href="https://dl.google.com/android/repository/android-ndk-r15c-darwin-x86_64.zip">android-ndk-r15c-darwin-x86_64.zip</a></td>
     <td>960251267</td>
     <td>ea4b5d76475db84745aa8828000d009625fc1f98</td>
@@ -301,7 +301,7 @@ Release | TBD
     <td>becd161da6ed9a823e25be5c02955d9cbca1dbeb</td>
   </tr>
   <tr>
-    <td>Mac OS X</td>
+    <td>Mac</td>
     <td><a href="https://dl.google.com/android/repository/android-ndk-r14b-darwin-x86_64.zip">android-ndk-r14b-darwin-x86_64.zip</a></td>
     <td>824705073</td>
     <td>2bf582c43f6da16416e66203d158a6dfaba4277c</td>
@@ -338,7 +338,7 @@ Release | TBD
     <td>0600157c4ddf50ec15b8a037cfc474143f718fd0</td>
   </tr>
   <tr>
-    <td>Mac OS X</td>
+    <td>Mac</td>
     <td><a href="https://dl.google.com/android/repository/android-ndk-r13b-darwin-x86_64.zip">android-ndk-r13b-darwin-x86_64.zip</a></td>
     <td>665967997</td>
     <td>71fe653a7bf5db08c3af154735b6ccbc12f0add5</td>
@@ -376,7 +376,7 @@ href="https://dl.google.com/android/repository/android-ndk-r12b-linux-x86_64.zip
     <td>170a119bfa0f0ce5dc932405eaa3a7cc61b27694</td>
   </tr>
   <tr>
-    <td>Mac OS X</td>
+    <td>Mac</td>
     <td><a
 href="https://dl.google.com/android/repository/android-ndk-r12b-darwin-x86_64.zip">android-ndk-r12b-darwin-x86_64.zip</a></td>
     <td>734135279</td>
@@ -416,7 +416,7 @@ href="https://dl.google.com/android/repository/android-ndk-r12b-windows-x86_64.z
     <td>de5ce9bddeee16fb6af2b9117e9566352aa7e279</td>
   </tr>
   <tr>
-    <td>Mac OS X</td>
+    <td>Mac</td>
     <td><a href="https://dl.google.com/android/repository/android-ndk-r11c-darwin-x86_64.zip">android-ndk-r11c-darwin-x86_64.zip</a></td>
     <td>772428792</td>
     <td>4ce8e7ed8dfe08c5fe58aedf7f46be2a97564696</td>
