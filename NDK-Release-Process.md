@@ -62,6 +62,13 @@ APIs in the LTS) will never be added in point releases.
     * Note that these are not currently blocking, as we have not reached this
       state yet. Once clean, regressions will be considered blockers.
 
+### Non-issues
+
+* Bugs in experimental portions of the toolchain, such as compiler crashes that
+  only occur when using an unfinished C++ standard version. No guarantees are
+  made about the stability or availability of these features, and providing a
+  fix risks destabilizing the rest of the toolchain.
+
 ## LTS Release
 
 These releases cater to users that prioritize stability over new features.
