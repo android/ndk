@@ -78,26 +78,26 @@ Release | TBD
   </tr>
   <tr>
     <td>Linux</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-linux-x86_64.zip">android-ndk-r20-linux-x86_64.zip</a></td>
-    <td>859737910</td>
-    <td>8665fc84a1b1f0d6ab3b5fdd1e30200cc7b9adff</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r20b-linux-x86_64.zip">android-ndk-r20b-linux-x86_64.zip</a></td>
+    <td>859780564</td>
+    <td>d903fdf077039ad9331fb6c3bee78aa46d45527b</td>
   </tr>
   <tr>
-    <td>Mac</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-darwin-x86_64.zip">android-ndk-r20-darwin-x86_64.zip</a></td>
-    <td>843152912</td>
-    <td>96d5f1c50452596912d1982439c514194b5751e6</td>
+    <td>Mac OS X</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r20b-darwin-x86_64.zip">android-ndk-r20b-darwin-x86_64.zip</a></td>
+    <td>843201217</td>
+    <td>b51290ab69cb89de1f0ba108702277bc333b38be</td>
   </tr>
   <tr>
     <td>Windows 32-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-windows-x86.zip">android-ndk-r20-windows-x86.zip</a></td>
-    <td>814417431</td>
-    <td>b605f7e2e7585af2fc9d59fe9ddad86b64b2bf03</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r20b-windows-x86.zip">android-ndk-r20b-windows-x86.zip</a></td>
+    <td>814464692</td>
+    <td>71a1ba20475da1d83b0f1a1826813008f628d59b</td>
   </tr>
   <tr>
     <td>Windows 64-bit</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r20-windows-x86_64.zip">android-ndk-r20-windows-x86_64.zip</a></td>
-    <td>832429986</td>
-    <td>36e1dc77fad08ad2498fb94b13ad8caf26bbd9df</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r20b-windows-x86_64.zip">android-ndk-r20b-windows-x86_64.zip</a></td>
+    <td>832473103</td>
+    <td>ead0846608040b8344ad2bc9bc721b88cf13fb8d</td>
   </tr>
 </table>

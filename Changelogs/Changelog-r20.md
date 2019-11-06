@@ -18,6 +18,12 @@ For Android Studio issues, follow the docs on the [Android Studio site].
    August 2019. Start porting now to avoid surprises when the time comes. For
    more information, see [this blog post](https://android-developers.googleblog.com/2017/12/improving-app-security-and-performance.html).
 
+## r20b
+
+ * Fix for CVE-2019-2212, out of bounds buffer read in `std::random`. See
+   https://bugs.chromium.org/p/chromium/issues/detail?id=994957 for more
+   information.
+
 ## Changes
 
  * Updated Clang to r346389c.
