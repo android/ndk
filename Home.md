@@ -29,6 +29,7 @@ Process](/android/ndk/wiki/NDK-Release-Process).
 Release | Expected Release Date
 ------- | ---------------------
 Beta 1  | Released!
+Beta 2  | Released!
 RC 1    | TBD
 Release | TBD
 
@@ -47,21 +48,21 @@ Release | TBD
   </tr>
   <tr>
     <td>Linux</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r21-linux-x86_64.zip">android-ndk-r21-linux-x86_64.zip</a></td>
-    <td>1090223430</td>
-    <td>9c20b1095124f15a8ed3f7349f1ccb69ec66e891</td>
-  </tr>
-  <tr>
-    <td>Mac</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r21-darwin-x86_64.zip">android-ndk-r21-darwin-x86_64.zip</a></td>
-    <td>1002920052</td>
-    <td>14b45877e6e09d1c88c75709b3dcaf8055f16efd</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r21-beta2-linux-x86_64.zip">android-ndk-r21-beta2-linux-x86_64.zip</a></td>
+    <td>1043467643</td>
+    <td>335f30302bee700a9a5fdfe3ae533a4963499c44</td>
   </tr>
   <tr>
     <td>Windows</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r21-windows-x86_64.zip">android-ndk-r21-windows-x86_64.zip</a></td>
-    <td>1057163708</td>
-    <td>b06620b1fbc5c9be93ab6d34e2051cf72c08b56d</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r21-beta2-windows-x86_64.zip">android-ndk-r21-beta2-windows-x86_64.zip</a></td>
+    <td>1057424857</td>
+    <td>e5902e4f6c5b6f0354a2572a85f42f19c1a7b9d8</td>
+  </tr>
+  <tr>
+    <td>macOS</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r21-beta2-darwin-x86_64.zip">android-ndk-r21-beta2-darwin-x86_64.zip</a></td>
+    <td>958791657</td>
+    <td>34a46c3867c9d87a80895c0b8a098256052536d2</td>
   </tr>
 </table>
 

@@ -24,6 +24,10 @@ For Android Studio issues, follow the docs on the [Android Studio site].
    will affect builds using LLD with binutils strip and objcopy as opposed to
    llvm-strip and llvm-objcopy.
 
+ * The Play Store will require 64-bit support when uploading an APK beginning in
+   August 2019. Start porting now to avoid surprises when the time comes. For
+   more information, see [this blog post](https://android-developers.googleblog.com/2017/12/improving-app-security-and-performance.html).
+
 ## Changes
 
  * Updated Clang and LLD to r365631.
@@ -50,10 +54,17 @@ For Android Studio issues, follow the docs on the [Android Studio site].
  * Updated make to 4.2.1.
      * Modified ndk-build to supply `-O` for more readable errors with parallel
        builds.
+     * `abspath` now works properly with Windows drive letters, so if you're
+       using the [workaround] similar to what's found in the NDK samples, you'll
+       need to either drop the workaround or make sure it's only used prior to
+       r21.
  * Updated glibc to 2.17.
  * Updated gdb to 8.3.
  * [Issue 885]: For LLD+LLDB compatibility, the NDK build systems now pass
-   `-Wl,--build-id=sha1` instead of `-Wl,--build-id`. Third-party build systems
+   `-Wl,--build-id=sha1` instead of `-Wl,--build-id` when using LLD. Note that
+   the CMake toolchain does not have access to flags set in CMakeLists.txt, so
+   using an explicit `-fuse-ld=lld` instead of `ANDROID_LD=lld` will produce
+   output that cannot be debugged with Android Studio. Third-party build systems
    need to apply the workaround manually. For more details, see the [Build
    System Maintainers Guide][maintainer_linkers].
  * Fixed ndk-build to use Clang's default C++ standard version (currently C++14)
@@ -77,6 +88,9 @@ For Android Studio issues, follow the docs on the [Android Studio site].
    or newer:
 
    ```makefile
+   # This check works even on pre-r21 NDKs. The function is undefined pre-r21,
+   # and calling an undefined function in make returns the empty string, which
+   # is not equal to "true", so the else branch will be taken.
    ifeq ($(call ndk-major-at-least,21),true)
        # Using at least NDK r21.
    else
@@ -85,10 +99,7 @@ For Android Studio issues, follow the docs on the [Android Studio site].
    ```
 
    Note that because this API was not available before r21, it cannot be used to
-   determine *which* NDK version earlier than 21 is being used, so this API is
-   of limited use today. Also note that the above code will behave correctly
-   even on pre-r21 because calling an undefined function in make returns the
-   empty string, so the else case will be taken.
+   determine *which* NDK version earlier than 21 is being used.
  * [Issue 1092]: Fixed hiding of unwinder symbols in outputs of ndk-build and
    CMake. Maintainers of third-party build systems should apply similar fixes
    when using NDK r19 and above to guard against possible future compatibility
@@ -107,6 +118,7 @@ For Android Studio issues, follow the docs on the [Android Studio site].
 [Issue 976]: https://github.com/android/ndk/issues/976
 [blacklist CPUs]: https://support.google.com/googleplay/android-developer/answer/7353455?hl=en
 [maintainer_linkers]: https://android.googlesource.com/platform/ndk/+/master/docs/BuildSystemMaintainers.md#Linkers
+[workaround]: https://github.com/android/ndk-samples/blob/2c97a9eb5b9b5de233b7ece4dd0d0d28fa4cb4c2/other-builds/ndkbuild/common.mk#L26
 
 ## Known Issues
 
