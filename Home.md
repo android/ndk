@@ -30,14 +30,16 @@ Release | Expected Release Date
 ------- | ---------------------
 Beta 1  | Released!
 Beta 2  | Released!
-RC 1    | TBD
-Release | TBD
+RC 1    | Released!
+Release | January 2020
 
 ## Supported Downloads
 
-### Current Beta Release
+### Current Release Candidate
 
 [[r21 Changelog|Changelog-r21]]
+
+Note: r21 RC1 is the same build as beta 2.
 
 <table>
   <tr>
