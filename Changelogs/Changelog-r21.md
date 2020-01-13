@@ -24,9 +24,30 @@ For Android Studio issues, follow the docs on the [Android Studio site].
    will affect builds using LLD with binutils strip and objcopy as opposed to
    llvm-strip and llvm-objcopy.
 
+ * The legacy toolchain install paths will be removed before the next LTS
+   release (likely in r22). These paths have been obsolete since NDK r19 and
+   take up a considerable amount of space in the NDK. The paths being removed
+   are:
+
+   * platforms
+   * sources/cxx-stl
+   * sysroot
+   * toolchains (with the exception of toolchains/llvm)
+
+   In general this change should only affect build system maintainers, or those
+   using build systems that are not up to date. ndk-build and the CMake
+   toolchain users are unaffected, and neither are
+   `make_standalone_toolchain.py` users (though that script has been unnecessary
+   since r19).
+
+   For information on migrating away from the legacy toolchain layout, see the
+   [Build System Maintainers Guide] for the NDK version you're using.
+
  * The Play Store will require 64-bit support when uploading an APK beginning in
    August 2019. Start porting now to avoid surprises when the time comes. For
    more information, see [this blog post](https://android-developers.googleblog.com/2017/12/improving-app-security-and-performance.html).
+
+[Build System Maintainers Guide]: https://android.googlesource.com/platform/ndk/+/master/docs/BuildSystemMaintainers.md
 
 ## Changes
 

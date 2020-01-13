@@ -1,5 +1,40 @@
 **Note: these obsolete versions of the NDK are no longer supported. Use a [current release](/android/ndk/wiki) instead.**
 
+[[r20 Changelog|Changelog-r20]]
+
+<table>
+  <tr>
+    <th>Platform</th>
+    <th>Package</th>
+    <th>Size (bytes)</th>
+    <th>SHA1 Checksum</th>
+  </tr>
+  <tr>
+    <td>Linux</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r20b-linux-x86_64.zip">android-ndk-r20b-linux-x86_64.zip</a></td>
+    <td>859780564</td>
+    <td>d903fdf077039ad9331fb6c3bee78aa46d45527b</td>
+  </tr>
+  <tr>
+    <td>Mac OS X</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r20b-darwin-x86_64.zip">android-ndk-r20b-darwin-x86_64.zip</a></td>
+    <td>843201217</td>
+    <td>b51290ab69cb89de1f0ba108702277bc333b38be</td>
+  </tr>
+  <tr>
+    <td>Windows 32-bit</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r20b-windows-x86.zip">android-ndk-r20b-windows-x86.zip</a></td>
+    <td>814464692</td>
+    <td>71a1ba20475da1d83b0f1a1826813008f628d59b</td>
+  </tr>
+  <tr>
+    <td>Windows 64-bit</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r20b-windows-x86_64.zip">android-ndk-r20b-windows-x86_64.zip</a></td>
+    <td>832473103</td>
+    <td>ead0846608040b8344ad2bc9bc721b88cf13fb8d</td>
+  </tr>
+</table>
+
 ### r19c
 
 [[r19c Changelog|Changelog-r19]]
