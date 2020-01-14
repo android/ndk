@@ -24,14 +24,13 @@ are a possibility if the first beta does not meet our promotion criteria, but
 there will always be at least one of each. For details, see [NDK Release
 Process](/android/ndk/wiki/NDK-Release-Process).
 
-### NDK r21 (LTS)
+### NDK r22
 
 Release | Expected Release Date
 ------- | ---------------------
-Beta 1  | Released!
-Beta 2  | Released!
-RC 1    | Released!
-Release | January 2020
+Beta 1  | Q1 2020
+RC 1    | TBD
+Release | TBD
 
 ## Supported Downloads
 
