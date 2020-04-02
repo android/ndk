@@ -2,6 +2,12 @@
 
 [[r20 Changelog|Changelog-r20]]
 
+```gradle
+android {
+    ndkVersion "20.1.5948944"
+}
+```
+
 <table>
   <tr>
     <th>Platform</th>
@@ -38,6 +44,12 @@
 ### r19c
 
 [[r19c Changelog|Changelog-r19]]
+
+```gradle
+android {
+    ndkVersion "19.2.5345600"
+}
+```
 
 <table>
   <tr>
@@ -76,6 +88,12 @@
 
 [[r18 Changelog|Changelog-r18]]
 
+```gradle
+android {
+    ndkVersion "18.1.5063045"
+}
+```
+
 <table>
   <tr>
     <th>Platform</th>
@@ -113,6 +131,12 @@
 
 [[r17c Changelog|Changelog-r17]]
 
+```gradle
+android {
+    ndkVersion "17.2.4988734"
+}
+```
+
 <table>
   <tr>
     <th>Platform</th>
@@ -149,6 +173,12 @@
 ### r16b
 
 [[r16b Changelog|Changelog-r16]]
+
+```gradle
+android {
+    ndkVersion "16.1.4479499"
+}
+```
 
 <table>
   <tr>
