@@ -38,6 +38,12 @@ Release | TBD
 
 [[r21 Changelog|Changelog-r21]]
 
+```gradle
+android {
+    ndkVersion "21.0.6113669"
+}
+```
+
 <table>
   <tr>
     <th>Platform</th>
