@@ -40,7 +40,7 @@ Release | TBD
 
 ```gradle
 android {
-    ndkVersion "21.0.6113669"
+    ndkVersion "21.0.6352462"
 }
 ```
 
@@ -53,20 +53,20 @@ android {
   </tr>
   <tr>
     <td>Linux</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r21-linux-x86_64.zip">android-ndk-r21-linux-x86_64.zip</a></td>
-    <td>1043332542</td>
-    <td>afc9c0b9faad222898ac8168c78ad4ccac8a1b5c</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r21b-linux-x86_64.zip">android-ndk-r21b-linux-x86_64.zip</a></td>
+    <td>1162377080</td>
+    <td>50250fcba479de477b45801e2699cca47f7e1267</td>
   </tr>
   <tr>
     <td>Windows</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r21-windows-x86_64.zip">android-ndk-r21-windows-x86_64.zip</a></td>
-    <td>1057294207</td>
-    <td>c61631eacbd40c30273b716a4e589c6877b85419</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r21b-windows-x86_64.zip">android-ndk-r21b-windows-x86_64.zip</a></td>
+    <td>1079474640</td>
+    <td>6809fac4a6e829f4bac64628fa9835d57bbd61a8</td>
   </tr>
   <tr>
     <td>macOS</td>
-    <td><a href="https://dl.google.com/android/repository/android-ndk-r21-darwin-x86_64.zip">android-ndk-r21-darwin-x86_64.zip</a></td>
-    <td>958656601</td>
-    <td>0d50636cc0e34ed3ba540d6d5818ea0cf10f16aa</td>
+    <td><a href="https://dl.google.com/android/repository/android-ndk-r21b-darwin-x86_64.zip">android-ndk-r21b-darwin-x86_64.zip</a></td>
+    <td>1014473187</td>
+    <td>e1de2f749c5c32ae991c3ccaabfcdf7688ee221f</td>
   </tr>
 </table>
