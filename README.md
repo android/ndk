@@ -14,7 +14,7 @@ This section lists any in-progress features with open discussion bugs. We're
 still working on these and want to hear from you, so please read the thread and
 join the discussion if you have anything to add!
 
- * NDK package management: https://github.com/android-ndk/ndk/issues/916
+ * None right now :)
 
 ## NDK documentation
 
