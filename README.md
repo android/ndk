@@ -4,7 +4,7 @@ The NDK allows Android application developers to include
 native code in their Android application packages, compiled as JNI shared
 libraries.
 
-For what we're working on, see the [milestones](https://github.com/android/ndk/milestones).
+For what's coming in NDK r21 in 2019Q3, see the [r21 hotlist](https://github.com/android-ndk/ndk/milestone/20).
 
 For further into the future, see the [NDK Roadmap](https://android.googlesource.com/platform/ndk/+/master/docs/Roadmap.md).
 
