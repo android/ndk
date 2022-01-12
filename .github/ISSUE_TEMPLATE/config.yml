@@ -1,0 +1,27 @@
+---
+blank_issues_enabled: false
+contact_links:
+  - name: Android Studio and Gradle issues
+    url: https://developer.android.com/studio/report-bugs
+    about: >
+      Issues with Android Studio or the Android Gradle Plugin are not handled by
+      this team and must be filed against the Android Studio team. Android
+      Studio and AGP bugs filed in this bug tracker may be closed without
+      investigation.
+  - name: Android OS issues, new NDK API requests
+    url: https://source.android.com/setup/contribute/report-bugs
+    about: >
+      Device and OS issues (typically) cannot be fixed in the NDK. Sometimes we
+      can add workarounds in the NDK, in which case you can file a feature
+      request here, but you should also report the bug against the OS so it can
+      be fixed in future versions.
+  - name: Questions
+    url: https://github.com/android/ndk/discussions
+    about: >
+      If you have a question about the NDK, ask in the GitHub Discussion forum.
+      If your question is "Can you confirm if this is a bug?", go ahead and file
+      it as a bug :)
+
+      Note that we generally can't answer questions about Studio or the Android
+      Gradle Plugin. For those questions, file a Studio bug using the link
+      above.

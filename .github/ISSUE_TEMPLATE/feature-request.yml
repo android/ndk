@@ -1,0 +1,12 @@
+---
+name: Feature request
+description: Suggest an idea for this project
+title: "[FR]"
+labels: enhancement
+body:
+  - type: textarea
+    attributes:
+      label: Description
+      description: >
+        Describe the new feature, and how it would help. Include any
+        alternatives or additional context that might be helpful.

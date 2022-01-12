@@ -1,0 +1,120 @@
+---
+name: LLVM Bug
+description: >
+  Bugs related to Clang or LLVM tools. These can be crashes, miscompiles,
+  performance issues, etc. Feature requests should instead use the standard
+  Feature Request template.
+title: "[Bug]: "
+labels: ["bug", "llvm"]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Before filing a bug, check that you are using the latest version of the
+        NDK. The latest stable version and the preview release of the next
+        stable version are listed on our wiki:
+        https://github.com/android-ndk/ndk/wiki#downloads.
+
+
+        Make sure your issue isn't on the list of common problems before filing
+        a bug:
+        https://android.googlesource.com/platform/ndk/+/master/docs/user/common_problems.md
+
+
+        LLVM bugs can also be filed directly in
+        [their GitHub project](https://github.com/llvm/llvm-project/issues), but
+        feel free to file here as well if you want us to backport a fix (when
+        possible).
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: Description
+      description: |
+        Describe the bug. Include a test case. It's unlikely that anything can be done without a test case.
+
+        Bug reports with better test cases will be resolved sooner than those with bad test cases. A good test case:
+
+        * Is as small as possible while still exposing the bug.
+        * Does not require Android Studio or Gradle. If your bug cannot be reproduced without either of those, it's a bug in Studio or Gradle, and should be reported to Android Studio.
+        * Is complete. Snippets that would not compile even in the absence of the bug you are reporting slow down the process.
+
+        Here's an example of a good test case: https://github.com/DanAlbert/dynamic-cast-repro
+
+        Clang will produce a zip file with reproduction artifacts for crashes. **We need these files to investigate crashes.**
+
+        Some ways to include test cases:
+
+        * Linking to another git repo with build instructions (preferred)
+        * Attaching a zip or tarball to this bug by dragging and dropping into the description text box
+        * Linking to a gist
+        * Including the full text of the text case here (please use a gist for longer test cases)
+  - type: input
+    attributes:
+      label: Upstream bug
+      description: The URL of the bug filed in LLVM's GitHub, if any.
+  - type: input
+    attributes:
+      label: Commit to cherry-pick
+      description: >
+        A link to or git SHA of the upstream commit that fixes the issue. Leave
+        empty if not known.
+  - type: dropdown
+    validations:
+      required: true
+    attributes:
+      label: Affected versions
+      multiple: true
+      description: >
+        Select all NDK versions in which you have observed this bug. You do not
+        need to test all of them, but if you already have that information is
+        useful to us! If you're not sure which NDK version you're using, check
+        the `android.ndkVersion` for your AGP project, or look in
+        `$NDK/source.properties`.
+
+
+        At least one version must be selected. The currently supported releases
+        are listed here. If you observed the bug on a different release, you
+        will need to verify that it is still present on a supported release
+        before filing.
+
+
+        If the bug was found in an unreleased build of the NDK, select "canary"
+        and include the build information in the description.
+      options:
+        - r23
+        - r24
+        - Canary
+  - type: input
+    attributes:
+      label: Canary version
+      description: >
+        Information about the canary version if the bug is only found in the NDK
+        canary builds.
+  - type: dropdown
+    validations:
+      required: true
+    attributes:
+      label: Host OS
+      multiple: true
+      options:
+        - Linux
+        - Mac
+        - Windows
+  - type: input
+    validations:
+      required: true
+    attributes:
+      label: Host OS version
+      placeholder: Ubuntu 20.04, macOS 11.1, etc.
+  - type: dropdown
+    validations:
+      required: true
+    attributes:
+      label: Affected ABIs
+      multiple: true
+      options:
+        - armeabi-v7a
+        - arm64-v8a
+        - x86
+        - x86_64
