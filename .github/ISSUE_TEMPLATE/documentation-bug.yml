@@ -1,0 +1,29 @@
+---
+name: Documentation bug
+description: An issue with the NDK documentation.
+title: "[DOC]"
+labels: docs
+body:
+  - type: markdown
+    attributes:
+      value: >
+        **Note:** The NDK docs reside under https://developer.android.com/ndk/.
+        If the bug you are reporting belongs to a different section of the site,
+        this is the wrong bug tracker. See
+        https://source.android.com/setup/contribute/report-bugs.
+  - type: input
+    attributes:
+      label: URL
+      description: >
+        URL of the incorrect documentation. If the problem is that there is no
+        documentation and it belongs on a new page, say so.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Problem
+      description: >
+        What's wrong? Does something need clarification/expansion? Is there a
+        typo?
+    validations:
+      required: true
