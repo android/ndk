@@ -819,3 +819,5 @@ The choice of which to use depends on two factors:
 2. If the data is eventually being passed to a system API, what form must it be in? (For example, if the data is eventually passed to a function that takes a byte[], doing processing in a direct `ByteBuffer` might be unwise.)
 
 If there's no clear winner, use a direct byte buffer. Support for them is built directly into JNI, and performance should improve in future releases.
+
+
