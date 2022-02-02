@@ -122,3 +122,6 @@ description of how to interpret this table, see the description accompanying the
 | RC respin triggered by     | High severity   |
 | Point release triggered by | High severity   |
 | Point release accepts      | Medium severity |
+
+
+
