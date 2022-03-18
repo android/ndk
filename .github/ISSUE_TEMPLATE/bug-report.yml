@@ -64,6 +64,7 @@ body:
       options:
         - r23
         - r24
+        - r25
         - Canary
   - type: input
     attributes:
