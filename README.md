@@ -9,6 +9,9 @@ For what we're working on, see the
 For further into the future, see the
 [NDK Roadmap](https://android.googlesource.com/platform/ndk/+/master/docs/Roadmap.md).
 
+The source for the NDK is maintained in AOSP. See
+https://android.googlesource.com/platform/ndk/+/master/README.md.
+
 ## RFC
 
 This section lists any in-progress features with open discussion bugs. We're
@@ -66,6 +69,5 @@ The documentation for Android OS developers has:
 - The NDK and Android Studio support ndk-build and CMake out of the box, but we
   also have a
   [Build System Maintainers Guide](https://android.googlesource.com/platform/ndk/+/master/docs/BuildSystemMaintainers.md).
-- If you want to work _on_ the NDK itself rather than just use it, see the NDK
-  team's
-  [internal documentation](https://android.googlesource.com/platform/ndk/+/master/README.md).
+- If you want to work _on_ the NDK itself rather than just use it, see the
+  [README.md in the NDK source](https://android.googlesource.com/platform/ndk/+/master/README.md).
