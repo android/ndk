@@ -15,6 +15,9 @@ contact_links:
       can add workarounds in the NDK, in which case you can file a feature
       request here, but you should also report the bug against the OS so it can
       be fixed in future versions.
+
+      **Do not use the NDK component.** That will just bring you back here. You
+      almost always want the Framework component for this type of bug.
   - name: Questions
     url: https://github.com/android/ndk/discussions
     about: >
