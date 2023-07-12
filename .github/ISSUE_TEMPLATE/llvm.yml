@@ -82,9 +82,8 @@ body:
         If the bug was found in an unreleased build of the NDK, select "canary"
         and include the build information in the description.
       options:
-        - r23
-        - r24
         - r25
+        - r26
         - Canary
   - type: input
     attributes:
