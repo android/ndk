@@ -1,6 +1,9 @@
 ---
 name: Documentation bug
-description: An issue with the NDK documentation.
+description: >
+  An issue with the NDK documentation (note that _API_ documentation bugs should
+  be filed against Framework following
+  https://source.android.com/docs/setup/contribute/report-bugs).
 title: "[DOC]"
 labels: docs
 body:
