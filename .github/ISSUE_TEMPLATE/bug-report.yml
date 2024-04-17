@@ -63,6 +63,7 @@ body:
         and include the build information in the description.
       options:
         - r26
+        - r27
         - Canary
   - type: input
     attributes:
