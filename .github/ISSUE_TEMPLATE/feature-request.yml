@@ -1,6 +1,8 @@
 ---
 name: Feature request
-description: Suggest an idea for this project
+description: >
+  Feature requests for the NDK. **Not for Android APIs, Gradle, or Android
+  Studio features.**
 title: "[FR]"
 labels: enhancement
 body:
