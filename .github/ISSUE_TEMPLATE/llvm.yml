@@ -66,17 +66,19 @@ body:
       label: Affected versions
       multiple: true
       description: >
-        Select all NDK versions in which you have observed this bug. You do not
-        need to test all of them, but if you already have that information is
-        useful to us! If you're not sure which NDK version you're using, check
+        **If you are using Unity, double check the NDK version you're using.
+        It's probably not in this list because it's not supported. File those
+        bugs with Unity.**
+
+
+        Select all NDK versions in which you have observed this bug. **NDK
+        versions not listed here are not supported and those bugs will be closed
+        without investigation.**
+        
+        
+        If you're not sure which NDK version you're using, check
         the `android.ndkVersion` for your AGP project, or look in
         `$NDK/source.properties`.
-
-
-        At least one version must be selected. The currently supported releases
-        are listed here. If you observed the bug on a different release, you
-        will need to verify that it is still present on a supported release
-        before filing.
 
 
         If the bug was found in an unreleased build of the NDK, select "canary"
