@@ -59,6 +59,16 @@ body:
       description: >
         A link to or git SHA of the upstream commit that fixes the issue. Leave
         empty if not known.
+  - type: checkboxes
+    id: supported
+    attributes:
+      label: I am using a supported NDK
+      description: >
+        If you're using an unsupported NDK, don't file the bug. We will only
+        investigate bugs that impact supported NDKs.
+      options:
+        - label: I have checked and the NDK I'm using is currently supported
+          required: true
   - type: dropdown
     validations:
       required: true
@@ -87,16 +97,6 @@ body:
       options:
         - r27
         - r28
-  - type: checkboxes
-    id: supported
-    attributes:
-      label: I am using a supported NDK
-      description: >
-        If you're using an unsupported NDK, don't file the bug. We will only
-        investigate bugs that impact supported NDKs.
-      options:
-        - label: I have checked and the NDK I'm using is currently supported
-          required: true
   - type: dropdown
     validations:
       required: true
