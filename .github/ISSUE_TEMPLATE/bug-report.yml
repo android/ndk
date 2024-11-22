@@ -71,8 +71,9 @@ body:
     id: supported
     attributes:
       label: I am using a supported NDK
-      description: If you're using an unsupported NDK, don't file the bug. We
-      only investigate bugs that impact supported NDKs.
+      description: >
+        If you're using an unsupported NDK, don't file the bug. We will only
+        investigate bugs that impact supported NDKs.
       options:
         - label: I have checked and the NDK I'm using is currently supported
           required: true
