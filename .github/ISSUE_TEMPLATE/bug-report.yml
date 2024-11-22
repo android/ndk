@@ -61,18 +61,21 @@ body:
         `$NDK/source.properties`.
 
 
-        If the bug was found in an unreleased build of the NDK, select "canary"
-        and include the build information in the description.
+        If the bug was found in a canary build of the NDK, pick either, but use
+        the bug description to say so, and include the ci.android.com build
+        number.
       options:
         - r27
         - r28
-        - Canary
-  - type: input
+  - type: checkboxes
+    id: supported
     attributes:
-      label: Canary version
-      description: >
-        Information about the canary version if the bug is only found in the NDK
-        canary builds.
+      label: I am using a supported NDK
+      description: If you're using an unsupported NDK, don't file the bug. We
+      only investigate bugs that impact supported NDKs.
+      options:
+        - label: I have checked and the NDK I'm using is currently supported
+          required: true
   - type: dropdown
     validations:
       required: true
