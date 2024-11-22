@@ -1,5 +1,5 @@
 ---
-name: Bug report (**search and look at the pinned issues before filing**)
+name: Bug report
 description: >
   Bugs related to the NDK itself. ndk-build, CMake toolchain file, sysroot, etc.
 title: "[BUG]"
