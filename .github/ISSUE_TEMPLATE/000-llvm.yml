@@ -97,6 +97,7 @@ body:
       options:
         - r27
         - r28
+        - r29
   - type: dropdown
     validations:
       required: true
