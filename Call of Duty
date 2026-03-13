@@ -1,0 +1,19 @@
+// Это код, который вы пишете и компилируете
+// для видеокарты через OpenGL/Vulkan/Metal API
+#version 300 es
+layout (location = 0) in vec3 aPos;    // Входная позиция из буфера
+layout (location = 1) in vec3 aNormal; // Входная нормаль
+
+uniform mat4 model;      // Матрица объекта
+uniform mat4 view;       // Матрица камеры
+uniform mat4 projection; // Матрица проекции
+
+out vec3 FragPos; // Передается в Fragment Shader
+out vec3 Normal;
+
+void main()
+{
+    FragPos = vec3(model * vec4(aPos, 1.0));
+    Normal = mat3(transpose(inverse(model))) * aNormal;  
+    gl_Position = projection * view * vec4(FragPos, 1.0);
+}
