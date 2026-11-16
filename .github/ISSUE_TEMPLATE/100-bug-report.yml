@@ -75,7 +75,5 @@ body:
         the bug description to say so, and include the ci.android.com build
         number.
       options:
-        - r27
-        - r28
-        - r29
         - r30
+        - r31
